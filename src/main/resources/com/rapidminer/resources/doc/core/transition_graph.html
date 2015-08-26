@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/chart_bubble.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Transition Graph</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Transition_Graph skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Creates a graphical representation of transitions defined by source and target attributes.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator creates a transition graph from the given example set. The example set must have a specific structure with (at least) two columns where one column specifies the source of the transition and the second column specifies the target of the transition. Optionally, a third column can be specified in order to define the strength of the transition (this column can for example store the number of times this transition occurred after an aggregation).
+</p>
+<p>
+The parameter "node_description" will be used for displaying information about the nodes if the information is made available via an example visualization operator. The string might contain macros pointing to attribute names.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>transition graph</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>source attribute</b>:  The name of the attribute defining the sources of the transitions.
+</li>
+<li> <b>target attribute</b>:  The name of the attribute defining the targets of the transitions.
+</li>
+<li> <b>strength attribute</b>:  The name of the attribute defining the strength of the transitions.
+</li>
+<li> <b>type attribute</b>:  The name of the attribute defining the type of the transitions.
+</li>
+<li> <b>node description</b>:  The description of each node where columns from the example data can be used by the macro form %{COLUMN_NAME}.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Sonar"/>
+      </operator>
+      <operator activated="true" class="principal_component_analysis" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="PCA" width="90" x="179" y="30"/>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="380" y="30">
+        <list key="application_parameters">
+          <parameter key="variance_threshold" value="0.95"/>
+        </list>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="PCA" to_port="example set input"/>
+      <connect from_op="PCA" from_port="original" to_op="ModelApplier" to_port="unlabelled data"/>
+      <connect from_op="PCA" from_port="preprocessing model" to_op="ModelApplier" to_port="model"/>
+      <connect from_op="ModelApplier" from_port="labelled data" to_port="result 1"/>
+      <connect from_op="ModelApplier" from_port="model" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="84" resized="false" width="400" x="40" y="140">This is another principal components operator creating a PCA model which can be applied to data sets. This allows for performance estimations of the feature transformation on unseen data sets.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Transactions"/>
+      </operator>
+      <operator activated="true" class="nominal_to_binominal" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Nominal2Binominal" width="90" x="180" y="30">
+        <parameter key="transform_binominal" value="true"/>
+      </operator>
+      <operator activated="true" class="select_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeFilter" width="90" x="315" y="30">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="regular_expression" value=".*true.*"/>
+      </operator>
+      <operator activated="true" class="fp_growth" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FPGrowth" width="90" x="447" y="30"/>
+      <operator activated="true" class="create_association_rules" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AssociationRuleGenerator" width="90" x="581" y="75"/>
+      <connect from_op="Retrieve" from_port="output" to_op="Nominal2Binominal" to_port="example set input"/>
+      <connect from_op="Nominal2Binominal" from_port="example set output" to_op="AttributeFilter" to_port="example set input"/>
+      <connect from_op="AttributeFilter" from_port="example set output" to_op="FPGrowth" to_port="example set"/>
+      <connect from_op="FPGrowth" from_port="example set" to_port="result 2"/>
+      <connect from_op="FPGrowth" from_port="frequent sets" to_op="AssociationRuleGenerator" to_port="item sets"/>
+      <connect from_op="AssociationRuleGenerator" from_port="rules" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="18"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="304" resized="true" width="685" x="32" y="169">This process uses two important preprocessing operators: First the frequency discretization operator, which discretizes numerical attributes by putting the values into bins of equal size. Second, the filter operator nominal to binominal creates for each possible nominal value of a polynominal attribute a new binominal (binary) feature which is true if the example had the particular nominal value.&lt;br/&gt;&lt;br/&gt;These preprocessing operators are necessary since particular learning schemes can not handle attributes of certain value types. For example, the very efficient frequent item set mining operator FPGrowth used in this process setup can only handle binominal features and no numerical or polynominal ones.&lt;br/&gt;&lt;br/&gt;The next operator is the frequent item set mining operator FPGrowth. This operator efficiently calculates attribute value sets often occuring together. From these so called frequent item sets the most confident rules are calculated. with the association rule generator.&lt;br/&gt;&lt;br/&gt;The result will be displayed in a rule browser where desired conclusion can be selected in a selection list on the left side. As for all other tables available in RapidMiner you can sort the columns by clicking on the column header. Pressing CTRL during these clicks allows the selection for up to three sorting columns.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.rapidminer.com/xml/schema/RapidMinerProcess" xmlns:tns="http://www.rapidminer.com/xml/schema/RapidMinerProcess" elementFormDefault="qualified">
+
+    <complexType name="processType">
+    	<sequence>
+    		<element name="operator" type="tns:operatorType" maxOccurs="unbounded" minOccurs="0"></element>
+    		<element name="connect" type="tns:connectType" maxOccurs="unbounded" minOccurs="0"></element>
+    	</sequence>
+    	<attribute name="version" use="optional">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="4.0"></enumeration>
+    				<enumeration value="4.1"></enumeration>
+    				<enumeration value="4.2"></enumeration>
+    				<enumeration value="4.3"></enumeration>
+    				<enumeration value="4.4"></enumeration>
+    				<enumeration value="5.0"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+
+    <complexType name="operatorType">
+    	<sequence>
+    		<element name="description" type="tns:descriptionType"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+            <element name="parameter" type="tns:parameterType"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</element>
+            <element name="list" type="tns:listType"
+            	maxOccurs="unbounded" minOccurs="0">
+            </element>
+            <choice>
+                <element name="process" type="tns:processType"
+    				maxOccurs="unbounded" minOccurs="0">
+    			</element>
+    			<element name="operator" type="tns:operatorType"
+    				maxOccurs="unbounded" minOccurs="0">
+    			</element>
+    		</choice>
+    	</sequence>
+    	<attribute name="name" type="NCName" use="required"></attribute>
+    	<attribute name="class" type="string" use="required"></attribute>
+    	<attribute name="breakpoints">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value=""></enumeration>
+    				<enumeration value="before"></enumeration>
+    				<enumeration value="after"></enumeration>
+    				<enumeration value="within"></enumeration>
+    				<enumeration value="before,after"></enumeration>
+    				<enumeration value="before,within"></enumeration>
+    				<enumeration value="within,after"></enumeration>
+    				<enumeration value="before,within,after"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="activated" default="yes">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="yes"></enumeration>
+    				<enumeration value="no"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="expanded" default="yes" use="optional">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="yes"></enumeration>
+    				<enumeration value="no"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+
+    <complexType name="connectType">
+    	<attribute name="from_op" type="NCName" use="optional"></attribute>
+    	<attribute name="from_port" type="string" use="required"></attribute>
+    	<attribute name="to_op" type="NCName" use="optional"></attribute>
+    	<attribute name="to_port" type="string" use="required"></attribute>
+    </complexType>
+
+    <complexType name="parameterType">
+    	<attribute name="key" type="string" use="required"></attribute>
+    	<attribute name="value" type="string" use="required"></attribute>
+    </complexType>
+
+    <element name="process" type="tns:processType">
+    	<key name="operatorNameKey">
+    		<selector xpath=".//tns:operator"/>
+    		<field xpath="@name"/>
+    	</key>
+    	<keyref name="operatorNameRef" refer="tns:operatorNameKey">
+    		<selector xpath=".//tns:connect"/>
+    		<field xpath="@from_op | @to_op"/>
+    	</keyref>
+    </element>
+
+    <complexType name="descriptionType">
+    	<attribute name="text" type="string"></attribute>
+    </complexType>
+
+    <complexType name="listType">
+    		<sequence><element name="parameter" type="tns:parameterType" maxOccurs="unbounded" minOccurs="0">
+    		</element></sequence>
+    </complexType>
+</schema>

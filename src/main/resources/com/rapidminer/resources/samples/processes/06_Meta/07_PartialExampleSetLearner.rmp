@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="random_seed" value="-1"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="checkerboard classification"/>
+        <parameter key="number_examples" value="500"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="optimize_parameters_grid" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="GridParameterOptimization" width="90" x="179" y="30">
+        <list key="parameters">
+          <parameter key="PartialExampleSetLearner.fraction" value="[0.2;1.0;4;linear]"/>
+        </list>
+        <process expanded="true">
+          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
+            <parameter key="number_of_validations" value="15"/>
+            <process expanded="true">
+              <operator activated="true" class="loop_data_fractions" compatibility="6.4.000-SNAPSHOT" expanded="true" name="PartialExampleSetLearner">
+                <parameter key="fraction" value="1.0"/>
+                <process expanded="true">
+                  <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LibSVMLearner">
+                    <parameter key="gamma" value="0.5"/>
+                    <parameter key="epsilon" value="0.0010"/>
+                    <list key="class_weights"/>
+                  </operator>
+                  <connect from_port="example subset" to_op="LibSVMLearner" to_port="training set"/>
+                  <connect from_op="LibSVMLearner" from_port="model" to_port="model"/>
+                  <portSpacing port="source_example subset" spacing="0"/>
+                  <portSpacing port="sink_model" spacing="0"/>
+                </process>
+              </operator>
+              <connect from_port="training" to_op="PartialExampleSetLearner" to_port="example set"/>
+              <connect from_op="PartialExampleSetLearner" from_port="model" to_port="model"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Test">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ClassificationPerformance">
+                <parameter key="accuracy" value="false"/>
+                <parameter key="classification_error" value="true"/>
+                <list key="class_weights"/>
+              </operator>
+              <connect from_port="model" to_op="Test" to_port="model"/>
+              <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
+              <connect from_op="Test" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
+              <connect from_op="ClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog " width="90" x="425" y="48">
+            <list key="log">
+              <parameter key="Fraction" value="operator.PartialExampleSetLearner.parameter.fraction"/>
+              <parameter key="Performance" value="operator.XValidation.value.performance"/>
+            </list>
+          </operator>
+          <connect from_port="input 1" to_op="XValidation" to_port="training"/>
+          <connect from_op="XValidation" from_port="averagable 1" to_op="ProcessLog " to_port="through 1"/>
+          <connect from_op="ProcessLog " from_port="through 1" to_port="performance"/>
+          <portSpacing port="source_input 1" spacing="0"/>
+          <portSpacing port="source_input 2" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+          <portSpacing port="sink_result 1" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="GridParameterOptimization" to_port="input 1"/>
+      <connect from_op="GridParameterOptimization" from_port="performance" to_port="result 1"/>
+      <connect from_op="GridParameterOptimization" from_port="parameter" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="156" resized="false" width="400" x="40" y="160">This operator works similar to the LearningCurveOperator. In contrast to this, it just splits the ExampleSet according to the parameter &amp;quot;fraction&amp;quot; and learns a model only on the subset. It can be used, for example, in conjunction with GridSearchParameterOptimizationOperator which sets the fraction parameter to values between 0 and 1. The advantage is that this operator can then be used inside of a XValidation which  delivers more stable results.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/symbol_percent.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Bootstrapping Validation</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Bootstrapping_Validation skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator encapsulates an iterated bootstrapping sampling with performance evaluation on the remaining examples.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This validation operator performs several bootstrapped samplings (sampling with replacement) on the input set and trains a model on these samples. The remaining samples, i.e. those which were not sampled, build a test set on which the model is evaluated. This process is repeated for the specified number of iterations after which the average performance is calculated.
+</p>
+<p>
+The basic setup is the same as for the usual cross validation operator. The first inner operator must provide a model and the second a performance vector. Please note that this operator does not regard example weights, i.e. weights specified in a weight column.
+</p>
+<p>
+This validation operator provides several values which can be logged by means of a <i>ProcessLogOperator</i>. All performance estimation operators of RapidMiner provide access to the average values calculated during the estimation. Since the operator cannot ensure the names of the delivered criteria, the ProcessLog operator can access the values via the generic value names:
+</p>
+
+<ul class="ports">
+<li> performance: the value for the main criterion calculated by this validation operator
+</li>
+<li> performance1: the value of the first criterion of the performance vector calculated
+</li>
+<li> performance2: the value of the second criterion of the performance vector calculated
+</li>
+<li> performance3: the value of the third criterion of the performance vector calculated
+</li>
+<li> for the main criterion, also the variance and the standard deviation can be accessed where applicable.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>training</b>:
+</li>
+<li> <b>averagable 1</b>:
+</li>
+<li> <b>averagable 2</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>create complete model</b>:  Indicates if a model of the complete data set should be additionally build after estimation.
+</li>
+<li> <b>number of validations</b>:  The number of validations that should be executed.
+</li>
+<li> <b>sample ratio</b>:  This ratio of examples will be sampled (with replacement) in each iteration.
+</li>
+<li> <b>use weights</b>:  If checked, example weights will be used for bootstrapping if such weights are available.
+</li>
+<li> <b>average performances only</b>:  Indicates if only performance vectors should be averaged or all types of averagable result vectors.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

@@ -1,0 +1,372 @@
+################################################################################
+##
+## This file contains all tips which can be shown during startup.
+## Comment lines must start with '#'.
+##
+## Tips are separated with empty lines. It is not allowed to use empty lines 
+## in a tip. Tips are presented as they are, i.e. similar to a <pre></pre>
+## environment. Markup is not allowed. 
+## 
+## There are some special commands:
+## <lb> adds an initial linebreak
+## <item> adds some indentation and a star (*)
+## <indent> adds some indentation
+################################################################################
+Many general settings can be defined in the settings dialog:<lb>
+<indent>Tools -- Preferences
+
+Some people prefer to perform their experiments always in the same way,
+even if the experiment contains randomized heuristics. This ensures that
+the results can be reproduced. Therefore, the experiment root operator
+provides a parameter "random_seed" which determines the sequence of
+random numbers. A random seed of -1 means that no seed is used at all
+and the experiments are fully randomized. The default random seed can
+be defined in the settings dialog:<lb>
+<indent>Tools -- Preferences.
+
+You can toggle between the edit mode (editing the operator tree) and
+the results mode (viewing intermediate and end results) via the icons
+in the upper right corner, via F9, or via the items in the "View" menu.
+
+You can add a new operator from the context menu of the selected
+operator (right click) in the tree view. Please note that this option is
+only available for operator chains, i.e. operators which are able to
+contain inner operators.<lb>
+You can also use the "New Operator" tab and drag the new operator into
+the operator tree.<lb>
+The last option is to use the new operator icon in the toolbar which
+brings up a dialog with some search options.
+
+Another way of operator adding is the "New Operator" dialog which is
+available via the icon in the toolbar. This dialog provides several
+search schemes to find an operator which suits your needs.
+
+Instead of adding a new operator you can also replace the selected
+operator by another one. This is only possible in the operator context
+menu in the operator tree (right click).
+
+RapidMiner contains all Weka learners and attribute weighting schemes.
+They can simply be used like other RapidMiner operators. Please note that
+Weka meta learners must contain another Weka learner. For the documentation
+of the Weka operators and parameters please refer to the Weka documentation.
+
+The operator FeatureGeneration can construct new features from numerical
+data. All functions supported by Java are available. The format is a
+prefix format, for example<lb>
+<indent>sin(+(att1,att2))<lb>
+Please refer to the operator documentation in the RapidMiner tutorial.
+
+RapidMiner distinguishes between two types of attributes: regular
+attributes used by learning schemes and special attributes. The latter
+can have arbitrary names and are required by some operators. For example,
+a learning scheme needs at least a "Label" attribute.
+
+RapidMiner can easily be extended by plugins. These contain additional
+operators for some special learning tasks. Please check the RapidMiner
+website for new plugins:<lb>
+<indent>http://www.rapidminer.com
+
+Complex experiments sometimes need to write data or other results into a
+file and reload it later. Therefore, the %{X}-expansion in parameter values
+was added:
+<indent>%{a} is replaced by the number of times the operator was applied
+<indent>%{t} is replaced by the current system time
+<indent>%{n} is replaced by the name of operator
+<indent>%{c} is replaced by the class of operator
+Please refer to the RapidMiner tutorial for a full description of all macros.
+
+To estimate the performance of a learning scheme several validation schemes
+are provided:
+<item>XValidation
+<item>Leave-one-out
+<item>SimpleValidation
+<item>FixedSplitValidation
+<item>and others...
+Similar validation operators are available for the evaluation of feature
+operators and for time series predictions.
+
+To estimate the performance of feature selection and construction wrappers,
+another cross validation around the wrapper must be used. Although it is
+possible to nest several cross validations, sometimes it might be more
+convenient to use one of the following operators:
+<item>WrapperXValidation
+<item>SimpleWrapperValidation
+These operators take care that the weighting / selection is applied on the
+independent test set.
+
+Only one operator is used for all performance calculations:<lb>
+<indent>PerformanceEvaluator<lb>
+This operator provides many performance criteria including accuracy,
+precision, and recall for classification tasks and several error measures
+for regression tasks. Please make sure that you select the correct parameters
+for the task at hand.
+
+Attribute selection (feature selection) is seen as attribute weighting which
+allows more flexible operators. Feature operators like forward selection,
+genetic algorithms and the weighting operators can now deliver an example set
+with the selection / weighting already applied or the original example set
+(optional). Therefore, all feature operators deliver the IO object 
+"AttributeWeights", not only the weighting ones. A weight of 0 means, that the
+attribute should be deselected.
+
+The preprocessing operators in RapidMiner include
+<item>Discretization 
+<item>Example Filters
+<item>Feature Filters
+<item>Feature Selection, Construction, and Weighting
+<item>Value Replenishment
+<item>Sampling
+<item>Normalization and Standardization
+<item>Changing the value type of the attributes
+<item>IdTagging
+among others.
+
+One of the most usable operators for experiment evaluation is the 
+"ExperimentLogOperator" which is able to record almost arbitrary data. The
+collected data can directly be plotted in the graphical user interface
+(online plotting). This is often the best way to check if the experiment
+seems to produce good results.
+
+Each time the ExperimentLogOperatory is applied, all the values and parameters
+specified by the list "log" are collected and stored in a data row. Therefore,
+this operator should be placed at a position where it is able to collect the
+necessary data.<lb>
+Since using this operator is somewhat tricky please refer to the documentation
+and the experiments in the sample directory of RapidMiner.
+
+Since massive logging may slow down experiments the default log verbosity for
+new experiments is "init". The log verbosity can be defined as a parameter of
+the root experiment operator. The higher the parameter was set, the less messages
+are logged. The possible settings are:
+<item>ALL: logs everything
+<item>IO: shows all input and output of each operator
+<item>STATUS: displays operator messages
+<item>INIT: displays initialization infos and end results
+<item>NOTE: displays important notes
+<item>WARNING: displays all warnings
+<item>ERROR: displays all errors
+<item>FATAL: displays all fatal errors which will definitely stop the experiment
+<item>MAXIMUM: logs almost nothing
+
+Please ensure that the correct performance criteria for the task at hand were
+defined. For example, criteria like accuracy or precision are suitable for
+classification tasks, criteria like absolute or squared error are suitable for
+regression tasks.
+
+Examples with Id can now be displayed from the plotter by double clicking the
+example in the plot. Therefore a "ExampleVisualization" operator must have been
+added. Plugins may add more appropriate example visualizers, for example music
+players for audio data or image / text viewers.
+
+The 2D scatter plotter provides a simple zooming functionality. Simply drag a
+rectangle to zoom into the selected region. Right clicking sets the range back to
+the maximum size.
+
+User descriptions (comments) can be added and edited in the comment tab. The
+description of the root operator is shown in a dialog after loading the experiment.
+This can be disabled in the settings dialog.
+
+RapidMiner provides two different modes for experts and beginners. In expert
+mode all parameters are shown. In the beginner mode only the most important
+parameters.
+
+You can save your experiment as Template. Experiments which were saved
+as template can be used by the wizard. This allows quick experiment setup for
+similar experiments.
+
+All operators, parameters, and GUI elements provide useful information
+as tool tips. Point the mouse cursor a few moments at an element in order to
+display a short description.
+
+The operator information including a short description is displayed in the
+operator info dialog. This dialog also contains error descriptions in cases
+the experiment validation found an error. The dialog for the selected operator
+can be opened with F1 or from the context menu (right click).
+
+Experiments should be validated before they are started (via the icon in the
+tool bar, the Tools menu, or F4). Errors are marked with an exclamation mark
+in the operator tree. A short error description can also be found in the
+operator info screen (F1).
+
+Most data input operators support a parameter "datamanagement". Usually,
+all examples are encoded as numerical arrays which is a very efficient way
+of data management. For sparse data sets, i.e. where examples contain many
+attributes with a default value is might be more efficient with respect to 
+memory usage to use one of the sparse data management types. We recommend
+'sparse_double_array' which uses less memory and is still very fast.
+
+On Windows systems, RapidMiner automatically determines the maximum amount
+of free memory and uses about 90% of the free amount. This is sufficient in
+most cases. Please refer to the installation section of our web site for
+some details about adjusting the used amount of memory:
+<indent>http://rapidminer.com/
+This also applies for all other systems, where RapidMiner usually uses only
+128 Mb of main memory - even if your computer provides more memory.
+
+For classification tasks the prediction confidences are automatically set for
+all classes. Most learners directly provide correct confidence values but in
+some cases it is necessary to define a boolean parameter to cause the correct
+confidence values.
+
+RapidMiner supports different types of meta data. Each attribute at least has
+a name and a value type (e.g. numerical or nominal). Further meta data define
+if an attribute is a singular value or part of a value series.
+
+Example sets can be displayed in three different ways: the meta data view, the
+data view, and the plot view. In meta data view each line describes an
+attribute and some basic statistics for this attribute. In data view each line
+is an example containing all attribute values. The plot view can be used to
+display different plots in the selected dimensions.
+
+RapidMiner provides some built-in plotters for data and results: 2D and 3D
+(color) plots, histograms or distribution plots, and high-dimensional plots
+like survey or parallel plots. For some results like models, performance, or
+weight vectors other plot types like Hinton diagrams or quantile plots are
+also supported.
+
+One of the main features of RapidMiner is it's ability to arbitrarily nest
+operator chains and build complex operator trees. This allows for example the
+optimization of a feature set and the parameters at the same time. You can
+simply exchange single operators to evaluate how each operator performs on
+your task. The rest of the experiment remains the same.
+
+You should start with the online tutorial (help menu) to learn about some
+basic concepts of RapidMiner.
+
+Our web site provides several online tours showing some of the
+basic features of RapidMiner:<lb>
+<indent>http://www.rapidminer.com
+
+The standard data file format of RapidMiner is a set of data files together
+with a meta data description in a simple XML format (.aml file). The format
+of the data files is very flexible and data can be merged from several files.
+The input operator "ExampleSource" can be configured to allow arbitrary column
+separators (via regular expressions), quote characters, and comment characters.
+
+The XML attribute meta data description can be created with help of the
+Attribute Editor. Please click on the "Edit" button of the parameter
+"attributes" of the operator "ExampleSource". This opens a
+dialog for loading data and setting the attribute meta data. The attribute
+description XML file can be saved and is automatically loaded by the
+"ExampleSource" operator. This dialog is also available in the "Tools" menu.
+
+The easiest way to load data files into RapidMiner is the configuration
+wizard provided by the "ExampleSource" operator. Simply press the button
+at the top of the parameters of this operator.
+
+The easiest way to load data from a database into RapidMiner is the
+configuration wizard provided by the "DatabaseExampleSource" operator.
+Simply press the button at the top of the parameters of this operator.
+
+Almost all objects which can be passed between operators can be saved into
+and loaded from files. Please check the "IO" group in the operator menus.
+
+RapidMiner contains many data input and output operators. 
+Data can be loaded from several file formats including ARFF, sparse, csv,
+dBase, C4.5, and BibTeX. It can also be loaded directly from a database.
+
+Data can be written in almost arbitrarily formats using the
+"ExampleSetWriter" operator. A writer for ARFF files and databases
+is also provided.
+
+A special operator "IOConsumer" exists to consume output objects which
+are not used any longer. This allows even more complex experiments.
+
+A special operator "IOMultiplier" exists to multiply given input objects 
+in cases where the same input object should be used and consumed by several
+operators. This allows even more complex experiments.
+
+Meta optimization schemes like parameter optimization operators usually need
+children which are to be optimized. They must provide a performance measure 
+(wrapper approach).
+
+The "IteratingOperatorChain" can be used to perform the action of the
+inner operators "n" times.
+
+In contrast to the parameter optimization operators the operator
+"ParameterIterator" just iterates through a given set of parameters
+without performing any search for an optimal parameter set. This might be
+useful in cases where performance or other characteristics should be
+plotted against a parameter, e.g. inter cluster density against the
+parameter "k" of k-Means clustering.
+
+"Discretization" operators discretize numerical attributes into a user
+defined number of bins.
+
+Example filter operators allow only examples which fulfill a specified
+condition.
+
+Feature filter operators deselect features not fulfilling a given condition.
+
+Feature selection, construction, and weighting operators are a frequently
+used way to greatly improve learning accuracy. RapidMiner contains many
+feature operators including (evolutionary) wrappers and weighting filters.
+
+If a set of feature weights was once built you can use the operator
+"AttributeWeightSelection" to deselect all features which weight do not
+fulfill a given relation. For example, you can decide to keep only those
+features with a weight greater than 0.5.
+
+Value replenishment operators replace infinite or missing values.
+
+RapidMiner provides several schemes to sample a subset of the complete
+example set.
+
+"Normalization" and "Standardization" normalize into given intervals
+or standardize data to zero mean and standard deviation 1 (z-transform).
+Both operations are available via the "Normalization" operator.
+
+You can easily change the value types of attributes by the corresponding
+preprocessing operators.
+
+One of the main features of RapidMiner is the multi-layered view concept.
+This allows the almost arbitrary nesting of complex operator chains while
+keeping an efficient data handling. Data is never copied (e.g. for cross
+validation or feature selection) but only different views are used on the
+same data table. Please check the sample directory for a small excerpt of
+all possible experiments.
+
+RapidMiner experiments are described in an XML format which can be used as a
+scripting language for data mining experiments. You can see RapidMiner as a
+Interpreter for this data mining scripting language and use it from your own
+application.
+
+Usually only one operator must be changed to compare two algorithms. The rest
+of the experiment remains the same.
+
+RapidMiner contains a huge amount of feature operators for automatic feature
+selection, aggregation, and construction. Together with the Value Series
+plugin it is even possible to perform a automatic feature extraction from
+series data of classification tasks.
+
+Many RapidMiner operatos follow a Wrapper approach. They need an inner
+operator which must deliver a performance estimation (PerformanceVector),
+e.g. a SimpleValidation or a XValidation operator.
+
+Several data transformation operators exist including PCA, ICA, and GHA.
+
+Operators from the post processing group can be applied to existing models or
+on data sets after a model was applied. These operators include scaling
+schemes like Platt scaling or cost sensitive threshold finding.
+
+Not only learning operators but also preprocessing operators are able to
+create a model. All models generated during learning are aggregated into a
+collection of models which can be completely applied to new data sets. This
+also allows for fair comparisons which also take the preprocessing into mind. 
+
+RapidMiner provides a huge amount of performance criteria including well known
+criteria for regression or classification learning. While some of these
+criteria can only be used for classification tasks (like accuracy or
+precision) others can be applied for both nominal and numerical labels. For
+example, the root mean square error (RMS) uses the confidence value difference
+as deviation in case of nominal learning.
+
+The target variable is always called label independently from the type. We
+refer to this special attribute as label in both cases for nominal
+classification tasks and numerical regression tasks.
+
+All evolutionary optimization operators, e.g. for automatic feature selection,
+supports multi-objective optimization.
+
+You can export pictures in several file formats of the currently selected view
+(tree view, XML view, Box view etc.) via the export menu item in the file menu.

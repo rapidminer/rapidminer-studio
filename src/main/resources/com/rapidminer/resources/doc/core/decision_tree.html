@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Decision Tree</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Decision_Tree skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Generates decision trees to classify nominal data. 
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator learns decision trees from both nominal and numerical  data. Decision trees are powerful classification methods which often can  also easily be understood. In order to classify an example, the tree is  traversed bottom-down. Every node in a decision tree is labelled with an  attribute. The example's value for this attribute determines which of  the outcoming edges is taken. For nominal attributes, we have one  outgoing edge per possible attribute value, and for numerical attribtues  the outgoing edges are labelled with disjoint ranges. 
+</p>
+
+<p>
+This decision tree learner works similar to Quinlan's C4.5 or CART.  Roughly speaking, the tree induction algorithm works as follows.  Whenever a new node is created at a certain stage, an attribute is  picked to maximise the discriminative power of that node with respect to  the examples assigned to the particular subtree. This discriminative  power is measured by a criterion which can be selected by the user  (information gain, gain ratio, gini index, etc.). 
+</p>
+
+<p>
+The algorithm stops in various cases: 
+</p>
+
+<ul class="ports">
+<li>  No attribute reaches a certain threshold (minimum_gain). 
+</li>
+<li>  The maximal depth is reached. 
+</li>
+<li>  There are less than a certain number of examples  (minimal_size_for_split) in the current subtree. 
+</li>
+</ul>
+<p>
+Finally, the tree is pruned, i.e. leaves that do not add to the  discriminative power of the whole tree are removed. 
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>exampleSet</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>criterion</b>:  Specifies the used criterion for selecting attributes and numerical splits.
+</li>
+<li> <b>minimal size for split</b>:  The minimal size of a node in order to allow a split.
+</li>
+<li> <b>minimal leaf size</b>:  The minimal size of all leaves.
+</li>
+<li> <b>minimal gain</b>:  The minimal gain which must be achieved in order to produce a split.
+</li>
+<li> <b>maximal depth</b>:  The maximum tree depth (-1: no bound)
+</li>
+<li> <b>confidence</b>:  The confidence level used for the pessimistic error calculation of pruning.
+</li>
+<li> <b>number of prepruning alternatives</b>:  The number of alternative nodes tried when prepruning would prevent a split.
+</li>
+<li> <b>no pre pruning</b>:  Disables the pre pruning and delivers a tree without any prepruning.
+</li>
+<li> <b>no pruning</b>:  Disables the pruning and delivers an unpruned tree.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/symbol_percent.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Performance</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Performance skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator delivers a list of performance values automatically determined in order to fit the learning task type.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+In contrast to the other performance evaluation methods like for example <a href="/wiki/index.php?title=Performance_(Classification)" shape="rect" title="Performance (Classification)">Performance (Classification)</a>, <a href="/wiki/index.php?title=Performance_(Binominal_Classification)" shape="rect" title="Performance (Binominal Classification)">Performance (Binominal Classification)</a> or <a href="/wiki/index.php?title=Performance_(Regression)" shape="rect" title="Performance (Regression)">Performance (Regression)</a>, this operator can be used for all types of learning tasks. It will automatically determine the learning task type and will calculate the most common criteria for this type. For more sophisticated performance calculations, you should use the operators mentioned above. If none of them suits your need, you might write your own performance measure and  calculate it with <a href="/wiki/index.php?title=Performance_(User-Based)" shape="rect" title="Performance (User-Based)">Performance (User-Based)</a>.
+</p>
+<p>
+
+
+This operator expects a test <i>ExampleSet</i> as input, containing one attribute with the role <i>label</i> and one with the role <i>prediction</i>. See the <a href="/wiki/index.php?title=Set_Role" shape="rect" title="Set Role">Set Role</a> operator for more details.  On the basis of this two attributes a <i>PerformanceVector</i> is calculated, containing the values of the performance criteria. If a <i>PerformanceVector</i> was fed into <i>performance</i> input, it's values are kept if it does not already contain the new criteria. Otherwise the values are averaged over the old and the new values. 
+</p>
+<p>
+
+
+The following criterias are added for binominal classification tasks: 
+
+
+<ul class="ports">
+<li> Accuracy
+</li>
+<li> Precision
+</li>
+<li> Recall
+</li>
+<li> AUC (optimistic)
+</li>
+<li> AUC (neutral)
+</li>
+<li> AUC (pessimistic)
+</li>
+</ul>
+The following criterias are added for polynominal classification tasks: 
+
+
+<ul class="ports">
+<li> Accuracy
+</li>
+<li> Kappa statistic
+</li>
+</ul>
+The following criterias are added for regression tasks: 
+
+
+<ul class="ports">
+<li> Root Mean Squared Error
+</li>
+<li> Mean Squared Error
+</li>
+</ul>
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>labelled data</b>: <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+<li> <b>performance</b>: <i>optional:</i> PerformanceVector
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>performance</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>use example weights</b>:  Indicated if example weights should be used for performance calculations if possible.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

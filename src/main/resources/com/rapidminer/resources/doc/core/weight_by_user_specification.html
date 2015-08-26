@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/sort_descending.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Weight by User Specification</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Weight_by_User_Specification skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator defines the weights for all features based on a list of regular expressions for the feature names which can be used to set a specified weight to features with a name fulfilling these expressions.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator is able to create feature weights based on regular expressions defined for the feature names. For example, the user can map all features with a name starting with "Att" to the weight 0.5 by using the regular expression "Att.*". Alternatively, the specified weight may be considered as weight sum for all attributes matching the corresponding regular expression and may be equally distributed among these attributes. All other feature weights whose feature names are not covered by one of the regular expressions are set to the default weight.
+</p>
+<p>
+Please note that the weights defined in the regular expression list are set in the order as they are defined in the list, i.e. weights can overwrite weights set before.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>weights</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>normalize weights</b>:  Activates the normalization of all weights.
+</li>
+<li> <b>name regex to weights</b>:  This list maps different regular expressions for the feature names to the specified weights.
+</li>
+<li> <b>distribute weights</b>:  If enabled, the weights specified in the list are split and distributed equally among the attributes matching the corresponding regular expressions.
+</li>
+<li> <b>default weight</b>:  This default weight is used for all features not covered by any of the regular expressions given in the list.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

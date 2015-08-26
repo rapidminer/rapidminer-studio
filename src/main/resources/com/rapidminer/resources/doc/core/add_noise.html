@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/data_new.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Add Noise</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Add_Noise skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Adds noise to existing attributes or add random attributes.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator adds random attributes and white noise to the data. New random attributes are simply filled with random data which is not correlated to the label at all. Additionally, this operator might add noise to the label attribute or to the regular attributes. In case of a numerical label the given <code>label_noise</code> is the percentage of the label range which defines the standard deviation of normal distributed noise which is added to the label attribute. For nominal labels the parameter <code>label_noise</code> defines the probability to randomly change the nominal label value. In case of adding noise to regular attributes the parameter <code>default_attribute_noise</code> simply defines the standard deviation of normal distributed noise without using the attribute value range. Using the parameter list it is possible to set different noise levels for different attributes. However, it is not possible to add noise to nominal attributes.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, Example set matching at least one selected attribute.
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+<li> <b>preprocessing model</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>return preprocessing model</b>:  Indicates if the preprocessing model should also be returned
+</li>
+<li> <b>create view</b>:  Create View to apply preprocessing instead of changing the data
+</li>
+<li> <b>attribute filter type</b>:  The condition specifies which attributes are selected or affected by this operator.
+</li>
+<li> <b>attribute</b>:  The attribute which should be chosen.
+</li>
+<li> <b>attributes</b>:  The attribute which should be chosen.
+</li>
+<li> <b>regular expression</b>:  A regular expression for the names of the attributes which should be kept.
+</li>
+<li> <b>use except expression</b>:  If enabled, an exception to the specified regular expression might be specified. Attributes of matching this will be filtered out, although matching the first expression.
+</li>
+<li> <b>except regular expression</b>:  A regular expression for the names of the attributes which should be filtered out although matching the above regular expression.
+</li>
+<li> <b>value type</b>:  The value type of the attributes.
+</li>
+<li> <b>use value type exception</b>:  If enabled, an exception to the specified value type might be specified. Attributes of this type will be filtered out, although matching the first specified type.
+</li>
+<li> <b>except value type</b>:  Except this value type.
+</li>
+<li> <b>block type</b>:  The block type of the attributes.
+</li>
+<li> <b>use block type exception</b>:  If enabled, an exception to the specified block type might be specified.
+</li>
+<li> <b>except block type</b>:  Except this block type.
+</li>
+<li> <b>numeric condition</b>:  Parameter string for the condition, e.g. '&gt;= 5'
+</li>
+<li> <b>invert selection</b>:  Indicates if only attributes should be accepted which would normally filtered.
+</li>
+<li> <b>include special attributes</b>:  Indicate if this operator should also be applied on the special attributes. Otherwise they are always kept.
+</li>
+<li> <b>random attributes</b>:  Adds this number of random attributes.
+</li>
+<li> <b>label noise</b>:  Add this percentage of a numerical label range as a normal distributed noise or probability for a nominal label change.
+</li>
+<li> <b>default attribute noise</b>:  The standard deviation of the default attribute noise.
+</li>
+<li> <b>noise</b>:  List of noises for each attributes.
+</li>
+<li> <b>offset</b>:  Offset added to the values of each random attribute
+</li>
+<li> <b>linear factor</b>:  Linear factor multiplicated with the values of each random attribute
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

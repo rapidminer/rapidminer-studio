@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="polynomial"/>
+        <parameter key="number_examples" value="200"/>
+        <parameter key="number_of_attributes" value="3"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="normalize" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Normalization" width="90" x="180" y="30"/>
+      <operator activated="true" class="polynomial_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="PolynomialRegression" width="90" x="315" y="30">
+        <parameter key="max_iterations" value="20000"/>
+        <parameter key="replication_factor" value="2"/>
+        <parameter key="max_degree" value="3"/>
+        <parameter key="min_coefficient" value="-500.0"/>
+        <parameter key="max_coefficient" value="500.0"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Apply Model" width="90" x="450" y="30">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="782" y="30"/>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="Normalization" to_port="example set input"/>
+      <connect from_op="Normalization" from_port="example set output" to_op="PolynomialRegression" to_port="training set"/>
+      <connect from_op="PolynomialRegression" from_port="model" to_op="Apply Model" to_port="model"/>
+      <connect from_op="PolynomialRegression" from_port="exampleSet" to_op="Apply Model" to_port="unlabelled data"/>
+      <connect from_op="Apply Model" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+      <connect from_op="Apply Model" from_port="model" to_port="result 3"/>
+      <connect from_op="Performance" from_port="performance" to_port="result 1"/>
+      <connect from_op="Performance" from_port="example set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="126"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+    </process>
+  </operator>
+</process>

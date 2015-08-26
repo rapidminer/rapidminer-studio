@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="polynomial classification"/>
+      </operator>
+      <operator activated="true" class="loop_and_deliver_best" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RandomOptimizer" width="90" x="179" y="30">
+        <process expanded="true">
+          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
+            <process expanded="true">
+              <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" name="JMySVMLearner">
+                <parameter key="kernel_type" value="polynomial"/>
+                <parameter key="kernel_degree" value="3.0"/>
+                <parameter key="convergence_epsilon" value="0.0010"/>
+              </operator>
+              <connect from_port="training" to_op="JMySVMLearner" to_port="training set"/>
+              <connect from_op="JMySVMLearner" from_port="model" to_port="model"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ClassificationPerformance">
+                <parameter key="main_criterion" value="accuracy"/>
+                <parameter key="classification_error" value="true"/>
+                <list key="class_weights"/>
+              </operator>
+              <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+              <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
+              <connect from_op="ClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="425" y="48">
+            <list key="log">
+              <parameter key="iterations" value="operator.RandomOptimizer.value.iteration"/>
+              <parameter key="accuracy" value="operator.XValidation.value.performance"/>
+            </list>
+          </operator>
+          <connect from_port="in 1" to_op="XValidation" to_port="training"/>
+          <connect from_op="XValidation" from_port="averagable 1" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="ProcessLog" from_port="through 1" to_port="performance vector"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_performance vector" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="RandomOptimizer" to_port="in 1"/>
+      <connect from_op="RandomOptimizer" from_port="performance" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="124" resized="true" width="404" x="33" y="123">The random optimizer performs its inner operators several times. This is especially useful for algorithms which depends on random start initializations like k-means clustering.&lt;br&gt;&lt;br&gt;In this process the operator is used to plot the dependency between different splits of the data by cross validation.</description>
+    </process>
+  </operator>
+</process>

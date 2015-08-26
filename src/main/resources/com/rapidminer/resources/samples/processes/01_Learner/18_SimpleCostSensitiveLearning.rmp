@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="polynomial classification"/>
+        <parameter key="number_examples" value="300"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="180" y="30">
+        <parameter key="number_of_validations" value="5"/>
+        <process expanded="true">
+          <operator activated="true" class="metacost" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="MetaCost" width="90" x="211" y="30">
+            <parameter key="cost_matrix" value="[0.0 1.0;10.0 0.0]"/>
+            <process expanded="true">
+              <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" name="DecisionTree"/>
+              <connect from_port="training set" to_op="DecisionTree" to_port="training set"/>
+              <connect from_op="DecisionTree" from_port="model" to_port="model"/>
+              <portSpacing port="source_training set" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="training" to_op="MetaCost" to_port="training set"/>
+          <connect from_op="MetaCost" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Apply Model" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="279" y="30"/>
+          <connect from_port="model" to_op="Apply Model" to_port="model"/>
+          <connect from_port="test set" to_op="Apply Model" to_port="unlabelled data"/>
+          <connect from_op="Apply Model" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+          <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="XValidation" to_port="training"/>
+      <connect from_op="XValidation" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="271" resized="true" width="620" x="34" y="155">This process is another example for cost sensitive learning, i.e. for a case where different prediction errors would cause different costs. Beside the preprocessing operator ThresholdFinder, which is also able to deliver ROC plots for two classes, another operator exist which can be used for cost sensitive learning.&lt;br/&gt;&lt;br/&gt;This operator is part of the Learner -- Meta group and is called MetaCost. It is used as any other meta learning scheme and must contain another inner learning operator, in this case the decision tree learner is used.&lt;br/&gt;&lt;br/&gt;The cost matrix used for cost sensitive learning can be defined via the matrix editor (just press the button for the parameter cost_matrix of the MetaCost operator). The basic format for the parameter cost-matrix is [k11 ... k1m; k21 ... k2m; ... ; kn1 ... knm], e.g. for a 2x2 cost matrix of a binary classification problem [0 1; 10 0]. This example means that the costs for the error of predicting the first class as the second are ten times higher than the other error type.</description>
+    </process>
+  </operator>
+</process>

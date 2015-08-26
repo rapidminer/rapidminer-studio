@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Support Vector Machine (LibSVM)</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Support_Vector_Machine_LibSVM skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operators is an SVM Learner based on the Java libsvm, an SVM learner.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+Applies the &lt;a href="<a class="external free" href="http://www.csie.ntu.edu.tw/~cjlin/libsvm" rel="nofollow" shape="rect">http://www.csie.ntu.edu.tw/~cjlin/libsvm</a>"&gt;libsvm&lt;/a&gt; learner by Chih-Chung Chang and Chih-Jen Lin. The SVM is a powerful method for both classification and regression. This operator supports the SVM types <code>C-SVC</code> and <code>nu-SVC</code> for classification tasks as well as <code>epsilon-SVR</code> and <code>nu-SVR</code> for regression tasks. 
+
+Additionally <code>one-class</code> gives the possibility to learn from just one class of examples and lateron test if new examples match the knowing ones.
+</p>
+<p>
+
+
+In contrast to other SVM learners, the libsvm supports also internal multiclass learning and probability estimation based on Platt scaling for proper confidence values after applying the learned model on a classification data set.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet, <i>optional:</i> null
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>exampleSet</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>svm type</b>:  SVM for classification (C-SVC, nu-SVC), regression (epsilon-SVR, nu-SVR) and distribution estimation (one-class)
+</li>
+<li> <b>kernel type</b>:  The type of the kernel functions
+</li>
+<li> <b>degree</b>:  The degree for a polynomial kernel function.
+</li>
+<li> <b>gamma</b>:  The parameter gamma for polynomial, rbf, and sigmoid kernel functions (0 means 1/#examples).
+</li>
+<li> <b>coef0</b>:  The parameter coef0 for polynomial and sigmoid kernel functions.
+</li>
+<li> <b>C</b>:  The cost parameter C for c_svc, epsilon_svr, and nu_svr.
+</li>
+<li> <b>nu</b>:  The parameter nu for nu_svc, one_class, and nu_svr.
+</li>
+<li> <b>cache size</b>:  Cache size in Megabyte.
+</li>
+<li> <b>epsilon</b>:  Tolerance of termination criterion.
+</li>
+<li> <b>p</b>:  Tolerance of loss function of epsilon-SVR.
+</li>
+<li> <b>class weights</b>:  The weights w for all classes (first column: class name, second column: weight), i.e. set the parameters C of each class w * C (empty: using 1 for all classes where the weight was not defined).
+</li>
+<li> <b>shrinking</b>:  Whether to use the shrinking heuristics.
+</li>
+<li> <b>calculate confidences</b>:  Indicates if proper confidence values should be calculated.
+</li>
+<li> <b>confidence for multiclass</b>:  Indicates if the class with the highest confidence should be selected in the multiclass setting. Uses binary majority vote over all 1-vs-1 classifiers otherwise (selected class must not be the one with highest confidence in that case).
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

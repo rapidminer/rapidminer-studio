@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Seemingly Unrelated Regression</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Seemingly_Unrelated_Regression skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This will perform regressions on different datasets with different labels and will take into account the  correlation of residuals.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+The regression might be performed on different attribute sets, but all delivered ExampleSets must have the same number of examples. A main set must be  delivered containing the union of all attributes in all subsets. This must be connected to the first input port of this operator. On all other ports subsets might be attached.
+</p>
+<p>
+To compute the residuals a linear regression is performed on each single set using the parameter settings of this operator. The covariance of the residuals is used for improve the quality of predictions that are influenced by effects not captured by the attributes.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet
+</li>
+<li> <b>unrelated example sets 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>exampleSet</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>feature selection</b>:  The feature selection method used during regression.
+</li>
+<li> <b>eliminate colinear features</b>:  Indicates if the algorithm should try to delete colinear features during the regression.
+</li>
+<li> <b>min standardized coefficient</b>:  The minimum standardized coefficient for the removal of colinear feature elimination.
+</li>
+<li> <b>ridge</b>:  The ridge parameter used during ridge regression.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

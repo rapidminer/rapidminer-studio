@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/refresh.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Loop Batches</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Loop_Batches skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Creates batches from the input examples and performs its inner operators on each of these batches which might be useful for applying methods on very large data sets directly in databases.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator groups the input examples into batches of the specified size and performs the inner operators on all batches subsequently. This might be useful for very large data sets which cannot be load into memory but must be handled in a database. In these cases, preprocessing methods or model applications and other tasks can be performed on each batch and the result might be again written into a database table (by using the DatabaseExampleSetWriter in its append mode). 
+
+Note that the output of this operator is not composed of the results of the nested subprocess. In fact the subprocess does not need to deliver any output since it operates on a subset view of the input example set.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>batch size</b>:  This number of examples is processed batch-wise by the inner operators of this operator.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

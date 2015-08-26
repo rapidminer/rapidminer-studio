@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Sonar"/>
+      </operator>
+      <operator activated="true" class="logistic_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="MyKLRLearner" width="90" x="179" y="30">
+        <parameter key="convergence_epsilon" value="0.0010"/>
+        <parameter key="calculate_weights" value="false"/>
+        <parameter key="return_optimization_performance" value="false"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="MyKLRLearner" to_port="training set"/>
+      <connect from_op="MyKLRLearner" from_port="model" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="50" resized="true" width="286" x="40" y="140">Using a logistic regression learner for a classification task of numerical data.</description>
+    </process>
+  </operator>
+</process>

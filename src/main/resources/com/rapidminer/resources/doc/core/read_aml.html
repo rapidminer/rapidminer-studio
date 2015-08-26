@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/import.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Read AML</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Read_AML skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator reads an example set from file. The operator can be     configured to read almost all line based file formats.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator reads an example set from (a) file(s). Probably you can       use the default parameter values for the most file formats (including       the format produced by the ExampleSetWriter, CSV, ...). Please refer to       section <i>First steps/File formats</i> for details on the attribute       description file set by the parameter <var>attributes</var> used to       specify attribute types. You can use the wizard of this operator or the       tool Attribute Editor in order to create those meta data .aml files for       your datasets.    
+</p>
+<p>
+This operator supports the reading of data from multiple source files.       Each attribute (including special attributes like labels, weights, ...)       might be read from another file. Please note that only the minimum       number of lines of all files will be read, i.e. if one of the data       source files has less lines than the others, only this number of       examples will be read.    
+</p>
+<p>
+The split points can be defined with regular expressions (please refer       to one of the plenty tutorials available on the web for an       introduction). The default split parameter ",\s*|;\s*|\s+" should work       for most file formats. This regular expression describes the following       column separators    
+</p>
+
+<ul class="ports">
+<li>         the character "," followed by a whitespace of arbitrary length (also         no white space)      
+</li>
+<li>         the character ";" followed by a whitespace of arbitrary length (also         no white space)      
+</li>
+<li>         a whitespace of arbitrary length (min. 1)      
+</li>
+</ul>
+<p>A logical XOR is defined by "|". Other useful separators might be "\t" for     tabulars, " " for a single whitespace, and "\s" for any whitespace.
+&lt;/p&gt;
+</p>
+<p>
+    
+
+&lt;p&gt;
+Quoting is also possible with ". You can escape quotes with a backslash,       i.e. \". Please note that you can change these characters by adjusting       the corresponding settings.    
+</p>
+<p>
+Additionally you can specify comment characters which can be used at       arbitrary locations of the data lines. Any content after the comment       character will be ignored. Unknown attribute values can be marked with       empty strings (if this is possible for your column separators) or by a       question mark (recommended).    
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>output</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>configure operator</b>:  Configure this operator by means of a Wizard.
+</li>
+<li> <b>attributes</b>:  Filename for the xml attribute description file. This file also contains the names of the files to read the data from.
+</li>
+<li> <b>sample ratio</b>:  The fraction of the data set which should be read (1 = all; only used if sample_size = -1)
+</li>
+<li> <b>sample size</b>:  The exact number of samples which should be read (-1 = use sample ratio; if not -1, sample_ratio will not have any effect)
+</li>
+<li> <b>permute</b>:  Indicates if the loaded data should be permutated.
+</li>
+<li> <b>decimal point character</b>:  Character that is used as decimal point.
+</li>
+<li> <b>column separators</b>:  Column separators for data files (regular expression)
+</li>
+<li> <b>use comment characters</b>:  Indicates if a comment character should be used.
+</li>
+<li> <b>comment chars</b>:  Any content in a line after one of these characters will be ignored.
+</li>
+<li> <b>use quotes</b>:  Indicates if quotes should be regarded.
+</li>
+<li> <b>quote character</b>:  Specifies the character which should be used for quoting.
+</li>
+<li> <b>quoting escape character</b>:  Specifies the character which should be used for escape the quoting.
+</li>
+<li> <b>trim lines</b>:  Indicates if lines should be trimmed (empty spaces are removed at the beginning and the end) before the column split is performed.
+</li>
+<li> <b>skip error lines</b>:  Indicates if lines which can not be read should be skipped instead of letting this operator fail its execution.
+</li>
+<li> <b>datamanagement</b>:  Determines, how the data is represented internally.
+</li>
+<li> <b>encoding</b>:  The encoding used for reading or writing files.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_replace.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Self-Organizing Map</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Self-Organizing_Map skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Trains a self-organizing map and applyes the examples on the map. The resulting coordinates are used as new attributes.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator performs a dimensionality reduction based on a SOM (Self Organizing Map, aka Kohonen net).
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+<li> <b>preprocessing model</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>return preprocessing model</b>:  Indicates if the preprocessing model should also be returned
+</li>
+<li> <b>number of dimensions</b>:  Defines the number of dimensions, the data shall be reduced.
+</li>
+<li> <b>net size</b>:  Defines the size of the SOM net, by setting the length of every edge of the net.
+</li>
+<li> <b>training rounds</b>:  Defines the number of trainnig rounds
+</li>
+<li> <b>learning rate start</b>:  Defines the strength of an adaption in the first round. The strength will decrease every round until it reaches the learning_rate_end in the last round.
+</li>
+<li> <b>learning rate end</b>:  Defines the strength of an adaption in the last round. The strength will decrease to this value in last round, beginning with learning_rate_start in the first round.
+</li>
+<li> <b>adaption radius start</b>:  Defines the radius of the sphere around an stimulus, within an adaption occoures. This radius decreases every round, starting by adaption_radius_start in first round, to adaption_radius_end in last round.
+</li>
+<li> <b>adaption radius end</b>:  Defines the radius of the sphere around an stimulus, within an adaption occoures. This radius decreases every round, starting by adaption_radius_start in first round, to adaption_radius_end in last round.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/objects_transform.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Nominal to Date</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Nominal_to_Date skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Parses the nominal values for the specified attribute with respect to the given date format string and transforms the values into date values.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator parses given nominal attributes in order to create date and / or time attributes. The date format can be specified by the <b>date_format</b> parameter. The old nominal attribute will be removed and replaced by a new date attribute if the corresponding parameter <b>keep_old_attribute</b> is not set (default).
+</p><br/><h4> <span class="mw-headline" id="Date_and_Time_Patterns">Date and Time Patterns</span>
+</h4>
+<p>
+Date and time formats are specified by <i>date and time pattern</i> strings in the <b>date_format</b> parameter. Within date and time pattern strings, unquoted letters from <code>'A'</code> to <code>'Z'</code> and from <code>'a'</code> to <code>'z'</code> are interpreted as pattern letters representing the components of a date or time string. Text can be quoted using single quotes (<code>'</code>) to avoid interpretation. <code>"''"</code> represents a single quote. All other characters are not interpreted; they're simply copied into the output string during formatting or matched against the input string during parsing.
+</p>
+<p>
+The following pattern letters are defined (all other characters from <code>'A'</code> to <code>'Z'</code> and from <code>'a'</code> to <code>'z'</code> are reserved):
+</p>
+
+<ul class="ports">
+<li> <i>G</i>: era designator; Text; example: AD
+</li>
+<li> <i>y</i>: year; Year; example: 1996; 96
+</li>
+<li> <i>M</i>: month in year; Month; example: July; Jul; 07
+</li>
+<li> <i>w</i>: week in year; Number; example: 27
+</li>
+<li> <i>W</i>: week in month; Number; example: 2
+</li>
+<li> <i>D</i>: day in year; Number; example: 189
+</li>
+<li> <i>d</i>: day in month; Number; example: 10
+</li>
+<li> <i>F</i>: day of week in month; Number; example: 2
+</li>
+<li> <i>E</i>: day in week; Text; example: Tuesday; Tue
+</li>
+<li> <i>a</i>: am/pm marker; Text; example: PM
+</li>
+<li> <i>H</i>: hour in day (0-23); Number; example: 0
+</li>
+<li> <i>k</i>: hour in day (1-24); Number; example: 24
+</li>
+<li> <i>K</i>: hour in am / pm (0-11); Number; example: 0
+</li>
+<li> <i>h</i>: hour in am / pm (1-12); Number; example: 12
+</li>
+<li> <i>m</i>: minute in hour; Number; example: 30
+</li>
+<li> <i>s</i>: second in minute; Number; example: 55
+</li>
+<li> <i>S</i>: millisecond; Number; example: 978
+</li>
+<li> <i>z</i>: time zone; General Time Zone; example: Pacific Standard Time; PST; GMT-08:00
+</li>
+<li> <i>Z</i>: time zone; <a class="external mw-magiclink-rfc" href="http://tools.ietf.org/html/rfc822" shape="rect">RFC 822</a> Time Zone; example: -0800
+</li>
+</ul>
+<p>
+Pattern letters are usually repeated, as their number determines the exact presentation:
+</p>
+
+<ul class="ports">
+<li> <i>Text:</i> For formatting, if the number of pattern letters is 4 or more, the full form is used; otherwise a short or abbreviated form is used if available. For parsing, both forms are accepted, independent of the number of pattern letters.
+</li>
+<li> <i>Number:</i> For formatting, the number of pattern letters is the minimum number of digits, and shorter numbers are zero-padded to this amount. For parsing, the number of pattern letters is ignored unless it's needed to separate two adjacent fields.
+</li>
+<li> <i>Year:</i> If the underlying calendar is the Gregorian calendar, the following rules are applied. 
+</li>
+</ul>
+
+<ul class="ports">
+<li> For formatting, if the number of pattern letters is 2, the year is truncated to 2 digits; otherwise it is interpreted as a <i>number</i>.
+</li>
+<li> For parsing, if the number of pattern letters is more than 2, the year is interpreted literally, regardless of the number of digits. So using the pattern "MM/dd/yyyy", "01/11/12" parses to Jan 11, 12 A.D.
+</li>
+<li> For parsing with the abbreviated year pattern ("y" or "yy"), this operator must interpret the abbreviated year relative to some century. It does this by adjusting dates to be within 80 years before and 20 years after the time the operator is created. For example, using a pattern of "MM/dd/yy" and the operator created on Jan 1, 1997, the string "01/11/12" would be interpreted as Jan 11, 2012 while the string "05/04/64" would be interpreted as May 4, 1964. During parsing, only strings consisting of exactly two digits will be parsed into the default century. Any other numeric string, such as a one digit string, a three or more digit string, or a two digit string that isn't all digits (for example, "-1"), is interpreted literally. So "01/02/3" or "01/02/003" are parsed, using the same pattern, as Jan 2, 3 AD. Likewise, "01/02/-3" is parsed as Jan 2, 4 BC.
+</li>
+</ul>
+<p>Otherwise, calendar system specific forms are applied. If the number of pattern letters is 4 or more, a calendar specific long form is used. Otherwise, a calendar short or abbreviated form is used.
+</p>
+<ul class="ports">
+<li> <i>Month:</i> If the number of pattern letters is 3 or more, the month is interpreted as <i>text</i>; otherwise, it is interpreted as a <i>number</i>.
+</li>
+<li> <i>General time zone:</i> Time zones are interpreted as <i>text</i> if they have names. It is possible to define time zones by representing a GMT offset value. <a class="external mw-magiclink-rfc" href="http://tools.ietf.org/html/rfc822" shape="rect">RFC 822</a> time zones are also accepted.
+</li>
+<li> <i>
+<a class="external mw-magiclink-rfc" href="http://tools.ietf.org/html/rfc822" shape="rect">RFC 822</a> time zone:</i> For formatting, the <a class="external mw-magiclink-rfc" href="http://tools.ietf.org/html/rfc822" shape="rect">RFC 822</a> 4-digit time zone format is used. General time zones are also accepted.
+</li>
+</ul>
+<p>
+This operator also supports <i>localized date and time pattern</i> strings by defining the locale parameter. In these strings, the pattern letters described above may be replaced with other, locale dependent, pattern letters.
+</p><br/><h4> <span class="mw-headline" id="Examples">Examples</span>
+</h4>
+<p>
+
+
+The following examples show how date and time patterns are interpreted in the U.S. locale. The given date and time are 2001-07-04 12:08:56 local time in the U.S. Pacific Time time zone.
+</p>
+
+<ul class="ports">
+<li> <i>"yyyy.MM.dd G 'at' HH:mm:ss z"</i>: 2001.07.04 AD at 12:08:56 PDT
+</li>
+<li> <i>"EEE, MMM d, </i>yy"<i>: Wed, Jul 4, '01</i>
+</li>
+<li> <i>"h:mm a"</i>: 12:08 PM
+</li>
+<li> <i>"hh 'o</i>clock' a, zzzz"<i>: 12 o'clock PM, Pacific Daylight Time</i>
+</li>
+<li> <i>"K:mm a, z"</i>: 0:08 PM, PDT
+</li>
+<li> <i>"yyyy.MMMMM.dd GGG hh:mm aaa"</i>: 02001.July.04 AD 12:08 PM
+</li>
+<li> <i>"EEE, d MMM yyyy HH:mm:ss Z"</i>: Wed, 4 Jul 2001 12:08:56 -0700
+</li>
+<li> <i>"yyMMddHHmmssZ"</i>: 010704120856-0700
+</li>
+<li> <i>"yyyy-MM-dd'T'HH:mm:ss.SSSZ"</i>: 2001-07-04T12:08:56.235-0700
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, <i>expects:</i> ExampleSet
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>attribute name</b>:  The attribute which should be parsed.
+</li>
+<li> <b>date type</b>:  The desired value type for the parsed attribute.
+</li>
+<li> <b>date format</b>:  The parse format of the date values, for example "yyyy/MM/dd".
+</li>
+<li> <b>time zone</b>:  The time zone used for the date objects if not specified in the date string itself.
+</li>
+<li> <b>locale</b>:  The used locale for date texts, for example "Wed" (English) in contrast to "Mi" (German).
+</li>
+<li> <b>keep old attribute</b>:  Indicates if the original date attribute should be kept.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>
