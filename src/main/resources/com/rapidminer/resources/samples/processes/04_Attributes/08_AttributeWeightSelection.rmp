@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Polynomial"/>
+      </operator>
+      <operator activated="true" class="weight_by_relief" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Relief" width="90" x="180" y="30">
+        <parameter key="normalize_weights" value="true"/>
+      </operator>
+      <operator activated="true" class="select_by_weights" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="AttributeWeightSelection" width="90" x="315" y="30">
+        <parameter key="weight" value="0.5"/>
+        <parameter key="use_absolute_weights" value="false"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Relief" to_port="example set"/>
+      <connect from_op="Relief" from_port="weights" to_op="AttributeWeightSelection" to_port="weights"/>
+      <connect from_op="Relief" from_port="example set" to_op="AttributeWeightSelection" to_port="example set input"/>
+      <connect from_op="AttributeWeightSelection" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="196" resized="true" width="437" x="35" y="137">A simple and usually fast possibility to perform feature selection is to first calculate attribute weights from the given data set (in this process: Relief) and to apply an AttributeWeightSelection operator afterwards. This operator deselects all features not fulfilling a given weight relation. &lt;br/&gt;&lt;br/&gt;This is usually referred to as &amp;quot;filter approach&amp;quot; since no other information than the data set is used. If the performance of a specific learner should be taken into account we refer to this as &amp;quot;wrapper approach&amp;quot;. The next sample processes give examples for different wrapper approaches for feature weighting, selection, and construction.</description>
+    </process>
+  </operator>
+</process>

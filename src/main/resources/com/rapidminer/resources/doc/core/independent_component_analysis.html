@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_replace.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Independent Component Analysis</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Independent_Component_Analysis skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Performs an independent component analysis (ICA).
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator performs the independent componente analysis (ICA). Implementation of the FastICA-algorithm of Hyvaerinen und Oja. The operator outputs a <code>FastICAModel</code>. With the <code>ModelApplier</code> you can transform the features.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+<li> <b>preprocessing model</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>dimensionality reduction</b>:  Indicates which type of dimensionality reduction should be applied
+</li>
+<li> <b>number of components</b>:  Keep this number of components.
+</li>
+<li> <b>algorithm type</b>:  If 'parallel' the components are extracted simultaneously, 'deflation' the components are extracted one at a time
+</li>
+<li> <b>function</b>:  The functional form of the G function used in the approximation to neg-entropy
+</li>
+<li> <b>alpha</b>:  constant in range [1, 2] used in approximation to neg-entropy when fun="logcosh"
+</li>
+<li> <b>row norm</b>:  Indicates whether rows of the data matrix should be standardized beforehand.
+</li>
+<li> <b>max iteration</b>:  maximum number of iterations to perform
+</li>
+<li> <b>tolerance</b>:  A positive scalar giving the tolerance at which the un-mixing matrix is considered to have converged.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

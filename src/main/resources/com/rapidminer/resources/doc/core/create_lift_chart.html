@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/symbol_percent.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Create Lift Chart</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Create_Lift_Chart skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Generates a lift chart for the given model and input data set based on discretized confidences and a Pareto chart.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator creates a Lift chart based on a Pareto plot for the discretized confidence values for the given example set and model. The model will be applied on the example set and a lift chart will be produced afterwards. Please note that a predicted label of the given example set will be removed during the application of this operator.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet
+</li>
+<li> <b>model</b>: <i>expects:</i> Model
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>model</b>:
+</li>
+<li> <b>lift pareto chart</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>target class</b>:  Indicates the target class for which the lift chart should be produced.
+</li>
+<li> <b>binning type</b>:  Indicates the binning type of the confidences.
+</li>
+<li> <b>number of bins</b>:  The confidence is discretized in this number of bins.
+</li>
+<li> <b>size of bins</b>:  The confidence is discretized so that each bin contains this amount of examples.
+</li>
+<li> <b>automatic number of digits</b>:  Indicates if the number of digits should be automatically determined for the range names.
+</li>
+<li> <b>number of digits</b>:  The minimum number of digits used for the interval names (-1: determine minimal number automatically).
+</li>
+<li> <b>show bar labels</b>:  Indicates if the bars should display the size of the bin together with the amount of the target class in the corresponding bin.
+</li>
+<li> <b>show cumulative labels</b>:  Indicates if the cumulative line plot should display the cumulative sizes of the bins together with the cumulative amount of the target class in the corresponding bins.
+</li>
+<li> <b>rotate labels</b>:  Indicates if the labels of the bins should be rotated.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

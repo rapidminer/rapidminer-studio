@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Find Threshold (Meta)</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Find_Threshold_Meta skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Determines confidence thresholds based on misclassification costs, also possible to define costs for the option non-classified.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator uses a set of class weights and also allows a weight for the fact that an example is not classified at all (marked as unknown). Based on the predictions of the model of the inner learner this operator optimized a set of thresholds regarding the defined weights.
+</p>
+<p>
+This operator might be very useful in cases where it is better to not classify an example then to classify it in a wrong way. This way, it is often possible to get very high accuracies for the remaining examples (which are actually classified) for the cost of having some examples which must still be manually classified. 
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>class weights</b>:  The weights for all classes, empty: using 1 for all classes. The costs for not classifying at all are defined with class name '?'.
+</li>
+<li> <b>allow unknown predictions</b>:  This indicates if unknown predictions are allowed. If checked, the costs for unknown predictions must be specified.
+</li>
+<li> <b>predict unknown costs</b>:  Use this cost value for predicting an example as unknown.
+</li>
+<li> <b>training ratio</b>:  Use this amount of input data for model learning and the rest for threshold optimization.
+</li>
+<li> <b>number of iterations</b>:  Defines the number of optimization iterations.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/symbol_percent.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Performance (User-Based)</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Performance_User-Based skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator delivers as output a list of performance values according to a list of user defined performance criteria.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This performance evaluator operator should be used for regression tasks, i.e. in cases where the label attribute has a numerical value type. The operator expects a test <i>ExampleSet</i> as input, whose elements have both true and predicted labels, and delivers as output a list of performance values according to a list of performance criteria that it calculates. If an input performance vector was already given, this is used for keeping the performance values.
+</p>
+<p>
+Additional user-defined implementations of <i>PerformanceCriterion</i> can be specified by using the parameter list <var>additional_performance_criteria</var>. Each key/value pair in this list must specify a fully qualified classname (as the key), and a string parameter (as value) that is passed to the constructor. Please make sure that the class files are in the classpath (this is the case if the implementations are supplied by a plugin) and that they implement a one-argument constructor taking a string parameter. It must also be ensured that these classes extend <i>MeasuredPerformance</i> since the PerformanceEvaluator operator will only support these criteria. Please note that only the first three user defined criteria can be used as logging value with names "user1", ... , "user3".
+</p>
+<p>
+The resulting performance vectors are usually compared with a standard performance comparator which only compares the fitness values of the main criterion. Other implementations than this simple comparator can be specified using the parameter <var>comparator_class</var>. This may for instance be useful if you want to compare performance vectors according to the weighted sum of the individual criteria. In order to implement your own comparator, simply subclass <i>PerformanceComparator</i>. Please note that for true multi-objective optimization usually another selection scheme is used instead of simply replacing the performance comparator.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>labelled data</b>: <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+<li> <b>performance</b>: <i>optional:</i> PerformanceVector
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>performance</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>skip undefined labels</b>:  If set to true, examples with undefined labels are skipped.
+</li>
+<li> <b>comparator class</b>:  Fully qualified classname of the PerformanceComparator implementation.
+</li>
+<li> <b>use example weights</b>:  Indicated if example weights should be used for performance calculations if possible.
+</li>
+<li> <b>main criterion</b>:  The criterion used for comparing performance vectors.
+</li>
+<li> <b>additional performance criteria</b>:  List of classes that implement com.rapidminer.operator.performance.PerformanceCriterion.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

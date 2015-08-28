@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/export2.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Write Model</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Write_Model skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Writes a model to a given file.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+Writes the input model in the file specified by the corresponding parameter. Since models are often written into files and loaded and applied in other processes or applications, this operator offers three different writing modes for models:
+</p>
+
+<ul class="ports">
+<li> <i>XML</i>: in this mode, the models are written as plain text XML files. The file size is usually the biggest in this mode (might be several hundred mega bytes so you should be cautious) but this model type has the advantage that the user can inspect and change the files.
+</li>
+<li> <i>XML Zipped (default)</i>: In this mode, the models are written as zipped XML files. Users can simply unzip the files and read or change the contents. The file sizes are smallest for most models. For these reasons, this mode is the default writing mode for models although the loading times are the longest due to the XML parsing and unzipping.
+</li>
+<li> <i>Binary</i>: In this mode, the models are written in an proprietary binary format. The resulting model files cannot be inspected by the user and the file sizes are usually slightly bigger then for the zipped XML files. The loading time, however, is smallers than the time needed for the other modes.
+</li>
+</ul>
+<p>
+This operator is also able to keep old files if the overwriting flag is set to false. However, this could also be achieved by using some of the parameter macros provided by RapidMiner like %{t} or %{a} (please refer to the tutorial section about macros).
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>input</b>: <i>expects:</i> Model
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>through</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model file</b>:  Filename for the model file.
+</li>
+<li> <b>overwrite existing file</b>:  Overwrite an existing file. If set to false then an index is appended to the filename.
+</li>
+<li> <b>output type</b>:  Indicates the type of the output
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

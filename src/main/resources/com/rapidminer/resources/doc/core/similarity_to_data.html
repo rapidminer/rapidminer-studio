@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/graph_edge_directed.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Similarity to Data</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Similarity_to_Data skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Calculates a an example set from a similarity measure.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator creates an example set from a given similarity measure. It can either produce a long table format, i.e. something like
+
+
+
+id1 id2 sim
+
+id1 id3 sim
+
+id1 id4 sim
+
+...
+
+id2 id1 sim
+
+...
+
+
+
+or a matrix format like here
+
+
+
+id id1 id2 id3 ...
+
+id1 sim sim sim...
+
+... 
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>similarity</b>: <i>expects:</i> SimilarityMeasureObject
+</li>
+<li> <b>exampleSet</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>exampleSet</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>table type</b>:  Indicates if the resulting table should have a matrix format or a long table format.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

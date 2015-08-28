@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Polynomial"/>
+      </operator>
+      <operator activated="true" class="weight_by_pca" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="PCAWeighting" width="90" x="180" y="30"/>
+      <operator activated="true" class="optimize_selection_weight_guided" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="WeightGuidedFeatureSelection" width="90" x="380" y="30">
+        <process expanded="true">
+          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
+            <parameter key="sampling_type" value="shuffled sampling"/>
+            <process expanded="true">
+              <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="45" y="30">
+                <parameter key="k" value="5"/>
+              </operator>
+              <connect from_port="training" to_op="NearestNeighbors" to_port="training set"/>
+              <connect from_op="NearestNeighbors" from_port="model" to_port="model"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="180" y="30"/>
+              <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+              <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+              <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="example set" to_op="XValidation" to_port="training"/>
+          <connect from_op="XValidation" from_port="averagable 1" to_port="performance"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="PCAWeighting" to_port="example set"/>
+      <connect from_op="PCAWeighting" from_port="weights" to_op="WeightGuidedFeatureSelection" to_port="attribute weights in"/>
+      <connect from_op="PCAWeighting" from_port="example set" to_op="WeightGuidedFeatureSelection" to_port="example set in"/>
+      <connect from_op="WeightGuidedFeatureSelection" from_port="example set out" to_port="result 1"/>
+      <connect from_op="WeightGuidedFeatureSelection" from_port="weights" to_port="result 2"/>
+      <connect from_op="WeightGuidedFeatureSelection" from_port="performance" to_port="result 3"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="102" resized="false" width="400" x="40" y="140">The WeightGuidedFeatureSelection operator uses given input AttributeWeights to determine the order of attribute adding. In this process we use a 10-fold cross validation of a learning scheme as performance evaluation (the inner operator) and combine attribute filtering with a wrapper approach.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sinc"/>
+        <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="1"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+        <parameter key="label_noise" value="0.1"/>
+        <list key="noise"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XVal" width="90" x="315" y="30">
+        <parameter key="number_of_validations" value="3"/>
+        <parameter key="sampling_type" value="shuffled sampling"/>
+        <parameter key="local_random_seed" value="-1"/>
+        <process expanded="true">
+          <operator activated="true" class="gaussian_process" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="GPLearner" width="90" x="144" y="30"/>
+          <connect from_port="training" to_op="GPLearner" to_port="training set"/>
+          <connect from_op="GPLearner" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="211" y="30"/>
+          <connect from_port="model" to_op="Test" to_port="model"/>
+          <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
+          <connect from_op="Test" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+          <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_op="XVal" to_port="training"/>
+      <connect from_op="XVal" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

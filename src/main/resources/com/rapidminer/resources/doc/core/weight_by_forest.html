@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/sort_descending.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Weight by Tree Importance</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Weight_by_Tree_Importance skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator calculates the importance of the attributes by analysing the split points of a Random Forest model.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This weighting schema will use a given random forest to extract the implicit importance of the used attributes. Therefore each node of each tree is visited and the benefit created by the respective split is retrieved. This benefit is summed per attribute, that had been used for the split. The mean benefit over all trees is used as importance.
+</p>
+<p>
+This algorithm is implemented following the idea from "A comparison of random forest and its Gini importance with standard chemometric methods for the feature selection and classification of spectral data" by Menze, Bjoen H et all (2009). It has been extended by additional criterias for computing the benefit created from a  certain split. The original paper only mentioned Gini Index, this operator additionally supports the more reliable criterions Information Gain and Information Gain Ratio. 
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>random forest</b>: <i>expects:</i> RandomForestModel
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>weights</b>:
+</li>
+<li> <b>random forest</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>criterion</b>:  Specifies the used criterion for weighting attributes.
+</li>
+<li> <b>normalize weights</b>:  Activates the normalization of all weights.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

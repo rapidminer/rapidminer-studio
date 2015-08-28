@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="36" y="30">
+        <parameter key="repository_entry" value="../../data/Golf"/>
+      </operator>
+      <operator activated="true" class="obfuscate" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Obfuscator" width="90" x="180" y="30">
+        <parameter key="obfuscation_map_file" value="obfuscating.obf"/>
+      </operator>
+      <operator activated="true" class="de_obfuscate" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DeObfuscator" width="90" x="313" y="30">
+        <parameter key="obfuscation_map_file" value="obfuscating.obf"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Obfuscator" to_port="example set input"/>
+      <connect from_op="Obfuscator" from_port="example set output" to_op="DeObfuscator" to_port="example set input"/>
+      <connect from_op="DeObfuscator" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="145" resized="true" width="413" x="28" y="121">Replaces all nominal values and attribute names with random strings. This can be used to anonymize your data. The obfuscation map can be written to file and be used by a DeObfuscator to map the values and names back to the original values.&lt;br/&gt;&lt;br&gt;You can use a breakpoint after the obfuscator to check that the values were changed.</description>
+    </process>
+  </operator>
+</process>

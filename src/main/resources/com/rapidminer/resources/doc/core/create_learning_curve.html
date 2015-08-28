@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/refresh.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Create Learning Curve</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Create_Learning_Curve skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Iterates its inner operator for an increasing number of samples and collects the performances.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator first divides the input example set into two parts, a training set and a test set according to the parameter "training_ratio". It then uses iteratively bigger subsets from the fixed training set for learning (the first subprocess) and calculates the corresponding performance values on the fixed test set (with the second subprocess).
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>exampleSet</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training ratio</b>:  The fraction of examples which shall be maximal used for training (dynamically growing), the rest is used for testing (fixed)
+</li>
+<li> <b>step fraction</b>:  The fraction of examples which would be additionally used in each step.
+</li>
+<li> <b>start fraction</b>:  Starts with this fraction of the training data and iteratively add step_fraction examples from the training data.
+</li>
+<li> <b>sampling type</b>:  Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant)
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

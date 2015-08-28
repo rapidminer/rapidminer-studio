@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="180" y="30">
+        <parameter key="k" value="3"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ClusterModel2ExampleSet" width="90" x="315" y="30">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="450" y="30">
+        <process expanded="true">
+          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="176" y="30"/>
+          <connect from_port="training" to_op="DecisionTree" to_port="training set"/>
+          <connect from_op="DecisionTree" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ClassificationPerformance" width="90" x="243" y="30">
+            <parameter key="accuracy" value="false"/>
+            <parameter key="classification_error" value="true"/>
+            <list key="class_weights"/>
+          </operator>
+          <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+          <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
+          <connect from_op="ClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="KMeans" to_port="example set"/>
+      <connect from_op="KMeans" from_port="cluster model" to_op="ClusterModel2ExampleSet" to_port="model"/>
+      <connect from_op="KMeans" from_port="clustered set" to_op="ClusterModel2ExampleSet" to_port="unlabelled data"/>
+      <connect from_op="ClusterModel2ExampleSet" from_port="labelled data" to_op="XValidation" to_port="training"/>
+      <connect from_op="XValidation" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

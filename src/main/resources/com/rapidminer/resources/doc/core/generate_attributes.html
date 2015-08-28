@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_add.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Generate Attributes</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Generate_Attributes skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator constructs new user defined attributes from mathematical expressions.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator constructs new attributes from the attributes of the input <i>ExampleSet</i> and arbitrary constants. The names of the new attributes and their construction description are defined in the parameter <b>functions</b>. The attribute names might be used as variables in the construction description. When the descriptions are evaluated on each single example during application of this operator, these variables will be filled with the example's attribute weights. 
+</p>
+<p>
+Please note that there are some restrictions for the attribute names in order to let this operator work properly: 
+
+
+<ul class="ports">
+<li> Attribute names containing parentheses are not allowed.
+</li>
+<li> Attribute names containing blanks are not allowed
+</li>
+<li> Attribute names with function or operator names are also not allowed.
+</li>
+<li> If the standard constants (see below) are usable, attribute names with names like "e" or "pi" are not allowed.
+</li>
+</ul>
+If these conditions are not fulfilled, the names must be changed beforehand, for example with the <a href="/wiki/index.php?title=Rename" shape="rect" title="Rename">Rename</a> operator. When replacing several attributes following a certain schema, the <a href="/wiki/index.php?title=Rename_by_Replacing" shape="rect" title="Rename by Replacing">Rename by Replacing</a> migth prove useful. 
+
+</p><br/><h4> <span class="mw-headline" id="Supported_Expressions">Supported Expressions</span>
+</h4>
+<p>
+The following <i>operations</i> are supported: 
+
+
+<ul class="ports">
+<li> Addition: +
+</li>
+<li> Subtraction: -
+</li>
+<li> Multiplication: *
+</li>
+<li> Division: /
+</li>
+<li> Power: ^
+</li>
+<li> Modulus: %
+</li>
+<li> Less Than: &lt;
+</li>
+<li> Greater Than: &gt;
+</li>
+<li> Less or Equal: &lt;=
+</li>
+<li> More or Equal: &gt;=
+</li>
+<li> Equal: ==
+</li>
+<li> Not Equal: !=
+</li>
+<li> Boolean Not: !
+</li>
+<li> Boolean And: two ampers and
+</li>
+<li> Boolean Or: ||
+</li>
+</ul>
+</p>
+<p>
+The following <i>log and exponential functions</i> are supported: 
+
+
+<ul class="ports">
+<li> Natural Logarithm: ln(x)
+</li>
+<li> Logarithm Base 10: log(x)
+</li>
+<li> Logarithm Dualis (Base 2): ld(x)
+</li>
+<li> Exponential (e^x): exp(x)
+</li>
+<li> Power: pow(x,y)
+</li>
+</ul>
+</p>
+<p>
+The following <i>trigonometric functions</i> are supported: 
+
+
+<ul class="ports">
+<li> Sine: sin(x)
+</li>
+<li> Cosine: cos(x)
+</li>
+<li> Tangent: tan(x)
+</li>
+<li> Arc Sine: asin(x)
+</li>
+<li> Arc Cosine: acos(x)
+</li>
+<li> Arc Tangent: atan(x)
+</li>
+<li> Arc Tangent (with 2 parameters): atan2(x,y)
+</li>
+<li> Hyperbolic Sine: sinh(x)
+</li>
+<li> Hyperbolic Cosine: cosh(x)
+</li>
+<li> Hyperbolic Tangent: tanh(x)
+</li>
+<li> Inverse Hyperbolic Sine: asinh(x)
+</li>
+<li> Inverse Hyperbolic Cosine: acosh(x)
+</li>
+<li> Inverse Hyperbolic Tangent: atanh(x)
+</li>
+</ul>
+</p>
+<p>
+The following <i>statistical functions</i> are supported: 
+
+
+<ul class="ports">
+<li> Round: round(x)
+</li>
+<li> Round to p decimals: round(x,p)
+</li>
+<li> Floor: floor(x)
+</li>
+<li> Ceiling: ceil(x)
+</li>
+<li> Average: avg(x,y,z...)
+</li>
+<li> Minimum: min(x,y,z...)
+</li>
+<li> Maximum: max(x,y,z...)
+</li>
+</ul>
+</p>
+<p>
+The following <i>miscellaneous functions</i> are supported: 
+
+
+<ul class="ports">
+<li> If-Then-Else: if(cond,true-evaluation, false-evaluation)
+</li>
+<li> Absolute: abs(x)
+</li>
+<li> Square Root: sqrt(x)
+</li>
+<li> Signum (delivers the sign of a number): sgn(x)
+</li>
+<li> Random Number (between 0 and 1): rand()
+</li>
+<li> Modulus (x % y): mod(x,y)
+</li>
+<li> Sum of k Numbers: sum(x,y,z...)
+</li>
+<li> Binomial Coefficients: binom(n, i)
+</li>
+<li> Number to String: str(x)
+</li>
+<li> String to Number: parse(x)
+</li>
+<li> Substring: cut(x, start, len)
+</li>
+</ul>
+</p>
+<p>
+The following <i>process related functions</i> are supported: 
+
+
+<ul class="ports">
+<li> Retrieving a parameter value: param("operator", "parameter")
+</li>
+</ul>
+</p>
+<p>
+Beside attributes and those operations and functions mentioned above, this operator also supports the constants pi and e if this is indicated by the corresponding parameter <b>use standard constants</b> (default: true). You can also use strings in formulas (for example in a conditioned if-formula) but the string values have to be enclosed in double quotes (").
+</p><br/><h4> <span class="mw-headline" id="Examples">Examples</span>
+</h4>
+<p>a1+sin(a2*a3)
+
+if (att1&gt;5, att2*att3,-abs(att1))
+
+&lt;/p&gt;
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>function descriptions</b>:  List of functions to generate.
+</li>
+<li> <b>use standard constants</b>:  Indicates if standard constants like e or pi should be available.
+</li>
+<li> <b>keep all</b>:  If set to true, all the original attributes are kept, otherwise they are removed from the example set.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

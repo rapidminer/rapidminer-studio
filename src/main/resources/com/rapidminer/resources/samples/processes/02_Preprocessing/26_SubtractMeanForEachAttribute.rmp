@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="loop_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FeatureIterator" width="90" x="179" y="30">
+        <parameter key="iteration_macro" value="loop_feature"/>
+        <process expanded="true">
+          <operator activated="true" class="aggregate" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Aggregation" width="90" x="45" y="30">
+            <list key="aggregation_attributes">
+              <parameter key="%{loop_feature}" value="average"/>
+            </list>
+          </operator>
+          <operator activated="true" class="extract_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="DataMacroDefinition" width="90" x="246" y="30">
+            <parameter key="macro" value="current_average"/>
+            <parameter key="macro_type" value="data_value"/>
+            <parameter key="attribute_name" value="average(%{loop_feature})"/>
+            <parameter key="example_index" value="1"/>
+            <list key="additional_macros"/>
+          </operator>
+          <operator activated="true" class="generate_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeConstruction" width="90" x="246" y="120">
+            <list key="function_descriptions">
+              <parameter key="norm_%{loop_feature}" value="%{loop_feature} - %{current_average}"/>
+            </list>
+          </operator>
+          <connect from_port="example set" to_op="Aggregation" to_port="example set input"/>
+          <connect from_op="Aggregation" from_port="example set output" to_op="DataMacroDefinition" to_port="example set"/>
+          <connect from_op="Aggregation" from_port="original" to_op="AttributeConstruction" to_port="example set input"/>
+          <connect from_op="AttributeConstruction" from_port="example set output" to_port="example set"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="sink_example set" spacing="0"/>
+          <portSpacing port="sink_result 1" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="FeatureIterator" to_port="example set"/>
+      <connect from_op="FeatureIterator" from_port="example set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

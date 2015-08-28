@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/shopping_cart_empty.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Generalized Sequential Patterns</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Generalized_Sequential_Patterns skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator applies given association rules on an example set.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator searches sequential patterns in a set of transactions. Each transaction must be encoded as an single example and must contain one attribute for the time and for the customer. This pair of attribute is used for generate one sequence per customer containing each single transaction ordered by the time of each transaction. The algorithm then searches sequential patterns in the form of: If a customer bought a and c in one transaction, he bought b in the next: &lt;a, c&gt; then &lt;b&gt;. The minimal support describes how many customer must support such a pattern for regarding it as frequent. Infrequent patterns will be dropped. A customer supports such a pattern, if there are some parts of his sequence including the pattern. The above pattern would be supported by a customer with this transactions: &lt;s, g&gt; then &lt;a, s, c&gt; then &lt;b&gt; then &lt;f, h&gt;.
+</p>
+<p>
+The parameters min_gap, max_gap and window_size determine how transaction are handled. For example, if the above customer forgot to by c, and had to return 5 minutes later to buy c, then his transactions would look like that: &lt;s, g&gt; then &lt;a, s&gt; then &lt;c&gt; then &lt;b&gt; then &lt;f  ^111, h&gt; This would not support the pattern &lt;a, c&gt; then &lt;b&gt;. To avoid this problem, the window size determines, how long a subsequent transaction is treated as the same transaction. If the window size is larger than 5 minutes, the &lt;c&gt; would be treated as being part of the second transaction and hence this customer would support the above pattern.
+</p>
+<p>
+The max_gap parameter causes a customers sequence not to support a pattern, if the transactions containing this pattern are to widely separated in time. The min_gap parameter does the same if they are to near.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSet
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>patterns</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>customer id</b>:  This attribute will be used to identify the customer of a transaction.
+</li>
+<li> <b>time attribute</b>:  This numerical attribute specifies the time of a transaction.
+</li>
+<li> <b>min support</b>:  This specifies the minimal support of a pattern
+</li>
+<li> <b>window size</b>:  This specifies the window size
+</li>
+<li> <b>max gap</b>:  This specifies the maximal gap
+</li>
+<li> <b>min gap</b>:  This specifies the minimal gap
+</li>
+<li> <b>positive value</b>:  This parameter determines, which value of the binominal attributes is treated as positive. Attributes with that value are considered as part of a transaction. If left blank, the example set determines, which is value is used.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

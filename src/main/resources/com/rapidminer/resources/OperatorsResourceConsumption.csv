@@ -1,0 +1,177 @@
+##########
+# Rows starting with '#' are considered comments (without '')
+# use the following format:
+# class package.classname; cpu time coefficient (for ns); cpu degree examples; cpu degree attributes; cpu logarithmus degree examples; cpu logarithmus degree attributes; 
+#							memory coefficient; memory degree examples; memory degree attributes; memory logarithmus degree examples; memory logarithmus degree attributes
+##########
+
+
+
+
+class com.rapidminer.operator.learner.bayes.NaiveBayes;318;1;1;0;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.learner.lazy.KNNLearner;215;1;1;0;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.learner.functions.linear.LinearRegression;13;2.65;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.learner.functions.VectorLinearRegression;968747;1;1;2;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.learner.functions.kernel.JMySVMLearner;25;2;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.learner.functions.kernel.LinearMySVMLearner;25;2;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.learner.functions.kernel.LibSVMLearner;11;2;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.learner.functions.kernel.evosvm.EvoSVM;315;2;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.learner.functions.kernel.evosvm.PSOSVM;985;2;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.learner.functions.FastLargeMargin;81;2;1;0;0;0;0;0;0;0
+# Function ...?
+class com.rapidminer.operator.learner.functions.kernel.hyperhyper.HyperHyper;0;1;1;0;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.preprocessing.discretization.AbsoluteDiscretization;4944;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.discretization.BinDiscretization;3006;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.discretization.FrequencyDiscretization;4159;1;1;0;0;0;0;0;0;0
+# operator exists?
+class com.rapidminer.operator.preprocessing.discretization.MinMaxBinDiscretization;1;0;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.discretization.MinimalEntropyDiscretization;146707;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.discretization.UserBasedDiscretization;2080;1;1;0;0;0;0;0;0;0
+
+
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.attributes.AttributeFilter;0;0;1;0;0;0;0;0;0;0
+
+
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.AddNominalValue;0;1;0;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.AttributeAdd;0;1;0;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.AttributeCopy;0;1;0;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.AttributeMerge;0;1;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.AttributeValueMapper;1988;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.AttributeValueReplace;2886;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.AttributeValueSplit;1341;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.AttributeValueSubstring;2278;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.AttributeValueTrim;2214;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.ChangeAttributeName;1;0;0;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.ChangeAttributeNames2Generic;0;0;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.ChangeAttributeNamesReplace;0;0;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.ChangeAttributeRole;1;0;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.ChangeAttributeType;1;0;0;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.Construction2Names;0;0;1;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.filter.Date2Nominal;0;1;0;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.filter.Date2Numerical;0;1;0;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.filter.DateAdjust;0;1;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.DeclareMissingValueOperator;1266;1;1;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.ExampleFilter;0;1;0;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.ExampleRangeFilter;0;1;0;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.ExampleSetToDictionary;0;1;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.ExchangeAttributeRoles;1;0;0;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.FeatureRangeRemoval;0;0;1;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.filter.FillDataGaps;0;0;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.InfiniteValueReplenishment;1153;1;1;0;0;0;0;0;0;0
+# RM crashes while testing?
+class com.rapidminer.operator.preprocessing.filter.InternalBinominalRemapping;0;1;1;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.filter.MergeNominalValues;0;1;0;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.filter.MissingValueImputation;0;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.MissingValueReplenishment;871;1;1;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.filter.Nominal2Date;0;1;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.Nominal2String;0;0;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.NominalNumbers2Numerical;3128;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.NominalToBinominal;5128;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.NominalToNumeric;1171;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.NonDominatedSorting;185354;1;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.Numerical2Real;0;0;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.NumericToBinominal;3718;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.NumericToFormattedNominal;7831;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.NumericToPolynominal;8242;1;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.PermutationOperator;0;0;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.Real2Integer;2136;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.RemoveDuplicates;143;2;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.filter.SetData;1;0;0;0;0;0;0;0;0;0
+# Function: ...?
+class com.rapidminer.operator.preprocessing.filter.Sorting;0;1;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.filter.String2Nominal;0;0;1;0;0;0;0;0;0;0
+# Function: n*m?
+class com.rapidminer.operator.preprocessing.filter.TFIDFFilter;0;1;1;0;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.preprocessing.join.ExampleSetCartesian;137;2;1;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.join.ExampleSetIntersect;0;1;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.join.ExampleSetJoin;304;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.join.ExampleSetMerge;13056;1;1;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.join.ExampleSetMinus;0;1;0;0;0;0;0;0;0;0
+# Function: n*m?
+class com.rapidminer.operator.preprocessing.join.ExampleSetSuperset;0;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.join.ExampleSetUnion;12965;1;1;0;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.preprocessing.normalization.Normalization;921;1;1;0;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.preprocessing.outlier.DBOutlierOperator;20245;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.outlier.DKNOutlierOperator;43891;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.outlier.EcodbOperator;8233;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.outlier.LOFOutlierOperator;43443;1;1;0;0;0;0;0;0;0
+
+
+class com.rapidminer.operator.preprocessing.sampling.SamplingOperator;1;0;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.sampling.StratifiedSamplingOperator;1;0;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.sampling.BootstrappingOperator;1;0;0;0;0;0;0;0;0;0
+# incredibly slow, could not evaluate
+class com.rapidminer.operator.preprocessing.sampling.KennardStoneSampling;0;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.sampling.ModelBasedSampling;6086;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.sampling.PartitionOperator;1;0;0;0;0;0;0;0;0;0
+
+
+# Function: m?
+class com.rapidminer.operator.preprocessing.transformation.AggregationOperator;0;0;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.transformation.Attribute2ExamplePivoting;0;0;1;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.transformation.Example2AttributePivoting;0;1;1;0;0;0;0;0;0;0
+# how to test?
+class com.rapidminer.operator.preprocessing.transformation.GroupedANOVAOperator;0;1;1;0;0;0;0;0;0;0
+
+
+# Function: n?
+class com.rapidminer.operator.preprocessing.weighting.EqualLabelWeighting;0;1;0;0;0;0;0;0;0;0
+# Can't test, runs ___EXTREMELY___ quick out of memory
+class com.rapidminer.operator.preprocessing.weighting.LocalPolynomialExampleWeightingOperator;0;1;1;0;0;0;0;0;0;0
+
+
+# Function: m?
+class com.rapidminer.operator.preprocessing.AttributeSubsetPreprocessing;0;0;1;0;0;0;0;0;0;0
+# could not test, RM keeps locking up
+class com.rapidminer.operator.preprocessing.Deobfuscator;0;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.ExampleSetTranspose;353;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.GuessValueTypes;11302;1;1;0;0;0;0;0;0;0
+# Function: n?
+class com.rapidminer.operator.preprocessing.IdTagging;0;1;0;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.MaterializeDataInMemory;529;1;1;0;0;0;0;0;0;0
+class com.rapidminer.operator.preprocessing.NoiseOperator;1940;1;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.Obfuscator;0;0;1;0;0;0;0;0;0;0
+# Function: m?
+class com.rapidminer.operator.preprocessing.UseRowAsAttributeNames;0;0;1;0;0;0;0;0;0;0
