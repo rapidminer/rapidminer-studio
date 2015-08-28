@@ -44,6 +44,7 @@ import com.rapidminer.gui.tour.PortInfoBubble.PortBubbleBuilder;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.PortUserError;
+import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.error.AttributeNotFoundError;
 import com.rapidminer.operator.error.ParameterError;
@@ -112,7 +113,7 @@ public class ProcessGUITools {
 				return displayInputPortWrongTypeInformation(userError.getPort(), userError.getExpectedType(),
 				        userError.getActualType());
 			} else {
-				return displayGenericUserError(error);
+				return displayGenericPortError(userError);
 			}
 		} else if (error.getClass().equals(UndefinedParameterError.class)) {
 			UndefinedParameterError userError = (UndefinedParameterError) error;
@@ -441,6 +442,22 @@ public class ProcessGUITools {
 	}
 
 	/**
+	 * Displays an information bubble pointing to a port to indicate a {@link PortUserError} was
+	 * thrown.
+	 *
+	 * @param portError
+	 *            the error instance
+	 * @return the {@link PortInfoBubble} instance, never {@code null}
+	 */
+	public static PortInfoBubble displayGenericPortError(final PortUserError portError) {
+		if (portError == null) {
+			throw new IllegalArgumentException("portError must not be null!");
+		}
+
+		return displayGenericPortError(portError, "generic_usererror");
+	}
+
+	/**
 	 * Displays an information bubble pointing to an operator to indicate a {@link UserError} was
 	 * thrown by the operator.
 	 *
@@ -750,11 +767,7 @@ public class ProcessGUITools {
 		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
 
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
-		String errMsg = error.getMessage().trim();
-		if (errMsg.endsWith(".") || errMsg.endsWith("!")) {
-			errMsg = errMsg.substring(0, errMsg.length() - 1);
-		}
-		final String message = errMsg;
+		final String message = removeTerminationCharacters(error.getMessage());
 		final JPanel linkPanel = new JPanel();
 		LinkButton showDetailsButton = new LinkButton(new ResourceAction(i18nKey + ".button_show_details") {
 
@@ -778,7 +791,10 @@ public class ProcessGUITools {
 
 		ParameterErrorBubbleBuilder builder = new ParameterErrorBubbleBuilder(RapidMinerGUI.getMainFrame(),
 		        error.getOperator(), param, "generic_parameter_decoration", i18nKey, message, "");
-		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setAlignment(AlignedSide.BOTTOM)
+		// if no operator or root operator, show in middle, otherwise below
+		AlignedSide prefSide = error.getOperator() == null || error.getOperator() instanceof ProcessRootOperator
+		        ? AlignedSide.MIDDLE : AlignedSide.BOTTOM;
+		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setAlignment(prefSide)
 		        .setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
 		        .setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
 		ackButton.addActionListener(new ActionListener() {
@@ -792,6 +808,25 @@ public class ProcessGUITools {
 
 		userErrorBubble.setVisible(true);
 		return userErrorBubble;
+	}
+
+	/**
+	 * Shortens the provided message by removing the trailing termination characters like '.' or a
+	 * '!'.
+	 *
+	 * @param message
+	 *            the message to shorten
+	 * @return the message without the trailing termination characters
+	 */
+	private static String removeTerminationCharacters(final String message) {
+		if (message == null) {
+			throw new IllegalArgumentException("Message must not be null");
+		}
+		String errMsg = message.trim();
+		while (errMsg.endsWith(".") || errMsg.endsWith("!")) {
+			errMsg = errMsg.substring(0, errMsg.length() - 1);
+		}
+		return errMsg;
 	}
 
 	/**
@@ -811,11 +846,7 @@ public class ProcessGUITools {
 		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
 
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
-		String errMsg = error.getMessage().trim();
-		if (errMsg.endsWith(".") || errMsg.endsWith("!")) {
-			errMsg = errMsg.substring(0, errMsg.length() - 1);
-		}
-		final String message = errMsg;
+		final String message = removeTerminationCharacters(error.getMessage());
 		final JPanel linkPanel = new JPanel();
 		LinkButton showDetailsButton = new LinkButton(new ResourceAction(i18nKey + ".button_show_details") {
 
@@ -839,7 +870,10 @@ public class ProcessGUITools {
 
 		OperatorBubbleBuilder builder = new OperatorBubbleBuilder(RapidMinerGUI.getMainFrame(), error.getOperator(), i18nKey,
 		        message, "");
-		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setAlignment(AlignedSide.BOTTOM)
+		// if no operator or root operator, show in middle, otherwise below
+		AlignedSide prefSide = error.getOperator() == null || error.getOperator() instanceof ProcessRootOperator
+		        ? AlignedSide.MIDDLE : AlignedSide.BOTTOM;
+		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setAlignment(prefSide)
 		        .setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
 		        .setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
 		ackButton.addActionListener(new ActionListener() {
@@ -853,6 +887,65 @@ public class ProcessGUITools {
 
 		userErrorBubble.setVisible(true);
 		return userErrorBubble;
+	}
+
+	/**
+	 * Displays an information bubble pointing to a port to indicate a {@link PortUserError} was
+	 * thrown.
+	 *
+	 * @param error
+	 *            the error instance
+	 * @param i18nKey
+	 *            the i18n key which defines the title, text and button label for the bubble. Format
+	 *            is "gui.bubble.{i18nKey}.title", "gui.bubble.{i18nKey}.body" and
+	 *            "gui.bubble.{i18nKey}.button.label".
+	 * @return the {@link PortInfoBubble} instance, never {@code null}
+	 */
+	private static PortInfoBubble displayGenericPortError(final PortUserError error, final String i18nKey) {
+		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label"));
+		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
+
+		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
+		final String message = removeTerminationCharacters(error.getMessage());
+		final JPanel linkPanel = new JPanel();
+		LinkButton showDetailsButton = new LinkButton(new ResourceAction(i18nKey + ".button_show_details") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				BubbleWindow bubble = bubbleDelegator.getBubble();
+				if (bubble != null) {
+					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
+		                    error.getDetails());
+					bubble.setMainText(text);
+
+					linkPanel.removeAll();
+					bubble.pack();
+				}
+			}
+		});
+		showDetailsButton.setToolTipText(I18N.getGUIMessage("gui.action." + i18nKey + ".button_show_details.tip"));
+		linkPanel.add(showDetailsButton);
+
+		// input ports (located left) show the "hook" of the bubble on the left and vice versa
+		AlignedSide prefSide = error.getPort() instanceof InputPort ? AlignedSide.LEFT : AlignedSide.RIGHT;
+		PortBubbleBuilder builder = new PortBubbleBuilder(RapidMinerGUI.getMainFrame(), error.getPort(), i18nKey, message,
+		        "");
+		final PortInfoBubble portErrorBubble = builder.setHideOnDisable(true).setAlignment(prefSide)
+		        .setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
+		        .setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
+		ackButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				portErrorBubble.killBubble(true);
+			}
+		});
+		bubbleDelegator.setBubbleWindow(portErrorBubble);
+
+		portErrorBubble.setVisible(true);
+		return portErrorBubble;
 	}
 
 	/**

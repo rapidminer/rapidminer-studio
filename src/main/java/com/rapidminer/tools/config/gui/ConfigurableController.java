@@ -40,6 +40,7 @@ import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.PasswordInputCanceledException;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.config.AbstractConfigurable;
 import com.rapidminer.tools.config.AbstractConfigurator;
@@ -276,7 +277,7 @@ public class ConfigurableController {
 				// check if the repository is still connected
 				try {
 					repository.resetContentManager();
-				} catch (RepositoryException e) {
+				} catch (RepositoryException | PasswordInputCanceledException e) {
 					// revert parameter and name changes
 					try {
 						model.resetConfigurables();

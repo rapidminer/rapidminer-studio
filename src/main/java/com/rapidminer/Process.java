@@ -3,20 +3,18 @@
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer;
 
@@ -67,6 +65,7 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectMap;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.PortUserError;
 import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UnknownParameterInformation;
@@ -808,7 +807,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 			return;
 		}
 		getLogger()
-		.info("Loading initial data" + (firstPort > 0 ? " (starting at port " + (firstPort + 1) + ")" : "") + ".");
+				.info("Loading initial data" + (firstPort > 0 ? " (starting at port " + (firstPort + 1) + ")" : "") + ".");
 		for (int i = firstPort; i < context.getInputRepositoryLocations().size(); i++) {
 			String location = context.getInputRepositoryLocations().get(i);
 			if (location == null || location.length() == 0) {
@@ -822,12 +821,14 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 					try {
 						loc = resolveRepositoryLocation(location);
 					} catch (MalformedRepositoryLocationException e1) {
-						throw e1.makeUserError(rootOperator);
+						throw new PortUserError(port, 325, e1.getMessage());
+					} catch (UserError e1) {
+						throw new PortUserError(port, 325, e1.getMessage());
 					}
 					try {
 						Entry entry = loc.locateEntry();
 						if (entry == null) {
-							throw new UserError(rootOperator, 312, loc, "Entry " + loc + " does not exist.");
+							throw new PortUserError(port, 312, loc, "Entry does not exist.");
 						}
 						if (entry instanceof IOObjectEntry) {
 							getLogger().info("Assigning " + loc + " to input port " + port.getSpec() + ".");
@@ -844,11 +845,11 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 						} else {
 							getLogger().info(
 									"Cannot assigning " + loc + " to input port " + port.getSpec()
-									+ ": Repository location does not reference an IOObject entry.");
-							throw new UserError(rootOperator, 312, loc, "Not an IOObject entry.");
+											+ ": Repository location does not reference an IOObject entry.");
+							throw new PortUserError(port, 312, loc, "Not an IOObject entry.");
 						}
 					} catch (RepositoryException e) {
-						throw new UserError(rootOperator, e, 312, loc, e.getMessage());
+						throw new PortUserError(port, 312, loc, e.getMessage());
 					}
 				}
 			}
@@ -875,7 +876,9 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 					try {
 						location = rootOperator.getProcess().resolveRepositoryLocation(locationStr);
 					} catch (MalformedRepositoryLocationException e1) {
-						throw e1.makeUserError(rootOperator);
+						throw new PortUserError(port, 325, e1.getMessage());
+					} catch (UserError e1) {
+						throw new PortUserError(port, 325, e1.getMessage());
 					}
 					IOObject data = port.getDataOrNull(IOObject.class);
 					if (data == null) {
@@ -888,7 +891,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 							RepositoryManager.getInstance(repositoryAccessor).store(data, location, rootOperator);
 
 						} catch (RepositoryException e) {
-							throw new UserError(rootOperator, e, 315, location, e.getMessage());
+							throw new PortUserError(port, 315, location, e.getMessage());
 						}
 					}
 				}
@@ -1357,7 +1360,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 	/** Resolves a repository location relative to {@link #getRepositoryLocation()}. */
 	public RepositoryLocation resolveRepositoryLocation(final String loc) throws UserError,
-	MalformedRepositoryLocationException {
+			MalformedRepositoryLocationException {
 		if (RepositoryLocation.isAbsolute(loc)) {
 			RepositoryLocation repositoryLocation = new RepositoryLocation(loc);
 			repositoryLocation.setAccessor(getRepositoryAccessor());

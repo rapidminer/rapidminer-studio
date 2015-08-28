@@ -40,6 +40,8 @@ public interface RemoteRepositoryFactory extends CustomRepositoryFactory {
 	 * Checks if the provided configuration works. If it is working, <code>null</code> will be
 	 * returned. If it is not working, an error message will be returned.
 	 *
+	 * @param name
+	 *            the repository name
 	 * @param repositoryURL
 	 *            the URL of the Server repository
 	 * @param userName
@@ -49,7 +51,7 @@ public interface RemoteRepositoryFactory extends CustomRepositoryFactory {
 	 * @return If the provided configuration is working, <code>null</code> will be returned. If it
 	 *         is not working, an error message will be returned.
 	 */
-	String checkConfiguration(String repositoryURL, String userName, char[] password);
+	String checkConfiguration(String name, String repositoryURL, String userName, char[] password);
 
 	/**
 	 * Creates a new {@link RemoteRepository} instance for the provided parameters
@@ -71,5 +73,5 @@ public interface RemoteRepositoryFactory extends CustomRepositoryFactory {
 	 *             parameters
 	 */
 	RemoteRepository create(URL baseUrl, String alias, String username, char[] password, boolean shouldSave)
-			throws RepositoryException;
+	        throws RepositoryException;
 }

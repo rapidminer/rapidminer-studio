@@ -3,20 +3,18 @@
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -32,12 +30,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.security.UserCredential;
 import com.rapidminer.gui.security.Wallet;
+import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PasswordInputCanceledException;
@@ -100,7 +98,7 @@ public class PasswordDialog extends ButtonDialog {
 	}
 
 	public static PasswordAuthentication getPasswordAuthentication(String forUrl, boolean forceRefresh)
-			throws PasswordInputCanceledException {
+	        throws PasswordInputCanceledException {
 		return getPasswordAuthentication(forUrl, forceRefresh, false);
 	}
 
@@ -115,7 +113,7 @@ public class PasswordDialog extends ButtonDialog {
 	 *            be used
 	 **/
 	public static PasswordAuthentication getPasswordAuthentication(String id, String forUrl, boolean forceRefresh,
-			boolean hideDialogIfPasswordKnown, String i18nKey, Object... args) throws PasswordInputCanceledException {
+	        boolean hideDialogIfPasswordKnown, String i18nKey, Object... args) throws PasswordInputCanceledException {
 
 		// First check whether the credentials are stored within the Wallet
 		UserCredential authentication = Wallet.getInstance().getEntry(id, forUrl);
@@ -134,8 +132,8 @@ public class PasswordDialog extends ButtonDialog {
 		// If password was not stored within the wallet or a refresh is forced, check whether we are
 		// in headless mode
 		if (RapidMiner.getExecutionMode().isHeadless()) {
-			LogService.getRoot().log(Level.WARNING,
-					"com.rapidminer.gui.tools.PassworDialog.no_query_password_in_batch_mode", forUrl);
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.tools.PassworDialog.no_query_password_in_batch_mode",
+			        forUrl);
 			return null;
 		}
 
@@ -154,24 +152,21 @@ public class PasswordDialog extends ButtonDialog {
 			args = new Object[] { authentication.getURL() };
 		}
 
-		final PasswordDialog pd = new PasswordDialog(ApplicationFrame.getApplicationFrame(), i18nKey, authentication, args);
+		final Object[] pdArgs = args;
+		final UserCredential passwordDialogCredentials = authentication;
+		final String passwordI18N = i18nKey;
 
-		if (SwingUtilities.isEventDispatchThread()) {
-			pd.setVisible(true);
-		} else {
-			try {
-				SwingUtilities.invokeAndWait(new Runnable() {
+		// create PasswordDialog on EDT
+		final PasswordDialog pd = SwingTools.invokeAndWaitWithResult(new ResultRunnable<PasswordDialog>() {
 
-					@Override
-					public void run() {
-						pd.setVisible(true);
-					}
-				});
-			} catch (Exception e) {
-				LogService.getRoot().log(Level.WARNING, "Error waiting for password authentication: " + e, e);
-				return null;
+			@Override
+			public PasswordDialog run() {
+				PasswordDialog pd = new PasswordDialog(ApplicationFrame.getApplicationFrame(), passwordI18N,
+		                passwordDialogCredentials, pdArgs);
+				pd.setVisible(true);
+				return pd;
 			}
-		}
+		});
 		if (pd.wasConfirmed()) {
 			PasswordAuthentication result = pd.makeAuthentication();
 			if (pd.rememberBox.isSelected()) {
@@ -205,7 +200,7 @@ public class PasswordDialog extends ButtonDialog {
 	}
 
 	public static PasswordAuthentication getPasswordAuthentication(String forUrl, boolean forceRefresh,
-			boolean hideDialogIfPasswordKnown) throws PasswordInputCanceledException {
+	        boolean hideDialogIfPasswordKnown) throws PasswordInputCanceledException {
 		return getPasswordAuthentication(forUrl, forceRefresh, hideDialogIfPasswordKnown, null);
 	}
 
@@ -221,7 +216,7 @@ public class PasswordDialog extends ButtonDialog {
 	 **/
 	@Deprecated
 	public static PasswordAuthentication getPasswordAuthentication(String forUrl, boolean forceRefresh,
-			boolean hideDialogIfPasswordKnown, String i18nKey, Object... args) throws PasswordInputCanceledException {
+	        boolean hideDialogIfPasswordKnown, String i18nKey, Object... args) throws PasswordInputCanceledException {
 		return getPasswordAuthentication(null, forUrl, forceRefresh, hideDialogIfPasswordKnown, null);
 	}
 }

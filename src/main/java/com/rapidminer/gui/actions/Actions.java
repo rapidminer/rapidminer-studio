@@ -27,7 +27,6 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
 
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.Process;
@@ -94,8 +93,8 @@ public class Actions implements ProcessEditor {
 	public final Action DELETE_OPERATOR_ACTION = new DeleteOperatorAction();
 
 	public final ToggleBreakpointItem TOGGLE_BREAKPOINT[] = {
-			new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_BEFORE),
-			new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_AFTER) };
+	        new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_BEFORE),
+	        new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_AFTER) };
 
 	public transient final ToggleAllBreakpointsItem TOGGLE_ALL_BREAKPOINTS = new ToggleAllBreakpointsItem(this);
 
@@ -273,10 +272,8 @@ public class Actions implements ProcessEditor {
 	 * selected...
 	 */
 	public void enableActions() {
-		if (SwingUtilities.isEventDispatchThread()) {
-			enableActionsNow();
-		} else {
-			SwingUtilities.invokeLater(new Runnable() {
+		synchronized (process) {
+			SwingTools.invokeLater(new Runnable() {
 
 				@Override
 				public void run() {
@@ -288,37 +285,36 @@ public class Actions implements ProcessEditor {
 	}
 
 	private void enableActionsNow() {
-		synchronized (process) {
-			boolean[] currentStates = new boolean[ConditionalAction.NUMBER_OF_CONDITIONS];
-			Operator op = getFirstSelectedOperator();
-			if (op != null) {
-				currentStates[ConditionalAction.OPERATOR_SELECTED] = true;
-				if (op instanceof OperatorChain) {
-					currentStates[ConditionalAction.OPERATOR_CHAIN_SELECTED] = true;
-				}
-				if (op.getParent() == null) {
-					currentStates[ConditionalAction.ROOT_SELECTED] = true;
-				} else {
-					currentStates[ConditionalAction.PARENT_ENABLED] = op.getParent().isEnabled();
-					if (op.getExecutionUnit().getNumberOfOperators() > 1) {
-						currentStates[ConditionalAction.SIBLINGS_EXIST] = true;
-					}
+		boolean[] currentStates = new boolean[ConditionalAction.NUMBER_OF_CONDITIONS];
+		Operator op = getFirstSelectedOperator();
+		if (op != null) {
+			currentStates[ConditionalAction.OPERATOR_SELECTED] = true;
+			if (op instanceof OperatorChain) {
+				currentStates[ConditionalAction.OPERATOR_CHAIN_SELECTED] = true;
+			}
+			if (op.getParent() == null) {
+				currentStates[ConditionalAction.ROOT_SELECTED] = true;
+			} else {
+				currentStates[ConditionalAction.PARENT_ENABLED] = op.getParent().isEnabled();
+				if (op.getExecutionUnit().getNumberOfOperators() > 1) {
+					currentStates[ConditionalAction.SIBLINGS_EXIST] = true;
 				}
 			}
-
-			int processState = process.getProcessState();
-			currentStates[ConditionalAction.PROCESS_STOPPED] = processState == Process.PROCESS_STATE_STOPPED;
-			currentStates[ConditionalAction.PROCESS_PAUSED] = processState == Process.PROCESS_STATE_PAUSED;
-			currentStates[ConditionalAction.PROCESS_RUNNING] = processState == Process.PROCESS_STATE_RUNNING;
-			currentStates[ConditionalAction.EDIT_IN_PROGRESS] = EditBlockingProgressThread.isEditing();
-			currentStates[ConditionalAction.PROCESS_SAVED] = process.hasSaveDestination();
-			currentStates[ConditionalAction.PROCESS_RENDERER_IS_VISIBLE] = mainFrame.getProcessPanel().getProcessRenderer()
-					.isShowing();
-			currentStates[ConditionalAction.PROCESS_RENDERER_HAS_UNDO_STEPS] = mainFrame.hasUndoSteps();
-			currentStates[ConditionalAction.PROCESS_RENDERER_HAS_REDO_STEPS] = mainFrame.hasRedoSteps();
-			ConditionalAction.updateAll(currentStates);
-			updateCheckboxStates();
 		}
+
+		int processState = process.getProcessState();
+		currentStates[ConditionalAction.PROCESS_STOPPED] = processState == Process.PROCESS_STATE_STOPPED;
+		currentStates[ConditionalAction.PROCESS_PAUSED] = processState == Process.PROCESS_STATE_PAUSED;
+		currentStates[ConditionalAction.PROCESS_RUNNING] = processState == Process.PROCESS_STATE_RUNNING;
+		currentStates[ConditionalAction.EDIT_IN_PROGRESS] = EditBlockingProgressThread.isEditing();
+		currentStates[ConditionalAction.PROCESS_SAVED] = process.hasSaveDestination();
+		currentStates[ConditionalAction.PROCESS_RENDERER_IS_VISIBLE] = mainFrame.getProcessPanel().getProcessRenderer()
+		        .isShowing();
+		currentStates[ConditionalAction.PROCESS_RENDERER_HAS_UNDO_STEPS] = mainFrame.hasUndoSteps();
+		currentStates[ConditionalAction.PROCESS_RENDERER_HAS_REDO_STEPS] = mainFrame.hasRedoSteps();
+		ConditionalAction.updateAll(currentStates);
+		updateCheckboxStates();
+
 	}
 
 	/** The currently selected operator will be deleted. */
@@ -348,7 +344,7 @@ public class Actions implements ProcessEditor {
 		} else if (mainFrame.getProcessPanel().getProcessRenderer().getModel().getDisplayedChain() == selectedNode) {
 			for (Operator newOperator : newOperators) {
 				int index = mainFrame.getProcessPanel().getProcessRenderer().getProcessIndexUnder(
-						mainFrame.getProcessPanel().getProcessRenderer().getModel().getCurrentMousePosition());
+				        mainFrame.getProcessPanel().getProcessRenderer().getModel().getCurrentMousePosition());
 				if (index == -1) {
 					index = 0;
 				}

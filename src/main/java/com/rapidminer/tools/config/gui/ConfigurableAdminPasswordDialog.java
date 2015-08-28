@@ -73,9 +73,11 @@ public class ConfigurableAdminPasswordDialog extends ButtonDialog {
 	/** label indicating that the connection could not be established */
 	private JLabel checkLabel = new JLabel();
 
+	private final String sourceName;
+
 	public ConfigurableAdminPasswordDialog(Window owner, RemoteRepository source) {
 		super(owner, "configurable_dialog.password_dialog_admin", ModalityType.MODELESS, new Object[] {
-				source != null ? source.getName() : "", source != null ? source.getBaseUrl().toString() : "" });
+		        source != null ? source.getName() : "", source != null ? source.getBaseUrl().toString() : "" });
 		JButton okButton = makeOkButton("configurable_dialog.password_dialog_admin.ok");
 		JButton cancelButton = makeCancelButton("configurable_dialog.password_dialog_admin.cancel");
 		setModal(true);
@@ -83,8 +85,10 @@ public class ConfigurableAdminPasswordDialog extends ButtonDialog {
 		// if this is not a remote connection, we don't need to login anywhere
 		if (source == null) {
 			dispose();
+			this.sourceName = null;
 		} else {
 			this.repositoryURL = source.getBaseUrl().toString();
+			this.sourceName = source.getName();
 
 			JPanel mainPanel = makeMainPanel();
 
@@ -122,9 +126,9 @@ public class ConfigurableAdminPasswordDialog extends ButtonDialog {
 			@Override
 			public void run() {
 				RemoteRepositoryFactory remoteRepositoryFactory = RemoteRepositoryFactoryRegistry.INSTANCE.get();
-				final String error = remoteRepositoryFactory != null ? remoteRepositoryFactory.checkConfiguration(
-						repositoryURL, getUserName(), getPassword()) : I18N
-						.getGUILabel("error.configurable_dialog.remote_repo_factory_not_available");
+				final String error = remoteRepositoryFactory != null
+		                ? remoteRepositoryFactory.checkConfiguration(sourceName, repositoryURL, getUserName(), getPassword())
+		                : I18N.getGUILabel("error.configurable_dialog.remote_repo_factory_not_available");
 
 				SwingUtilities.invokeLater(new Runnable() {
 

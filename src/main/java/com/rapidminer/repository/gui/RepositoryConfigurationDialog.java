@@ -28,6 +28,7 @@ import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 
 
@@ -45,9 +46,9 @@ public class RepositoryConfigurationDialog extends ButtonDialog {
 	private Repository repository;
 
 	public RepositoryConfigurationDialog(Repository repository) {
-		super(ApplicationFrame.getApplicationFrame(),
-				RemoteRepository.class.isAssignableFrom(repository.getClass()) ? "remoterepositoryconfigdialog"
-						: "repositoryconfigdialog", ModalityType.APPLICATION_MODAL, new Object[] {});
+		super(ApplicationFrame.getApplicationFrame(), RemoteRepository.class.isAssignableFrom(repository.getClass())
+		        ? "remoterepositoryconfigdialog" : "repositoryconfigdialog", ModalityType.APPLICATION_MODAL,
+		        new Object[] {});
 		this.repository = repository;
 		JButton okButton = makeOkButton("repository_configuration_dialog.save");
 		configurationPanel = repository.makeConfigurationPanel();
@@ -70,7 +71,7 @@ public class RepositoryConfigurationDialog extends ButtonDialog {
 		try {
 			repository.refresh();
 			super.ok();
-		} catch (Exception e) {
+		} catch (RepositoryException e) {
 			SwingTools.showSimpleErrorMessage("repository_configuration_dialog.cannot_refresh_folder", e);
 		}
 	}

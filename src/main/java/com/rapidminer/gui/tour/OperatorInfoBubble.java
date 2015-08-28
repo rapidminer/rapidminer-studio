@@ -86,7 +86,7 @@ public class OperatorInfoBubble extends BubbleWindow {
 		private boolean ensureVisible;
 
 		public OperatorBubbleBuilder(final Window owner, final Operator attachTo, final String i18nKey,
-		        final Object... arguments) {
+				final Object... arguments) {
 			super(owner, i18nKey, arguments);
 			this.attachTo = attachTo;
 		}
@@ -135,7 +135,7 @@ public class OperatorInfoBubble extends BubbleWindow {
 		@Override
 		public OperatorInfoBubble build() {
 			return new OperatorInfoBubble(owner, style, alignment, i18nKey, attachTo, componentsToAdd, hideOnDisable,
-			        hideOnRun, ensureVisible, moveable, showCloseButton, arguments);
+					hideOnRun, ensureVisible, moveable, showCloseButton, arguments);
 		}
 
 		@Override
@@ -191,16 +191,16 @@ public class OperatorInfoBubble extends BubbleWindow {
 	 *            arguments to pass thought to the I18N Object
 	 */
 	OperatorInfoBubble(Window owner, BubbleStyle style, AlignedSide preferredAlignment, String i18nKey, Operator toAttach,
-	        JComponent[] componentsToAdd, boolean hideOnDisable, boolean hideOnRun, boolean ensureVisible, boolean moveable,
-	        boolean showCloseButton, Object... arguments) {
+			JComponent[] componentsToAdd, boolean hideOnDisable, boolean hideOnRun, boolean ensureVisible, boolean moveable,
+			boolean showCloseButton, Object... arguments) {
 		super(owner, style, preferredAlignment, i18nKey, ProcessPanel.PROCESS_PANEL_DOCK_KEY, null, null, moveable,
-		        showCloseButton, componentsToAdd, arguments);
+				showCloseButton, componentsToAdd, arguments);
 		if (toAttach == null) {
 			throw new IllegalArgumentException("toAttach must not be null!");
 		}
 
 		this.operator = toAttach;
-		this.operatorChain = operator.getParent();
+		this.operatorChain = operator.getParent() == null ? (OperatorChain) operator : operator.getParent();
 		this.hideOnDisable = hideOnDisable;
 		this.hideOnRun = hideOnRun;
 
@@ -230,7 +230,7 @@ public class OperatorInfoBubble extends BubbleWindow {
 			}
 		};
 		getRootPane().registerKeyboardAction(closeOnEscape, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-		        JComponent.WHEN_IN_FOCUSED_WINDOW);
+				JComponent.WHEN_IN_FOCUSED_WINDOW);
 
 		// try to scroll to operator
 		Rectangle2D targetRect = renderer.getModel().getOperatorRect(operator);
@@ -373,21 +373,22 @@ public class OperatorInfoBubble extends BubbleWindow {
 			return new Point(0, 0);
 		}
 
+		Point rendererLoc = renderer.getVisibleRect().getLocation();
 		Rectangle2D targetRect = renderer.getModel().getOperatorRect(operator);
 		if (targetRect == null) {
-			return null;
+			return rendererLoc;
 		}
 		Point loc = new Point((int) targetRect.getX(), (int) targetRect.getY());
 		loc = ProcessDrawUtils.convertToAbsoluteProcessPoint(loc,
-		        renderer.getModel().getProcessIndex(operator.getExecutionUnit()), renderer.getModel());
+				renderer.getModel().getProcessIndex(operator.getExecutionUnit()), renderer.getModel());
 		if (loc == null) {
-			return null;
+			return rendererLoc;
 		}
 
 		// calculate actual on screen loc of the operator and return it
-		Point rendererLoc = renderer.getVisibleRect().getLocation();
+
 		Point absoluteLoc = new Point((int) (viewport.getLocationOnScreen().x + (loc.getX() - rendererLoc.getX())),
-		        (int) (viewport.getLocationOnScreen().y + (loc.getY() - rendererLoc.getY())));
+				(int) (viewport.getLocationOnScreen().y + (loc.getY() - rendererLoc.getY())));
 
 		// return validated Point
 		return this.validatePointForBubbleInViewport(absoluteLoc);

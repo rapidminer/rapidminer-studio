@@ -70,7 +70,8 @@ public final class ProcessTools {
 	 *
 	 * @param process
 	 *            the process to extract the operator from
-	 * @return the last executed child operator of the {@link ProcessRootOperator}
+	 * @return the last executed child operator of the {@link ProcessRootOperator} or {@code null}
+	 *         if process contains no operators
 	 */
 	public static Operator getLastExecutedRootChild(final Process process) {
 		if (process == null) {
@@ -78,7 +79,7 @@ public final class ProcessTools {
 		}
 
 		List<Operator> enabledOps = process.getRootOperator().getSubprocess(0).getEnabledOperators();
-		return enabledOps.get(enabledOps.size() - 1);
+		return enabledOps.isEmpty() ? null : enabledOps.get(enabledOps.size() - 1);
 	}
 
 	/**
@@ -157,7 +158,7 @@ public final class ProcessTools {
 					if (op.getParameters().getParameterOrNull(key) == null) {
 						return new Pair<>(op, param);
 					} else if (param instanceof ParameterTypeAttribute
-					        && "".equals(op.getParameters().getParameterOrNull(key))) {
+							&& "".equals(op.getParameters().getParameterOrNull(key))) {
 						return new Pair<>(op, param);
 					}
 				}

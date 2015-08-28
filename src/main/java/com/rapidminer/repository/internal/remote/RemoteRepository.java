@@ -145,7 +145,7 @@ public interface RemoteRepository extends Repository, RemoteFolder {
 	 * @throws RepositoryException
 	 *             in case the content manager could not be created
 	 */
-	void resetContentManager() throws RepositoryException;
+	void resetContentManager() throws RepositoryException, PasswordInputCanceledException;
 
 	/**
 	 * Use this function only if there are no query parameters. Use
@@ -183,8 +183,8 @@ public interface RemoteRepository extends Repository, RemoteFolder {
 	 *             if preAuthHeader is {@code false} and checking if the server is reachable failed
 	 *             or if the login dialog was canceled during this check
 	 */
-	HttpURLConnection getHTTPConnection(String pathInfo, String query, boolean preAuthHeader) throws IOException,
-	RepositoryException;
+	HttpURLConnection getHTTPConnection(String pathInfo, String query, boolean preAuthHeader)
+	        throws IOException, RepositoryException;
 
 	/**
 	 * @return the allowed connection typeIds of this remote repository

@@ -253,8 +253,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 	private static final String getFrameTitle() {
 		return "RapidMiner Studio "
-		        + LicenseTools.translateProductEdition(ProductConstraintManager.INSTANCE.getActiveLicense()) + " "
-		        + RapidMiner.getLongVersion();
+				+ LicenseTools.translateProductEdition(ProductConstraintManager.INSTANCE.getActiveLicense()) + " "
+				+ RapidMiner.getLongVersion();
 	}
 
 	// --------------------------------------------------------------------------------
@@ -265,14 +265,12 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 	private final EventListenerList processEditors = new EventListenerList();
 
-	public final transient Action AUTO_WIRE = new AutoWireAction(this, "wire", CompatibilityLevel.PRE_VERSION_5, false,
-	        true);
+	public final transient Action AUTO_WIRE = new AutoWireAction(this, "wire", CompatibilityLevel.PRE_VERSION_5, false, true);
 	public final transient Action AUTO_WIRE_RECURSIVELY = new AutoWireAction(this, "wire_recursive",
-	        CompatibilityLevel.PRE_VERSION_5, true, true);
-	public final transient Action REWIRE = new AutoWireAction(this, "rewire", CompatibilityLevel.PRE_VERSION_5, false,
-	        false);
+			CompatibilityLevel.PRE_VERSION_5, true, true);
+	public final transient Action REWIRE = new AutoWireAction(this, "rewire", CompatibilityLevel.PRE_VERSION_5, false, false);
 	public final transient Action REWIRE_RECURSIVELY = new AutoWireAction(this, "rewire_recursive",
-	        CompatibilityLevel.PRE_VERSION_5, true, false);
+			CompatibilityLevel.PRE_VERSION_5, true, false);
 
 	public final transient Action NEW_ACTION = new NewAction(this);
 	public final transient Action OPEN_ACTION = new OpenAction();
@@ -373,10 +371,10 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	private final ProcessContextProcessEditor processContextEditor = new ProcessContextProcessEditor();
 	private final ProcessPanel processPanel = new ProcessPanel(this);
 	private final ComicRenderer comicRenderer = new ComicRenderer(processPanel.getProcessRenderer(), this);
-	private final NewOperatorEditor newOperatorEditor = new NewOperatorEditor(
-	        processPanel.getProcessRenderer().getDragListener());
-	private final RepositoryBrowser repositoryBrowser = new RepositoryBrowser(
-	        processPanel.getProcessRenderer().getDragListener());
+	private final NewOperatorEditor newOperatorEditor = new NewOperatorEditor(processPanel.getProcessRenderer()
+			.getDragListener());
+	private final RepositoryBrowser repositoryBrowser = new RepositoryBrowser(processPanel.getProcessRenderer()
+			.getDragListener());
 	private final MacroViewer macroViewer = new MacroViewer();
 
 	private final Perspectives perspectives = new Perspectives(dockingContext);
@@ -476,9 +474,9 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		fireProcessViewChanged();
 		String xmlWithoutGUIInformation = process.getRootOperator().getXML(true, false);
 		if (lastProcessDisplayedOperatorChain != null
-		        && processPanel.getProcessRenderer().getModel().getDisplayedChain() != null
-		        && !processPanel.getProcessRenderer().getModel().getDisplayedChain().getName()
-		                .equals(lastProcessDisplayedOperatorChain.getName())) {
+				&& processPanel.getProcessRenderer().getModel().getDisplayedChain() != null
+				&& !processPanel.getProcessRenderer().getModel().getDisplayedChain().getName()
+						.equals(lastProcessDisplayedOperatorChain.getName())) {
 			addToUndoList(xmlWithoutGUIInformation, true);
 		}
 		lastProcessXML = xmlWithoutGUIInformation;
@@ -513,8 +511,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		@Override
 		public void update(final Observable<Process> observable, final Process arg) {
 			// if (process.getProcessState() == Process.PROCESS_STATE_RUNNING) {
-	        // return;
-	        // }
+			// return;
+			// }
 			if (System.currentTimeMillis() - lastUpdate > 500) {
 				updateProcessNow();
 			} else {
@@ -533,13 +531,13 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 		@Override
 		public void breakpointReached(final Process process, final Operator operator, final IOContainer ioContainer,
-	            final int location) {
+				final int location) {
 			if (process.equals(MainFrame.this.process)) {
 				RUN_ACTION.setState(process.getProcessState());
 				ProcessThread.beep("breakpoint");
 				MainFrame.this.toFront();
 				resultDisplay.showData(ioContainer,
-	                    "Breakpoint in " + operator.getName() + ", application " + operator.getApplyCount());
+						"Breakpoint in " + operator.getName() + ", application " + operator.getApplyCount());
 			}
 		}
 
@@ -687,17 +685,17 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 		// edit menu
 		((ResourceAction) actions.INFO_OPERATOR_ACTION).addToActionMap(JComponent.WHEN_FOCUSED, true, true, null,
-		        getProcessPanel().getProcessRenderer(), getOperatorTree());
+				getProcessPanel().getProcessRenderer(), getOperatorTree());
 		((ResourceAction) actions.TOGGLE_ACTIVATION_ITEM).addToActionMap(JComponent.WHEN_FOCUSED, true, true, null,
-		        getProcessPanel().getProcessRenderer(), getOperatorTree());
+				getProcessPanel().getProcessRenderer(), getOperatorTree());
 		((ResourceAction) actions.RENAME_OPERATOR_ACTION).addToActionMap(JComponent.WHEN_FOCUSED, true, true, null,
-		        getProcessPanel().getProcessRenderer(), getOperatorTree());
+				getProcessPanel().getProcessRenderer(), getOperatorTree());
 		// not added for ProcessRenderer because there the DELETE_SELECTED_CONNECTION action is
 		// active
 		((ResourceAction) actions.DELETE_OPERATOR_ACTION).addToActionMap(JComponent.WHEN_FOCUSED, true, true, null,
-		        getOperatorTree());
+				getOperatorTree());
 		((ResourceAction) actions.TOGGLE_ALL_BREAKPOINTS).addToActionMap(JComponent.WHEN_FOCUSED, true, true, null,
-		        getProcessPanel().getProcessRenderer(), getOperatorTree());
+				getProcessPanel().getProcessRenderer(), getOperatorTree());
 		editMenu = new ResourceMenu("edit");
 		editMenu.add(UNDO_ACTION);
 		editMenu.add(REDO_ACTION);
@@ -762,8 +760,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		// help menu
 		helpMenu = new ResourceMenu("help");
 		helpMenu.add(COMIC_ACTION);
-		helpMenu.add(new BrowseAction("help_documentation",
-		        URI.create("http://redirects.rapidminer.com/app/studio/6/documentation")));
+		helpMenu.add(new BrowseAction("help_documentation", URI
+				.create("http://redirects.rapidminer.com/app/studio/6/documentation")));
 		helpMenu.add(new BrowseAction("help_forum", URI.create("http://forum.rapidminer.com")));
 
 		buttonToolbar = new ExtendedJToolBar(true);
@@ -961,8 +959,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	public void newProcess() {
 		// ask for confirmation before stopping the currently running process and opening a new one!
 		if (getProcessState() == Process.PROCESS_STATE_RUNNING || getProcessState() == Process.PROCESS_STATE_PAUSED) {
-			if (SwingTools.showConfirmDialog("close_running_process",
-			        ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+			if (SwingTools.showConfirmDialog("close_running_process", ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
 				return;
 			}
 		}
@@ -980,11 +977,11 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 					setProcess(new Process(), true);
 					addToUndoList();
 					if (!"false"
-		                    .equals(ParameterService.getParameterValue(PROPERTY_RAPIDMINER_GUI_SAVE_ON_PROCESS_CREATION))) {
+							.equals(ParameterService.getParameterValue(PROPERTY_RAPIDMINER_GUI_SAVE_ON_PROCESS_CREATION))) {
 						SaveAction.saveAsync(getProcess());
 					}
 					// always have save action enabled. If process is not yet associated with
-		            // location SaveAs will be used
+					// location SaveAs will be used
 					SAVE_ACTION.setEnabled(true);
 				}
 			}
@@ -1014,7 +1011,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 			// Run
 			if (isChanged() || getProcess().getProcessLocation() == null) {
 				if (DecisionRememberingConfirmDialog.confirmAction("save_before_run",
-				        PROPERTY_RAPIDMINER_GUI_SAVE_BEFORE_RUN)) {
+						PROPERTY_RAPIDMINER_GUI_SAVE_BEFORE_RUN)) {
 					SaveAction.saveAsync(getProcess());
 				}
 			}
@@ -1194,7 +1191,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 					}
 				}
 				undoManager.add(currentStateXML, getProcessPanel().getProcessRenderer().getModel().getDisplayedChain(),
-				        getFirstSelectedOperator());
+						getFirstSelectedOperator());
 				String maxSizeProperty = ParameterService.getParameterValue(PROPERTY_RAPIDMINER_GUI_UNDOLIST_SIZE);
 				int maxSize = 20;
 				try {
@@ -1315,8 +1312,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 				// restore process panel view on correct subprocess on undo
 				if (shownOperatorChain != null) {
-					OperatorChain restoredOperatorChain = (OperatorChain) getProcess()
-					        .getOperator(shownOperatorChain.getName());
+					OperatorChain restoredOperatorChain = (OperatorChain) getProcess().getOperator(
+							shownOperatorChain.getName());
 					processPanel.getProcessRenderer().getModel().setDisplayedChain(restoredOperatorChain);
 					processPanel.getProcessRenderer().getModel().fireDisplayedChainChanged();
 				}
@@ -1349,7 +1346,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 				// /.../ + process name
 				if (locString.length() > MAX_LOCATION_TITLE_LENGTH) {
 					locString = RepositoryLocation.REPOSITORY_PREFIX + process.getRepositoryLocation().getRepositoryName()
-					        + RepositoryLocation.SEPARATOR + "..." + RepositoryLocation.SEPARATOR + loc.getShortName();
+							+ RepositoryLocation.SEPARATOR + "..." + RepositoryLocation.SEPARATOR + loc.getShortName();
 				}
 				setTitle(locString + (changed ? "*" : "") + " \u2013 " + getFrameTitle() + hostname);
 			} else {
@@ -1394,9 +1391,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 					// askForConfirmation=true)
 					if (askForConfirmation) {
 						if (RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_RUNNING
-						        || RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED) {
-							if (SwingTools.showConfirmDialog("close_running_process",
-							        ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+								|| RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED) {
+							if (SwingTools.showConfirmDialog("close_running_process", ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
 								return false;
 							}
 						}
@@ -1459,7 +1455,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		// show unsupported parameters info?
 		if (unknownParameters != null && unknownParameters.size() > 0) {
 			final UnknownParametersInfoDialog unknownParametersInfoDialog = new UnknownParametersInfoDialog(MainFrame.this,
-			        unknownParameters);
+					unknownParameters);
 			if (SwingUtilities.isEventDispatchThread()) {
 				unknownParametersInfoDialog.setVisible(true);
 			} else {
@@ -1511,15 +1507,13 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 			if (!relaunch) { // in this case we have already confirmed
 				// ask for special confirmation before exiting RapidMiner while a process is
 				// running!
-				if (getProcessState() == Process.PROCESS_STATE_RUNNING
-				        || getProcessState() == Process.PROCESS_STATE_PAUSED) {
-					if (SwingTools.showConfirmDialog("exit_despite_running_process",
-					        ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+				if (getProcessState() == Process.PROCESS_STATE_RUNNING || getProcessState() == Process.PROCESS_STATE_PAUSED) {
+					if (SwingTools.showConfirmDialog("exit_despite_running_process", ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
 						return;
 					}
 				} else {
 					int answer = ConfirmDialog.showConfirmDialog(ApplicationFrame.getApplicationFrame(), "exit",
-					        ConfirmDialog.YES_NO_OPTION, RapidMinerGUI.PROPERTY_CONFIRM_EXIT, ConfirmDialog.YES_OPTION);
+							ConfirmDialog.YES_NO_OPTION, RapidMinerGUI.PROPERTY_CONFIRM_EXIT, ConfirmDialog.YES_OPTION);
 					if (answer != ConfirmDialog.YES_OPTION) {
 						return;
 					}
@@ -1606,8 +1600,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	}
 
 	public Operator getFirstSelectedOperator() {
-		return processPanel.getProcessRenderer().getModel().getSelectedOperators().isEmpty() ? null
-		        : processPanel.getProcessRenderer().getModel().getSelectedOperators().get(0);
+		return processPanel.getProcessRenderer().getModel().getSelectedOperators().isEmpty() ? null : processPanel
+				.getProcessRenderer().getModel().getSelectedOperators().get(0);
 	}
 
 	/**
@@ -1849,7 +1843,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 			}
 
 			missingParameterBubble = ProcessGUITools.displayPrecheckMissingMandatoryParameterWarning(
-			        missingParamPair.getFirst(), missingParamPair.getSecond());
+					missingParamPair.getFirst(), missingParamPair.getSecond());
 			return true;
 		}
 
@@ -1878,8 +1872,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		// connected
 		boolean connectedResultPort = ProcessTools.isProcessConnectedToResultPort(process);
 		Operator lastExecutedProcessRootChild = ProcessTools.getLastExecutedRootChild(process);
-		if (!ComicManager.getInstance().isEpisodeRunning() && !connectedResultPort
-		        && !ResultWarningPreventionRegistry.isResultWarningSuppressed(lastExecutedProcessRootChild)) {
+		if (!ComicManager.getInstance().isEpisodeRunning() && !connectedResultPort && lastExecutedProcessRootChild != null
+				&& !ResultWarningPreventionRegistry.isResultWarningSuppressed(lastExecutedProcessRootChild)) {
 			noResultConnectionBubble = ProcessGUITools.displayPrecheckNoResultPortInformation(process);
 			return true;
 		}

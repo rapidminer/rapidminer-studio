@@ -38,6 +38,7 @@ import com.rapidminer.repository.internal.remote.RemoteInfoService;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
+import com.rapidminer.tools.PasswordInputCanceledException;
 import com.rapidminer.tools.config.AbstractConfigurable;
 import com.rapidminer.tools.config.Configurable;
 import com.rapidminer.tools.config.ConfigurationManager;
@@ -164,7 +165,7 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 
 			boolean sameLocalSource = source == null && configurable.getSource() == null;
 			boolean sameRemoteSource = source != null && configurable.getSource() != null
-					&& configurable.getSource().getName().equals(source.getName());
+			        && configurable.getSource().getName().equals(source.getName());
 			if (allConfigurables || sameLocalSource || sameRemoteSource) {
 				this.listOfConfigurables.add(configurable);
 				// copy key-value pairs and save them in new map
@@ -178,8 +179,8 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 				}
 				originalParameters.put(configurable, new HashMap<>(parameterMap));
 				originalNames.put(configurable, configurable.getName());
-				originalPermittedUserGroups.put(configurable, ConfigurationManager.getInstance()
-						.getPermittedGroupsForConfigurable(configurable));
+				originalPermittedUserGroups.put(configurable,
+				        ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable));
 			}
 		}
 
@@ -205,8 +206,8 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 			}
 			originalParameters.put(configurable, new HashMap<>(parameterMap));
 			originalNames.put(configurable, configurable.getName());
-			originalPermittedUserGroups.put(configurable, ConfigurationManager.getInstance()
-					.getPermittedGroupsForConfigurable(configurable));
+			originalPermittedUserGroups.put(configurable,
+			        ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable));
 		}
 	}
 
@@ -360,7 +361,7 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 
 		boolean sameLocalSource = configurable.getSource() == null && this.source == null;
 		boolean sameRemoteSource = configurable.getSource() != null && this.source != null
-				&& configurable.getSource().getName().equals(source.getName());
+		        && configurable.getSource().getName().equals(source.getName());
 
 		if (sameLocalSource || sameRemoteSource) {
 
@@ -448,7 +449,7 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 
 		boolean sameLocalSource = arg.getSecond() != null && arg.getSecond().getSource() == null && this.source == null;
 		boolean sameRemoteSource = arg.getSecond() != null && arg.getSecond().getSource() != null && this.source != null
-				&& arg.getSecond().getSource().getName().equals(source.getName());
+		        && arg.getSecond().getSource().getName().equals(source.getName());
 
 		if (EventType.CONFIGURABLES_CHANGED.equals(arg.getFirst())) {
 
@@ -486,7 +487,7 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 		if (source != null) {
 			for (Configurable originalConfig : originalNames.keySet()) {
 				ConfigurationManager.getInstance().removeConfigurable(originalConfig.getTypeId(),
-						originalNames.get(originalConfig), source.getName());
+				        originalNames.get(originalConfig), source.getName());
 			}
 			listOfConfigurables.clear();
 		}
@@ -507,6 +508,8 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 		} catch (RepositoryException e) {
 			// if no connection could be established
 			secondException = e;
+		} catch (PasswordInputCanceledException e) {
+			// ignore
 		}
 		try {
 			// clear the cache

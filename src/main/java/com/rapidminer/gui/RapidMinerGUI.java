@@ -309,8 +309,14 @@ public class RapidMinerGUI extends RapidMiner {
 		if (!EULADialog.getEULAAccepted()) {
 			// show EULA dialog
 			RapidMiner.splashMessage("eula");
-			EULADialog dialog = new EULADialog();
-			dialog.setVisible(true);
+			SwingTools.invokeAndWait(new Runnable() {
+
+				@Override
+				public void run() {
+					EULADialog dialog = new EULADialog();
+					dialog.setVisible(true);
+				}
+			});
 		}
 
 		RapidMiner.splashMessage("history");
