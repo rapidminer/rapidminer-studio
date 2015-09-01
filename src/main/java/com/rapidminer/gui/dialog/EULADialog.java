@@ -181,6 +181,7 @@ public class EULADialog extends ButtonDialog implements AdjustmentListener, Chan
 		this.eulaText.setColumns(60);
 		this.eulaText.setRows(15);
 		this.eulaText.setLineWrap(true);
+		this.eulaText.setWrapStyleWord(true);
 		this.eulaText.setEditable(false);
 		this.eulaText.setText(this.loadEULA());
 
