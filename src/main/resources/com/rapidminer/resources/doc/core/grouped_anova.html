@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/chart_bubble.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Grouped ANOVA</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Grouped_ANOVA skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Performs an ANOVA significance test for a single numerical attribute based on the groups defined by another (nominal) attribute.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator creates groups of the input example set based on the defined grouping attribute. For each of the groups the mean and variance of another attribute (the anova attribute) is calculated and an ANalysis Of VAriance (ANOVA) is performed. The result will be a significance test result for the specified significance level indicating if the values for the attribute are significantly different between the groups defined by the grouping attribute. 
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSet
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>significance</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>anova attribute</b>:  Calculate the ANOVA for this attribute based on the groups defines by group_by_attribute.
+</li>
+<li> <b>group by attribute</b>:  Performs a grouping by the values of the attribute with this name.
+</li>
+<li> <b>significance level</b>:  The significance level for the ANOVA calculation.
+</li>
+<li> <b>only distinct</b>:  Indicates if only rows with distinct values for the aggregation attribute should be used for the calculation of the aggregation function.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

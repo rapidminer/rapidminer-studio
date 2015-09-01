@@ -1,0 +1,153 @@
+
+
+#main-wrapper {
+	font-family: 'Open Sans', arial, helvetica sans-serif;
+
+}
+
+a {
+	color:#ff6600;
+	text-decoration: none;
+}
+
+/* should be tabs */
+#section {
+	border-width: 1px 0 1px 0;
+	border-style: solid;
+	border-color: #888;
+	padding-top:20px;
+	padding-bottom:20px;
+}
+
+
+/* Should be hideable */
+#help-text-wrapper {
+	padding-left:15px;
+	float:right;
+	border-style:solid;
+	border-color:#888888;
+	border-width:0 0 0 1px;
+	font-size:small;
+	font-style:italic;
+	color:#888888;
+}
+
+.result-title {
+		
+}
+/*
+.result-text {
+	text-align: center;	
+
+}
+*/
+
+.result-caption {
+	font-size:small;
+	font-style:italic;
+	color:#888888;
+}
+
+h1, h2, h3 {
+	font-family: 'Open Sans', arial, helvetica sans-serif;
+	font-weight: 300;
+}
+
+h1 {
+	font-size: 300%;
+}
+
+h2 {
+	font-size: 150%;
+	font-weight: 600;
+	margin-top: 40px;
+}
+
+h3 {
+	margin-top:40px;
+	font-size: 150%;
+	padding-top:2px;
+	font-weight: 500;
+	border-top: 1px solid #ccc;
+	
+}
+
+#tabs ul li {
+	display: inline;
+	background: #eee;
+	padding: 8px;
+	
+}
+
+#tabs ul {
+	padding:2px;
+	margin: 0px;
+	
+}
+
+/* table used for input and results. Scrolling does not seem to work for some reason. */
+
+table.result-table {
+	table-layout: fixed;
+	font-size: 95%;
+	border-spacing: 0px;
+	margin-bottom:10px;
+}
+table.result-table > tbody {
+
+}
+
+table.result-table > thead > tr > th {
+	font-weight:400;
+	background-color:#fff;
+	border-bottom: 1px solid #ccc;
+				padding:10px;
+
+}
+
+table.result-table > thead > tr {
+		border-bottom: 1px solid eee;
+}
+
+table.result-table tr > td {
+			padding:10px;
+
+}
+
+table.result-table > thead > tr > th.special {
+	font-weight:bold;
+	background-color:#ffffdd;
+
+}
+
+table.result-table > tbody > tr:nth-child(even) {
+	background-color:#eee;
+}
+
+table.result-table > tbody > tr > td.special {
+	background-color:#ffffdd;
+}
+
+table.result-table > tbody > tr:nth-chld(even) > td.special {
+	background-color:#ffffdd;
+}
+
+.help-button {
+	float:right;
+}
+
+.chart-wrapper {
+	text-align: left;	
+}
+
+#result-wrapper {
+	margin-bottom: 40px;
+	
+}
+
+.result-text-highlight {
+  color: #ff6600;
+  font-size:24px;
+  margin:10px;
+  font-weight: 600;
+}

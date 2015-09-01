@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <parameter key="random_seed" value="-1"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="179" y="30">
+        <parameter key="k" value="3"/>
+      </operator>
+      <operator activated="true" class="singular_value_decomposition" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="SVDReduction" width="90" x="313" y="120">
+        <parameter key="dimensions" value="2"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="KMeans" to_port="example set"/>
+      <connect from_op="KMeans" from_port="cluster model" to_port="result 1"/>
+      <connect from_op="KMeans" from_port="clustered set" to_op="SVDReduction" to_port="example set input"/>
+      <connect from_op="SVDReduction" from_port="example set output" to_port="result 2"/>
+      <connect from_op="SVDReduction" from_port="original" to_port="result 3"/>
+      <connect from_op="SVDReduction" from_port="preprocessing model" to_port="result 4"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="72"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+      <portSpacing port="sink_result 5" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="321" resized="true" width="423" x="33" y="225">In many cases, no target attribute (label) can be defined and the data should be automatically grouped. This procedure is called &amp;quot;Clustering&amp;quot;. RapidMiner supports a wide range of clustering schemes which can be used in just the same way like any other learning scheme. This includes the combination with all preprocessing operators.&lt;br&gt;&lt;br&gt;In this process, the well-known Iris data set is loaded (the label is loaded, too, but it is only used for visualization and comparison and not for building the clusters itself). One of the most simple clustering schemes, namely KMeans, is then applied to this data set. Afterwards, a dimensionality reduction is performed in order to better support the visualization of the data set in two dimensions.&lt;br&gt;&lt;br&gt;Run the process and compare the clustering result with the original label (e.g. in the plot view of the example set). You can also visualize the cluster model itself.</description>
+    </process>
+  </operator>
+</process>

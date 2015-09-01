@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/objects_transform.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Date to Numerical</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Date_to_Numerical skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Transforms date values into numerical ones capturing the milliseconds since 01/01/1970 00:00:00 GMT.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator changes a date attribute into a numerical one. It allows to specify exactly which entity should be extracted and to which unit or date it should relate. As an example, it is possible to extract seconds within a minute. Analogously, it is also possible to extract the day within a month. But it is also possible to extract the day within a week or within a year. For all time units, it is also possible to extract the number which has passed by since 1970-01-01 00:00.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, <i>expects:</i> ExampleSet
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>attribute name</b>:  The attribute which should be parsed.
+</li>
+<li> <b>time unit</b>:  The unit in which the time is measured.
+</li>
+<li> <b>millisecond relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>second relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>minute relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>hour relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>day relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>week relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>month relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>quarter relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>half year relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>year relative to</b>:  The unit the value is extracted relativ to.
+</li>
+<li> <b>keep old attribute</b>:  Indicates if the original date attribute should be kept.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

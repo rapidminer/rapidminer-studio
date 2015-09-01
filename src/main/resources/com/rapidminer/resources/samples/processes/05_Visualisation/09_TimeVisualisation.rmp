@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum classification"/>
+        <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="50"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="180" y="30">
+        <process expanded="true">
+          <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="JMySVMLearner" width="90" x="45" y="30">
+            <parameter key="convergence_epsilon" value="0.0010"/>
+          </operator>
+          <connect from_port="training" to_op="JMySVMLearner" to_port="training set"/>
+          <connect from_op="JMySVMLearner" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="180" y="30"/>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="315" y="30">
+            <list key="log">
+              <parameter key="iteration" value="operator.XValidation.value.iteration"/>
+              <parameter key="looptime" value="operator.XValidation.value.looptime"/>
+              <parameter key="totaltime" value="operator.XValidation.value.time"/>
+            </list>
+          </operator>
+          <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+          <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+          <connect from_op="Performance" from_port="performance" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="ProcessLog" from_port="through 1" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="XValidation" to_port="training"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="265" resized="true" width="442" x="35" y="158">RapidMiner offers a way to log the time an operator needs. Each operator provide two values &amp;quot;looptime&amp;quot; and &amp;quot;time&amp;quot; which can be logged as usual by means of the ProcessLog operator. The looptime only differs from the time if the operator performs a kind of a loop.&lt;br&gt;&lt;br&gt;In this case, the total time of a cross validation operator and the time needed for each iteration is logged and can be plotted online or after the process has finished. Just change to the Results tab after the process has started and plot the values &amp;quot;looptime&amp;quot; and &amp;quot;totaltime&amp;quot; agains the &amp;quot;iteration&amp;quot;, e.g. with the usual Scatter plot.&lt;br&gt;&lt;br&gt;Please note that in order to get accurate results for the looptime the ProcessLog operator should be placed as the last operator in the loop which time should be logged.</description>
+    </process>
+  </operator>
+</process>

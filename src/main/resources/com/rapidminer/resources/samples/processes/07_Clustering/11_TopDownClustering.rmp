@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="top_down_clustering" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="TopDownClustering" width="90" x="179" y="30">
+        <parameter key="create_cluster_label" value="false"/>
+        <parameter key="max_leaf_size" value="20"/>
+        <process expanded="true">
+          <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="45" y="30"/>
+          <connect from_port="example set" to_op="KMeans" to_port="example set"/>
+          <connect from_op="KMeans" from_port="cluster model" to_port="cluster model"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="sink_cluster model" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="TopDownClustering" to_port="example set"/>
+      <connect from_op="TopDownClustering" from_port="cluster model" to_port="result 1"/>
+      <connect from_op="TopDownClustering" from_port="clustered set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+    </process>
+  </operator>
+</process>

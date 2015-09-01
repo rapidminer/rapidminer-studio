@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_delete.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Backward Elimination</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Backward_Elimination skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+A highly efficient implementation of the backward elimination scheme.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator starts with the full set of attributes and, in each round, it removes each remaining attribute of the given set of examples. For each removed attribute, the performance is estimated using inner operators, e.g. a cross-validation. Only the attribute giving the least decrease of performance is finally removed from the selection. Then a new round is started with the modified selection. This implementation will avoid any additional memory consumption beside the memory used originally for storing the data and the memory which might be needed for applying the inner operators. A parameter specifies when the iteration will be aborted. There are three different behaviors possible: 
+</p>
+<ul class="ports">
+<li> <b>with decrease</b>
+</li>
+</ul>
+<p>
+runs as long as there is any increase in performance
+</p>
+<ul class="ports">
+<li> <b>with decrease of more than</b>
+</li>
+</ul>
+<p>
+runs as long as the decrease is less than the specified threshold, either relative or absolute.
+</p>
+<ul class="ports">
+<li> <b>with significant decrease</b>
+</li>
+</ul>
+<p>
+stops as soon as the decrease is significant to the specified level.
+</p>
+<p>
+The parameter speculative_rounds defines how many rounds will be performed in a row, after a first time the stopping criterion was fulfilled. If the performance increases again during the speculative rounds, the elimination will be continued. Otherwise all additionally eliminated attributes will be restored, as if no speculative rounds would have been executed. This might help to avoid getting stuck in local optima. 
+</p>
+<p>
+The operator provides a value for logging the performance in each round using a Log.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>attribute weights</b>:
+</li>
+<li> <b>performance</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>maximal number of eliminations</b>:  The maximal number of backward eliminations. Hence the resulting number of attributes is maximal reduced by this number.
+</li>
+<li> <b>speculative rounds</b>:  Defines the number of times, the stopping criterion might be consecutivly ignored before the elimination is actually stopped. A number higher than one might help not to stack in the local optima.
+</li>
+<li> <b>stopping behavior</b>:  Defines on what criterias the elimination is stopped.
+</li>
+<li> <b>use relative decrease</b>:  If checked, the relative performance decrease will be used as stopping criterion.
+</li>
+<li> <b>maximal absolute decrease</b>:  If the absolut performance decrease to the last step exceeds this threshold, the selection will be stopped.
+</li>
+<li> <b>maximal relative decrease</b>:  If the relative performance decrease to the last step exceeds this threshold, the selection will be stopped.
+</li>
+<li> <b>alpha</b>:  The probability threshold which determines if differences are considered as significant.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

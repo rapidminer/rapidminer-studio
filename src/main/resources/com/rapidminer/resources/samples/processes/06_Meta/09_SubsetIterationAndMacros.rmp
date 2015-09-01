@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum classification"/>
+        <parameter key="number_of_attributes" value="3"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+        <parameter key="random_attributes" value="3"/>
+        <list key="noise"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="loop_attribute_subsets" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="FeatureSubsetIteration" width="90" x="313" y="30">
+        <parameter key="limit_max_number" value="true"/>
+        <parameter key="max_number_of_attributes" value="3"/>
+        <process expanded="true">
+          <operator activated="true" class="extract_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="DataMacroDefinition" width="90" x="45" y="30">
+            <parameter key="macro" value="feature_count"/>
+            <parameter key="macro_type" value="number_of_attributes"/>
+            <list key="additional_macros"/>
+          </operator>
+          <operator activated="true" class="generate_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="MacroConstruction" width="90" x="179" y="30">
+            <list key="function_descriptions">
+              <parameter key="feature_count_new" value="cut(str(%{feature_count} + 1), 0, 1)"/>
+            </list>
+          </operator>
+          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="313" y="30">
+            <parameter key="maximal_depth" value="%{feature_count_new}"/>
+            <parameter key="apply_pruning" value="false"/>
+            <parameter key="minimal_gain" value="0.0"/>
+            <parameter key="minimal_leaf_size" value="1"/>
+            <parameter key="minimal_size_for_split" value="2"/>
+            <parameter key="number_of_prepruning_alternatives" value="0"/>
+          </operator>
+          <connect from_port="example set" to_op="DataMacroDefinition" to_port="example set"/>
+          <connect from_op="DataMacroDefinition" from_port="example set" to_op="MacroConstruction" to_port="through 1"/>
+          <connect from_op="MacroConstruction" from_port="through 1" to_op="DecisionTree" to_port="training set"/>
+          <portSpacing port="source_example set" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_op="FeatureSubsetIteration" to_port="example set"/>
+      <connect from_op="FeatureSubsetIteration" from_port="example set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

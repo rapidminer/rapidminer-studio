@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Neural Net</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Neural_Net skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Learns a neural net from the input data.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator learns a model by means of a feed-forward neural network trained by a backpropagation algorithm (multi-layer perceptron). The user can define the structure of the neural network with the parameter list "hidden_layers". Each list entry describes a new hidden layer. The key of each entry must correspond to the layer name. The value of each entry must be a number defining the size of the hidden layer. A size value of -1 indicates that the layer size should be calculated from the number of attributes of the input example set. In this case, the layer size will be set to (number of attributes + number of classes) / 2 + 1.
+</p>
+<p>
+If the user does not specify any hidden layers, a default hidden layer with sigmoid type and size (number of attributes + number of classes) / 2 + 1 will be created and added to the net. If only a single layer without nodes is specified, the input nodes are directly connected to the output nodes and no hidden layer will be used.
+</p>
+<p>
+The used activation function is the usual sigmoid function. Therefore, the values ranges of the attributes should be scaled to -1 and +1. This is also done by this operator if not specified otherwise by the corresponding parameter setting. The type of the output node is sigmoid if the learning data describes a classification task and linear for numerical regression tasks.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>exampleSet</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>hidden layers</b>:  Describes the name and the size of all hidden layers.
+</li>
+<li> <b>training cycles</b>:  The number of training cycles used for the neural network training.
+</li>
+<li> <b>learning rate</b>:  The learning rate determines by how much we change the weights at each step. May not be 0.
+</li>
+<li> <b>momentum</b>:  The momentum simply adds a fraction of the previous weight update to the current one (prevent local maxima and smoothes optimization directions).
+</li>
+<li> <b>decay</b>:  Indicates if the learning rate should be decreased during learningh
+</li>
+<li> <b>shuffle</b>:  Indicates if the input data should be shuffled before learning (increases memory usage but is recommended if data is sorted before)
+</li>
+<li> <b>normalize</b>:  Indicates if the input data should be normalized between -1 and +1 before learning (increases runtime but is in most cases necessary)
+</li>
+<li> <b>error epsilon</b>:  The optimization is stopped if the training error gets below this epsilon value.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

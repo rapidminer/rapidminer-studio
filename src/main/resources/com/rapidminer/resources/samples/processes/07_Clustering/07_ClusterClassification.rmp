@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="180" y="30">
+        <parameter key="k" value="3"/>
+      </operator>
+      <operator activated="true" class="set_role" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ChangeAttributeRole" width="90" x="315" y="30">
+        <parameter key="attribute_name" value="cluster"/>
+        <parameter key="target_role" value="label"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="624" y="30"/>
+      <connect from_op="Retrieve" from_port="output" to_op="KMeans" to_port="example set"/>
+      <connect from_op="KMeans" from_port="clustered set" to_op="ChangeAttributeRole" to_port="example set input"/>
+      <connect from_op="ChangeAttributeRole" from_port="example set output" to_op="DecisionTree" to_port="training set"/>
+      <connect from_op="DecisionTree" from_port="model" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_direct_mailing_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="DirectMailingExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="number_examples" value="10000"/>
+      </operator>
+      <operator activated="true" class="split_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="SimpleValidation" width="90" x="180" y="30">
+        <process expanded="true">
+          <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NaiveBayes" width="90" x="45" y="30"/>
+          <connect from_port="training" to_op="NaiveBayes" to_port="training set"/>
+          <connect from_op="NaiveBayes" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="create_lift_chart" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="LiftParetoChart" width="90" x="45" y="30">
+            <parameter key="target_class" value="response"/>
+          </operator>
+          <operator activated="true" class="remember" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="IOStorer" width="90" x="179" y="120">
+            <parameter key="name" value="Lift Chart"/>
+            <parameter key="io_object" value="LiftParetoChart"/>
+          </operator>
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="315" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="450" y="30"/>
+          <connect from_port="model" to_op="LiftParetoChart" to_port="model"/>
+          <connect from_port="test set" to_op="LiftParetoChart" to_port="example set"/>
+          <connect from_op="LiftParetoChart" from_port="example set" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_op="LiftParetoChart" from_port="model" to_op="ModelApplier" to_port="model"/>
+          <connect from_op="LiftParetoChart" from_port="lift pareto chart" to_op="IOStorer" to_port="store"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+          <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="recall" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="IORetriever" width="90" x="315" y="30">
+        <parameter key="name" value="Lift Chart"/>
+        <parameter key="io_object" value="LiftParetoChart"/>
+      </operator>
+      <connect from_op="DirectMailingExampleSetGenerator" from_port="output" to_op="SimpleValidation" to_port="training"/>
+      <connect from_op="IORetriever" from_port="result" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

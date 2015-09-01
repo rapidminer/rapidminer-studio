@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum"/>
+      </operator>
+      <operator activated="true" class="loop_parameters" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ParameterIteration" width="90" x="180" y="30">
+        <list key="parameters">
+          <parameter key="OperatorSelector.select_which" value="1,2,3"/>
+        </list>
+        <process expanded="true">
+          <operator activated="true" breakpoints="after" class="select_subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="OperatorSelector" width="90" x="45" y="30">
+            <parameter key="select_which" value="3"/>
+            <process expanded="true">
+              <operator activated="true" class="discretize_by_bins" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinDiscretization">
+                <parameter key="create_view" value="true"/>
+              </operator>
+              <connect from_port="input 1" to_op="BinDiscretization" to_port="example set input"/>
+              <connect from_op="BinDiscretization" from_port="example set output" to_port="output 1"/>
+              <portSpacing port="source_input 1" spacing="0"/>
+              <portSpacing port="source_input 2" spacing="0"/>
+              <portSpacing port="sink_output 1" spacing="0"/>
+              <portSpacing port="sink_output 2" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="discretize_by_bins" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinDiscretization (2)">
+                <parameter key="create_view" value="true"/>
+                <parameter key="number_of_bins" value="3"/>
+              </operator>
+              <connect from_port="input 1" to_op="BinDiscretization (2)" to_port="example set input"/>
+              <connect from_op="BinDiscretization (2)" from_port="example set output" to_port="output 1"/>
+              <portSpacing port="source_input 1" spacing="0"/>
+              <portSpacing port="source_input 2" spacing="0"/>
+              <portSpacing port="sink_output 1" spacing="0"/>
+              <portSpacing port="sink_output 2" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="discretize_by_bins" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinDiscretization (3)">
+                <parameter key="create_view" value="true"/>
+                <parameter key="number_of_bins" value="4"/>
+              </operator>
+              <connect from_port="input 1" to_op="BinDiscretization (3)" to_port="example set input"/>
+              <connect from_op="BinDiscretization (3)" from_port="example set output" to_port="output 1"/>
+              <portSpacing port="source_input 1" spacing="0"/>
+              <portSpacing port="source_input 2" spacing="0"/>
+              <portSpacing port="sink_output 1" spacing="0"/>
+              <portSpacing port="sink_output 2" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="input 1" to_op="OperatorSelector" to_port="input 1"/>
+          <connect from_op="OperatorSelector" from_port="output 1" to_port="result 1"/>
+          <portSpacing port="source_input 1" spacing="0"/>
+          <portSpacing port="source_input 2" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+          <portSpacing port="sink_result 1" spacing="0"/>
+          <portSpacing port="sink_result 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="ParameterIteration" to_port="input 1"/>
+      <connect from_op="ParameterIteration" from_port="result 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

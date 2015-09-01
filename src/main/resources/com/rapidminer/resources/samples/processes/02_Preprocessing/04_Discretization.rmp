@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Sonar"/>
+      </operator>
+      <operator activated="true" class="discretize_by_frequency" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="FrequencyDiscretization" width="90" x="179" y="30">
+        <parameter key="attribute" value="attribute_1"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="FrequencyDiscretization" to_port="example set input"/>
+      <connect from_op="FrequencyDiscretization" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="108" resized="true" width="372" x="42" y="139">In cases where a learning scheme cannot handle numerical attributes it might be necessary to apply a discretization step. In this process we use FrequencyDiscretization which tries to identify split points in a way that all bins contain the same number of examples.</description>
+    </process>
+  </operator>
+</process>

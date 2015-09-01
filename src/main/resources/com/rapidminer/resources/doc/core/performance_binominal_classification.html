@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/symbol_percent.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Performance (Binominal Classification)</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Performance_Binominal_Classification skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator delivers as output a list of performance values according to a list of selected performance criteria (for binominal classification tasks).
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This performance evaluator operator should be used for classification tasks, i.e. in cases where the label attribute has a binominal value type. Other polynominal classification tasks, i.e. tasks with more than two classes can be handled by the <i>PolynominalClassificationPerformanceEvaluator</i> operator. This operator expects a test <i>ExampleSet</i> as input, whose elements have both true and predicted labels, and delivers as output a list of performance values according to a list of performance criteria that it calculates. If an input performance vector was already given, this is used for keeping the performance values.
+</p>
+<p>
+All of the performance criteria can be switched on using boolean parameters. Their values can be queried by a ProcessLogOperator using the same names. The main criterion is used for comparisons and need to be specified only for processes where performance vectors are compared, e.g. feature selection or other meta optimization process setups. If no other main criterion was selected, the first criterion in the resulting performance vector will be assumed to be the main criterion.
+</p>
+<p>
+The resulting performance vectors are usually compared with a standard performance comparator which only compares the fitness values of the main criterion. Other implementations than this simple comparator can be specified using the parameter <var>comparator_class</var>. This may for instance be useful if you want to compare performance vectors according to the weighted sum of the individual criteria. In order to implement your own comparator, simply subclass <i>PerformanceComparator</i>. Please note that for true multi-objective optimization usually another selection scheme is used instead of simply replacing the performance comparator.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>labelled data</b>: <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+<li> <b>performance</b>: <i>optional:</i> PerformanceVector
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>performance</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>main criterion</b>:  The criterion used for comparing performance vectors.
+</li>
+<li> <b>accuracy</b>:  Relative number of correctly classified examples
+</li>
+<li> <b>classification error</b>:  Relative number of misclassified examples
+</li>
+<li> <b>kappa</b>:  The kappa statistics for the classification
+</li>
+<li> <b>AUC (optimistic)</b>:  The area under a ROC curve. Given example weights are also considered. Please note that the second class is considered to be positive.
+</li>
+<li> <b>AUC</b>:  The area under a ROC curve. Given example weights are also considered. Please note that the second class is considered to be positive.
+</li>
+<li> <b>AUC (pessimistic)</b>:  The area under a ROC curve. Given example weights are also considered. Please note that the second class is considered to be positive.
+</li>
+<li> <b>precision</b>:  Relative number of correctly as positive classified examples among all examples classified as positive
+</li>
+<li> <b>recall</b>:  Relative number of correctly as positive classified examples among all positive examples
+</li>
+<li> <b>lift</b>:  The lift of the positive class
+</li>
+<li> <b>fallout</b>:  Relative number of incorrectly as positive classified examples among all negative examples
+</li>
+<li> <b>f measure</b>:  Combination of precision and recall: f=2pr/(p+r)
+</li>
+<li> <b>false positive</b>:  Absolute number of incorrectly as positive classified examples
+</li>
+<li> <b>false negative</b>:  Absolute number of incorrectly as negative classified examples
+</li>
+<li> <b>true positive</b>:  Absolute number of correctly as positive classified examples
+</li>
+<li> <b>true negative</b>:  Absolute number of correctly as negative classified examples
+</li>
+<li> <b>sensitivity</b>:  Relative number of correctly as positive classified examples among all positive examples (like recall)
+</li>
+<li> <b>specificity</b>:  Relative number of correctly as negative classified examples among all negative examples
+</li>
+<li> <b>youden</b>:  The sum of sensitivity and specificity minus 1
+</li>
+<li> <b>positive predictive value</b>:  Relative number of correctly as positive classified examples among all examples classified as positive (same as precision)
+</li>
+<li> <b>negative predictive value</b>:  Relative number of correctly as negative classified examples among all examples classified as negative
+</li>
+<li> <b>psep</b>:  The sum of the positive predicitve value and the negative predictive value minus 1
+</li>
+<li> <b>skip undefined labels</b>:  If set to true, examples with undefined labels are skipped.
+</li>
+<li> <b>comparator class</b>:  Fully qualified classname of the PerformanceComparator implementation.
+</li>
+<li> <b>use example weights</b>:  Indicated if example weights should be used for performance calculations if possible.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>
