@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Golf"/>
+      </operator>
+      <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="180" y="30"/>
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve (2)" width="90" x="313" y="75">
+        <parameter key="repository_entry" value="../../data/Golf-Testset"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Apply Model" width="90" x="447" y="30">
+        <list key="application_parameters"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="DecisionTree" to_port="training set"/>
+      <connect from_op="DecisionTree" from_port="model" to_op="Apply Model" to_port="model"/>
+      <connect from_op="Retrieve (2)" from_port="output" to_op="Apply Model" to_port="unlabelled data"/>
+      <connect from_op="Apply Model" from_port="labelled data" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="175" resized="true" width="400" x="40" y="150">&lt;table&gt; &lt;tr&gt; &lt;td&gt; The Apply Model operator is one of the most important RapidMiner operators. It can be used to apply a previously learned model to (unseen) data. &lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt; In this process we first load some training data and learn a decision tree model. This model is then applied to the test data set with help of the apply model operator. You can add a breakpoint after the learner operator (from the context menu) in order to inspect the learned model. &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</description>
+    </process>
+  </operator>
+</process>

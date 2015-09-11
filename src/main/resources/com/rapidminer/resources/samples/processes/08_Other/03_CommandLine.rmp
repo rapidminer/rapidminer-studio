@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="execute_program" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="CommandLineOperator" width="90" x="45" y="30">
+        <parameter key="command" value="cmd /c start dir"/>
+        <list key="env_variables"/>
+      </operator>
+      <connect from_port="input 1" to_op="CommandLineOperator" to_port="through 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="source_input 2" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="120" resized="false" width="400" x="40" y="170">The command line operator can be used to start another file or process via a command line call.   For example, you could write down data into a file, process it with another program and read it back into  RapidMiner. Please note that often the structure of the command must be &amp;quot;cmd /c start [actual_command]&amp;quot; where the option start is often optional.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/refresh.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Loop Files</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Loop_Files skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator iterates over all files in a directory and delivers their paths and names as macro to the inner operators.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator iterates over the files in the specified directory (and subdirectories if the corresponding parameter is set to true).
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>in 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>directory</b>:  Specifies the directory to iterate over.
+</li>
+<li> <b>filter</b>:  Specifies a regular expression which is used as filter for the file and directory names, e.g. 'a.*b' for all files starting with 'a' and ending with 'b'.
+</li>
+<li> <b>file name macro</b>:  Specifies the name of the macro, which delievers the current file name without path. Use %{macro_name} to use the file name in suboperators.
+</li>
+<li> <b>file path macro</b>:  Specifies the name of the macro containing the absolute path and file name of the current file. Use %{macro_name} to address the file in suboperators.
+</li>
+<li> <b>parent path macro</b>:  Specifies the name of the macro containing the absolute path of the current file's directory. Use %{macro_name} to address the file in suboperators.
+</li>
+<li> <b>recursive</b>:  Indicates if the operator will also deliver the files / directories of subdirectories (resursively).
+</li>
+<li> <b>iterate over files</b>:  If checked, the operator will iterate over files in the given directory and set their path and name macros.
+</li>
+<li> <b>iterate over subdirs</b>:  If checked, the operator will iterate over subdirectories in the given directory and set their path and name macros.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

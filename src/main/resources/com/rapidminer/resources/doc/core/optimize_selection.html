@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_delete.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Optimize Selection</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Optimize_Selection skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator realizes feature selection by forward selection and backward elimination, respectively.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator realizes the two deterministic greedy feature selection algorithms forward selection and backward elimination. However, we added some enhancements to the standard algorithms which are described below: 
+</p><br/><h4> <span class="mw-headline" id="Forward_Selection">Forward Selection</span>
+</h4>
+<ol> * Create an initial population with <i>n</i> individuals where <i>n</i> is the input example set's number of attributes. Each individual will use exactly one of the features.
+<ul class="ports">
+<li> Evaluate the attribute sets and select only the best <i>k</i>.
+</li>
+<li> For each of the <i>k</i> attribute sets do: If there are <i>j</i> unused attributes, make <i>j</i> copies of the attribute set and add exactly one of the previously unused attributes to the attribute set.
+</li>
+<li> As long as the performance improved in the last <i>p</i> iterations go to 2
+</li>
+</ul>
+</ol> ====Backward Elimination====
+<ol> * Start with an attribute set which uses all features.
+<ul class="ports">
+<li> Evaluate all attribute sets and select the best <i>k</i>.
+</li>
+<li> For each of the <i>k</i> attribute sets do: If there are <i>j</i> attributes used, make <i>j</i> copies of the attribute set and remove exactly one of the previously used attributes from the attribute set.
+</li>
+<li> As long as the performance improved in the last <i>p</i> iterations go to 2
+</li>
+</ul>
+</ol> 
+<p>
+The parameter <i>k</i> can be specified by the parameter <code>keep_best</code>, the parameter <i>p</i> can be specified by the parameter <code>generations_without_improval</code>. These parameters have default values 1 which means that the standard selection algorithms are used. Using other values increase the runtime but might help to avoid local extrema in the search for the global optimum. 
+</p>
+<p>
+Another unusual parameter is <code>maximum_number_of_generations</code>. This parameter bounds the number of iterations to this maximum of feature selections / deselections. In combination with <code>generations_without_improval</code> this allows several different selection schemes (which are described for forward selection, backward elimination works analogous): 
+
+
+<ul class="ports">
+<li> <code>maximum_number_of_generations</code> = <i>m</i> and <code>generations_without_improval</code> = <i>p</i>: Selects maximal <i>m</i> features. The selection stops if not performance improvement was measured in the last <i>p</i> generations.
+</li>
+<li> <code>maximum_number_of_generations</code> = <i>-1</i> and <code>generations_without_improval</code> = <i>p</i>: Tries to selects new features until no performance improvement was measured in the last <i>p</i> generations.
+</li>
+<li> <code>maximum_number_of_generations</code> = <i>m</i> and <code>generations_without_improval</code> = <i>-1</i>: Selects maximal <i>m</i> features. The selection stops is not stopped until all combinations with maximal <i>m</i> were tried. However, the result might contain less features than these.
+</li>
+<li> <code>maximum_number_of_generations</code> = <i>-1</i> and <code>generations_without_improval</code> = <i>-1</i>: Test all combinations of attributes (brute force, this might take a very long time and should only be applied to small attribute sets).
+</li>
+</ul>
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set in</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+<li> <b>through 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set out</b>:
+</li>
+<li> <b>weights</b>:
+</li>
+<li> <b>performance</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>selection direction</b>:  Forward selection or backward elimination.
+</li>
+<li> <b>limit generations without improval</b>:  Indicates if the optimization should be aborted if this number of generations showed no improvement. If unchecked, always the maximal number of generations will be used.
+</li>
+<li> <b>generations without improval</b>:  Stop after n generations without improval of the performance.
+</li>
+<li> <b>limit number of generations</b>:  Defines if the number of generations should be limited on a specific number.
+</li>
+<li> <b>keep best</b>:  Keep the best n individuals in each generation.
+</li>
+<li> <b>maximum number of generations</b>:  Defines the maximum amount of generations.
+</li>
+<li> <b>normalize weights</b>:  Indicates if the final weights should be normalized.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+<li> <b>show stop dialog</b>:  Determines if a dialog with a button should be displayed which stops the run: the best individual is returned.
+</li>
+<li> <b>user result individual selection</b>:  Determines if the user wants to select the final result individual from the last population.
+</li>
+<li> <b>show population plotter</b>:  Determines if the current population should be displayed in performance space.
+</li>
+<li> <b>plot generations</b>:  Update the population plotter in these generations.
+</li>
+<li> <b>constraint draw range</b>:  Determines if the draw range of the population plotter should be constrained between 0 and 1.
+</li>
+<li> <b>draw dominated points</b>:  Determines if only points which are not Pareto dominated should be painted.
+</li>
+<li> <b>population criteria data file</b>:  The path to the file in which the criteria data of the final population should be saved.
+</li>
+<li> <b>maximal fitness</b>:  The optimization will stop if the fitness reaches the defined maximum.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

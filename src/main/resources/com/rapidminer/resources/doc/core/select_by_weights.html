@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_delete.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Select by Weights</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Select_by_Weights skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Selects only attributes which weights fulfill a given relation with respect to the input attribute weights.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator selects all attributes which have a weight satisfying a given condition. For example, only attributes with a weight greater than <code>min_weight</code> should be selected. This operator is also able to select the k attributes with the highest weight.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+<li> <b>weights</b>: <i>expects:</i> AttributeWeights
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+<li> <b>weights</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>weight relation</b>:  Selects only weights which fulfill this relation.
+</li>
+<li> <b>weight</b>:  The selected relation will be evaluated against this value.
+</li>
+<li> <b>k</b>:  Number k of attributes to be selected. For example 'top k' with k = 5 will return an exampleset containing only the 5 highest weighted attributes.
+</li>
+<li> <b>p</b>:  Percentage of attributes to be selected. For example 'top p%' with p = 15 will return an exampleset containing only attributes which are part of the 15% of the highest weighted attributes.
+</li>
+<li> <b>deselect unknown</b>:  Indicates if attributes which weight is unknown should be removed from example set.
+</li>
+<li> <b>use absolute weights</b>:  Indicates if the absolute values of the weights should be used for comparison.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

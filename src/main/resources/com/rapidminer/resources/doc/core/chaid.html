@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">CHAID</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-CHAID skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Learns a pruned decision tree based on a chi squared attribute relevance test.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>The CHAID decision tree learner works like the <i>DecisionTreeLearner</i> with one exception: it used a chi squared based criterion instead of the information gain or gain ratio criteria.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>exampleSet</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>minimal size for split</b>:  The minimal size of a node in order to allow a split.
+</li>
+<li> <b>minimal leaf size</b>:  The minimal size of all leaves.
+</li>
+<li> <b>minimal gain</b>:  The minimal gain which must be achieved in order to produce a split.
+</li>
+<li> <b>maximal depth</b>:  The maximum tree depth (-1: no bound)
+</li>
+<li> <b>confidence</b>:  The confidence level used for the pessimistic error calculation of pruning.
+</li>
+<li> <b>number of prepruning alternatives</b>:  The number of alternative nodes tried when prepruning would prevent a split.
+</li>
+<li> <b>no pre pruning</b>:  Disables the pre pruning and delivers a tree without any prepruning.
+</li>
+<li> <b>no pruning</b>:  Disables the pruning and delivers an unpruned tree.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

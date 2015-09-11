@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <parameter key="random_seed" value="2000"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="random dots classification"/>
+        <parameter key="number_examples" value="500"/>
+        <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="0.0"/>
+        <parameter key="attributes_upper_bound" value="25.0"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XVal" width="90" x="179" y="30">
+        <parameter key="number_of_validations" value="5"/>
+        <process expanded="true">
+          <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="LibSVMLearner" width="90" x="176" y="30">
+            <parameter key="gamma" value="1.0"/>
+            <parameter key="epsilon" value="0.0010"/>
+            <list key="class_weights"/>
+          </operator>
+          <connect from_port="training" to_op="LibSVMLearner" to_port="training set"/>
+          <connect from_op="LibSVMLearner" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="find_threshold" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ThresholdFinder" width="90" x="45" y="165">
+            <parameter key="show_roc_plot" value="true"/>
+          </operator>
+          <operator activated="true" class="apply_threshold" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ThresholdApplier" width="90" x="179" y="165"/>
+          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="313" y="30"/>
+          <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+          <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="ThresholdFinder" to_port="example set"/>
+          <connect from_op="ThresholdFinder" from_port="example set" to_op="ThresholdApplier" to_port="example set"/>
+          <connect from_op="ThresholdFinder" from_port="threshold" to_op="ThresholdApplier" to_port="threshold"/>
+          <connect from_op="ThresholdApplier" from_port="example set" to_op="Performance" to_port="labelled data"/>
+          <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="XVal" to_port="training"/>
+      <connect from_op="XVal" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="359" resized="true" width="531" x="34" y="153">We use the confidence values delivered by the learner used in this process (soft predictions instead of crisp classifications). All RapidMiner learners deliver these confidence values in addition to the predicted values. They can be read as sort of a guarantee of the learner that the corresponding crisp prediction is actually the true label. Hence the name confidence.&lt;br&gt;&lt;br&gt;In many binary classification scenarios an error for a wrong prediction does not cause the same costs for both classes. A learning scheme should take these asymmetric costs into account. By using the prediction confidences we can turn all classification learners in cost sensitive learners. Therefore, we adjust the confidence threshold for making the one prediction or the other (usually 0.5).&lt;br&gt;&lt;br&gt;A ThresholdFinder can be used to determine the best threshold with respect to class weights. The following ThresholdApplier maps the soft predictions (confidences) to crisp classifications with respect to the determined threshold value. The ThresholdFinder can also produce a ROC curve for several thresholds. This is a nice visualization for the performance of a learning scheme. The process stops every time the ROC curve is plotted until you press the Ok button (5 times). The parameter &amp;quot;show_ROC_plot&amp;quot; determines if the ROC plot should be displayed at all.</description>
+    </process>
+  </operator>
+</process>

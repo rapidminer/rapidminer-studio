@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_add.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Optimize by Generation (AGA)</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Optimize_by_Generation_AGA skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Another (improved) genetic algorithm for feature selection and feature generation (AGA).
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>Basically the same operator as the <i>GeneratingGeneticAlgorithm</i> operator. This version adds additional generators and improves the simple GGA approach by providing some basic intron prevention techniques. In general, this operator seems to work better than the original approach but frequently deliver inferior results compared to the operator <i>YAGGA2</i>.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set in</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set out</b>:
+</li>
+<li> <b>attribute weights out</b>:
+</li>
+<li> <b>performance out</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>max number of new attributes</b>:  Max number of attributes to generate for an individual in one generation.
+</li>
+<li> <b>limit max total number of attributes</b>:  Indicates if the total number of attributes in all generations should be limited.
+</li>
+<li> <b>max total number of attributes</b>:  Max total number of attributes in all generations.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+<li> <b>show stop dialog</b>:  Determines if a dialog with a button should be displayed which stops the run: the best individual is returned.
+</li>
+<li> <b>maximal fitness</b>:  The optimization will stop if the fitness reaches the defined maximum.
+</li>
+<li> <b>population size</b>:  Number of individuals per generation.
+</li>
+<li> <b>maximum number of generations</b>:  Number of generations after which to terminate the algorithm.
+</li>
+<li> <b>use plus</b>:  Generate sums.
+</li>
+<li> <b>use diff</b>:  Generate differences.
+</li>
+<li> <b>use mult</b>:  Generate products.
+</li>
+<li> <b>use div</b>:  Generate quotients.
+</li>
+<li> <b>reciprocal value</b>:  Generate reciprocal values.
+</li>
+<li> <b>use early stopping</b>:  Enables early stopping. If unchecked, always the maximum number of generations is performed.
+</li>
+<li> <b>generations without improval</b>:  Stop criterion: Stop after n generations without improval of the performance.
+</li>
+<li> <b>tournament size</b>:  The fraction of the current population which should be used as tournament members (only tournament selection).
+</li>
+<li> <b>start temperature</b>:  The scaling temperature (only Boltzmann selection).
+</li>
+<li> <b>dynamic selection pressure</b>:  If set to true the selection pressure is increased to maximum during the complete optimization run (only Boltzmann and tournament selection).
+</li>
+<li> <b>keep best individual</b>:  If set to true, the best individual of each generations is guaranteed to be selected for the next generation (elitist selection).
+</li>
+<li> <b>p initialize</b>:  Initial probability for an attribute to be switched on.
+</li>
+<li> <b>p crossover</b>:  Probability for an individual to be selected for crossover.
+</li>
+<li> <b>crossover type</b>:  Type of the crossover.
+</li>
+<li> <b>p generate</b>:  Probability for an individual to be selected for generation.
+</li>
+<li> <b>use heuristic mutation probability</b>:  If checked the probability for mutations will be chosen as 1/number of attributes.
+</li>
+<li> <b>p mutation</b>:  Probability for mutation.
+</li>
+<li> <b>use square roots</b>:  Generate square root values.
+</li>
+<li> <b>use power functions</b>:  Generate the power of one attribute and another.
+</li>
+<li> <b>use sin</b>:  Generate sinus.
+</li>
+<li> <b>use cos</b>:  Generate cosinus.
+</li>
+<li> <b>use tan</b>:  Generate tangens.
+</li>
+<li> <b>use atan</b>:  Generate arc tangens.
+</li>
+<li> <b>use exp</b>:  Generate exponential functions.
+</li>
+<li> <b>use log</b>:  Generate logarithmic functions.
+</li>
+<li> <b>use absolute values</b>:  Generate absolute values.
+</li>
+<li> <b>use min</b>:  Generate minimum values.
+</li>
+<li> <b>use max</b>:  Generate maximum values.
+</li>
+<li> <b>use sgn</b>:  Generate signum values.
+</li>
+<li> <b>use floor ceil functions</b>:  Generate floor, ceil, and rounded values.
+</li>
+<li> <b>restrictive selection</b>:  Use restrictive generator selection (faster).
+</li>
+<li> <b>remove useless</b>:  Remove useless attributes.
+</li>
+<li> <b>remove equivalent</b>:  Remove equivalent attributes.
+</li>
+<li> <b>equivalence samples</b>:  Check this number of samples to prove equivalency.
+</li>
+<li> <b>equivalence epsilon</b>:  Consider two attributes equivalent if their difference is not bigger than epsilon.
+</li>
+<li> <b>equivalence use statistics</b>:  Recalculates attribute statistics before equivalence check.
+</li>
+<li> <b>search fourier peaks</b>:  Use this number of highest frequency peaks for sinus generation.
+</li>
+<li> <b>attributes per peak</b>:  Use this number of additional peaks for each found peak.
+</li>
+<li> <b>epsilon</b>:  Use this range for additional peaks for each found peak.
+</li>
+<li> <b>adaption type</b>:  Use this adaption type for additional peaks.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

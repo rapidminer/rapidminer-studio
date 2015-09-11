@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/data_down.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Remember</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Remember skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Stores an objects in the process' object store.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator can be used to store the input object into the process under  the specified name. It can later be restored by subsequent operators by  using the <i>Recall</i> operator by referencing this name. There is no  scoping mechanism in RapidMiner processes. Objects can be retrieved from  operators in all nesting levels. The combination of those two operators  can be used to build complex processes where an input object is used in  completely different parts or loops of processes.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>store</b>: expect: class com.rapidminer.operator.visualization.dependencies.ANOVAMatrix
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>stored</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>name</b>:  The name under which the specified object is stored and can later be retrieved.
+</li>
+<li> <b>io object</b>:  The class of the object which should be stored.
+</li>
+<li> <b>store which</b>:  Defines which input object should be stored.
+</li>
+<li> <b>remove from process</b>:  Indicates if the stored object should be removed from the process so that following operators can only access this object after retrieving it.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

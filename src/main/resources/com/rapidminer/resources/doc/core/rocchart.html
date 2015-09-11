@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/elements_selection.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">ROCChart</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-ROCChart skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>This operator creates a ROC chart for the given example set and model. The model
+will be applied on the example set and a ROC chart will be produced afterwards. If
+you are interested in finding an optimal threshold, the operator 
+</p>
+</div>
+<p>Please note that a predicted label of the given example set will be removed during 
+the application of this operator.
+</p><br/><h4> <span class="mw-headline" id="Parameter"> Parameter </span>
+</h4>
+<dl>
+<dt>
+<tt>use_example_weights</tt>
+</dt>
+<dd>Indicates if example weights should be used for calculations (use 1 as weights for each example otherwise). (boolean; default: true)
+</dd>
+<dt>
+<tt>use_model</tt>
+</dt>
+<dd>If checked a given model will be applied for generating ROCChart. If not the examples set must have a predicted label. (boolean; default: true)
+</dd>
+</dl>
+<h4> <span class="mw-headline" id="Values"> Values </span>
+</h4>
+<p>A list of values that can be logged using the <a class="new" href="/wiki/index.php?title=ProcessLog&amp;action=edit&amp;redlink=1" shape="rect" title="ProcessLog (page does not exist)">ProcessLog</a> operator.
+</p>
+<dl>
+<dt>
+<tt>applycount</tt>
+</dt>
+<dd>The number of times the operator was applied.
+</dd>
+<dt>
+<tt>looptime</tt>
+</dt>
+<dd>The time elapsed since the current loop started.
+</dd>
+<dt>
+<tt>time</tt>
+</dt>
+<dd>The time elapsed since this operator started.
+</dd>
+</dl>
+
+<h4> <span class="mw-headline" id="Examples"> Examples </span>
+</h4>
+<h3> <span class="mw-headline" id="Example_process_to_plot_a_ROC_chart"> Example process to plot a ROC chart </span>
+</h3>
+<p>&lt;source lang="xml"&gt;
+&lt;operator name="Root" class="Process" expanded="yes"&gt;
+</p>
+<table class=pre border=0 bordercolor=black style=border-style:dashed; xml:space="preserve">   &lt;operator name="ExampleSetGenerator" class="ExampleSetGenerator"&gt;
+       &lt;parameter key="target_function"	value="sinus classification"/&gt;
+   &lt;/operator&gt;
+   &lt;operator name="DecisionTree" class="DecisionTree"&gt;
+       &lt;parameter key="keep_example_set"	value="true"/&gt;
+   &lt;/operator&gt;
+   &lt;operator name="ROCChart" class="ROCChart"&gt;
+   &lt;/operator&gt;
+</table>
+<p>&lt;/operator&gt;
+&lt;/source&gt;
+</p>
+
+
+
+
+				
+				
+	</div>
+</div>
+</body>
+</html>

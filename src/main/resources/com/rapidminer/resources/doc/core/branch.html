@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/branch.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Branch</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Branch skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator provides a conditional execution of subprocesses.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator executes one of its two subprocesses based on a condition.  The first subprocess is executed if the specified condition is true, the  second one is executed if it is false (if-then-else).  
+</p>
+<p>
+If the condition "attribute_value_filter" is used, the same attribute  value conditions already known from the <i>ExampleFilter</i> operator  can be used. In addition to the known attribute value relation format  (e.g. "att1&gt;=0.7"), this operator expects an additional definition for  the used example which cam be added in "[" and "]" after the attribute  value condition. The following values are possible: 
+</p>
+
+<ul class="ports">
+<li>  a fixed number, e.g. "att1&gt;0.7 [7]" meaning that the value for  attribute "att1" for the example 7 must be greater than 0.7 
+</li>
+<li>  the wildcard "*" meaning that the attribute value condition must be  fulfilled for all examples, e.g. "att4&lt;=5 [*]" 
+</li>
+<li>  no example definition, meaning the same as the wildcard definition [*]
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>condition</b>:
+</li>
+<li> <b>input 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>input 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>condition type</b>:  The condition which is used for the condition check.
+</li>
+<li> <b>condition value</b>:  A condition parameter which might be desired for some condition checks.
+</li>
+<li> <b>io object</b>:  The class of the object(s) which should be checked for existance.
+</li>
+<li> <b>return inner output</b>:  Indicates if the output of the inner operators should be delivered.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

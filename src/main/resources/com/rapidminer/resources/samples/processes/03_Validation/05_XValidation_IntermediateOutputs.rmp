@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Polynomial"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XVal" width="90" x="180" y="30">
+        <parameter key="sampling_type" value="shuffled sampling"/>
+        <process expanded="true">
+          <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Training" width="90" x="211" y="30">
+            <parameter key="svm_type" value="epsilon-SVR"/>
+            <parameter key="kernel_type" value="poly"/>
+            <parameter key="C" value="1000.0"/>
+            <parameter key="epsilon" value="0.0010"/>
+            <list key="class_weights"/>
+          </operator>
+          <connect from_port="training" to_op="Training" to_port="training set"/>
+          <connect from_op="Training" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="write_special" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Write Special" width="90" x="179" y="30">
+            <parameter key="example_set_file" value="xval_%a.dat"/>
+            <parameter key="special_format" value="True: $l  Pred: $p"/>
+          </operator>
+          <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RegressionPerformance" width="90" x="346" y="30">
+            <parameter key="main_criterion" value="root_mean_squared_error"/>
+            <parameter key="absolute_error" value="true"/>
+            <parameter key="relative_error" value="true"/>
+            <parameter key="squared_error" value="true"/>
+            <parameter key="correlation" value="true"/>
+          </operator>
+          <connect from_port="model" to_op="Test" to_port="model"/>
+          <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
+          <connect from_op="Test" from_port="labelled data" to_op="Write Special" to_port="input"/>
+          <connect from_op="Write Special" from_port="through" to_op="RegressionPerformance" to_port="labelled data"/>
+          <connect from_op="RegressionPerformance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="XVal" to_port="training"/>
+      <connect from_op="XVal" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="181" resized="true" width="407" x="37" y="152">Sometimes the inner intermediate results of an operator which performs a loop (like cross validation) are of interest. The ExampleSetWriter in this process demonstrates a way to write the intermediate output into a file using the macro %{a} in the parameter string.&lt;br&gt;&lt;br&gt;Another possibility would be to embed the Training learner in an OperatorChain operator and add an additional Write Model. This would also write down the intermediate models.</description>
+    </process>
+  </operator>
+</process>

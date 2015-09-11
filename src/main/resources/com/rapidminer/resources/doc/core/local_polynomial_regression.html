@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Local Polynomial Regression</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Local_Polynomial_Regression skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Generates word vectors from a single text.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator provides functionality to perform a local regression. That means, that if the label value for a point in the data space is requested, the local neighborhood of this point is searched. For this search the distance measure specified in the distance measure parameter is used. After the neighborhood has been determined, its datapoints are used for fitting a polynomial of the specified degree using the weighted least squares optimization. The value of this polynom at the requested point in data space is then returned as result. During the fitting of the polynom, the neighborhoods data points are weighted by their distance to the requested point. Here again the distance function specified in the parameters is used. The weight is calculated from the distance using the kernel smoother, specified in the parameters. The resulting weight is then included into the least squares optimization. If the training example set contains a weight attribute, the distance based weight is multiplied by the example's weight. If the parameter use_robust_estimation is checked, a Generate Weight (LPR) is performed with the same parameters as the following Local Polynomial Regression. For different settings the operator Generate Weight (LPR) might be used as a preprocessing step instead of checking the parameter. The effect is, that outlier will be downweighted so that the least squares fitting will not be affected by them anymore.
+</p>
+<p>
+Since it is a local method, the computational need for training is minimal: In fact, each example is only stored in a way which provides a fast neighborhood search during application time. Since all calculations are performed during application time, it is slower than for example SVM, LinearRegression or NaiveBayes. In fact it really much depends on the number of training examples and the number of attributes. If a higher degree than 1 is used, the calculations take much longer, because implicitly the polynomial expansion must be calculated.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>exampleSet</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>degree</b>:  Specifies the degree of the local fitted polynomial. Please keep in mind, that a higher degree than 2 will increase calculation time extremely and probably suffer from overfitting.
+</li>
+<li> <b>ridge factor</b>:  Specifies the ridge factor. This factor is used to penalize high coefficients. In order to aviod overfitting this might be increased.
+</li>
+<li> <b>use robust estimation</b>:  If checked, a reweighting of the examples is performed in order to downweight outliers
+</li>
+<li> <b>use weights</b>:  Indicates if example weights should be used if present in the given example set.
+</li>
+<li> <b>iterations</b>:  The number of iterations performed for weight calculation.
+</li>
+<li> <b>numerical measure</b>:  Select measure
+</li>
+<li> <b>neighborhood type</b>:  Determines which type of neighborhood should be used. Either with fixed number of neighbors, or all neighbors within a distance or mixed.
+</li>
+<li> <b>k</b>:  Specifies the number of neighbors in the neighborhood. Regardless of the local density, always that much samples are returned.
+</li>
+<li> <b>fixed distance</b>:  Specifies the size of the neighborhood. All points within this distance are added.
+</li>
+<li> <b>relative size</b>:  Specifies the size of the neighborhood relative to the total number of examples. A value of 0.04 would include 4% of the data points into the neighborhood.
+</li>
+<li> <b>distance</b>:  Specifies the size of the neighborhood. All points within this distance are added.
+</li>
+<li> <b>at least</b>:  If the neighborhood count is less than this number, the distance is increased until this number is met.
+</li>
+<li> <b>smoothing kernel</b>:  Determines which kernel type is used to calculate the weights of distant examples.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

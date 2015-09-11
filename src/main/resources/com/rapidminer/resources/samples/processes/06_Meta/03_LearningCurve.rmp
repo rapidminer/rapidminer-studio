@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <parameter key="random_seed" value="2004"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum classification"/>
+        <parameter key="number_examples" value="300"/>
+        <parameter key="attributes_lower_bound" value="-1.0"/>
+        <parameter key="attributes_upper_bound" value="1.0"/>
+      </operator>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+        <parameter key="random_attributes" value="5"/>
+        <parameter key="label_noise" value="0.2"/>
+        <list key="noise"/>
+      </operator>
+      <operator activated="true" class="normalize" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Normalization" width="90" x="315" y="30"/>
+      <operator activated="true" class="create_learning_curve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="LearningCurve" width="90" x="450" y="30">
+        <parameter key="training_ratio" value="0.2"/>
+        <process expanded="true">
+          <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="JMySVMLearner" width="90" x="187" y="30">
+            <parameter key="convergence_epsilon" value="0.0010"/>
+          </operator>
+          <connect from_port="training set" to_op="JMySVMLearner" to_port="training set"/>
+          <connect from_op="JMySVMLearner" from_port="model" to_port="through 1"/>
+          <connect from_op="JMySVMLearner" from_port="weights" to_port="through 2"/>
+          <portSpacing port="source_training set" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+          <portSpacing port="sink_through 2" spacing="0"/>
+          <portSpacing port="sink_through 3" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ApplierChain" width="90" x="45" y="30">
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="512" y="30"/>
+              <connect from_port="in 1" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_port="in 2" to_op="ModelApplier" to_port="model"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+              <connect from_op="Performance" from_port="performance" to_port="out 1"/>
+              <portSpacing port="source_in 1" spacing="0"/>
+              <portSpacing port="source_in 2" spacing="0"/>
+              <portSpacing port="source_in 3" spacing="0"/>
+              <portSpacing port="sink_out 1" spacing="0"/>
+              <portSpacing port="sink_out 2" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ProcessLog" width="90" x="255" y="30">
+            <list key="log">
+              <parameter key="fraction" value="operator.LearningCurve.value.fraction"/>
+              <parameter key="performance" value="operator.LearningCurve.value.performance"/>
+            </list>
+          </operator>
+          <connect from_port="test set" to_op="ApplierChain" to_port="in 1"/>
+          <connect from_port="through 1" to_op="ApplierChain" to_port="in 2"/>
+          <connect from_port="through 2" to_op="ProcessLog" to_port="through 2"/>
+          <connect from_op="ApplierChain" from_port="out 1" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="ProcessLog" from_port="through 1" to_port="performance"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="source_through 2" spacing="0"/>
+          <portSpacing port="source_through 3" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_op="Normalization" to_port="example set input"/>
+      <connect from_op="Normalization" from_port="example set output" to_op="LearningCurve" to_port="exampleSet"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="48" resized="false" width="400" x="40" y="160">This process plots the learning curve, i.e. the performance with respect to the number of examples which is used for learning.</description>
+    </process>
+  </operator>
+</process>
