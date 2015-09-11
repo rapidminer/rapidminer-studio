@@ -3,20 +3,18 @@
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow.processrendering.view;
 
@@ -366,7 +364,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			if (wasConsumed) {
 				return;
 			}
-			wasConsumed |= processPhaseListenerMouseEvent(MouseEventType.MOUSE_RELEASED, e, RenderPhase.OPERATOR_ANNOTATIONS);
+			wasConsumed |= processPhaseListenerMouseEvent(MouseEventType.MOUSE_RELEASED, e,
+					RenderPhase.OPERATOR_ANNOTATIONS);
 			if (wasConsumed) {
 				return;
 			}
@@ -541,6 +540,31 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					}
 					e.consume();
 					break;
+				case KeyEvent.VK_BACK_SPACE:
+					wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, RenderPhase.FOREGROUND);
+					if (wasConsumed) {
+						return;
+					}
+					wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, RenderPhase.OVERLAY);
+					if (wasConsumed) {
+						return;
+					}
+					wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, RenderPhase.OPERATOR_ADDITIONS);
+					if (wasConsumed) {
+						return;
+					}
+
+					// operator phase event, no more decorator processing afterwards
+					if (model.getDisplayedChain().getRoot() != model.getDisplayedChain()) {
+						OperatorChain parent = model.getDisplayedChain().getParent();
+						if (parent != null) {
+							model.setDisplayedChain(parent);
+							model.fireDisplayedChainChanged();
+							ProcessRendererView.this.mainFrame.addViewSwitchToUndo();
+						}
+					}
+					e.consume();
+					break;
 				default:
 					// first come, first served, no limit to specific phases
 					for (RenderPhase phase : RenderPhase.eventOrder()) {
@@ -638,7 +662,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	/** the mainframe instance */
 	private final MainFrame mainFrame;
 
-	public ProcessRendererView(final ProcessRendererModel model, final ProcessPanel processPanel, final MainFrame mainFrame) {
+	public ProcessRendererView(final ProcessRendererModel model, final ProcessPanel processPanel,
+			final MainFrame mainFrame) {
 		this.mainFrame = mainFrame;
 		this.model = model;
 		this.controller = new ProcessRendererController(this, model);
@@ -798,8 +823,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		});
 
 		// add some actions to the action map of this component
-		((ResourceAction) mainFrame.getActions().TOGGLE_BREAKPOINT[BreakpointListener.BREAKPOINT_AFTER]).addToActionMap(
-				this, WHEN_FOCUSED);
+		((ResourceAction) mainFrame.getActions().TOGGLE_BREAKPOINT[BreakpointListener.BREAKPOINT_AFTER]).addToActionMap(this,
+				WHEN_FOCUSED);
 		((ResourceAction) mainFrame.getActions().TOGGLE_ACTIVATION_ITEM).addToActionMap(this, WHEN_FOCUSED);
 		selectAllAction.addToActionMap(this, WHEN_FOCUSED);
 		OperatorTransferHandler.addToActionMap(this);
@@ -1188,8 +1213,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		double rollout = model.getNameRolloutInterpolationMap().getValue(op);
 		int width = 0;
 		if (rollout > 0) {
-			width = (int) ProcessDrawer.OPERATOR_FONT.getStringBounds(op.getName(),
-					((Graphics2D) getGraphics()).getFontRenderContext()).getWidth();
+			width = (int) ProcessDrawer.OPERATOR_FONT
+					.getStringBounds(op.getName(), ((Graphics2D) getGraphics()).getFontRenderContext()).getWidth();
 		}
 		width = Math.max(width, ProcessDrawer.OPERATOR_WIDTH);
 
@@ -1271,13 +1296,14 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			if (subprocessIndex >= 0) {
 				Point loc = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(0, 0), subprocessIndex, model);
 				double width = model.getProcessWidth(model.getProcess(subprocessIndex)) + 1;
-				button.setBounds((int) (loc.getX() + width), (int) loc.getY() + (button.isAdd() ? 0 : button.getHeight())
-						- 1, (int) button.getPreferredSize().getWidth(), (int) button.getPreferredSize().getHeight());
+				button.setBounds((int) (loc.getX() + width),
+						(int) loc.getY() + (button.isAdd() ? 0 : button.getHeight()) - 1,
+						(int) button.getPreferredSize().getWidth(), (int) button.getPreferredSize().getHeight());
 			} else {
 				Point loc = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(0, 0), 0, model);
 				button.setBounds((int) loc.getX() - button.getWidth(),
-						(int) loc.getY() + (button.isAdd() ? 0 : button.getHeight()) - 1, (int) button.getPreferredSize()
-						.getWidth(), (int) button.getPreferredSize().getHeight());
+						(int) loc.getY() + (button.isAdd() ? 0 : button.getHeight()) - 1,
+						(int) button.getPreferredSize().getWidth(), (int) button.getPreferredSize().getHeight());
 			}
 		}
 	}
@@ -1304,23 +1330,23 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			// add port actions
 			final IOObject data = hoveringPort.getAnyDataOrNull();
 			if (data != null && data instanceof ResultObject) {
-				JMenuItem showResult = new JMenuItem(new ResourceAction(true, "show_port_data",
-						((ResultObject) data).getName()) {
+				JMenuItem showResult = new JMenuItem(
+						new ResourceAction(true, "show_port_data", ((ResultObject) data).getName()) {
 
-					private static final long serialVersionUID = -6557085878445788274L;
+							private static final long serialVersionUID = -6557085878445788274L;
 
-					@Override
-					public void actionPerformed(final ActionEvent e) {
-						data.setSource(hoveringPort.getPorts().getOwner().getOperator().getName());
-						mainFrame.getResultDisplay().showResult((ResultObject) data);
-					}
+							@Override
+							public void actionPerformed(final ActionEvent e) {
+								data.setSource(hoveringPort.getPorts().getOwner().getOperator().getName());
+								mainFrame.getResultDisplay().showResult((ResultObject) data);
+							}
 
-				});
+						});
 				menu.add(showResult);
 				try {
 					String locationString = mainFrame.getProcess().getRepositoryLocation().getAbsoluteLocation();
-					menu.add(new StoreInRepositoryAction(data, new RepositoryLocation(locationString.substring(0,
-							locationString.lastIndexOf(RepositoryLocation.SEPARATOR)))));
+					menu.add(new StoreInRepositoryAction(data, new RepositoryLocation(
+							locationString.substring(0, locationString.lastIndexOf(RepositoryLocation.SEPARATOR)))));
 				} catch (Exception e1) {
 					menu.add(new StoreInRepositoryAction(data));
 				}
@@ -1465,18 +1491,18 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 							menu.addSeparator();
 							first = false;
 						}
-						JMenuItem showResult = new JMenuItem(new ResourceAction(true, "show_port_data",
-								((ResultObject) data).getName()) {
+						JMenuItem showResult = new JMenuItem(
+								new ResourceAction(true, "show_port_data", ((ResultObject) data).getName()) {
 
-							private static final long serialVersionUID = -6557085878445788274L;
+									private static final long serialVersionUID = -6557085878445788274L;
 
-							@Override
-							public void actionPerformed(final ActionEvent e) {
-								data.setSource(hoveredOp.getName());
-								mainFrame.getResultDisplay().showResult((ResultObject) data);
-							}
+									@Override
+									public void actionPerformed(final ActionEvent e) {
+										data.setSource(hoveredOp.getName());
+										mainFrame.getResultDisplay().showResult((ResultObject) data);
+									}
 
-						});
+								});
 						menu.add(showResult);
 					}
 				}
@@ -1554,24 +1580,24 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 				if (index == 0) {
 					ExtensionButton addButton2 = new ExtensionButton(model, model.getDisplayedChain(), -1, true);
-					addButton2.setBounds((int) (loc.getX() - addButton2.getPreferredSize().getWidth() + 1), (int) (loc
-							.getY() - 1), (int) addButton2.getPreferredSize().getWidth(), (int) addButton2
-							.getPreferredSize().getHeight());
+					addButton2.setBounds((int) (loc.getX() - addButton2.getPreferredSize().getWidth() + 1),
+							(int) (loc.getY() - 1), (int) addButton2.getPreferredSize().getWidth(),
+							(int) addButton2.getPreferredSize().getHeight());
 					subprocessExtensionButtons.add(addButton2);
 					add(addButton2);
 				}
 
 				ExtensionButton addButton = new ExtensionButton(model, model.getDisplayedChain(), index, true);
-				addButton.setBounds((int) (loc.getX() + width), (int) (loc.getY() - 1), (int) addButton.getPreferredSize()
-						.getWidth(), (int) addButton.getPreferredSize().getHeight());
+				addButton.setBounds((int) (loc.getX() + width), (int) (loc.getY() - 1),
+						(int) addButton.getPreferredSize().getWidth(), (int) addButton.getPreferredSize().getHeight());
 				subprocessExtensionButtons.add(addButton);
 				add(addButton);
 
 				if (model.getProcesses().size() > 1) {
 					ExtensionButton deleteButton = new ExtensionButton(model, model.getDisplayedChain(), index, false);
 					deleteButton.setBounds((int) (loc.getX() + width), (int) (loc.getY() + addButton.getHeight() - 1),
-							(int) deleteButton.getPreferredSize().getWidth(), (int) deleteButton.getPreferredSize()
-							.getHeight());
+							(int) deleteButton.getPreferredSize().getWidth(),
+							(int) deleteButton.getPreferredSize().getHeight());
 					subprocessExtensionButtons.add(deleteButton);
 					add(deleteButton);
 				}

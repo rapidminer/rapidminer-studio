@@ -3,20 +3,18 @@
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance.cost;
 
@@ -31,7 +29,7 @@ import com.rapidminer.tools.math.Averagable;
 /**
  * This performance Criterion works with a given cost matrix. Every classification result creates
  * costs. Costs should be minimized since that the fitness is - cost.
- * 
+ *
  * @author Sebastian Land
  */
 public class ClassificationCostCriterion extends MeasuredPerformance {
@@ -41,13 +39,15 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	private double[][] costMatrix;
 	private double exampleCount;
 	private double costs;
+	private double totalCosts;
+	private double totalExampleCount;
 	Attribute label;
 	Attribute predictedLabel;
 	private Map<String, Integer> classOrderMap = null;
 
 	/**
 	 * Clone constructor
-	 * 
+	 *
 	 * @param other
 	 *            the object to be cloned from
 	 */
@@ -108,6 +108,8 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 		this.predictedLabel = predictedLabel;
 		exampleCount = 0;
 		costs = 0;
+		totalCosts = 0;
+		totalExampleCount = 0;
 	}
 
 	@Override
@@ -123,12 +125,15 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	@Override
 	public void countExample(Example example) {
 		exampleCount++;
+		totalExampleCount++;
 		if (classOrderMap == null) {
 			costs += costMatrix[(int) example.getValue(predictedLabel)][(int) example.getValue(label)];
+			totalCosts += costMatrix[(int) example.getValue(predictedLabel)][(int) example.getValue(label)];
 		} else {
 			int predictedLabelIndex = classOrderMap.get(example.getNominalValue(predictedLabel));
 			int labelIndex = classOrderMap.get(example.getNominalValue(label));
 			costs += costMatrix[predictedLabelIndex][labelIndex];
+			totalCosts += costMatrix[predictedLabelIndex][labelIndex];
 		}
 	}
 
@@ -143,16 +148,38 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	}
 
 	@Override
-	protected void buildSingleAverage(Averagable averagable) {}
+	protected void buildSingleAverage(Averagable averagable) {
+		ClassificationCostCriterion other = (ClassificationCostCriterion) averagable;
+		totalCosts += other.getTotalCosts();
+		totalExampleCount += other.getTotalExampleCount();
+	}
 
 	@Override
 	public double getMikroAverage() {
-		return costs / exampleCount;
+		return totalCosts / totalExampleCount;
 	}
 
 	@Override
 	public double getMikroVariance() {
 		return 0;
+	}
+
+	/**
+	 * Delivers the total amount of considered examples for the MikroAverange.
+	 *
+	 * @return total number of examples used
+	 */
+	protected double getTotalExampleCount() {
+		return totalExampleCount;
+	}
+
+	/**
+	 * Delivers the total amount of costs considered for the MikroAverange.
+	 *
+	 * @return total costs
+	 */
+	protected double getTotalCosts() {
+		return totalCosts;
 	}
 
 }

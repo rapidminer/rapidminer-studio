@@ -66,7 +66,7 @@ public class ExampleResolver implements Resolver {
 		if (exampleSet == null) {
 			throw new IllegalArgumentException("exampleSet must not be null");
 		}
-		this.metaData = new ExampleSetMetaData(exampleSet, true);
+		this.metaData = new ExampleSetMetaData(exampleSet, false, false);
 	}
 
 	/**
@@ -124,11 +124,11 @@ public class ExampleResolver implements Resolver {
 
 		for (AttributeMetaData amd : metaDataAttributes) {
 			if (amd.isSpecial()) {
-				functionInputs.add(new FunctionInput(Category.DYNAMIC, KEY_SPECIAL_ATTRIBUTES, amd.getName(), amd
-						.getValueType(), amd.getRole()));
+				functionInputs.add(new FunctionInput(Category.DYNAMIC, KEY_SPECIAL_ATTRIBUTES, amd.getName(),
+				        amd.getValueType(), amd.getRole()));
 			} else {
-				functionInputs.add(new FunctionInput(Category.DYNAMIC, KEY_ATTRIBUTES, amd.getName(), amd.getValueType(),
-						null));
+				functionInputs
+				        .add(new FunctionInput(Category.DYNAMIC, KEY_ATTRIBUTES, amd.getName(), amd.getValueType(), null));
 			}
 		}
 
@@ -172,7 +172,8 @@ public class ExampleResolver implements Resolver {
 
 	@Override
 	public double getDoubleValue(String variableName) {
-		if (!(getVariableType(variableName) == ExpressionType.DOUBLE || getVariableType(variableName) == ExpressionType.INTEGER)) {
+		if (!(getVariableType(variableName) == ExpressionType.DOUBLE
+		        || getVariableType(variableName) == ExpressionType.INTEGER)) {
 			throw new IllegalStateException("the variable " + variableName + " does not have a double value");
 		}
 		Example example = getNonNullExample();

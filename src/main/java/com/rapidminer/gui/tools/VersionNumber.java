@@ -3,20 +3,18 @@
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -44,6 +42,8 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	private static final String ALPHA_TAG = "alpha";
 
 	private static final String BETA_TAG = "beta";
+
+	private static final String RELEASE_CANDIDATE = "rc";
 
 	private static final String SNAPSHOT = "snapshot";
 
@@ -137,7 +137,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	 */
 	@Deprecated
 	public VersionNumber(int majorNumber, int minorNumber, int patchLevel, boolean alpha, int alphaNumber, boolean beta,
-			int betaNumber) {
+	        int betaNumber) {
 		this.majorNumber = majorNumber;
 		this.minorNumber = minorNumber;
 		this.patchLevel = patchLevel;
@@ -250,7 +250,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	@Override
 	public String toString() {
 		return majorNumber + "." + minorNumber + "." + "000".substring((patchLevel + "").length()) + patchLevel
-				+ (classifier != null ? classifier.toUpperCase(Locale.ENGLISH) : "");
+		        + (classifier != null ? classifier.toUpperCase(Locale.ENGLISH) : "");
 	}
 
 	/**
@@ -294,6 +294,23 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	 *         classifier named SNAPSHOT).
 	 */
 	public boolean isDevelopmentBuild() {
+		return isSnapshot() || isPreview(ALPHA_TAG) || isPreview(BETA_TAG) || isPreview(RELEASE_CANDIDATE);
+	}
+
+	private boolean isSnapshot() {
 		return classifier != null && classifier.equalsIgnoreCase(CLASSIFIER_TAG + SNAPSHOT);
+	}
+
+	private boolean isPreview(String tagName) {
+		if (classifier != null) {
+			String lowerCase = classifier.toLowerCase(Locale.ENGLISH);
+			if (lowerCase.contains(CLASSIFIER_TAG)) {
+				String suffix = lowerCase.substring(lowerCase.lastIndexOf(CLASSIFIER_TAG) + 1);
+				return suffix.startsWith(tagName);
+			} else {
+				return false;
+			}
+		}
+		return false;
 	}
 }

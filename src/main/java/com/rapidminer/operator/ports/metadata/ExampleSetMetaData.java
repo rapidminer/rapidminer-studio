@@ -3,22 +3,27 @@
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.ports.metadata;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.example.AttributeRole;
@@ -28,28 +33,20 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * This class stores detailed meta data information about ExampleSets.
- * 
+ *
  * @author Simon Fischer, Sebastian Land
  */
 public class ExampleSetMetaData extends MetaData {
 
 	/**
-     * 
-     */
+	 *
+	 */
 	private static final long serialVersionUID = 1L;
 
 	private SetRelation attributesRelation = SetRelation.EQUAL;
-	// private final SetRelation specialAttributesRelation = SetRelation.EQUAL;
 
 	private MDInteger numberOfExamples = new MDInteger();
 
@@ -89,15 +86,42 @@ public class ExampleSetMetaData extends MetaData {
 	 * each nominal value stored in the data. With large, id-like data this will become very big.
 	 */
 	public ExampleSetMetaData(ExampleSet exampleSet) {
-		this(exampleSet, false);
+		this(exampleSet, false, true);
 	}
 
+	/**
+	 * Creates an {@link ExampleSetMetaData} object for the provided ExampleSet object.
+	 *
+	 * @param exampleSet
+	 *            the ExampleSet object the meta-data should be constructed for
+	 * @param shortened
+	 *            whether the meta data should be shortened AND whether the statistics should be
+	 *            recalculated
+	 * @deprecated use {@link #ExampleSetMetaData(ExampleSet, boolean, boolean)} instead
+	 */
+	@Deprecated
 	public ExampleSetMetaData(ExampleSet exampleSet, boolean shortened) {
+		this(exampleSet, shortened, !shortened);
+	}
+
+	/**
+	 * Creates an {@link ExampleSetMetaData} object for the provided ExampleSet object.
+	 *
+	 * @param exampleSet
+	 *            the ExampleSet object the meta-data should be constructed for
+	 * @param shortened
+	 *            whether the meta data should be shortened. In case it should be shortened the
+	 *            meta-data will contain at most {@link #getMaximumNumberOfAttributes()} attributes
+	 * @param recalculateStatistics
+	 *            defines whether the ExampleSet statistics should be recalculated
+	 */
+	public ExampleSetMetaData(ExampleSet exampleSet, boolean shortened, boolean recalculateStatistics) {
 		super(ExampleSet.class);
 		int maxNumber = Integer.MAX_VALUE;
 		if (shortened) {
 			maxNumber = getMaximumNumberOfAttributes();
-		} else {
+		}
+		if (recalculateStatistics) {
 			try {
 				exampleSet.recalculateAllAttributeStatistics();
 			} catch (UnsupportedOperationException e) {
@@ -172,17 +196,16 @@ public class ExampleSetMetaData extends MetaData {
 				case SUPERSET:
 					buf.append("At least ");
 					break;
+				default:
+					// ignore, number of attributes will evaluate to "1 attribute" or "x attributes"
+					break;
 			}
 			buf.append(attributeMetaData.size());
 			buf.append(" attribute" + (attributeMetaData.size() != 1 ? "s" : "") + ": ");
-			buf.append("<table><thead><tr><th>Role</th><th>Name</th><th>Type</th><th>Range</th><th>Missings</th><th>Comment</th></tr></thead><tbody>");
+			buf.append(
+			        "<table><thead><tr><th>Role</th><th>Name</th><th>Type</th><th>Range</th><th>Missings</th><th>Comment</th></tr></thead><tbody>");
 			// boolean first = true;
 			for (AttributeMetaData amd : attributeMetaData.values()) {
-				// if (!first) {
-				// buf.append("<br/>");
-				// } else {
-				// first = false;
-				// }
 				buf.append(amd.getDescriptionAsTableRow());
 			}
 			buf.append("</tbody></table>");
@@ -293,7 +316,7 @@ public class ExampleSetMetaData extends MetaData {
 
 	/**
 	 * Joins the attributes of both example sets.
-	 * 
+	 *
 	 * @param prefixForDuplicates
 	 *            If this is non-null, attributes with duplicate names will be renamed. Otherwise,
 	 *            only one will be kept.
@@ -445,7 +468,7 @@ public class ExampleSetMetaData extends MetaData {
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("ExampleSetMetaData: #examples: " + numberOfExamples + "; #attributes: " + getAllAttributes().size()
-				+ Tools.getLineSeparator());
+		        + Tools.getLineSeparator());
 		for (AttributeMetaData amd : getAllAttributes()) {
 			buffer.append(amd.toString() + Tools.getLineSeparator());
 		}
@@ -529,11 +552,11 @@ public class ExampleSetMetaData extends MetaData {
 			return MetaDataInfo.YES;
 		}
 		if (other.getAllAttributes().size() != getAllAttributes().size()
-				&& other.getAttributeSetRelation() == SetRelation.EQUAL && getAttributeSetRelation() == SetRelation.EQUAL) {
+		        && other.getAttributeSetRelation() == SetRelation.EQUAL && getAttributeSetRelation() == SetRelation.EQUAL) {
 			return MetaDataInfo.NO;
 		}
 		if (other.getAllAttributes().size() == getAllAttributes().size()
-				&& other.getAttributeSetRelation() == SetRelation.EQUAL && getAttributeSetRelation() == SetRelation.EQUAL) {
+		        && other.getAttributeSetRelation() == SetRelation.EQUAL && getAttributeSetRelation() == SetRelation.EQUAL) {
 			for (AttributeMetaData amd : getAllAttributes()) {
 				AttributeMetaData otherAMD = other.getAttributeByName(amd.getName());
 				if (otherAMD == null) {
@@ -577,13 +600,17 @@ public class ExampleSetMetaData extends MetaData {
 				case SUPERSET:
 					buf.append("At least ");
 					break;
+				default:
+					// ignore, number of attributes will evaluate to "1 attribute" or "x attributes"
+					break;
 			}
 			buf.append(attributeMetaData.size());
 			buf.append(" attribute" + (attributeMetaData.size() != 1 ? "s" : "") + ": ");
 		}
 		if (nominalDataWasShrinked) {
-			buf.append("<br/><small><strong>Note:</strong> Some of the nominal values in this set were discarded due to performance reasons. You can change this behaviour in the preferences (<code>"
-					+ RapidMiner.PROPERTY_RAPIDMINER_GENERAL_MAX_NOMINAL_VALUES + "</code>).</small>");
+			buf.append(
+			        "<br/><small><strong>Note:</strong> Some of the nominal values in this set were discarded due to performance reasons. You can change this behaviour in the preferences (<code>"
+			                + RapidMiner.PROPERTY_RAPIDMINER_GENERAL_MAX_NOMINAL_VALUES + "</code>).</small>");
 		}
 		return buf.toString();
 	}
@@ -612,7 +639,7 @@ public class ExampleSetMetaData extends MetaData {
 	public static int getMaximumNumberOfAttributes() {
 		int maxSize = 250;
 		String maxSizeString = ParameterService
-				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_MAX_META_DATA_ATTRIBUTES);
+		        .getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_MAX_META_DATA_ATTRIBUTES);
 		if (maxSizeString != null) {
 			maxSize = Integer.parseInt(maxSizeString);
 			if (maxSize == 0) {

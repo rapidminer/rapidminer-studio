@@ -3,20 +3,18 @@
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties;
 
@@ -139,11 +137,11 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 	private JTextField stepsValueTextField;
 
-	private JComboBox gridScaleValueComboBox;
+	private JComboBox<String> gridScaleValueComboBox;
 
-	private JList categoriesList;
+	private JList<String> categoriesList;
 
-	private JList selectedCategoriesList;
+	private JList<String> selectedCategoriesList;
 
 	private DefaultListModel categoriesListModel;
 
@@ -246,10 +244,10 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 						int previousIndex = selectedParametersList.getSelectedIndex() == e.getFirstIndex() ? e
 								.getLastIndex() : e.getFirstIndex();
 
-						if (previousIndex != selectedParametersList.getSelectedIndex() && previousIndex >= 0
-										&& previousIndex < selectedParametersListModel.getSize()) {
-							updateNumericalParameterValues(previousIndex);
-						}
+								if (previousIndex != selectedParametersList.getSelectedIndex() && previousIndex >= 0
+								&& previousIndex < selectedParametersListModel.getSize()) {
+									updateNumericalParameterValues(previousIndex);
+								}
 					}
 					showParameterValues((String) selectedParametersList.getSelectedValue());
 				}
@@ -464,9 +462,9 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		gridPanel.add(stepsValueTextField);
 
 		if (mode == ParameterIteratingOperatorChain.VALUE_MODE_DISCRETE) {
-			gridScaleValueComboBox = new JComboBox(ParameterValueGrid.SCALES);
+			gridScaleValueComboBox = new JComboBox<String>(ParameterValueGrid.SCALES);
 		} else {
-			gridScaleValueComboBox = new JComboBox();
+			gridScaleValueComboBox = new JComboBox<String>();
 		}
 		gridScaleValueComboBox.setToolTipText("Grid scheme.");
 		gridScaleValueComboBox.setEnabled(false);
@@ -503,7 +501,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		c.fill = GridBagConstraints.BOTH;
 		listPanel.add(createValueTextField, c);
 
-		categoriesList = new JList(categoriesListModel);
+		categoriesList = new JList<String>(categoriesListModel);
 		categoriesList.setToolTipText("Available (or predefined) values.");
 		categoriesList.setEnabled(false);
 		c.insets = new Insets(0, 0, 0, GAP);
@@ -885,10 +883,12 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		Collection<ParameterType> parameters = operator.getParameters().getParameterTypes();
 		for (ParameterType parameter : parameters) {
 			// do not show parameters that are not numerical in continuous mode
-			/*
-			 * if (mode == ParameterIteratingOperatorChain.VALUE_MODE_CONTINUOUS) { if (!(parameter
-			 * instanceof ParameterTypeNumber)) { continue; } }
-			 */
+			if (mode == ParameterIteratingOperatorChain.VALUE_MODE_CONTINUOUS) {
+				if (!operator.getParameterType(parameter.getKey()).isNumerical()) {
+					continue;
+				}
+			}
+
 			if (!parameterValuesMap.containsKey(operator.getName() + "." + parameter.getKey())) {
 				parametersListModel.addElement(parameter.getKey(), parameter.getDescription());
 				if (parameter.isNumerical() || parameter instanceof ParameterTypeCategory

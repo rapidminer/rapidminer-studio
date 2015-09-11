@@ -269,7 +269,7 @@ public class RapidMinerGUI extends RapidMiner {
 			try {
 				sl.splashWillBeShown();
 			} catch (RuntimeException e) {
-				// ignore
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.startup_listener_error", e);
 			}
 		}
 
@@ -347,7 +347,7 @@ public class RapidMinerGUI extends RapidMiner {
 			try {
 				sl.mainFrameInitialized(mainFrame);
 			} catch (RuntimeException e) {
-				// ignore
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.startup_listener_error", e);
 			}
 		}
 
@@ -379,7 +379,7 @@ public class RapidMinerGUI extends RapidMiner {
 			try {
 				sl.splashWasHidden();
 			} catch (RuntimeException e) {
-				// ignore
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.startup_listener_error", e);
 			}
 		}
 
@@ -406,7 +406,7 @@ public class RapidMinerGUI extends RapidMiner {
 			try {
 				sl.startupCompleted();
 			} catch (RuntimeException e) {
-				// ignore
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.startup_listener_error", e);
 			}
 		}
 	}
