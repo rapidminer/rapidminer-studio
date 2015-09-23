@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/lightbulb.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Bayesian Boosting</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Bayesian_Boosting skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Boosting operator based on Bayes' theorem.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator trains an ensemble of classifiers for boolean target attributes. In each iteration the training set is reweighted, so that previously discovered patterns and other kinds of prior knowledge are "sampled out" {@rapidminer.cite Scholz/2005b}. An inner classifier, typically a rule or decision tree induction algorithm, is sequentially applied several times, and the models are combined to a single global model. The number of models to be trained maximally are specified by the parameter <code>iterations</code>.
+</p>
+<p>
+If the parameter <code>rescale_label_priors</code> is set, then the example set is reweighted, so that all classes are equally probable (or frequent). For two-class problems this turns the problem of fitting models to maximize weighted relative accuracy into the more common task of classifier induction {@rapidminer.cite Scholz/2005a}. Applying a rule induction algorithm as an inner learner allows to do subgroup discovery. This option is also recommended for data sets with class skew, if a "very weak learner" like a decision stump is used. If <code>rescale_label_priors</code> is not set, then the operator performs boosting based on probability estimates.
+</p>
+<p>
+The estimates used by this operator may either be computed using the same set as for training, or in each iteration the training set may be split randomly, so that a model is fitted based on the first subset, and the probabilities are estimated based on the second. The first solution may be advantageous in situations where data is rare. Set the parameter <code>ratio_internal_bootstrap</code> to 1 to use the same set for training as for estimation. Set this parameter to a value of lower than 1 to use the specified subset of data for training, and the remaining examples for probability estimation.
+</p>
+<p>
+If the parameter <code>allow_marginal_skews</code> is <i>not</i> set, then the support of each subset defined in terms of common base model predictions does not change from one iteration to the next. Analogously the class priors do not change. This is the procedure originally described in {@rapidminer.cite Scholz/2005b} in the context of subgroup discovery.
+</p>
+<p>
+Setting the <code>allow_marginal_skews</code> option to <code>true</code> leads to a procedure that changes the marginal weights/probabilities of subsets, if this is beneficial in a boosting context, and stratifies the two classes to be equally likely. As for AdaBoost, the total weight upper-bounds the training error in this case. This bound is reduced more quickly by the BayesianBoosting operator, however.
+</p>
+<p>
+In sum, to reproduce the sequential sampling, or knowledge-based sampling, from {@rapidminer.cite Scholz/2005b} for subgroup discovery, two of the default parameter settings of this operator have to be changed: <code>rescale_label_priors</code> must be set to <code>true</code>, and <code>allow_marginal_skews</code> must be set to <code>false</code>. In addition, a boolean (binomial) label has to be used.
+</p>
+<p>
+The operator requires an example set as its input. To sample out prior knowledge of a different form it is possible to provide another model as an optional additional input. The predictions of this model are used to weight produce an initial weighting of the training set. The ouput of the operator is a classification model applicable for estimating conditional class probabilities or for plain crisp classification. It contains up to the specified number of inner base models. In the case of an optional initial model, this model will also be stored in the output model, in order to produce the same initial weighting during model application.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>training set</b>: <i>expects:</i> ExampleSet
+</li>
+<li> <b>model</b>: <i>optional:</i> PredictionModel
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>model</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>use subset for training</b>:  Fraction of examples used for training, remaining ones are used to estimate the confusion matrix. Set to 1 to turn off test set.
+</li>
+<li> <b>iterations</b>:  The maximum number of iterations.
+</li>
+<li> <b>rescale label priors</b>:  Specifies whether the proportion of labels should be equal by construction after first iteration .
+</li>
+<li> <b>allow marginal skews</b>:  Allow to skew the marginal distribution (P(x)) during learning.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

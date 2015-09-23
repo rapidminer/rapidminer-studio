@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="status"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="three ring clusters"/>
+        <parameter key="number_examples" value="500"/>
+        <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-50.0"/>
+        <parameter key="attributes_upper_bound" value="50.0"/>
+      </operator>
+      <operator activated="true" class="support_vector_clustering" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="SupportVectorClustering" width="90" x="179" y="30">
+        <parameter key="min_pts" value="5"/>
+        <parameter key="kernel_gamma" value="0.0050"/>
+        <parameter key="convergence_epsilon" value="0.0010"/>
+        <parameter key="p" value="0.01"/>
+        <parameter key="number_sample_points" value="3"/>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="SupportVectorClustering" to_port="example set"/>
+      <connect from_op="SupportVectorClustering" from_port="cluster model" to_port="result 1"/>
+      <connect from_op="SupportVectorClustering" from_port="clustered set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+    </process>
+  </operator>
+</process>

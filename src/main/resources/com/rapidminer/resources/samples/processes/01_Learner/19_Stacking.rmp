@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="simple polynomial classification"/>
+        <parameter key="number_examples" value="1000"/>
+      </operator>
+      <operator activated="true" class="stacking" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Stacking" width="90" x="179" y="30">
+        <process expanded="true">
+          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="179" y="30"/>
+          <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="179" y="120">
+            <parameter key="k" value="5"/>
+          </operator>
+          <operator activated="true" class="linear_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="LinearRegression" width="90" x="179" y="210"/>
+          <connect from_port="training set 1" to_op="DecisionTree" to_port="training set"/>
+          <connect from_port="training set 2" to_op="NearestNeighbors" to_port="training set"/>
+          <connect from_port="training set 3" to_op="LinearRegression" to_port="training set"/>
+          <connect from_op="DecisionTree" from_port="model" to_port="base model 1"/>
+          <connect from_op="NearestNeighbors" from_port="model" to_port="base model 2"/>
+          <connect from_op="LinearRegression" from_port="model" to_port="base model 3"/>
+          <portSpacing port="source_training set 1" spacing="0"/>
+          <portSpacing port="source_training set 2" spacing="0"/>
+          <portSpacing port="source_training set 3" spacing="0"/>
+          <portSpacing port="source_training set 4" spacing="0"/>
+          <portSpacing port="sink_base model 1" spacing="0"/>
+          <portSpacing port="sink_base model 2" spacing="0"/>
+          <portSpacing port="sink_base model 3" spacing="0"/>
+          <portSpacing port="sink_base model 4" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NaiveBayes" width="90" x="172" y="30"/>
+          <connect from_port="stacking examples" to_op="NaiveBayes" to_port="training set"/>
+          <connect from_op="NaiveBayes" from_port="model" to_port="stacking model"/>
+          <portSpacing port="source_stacking examples" spacing="0"/>
+          <portSpacing port="sink_stacking model" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="Stacking" to_port="training set"/>
+      <connect from_op="Stacking" from_port="model" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="268" resized="true" width="469" x="39" y="117">RapidMiner supports Meta Learning by embedding one or several basic learners as children into a parent meta learning operator.&lt;br&gt;&lt;br&gt;In this example we generate a data set with the ExampleSetGenerator operator and apply an improved version of Stacking on this data set. The Stacking operator contains four inner operators, the first one is the learner which should learn the stacked model from the predictions of the other four child operators (base learners).&lt;br/&gt;&lt;br&gt;Other meta learning schemes like Boosting or Bagging only contain one inner learning operator. In both cases the parameters of the inner learning schemes are directly set for the base learning operators. There is no need to cope with different styles of parameters for the inner and the meta learning operator.</description>
+    </process>
+  </operator>
+</process>

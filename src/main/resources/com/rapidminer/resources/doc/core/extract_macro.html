@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/keyboard_key.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Extract Macro</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Extract_Macro skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator can be used to define a single macro which can be used by %{my_macro} in parameter values. The macro value will be derived from the input </p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator (re-)defines a macro for the current process. Macros will be replaced in the value strings of parameters by the macros' values, see Macros section below. In contrast to the usual <a href="/wiki/index.php?title=Set_Macro" shape="rect" title="Set Macro">Set Macro</a> operator, this operator sets the value of a single macro from properties of a given input <i>ExampleSet</i>, e.g. from properties like the number of examples or attributes or from a specific data value. The name of the macro must be specified in the <b>macro</b> parameter and the way the value is retrieved from the <i>ExampleSet</i> must be chosen from <b>macro_type</b>.
+</p><br/><h4> <span class="mw-headline" id="Macros">Macros</span>
+</h4>
+<p>
+A defined macro can then be used in all succeeding operators as parameter value for parameters. A macro must then be enclosed by "%{" and "}".
+</p>
+<p>
+There are several predefined macros:
+</p>
+
+<ul class="ports">
+<li> <b>%{process_name}:</b> will be replaced by the name of the process (without path and extension)
+</li>
+<li> <b>%{process_file}:</b> will be replaced by the file name of the process (with extension)
+</li>
+<li> <b>%{process_path}:</b> will be replaced by the complete absolute path of the process file
+</li>
+</ul>
+<p>
+In addition to those the user might define arbitrary other macros which will be replaced by arbitrary string during the process run. Please note also that several other short macros exist, e.g. %{a} for the number of times the current operator was applied.
+
+Please note also that other operators like many of the loop operators like  <a href="/wiki/index.php?title=Loop_Values" shape="rect" title="Loop Values">Loop Values</a> or <a href="/wiki/index.php?title=Loop_Attributes" shape="rect" title="Loop Attributes">Loop Attributes</a> also add specific macros.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet, <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>macro</b>:  The macro name defined by the user.
+</li>
+<li> <b>macro type</b>:  Indicates the way how the macro should be defined.
+</li>
+<li> <b>statistics</b>:  The statistics of the specified attribute which should be used as macro value.
+</li>
+<li> <b>attribute name</b>:  The name of the attribute from which the data should be derived.
+</li>
+<li> <b>attribute value</b>:  The value of the attribute which should be counted.
+</li>
+<li> <b>example index</b>:  The index of the example from which the data should be derived. Negative indices are counted from the end of the data set. Positive counting starts with 1, negative counting with -1.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

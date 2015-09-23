@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_delete.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Forward Selection</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Forward_Selection skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+A highly efficient implementation of the forward selection scheme.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator starts with an empty selection of attributes and, in each round, it adds each unused attribute of the given set of examples. For each added attribute, the performance is estimated using inner operators, e.g. a cross-validation. Only the attribute giving the highest increase of performance is added to the selection. Then a new round is started with the modified selection. This implementation will avoid any additional memory consumption beside the memory used originally for storing the data and the memory which might be needed for applying the inner operators.
+</p>
+<p>
+
+
+A parameter specifies when the iteration will be aborted. There are three different behaviors possible: 
+
+
+<ul class="ports">
+<li> <b>without increase</b>
+</li>
+</ul>
+
+runs as long as there is any increase in performance
+<ul class="ports">
+<li> <b>without increase of at least</b>
+</li>
+</ul>
+
+runs as long as the increase is at least as high as specified, either relative or absolute.
+<ul class="ports">
+<li> <b>without significant increase</b>
+</li>
+</ul>
+
+stops as soon as the increase isn't significant to the specified level.
+</p>
+<p>
+The parameter speculative_rounds defines how many rounds will be performed in a row, after a first time the stopping criterion was fulfilled. If the performance increases again during the speculative rounds, the selection will be continued. Otherwise all additionally selected attributes will be removed, as if no speculative rounds would have been executed. This might help to avoid getting stuck in local optima. A following backward elimination operator might remove unneeded attributes again.
+</p>
+<p>
+The operator provides a value for logging the performance in each round using a Log.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>attribute weights</b>:
+</li>
+<li> <b>performance</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>maximal number of attributes</b>:  The maximal number of forward selection steps and hence the maximal number of attributes.
+</li>
+<li> <b>speculative rounds</b>:  Defines the number of times, the stopping criterion might be consecutivly ignored before the selection is actually stopped. A number higher than one might help not to stack in the local optima.
+</li>
+<li> <b>stopping behavior</b>:  Defines on what criterias the selection is stopped.
+</li>
+<li> <b>use relative increase</b>:  If checked, the relative performance increase will be used as stopping criterion.
+</li>
+<li> <b>minimal absolute increase</b>:  If the absolut performance increase to the last step drops below this threshold, the selection will be stopped.
+</li>
+<li> <b>minimal relative increase</b>:  If the relative performance increase to the last step drops below this threshold, the selection will be stopped.
+</li>
+<li> <b>alpha</b>:  The probability threshold which determines if differences are considered as significant.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

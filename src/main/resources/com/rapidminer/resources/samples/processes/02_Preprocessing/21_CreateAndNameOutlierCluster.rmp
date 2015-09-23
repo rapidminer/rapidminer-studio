@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="gaussian mixture clusters"/>
+        <parameter key="number_examples" value="200"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="generate_id" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="IdTagging" width="90" x="180" y="30"/>
+      <operator activated="true" class="detect_outlier_lof" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="LOFOutlierDetection" width="90" x="315" y="30">
+        <parameter key="distance_function" value="angle"/>
+      </operator>
+      <operator activated="true" class="multiply" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="IOMultiplier_1" width="90" x="246" y="165"/>
+      <operator activated="true" class="subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Outliers" width="90" x="380" y="165">
+        <process expanded="true">
+          <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ExampleFilter" width="90" x="45" y="30">
+            <parameter key="parameter_string" value="outlier&gt;0.8"/>
+            <parameter key="condition_class" value="attribute_value_filter"/>
+            <list key="filters_list"/>
+          </operator>
+          <operator activated="true" class="select_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Select Attributes" width="90" x="180" y="30">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="regular_expression" value="Outlier"/>
+            <parameter key="invert_selection" value="true"/>
+            <parameter key="include_special_attributes" value="true"/>
+          </operator>
+          <operator activated="true" class="generate_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeConstruction" width="90" x="315" y="30">
+            <list key="function_descriptions">
+              <parameter key="cluster" value="-1"/>
+            </list>
+          </operator>
+          <operator activated="true" class="work_on_subset" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeSubsetPreprocessing" width="90" x="450" y="30">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="regular_expression" value="cluster"/>
+            <parameter key="remove_roles" value="true"/>
+            <process expanded="true">
+              <operator activated="true" class="numerical_to_polynominal" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Numerical2Polynominal"/>
+              <connect from_port="exampleSet" to_op="Numerical2Polynominal" to_port="example set input"/>
+              <connect from_op="Numerical2Polynominal" from_port="example set output" to_port="example set"/>
+              <portSpacing port="source_exampleSet" spacing="0"/>
+              <portSpacing port="sink_example set" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="map" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Mapping" width="90" x="585" y="30">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="regular_expression" value="cluster"/>
+            <list key="value_mappings"/>
+            <parameter key="replace_what" value="-1"/>
+            <parameter key="replace_by" value="outlier_cluster"/>
+          </operator>
+          <operator activated="true" class="set_role" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ChangeAttributeRole" width="90" x="695" y="30">
+            <parameter key="attribute_name" value="cluster"/>
+            <parameter key="target_role" value="cluster"/>
+            <list key="set_additional_roles"/>
+          </operator>
+          <connect from_port="in 1" to_op="ExampleFilter" to_port="example set input"/>
+          <connect from_op="ExampleFilter" from_port="example set output" to_op="Select Attributes" to_port="example set input"/>
+          <connect from_op="Select Attributes" from_port="example set output" to_op="AttributeConstruction" to_port="example set input"/>
+          <connect from_op="AttributeConstruction" from_port="example set output" to_op="AttributeSubsetPreprocessing" to_port="example set"/>
+          <connect from_op="AttributeSubsetPreprocessing" from_port="example set" to_op="Mapping" to_port="example set input"/>
+          <connect from_op="Mapping" from_port="example set output" to_op="ChangeAttributeRole" to_port="example set input"/>
+          <connect from_op="ChangeAttributeRole" from_port="example set output" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NonOutliers" width="90" x="380" y="255">
+        <process expanded="true">
+          <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ExampleFilter (2)" width="90" x="45" y="30">
+            <parameter key="parameter_string" value="outlier&lt;0.9"/>
+            <parameter key="condition_class" value="attribute_value_filter"/>
+            <list key="filters_list"/>
+          </operator>
+          <operator activated="true" class="select_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Select Attributes (2)" width="90" x="179" y="30">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="regular_expression" value="Outlier"/>
+            <parameter key="invert_selection" value="true"/>
+            <parameter key="include_special_attributes" value="true"/>
+          </operator>
+          <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="315" y="30">
+            <parameter key="k" value="4"/>
+          </operator>
+          <connect from_port="in 1" to_op="ExampleFilter (2)" to_port="example set input"/>
+          <connect from_op="ExampleFilter (2)" from_port="example set output" to_op="Select Attributes (2)" to_port="example set input"/>
+          <connect from_op="Select Attributes (2)" from_port="example set output" to_op="KMeans" to_port="example set"/>
+          <connect from_op="KMeans" from_port="clustered set" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="append" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ExampleSetMerge" width="90" x="581" y="165"/>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="IdTagging" to_port="example set input"/>
+      <connect from_op="IdTagging" from_port="example set output" to_op="LOFOutlierDetection" to_port="example set input"/>
+      <connect from_op="LOFOutlierDetection" from_port="example set output" to_op="IOMultiplier_1" to_port="input"/>
+      <connect from_op="IOMultiplier_1" from_port="output 1" to_op="Outliers" to_port="in 1"/>
+      <connect from_op="IOMultiplier_1" from_port="output 2" to_op="NonOutliers" to_port="in 1"/>
+      <connect from_op="Outliers" from_port="out 1" to_op="ExampleSetMerge" to_port="example set 2"/>
+      <connect from_op="NonOutliers" from_port="out 1" to_op="ExampleSetMerge" to_port="example set 1"/>
+      <connect from_op="ExampleSetMerge" from_port="merged set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="126"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

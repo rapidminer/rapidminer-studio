@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_edit.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Set Role</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Set_Role skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator can be used to change the attribute role (regular, special,     label, id...).
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator can be used to change the role of an attribute of the       input <i>ExampleSet</i>. If you want to change the attribute name you       should use the     
+</p>
+<p>
+<a href="/wiki/index.php?title=Rename" shape="rect" title="Rename">Rename</a>  operator.    
+</p>
+<p>
+The target role indicates if the attribute is a regular attribute (used       by learning operators) or a special attribute (e.g. a label or id       attribute). The following target attribute types are possible:    
+</p>
+
+<ul class="ports">
+<li>         <b>regular: </b>only regular attributes are used as input variables         for learning tasks      
+</li>
+<li>         <b>id:</b> the id attribute for the example set      
+</li>
+<li>         <b>label:</b> target attribute for learning      
+</li>
+<li>         <b>prediction:</b> predicted attribute, i.e. the predictions of a         learning scheme      
+</li>
+<li>         <b>cluster:</b> indicates the membership to a cluster      
+</li>
+<li>         <b>weight: </b>indicates the weight of the example      
+</li>
+<li>         <b>batch:</b> indicates the membership to an example batch      
+</li>
+</ul>
+<p>
+Users can also define own attribute types by simply using the desired       name.    
+</p>
+
+<p>
+<b>Please be aware that roles have to be unique!</b> Assigning a non       regular role the second time will cause the first attribute to be       dropped from the example set. If you want to keep this attribute, you       have to change it's role first.    
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, <i>expects:</i> ExampleSet
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>name</b>:  The name of the attribute whose role should be changed.
+</li>
+<li> <b>target role</b>:  The target role of the attribute (only changed if parameter change_attribute_type is true).
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

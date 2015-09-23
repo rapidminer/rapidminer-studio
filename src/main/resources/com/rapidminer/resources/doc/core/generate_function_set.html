@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_add.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Generate Function Set</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Generate_Function_Set skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+The feature generation operator generates new features via applying a set of functions on all features.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator applies a set of functions on all features of the input example set. Applicable functions include +, -, *, /, norm, sin, cos, tan, atan, exp, log, min, max, floor, ceil, round, sqrt, abs, and pow. Features with two arguments will be applied on all pairs. Non commutative functions will also be applied on all permutations.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>keep all</b>:  If set to true, all the original attributes are kept, otherwise they are removed from the example set.
+</li>
+<li> <b>use plus</b>:  Generate sums.
+</li>
+<li> <b>use diff</b>:  Generate differences.
+</li>
+<li> <b>use mult</b>:  Generate products.
+</li>
+<li> <b>use div</b>:  Generate quotients.
+</li>
+<li> <b>use reciprocals</b>:  Generate reciprocal values.
+</li>
+<li> <b>use square roots</b>:  Generate square root values.
+</li>
+<li> <b>use power functions</b>:  Generate the power of one attribute and another.
+</li>
+<li> <b>use sin</b>:  Generate sinus.
+</li>
+<li> <b>use cos</b>:  Generate cosinus.
+</li>
+<li> <b>use tan</b>:  Generate tangens.
+</li>
+<li> <b>use atan</b>:  Generate arc tangens.
+</li>
+<li> <b>use exp</b>:  Generate exponential functions.
+</li>
+<li> <b>use log</b>:  Generate logarithmic functions.
+</li>
+<li> <b>use absolute values</b>:  Generate absolute values.
+</li>
+<li> <b>use min</b>:  Generate minimum values.
+</li>
+<li> <b>use max</b>:  Generate maximum values.
+</li>
+<li> <b>use ceil</b>:  Generate ceil values.
+</li>
+<li> <b>use floor</b>:  Generate floor values.
+</li>
+<li> <b>use rounded</b>:  Generate rounded values.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

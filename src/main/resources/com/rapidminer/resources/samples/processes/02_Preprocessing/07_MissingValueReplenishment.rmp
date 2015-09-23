@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
+      </operator>
+      <operator activated="true" class="replace_missing_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Preprocessing" width="90" x="180" y="30">
+        <parameter key="attribute" value="shift-differential"/>
+        <parameter key="value_type" value="numeric"/>
+        <list key="columns">
+          <parameter key="wage-inc-1st" value="minimum"/>
+          <parameter key="wage-inc-3rd" value="maximum"/>
+        </list>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Preprocessing" to_port="example set input"/>
+      <connect from_op="Preprocessing" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="195" resized="true" width="526" x="38" y="133">Usually much time of data mining is spent to preprocess the data. RapidMiner offers several operators to read your data from many different sources and also operators to process your data and ease learning.&lt;br/&gt;&lt;br/&gt;In many applications the data contains missing values. One of the available preprocessing operators replaces them with the average / min / max of the attribute. Other operators can also handle infinite values.&lt;br/&gt;&lt;br&gt;This process will replace the missing values of the column wage-inc-1st with the minimum value of this column and thewage-inc-3rd with the maximum value.</description>
+    </process>
+  </operator>
+</process>

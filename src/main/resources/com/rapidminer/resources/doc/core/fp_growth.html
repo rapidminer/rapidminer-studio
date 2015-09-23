@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/shopping_cart_empty.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">FP-Growth</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-FP-Growth skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This learner efficiently calculates all frequent item sets from the given data.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator calculates all frequent items sets from a data set by building a FPTree data structure on the transaction data base. This is a very compressed copy of the data which in many cases fits into main memory even for large data bases. From this FPTree all frequent item set are derived. A major advantage of FPGrowth compared to Apriori is that it uses only 2 data scans and is therefore often applicable even on large data sets.
+</p>
+<p>
+Please note that the given data set is only allowed to contain binominal attributes, i.e. nominal attributes with only two different values. Simply use the provided preprocessing operators in order to transform your data set. The necessary operators are the discretization operators for changing the value types of numerical attributes to nominal and the operator Nominal2Binominal for transforming nominal attributes into binominal / binary ones. 
+</p>
+<p>
+The frequent item sets are mined for the positive entries in your data base, i.e. for those nominal values which are defined as positive in your data base. If you use an attribute description file (.aml) for the <i>ExampleSource</i> operator this corresponds to the second value which is defined via the classes attribute or inner value tags.
+</p>
+<p>
+If your data does not specify the positive entries correctly, you may set them using the parameter positive_value. This only works if all your attributes contain this value!
+</p>
+<p>
+This operator has two basic working modes: finding at least the specified number of item sets with highest support without taking the min_support into account (default) or finding all item sets with a support large than min_support.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>frequent sets</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>find min number of itemsets</b>:  Indicates if the mininmal support should be decreased automatically until the specified minimum number of frequent item sets is found. The defined minimal support is lowered by 20 percent each time.
+</li>
+<li> <b>min number of itemsets</b>:  Indicates the minimum number of itemsets which should be determined if the corresponding parameter is activated.
+</li>
+<li> <b>max number of retries</b>:  This determines how many times the operator lowers min support to find the minimal number of item sets. Each time the minimal support is lowered by 20 percent.
+</li>
+<li> <b>positive value</b>:  This parameter determines, which value of the binominal attributes is treated as positive. Attributes with that value are considered as part of a transaction. If left blank, the example set determines, which is value is used.
+</li>
+<li> <b>min support</b>:  The minimal support necessary in order to be a frequent item (set).
+</li>
+<li> <b>max items</b>:  The upper bound for the length of the item sets (-1: no upper bound)
+</li>
+<li> <b>must contain</b>:  The items any generated rule must contain as regular expression. Empty if none.
+</li>
+<li> <b>keep example set</b>:  indicates if example set is kept
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

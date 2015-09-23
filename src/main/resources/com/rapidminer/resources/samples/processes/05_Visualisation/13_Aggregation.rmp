@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Golf"/>
+      </operator>
+      <operator activated="true" class="aggregate" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Aggregation" width="90" x="179" y="30">
+        <list key="aggregation_attributes">
+          <parameter key="Temperature" value="average"/>
+          <parameter key="Humidity" value="maximum"/>
+        </list>
+        <parameter key="group_by_attributes" value="Outlook"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Aggregation" to_port="example set input"/>
+      <connect from_op="Aggregation" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="251" resized="true" width="425" x="41" y="128">This process demonstrates a typical example for data aggregation. This type of calculations is often used in OLAP analysis tasks and usually performed by aggregation functions in SQL statements together with a group-by clause. In this example, the data is grouped in several parts according to two different nominal attributes and some statistics are calculated for each of these groups. &lt;br/&gt;&lt;br/&gt;Using the Aggregation operator might especially useful after clustering where some of attributes of the different clusters are aggregated in order to describe the examples in each cluster. For example, if you cluster your customer database you might want to perform aggregation grouped by the cluster attribute and calculate the sum of some sort of income attribute for each of the clusters.</description>
+    </process>
+  </operator>
+</process>

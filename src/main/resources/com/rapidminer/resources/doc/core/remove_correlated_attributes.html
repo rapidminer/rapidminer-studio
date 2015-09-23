@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_column_delete.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Remove Correlated Attributes</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Remove_Correlated_Attributes skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Removes correlated features.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+Removes (un-) correlated features due to the selected filter relation. The procedure is quadratic in number of attributes. In order to get more stable results, the original, random, and reverse order of attributes is available.
+</p>
+<p>
+Please note that this operator might fail in some cases when the attributes should be filtered out, e.g. it might not be able to remove for example all negative correlated features. The reason for this behaviour seems to be that for the complete m x m - matrix of correlations (for m attributes) the correlations will not be recalculated and hence not checked if one of the attributes of the current pair was already marked for removal. That means for three attributes a1, a2, and a3 that it might be that a2 was already ruled out by the negative correlation with a1 and is now not able to rule out a3 any longer.
+</p>
+<p>
+The used correlation function is the Pearson correlation. 
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>correlation</b>:  Use this correlation for the filter relation.
+</li>
+<li> <b>filter relation</b>:  Removes one of two features if their correlation fulfill this relation.
+</li>
+<li> <b>attribute order</b>:  The algorithm takes this attribute order to calculate correlation and filter.
+</li>
+<li> <b>use absolute correlation</b>:  Indicates if the absolute value of the correlations should be used for comparison.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>
