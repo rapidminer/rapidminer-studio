@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="112" y="210">
+        <parameter key="target_function" value="sum classification"/>
+        <parameter key="number_examples" value="10"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator (2)" width="90" x="45" y="120">
+        <parameter key="target_function" value="sum classification"/>
+        <parameter key="number_examples" value="5"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator (3)" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum classification"/>
+        <parameter key="number_examples" value="2"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="append" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="ExampleSetMerge" width="90" x="246" y="30"/>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="ExampleSetMerge" to_port="example set 3"/>
+      <connect from_op="ExampleSetGenerator (2)" from_port="output" to_op="ExampleSetMerge" to_port="example set 2"/>
+      <connect from_op="ExampleSetGenerator (3)" from_port="output" to_op="ExampleSetMerge" to_port="example set 1"/>
+      <connect from_op="ExampleSetMerge" from_port="merged set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="210" resized="false" width="400" x="246" y="170">This simple process shows how several compatible example sets can be merged into a single combined one. The new example set contains all data rows from the input example sets. Please note that this operator does only work for compatible example sets, i.e. example sets where the number of attributes and the attribute names are the same.  For example set joins you might want to try the ExampleSetJoin operator. For other more sophisticated data set transformations and aggregations especially for relational databases you might think of using another data integration tool to create one single table which can then be used from RapidMiner.</description>
+    </process>
+  </operator>
+</process>

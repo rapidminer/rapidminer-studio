@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/refresh.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Loop and Deliver Best</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Loop_and_Deliver_Best skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Performs its inner operators k times and returns the best results.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator iterates several times through the inner operators and in each cycle evaluates a performance measure. The IOObjects that are produced as output of the inner operators in the best cycle are then returned. The target of this operator are methods that involve some non-deterministic elements such that the performance in each cycle may vary. An example is k-means with random initialization.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>in 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>performance</b>:
+</li>
+<li> <b>out 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>iterations</b>:  The number of iterations to perform
+</li>
+<li> <b>enable timeout</b>:  If used the processing will be aborted after the next completed execution of child operators.
+</li>
+<li> <b>timeout</b>:  Timeout in minutes
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

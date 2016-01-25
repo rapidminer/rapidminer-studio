@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="normalize" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Normalization" width="90" x="180" y="30"/>
+      <operator activated="true" class="principal_component_analysis" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="PrincipalComponents" width="90" x="313" y="30"/>
+      <connect from_op="Retrieve" from_port="output" to_op="Normalization" to_port="example set input"/>
+      <connect from_op="Normalization" from_port="example set output" to_op="PrincipalComponents" to_port="example set input"/>
+      <connect from_op="PrincipalComponents" from_port="example set output" to_port="result 1"/>
+      <connect from_op="PrincipalComponents" from_port="preprocessing model" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="18"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="120" resized="false" width="400" x="40" y="140">The calculation of principal components is often used as a feature transforming preprocessing step. It can reduce the dimensionality of the data set at hand while the major data variance is preserved. Perform the process and check out the plot view of the Iris data set loaded and transformed by this process.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,15 @@
+ENTRY Deals.ioo
+ENTRY Deals-Testset.ioo
+ENTRY Golf.ioo
+ENTRY Golf-Testset.ioo
+ENTRY Iris.ioo
+ENTRY Labor-Negotiations.ioo
+ENTRY Market-Data.ioo
+ENTRY Polynomial.ioo
+ENTRY Products.ioo
+ENTRY Purchases.ioo
+ENTRY Ripley-Set.ioo
+ENTRY Sonar.ioo
+ENTRY Titanic.ioo
+ENTRY Transactions.ioo
+ENTRY Weighting.ioo

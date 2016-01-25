@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="split_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="SimpleValidation" width="90" x="180" y="30">
+        <process expanded="true">
+          <operator activated="true" class="classification_by_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ClassificationByRegression" width="90" x="45" y="30">
+            <process expanded="true">
+              <operator activated="true" class="linear_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LinearRegression"/>
+              <connect from_port="training set" to_op="LinearRegression" to_port="training set"/>
+              <connect from_op="LinearRegression" from_port="model" to_port="model"/>
+              <portSpacing port="source_training set" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="training" to_op="ClassificationByRegression" to_port="training set"/>
+          <connect from_op="ClassificationByRegression" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="238" y="30"/>
+          <connect from_port="model" to_op="Test" to_port="model"/>
+          <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
+          <connect from_op="Test" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+          <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="SimpleValidation" to_port="training"/>
+      <connect from_op="SimpleValidation" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="282" resized="true" width="396" x="33" y="157">Beside cross validation (XValidation operator) there are several validation schemes which can be used in order to estimate the performance of a learner. You can build a random hold out set (test set) with the SimpleValidation operator and evaluate the model performance on this unseen test data. The basic setup is the same as for XValidation: the first inner operator must produce a model and the second inner operator must be able to handle the create model and the test example set and must provide a PerformanceVector. &lt;br/&gt;&lt;br/&gt;This process loads ARFF data with the ArffExampleSource operator and performs a random split validation chain. Since the label has three class values, multi class learning is done with a classification by regression approach.</description>
+    </process>
+  </operator>
+</process>

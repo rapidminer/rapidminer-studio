@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Golf"/>
+      </operator>
+      <operator activated="true" class="bagging" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Bagging" width="90" x="179" y="30">
+        <process expanded="true">
+          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="45" y="30"/>
+          <connect from_port="training set" to_op="DecisionTree" to_port="training set"/>
+          <connect from_op="DecisionTree" from_port="model" to_port="model"/>
+          <portSpacing port="source_training set" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Bagging" to_port="training set"/>
+      <connect from_op="Bagging" from_port="model" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="66" resized="false" width="400" x="40" y="120">This process uses a meta learning scheme. For all meta learners, the inner learner is specified as operator child. In this case we use Bagging together with a decision tree.</description>
+    </process>
+  </operator>
+</process>
