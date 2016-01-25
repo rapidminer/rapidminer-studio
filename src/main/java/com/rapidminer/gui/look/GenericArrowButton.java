@@ -1,28 +1,29 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look;
 
-import java.awt.Color;
+import java.awt.BasicStroke;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
 
 import javax.swing.UIManager;
 import javax.swing.plaf.UIResource;
@@ -31,13 +32,17 @@ import javax.swing.plaf.basic.BasicArrowButton;
 
 /**
  * The button used at the end of scrollbars.
- * 
- * 
- * @author Ingo Mierswa
+ *
+ *
+ * @author Ingo Mierswa, Marco Boeck
  */
 public class GenericArrowButton extends BasicArrowButton implements UIResource {
 
 	private static final long serialVersionUID = 8079721815873790893L;
+
+	private static final Stroke ARROW_STROKE = new BasicStroke(1.5f);
+
+	private static final int OFFSET = 4;
 
 	public GenericArrowButton(int direction, int w, int h) {
 		super(direction);
@@ -85,504 +90,99 @@ public class GenericArrowButton extends BasicArrowButton implements UIResource {
 		int h = getHeight();
 
 		if (isOpaque()) {
-			g.setColor((Color) UIManager.get("ScrollBar.background"));
+			g.setColor(Colors.WHITE);
 			g.fillRect(0, 0, w, h);
 		}
 
-		boolean isPressed = getModel().isPressed();
+		g.setColor(Colors.SCROLLBAR_ARROW_BACKGROUND);
+		g.fillRect(0, 0, w, h);
 
+		boolean isPressed = getModel().isPressed();
+		boolean isRollover = getModel().isRollover();
+
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		switch (this.direction) {
 			case NORTH:
-				paintNorthArrow(g, w, h, isPressed);
+				paintNorthArrow(g2, w, h, isPressed, isRollover);
 				break;
-
 			case SOUTH:
-				paintSouthArrow(g, w, h, isPressed);
+				paintSouthArrow(g2, w, h, isPressed, isRollover);
 				break;
-
 			case EAST:
-				paintEastArrow(g, w, h, isPressed);
+				paintEastArrow(g2, w, h, isPressed, isRollover);
 				break;
-
 			case WEST:
-				paintWestArrow(g, w, h, isPressed);
+				paintWestArrow(g2, w, h, isPressed, isRollover);
 				break;
 		}
 	}
 
-	private void paintWestArrow(Graphics g, int w, int h, boolean isPressed) {
-		int baseX = 5;
-		int baseY = 3;
+	private void paintWestArrow(Graphics2D g2, int w, int h, boolean isPressed, boolean isRollover) {
+		g2.setColor(Colors.SCROLLBAR_ARROW_BORDER);
+		g2.drawLine(0, 0, w - 1, 0);
 
 		if (isPressed) {
-			baseX--;
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][0]);
-			g.drawLine(0, 4, 0, h - 5);
-			g.drawLine(1, 2, 1, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(1, 3, 1, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][0]);
-			g.drawLine(2, 1, 2, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(2, 2, 2, h - 3);
-			g.drawLine(3, 1, 3, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(4, 0, w - 1, 0);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(5, 0, w - 1, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][4]);
-			g.drawLine(4, 1, w - 2, 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(4, h - 1, w - 1, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(5, h - 1, w - 1, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][4]);
-			g.drawLine(4, h - 2, w - 2, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.fillRect(4, 2, w - 5, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][5]);
-			g.drawLine(w - 1, 1, w - 1, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(w - 2, 2, w - 2, h - 3);
-
+			g2.setColor(Colors.SCROLLBAR_ARROW_PRESSED);
+		} else if (isRollover) {
+			g2.setColor(Colors.SCROLLBAR_ARROW_ROLLOVER);
 		} else {
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][0]);
-			g.drawLine(0, 4, 0, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][1]);
-			g.drawLine(1, 2, 1, h - 3);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][2]);
-			g.drawLine(1, 3, 1, h - 4);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][3]);
-			g.drawLine(1, 4, 1, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][4]);
-			g.drawLine(2, 1, 2, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][5]);
-			g.drawLine(2, 2, 2, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][6]);
-			g.drawLine(3, 1, 3, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][7]);
-			g.drawLine(3, 2, 3, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(4, 0, w - 1, 0);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(5, 0, w - 1, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(4, 1, w - 2, 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(4, h - 1, w - 1, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(5, h - 1, w - 1, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(4, h - 2, w - 2, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][11]);
-			g.fillRect(4, 2, w - 6, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][12]);
-			g.drawLine(w - 1, 1, w - 1, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][13]);
-			g.drawLine(w - 2, 2, w - 2, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][14]);
-			g.drawLine(w - 3, 3, w - 3, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][15]);
-			g.drawLine(w - 4, 4, w - 4, h - 5);
+			g2.setColor(Colors.SCROLLBAR_ARROW);
 		}
 
-		int yCenter = h / 2 - 9;
-		g.translate(0, yCenter);
-
-		g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][16]);
-		g.drawLine(baseX, baseY + 5, baseX + 4, baseY + 1);
-		g.drawLine(baseX, baseY + 5, baseX + 4, baseY + 9);
-
-		g.setColor(Color.white);
-		g.drawLine(baseX + 1, baseY + 5, baseX + 5, baseY + 1);
-		g.drawLine(baseX + 1, baseY + 5, baseX + 5, baseY + 9);
-
-		g.drawLine(baseX + 2, baseY + 5, baseX + 4, baseY + 3);
-		g.drawLine(baseX + 2, baseY + 5, baseX + 4, baseY + 7);
-
-		g.drawLine(baseX + 3, baseY + 5, baseX + 3, baseY + 5);
-
-		g.translate(0, -yCenter);
-
+		g2.setStroke(ARROW_STROKE);
+		g2.drawLine(w - 6, OFFSET, 6, h / 2);
+		g2.drawLine(6, h / 2, w - 6, h - OFFSET);
 	}
 
-	private void paintEastArrow(Graphics g, int w, int h, boolean isPressed) {
-		int baseX = 5;
-		int baseY = 3;
+	private void paintEastArrow(Graphics2D g2, int w, int h, boolean isPressed, boolean isRollover) {
+		g2.setColor(Colors.SCROLLBAR_ARROW_BORDER);
+		g2.drawLine(0, 0, w - 1, 0);
 
 		if (isPressed) {
-			baseX++;
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][0]);
-			g.drawLine(w - 1, 4, w - 1, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][0]);
-			g.drawLine(w - 2, 2, w - 2, h - 3);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(w - 2, 3, w - 2, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][0]);
-			g.drawLine(w - 3, 1, w - 3, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(w - 3, 2, w - 3, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(w - 4, 1, w - 4, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(0, 0, w - 5, 0);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(0, 0, w - 6, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][4]);
-			g.drawLine(1, 1, w - 5, 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(0, h - 1, w - 5, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(0, h - 1, w - 6, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][4]);
-			g.drawLine(1, h - 2, w - 5, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.fillRect(1, 2, w - 5, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][5]);
-			g.drawLine(0, 1, 0, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(1, 2, 1, h - 3);
+			g2.setColor(Colors.SCROLLBAR_ARROW_PRESSED);
+		} else if (isRollover) {
+			g2.setColor(Colors.SCROLLBAR_ARROW_ROLLOVER);
 		} else {
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][0]);
-			g.drawLine(w - 1, 4, w - 1, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][1]);
-			g.drawLine(w - 2, 2, w - 2, h - 3);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][2]);
-			g.drawLine(w - 2, 3, w - 2, h - 4);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][3]);
-			g.drawLine(w - 2, 4, w - 2, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][4]);
-			g.drawLine(w - 3, 1, w - 3, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][5]);
-			g.drawLine(w - 3, 2, w - 3, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][6]);
-			g.drawLine(w - 4, 1, w - 4, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][7]);
-			g.drawLine(w - 4, 2, w - 4, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(0, 0, w - 5, 0);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(0, 0, w - 6, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(1, 1, w - 5, 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(0, h - 1, w - 5, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(0, h - 1, w - 6, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(1, h - 2, w - 5, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][11]);
-			g.fillRect(1, 2, w - 5, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][12]);
-			g.drawLine(0, 1, 0, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][13]);
-			g.drawLine(1, 2, 1, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][14]);
-			g.drawLine(2, 3, 2, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][15]);
-			g.drawLine(3, 4, 3, h - 5);
+			g2.setColor(Colors.SCROLLBAR_ARROW);
 		}
 
-		int yCenter = h / 2 - 9;
-		g.translate(0, yCenter);
-
-		g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][16]);
-		g.drawLine(baseX + 6, baseY + 5, baseX + 2, baseY + 1);
-		g.drawLine(baseX + 6, baseY + 5, baseX + 2, baseY + 9);
-
-		g.setColor(Color.white);
-		g.drawLine(baseX + 5, baseY + 5, baseX + 1, baseY + 1);
-		g.drawLine(baseX + 5, baseY + 5, baseX + 1, baseY + 9);
-
-		g.drawLine(baseX + 4, baseY + 5, baseX + 2, baseY + 3);
-		g.drawLine(baseX + 4, baseY + 5, baseX + 2, baseY + 7);
-
-		g.drawLine(baseX + 3, baseY + 5, baseX + 3, baseY + 5);
-
-		g.translate(0, -yCenter);
+		g2.setStroke(ARROW_STROKE);
+		g2.drawLine(6, OFFSET, w - 6, h / 2);
+		g2.drawLine(w - 6, h / 2, 6, h - OFFSET);
 	}
 
-	private void paintSouthArrow(Graphics g, int w, int h, boolean isPressed) {
-		int baseX = 4;
-		int baseY = 5;
+	private void paintSouthArrow(Graphics2D g2, int w, int h, boolean isPressed, boolean isRollover) {
+		g2.setColor(Colors.SCROLLBAR_ARROW_BORDER);
+		g2.drawLine(0, 0, 0, h - 1);
 
 		if (isPressed) {
-			baseY++;
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][7]);
-			g.drawLine(4, h - 1, w - 5, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][0]);
-			g.drawLine(2, h - 2, w - 3, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(3, h - 2, w - 4, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][0]);
-			g.drawLine(1, h - 3, w - 2, h - 3);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(2, h - 3, w - 3, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(1, h - 4, w - 2, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(0, 0, 0, h - 5);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(0, 0, 0, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(1, 1, 1, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(w - 1, 0, w - 1, h - 5);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(w - 1, 0, w - 1, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][4]);
-			g.drawLine(w - 2, 1, w - 2, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.fillRect(2, 2, w - 4, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][5]);
-			g.drawLine(1, 0, w - 2, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(2, 1, w - 3, 1);
+			g2.setColor(Colors.SCROLLBAR_ARROW_PRESSED);
+		} else if (isRollover) {
+			g2.setColor(Colors.SCROLLBAR_ARROW_ROLLOVER);
 		} else {
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][0]);
-			g.drawLine(4, h - 1, w - 5, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][1]);
-			g.drawLine(2, h - 2, w - 3, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][2]);
-			g.drawLine(3, h - 2, w - 4, h - 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][3]);
-			g.drawLine(4, h - 2, w - 5, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][4]);
-			g.drawLine(1, h - 3, w - 2, h - 3);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][5]);
-			g.drawLine(2, h - 3, w - 3, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][6]);
-			g.drawLine(1, h - 4, w - 2, h - 4);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][7]);
-			g.drawLine(2, h - 4, w - 3, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(0, 0, 0, h - 5);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(0, 0, 0, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(1, 1, 1, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(w - 1, 0, w - 1, h - 5);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(w - 1, 0, w - 1, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(w - 2, 1, w - 2, h - 5);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][11]);
-			g.fillRect(2, 2, w - 4, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][12]);
-			g.drawLine(1, 0, w - 2, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][13]);
-			g.drawLine(2, 1, w - 3, 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][14]);
-			g.drawLine(3, 2, w - 4, 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][15]);
-			g.drawLine(4, 3, w - 5, 3);
+			g2.setColor(Colors.SCROLLBAR_ARROW);
 		}
 
-		int xCenter = w / 2 - 9;
-		g.translate(xCenter, 0);
-
-		g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][16]);
-		g.drawLine(baseX + 5, baseY + 6, baseX + 1, baseY + 2);
-		g.drawLine(baseX + 5, baseY + 6, baseX + 9, baseY + 2);
-
-		g.setColor(Color.white);
-		g.drawLine(baseX + 5, baseY + 5, baseX + 1, baseY + 1);
-		g.drawLine(baseX + 5, baseY + 5, baseX + 9, baseY + 1);
-
-		g.drawLine(baseX + 5, baseY + 4, baseX + 3, baseY + 2);
-		g.drawLine(baseX + 5, baseY + 4, baseX + 7, baseY + 2);
-
-		g.drawLine(baseX + 5, baseY + 3, baseX + 5, baseY + 3);
-
-		g.translate(-xCenter, 0);
+		g2.setStroke(ARROW_STROKE);
+		g2.drawLine(OFFSET, 6, w / 2, h - 6);
+		g2.drawLine(w / 2, h - 6, w - OFFSET, 6);
 	}
 
-	private void paintNorthArrow(Graphics g, int w, int h, boolean isPressed) {
-		int baseX = 4;
-		int baseY = 5;
+	private void paintNorthArrow(Graphics2D g2, int w, int h, boolean isPressed, boolean isRollover) {
+		g2.setColor(Colors.SCROLLBAR_ARROW_BORDER);
+		g2.drawLine(0, 0, 0, h - 1);
 
 		if (isPressed) {
-			baseY--;
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][7]);
-			g.drawLine(4, 0, w - 5, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][6]);
-			g.drawLine(2, 1, w - 3, 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(3, 1, w - 4, 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][6]);
-			g.drawLine(1, 2, w - 2, 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(2, 2, w - 3, 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(1, 3, w - 2, 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(0, 4, 0, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(0, 5, 0, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][4]);
-			g.drawLine(1, 4, 1, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][2]);
-			g.drawLine(w - 1, 4, w - 1, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][3]);
-			g.drawLine(w - 1, 5, w - 1, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][4]);
-			g.drawLine(w - 2, 4, w - 2, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.fillRect(2, 4, w - 4, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][5]);
-			g.drawLine(1, h - 1, w - 2, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[0][1]);
-			g.drawLine(2, h - 2, w - 3, h - 2);
+			g2.setColor(Colors.SCROLLBAR_ARROW_PRESSED);
+		} else if (isRollover) {
+			g2.setColor(Colors.SCROLLBAR_ARROW_ROLLOVER);
 		} else {
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][0]);
-			g.drawLine(4, 0, w - 5, 0);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][1]);
-			g.drawLine(2, 1, w - 3, 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][2]);
-			g.drawLine(3, 1, w - 4, 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][3]);
-			g.drawLine(4, 1, w - 5, 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][4]);
-			g.drawLine(1, 2, w - 2, 2);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][5]);
-			g.drawLine(2, 2, w - 3, 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][6]);
-			g.drawLine(1, 3, w - 2, 3);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][7]);
-			g.drawLine(2, 3, w - 3, 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(0, 4, 0, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(0, 5, 0, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(1, 4, 1, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][8]);
-			g.drawLine(w - 1, 4, w - 1, h - 1);
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][9]);
-			g.drawLine(w - 1, 5, w - 1, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][10]);
-			g.drawLine(w - 2, 4, w - 2, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][11]);
-			g.fillRect(2, 4, w - 4, h - 6);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][12]);
-			g.drawLine(1, h - 1, w - 2, h - 1);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][13]);
-			g.drawLine(2, h - 2, w - 3, h - 2);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][14]);
-			g.drawLine(3, h - 3, w - 4, h - 3);
-
-			g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][15]);
-			g.drawLine(4, h - 4, w - 5, h - 4);
+			g2.setColor(Colors.SCROLLBAR_ARROW);
 		}
 
-		int xCenter = w / 2 - 9;
-		g.translate(xCenter, 0);
-
-		g.setColor(RapidLookTools.getColors().getArrowButtonColors()[1][16]);
-		g.drawLine(baseX + 1, baseY + 4, baseX + 5, baseY);
-		g.drawLine(baseX + 9, baseY + 4, baseX + 5, baseY);
-
-		g.setColor(Color.white);
-		g.drawLine(baseX + 5, baseY + 1, baseX + 1, baseY + 5);
-		g.drawLine(baseX + 5, baseY + 1, baseX + 9, baseY + 5);
-
-		g.drawLine(baseX + 5, baseY + 2, baseX + 3, baseY + 4);
-		g.drawLine(baseX + 5, baseY + 2, baseX + 7, baseY + 4);
-
-		g.drawLine(baseX + 5, baseY + 3, baseX + 5, baseY + 3);
-
-		g.translate(-xCenter, 0);
+		g2.setStroke(ARROW_STROKE);
+		g2.drawLine(OFFSET, h - 6, w / 2, 6);
+		g2.drawLine(w / 2, 6, w - OFFSET, h - 6);
 	}
 }

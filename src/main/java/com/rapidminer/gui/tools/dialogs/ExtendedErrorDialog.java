@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.dialogs;
 
@@ -51,14 +49,14 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExecutionMode;
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.Perspectives;
+import com.rapidminer.gui.PerspectiveModel;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.dialog.BugZillaAssistant;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.components.LinkButton;
+import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.repository.RepositoryException;
@@ -191,16 +189,17 @@ public class ExtendedErrorDialog extends ButtonDialog {
 
 		if (error != null && error instanceof UserError && ((UserError) error).getOperator() != null) {
 			final String opName = ((UserError) error).getOperator().getName();
-			mainComponent.add(new LinkButton(new ResourceAction("show_offending_operator", opName) {
+			mainComponent.add(new LinkLocalButton(new ResourceAction("show_offending_operator", opName) {
 
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					MainFrame mainFrame = RapidMinerGUI.getMainFrame();
-					mainFrame.getPerspectives().showPerspective(Perspectives.DESIGN);
+					mainFrame.getPerspectiveController().showPerspective(PerspectiveModel.DESIGN);
 					mainFrame.selectOperator(mainFrame.getProcess().getOperator(opName));
-					mainFrame.getProcessPanel().getProcessRenderer().getModel().setDisplayedChain(mainFrame.getProcess().getOperator(opName).getParent());
+					mainFrame.getProcessPanel().getProcessRenderer().getModel()
+							.setDisplayedChain(mainFrame.getProcess().getOperator(opName).getParent());
 					mainFrame.getProcessPanel().getProcessRenderer().getModel().fireDisplayedChainChanged();
 				}
 			}), BorderLayout.NORTH);
@@ -288,9 +287,9 @@ public class ExtendedErrorDialog extends ButtonDialog {
 			final Throwable error) {
 		Collection<AbstractButton> buttons = new LinkedList<>();
 		if (hasError && !(error instanceof RepositoryException)) {
-			final JToggleButton showDetailsButton = new JToggleButton(I18N.getMessage(I18N.getGUIBundle(),
-					"gui.dialog.error.show_details.label"), SwingTools.createIcon("24/"
-					+ I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.error.show_details.icon")));
+			final JToggleButton showDetailsButton = new JToggleButton(
+					I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.error.show_details.label"), SwingTools
+							.createIcon("24/" + I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.error.show_details.icon")));
 			showDetailsButton.setSelected(false);
 			showDetailsButton.addActionListener(new ActionListener() {
 
@@ -302,15 +301,15 @@ public class ExtendedErrorDialog extends ButtonDialog {
 						int width2 = ExtendedErrorDialog.this.getWidth();
 						mainComponent.remove(detailedPane);
 
-						ExtendedErrorDialog.this.setPreferredSize(new Dimension(width2,
-								ExtendedErrorDialog.this.getHeight() - 150));
+						ExtendedErrorDialog.this
+								.setPreferredSize(new Dimension(width2, ExtendedErrorDialog.this.getHeight() - 150));
 						pack();
 					} else {
 						int width2 = ExtendedErrorDialog.this.getWidth();
 						mainComponent.add(detailedPane, BorderLayout.CENTER);
 
-						ExtendedErrorDialog.this.setPreferredSize(new Dimension(width2,
-								ExtendedErrorDialog.this.getHeight() + 150));
+						ExtendedErrorDialog.this
+								.setPreferredSize(new Dimension(width2, ExtendedErrorDialog.this.getHeight() + 150));
 						pack();
 					}
 					detailsShown = !detailsShown;
@@ -329,7 +328,8 @@ public class ExtendedErrorDialog extends ButtonDialog {
 					// in case of UserError, ask if the user really wants to send a bugreport
 					// because it's likely not a bug
 					if (error instanceof UserError) {
-						if (SwingTools.showConfirmDialog("send_bugreport.confirm", ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+						if (SwingTools.showConfirmDialog("send_bugreport.confirm",
+								ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
 							return;
 						}
 					}
@@ -418,7 +418,6 @@ public class ExtendedErrorDialog extends ButtonDialog {
 		if (error != null) {
 			StringBuilder infoText = new StringBuilder();
 			infoText.append("<div>");
-
 			infoText.append(super.getInfoText());
 			infoText.append("</div>");
 
@@ -428,21 +427,6 @@ public class ExtendedErrorDialog extends ButtonDialog {
 				infoText.append(Tools.escapeHTML(error.getMessage()));
 			}
 
-			Throwable cause = error.getCause();
-			if (cause != null) {
-				String message = Tools.escapeHTML(cause.getMessage());
-				if (message == null) {
-					message = cause.toString();
-				}
-
-				if (!"null".equals(message)) {
-					infoText.append("<br/>");
-					infoText.append("<strong>"
-							+ I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.error.process_failed_reason.message")
-							+ " </strong>");
-					infoText.append(message);
-				}
-			}
 			return infoText.toString();
 		} else {
 			return super.getInfoText();

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.test.asserter;
 
@@ -38,15 +36,18 @@ import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.associations.FrequentItemSet;
 import com.rapidminer.operator.learner.associations.FrequentItemSets;
+import com.rapidminer.operator.learner.functions.LinearRegressionModel;
 import com.rapidminer.operator.meta.ParameterSet;
 import com.rapidminer.operator.meta.ParameterValue;
 import com.rapidminer.operator.nio.file.FileObject;
 import com.rapidminer.operator.performance.PerformanceCriterion;
 import com.rapidminer.operator.performance.PerformanceVector;
+import com.rapidminer.operator.visualization.dependencies.ANOVAMatrix;
 import com.rapidminer.operator.visualization.dependencies.NumericalMatrix;
 import com.rapidminer.test_utils.Asserter;
 import com.rapidminer.test_utils.RapidAssert;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.math.AnovaCalculator.AnovaSignificanceTestResult;
 import com.rapidminer.tools.math.Averagable;
 import com.rapidminer.tools.math.AverageVector;
 
@@ -498,7 +499,7 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 				// compare number of transactions
 				Assert.assertEquals(
 						message + " : number of transactions is not equal(expected <" + expected.getNumberOfTransactions()
-						+ "> was <" + actual.getNumberOfTransactions() + ">)", expected.getNumberOfTransactions(),
+								+ "> was <" + actual.getNumberOfTransactions() + ">)", expected.getNumberOfTransactions(),
 						actual.getNumberOfTransactions());
 
 				// compare example values
@@ -509,6 +510,167 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 				while (i1.hasNext() && i2.hasNext()) {
 					Assert.assertTrue(message, i1.next().compareTo(i2.next()) == 0);
 				}
+			}
+
+		});
+
+		// Asserter for linear regression model
+		asserters.add(new Asserter() {
+
+			@Override
+			public Class<?> getAssertable() {
+				return LinearRegressionModel.class;
+			}
+
+			/**
+			 * Tests two linearRegression models by comparing all values
+			 *
+			 * @param message
+			 *            message to display if an error occurs
+			 * @param expected
+			 *            expected value
+			 * @param actual
+			 *            actual value
+			 */
+			@Override
+			public void assertEquals(String message, Object expectedObj, Object actualObj) {
+				LinearRegressionModel expected = (LinearRegressionModel) expectedObj;
+				LinearRegressionModel actual = (LinearRegressionModel) actualObj;
+
+				message = message + " - Linear Regression Model \"" + actual.getSource()
+						+ "\" does not match the expected Model";
+				// compare coefficients
+				Assert.assertArrayEquals(message + " : coefficients are not equal", expected.getCoefficients(),
+						actual.getCoefficients(), 1E-15);
+
+				// compare probabilities
+				Assert.assertArrayEquals(message + " : probabilities are not equal", expected.getProbabilities(),
+						actual.getProbabilities(), 1E-15);
+				// compare selected attribute names
+				Assert.assertArrayEquals(message + " : selected attributes are not equal",
+						expected.getSelectedAttributeNames(), actual.getSelectedAttributeNames());
+				// compare selected attributes
+				Assert.assertArrayEquals(message + " : selected attributes are not equal", expected.getSelectedAttributes(),
+						actual.getSelectedAttributes());
+				// compare standard errors
+				Assert.assertArrayEquals(message + " : standard errors are not equal", expected.getStandardErrors(),
+						actual.getStandardErrors(), 1E-15);
+				// compare standardized coefficients
+				Assert.assertArrayEquals(message + " : standardized coefficients are not equal",
+						expected.getStandardizedCoefficients(), actual.getStandardizedCoefficients(), 1E-15);
+				// compare tolerances
+				Assert.assertArrayEquals(message + " : tolerances are not equal", expected.getTolerances(),
+						actual.getTolerances(), 1E-15);
+				// compare t-stats
+				Assert.assertArrayEquals(message + " : t statistics are not equal", expected.getTStats(),
+						actual.getTStats(), 1E-15);
+			}
+
+		});
+
+		// Asserter for ANOVA-Matrixes
+		asserters.add(new Asserter() {
+
+			@Override
+			public Class<?> getAssertable() {
+				return ANOVAMatrix.class;
+			}
+
+			/**
+			 * Tests two ANOVA-Matrixes by comparing all values
+			 *
+			 * @param message
+			 *            message to display if an error occurs
+			 * @param expected
+			 *            expected value
+			 * @param actual
+			 *            actual value
+			 */
+			@Override
+			public void assertEquals(String message, Object expectedObj, Object actualObj) {
+				ANOVAMatrix expected = (ANOVAMatrix) expectedObj;
+				ANOVAMatrix actual = (ANOVAMatrix) actualObj;
+
+				message = message + " - ANOVA-Matrix \"" + actual.getSource() + "\" does not match the expected Matrix";
+
+				// compare all entries
+				double[][] expectedProbabilities = expected.getProbabilities();
+				double[][] actualProbabilities = actual.getProbabilities();
+
+				for (int i = 0; i < expectedProbabilities.length; i++) {
+					for (int j = 0; j < expectedProbabilities[i].length; j++) {
+						Assert.assertEquals(message + " : probabilities are not equal", expectedProbabilities[i][j],
+								actualProbabilities[i][j], 1E-15);
+					}
+				}
+
+				Assert.assertEquals(message + " : significance levels are not equal", expected.getSignificanceLevel(),
+						actual.getSignificanceLevel(), 1E-15);
+
+			}
+
+		});
+
+		// Asserter for Significance Test Results
+		asserters.add(new Asserter() {
+
+			@Override
+			public Class<?> getAssertable() {
+				return AnovaSignificanceTestResult.class;
+			}
+
+			/**
+			 * Tests two ANOVA-Significance test results
+			 *
+			 * @param message
+			 *            message to display if an error occurs
+			 * @param expected
+			 *            expected value
+			 * @param actual
+			 *            actual value
+			 */
+			@Override
+			public void assertEquals(String message, Object expectedObj, Object actualObj) {
+				AnovaSignificanceTestResult expected = (AnovaSignificanceTestResult) expectedObj;
+				AnovaSignificanceTestResult actual = (AnovaSignificanceTestResult) actualObj;
+
+				message = message + " - ANOVA significance test result \"" + actual.getSource()
+						+ "\" does not match the expected result";
+
+				// compare alpha values
+				Assert.assertEquals(message + " : alpha values are not equal", expected.getAlpha(), actual.getAlpha(), 1E-15);
+
+				// compare DF1
+				Assert.assertEquals(message + " : first degrees of freedom are equal", expected.getDf1(), actual.getDf1(),
+						1E-15);
+
+				// compare DF2
+				Assert.assertEquals(message + " : second degrees of freedom are equal", expected.getDf2(), actual.getDf2(),
+						1E-15);
+
+				// compare F values
+				Assert.assertEquals(message + " : F-values are not equal", expected.getFValue(), actual.getFValue(), 1E-15);
+
+				// compare mean square residuals
+				Assert.assertEquals(message + " : mean square residual values are not equal",
+						expected.getMeanSquaresResiduals(), actual.getMeanSquaresResiduals(), 1E-15);
+
+				// compare mean square between
+				Assert.assertEquals(message + " : mean square between values are not equal",
+						expected.getMeanSquaresBetween(), actual.getMeanSquaresBetween(), 1E-15);
+
+				// compare probabilities
+				Assert.assertEquals(message + " : probabilities are not equal", expected.getProbability(),
+						actual.getProbability(), 1E-15);
+
+				// compare sum squares between
+				Assert.assertEquals(message + " : sum squares between values are not equal",
+						expected.getSumSquaresBetween(), actual.getSumSquaresBetween(), 1E-15);
+
+				// compare sum squares residuals
+				Assert.assertEquals(message + " : sum squares residuals values are not equal",
+						expected.getSumSquaresResiduals(), actual.getSumSquaresResiduals(), 1E-15);
+
 			}
 
 		});

@@ -1,31 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.operatortree;
-
-import com.rapidminer.ProcessSetupListener;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.operator.ExecutionUnit;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorChain;
-import com.rapidminer.tools.LogService;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -37,16 +28,23 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import com.rapidminer.ProcessSetupListener;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.operator.ExecutionUnit;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.tools.LogService;
+
 
 /**
  * A model view of a process that displays processes as individual nodes. Rewrite of the original
  * OperatorTreeModel.
- * 
+ *
  * Nodes of this model can be {@link Operator}s and {@link ExecutionUnit}s. The latter are hidden
  * from the model if an {@link OperatorChain} contains only one {@link ExecutionUnit}.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class ProcessTreeModel implements TreeModel {
 
@@ -157,7 +155,6 @@ public class ProcessTreeModel implements TreeModel {
 		} else if (parent instanceof ExecutionUnit) {
 			return getChildren((ExecutionUnit) parent).indexOf(child);
 		} else {
-			// LogService.getRoot().warning(child + " is no child of " + parent);
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.operatortree.ProcessTreeModel.child_is_no_child",
 					new Object[] { child, parent });
 
@@ -173,7 +170,13 @@ public class ProcessTreeModel implements TreeModel {
 	@Override
 	public boolean isLeaf(Object node) {
 		if (node instanceof OperatorChain) {
-			return ((OperatorChain) node).getNumberOfSubprocesses() == 0;
+			if (((OperatorChain) node).getNumberOfSubprocesses() == 0) {
+				return true;
+			}
+			if (((OperatorChain) node).getNumberOfSubprocesses() == 1) {
+				return ((OperatorChain) node).getSubprocess(0).getNumberOfOperators() == 0;
+			}
+			return false;
 		} else if (node instanceof ExecutionUnit) {
 			return ((ExecutionUnit) node).getNumberOfOperators() == 0;
 		} else {
@@ -237,14 +240,14 @@ public class ProcessTreeModel implements TreeModel {
 
 	private void fireTreeNodesChanged(Operator operator) {
 		TreeModelEvent e = makeChangeEvent(operator);
-		if ((e.getChildIndices() != null) && (e.getChildIndices()[0] != -1)) { // otherwise the
-																				// operator is in
-																				// the state of
-																				// being removed and
-																				// has
-																				// triggered an
-																				// update while
-																				// dying.
+		if (e.getChildIndices() != null && e.getChildIndices()[0] != -1) { // otherwise the
+			// operator is in
+			// the state of
+			// being removed and
+			// has
+			// triggered an
+			// update while
+			// dying.
 			for (TreeModelListener l : listenerList.getListeners(TreeModelListener.class)) {
 				l.treeNodesChanged(e);
 			}
@@ -274,12 +277,4 @@ public class ProcessTreeModel implements TreeModel {
 		}
 	}
 
-	public void setShowDisabledOperators(boolean showDisabled) {
-		this.showDisabled = showDisabled;
-	}
-
-	public boolean showDisabledOperators() {
-		return showDisabled;
-
-	}
 }

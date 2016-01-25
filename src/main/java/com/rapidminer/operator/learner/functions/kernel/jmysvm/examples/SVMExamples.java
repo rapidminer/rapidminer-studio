@@ -1,27 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.kernel.jmysvm.examples;
-
-import com.rapidminer.example.Attribute;
-import com.rapidminer.tools.Tools;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -32,11 +27,14 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.rapidminer.example.Attribute;
+import com.rapidminer.tools.Tools;
+
 
 /**
  * Implementation of a sparse example set which can be used for learning. This data structure is
  * also used as SVM model.
- * 
+ *
  * @author Stefan Rueping, Ingo Mierswa
  */
 public class SVMExamples implements Serializable {
@@ -102,9 +100,15 @@ public class SVMExamples implements Serializable {
 	private double b;
 
 	/**
-	 * This example will be once constructed and delivered with the asked values.
+	 * This example will be once constructed for every thread and delivered with the asked values.
 	 */
-	private SVMExample x;
+	private final ThreadLocal<SVMExample> x = new ThreadLocal<SVMExample>() {
+
+		@Override
+		protected SVMExample initialValue() {
+			return new SVMExample();
+		}
+	};
 
 	/**
 	 * This map stores the mean-variance informations about all attributes (att index -->
@@ -124,7 +128,6 @@ public class SVMExamples implements Serializable {
 
 		ids = new String[size];
 
-		x = new SVMExample();
 	}
 
 	private static Map<Integer, MeanVariance> createMeanVariances(com.rapidminer.example.ExampleSet exampleSet) {
@@ -294,7 +297,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * Counts the training examples.
-	 * 
+	 *
 	 * @return Number of examples
 	 */
 	public int count_examples() {
@@ -303,7 +306,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * Counts the positive training examples
-	 * 
+	 *
 	 * @return Number of positive examples
 	 */
 	public int count_pos_examples() {
@@ -318,7 +321,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * Gets the dimension of the examples
-	 * 
+	 *
 	 * @return dim
 	 */
 	public int get_dim() {
@@ -330,23 +333,26 @@ public class SVMExamples implements Serializable {
 	}
 
 	/**
-	 * Gets an example.
-	 * 
-	 * This method is not thread safe. It always returns the same instance.
-	 * 
+	 * Gets an example. Returns a thread-local instance with value set according to the desired
+	 * position.
+	 *
+	 * It always returns the same thread-local instance, so calling this method again in the same
+	 * thread will change the already acquired instance.
+	 *
 	 * @param pos
 	 *            Number of example
 	 * @return Array of example attributes in their default order
 	 */
 	public SVMExample get_example(int pos) {
-		x.att = atts[pos];
-		x.index = index[pos];
-		return x;
+		SVMExample result = x.get();
+		result.att = atts[pos];
+		result.index = index[pos];
+		return result;
 	}
 
 	/**
 	 * Gets an y-value.
-	 * 
+	 *
 	 * @param pos
 	 *            Number of example
 	 * @return y
@@ -362,7 +368,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * Gets the y array
-	 * 
+	 *
 	 * @return y
 	 */
 	public double[] get_ys() {
@@ -372,7 +378,7 @@ public class SVMExamples implements Serializable {
 	/**
 	 * Gets an alpha-value. Please note that the alpha values are already multiplied by the
 	 * corresponding y-value.
-	 * 
+	 *
 	 * @param pos
 	 *            Number of example
 	 * @return alpha
@@ -384,7 +390,7 @@ public class SVMExamples implements Serializable {
 	/**
 	 * Gets the alpha array. Please note that the alpha values are already multiplied by the
 	 * corresponding y-value.
-	 * 
+	 *
 	 * @return alpha
 	 */
 	public double[] get_alphas() {
@@ -393,7 +399,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * swap two training examples
-	 * 
+	 *
 	 * @param pos1
 	 * @param pos2
 	 */
@@ -414,7 +420,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * get b
-	 * 
+	 *
 	 * @return b
 	 */
 	public double get_b() {
@@ -423,7 +429,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * set b
-	 * 
+	 *
 	 * @param new_b
 	 */
 	public void set_b(double new_b) {
@@ -432,7 +438,7 @@ public class SVMExamples implements Serializable {
 
 	/**
 	 * sets an alpha value.
-	 * 
+	 *
 	 * @param pos
 	 *            Number of example
 	 * @param alpha

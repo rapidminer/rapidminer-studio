@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.actions.export;
 
@@ -36,9 +34,9 @@ import org.jdesktop.swingx.border.DropShadowBorder;
 
 /**
  * The preview panel used by the {@link PrintAndExportDialog} to show a print preview.
- * 
+ *
  * @author Nils Woehler
- * 
+ *
  */
 public class PrintPreviewPanel extends JPanel {
 
@@ -107,11 +105,11 @@ public class PrintPreviewPanel extends JPanel {
 			g.fillRect(2, 2, (int) width, (int) height);
 
 			double widthFactor = width / pageFormat.getWidth();
-			double x = (pageFormat.getImageableX() * widthFactor) + 2;
+			double x = pageFormat.getImageableX() * widthFactor + 2;
 			double scaledWidth = pageFormat.getImageableWidth() * widthFactor;
 
 			double heightFactor = height / pageFormat.getHeight();
-			double y = (pageFormat.getImageableY() * heightFactor) + 2;
+			double y = pageFormat.getImageableY() * heightFactor + 2;
 			double scaledHeight = pageFormat.getImageableHeight() * heightFactor;
 
 			printer.print(g, x, y, scaledWidth, scaledHeight, 0);
@@ -132,7 +130,7 @@ public class PrintPreviewPanel extends JPanel {
 
 	/**
 	 * Creates a preview panel for the specified {@link PrintableComponent}.
-	 * 
+	 *
 	 * @param comp
 	 *            the {@link PrintableComponent} the preview panel should be created for.
 	 */

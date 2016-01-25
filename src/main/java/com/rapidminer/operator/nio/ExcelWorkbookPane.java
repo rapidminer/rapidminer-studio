@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio;
 
@@ -28,8 +26,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 
-import jxl.read.biff.BiffException;
-
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -37,11 +33,12 @@ import com.rapidminer.gui.tools.ExtendedJTabbedPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.operator.nio.model.ParseException;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet.XlsxReadMode;
+
+import jxl.read.biff.BiffException;
 
 
 /**
@@ -110,7 +107,7 @@ public class ExcelWorkbookPane extends JPanel {
 	private ExtendedJTabbedPane sheetsPane;
 	private ExtendedJTable[] tables;
 
-	public ExcelWorkbookPane(WizardStep wizardStep, ExcelResultSetConfiguration configuration) {
+	public ExcelWorkbookPane(ExcelResultSetConfiguration configuration) {
 		super();
 		this.configuration = configuration;
 
@@ -140,8 +137,6 @@ public class ExcelWorkbookPane extends JPanel {
 				getProgressListener().setTotal(100);
 				getProgressListener().setCompleted(10);
 
-				// loading workbook if necessary
-
 				// now add everything to gui
 				SwingUtilities.invokeLater(new Runnable() {
 
@@ -153,7 +148,7 @@ public class ExcelWorkbookPane extends JPanel {
 							String[] sheetNames = configuration.getSheetNames();
 							for (int sheetIndex = 0; sheetIndex < configuration.getNumberOfSheets(); sheetIndex++) {
 								tables[sheetIndex] = new ExtendedJTable(configuration.createExcelTableModel(sheetIndex,
-										XlsxReadMode.WIZARD_WORKPANE), false, false);
+										XlsxReadMode.WIZARD_WORKPANE, getProgressListener()), false, false);
 								tables[sheetIndex].setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 								tables[sheetIndex].setBorder(null);
 
@@ -171,11 +166,12 @@ public class ExcelWorkbookPane extends JPanel {
 								sheetsPane.addTab(sheetNames[sheetIndex], pane);
 							}
 							ExcelWorkbookSelection selection = new ExcelWorkbookSelection(configuration.getSheet(),
-									configuration.getColumnOffset(), configuration.getRowOffset(), configuration
-											.getColumnLast(), configuration.getRowLast());
+									configuration.getColumnOffset(), configuration.getRowOffset(),
+									configuration.getColumnLast(), configuration.getRowLast());
 
 							setSelection(selection);
-						} catch (InvalidFormatException | BiffException | IOException | OperatorException | ParseException e) {
+						} catch (InvalidFormatException | BiffException | IOException | OperatorException
+								| ParseException e) {
 							ImportWizardUtils.showErrorMessage(configuration.getResourceName(), e.toString(), e);
 						} finally {
 							getProgressListener().complete();
@@ -195,11 +191,8 @@ public class ExcelWorkbookPane extends JPanel {
 				boolean noColumns = tables[sheetIndex].getColumnCount() == 0;
 				boolean noRows = tables[sheetIndex].getRowCount() == 0;
 				if (!noRows && !noColumns) {
-					tables[sheetIndex]
-							.setColumnSelectionInterval(
-									Math.max(selection.getColumnIndexStart(), 0),
-									Math.min(selection.getColumnIndexEnd(),
-											noColumns ? 0 : tables[sheetIndex].getColumnCount() - 1));
+					tables[sheetIndex].setColumnSelectionInterval(Math.max(selection.getColumnIndexStart(), 0), Math
+							.min(selection.getColumnIndexEnd(), noColumns ? 0 : tables[sheetIndex].getColumnCount() - 1));
 					tables[sheetIndex].setRowSelectionInterval(Math.max(selection.getRowIndexStart(), 0),
 							Math.min(selection.getRowIndexEnd(), noRows ? 0 : tables[sheetIndex].getRowCount() - 1));
 				}
@@ -226,8 +219,8 @@ public class ExcelWorkbookPane extends JPanel {
 			int columnCount = selectedTable.getColumnCount();
 			return new ExcelWorkbookSelection(sheetsPane.getSelectedIndex(), 0, 0, columnCount - 1, rowCount - 1);
 		} else {
-			return new ExcelWorkbookSelection(sheetsPane.getSelectedIndex(), columnIndexStart, rowIndexStart,
-					columnIndexEnd, rowIndexEnd);
+			return new ExcelWorkbookSelection(sheetsPane.getSelectedIndex(), columnIndexStart, rowIndexStart, columnIndexEnd,
+					rowIndexEnd);
 		}
 	}
 
@@ -254,7 +247,7 @@ public class ExcelWorkbookPane extends JPanel {
 	/**
 	 * @return the tabbed sheet pane
 	 */
-	JTabbedPane getSheetTabbedPane() {
+	public JTabbedPane getSheetTabbedPane() {
 		return sheetsPane;
 	}
 }

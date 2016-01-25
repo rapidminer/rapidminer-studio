@@ -1,30 +1,32 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JTextField;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
@@ -37,6 +39,7 @@ import javax.swing.text.DefaultEditorKit;
 
 import com.rapidminer.gui.look.borders.Borders;
 import com.rapidminer.gui.look.icons.IconFactory;
+import com.rapidminer.gui.tools.ScaledImageIcon;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
@@ -50,6 +53,12 @@ import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 public class RapidLookAndFeel extends BasicLookAndFeel {
 
 	private static final long serialVersionUID = 1616331528047010458L;
+
+	/** the radius of RoundedRect corners */
+	public static final int CORNER_DEFAULT_RADIUS = 5;
+
+	/** the radius of RoundedRect corners for tabs */
+	public static final int CORNER_TAB_RADIUS = 5;
 
 	/** the control key is not used on Mac for the same things it is used on Windows/Linux */
 	private static final String CONTROL_ID = SystemInfoUtilities.getOperatingSystem() != OperatingSystem.OSX ? "control"
@@ -138,7 +147,8 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 
 	@Override
 	protected void initSystemColorDefaults(UIDefaults table) {
-		Object[] systemColors = { "desktop", getDesktopColor(), /* Color of the desktop background */
+		Object[] systemColors = { "desktop",
+				getDesktopColor(), /* Color of the desktop background */
 				"activeCaption", getWindowTitleBackground(),
 				/* Color for captions (title bars) when they are active. */
 				"activeCaptionText", getWindowTitleForeground(),
@@ -149,11 +159,9 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				/* Color for captions (title bars) when not active. */
 				"inactiveCaptionText", getWindowTitleForeground(),
 				/* Text color for text in inactive captions (title bars). */
-				"inactiveCaptionBorder",
-				getControlShadow(),
+				"inactiveCaptionBorder", getControlShadow(),
 				/* Border color for inactive caption (title bar) window borders. */
-				"window",
-				getColors().getCommonBackground(), // getWindowBackground(), /* Default color for
+				"window", Colors.WINDOW_BACKGROUND,  // getWindowBackground(), /* Default color for
 				// the interior of windows */
 
 				"windowBorder", getColors().getCommonBackground(), /* ??? */
@@ -161,13 +169,11 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				"menu", getMenuBackground(), /* Background color for menus */
 				"menuText", getMenuForeground(), /* Text color for menus */
 				"text", getTextBackground(), "textText", getUserTextColor(), "textHighlight", getTextHighlightColor(),
-				"textHighlightText", getHighlightedTextColor(), "textInactiveText", getInactiveSystemTextColor(), "control",
-				getColors().getCommonBackground(), "controlText", getControlTextColor(), /*
-				 * Default
-				 * color for
-				 * text in
-				 * controls
-				 */
+				"textHighlightText", Colors.TEXT_HIGHLIGHT_FOREGROUND, "textInactiveText", getInactiveSystemTextColor(),
+				"control", getColors().getCommonBackground(), "controlText",
+				getControlTextColor(), /*
+										 * Default color for text in controls
+										 */
 				"controlHighlight", getControlHighlight(),
 				/* Specular highlight (opposite of the shadow) */
 				"controlLtHighlight", getControlHighlight(), /* Highlight color for controls */
@@ -175,7 +181,7 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				"controlDkShadow", getControlDarkShadow(), /* Dark shadow color for controls */
 				"scrollbar", getColors().getCommonBackground(),
 				/* Scrollbar background (usually the "track") */
-				"info", new ColorUIResource(255, 240, 195), /* ToolTip Background */
+				"info", new ColorUIResource(252, 252, 252), /* ToolTip Background */
 				// "infoText", /* ToolTip Text */
 		};
 
@@ -209,10 +215,10 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				DefaultEditorKit.backwardAction, "ENTER", JTextField.notifyAction, CONTROL_ID + " BACK_SLASH", "unselect",
 				CONTROL_ID + " shift O", "toggle-componentOrientation" });
 
-		Object multilineInputMap = new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C",
-				DefaultEditorKit.copyAction, CONTROL_ID + " V", DefaultEditorKit.pasteAction, CONTROL_ID + " X",
-				DefaultEditorKit.cutAction, "COPY", DefaultEditorKit.copyAction, "PASTE", DefaultEditorKit.pasteAction,
-				"CUT", DefaultEditorKit.cutAction, "shift LEFT", DefaultEditorKit.selectionBackwardAction, "shift KP_LEFT",
+		Object multilineInputMap = new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", DefaultEditorKit.copyAction,
+				CONTROL_ID + " V", DefaultEditorKit.pasteAction, CONTROL_ID + " X", DefaultEditorKit.cutAction, "COPY",
+				DefaultEditorKit.copyAction, "PASTE", DefaultEditorKit.pasteAction, "CUT", DefaultEditorKit.cutAction,
+				"shift LEFT", DefaultEditorKit.selectionBackwardAction, "shift KP_LEFT",
 				DefaultEditorKit.selectionBackwardAction, "shift RIGHT", DefaultEditorKit.selectionForwardAction,
 				"shift KP_RIGHT", DefaultEditorKit.selectionForwardAction, CONTROL_ID + " LEFT",
 				DefaultEditorKit.previousWordAction, CONTROL_ID + " KP_LEFT", DefaultEditorKit.previousWordAction,
@@ -226,14 +232,14 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				DefaultEditorKit.upAction, "KP_UP", DefaultEditorKit.upAction, "DOWN", DefaultEditorKit.downAction,
 				"KP_DOWN", DefaultEditorKit.downAction, "PAGE_UP", DefaultEditorKit.pageUpAction, "PAGE_DOWN",
 				DefaultEditorKit.pageDownAction, "shift PAGE_UP", "selection-page-up", "shift PAGE_DOWN",
-				"selection-page-down", CONTROL_ID + " shift PAGE_UP", "selection-page-left",
-				CONTROL_ID + " shift PAGE_DOWN", "selection-page-right", "shift UP", DefaultEditorKit.selectionUpAction,
-				"shift KP_UP", DefaultEditorKit.selectionUpAction, "shift DOWN", DefaultEditorKit.selectionDownAction,
-				"shift KP_DOWN", DefaultEditorKit.selectionDownAction, "ENTER", DefaultEditorKit.insertBreakAction,
-				"BACK_SPACE", DefaultEditorKit.deletePrevCharAction, CONTROL_ID + " BACK_SPACE",
-				DefaultEditorKit.deletePrevWordAction, "DELETE", DefaultEditorKit.deleteNextCharAction,
-				CONTROL_ID + " DELETE", DefaultEditorKit.deleteNextWordAction, "RIGHT", DefaultEditorKit.forwardAction,
-				"LEFT", DefaultEditorKit.backwardAction, "KP_RIGHT", DefaultEditorKit.forwardAction, "KP_LEFT",
+				"selection-page-down", CONTROL_ID + " shift PAGE_UP", "selection-page-left", CONTROL_ID + " shift PAGE_DOWN",
+				"selection-page-right", "shift UP", DefaultEditorKit.selectionUpAction, "shift KP_UP",
+				DefaultEditorKit.selectionUpAction, "shift DOWN", DefaultEditorKit.selectionDownAction, "shift KP_DOWN",
+				DefaultEditorKit.selectionDownAction, "ENTER", DefaultEditorKit.insertBreakAction, "BACK_SPACE",
+				DefaultEditorKit.deletePrevCharAction, CONTROL_ID + " BACK_SPACE", DefaultEditorKit.deletePrevWordAction,
+				"DELETE", DefaultEditorKit.deleteNextCharAction, CONTROL_ID + " DELETE",
+				DefaultEditorKit.deleteNextWordAction, "RIGHT", DefaultEditorKit.forwardAction, "LEFT",
+				DefaultEditorKit.backwardAction, "KP_RIGHT", DefaultEditorKit.forwardAction, "KP_LEFT",
 				DefaultEditorKit.backwardAction, "TAB", DefaultEditorKit.insertTabAction, CONTROL_ID + " BACK_SLASH",
 				"unselect", CONTROL_ID + " HOME", DefaultEditorKit.beginAction, CONTROL_ID + " END",
 				DefaultEditorKit.endAction, CONTROL_ID + " shift HOME", DefaultEditorKit.selectionBeginAction,
@@ -245,18 +251,24 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				new Object[] { new ColorUIResource(100, 100, 100) });
 
 		Object focusCellHighlightBorder = new UIDefaults.ProxyLazyValue(
-				"javax.swing.plaf.BorderUIResource$LineBorderUIResource", new Object[] { COLORS.getTextHighlightBackColor()
-						.darker() });
+				"javax.swing.plaf.BorderUIResource$LineBorderUIResource", new Object[] { Colors.TEXTFIELD_BORDER });
 
-		Object fontDialog12 = new UIDefaults.ProxyLazyValue("javax.swing.plaf.FontUIResource", null, new Object[] {
-				"Dialog", Integer.valueOf(0), Integer.valueOf(12) });
+		Object fontDialog12 = new UIDefaults.ProxyLazyValue("javax.swing.plaf.FontUIResource", null,
+				new Object[] { "Dialog", Integer.valueOf(0), Integer.valueOf(12) });
+		Object fontDialog12Bold = new UIDefaults.ProxyLazyValue("javax.swing.plaf.FontUIResource", null,
+				new Object[] { "Dialog", Integer.valueOf(Font.BOLD), Integer.valueOf(12) });
+		Object fontDialog11Bold = new UIDefaults.ProxyLazyValue("javax.swing.plaf.FontUIResource", null,
+				new Object[] { "Dialog", Integer.valueOf(Font.BOLD), Integer.valueOf(11) });
 
 		ColorUIResource caretColor = new ColorUIResource(0, 25, 100);
 
 		Object textFieldMargin = new InsetsUIResource(4, 6, 4, 6);
-		Object tabbedpaneTabInsets = new InsetsUIResource(3, 10, 0, 10);
+		Object tabbedpaneTabInsets = new InsetsUIResource(3, 0, 0, 0);
+		Object menuItemInsets = new InsetsUIResource(5, 0, 5, 0);
 
-		Object defaultDirectoryIcon = SwingTools.createImage("plaf/folder.png");
+		Object defaultDirectoryIcon = SwingTools.createImage("plaf/folder_open_24.png");
+		Object sortAscIcon = SwingTools.createImage("plaf/laf_sort_up.png");
+		Object sortDescIcon = SwingTools.createImage("plaf/laf_sort_down.png");
 
 		Integer zero = Integer.valueOf(0);
 		Integer one = Integer.valueOf(1);
@@ -265,550 +277,286 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 
 		Object[] defaults = {
 				// Button
-				"Button.font",
-				fontDialog12,
-				"Button.background",
-				COLORS.getCommonBackground(),
-				"Button.foreground",
-				COLORS.getCommonForeground(),
-				"Button.margin",
-				new InsetsUIResource(10, 20, 10, 20),
-				"Button.textShiftOffset",
-				one,
+				"Button.font", fontDialog12, "Button.background", COLORS.getCommonBackground(), "Button.foreground",
+				Colors.TEXT_FOREGROUND, "Button.margin", new InsetsUIResource(10, 20, 10, 20), "Button.textShiftOffset", one,
 				"Button.focusInputMap",
 				new UIDefaults.LazyInputMap(new Object[] { "SPACE", "pressed", "released SPACE", "released", "ENTER",
 						"pressed", "released ENTER", "released" }),
-						// ToggleButton
-						"ToggleButton.font",
-						fontDialog12,
-						"ToggleButton.background",
-						COLORS.getCommonBackground(),
-						"ToggleButton.foreground",
-						COLORS.getCommonForeground(),
-						"ToggleButton.textShiftOffset",
-						one,
-						"ToggleButton.margin",
-						textFieldMargin,
-						"Button.focusInputMap",
-						new UIDefaults.LazyInputMap(new Object[] { "SPACE", "pressed", "released SPACE", "released" }),
-						// RadioButton
-						"RadioButton.font",
-						fontDialog12,
-						"RadioButton.background",
-						COLORS.getCommonBackground(),
-						"RadioButton.foreground",
-						COLORS.getCommonForeground(),
-						"RadioButton.textShiftOffset",
-						zero,
-						"RadioButton.focusInputMap",
-						new UIDefaults.LazyInputMap(new Object[] { "SPACE", "pressed", "released SPACE", "released", "RETURN",
-						"pressed" }),
-						// CheckBox
-						"CheckBox.font",
-						fontDialog12,
-						"CheckBox.background",
-						COLORS.getCommonBackground(),
-						"CheckBox.foreground",
-						COLORS.getCommonForeground(),
-						"CheckBox.textShiftOffset",
-						zero,
-						"CheckBox.focusInputMap",
-						new UIDefaults.LazyInputMap(new Object[] { "SPACE", "pressed", "released SPACE", "released", "RETURN",
-						"pressed" }),
-						// TextField
-						"TextField.selectionBackground",
-						COLORS.getTextHighlightBackColor(),
-						// ComboBox
-						"ComboBox.font",
-						fontDialog12,
-						"ComboBox.selectionBackground",
-						COLORS.getTextHighlightBackColor(),
-						"ComboBox.selectionForeground",
-						getHighlightedTextColor(),
-						"ComboBox.background",
-						COLORS.getCommonBackground(),
-						"ComboBox.foreground",
-						COLORS.getCommonForeground(),
-						"ComboBox.textShiftOffset",
-						one,
-						"ComboBox.disabledForeground",
-						getInactiveSystemTextColor(),
-						"ComboBox.ancestorInputMap",
-						new UIDefaults.LazyInputMap(new Object[] { "ESCAPE", "hidePopup", "PAGE_UP", "pageUpPassThrough",
-								"PAGE_DOWN", "pageDownPassThrough", "HOME", "homePassThrough", "END", "endPassThrough", "DOWN",
-								"selectNext", "KP_DOWN", "selectNext", "alt DOWN", "togglePopup", "alt KP_DOWN", "togglePopup",
-								"alt UP", "togglePopup", "alt KP_UP", "togglePopup", "SPACE", "spacePopup", "ENTER", "enterPressed",
-								"UP", "selectPrevious", "KP_UP", "selectPrevious" }),
-								// Filechooser
-								"FileChooser.defaultDirectoryIcon",
-								defaultDirectoryIcon,
-								"FileChooser.newFolderIcon",
-								null,
-								"FileChooser.upFolderIcon",
-								null,
-								"FileChooser.homeFolderIcon",
-								null,
-								"FileChooser.detailsViewIcon",
-								null,
-								"FileChooser.listViewIcon",
-								null,
-								"FileView.directoryIcon",
-								null,
-								"FileView.fileIcon",
-								null,
-								"FileView.computerIcon",
-								null,
-								"FileView.hardDriveIcon",
-								null,
-								"FileView.floppyDriveIcon",
-								null,
-								"FileChooser.ChangeViewNormalIcon",
-								SwingTools.createImage("plaf/fc/fc_change_1.png"),
-								"FileChooser.ChangeViewHighlightedIcon",
-								SwingTools.createImage("plaf/fc/fc_change_2.png"),
-								"FileChooser.BookmarksAddNormalIcon",
-								SwingTools.createImage("plaf/fc/fc_bookmark_1.png"),
-								"FileChooser.BookmarksAddHighlightedIcon",
-								SwingTools.createImage("plaf/fc/fc_bookmark_2.png"),
-								"FileChooser.HomeNormalIcon",
-								SwingTools.createImage("plaf/fc/fc_home_1.png"),
-								"FileChooser.HomeHighlightedIcon",
-								SwingTools.createImage("plaf/fc/fc_home_2.png"),
-								"FileChooser.HomeDisabledIcon",
-								SwingTools.createImage("plaf/fc/fc_home_3.png"),
-								"FileChooser.NewFolderNormalIcon",
-								SwingTools.createImage("plaf/fc/fc_new_1.png"),
-								"FileChooser.NewFolderHighlightedIcon",
-								SwingTools.createImage("plaf/fc/fc_new_2.png"),
-								"FileChooser.NewFolderDisabledIcon",
-								SwingTools.createImage("plaf/fc/fc_new_3.png"),
-								"FileChooser.UpFolderNormalIcon",
-								SwingTools.createImage("plaf/fc/fc_up_1.png"),
-								"FileChooser.UpFolderHighlightedIcon",
-								SwingTools.createImage("plaf/fc/fc_up_2.png"),
-								"FileChooser.UpFolderDisabledIcon",
-								SwingTools.createImage("plaf/fc/fc_up_3.png"),
-								"FileChooser.BackFolderNormalIcon",
-								SwingTools.createImage("plaf/fc/fc_back1.png"),
-								"FileChooser.BackFolderHighlightedIcon",
-								SwingTools.createImage("plaf/fc/fc_back2.png"),
-								"FileChooser.BackFolderDisabledIcon",
-								SwingTools.createImage("plaf/fc/fc_back3.png"),
-								"FileChooser.ancestorInputMap",
-								new UIDefaults.LazyInputMap(new Object[] { "ESCAPE", "cancelSelection", "BACK_SPACE", "Go Up", "ENTER",
-								"approveSelection" }),
-								// InternalFrame
-								"InternalFrame.titleFont",
-								new FontUIResource("Dialog", 1, 12),
-								"InternalFrame.activeTitleForeground",
-								Colors.getBlack(),
-								"InternalFrame.inactiveTitleForeground",
-								Colors.getBlack(),
-								"InternalFrame.closeIcon",
-								SwingTools.createImage("plaf/close_icon.png"),
-								"InternalFrame.rolloverCloseIcon",
-								SwingTools.createImage("plaf/armed_close_icon.png"),
-								"InternalFrame.maximizeIcon",
-								SwingTools.createImage("plaf/maximize_icon.png"),
-								"InternalFrame.rolloverMaximizeIcon",
-								SwingTools.createImage("plaf/armed_maximize_icon.png"),
-								"InternalFrame.minimizeIcon",
-								SwingTools.createImage("plaf/minimize_icon.png"),
-								"InternalFrame.rolloverMinimizeIcon",
-								SwingTools.createImage("plaf/armed_minimize_icon.png"),
-								"InternalFrame.iconifyIcon",
-								SwingTools.createImage("plaf/iconify_icon.png"),
-								"InternalFrame.rolloverIconifyIcon",
-								SwingTools.createImage("plaf/armed_iconify_icon.png"),
-								"InternalFrame.icon",
-								SwingTools.createImage("plaf/internal_icon.png"),
-								// DesktopIcon
-								"DesktopIcon.foreground",
-								getControlTextColor(),
-								"DesktopIcon.width",
-								new Integer(140),
-								"DesktopIcon.font",
-								getMainFont(),
-								// Desktop
-								"Desktop.background",
-								COLORS.getDesktopBackgroundColor(),
-								"Desktop.ancestorInputMap",
-								new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " F5", "restore", CONTROL_ID + " F4", "close",
-										CONTROL_ID + " F7", "move", CONTROL_ID + " F8", "resize", "RIGHT", "right", "KP_RIGHT", "right",
-										"shift RIGHT", "shrinkRight", "shift KP_RIGHT", "shrinkRight", "LEFT", "left", "KP_LEFT", "left",
-										"shift LEFT", "shrinkLeft", "shift KP_LEFT", "shrinkLeft", "UP", "up", "KP_UP", "up", "shift UP",
-										"shrinkUp", "shift KP_UP", "shrinkUp", "DOWN", "down", "KP_DOWN", "down", "shift DOWN",
-										"shrinkDown", "shift KP_DOWN", "shrinkDown", "ESCAPE", "escape", CONTROL_ID + " F9", "minimize",
-										CONTROL_ID + " F10", "maximize", CONTROL_ID + " F6", "selectNextFrame", CONTROL_ID + " TAB",
-										"selectNextFrame", CONTROL_ID + " alt F6", "selectNextFrame", "shift ctrl alt F6",
-										"selectPreviousFrame", CONTROL_ID + " F12", "navigateNext", "shift ctrl F12", "navigatePrevious" }),
-										// Label
-										"Label.font",
-										fontDialog12,
-										"Label.foreground",
-										getSystemTextColor(),
-										"Label.disabledForeground",
-										getInactiveSystemTextColor(),
-										"Label.background",
-										COLORS.getCommonBackground(),
-										// List
-										"List.focusCellHighlightBorder",
-										focusCellHighlightBorder,
-										"List.font",
-										fontDialog12,
-										"List.background",
-										Colors.getWhite(),
-										"List.selectionBackground",
-										COLORS.getTextHighlightBackColor(),
-										"List.focusInputMap",
-										new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", "copy", CONTROL_ID + " V", "paste",
-												CONTROL_ID + " X", "cut", "COPY", "copy", "PASTE", "paste", "CUT", "cut", "UP", "selectPreviousRow",
-												"KP_UP", "selectPreviousRow", "shift UP", "selectPreviousRowExtendSelection", "shift KP_UP",
-												"selectPreviousRowExtendSelection", "DOWN", "selectNextRow", "KP_DOWN", "selectNextRow",
-												"shift DOWN", "selectNextRowExtendSelection", "shift KP_DOWN", "selectNextRowExtendSelection",
-												"LEFT", "selectPreviousColumn", "KP_LEFT", "selectPreviousColumn", "shift LEFT",
-												"selectPreviousColumnExtendSelection", "shift KP_LEFT", "selectPreviousColumnExtendSelection",
-												"RIGHT", "selectNextColumn", "KP_RIGHT", "selectNextColumn", "shift RIGHT",
-												"selectNextColumnExtendSelection", "shift KP_RIGHT", "selectNextColumnExtendSelection", "HOME",
-												"selectFirstRow", "shift HOME", "selectFirstRowExtendSelection", "END", "selectLastRow",
-												"shift END", "selectLastRowExtendSelection", "PAGE_UP", "scrollUp", "shift PAGE_UP",
-												"scrollUpExtendSelection", "PAGE_DOWN", "scrollDown", "shift PAGE_DOWN",
-												"scrollDownExtendSelection", CONTROL_ID + " A", "selectAll", CONTROL_ID + " SLASH", "selectAll",
-												CONTROL_ID + " BACK_SLASH", "clearSelection" }),
-												// MenuBar
-												"MenuBar.font",
-												fontDialog12,
-												"MenuBar.windowBindings",
-												new Object[] { "F10", "takeFocus" }
+				// ToggleButton
+				"ToggleButton.font", fontDialog12, "ToggleButton.background", COLORS.getCommonBackground(),
+				"ToggleButton.foreground", Colors.TEXT_FOREGROUND, "ToggleButton.textShiftOffset", one,
+				"ToggleButton.margin", textFieldMargin, "Button.focusInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "SPACE", "pressed", "released SPACE", "released" }),
+				// RadioButton
+				"RadioButton.font", fontDialog12, "RadioButton.background", COLORS.getCommonBackground(),
+				"RadioButton.foreground", Colors.TEXT_FOREGROUND, "RadioButton.textShiftOffset", zero,
+				"RadioButton.focusInputMap",
+				new UIDefaults.LazyInputMap(
+						new Object[] { "SPACE", "pressed", "released SPACE", "released", "RETURN", "pressed" }),
+				// CheckBox
+				"CheckBox.font", fontDialog12, "CheckBox.background", COLORS.getCommonBackground(), "CheckBox.foreground",
+				Colors.TEXT_FOREGROUND, "CheckBox.textShiftOffset", zero, "CheckBox.focusInputMap",
+				new UIDefaults.LazyInputMap(
+						new Object[] { "SPACE", "pressed", "released SPACE", "released", "RETURN", "pressed" }),
+				// TextField
+				"TextField.selectionBackground", Colors.TEXT_HIGHLIGHT_BACKGROUND,
+				// ComboBox
+				"ComboBox.font", fontDialog12, "ComboBox.selectionBackground", Colors.TEXT_HIGHLIGHT_BACKGROUND,
+				"ComboBox.selectionForeground", Colors.TEXT_HIGHLIGHT_FOREGROUND, "ComboBox.background",
+				COLORS.getCommonBackground(), "ComboBox.foreground", Colors.TEXT_FOREGROUND, "ComboBox.textShiftOffset", one,
+				"ComboBox.disabledForeground", getInactiveSystemTextColor(), "ComboBox.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "ESCAPE", "hidePopup", "PAGE_UP", "pageUpPassThrough",
+						"PAGE_DOWN", "pageDownPassThrough", "HOME", "homePassThrough", "END", "endPassThrough", "DOWN",
+						"selectNext", "KP_DOWN", "selectNext", "alt DOWN", "togglePopup", "alt KP_DOWN", "togglePopup",
+						"alt UP", "togglePopup", "alt KP_UP", "togglePopup", "SPACE", "spacePopup", "ENTER", "enterPressed",
+						"UP", "selectPrevious", "KP_UP", "selectPrevious" }),
+				// Filechooser
+				"FileChooser.defaultDirectoryIcon", defaultDirectoryIcon, "FileChooser.newFolderIcon", null,
+				"FileChooser.upFolderIcon", null, "FileChooser.homeFolderIcon", null, "FileChooser.detailsViewIcon", null,
+				"FileChooser.listViewIcon", null, "FileView.directoryIcon", null, "FileView.fileIcon", null,
+				"FileView.computerIcon", null, "FileView.hardDriveIcon", null, "FileView.floppyDriveIcon", null,
+				"FileChooser.ancestorInputMap",
+				new UIDefaults.LazyInputMap(
+						new Object[] { "ESCAPE", "cancelSelection", "BACK_SPACE", "Go Up", "ENTER", "approveSelection" }),
+				// InternalFrame
+				"InternalFrame.titleFont", new FontUIResource("Dialog", 1, 12), "InternalFrame.activeTitleForeground",
+				Colors.TEXT_FOREGROUND, "InternalFrame.inactiveTitleForeground", Colors.TEXT_FOREGROUND,
+				"InternalFrame.closeIcon", SwingTools.createImage("plaf/close_icon.png"), "InternalFrame.rolloverCloseIcon",
+				SwingTools.createImage("plaf/armed_close_icon.png"), "InternalFrame.maximizeIcon",
+				SwingTools.createImage("plaf/maximize_icon.png"), "InternalFrame.rolloverMaximizeIcon",
+				SwingTools.createImage("plaf/armed_maximize_icon.png"), "InternalFrame.minimizeIcon",
+				SwingTools.createImage("plaf/minimize_icon.png"), "InternalFrame.rolloverMinimizeIcon",
+				SwingTools.createImage("plaf/armed_minimize_icon.png"), "InternalFrame.iconifyIcon",
+				SwingTools.createImage("plaf/iconify_icon.png"), "InternalFrame.rolloverIconifyIcon",
+				SwingTools.createImage("plaf/armed_iconify_icon.png"), "InternalFrame.icon",
+				SwingTools.createImage("plaf/internal_icon.png"),
+				// DesktopIcon
+				"DesktopIcon.foreground", getControlTextColor(), "DesktopIcon.width", new Integer(140), "DesktopIcon.font",
+				getMainFont(),
+				// Desktop
+				"Desktop.background", COLORS.getDesktopBackgroundColor(), "Desktop.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " F5", "restore", CONTROL_ID + " F4", "close",
+						CONTROL_ID + " F7", "move", CONTROL_ID + " F8", "resize", "RIGHT", "right", "KP_RIGHT", "right",
+						"shift RIGHT", "shrinkRight", "shift KP_RIGHT", "shrinkRight", "LEFT", "left", "KP_LEFT", "left",
+						"shift LEFT", "shrinkLeft", "shift KP_LEFT", "shrinkLeft", "UP", "up", "KP_UP", "up", "shift UP",
+						"shrinkUp", "shift KP_UP", "shrinkUp", "DOWN", "down", "KP_DOWN", "down", "shift DOWN", "shrinkDown",
+						"shift KP_DOWN", "shrinkDown", "ESCAPE", "escape", CONTROL_ID + " F9", "minimize",
+						CONTROL_ID + " F10", "maximize", CONTROL_ID + " F6", "selectNextFrame", CONTROL_ID + " TAB",
+						"selectNextFrame", CONTROL_ID + " alt F6", "selectNextFrame", "shift ctrl alt F6",
+						"selectPreviousFrame", CONTROL_ID + " F12", "navigateNext", "shift ctrl F12", "navigatePrevious" }),
+				// Label
+				"Label.font", fontDialog12, "Label.foreground", getSystemTextColor(), "Label.disabledForeground",
+				getInactiveSystemTextColor(), "Label.background", Colors.PANEL_BACKGROUND,
+				// List
+				"List.focusCellHighlightBorder", focusCellHighlightBorder, "List.font", fontDialog12, "List.background",
+				Colors.WHITE, "List.selectionBackground", Colors.TEXT_HIGHLIGHT_BACKGROUND, "List.focusInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", "copy", CONTROL_ID + " V", "paste",
+						CONTROL_ID + " X", "cut", "COPY", "copy", "PASTE", "paste", "CUT", "cut", "UP", "selectPreviousRow",
+						"KP_UP", "selectPreviousRow", "shift UP", "selectPreviousRowExtendSelection", "shift KP_UP",
+						"selectPreviousRowExtendSelection", "DOWN", "selectNextRow", "KP_DOWN", "selectNextRow",
+						"shift DOWN", "selectNextRowExtendSelection", "shift KP_DOWN", "selectNextRowExtendSelection",
+						"LEFT", "selectPreviousColumn", "KP_LEFT", "selectPreviousColumn", "shift LEFT",
+						"selectPreviousColumnExtendSelection", "shift KP_LEFT", "selectPreviousColumnExtendSelection",
+						"RIGHT", "selectNextColumn", "KP_RIGHT", "selectNextColumn", "shift RIGHT",
+						"selectNextColumnExtendSelection", "shift KP_RIGHT", "selectNextColumnExtendSelection", "HOME",
+						"selectFirstRow", "shift HOME", "selectFirstRowExtendSelection", "END", "selectLastRow", "shift END",
+						"selectLastRowExtendSelection", "PAGE_UP", "scrollUp", "shift PAGE_UP", "scrollUpExtendSelection",
+						"PAGE_DOWN", "scrollDown", "shift PAGE_DOWN", "scrollDownExtendSelection", CONTROL_ID + " A",
+						"selectAll", CONTROL_ID + " SLASH", "selectAll", CONTROL_ID + " BACK_SLASH", "clearSelection" }),
+				// MenuBar
+				"MenuBar.font", fontDialog12, "MenuBar.windowBindings", new Object[] { "F10", "takeFocus" }
 
-				,
+				, "MenuBar.selectionForeground", Colors.TEXT_HIGHLIGHT_FOREGROUND,
 				// Menu Item
-				"MenuItem.font",
-				fontDialog12,
-				"MenuItem.acceleratorFont",
-				fontDialog12,
-				"MenuItem.selectionBackground",
-				getMenuSelectedBack(),
+				"MenuItem.font", fontDialog12, "MenuItem.margin", menuItemInsets, "MenuItem.acceleratorFont", fontDialog12,
+				"MenuItem.selectionBackground", getMenuSelectedBack(), "MenuItem.selectionForeground",
+				Colors.TEXT_HIGHLIGHT_FOREGROUND, "MenuItem.foreground", Colors.TEXT_HIGHLIGHT_FOREGROUND,
+				"MenuItem.acceleratorForeground", Colors.TEXT_HIGHLIGHT_FOREGROUND,
 				// RadioButtonMenuItem
-				"RadioButtonMenuItem.font",
-				fontDialog12,
-				"RadioButtonMenuItem.selectionBackground",
-				getMenuSelectedBack(),
-				"RadioButtonMenuItem.checkIcon",
+				"RadioButtonMenuItem.font", fontDialog12, "RadioButtonMenuItem.margin", menuItemInsets,
+				"RadioButtonMenuItem.selectionBackground", getMenuSelectedBack(), "RadioButtonMenuItem.checkIcon",
 				new UIDefaults.ProxyLazyValue("com.rapidminer.gui.look.icons.IconFactory", "getRadioButtonMenuItemIcon"),
 				// CheckBoxMenuItem
-				"CheckBoxMenuItem.font",
-				fontDialog12,
-				"CheckBoxMenuItem.selectionBackground",
-				getMenuSelectedBack(),
-				"CheckBoxMenuItem.checkIcon",
+				"CheckBoxMenuItem.font", fontDialog12, "CheckBoxMenuItem.margin", menuItemInsets,
+				"CheckBoxMenuItem.selectionBackground", getMenuSelectedBack(), "CheckBoxMenuItem.checkIcon",
 				new UIDefaults.ProxyLazyValue("com.rapidminer.gui.look.icons.IconFactory", "getCheckBoxMenuItemIcon"),
 				// Menus
-				"Menu.font",
-				fontDialog12,
-				"Menu.selectionBackground",
-				getMenuSelectedBack(),
+				"Menu.font", fontDialog12, "Menu.selectionBackground", getMenuSelectedBack(), "Menu.selectionForeground",
+				Colors.TEXT_HIGHLIGHT_FOREGROUND, "Menu.margin", menuItemInsets,
 				// PopupMenu
-				"PopupMenu.font",
-				fontDialog12,
+				"PopupMenu.font", fontDialog12, "PopupMenu.selectionForeground", Colors.TEXT_HIGHLIGHT_FOREGROUND,
 				// OptionPane
-				"OptionPane.font",
-				fontDialog12,
-				"OptionPane.informationIcon",
-				SwingTools.createImage("plaf/information.png"),
-				"OptionPane.errorIcon",
-				SwingTools.createImage("plaf/error.png"),
-				"OptionPane.questionIcon",
-				SwingTools.createImage("plaf/question.png"),
-				"OptionPane.warningIcon",
-				SwingTools.createImage("plaf/warning.png"),
+				"OptionPane.font", fontDialog12, "OptionPane.informationIcon",
+				SwingTools.createImage("icons/48/information.png"), "OptionPane.errorIcon",
+				SwingTools.createImage("icons/48/error.png"), "OptionPane.questionIcon",
+				SwingTools.createImage("icons/48/question.png"), "OptionPane.warningIcon",
+				SwingTools.createImage("icons/48/sign_warning.png"),
 				// Panel
-				"Panel.font",
-				fontDialog12,
+				"Panel.font", fontDialog12,
 				// ProggressBar
-				"ProgressBar.foreground",
-				new ColorUIResource(40, 40, 40),
-				"ProgressBar.background",
-				new ColorUIResource(240, 240, 240),
-				"ProgressBar.font",
-				new java.awt.Font("Dialog", 0, 11),
-				"ProgressBar.cycleTime",
-				new Integer(12000),
+				"ProgressBar.foreground", new ColorUIResource(40, 40, 40), "ProgressBar.background",
+				new ColorUIResource(240, 240, 240), "ProgressBar.font", new java.awt.Font("Dialog", 0, 10),
+				"ProgressBar.cycleTime", new Integer(12000),
+				// Separator
+				"Separator.foreground", Colors.TEXTFIELD_BORDER,
 				// ScrollBar
-				"ScrollBar.border",
-				null,
-				"ScrollBar.background",
-				getColors().getCommonBackground(),
+				"ScrollBar.border", null, "ScrollBar.background", getColors().getCommonBackground(),
 				"ScrollBar.focusInputMap",
 				new UIDefaults.LazyInputMap(new Object[] { "RIGHT", "positiveUnitIncrement", "KP_RIGHT",
 						"positiveUnitIncrement", "DOWN", "positiveUnitIncrement", "KP_DOWN", "positiveUnitIncrement",
 						"PAGE_DOWN", "positiveBlockIncrement", "LEFT", "negativeUnitIncrement", "KP_LEFT",
 						"negativeUnitIncrement", "UP", "negativeUnitIncrement", "KP_UP", "negativeUnitIncrement", "PAGE_UP",
 						"negativeBlockIncrement", "HOME", "minScroll", "END", "maxScroll" }),
-						// ScrollPane
-						"ScrollPane.font",
-						fontDialog12,
-						"ScrollPane.ancestorInputMap",
-						new UIDefaults.LazyInputMap(new Object[] { "RIGHT", "unitScrollRight", "KP_RIGHT", "unitScrollRight",
-								"DOWN", "unitScrollDown", "KP_DOWN", "unitScrollDown", "LEFT", "unitScrollLeft", "KP_LEFT",
-								"unitScrollLeft", "UP", "unitScrollUp", "KP_UP", "unitScrollUp", "PAGE_UP", "scrollUp", "PAGE_DOWN",
-								"scrollDown", CONTROL_ID + " PAGE_UP", "scrollLeft", CONTROL_ID + " PAGE_DOWN", "scrollRight",
-								CONTROL_ID + " HOME", "scrollHome", CONTROL_ID + " END", "scrollEnd" }),
-								// ViewPort
-								"Viewport.font",
-								fontDialog12,
-								// Slider
-								"Slider.focusInsets",
-								sliderFocusInsets,
-								"Slider.disabledForeground",
-								getInactiveSystemTextColor(),
-								"Slider.majorColor",
-								new ColorUIResource(100, 100, 100),
-								"Slider.minorColor",
-								new ColorUIResource(180, 180, 180),
-								"Slider.majorDisabledColor",
-								new ColorUIResource(180, 180, 180),
-								"Slider.minorDisabledColor",
-								new ColorUIResource(220, 220, 220),
-								"Slider.trackWidth",
-								new Integer(7),
-								"Slider.majorTickLength",
-								new Integer(6),
-								"Slider.focusInputMap",
-								new UIDefaults.LazyInputMap(new Object[] { "RIGHT", "positiveUnitIncrement", "KP_RIGHT",
-										"positiveUnitIncrement", "DOWN", "negativeUnitIncrement", "KP_DOWN", "negativeUnitIncrement",
-										"PAGE_DOWN", "negativeBlockIncrement", CONTROL_ID + " PAGE_DOWN", "negativeBlockIncrement", "LEFT",
-										"negativeUnitIncrement", "KP_LEFT", "negativeUnitIncrement", "UP", "positiveUnitIncrement", "KP_UP",
-										"positiveUnitIncrement", "PAGE_UP", "positiveBlockIncrement", CONTROL_ID + " PAGE_UP",
-										"positiveBlockIncrement", "HOME", "minScroll", "END", "maxScroll" }),
-										// Spinner
-										"Spinner.font",
-										fontDialog12,
-										"Spinner.background",
-										COLORS.getCommonBackground(),
-										"Spinner.margin",
-										new InsetsUIResource(10, 10, 10, 10),
-										"Spinner.ancestorInputMap",
-										new UIDefaults.LazyInputMap(new Object[] { "UP", "increment", "KP_UP", "increment", "DOWN", "decrement",
-												"KP_DOWN", "decrement", }),
-												// SplitPane
-												"SplitPane.dividerSize",
-												Integer.valueOf(9),
-												"SplitPane.highlight",
-												new ColorUIResource(250, 250, 250),
-												"SplitPane.shadow",
-												new ColorUIResource(200, 200, 200),
-												"SplitPane.ancestorInputMap",
-												new UIDefaults.LazyInputMap(new Object[] { "UP", "negativeIncrement", "DOWN", "positiveIncrement", "LEFT",
-														"negativeIncrement", "RIGHT", "positiveIncrement", "KP_UP", "negativeIncrement", "KP_DOWN",
-														"positiveIncrement", "KP_LEFT", "negativeIncrement", "KP_RIGHT", "positiveIncrement", "HOME",
-														"selectMin", "END", "selectMax", "F8", "startResize", "F6", "toggleFocus", CONTROL_ID + " TAB",
-														"focusOutForward", CONTROL_ID + " shift TAB", "focusOutBackward" }),
+				// ScrollPane
+				"ScrollPane.font", fontDialog12, "ScrollPane.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "RIGHT", "unitScrollRight", "KP_RIGHT", "unitScrollRight", "DOWN",
+						"unitScrollDown", "KP_DOWN", "unitScrollDown", "LEFT", "unitScrollLeft", "KP_LEFT", "unitScrollLeft",
+						"UP", "unitScrollUp", "KP_UP", "unitScrollUp", "PAGE_UP", "scrollUp", "PAGE_DOWN", "scrollDown",
+						CONTROL_ID + " PAGE_UP", "scrollLeft", CONTROL_ID + " PAGE_DOWN", "scrollRight",
+						CONTROL_ID + " HOME", "scrollHome", CONTROL_ID + " END", "scrollEnd" }),
+				// ViewPort
+				"Viewport.font", fontDialog12,
+				// Slider
+				"Slider.focusInsets", sliderFocusInsets, "Slider.font", fontDialog11Bold, "Slider.disabledForeground",
+				getInactiveSystemTextColor(), "Slider.trackWidth", new Integer(7), "Slider.focusInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "RIGHT", "positiveUnitIncrement", "KP_RIGHT",
+						"positiveUnitIncrement", "DOWN", "negativeUnitIncrement", "KP_DOWN", "negativeUnitIncrement",
+						"PAGE_DOWN", "negativeBlockIncrement", CONTROL_ID + " PAGE_DOWN", "negativeBlockIncrement", "LEFT",
+						"negativeUnitIncrement", "KP_LEFT", "negativeUnitIncrement", "UP", "positiveUnitIncrement", "KP_UP",
+						"positiveUnitIncrement", "PAGE_UP", "positiveBlockIncrement", CONTROL_ID + " PAGE_UP",
+						"positiveBlockIncrement", "HOME", "minScroll", "END", "maxScroll" }),
+				// Spinner
+				"Spinner.font", fontDialog12, "Spinner.background", COLORS.getCommonBackground(), "Spinner.margin",
+				new InsetsUIResource(10, 10, 10, 10), "Spinner.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "UP", "increment", "KP_UP", "increment", "DOWN", "decrement",
+						"KP_DOWN", "decrement", }),
+				// SplitPane
+				"SplitPane.dividerSize", Integer.valueOf(5), "SplitPane.highlight", Colors.SPLITPANE_BORDER_FOCUS,
+				"SplitPaneDivider.draggingColor", Colors.SPLITPANE_BORDER_FOCUS, "SplitPane.shadow",
+				new ColorUIResource(200, 200, 200), "SplitPane.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "UP", "negativeIncrement", "DOWN", "positiveIncrement", "LEFT",
+						"negativeIncrement", "RIGHT", "positiveIncrement", "KP_UP", "negativeIncrement", "KP_DOWN",
+						"positiveIncrement", "KP_LEFT", "negativeIncrement", "KP_RIGHT", "positiveIncrement", "HOME",
+						"selectMin", "END", "selectMax", "F8", "startResize", "F6", "toggleFocus", CONTROL_ID + " TAB",
+						"focusOutForward", CONTROL_ID + " shift TAB", "focusOutBackward" }),
 
-														"SplitPaneDivider.border",
-														null,
-														// TabbedPane
-														"TabbedPane.tabAreaInsets",
-														tabbedpaneTabInsets,
-														"TabbedPane.font",
-														fontDialog12,
-														"TabbedPane.focusInputMap",
-														new UIDefaults.LazyInputMap(new Object[] { "RIGHT", "navigateRight", "KP_RIGHT", "navigateRight", "LEFT",
-																"navigateLeft", "KP_LEFT", "navigateLeft", "UP", "navigateUp", "KP_UP", "navigateUp", "DOWN",
-																"navigateDown", "KP_DOWN", "navigateDown", CONTROL_ID + " DOWN", "requestFocusForVisibleComponent",
-																CONTROL_ID + " KP_DOWN", "requestFocusForVisibleComponent", }),
-																"TabbedPane.ancestorInputMap",
-																new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " PAGE_DOWN", "navigatePageDown",
-																		CONTROL_ID + " PAGE_UP", "navigatePageUp", CONTROL_ID + " UP", "requestFocus",
-																		CONTROL_ID + " KP_UP", "requestFocus", }),
-																		// Table
-																		"Table.font",
-																		fontDialog12,
-																		"Table.background",
-																		Colors.getWhite(),
-																		"Table.selectionForeground",
-																		getUserTextColor(),
-																		"Table.gridColor",
-																		new ColorUIResource(200, 200, 200),
-																		"Table.focusCellForeground",
-																		getHighlightedTextColor(),
-																		"Table.focusCellHighlightBorder",
-																		new LineBorderUIResource(COLORS.getTextHighlightBackColor().brighter()),
-																		"Table.ancestorInputMap",
-																		new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", "copy", CONTROL_ID + " V", "paste",
-																				CONTROL_ID + " X", "cut", "COPY", "copy", "PASTE", "paste", "CUT", "cut", "RIGHT",
-																				"selectNextColumn", "KP_RIGHT", "selectNextColumn", "LEFT", "selectPreviousColumn", "KP_LEFT",
-																				"selectPreviousColumn", "DOWN", "selectNextRow", "KP_DOWN", "selectNextRow", "UP",
-																				"selectPreviousRow", "KP_UP", "selectPreviousRow", "shift RIGHT", "selectNextColumnExtendSelection",
-																				"shift KP_RIGHT", "selectNextColumnExtendSelection", "shift LEFT",
-																				"selectPreviousColumnExtendSelection", "shift KP_LEFT", "selectPreviousColumnExtendSelection",
-																				"shift DOWN", "selectNextRowExtendSelection", "shift KP_DOWN", "selectNextRowExtendSelection",
-																				"shift UP", "selectPreviousRowExtendSelection", "shift KP_UP", "selectPreviousRowExtendSelection",
-																				"PAGE_UP", "scrollUpChangeSelection", "PAGE_DOWN", "scrollDownChangeSelection", "HOME",
-																				"selectFirstColumn", "END", "selectLastColumn", "shift PAGE_UP", "scrollUpExtendSelection",
-																				"shift PAGE_DOWN", "scrollDownExtendSelection", "shift HOME", "selectFirstColumnExtendSelection",
-																				"shift END", "selectLastColumnExtendSelection", CONTROL_ID + " PAGE_UP",
-																				"scrollLeftChangeSelection", CONTROL_ID + " PAGE_DOWN", "scrollRightChangeSelection",
-																				CONTROL_ID + " HOME", "selectFirstRow", CONTROL_ID + " END", "selectLastRow",
-																				CONTROL_ID + " shift PAGE_UP", "scrollRightExtendSelection", CONTROL_ID + " shift PAGE_DOWN",
-																				"scrollLeftExtendSelection", CONTROL_ID + " shift HOME", "selectFirstRowExtendSelection",
-																				CONTROL_ID + " shift END", "selectLastRowExtendSelection", "TAB", "selectNextColumnCell",
-																				"shift TAB", "selectPreviousColumnCell", "ENTER", "selectNextRowCell", "shift ENTER",
-																				"selectPreviousRowCell", CONTROL_ID + " A", "selectAll", "ESCAPE", "cancel", "F2", "startEditing" }),
-																				// TableHeader
-																				"TableHeader.font",
-																				fontDialog12,
-																				"TableHeader.background",
-																				getColors().getCommonBackground(),
-																				// TextField
-																				"TextField.margin",
-																				textFieldMargin,
-																				"TextField.font",
-																				fontDialog12,
-																				"TextField.caretForeground",
-																				caretColor,
-																				"TextField.focusInputMap",
-																				fieldInputMap,
-																				"TextField.background",
-																				Colors.getWhite(),
-																				"FormattedTextField.margin",
-																				textFieldMargin,
-																				"FormattedTextField.font",
-																				fontDialog12,
-																				"FormattedTextField.caretForeground",
-																				caretColor,
-																				"FormattedTextField.background",
-																				getWhiteBackground(),
-																				"FormattedTextField.focusInputMap",
-																				new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", DefaultEditorKit.copyAction,
-																						CONTROL_ID + " V", DefaultEditorKit.pasteAction, CONTROL_ID + " X", DefaultEditorKit.cutAction,
-																						"COPY", DefaultEditorKit.copyAction, "PASTE", DefaultEditorKit.pasteAction, "CUT",
-																						DefaultEditorKit.cutAction, "shift LEFT", DefaultEditorKit.selectionBackwardAction, "shift KP_LEFT",
-																						DefaultEditorKit.selectionBackwardAction, "shift RIGHT", DefaultEditorKit.selectionForwardAction,
-																						"shift KP_RIGHT", DefaultEditorKit.selectionForwardAction, CONTROL_ID + " LEFT",
-																						DefaultEditorKit.previousWordAction, CONTROL_ID + " KP_LEFT", DefaultEditorKit.previousWordAction,
-																						CONTROL_ID + " RIGHT", DefaultEditorKit.nextWordAction, CONTROL_ID + " KP_RIGHT",
-																						DefaultEditorKit.nextWordAction, CONTROL_ID + " shift LEFT",
-																						DefaultEditorKit.selectionPreviousWordAction, CONTROL_ID + " shift KP_LEFT",
-																						DefaultEditorKit.selectionPreviousWordAction, CONTROL_ID + " shift RIGHT",
-																						DefaultEditorKit.selectionNextWordAction, CONTROL_ID + " shift KP_RIGHT",
-																						DefaultEditorKit.selectionNextWordAction, CONTROL_ID + " A", DefaultEditorKit.selectAllAction,
-																						"HOME", DefaultEditorKit.beginLineAction, "END", DefaultEditorKit.endLineAction, "shift HOME",
-																						DefaultEditorKit.selectionBeginLineAction, "shift END", DefaultEditorKit.selectionEndLineAction,
-																						"BACK_SPACE", DefaultEditorKit.deletePrevCharAction, "DELETE", CONTROL_ID + " BACK_SPACE",
-						DefaultEditorKit.deletePrevWordAction, DefaultEditorKit.deleteNextCharAction,
-						CONTROL_ID + " DELETE", DefaultEditorKit.deleteNextWordAction, "RIGHT",
-						DefaultEditorKit.forwardAction, "LEFT", DefaultEditorKit.backwardAction, "KP_RIGHT",
-						DefaultEditorKit.forwardAction, "KP_LEFT", DefaultEditorKit.backwardAction, "ENTER",
-						JTextField.notifyAction, CONTROL_ID + " BACK_SLASH", "unselect", CONTROL_ID + " shift O",
-						"toggle-componentOrientation", "ESCAPE", "reset-field-edit", "UP", "increment", "KP_UP",
-						"increment", "DOWN", "decrement", "KP_DOWN", "decrement", }),
-																						"PasswordField.margin",
-																						textFieldMargin,
-																						"PasswordField.font",
-																						fontDialog12,
-																						"PasswordField.caretForeground",
-																						caretColor,
-																						"PasswordField.focusInputMap",
-																						fieldInputMap,
-																						"PasswordField.background",
-																						Colors.getWhite(),
-																						"EditorPane.margin",
-																						textFieldMargin,
-																						"EditorPane.font",
-																						fontDialog12,
-																						"EditorPane.caretForeground",
-																						caretColor,
-																						"EditorPane.focusInputMap",
-																						multilineInputMap,
-																						"EditorPane.background",
-																						Colors.getWhite(),
-																						"TextPane.margin",
-																						textFieldMargin,
-																						"TextPane.font",
-																						fontDialog12,
-																						"TextPane.caretForeground",
-																						caretColor,
-																						"TextPane.focusInputMap",
-																						multilineInputMap,
-																						"TextPane.background",
-																						Colors.getWhite(),
-																						"TextArea.margin",
-																						textFieldMargin,
-																						"TextArea.font",
-																						fontDialog12,
-																						"TextArea.caretForeground",
-																						caretColor,
-																						"TextArea.focusInputMap",
-																						multilineInputMap,
-																						"TextArea.background",
-																						Colors.getWhite(),
-																						// TitledBorder
-																						"TitledBorder.font",
-																						Colors.getWhite(),
-																						// ToolBar
-																						"ToolBar.background",
-																						COLORS.getToolbarColors()[0],
-																						"ToolBar.margin",
-																						new InsetsUIResource(0, 0, 0, 0),
-																						"ToolBar.dockingForeground",
-																						Color.ORANGE,
-																						"ToolBar.ancestorInputMap",
-																						new UIDefaults.LazyInputMap(new Object[] { "UP", "navigateUp", "KP_UP", "navigateUp", "DOWN",
-																								"navigateDown", "KP_DOWN", "navigateDown", "LEFT", "navigateLeft", "KP_LEFT", "navigateLeft",
-																								"RIGHT", "navigateRight", "KP_RIGHT", "navigateRight" }),
-																								// ToolTip
-																								"ToolTip.font",
-																								fontDialog12,
-																								"tooltip.border",
-																								toolTipBorder,
-																								// Tree
-																								"Tree.background",
-																								getWhiteBackground(),
-																								"Tree.font",
-																								fontDialog12,
-																								"Tree.selectionBorder",
-																								focusCellHighlightBorder,
-																								"Tree.selectionBackground", // HERE
-																								COLORS.getTextHighlightBackColor(),
-																								"Tree.editorBorder",
-																								focusCellHighlightBorder,
-																								"Tree.line",
-																								new ColorUIResource(220, 220, 220),
-																								"Tree.selectionBorderColor",
-																								COLORS.getTextHighlightBackColor().brighter(),
-																								"Tree.openIcon",
-																								SwingTools.createImage("plaf/tree_open.png"),
-																								"Tree.closedIcon",
-																								SwingTools.createImage("plaf/tree_closed.png"),
-																								"Tree.leafIcon",
-																								SwingTools.createImage("plaf/tree_leaf.png"),
-																								"Tree.expandedIcon",
-																								SwingTools.createImage("plaf/tree_expanded.png"),
-																								"Tree.collapsedIcon",
-																								SwingTools.createImage("plaf/tree_collapsed.png"),
-																								"Tree.focusInputMap",
-																								new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", "copy", CONTROL_ID + " V", "paste",
-																										CONTROL_ID + " X", "cut", "COPY", "copy", "PASTE", "paste", "CUT", "cut", "UP", "selectPrevious",
-																										"KP_UP", "selectPrevious", "shift UP", "selectPreviousExtendSelection", "shift KP_UP",
-																										"selectPreviousExtendSelection", "DOWN", "selectNext", "KP_DOWN", "selectNext", "shift DOWN",
-																										"selectNextExtendSelection", "shift KP_DOWN", "selectNextExtendSelection", "RIGHT", "selectChild",
-																										"KP_RIGHT", "selectChild", "LEFT", "selectParent", "KP_LEFT", "selectParent", "PAGE_UP",
-																										"scrollUpChangeSelection", "shift PAGE_UP", "scrollUpExtendSelection", "PAGE_DOWN",
-																										"scrollDownChangeSelection", "shift PAGE_DOWN", "scrollDownExtendSelection", "HOME", "selectFirst",
-																										"shift HOME", "selectFirstExtendSelection", "END", "selectLast", "shift END",
-																										"selectLastExtendSelection", "F2", "startEditing", CONTROL_ID + " A", "selectAll",
-																										CONTROL_ID + " SLASH", "selectAll", CONTROL_ID + " BACK_SLASH", "clearSelection",
-																										CONTROL_ID + " SPACE", "toggleSelectionPreserveAnchor", "shift SPACE", "extendSelection",
-																										CONTROL_ID + " HOME", "selectFirstChangeLead", CONTROL_ID + " END", "selectLastChangeLead",
-																										CONTROL_ID + " UP", "selectPreviousChangeLead", CONTROL_ID + " KP_UP", "selectPreviousChangeLead",
-																										CONTROL_ID + " DOWN", "selectNextChangeLead", CONTROL_ID + " KP_DOWN", "selectNextChangeLead",
-																										CONTROL_ID + " PAGE_DOWN", "scrollDownChangeLead", CONTROL_ID + " shift PAGE_DOWN",
-																										"scrollDownExtendSelection", CONTROL_ID + " PAGE_UP", "scrollUpChangeLead",
-																										CONTROL_ID + " shift PAGE_UP", "scrollUpExtendSelection", CONTROL_ID + " LEFT", "scrollLeft",
-																										CONTROL_ID + " KP_LEFT", "scrollLeft", CONTROL_ID + " RIGHT", "scrollRight",
-																										CONTROL_ID + " KP_RIGHT", "scrollRight", "SPACE", "toggleSelectionPreserveAnchor", }),
-																										"Tree.ancestorInputMap", new UIDefaults.LazyInputMap(new Object[] { "ESCAPE", "cancel" }) };
+				"SplitPaneDivider.border", null,
+				// TabbedPane
+				"TabbedPane.tabAreaInsets", tabbedpaneTabInsets, "TabbedPane.font", fontDialog12, "TabbedPane.focusInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "RIGHT", "navigateRight", "KP_RIGHT", "navigateRight", "LEFT",
+						"navigateLeft", "KP_LEFT", "navigateLeft", "UP", "navigateUp", "KP_UP", "navigateUp", "DOWN",
+						"navigateDown", "KP_DOWN", "navigateDown", CONTROL_ID + " DOWN", "requestFocusForVisibleComponent",
+						CONTROL_ID + " KP_DOWN", "requestFocusForVisibleComponent", }),
+				"TabbedPane.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " PAGE_DOWN", "navigatePageDown",
+						CONTROL_ID + " PAGE_UP", "navigatePageUp", CONTROL_ID + " UP", "requestFocus", CONTROL_ID + " KP_UP",
+						"requestFocus", }),
+				// Table
+				"Table.font", fontDialog12, "Table.background", Colors.WHITE, "Table.selectionForeground",
+				Colors.TEXT_HIGHLIGHT_FOREGROUND, "Table.gridColor", Colors.TABLE_CELL_BORDER, "Table.focusCellForeground",
+				Colors.TEXT_HIGHLIGHT_FOREGROUND, "Table.focusCellHighlightBorder",
+				new LineBorderUIResource(Colors.TEXT_HIGHLIGHT_BACKGROUND), "Table.ascendingSortIcon", sortAscIcon,
+				"Table.descendingSortIcon", sortDescIcon, "Table.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", "copy", CONTROL_ID + " V", "paste",
+						CONTROL_ID + " X", "cut", "COPY", "copy", "PASTE", "paste", "CUT", "cut", "RIGHT",
+						"selectNextColumn", "KP_RIGHT", "selectNextColumn", "LEFT", "selectPreviousColumn", "KP_LEFT",
+						"selectPreviousColumn", "DOWN", "selectNextRow", "KP_DOWN", "selectNextRow", "UP",
+						"selectPreviousRow", "KP_UP", "selectPreviousRow", "shift RIGHT", "selectNextColumnExtendSelection",
+						"shift KP_RIGHT", "selectNextColumnExtendSelection", "shift LEFT",
+						"selectPreviousColumnExtendSelection", "shift KP_LEFT", "selectPreviousColumnExtendSelection",
+						"shift DOWN", "selectNextRowExtendSelection", "shift KP_DOWN", "selectNextRowExtendSelection",
+						"shift UP", "selectPreviousRowExtendSelection", "shift KP_UP", "selectPreviousRowExtendSelection",
+						"PAGE_UP", "scrollUpChangeSelection", "PAGE_DOWN", "scrollDownChangeSelection", "HOME",
+						"selectFirstColumn", "END", "selectLastColumn", "shift PAGE_UP", "scrollUpExtendSelection",
+						"shift PAGE_DOWN", "scrollDownExtendSelection", "shift HOME", "selectFirstColumnExtendSelection",
+						"shift END", "selectLastColumnExtendSelection", CONTROL_ID + " PAGE_UP", "scrollLeftChangeSelection",
+						CONTROL_ID + " PAGE_DOWN", "scrollRightChangeSelection", CONTROL_ID + " HOME", "selectFirstRow",
+						CONTROL_ID + " END", "selectLastRow", CONTROL_ID + " shift PAGE_UP", "scrollRightExtendSelection",
+						CONTROL_ID + " shift PAGE_DOWN", "scrollLeftExtendSelection", CONTROL_ID + " shift HOME",
+						"selectFirstRowExtendSelection", CONTROL_ID + " shift END", "selectLastRowExtendSelection", "TAB",
+						"selectNextColumnCell", "shift TAB", "selectPreviousColumnCell", "ENTER", "selectNextRowCell",
+						"shift ENTER", "selectPreviousRowCell", CONTROL_ID + " A", "selectAll", "ESCAPE", "cancel", "F2",
+						"startEditing" }),
+				// TableHeader
+				"TableHeader.font", fontDialog12Bold, "TableHeader.background", Colors.PANEL_BACKGROUND,
+				// TextField
+				"TextField.margin", textFieldMargin, "TextField.font", fontDialog12, "TextField.caretForeground", caretColor,
+				"TextField.focusInputMap", fieldInputMap, "TextField.background", Colors.WHITE, "FormattedTextField.margin",
+				textFieldMargin, "FormattedTextField.font", fontDialog12, "FormattedTextField.caretForeground", caretColor,
+				"FormattedTextField.background", getWhiteBackground(), "FormattedTextField.focusInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", DefaultEditorKit.copyAction, CONTROL_ID + " V",
+						DefaultEditorKit.pasteAction, CONTROL_ID + " X", DefaultEditorKit.cutAction, "COPY",
+						DefaultEditorKit.copyAction, "PASTE", DefaultEditorKit.pasteAction, "CUT",
+						DefaultEditorKit.cutAction, "shift LEFT", DefaultEditorKit.selectionBackwardAction, "shift KP_LEFT",
+						DefaultEditorKit.selectionBackwardAction, "shift RIGHT", DefaultEditorKit.selectionForwardAction,
+						"shift KP_RIGHT", DefaultEditorKit.selectionForwardAction, CONTROL_ID + " LEFT",
+						DefaultEditorKit.previousWordAction, CONTROL_ID + " KP_LEFT", DefaultEditorKit.previousWordAction,
+						CONTROL_ID + " RIGHT", DefaultEditorKit.nextWordAction, CONTROL_ID + " KP_RIGHT",
+						DefaultEditorKit.nextWordAction, CONTROL_ID + " shift LEFT",
+						DefaultEditorKit.selectionPreviousWordAction, CONTROL_ID + " shift KP_LEFT",
+						DefaultEditorKit.selectionPreviousWordAction, CONTROL_ID + " shift RIGHT",
+						DefaultEditorKit.selectionNextWordAction, CONTROL_ID + " shift KP_RIGHT",
+						DefaultEditorKit.selectionNextWordAction, CONTROL_ID + " A", DefaultEditorKit.selectAllAction,
+						"HOME", DefaultEditorKit.beginLineAction, "END", DefaultEditorKit.endLineAction, "shift HOME",
+						DefaultEditorKit.selectionBeginLineAction, "shift END", DefaultEditorKit.selectionEndLineAction,
+						"BACK_SPACE", DefaultEditorKit.deletePrevCharAction, "DELETE", CONTROL_ID + " BACK_SPACE",
+						DefaultEditorKit.deletePrevWordAction, DefaultEditorKit.deleteNextCharAction, CONTROL_ID + " DELETE",
+						DefaultEditorKit.deleteNextWordAction, "RIGHT", DefaultEditorKit.forwardAction, "LEFT",
+						DefaultEditorKit.backwardAction, "KP_RIGHT", DefaultEditorKit.forwardAction, "KP_LEFT",
+						DefaultEditorKit.backwardAction, "ENTER", JTextField.notifyAction, CONTROL_ID + " BACK_SLASH",
+						"unselect", CONTROL_ID + " shift O", "toggle-componentOrientation", "ESCAPE", "reset-field-edit",
+						"UP", "increment", "KP_UP", "increment", "DOWN", "decrement", "KP_DOWN", "decrement", }),
+				"PasswordField.margin", textFieldMargin, "PasswordField.font", fontDialog12, "PasswordField.caretForeground",
+				caretColor, "PasswordField.focusInputMap", fieldInputMap, "PasswordField.background", Colors.WHITE,
+				"EditorPane.margin", textFieldMargin, "EditorPane.font", fontDialog12, "EditorPane.caretForeground",
+				caretColor, "EditorPane.focusInputMap", multilineInputMap, "EditorPane.background", Colors.WHITE,
+				"TextPane.margin", textFieldMargin, "TextPane.font", fontDialog12, "TextPane.caretForeground", caretColor,
+				"TextPane.focusInputMap", multilineInputMap, "TextPane.background", Colors.WHITE, "TextArea.margin",
+				textFieldMargin, "TextArea.font", fontDialog12, "TextArea.caretForeground", caretColor,
+				"TextArea.focusInputMap", multilineInputMap, "TextArea.background", Colors.WHITE,
+				// TitledBorder
+				"TitledBorder.titleColor", Colors.TEXT_FOREGROUND, "TitledBorder.border",
+				BorderFactory.createLineBorder(Colors.TAB_BORDER, 1),
+				// ToolBar
+				"ToolBar.background", Colors.PANEL_BACKGROUND, "ToolBar.margin", new InsetsUIResource(0, 0, 0, 0),
+				"ToolBar.dockingForeground", Color.ORANGE, "ToolBar.ancestorInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { "UP", "navigateUp", "KP_UP", "navigateUp", "DOWN", "navigateDown",
+						"KP_DOWN", "navigateDown", "LEFT", "navigateLeft", "KP_LEFT", "navigateLeft", "RIGHT",
+						"navigateRight", "KP_RIGHT", "navigateRight" }),
+				// ToolTip
+				"ToolTip.font", fontDialog12, "tooltip.border", toolTipBorder,
+				// Tree
+				"Tree.background", Colors.PANEL_BACKGROUND, "Tree.textBackground", Colors.PANEL_BACKGROUND, "Tree.font",
+				fontDialog12, "Tree.selectionBorder", focusCellHighlightBorder, "Tree.rowHeight", 24,
+				"Tree.selectionBackground", // HERE
+				Colors.TEXT_HIGHLIGHT_BACKGROUND, "Tree.editorBorder", focusCellHighlightBorder, "Tree.paintLines",
+				Boolean.FALSE, "Tree.rightChildIndent", 10, "Tree.selectionBorderColor", Colors.TEXTFIELD_BORDER,
+				"Tree.openIcon", SwingTools.createImage("plaf/tree_open.png"), "Tree.closedIcon",
+				SwingTools.createImage("plaf/tree_closed.png"), "Tree.leafIcon",
+				SwingTools.createImage("plaf/tree_leaf.png"), "Tree.expandedIcon",
+				SwingTools.createImage("plaf/laf_navigate_down.png"), "Tree.collapsedIcon",
+				SwingTools.createImage("plaf/laf_navigate_right.png"), "Tree.focusInputMap",
+				new UIDefaults.LazyInputMap(new Object[] { CONTROL_ID + " C", "copy", CONTROL_ID + " V", "paste",
+						CONTROL_ID + " X", "cut", "COPY", "copy", "PASTE", "paste", "CUT", "cut", "UP", "selectPrevious",
+						"KP_UP", "selectPrevious", "shift UP", "selectPreviousExtendSelection", "shift KP_UP",
+						"selectPreviousExtendSelection", "DOWN", "selectNext", "KP_DOWN", "selectNext", "shift DOWN",
+						"selectNextExtendSelection", "shift KP_DOWN", "selectNextExtendSelection", "RIGHT", "selectChild",
+						"KP_RIGHT", "selectChild", "LEFT", "selectParent", "KP_LEFT", "selectParent", "PAGE_UP",
+						"scrollUpChangeSelection", "shift PAGE_UP", "scrollUpExtendSelection", "PAGE_DOWN",
+						"scrollDownChangeSelection", "shift PAGE_DOWN", "scrollDownExtendSelection", "HOME", "selectFirst",
+						"shift HOME", "selectFirstExtendSelection", "END", "selectLast", "shift END",
+						"selectLastExtendSelection", "F2", "startEditing", CONTROL_ID + " A", "selectAll",
+						CONTROL_ID + " SLASH", "selectAll", CONTROL_ID + " BACK_SLASH", "clearSelection",
+						CONTROL_ID + " SPACE", "toggleSelectionPreserveAnchor", "shift SPACE", "extendSelection",
+						CONTROL_ID + " HOME", "selectFirstChangeLead", CONTROL_ID + " END", "selectLastChangeLead",
+						CONTROL_ID + " UP", "selectPreviousChangeLead", CONTROL_ID + " KP_UP", "selectPreviousChangeLead",
+						CONTROL_ID + " DOWN", "selectNextChangeLead", CONTROL_ID + " KP_DOWN", "selectNextChangeLead",
+						CONTROL_ID + " PAGE_DOWN", "scrollDownChangeLead", CONTROL_ID + " shift PAGE_DOWN",
+						"scrollDownExtendSelection", CONTROL_ID + " PAGE_UP", "scrollUpChangeLead",
+						CONTROL_ID + " shift PAGE_UP", "scrollUpExtendSelection", CONTROL_ID + " LEFT", "scrollLeft",
+						CONTROL_ID + " KP_LEFT", "scrollLeft", CONTROL_ID + " RIGHT", "scrollRight",
+						CONTROL_ID + " KP_RIGHT", "scrollRight", "SPACE", "toggleSelectionPreserveAnchor", }),
+				"Tree.ancestorInputMap", new UIDefaults.LazyInputMap(new Object[] { "ESCAPE", "cancel" }) };
 
 		table.putDefaults(defaults);
 
@@ -829,10 +577,10 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				"TextFieldUI", "com.rapidminer.gui.look.ui.TextFieldUI", "FormattedTextFieldUI",
 				"com.rapidminer.gui.look.ui.FormattedTextFieldUI", "PasswordFieldUI",
 				"com.rapidminer.gui.look.ui.PasswordFieldUI", "EditorPaneUI", "com.rapidminer.gui.look.ui.EditorPaneUI",
-				"TextPaneUI", "com.rapidminer.gui.look.ui.TextPaneUI", "TextAreaUI",
-				"com.rapidminer.gui.look.ui.TextAreaUI", "ProgressBarUI", "com.rapidminer.gui.look.ui.ProgressBarUI",
-				"TreeUI", "com.rapidminer.gui.look.ui.TreeUI", "SplitPaneUI", "com.rapidminer.gui.look.ui.SplitPaneUI",
-				"ScrollBarUI", "com.rapidminer.gui.look.ui.ScrollBarUI", "ButtonUI", "com.rapidminer.gui.look.ui.ButtonUI",
+				"TextPaneUI", "com.rapidminer.gui.look.ui.TextPaneUI", "TextAreaUI", "com.rapidminer.gui.look.ui.TextAreaUI",
+				"ProgressBarUI", "com.rapidminer.gui.look.ui.ProgressBarUI", "TreeUI", "com.rapidminer.gui.look.ui.TreeUI",
+				"SplitPaneUI", "com.rapidminer.gui.look.ui.SplitPaneUI", "ScrollBarUI",
+				"com.rapidminer.gui.look.ui.ScrollBarUI", "ButtonUI", "com.rapidminer.gui.look.ui.ButtonUI",
 				"ToggleButtonUI", "com.rapidminer.gui.look.ui.ToggleButtonUI", "TabbedPaneUI",
 				"com.rapidminer.gui.look.ui.TabbedPaneUI", "TableUI", "com.rapidminer.gui.look.ui.TableUI", "TableHeaderUI",
 				"com.rapidminer.gui.look.ui.TableHeaderUI", "MenuUI", "com.rapidminer.gui.look.ui.MenuUI", "MenuBarUI",
@@ -841,7 +589,7 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				"com.rapidminer.gui.look.ui.CheckBoxMenuItemUI", "PopupMenuSeparatorUI",
 				"com.rapidminer.gui.look.ui.PopupMenuSeparatorUI", "InternalFrameUI",
 				"com.rapidminer.gui.look.ui.InternalFrameUI", "LabelUI", "com.rapidminer.gui.look.ui.LabelUI", "ListUI",
-		"com.rapidminer.gui.look.ui.ListUI" };
+				"com.rapidminer.gui.look.ui.ListUI" };
 
 		if (!customUIDefaults.isEmpty()) {
 			for (String key : customUIDefaults.keySet()) {
@@ -863,25 +611,16 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 	}
 
 	private void initBorderDefaults(UIDefaults table) {
-		Object[] borderDefaults = {
-				"a",
-				IconFactory.getSliderThumb(),
-				"TextField.border",
-				Borders.getTextFieldBorder(),
-				"PasswordField.border",
-				Borders.getTextFieldBorder(),
-				"FormattedTextField.border",
-				Borders.getTextFieldBorder(),
-				"SplitPane.border",
-				Borders.getSplitPaneBorder(),
-				"ScrollPane.border",
-				Borders.getScrollPaneBorder(),
-				"InternalFrame.border",
-				Borders.getInternalFrameBorder(),
-				"Table.scrollPaneBorder",
-				null,  // removed table border, original: Borders.getSplitPaneBorder()
-				"Table.tabbedPaneBorder",
-				null,  // remove double borders
+		Object[] borderDefaults = { "TextField.border", Borders.getTextFieldBorder(), "PasswordField.border",
+				Borders.getTextFieldBorder(), "FilterTextField.border", Borders.getTextFieldBorder(),
+				"FormattedTextField.border", Borders.getTextFieldBorder(), "TextArea.border", Borders.getTextFieldBorder(),
+				"SplitPane.border", Borders.getSplitPaneBorder(), "ScrollPane.border", Borders.getScrollPaneBorder(),
+				"InternalFrame.border", Borders.getInternalFrameBorder(), "Table.scrollPaneBorder", null,   // removed
+				// table
+				// border,
+				// original:
+				// Borders.getSplitPaneBorder()
+				"Table.tabbedPaneBorder", null,   // remove double borders
 				"ToolBar.border", Borders.getToolBarBorder(), "Spinner.border", Borders.getSpinnerBorder(),
 				"ComboBox.border", Borders.getComboBoxBorder(), "Button.border", Borders.getEmptyButtonBorder(),
 				"ToggleButton.border", Borders.getEmptyButtonBorder(), "ProgressBar.border", Borders.getProgressBarBorder(),
@@ -891,6 +630,18 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				"RadioButton.icon", IconFactory.getRadioButtonIcon(), "ComboBox.focusCellHighlightBorder",
 				Borders.getComboBoxListCellRendererFocusBorder(), };
 		table.putDefaults(borderDefaults);
+	}
+
+	/**
+	 * Ensures that disabled {@link ScaledImageIcon}s have the correct width and height.
+	 */
+	@Override
+	public Icon getDisabledIcon(JComponent component, Icon icon) {
+		if (icon != null && icon instanceof ScaledImageIcon) {
+			ScaledImageIcon scaledIcon = (ScaledImageIcon) icon;
+			return scaledIcon.createDisabledIcon();
+		}
+		return super.getDisabledIcon(component, icon);
 	}
 
 	public static ColorUIResource getDesktopColor() {
@@ -906,10 +657,6 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 	}
 
 	public static ColorUIResource getControlHighlight() {
-		return new ColorUIResource(255, 255, 255);
-	}
-
-	public static ColorUIResource getPrimaryControl() {
 		return new ColorUIResource(255, 255, 255);
 	}
 
@@ -943,14 +690,6 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 
 	public static ColorUIResource getUserTextColor() {
 		return new ColorUIResource(0, 0, 0);
-	}
-
-	public static ColorUIResource getTextHighlightBackColor() {
-		return new ColorUIResource(90, 110, 170);
-	}
-
-	public static ColorUIResource getHighlightedTextColor() {
-		return new ColorUIResource(Color.white);
 	}
 
 	public static ColorUIResource getInactiveSystemTextColor() {
@@ -990,11 +729,6 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 		return new ColorUIResource(90, 110, 170);
 	}
 
-	public static ColorUIResource getWindowBackground() {
-		return new ColorUIResource(90, 110, 170);
-
-	}
-
 	public static FontUIResource getMainFont() {
 		return new FontUIResource("Dialog", 0, 12);
 	}
@@ -1004,6 +738,6 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 	}
 
 	public ColorUIResource getTextHighlightColor() {
-		return getColors().getTextHighlightBackColor();
+		return Colors.TEXT_HIGHLIGHT_BACKGROUND;
 	}
 }

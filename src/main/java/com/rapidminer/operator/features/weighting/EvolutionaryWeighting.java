@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -41,14 +42,11 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * This operator performs the weighting of features with an evolutionary strategies approach. The
  * variance of the gaussian additive mutation can be adapted by a 1/5-rule.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land
  */
 public class EvolutionaryWeighting extends AbstractGeneticAlgorithm {
@@ -176,7 +174,7 @@ public class EvolutionaryWeighting extends AbstractGeneticAlgorithm {
 			while (initPop.getNumberOfIndividuals() < numberOfIndividuals / 2) {
 				double[] weights = new double[exampleSet.getAttributes().size()];
 				for (int w = 0; w < weights.length; w++) {
-					weights[w] = Math.min(1.0d, Math.max(0.0d, initialWeights[w] + (getRandom().nextGaussian() * 0.1d)));
+					weights[w] = Math.min(1.0d, Math.max(0.0d, initialWeights[w] + getRandom().nextGaussian() * 0.1d));
 				}
 				initPop.add(new Individual(weights));
 			}
@@ -222,4 +220,5 @@ public class EvolutionaryWeighting extends AbstractGeneticAlgorithm {
 
 		return types;
 	}
+
 }

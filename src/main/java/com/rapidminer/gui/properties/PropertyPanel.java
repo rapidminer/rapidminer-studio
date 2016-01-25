@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,15 +38,16 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
-import javax.swing.Icon;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.properties.celleditors.value.AttributeFileValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.AttributeOrderingCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.AttributeValueCellEditor;
@@ -62,6 +63,7 @@ import com.rapidminer.gui.properties.celleditors.value.EnumerationValueCellEdito
 import com.rapidminer.gui.properties.celleditors.value.ExpressionValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.FilterValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.InnerOperatorValueCellEditor;
+import com.rapidminer.gui.properties.celleditors.value.LinkButtonValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.ListValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.MatrixValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.OAuthValueCellEditor;
@@ -79,7 +81,6 @@ import com.rapidminer.gui.properties.celleditors.value.TextValueCellEditor;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.ToolTipWindow;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TipProvider;
-import com.rapidminer.gui.tools.components.ToolTipWindow.TooltipLocation;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
@@ -101,6 +102,7 @@ import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeFilter;
 import com.rapidminer.parameter.ParameterTypeInnerOperator;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.ParameterTypeLinkButton;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeMatrix;
 import com.rapidminer.parameter.ParameterTypeOAuth;
@@ -178,9 +180,6 @@ public abstract class PropertyPanel extends JPanel {
 
 	private static final long serialVersionUID = -3478661102690417293L;
 
-	static final int HELP_ICON_GAP = 10;
-	static final Icon HELP_ICON = SwingTools.createIcon("13/"
-			+ I18N.getGUIMessage("gui.label.operator_pararameters.help_icon"));
 	private final GridBagLayout layout = new GridBagLayout();
 
 	/** Maps parameter type keys to currently displayed editors. */
@@ -191,13 +190,13 @@ public abstract class PropertyPanel extends JPanel {
 
 	private boolean showHelpButtons = true;
 
-	public static final int VALUE_CELL_EDITOR_HEIGHT = 28;
-
-	/** delay before showing the tool tip */
-	private static final int TOOL_TIP_DELAY = 80;
+	public static final int VALUE_CELL_EDITOR_HEIGHT = 32;
 
 	/** Color for the lines separating the entries */
-	private static final Color SEPARATION_LINE_COLOR = new Color(211, 213, 218);
+	private static final Color SEPARATION_LINE_COLOR = Colors.PANEL_SEPARATOR;
+
+	private static final Border PANEL_BORDER = BorderFactory.createCompoundBorder(
+			BorderFactory.createMatteBorder(0, 0, 1, 0, SEPARATION_LINE_COLOR), BorderFactory.createEmptyBorder(0, 0, 3, 0));
 
 	private static Map<Class<? extends ParameterType>, Class<? extends PropertyValueCellEditor>> knownValueEditors = new HashMap<>();
 
@@ -236,6 +235,7 @@ public abstract class PropertyPanel extends JPanel {
 		registerPropertyValueCellEditor(ParameterTypeSuggestion.class, SimpleSuggestionBoxValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeOAuth.class, OAuthValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeRemoteFile.class, RemoteFileValueCellEditor.class);
+		registerPropertyValueCellEditor(ParameterTypeLinkButton.class, LinkButtonValueCellEditor.class);
 	}
 
 	/**
@@ -328,8 +328,8 @@ public abstract class PropertyPanel extends JPanel {
 					String value = type.toString(valueObj);
 					String last;
 					last = getValue(type);
-					if (value != null && last == null || last == null && value != null || value != null && last != null
-							&& !value.equals(last)) {
+					if (value != null && last == null || last == null && value != null
+							|| value != null && last != null && !value.equals(last)) {
 						setValue(typesOperator, type, value, false);
 					}
 				}
@@ -381,16 +381,16 @@ public abstract class PropertyPanel extends JPanel {
 			parameterPanel = new JPanel(new BorderLayout());
 			parameterPanel.setOpaque(isOpaque());
 			parameterPanel.setBackground(getBackground());
-			parameterPanel.setPreferredSize(new Dimension((int) parameterPanel.getPreferredSize().getWidth(),
-					VALUE_CELL_EDITOR_HEIGHT));
-			parameterPanel.add(editorComponent, editorComponent instanceof JCheckBox ? BorderLayout.WEST
-					: BorderLayout.CENTER);
+			parameterPanel.setPreferredSize(
+					new Dimension((int) parameterPanel.getPreferredSize().getWidth(), VALUE_CELL_EDITOR_HEIGHT));
+			parameterPanel.add(editorComponent,
+					editorComponent instanceof JCheckBox ? BorderLayout.WEST : BorderLayout.CENTER);
 		} else {
 			parameterPanel = new JPanel(new GridLayout(1, 2));
 			parameterPanel.setOpaque(isOpaque());
 			parameterPanel.setBackground(getBackground());
-			parameterPanel.setPreferredSize(new Dimension((int) parameterPanel.getPreferredSize().getWidth(),
-					VALUE_CELL_EDITOR_HEIGHT));
+			parameterPanel.setPreferredSize(
+					new Dimension((int) parameterPanel.getPreferredSize().getWidth(), VALUE_CELL_EDITOR_HEIGHT));
 			final JLabel label = new JLabel(type.getKey().replace('_', ' ') + " ");
 			label.setOpaque(isOpaque());
 			label.setFont(getFont());
@@ -418,9 +418,7 @@ public abstract class PropertyPanel extends JPanel {
 
 		JPanel surroundingPanel = new JPanel(new BorderLayout());
 		surroundingPanel.add(parameterPanel, BorderLayout.CENTER);
-		surroundingPanel.setBorder(BorderFactory.createCompoundBorder(
-				BorderFactory.createMatteBorder(0, 0, 1, 0, SEPARATION_LINE_COLOR),
-				BorderFactory.createEmptyBorder(0, 0, 3, 0)));
+		surroundingPanel.setBorder(PANEL_BORDER);
 
 		if (showHelpButtons) {
 			addHelpLabel(type.getKey(), type.getKey().replace("_", " "), type.getDescription(), type.getRange(),
@@ -451,27 +449,10 @@ public abstract class PropertyPanel extends JPanel {
 	 */
 	protected final void addHelpLabel(final String key, final String title, final String description, final String range,
 			final boolean isOptional, JPanel labelPanel) {
-
-		JPanel helpPanel = new JPanel();
-		helpPanel.setLayout(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.anchor = GridBagConstraints.NORTH;
-		gbc.weightx = 1.0;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.insets = new Insets(5, 3, 0, 0);
-
-		final JLabel helpLabel = new JLabel();
-		helpLabel.setIcon(HELP_ICON);
-
-		helpPanel.add(helpLabel, gbc);
-		gbc.gridy += 1;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.weighty = 1.0;
-		gbc.insets = new Insets(0, 0, 0, 0);
-		helpPanel.add(new JLabel(), gbc);
-
-		labelPanel.add(helpPanel, BorderLayout.EAST);
-
+		// cannot just call {@link SwingTools#addTooltipHelpIconToLabel} since {@link
+		// #getToolTipText} must be called in the TipProvider because of the caching in {@link
+		// OperatorPropertyPanel#getToolTipText}
+		final JLabel helpLabel = SwingTools.initializeHelpLabel(labelPanel);
 		SwingUtilities.invokeLater(new Runnable() {
 
 			@Override
@@ -498,10 +479,7 @@ public abstract class PropertyPanel extends JPanel {
 					}
 
 				};
-				ToolTipWindow toolTipWindow = new ToolTipWindow(getDialogOwner(), tipProvider, helpLabel,
-						TooltipLocation.BELOW);
-				toolTipWindow.setOnlyWhenFocussed(false);
-				toolTipWindow.setToolTipDelay(TOOL_TIP_DELAY);
+				SwingTools.setupTooltip(tipProvider, getDialogOwner(), helpLabel);
 			}
 		});
 	}
@@ -552,10 +530,8 @@ public abstract class PropertyPanel extends JPanel {
 							.getConstructor(new Class[] { typeClass });
 					editor = constructor.newInstance(new Object[] { type });
 				} catch (Exception e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.gui.properties.PropertyPanel.construct_property_editor_error", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.gui.properties.PropertyPanel.construct_property_editor_error", e), e);
 
 					editor = new DefaultPropertyValueCellEditor(type);
 				}

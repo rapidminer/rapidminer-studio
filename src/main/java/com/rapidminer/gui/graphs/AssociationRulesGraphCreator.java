@@ -1,34 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.graphs;
-
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.viewer.AssociationRuleFilter;
-import com.rapidminer.gui.viewer.AssociationRuleFilterListener;
-import com.rapidminer.operator.learner.associations.AssociationRule;
-import com.rapidminer.operator.learner.associations.AssociationRules;
-import com.rapidminer.operator.learner.associations.Item;
-import com.rapidminer.tools.Tools;
-import edu.uci.ics.jung.graph.DirectedSparseGraph;
-import edu.uci.ics.jung.graph.Graph;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,10 +29,21 @@ import javax.swing.JComponent;
 
 import org.apache.commons.collections15.Factory;
 
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.viewer.AssociationRuleFilter;
+import com.rapidminer.gui.viewer.AssociationRuleFilterListener;
+import com.rapidminer.operator.learner.associations.AssociationRule;
+import com.rapidminer.operator.learner.associations.AssociationRules;
+import com.rapidminer.operator.learner.associations.Item;
+import com.rapidminer.tools.Tools;
+
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
+import edu.uci.ics.jung.graph.Graph;
+
 
 /**
  * Creates a graph model for a set of association rules.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements AssociationRuleFilterListener {
@@ -186,13 +185,11 @@ public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements
 		if (toolTip != null) {
 			return toolTip;
 		} else {
-			return "<html><b>Item:</b> "
-					+ id
-					+ "<br><b>Premise in Rules:</b> "
-					+ (((asPremise.get(id) == null) || (asPremise.get(id).size() == 0)) ? "none" : asPremise.get(id))
+			return "<html><b>Item:</b> " + id + "<br><b>Premise in Rules:</b> "
+					+ (asPremise.get(id) == null || asPremise.get(id).size() == 0 ? "none" : asPremise.get(id))
 					+ "<br><b>Conclusion in Rules:</b> "
-					+ (((asConclusion.get(id) == null) || (asConclusion.get(id).size() == 0)) ? "none" : asConclusion
-							.get(id)) + "</html>";
+					+ (asConclusion.get(id) == null || asConclusion.get(id).size() == 0 ? "none" : asConclusion.get(id))
+					+ "</html>";
 		}
 	}
 

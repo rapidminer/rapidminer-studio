@@ -1,24 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.construction;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -26,6 +29,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -39,19 +43,16 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction;
 import com.rapidminer.tools.math.function.aggregation.AggregationFunction;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-import java.util.Set;
 
 
 /**
  * Allows to generate a new attribute which consists of a function of several other attributes. As
  * functions, several aggregation attributes are available.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class AttributeAggregationOperator extends AbstractFeatureConstruction {
@@ -62,8 +63,12 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 
 	public static final String PARAMETER_IGNORE_MISSINGS = "ignore_missings";
 
+	public static final String PARAMETER_IGNORE_MISSING_ATTRIBUTES = "ignore_missing_attributes";
+
 	/** The parameter name for &quot;Indicates if the all old attributes should be kept.&quot; */
 	public static final String PARAMETER_KEEP_ALL = "keep_all";
+
+	private final OperatorVersion VERSION_BEFORE_HANDLING_EMPTY_ATTRIBUTE_SETS = new OperatorVersion(6, 5, 2);
 
 	public AttributeAggregationOperator(OperatorDescription description) {
 		super(description);
@@ -74,7 +79,8 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 		try {
 			AttributeMetaData newAMD = new AttributeMetaData(getParameterAsString(PARAMETER_ATTRIBUTE_NAME), Ontology.REAL);
 			AttributeSubsetSelector selector = new AttributeSubsetSelector(this, getExampleSetInputPort());
-			String functionName = AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES[getParameterAsInt(PARAMETER_AGGREGATION_FUNCTION)];
+			String functionName = AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES[getParameterAsInt(
+					PARAMETER_AGGREGATION_FUNCTION)];
 			boolean ignoreMissings = getParameterAsBoolean(PARAMETER_IGNORE_MISSINGS);
 			AggregationFunction aggregationFunction = null;
 			try {
@@ -82,10 +88,9 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 				int numberOfMissings = 0;
 				for (AttributeMetaData amd : selector.getMetaDataSubset(metaData, false).getAllAttributes()) {
 					if (!aggregationFunction.supportsAttribute(amd)) {
-						getExampleSetInputPort().addError(
-								new SimpleMetaDataError(Severity.ERROR, getExampleSetInputPort(),
-										"exampleset.parameters.attribute_must_be_numerical", amd.getName(),
-										PARAMETER_AGGREGATION_FUNCTION, functionName));
+						getExampleSetInputPort().addError(new SimpleMetaDataError(Severity.ERROR, getExampleSetInputPort(),
+								"exampleset.parameters.attribute_must_be_numerical", amd.getName(),
+								PARAMETER_AGGREGATION_FUNCTION, functionName));
 					}
 					if (amd.getNumberOfMissingValues().isKnown()) {
 						numberOfMissings = Math.max(numberOfMissings, amd.getNumberOfMissingValues().getValue());
@@ -108,10 +113,19 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		AttributeSubsetSelector selector = new AttributeSubsetSelector(this, getExampleSetInputPort());
-		Set<Attribute> attributes = selector.getAttributeSubset(exampleSet, false);
+		Set<Attribute> attributes;
+		boolean ignoreMissingAttributes = getCompatibilityLevel().isAtMost(VERSION_BEFORE_HANDLING_EMPTY_ATTRIBUTE_SETS)
+				|| getParameterAsBoolean(PARAMETER_IGNORE_MISSING_ATTRIBUTES);
+		if (ignoreMissingAttributes) {
+			attributes = selector.getAttributeSubset(exampleSet, false, false);
+		} else {
+			attributes = selector.getAttributeSubset(exampleSet, false, true);
+		}
+
 		// cannot do anything with no attributes
 		if (attributes.size() > 0) {
-			String functionName = AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES[getParameterAsInt(PARAMETER_AGGREGATION_FUNCTION)];
+			String functionName = AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES[getParameterAsInt(
+					PARAMETER_AGGREGATION_FUNCTION)];
 			boolean ignoreMissings = getParameterAsBoolean(PARAMETER_IGNORE_MISSINGS);
 			AggregationFunction aggregationFunction = null;
 			try {
@@ -128,17 +142,27 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 				throw new UserError(this, 904, functionName, e.getMessage());
 			}
 
-			int valueType = Ontology.ATTRIBUTE_VALUE;
-			for (Attribute attribute : attributes) {
-				if (valueType == Ontology.ATTRIBUTE_VALUE) {
-					if (attribute.isNominal() || attribute.isNumerical()) {
-						valueType = Ontology.NUMERICAL;
-					} else {
-						valueType = attribute.getValueType();
+			int valueType;
+			if (attributes.isEmpty()) {
+				// If there is no attribute present for the aggregation
+				// function, the function may have to work on an empty set of
+				// attributes. As the function still checks what attribute type
+				// is being served to them, we tell it to assume it's dealing
+				// with numerical values.
+				valueType = Ontology.NUMERICAL;
+			} else {
+				valueType = Ontology.ATTRIBUTE_VALUE;
+				for (Attribute attribute : attributes) {
+					if (valueType == Ontology.ATTRIBUTE_VALUE) {
+						if (attribute.isNominal() || attribute.isNumerical()) {
+							valueType = Ontology.NUMERICAL;
+						} else {
+							valueType = attribute.getValueType();
+						}
 					}
-				}
-				if (!aggregationFunction.supportsAttribute(attribute)) {
-					throw new UserError(this, 136, attribute.getName());
+					if (!aggregationFunction.supportsAttribute(attribute)) {
+						throw new UserError(this, 136, attribute.getName());
+					}
 				}
 			}
 
@@ -175,6 +199,14 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 	}
 
 	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] old = super.getIncompatibleVersionChanges();
+		OperatorVersion[] updatedVersions = Arrays.copyOf(old, old.length + 1);
+		updatedVersions[updatedVersions.length - 1] = VERSION_BEFORE_HANDLING_EMPTY_ATTRIBUTE_SETS;
+		return updatedVersions;
+	}
+
+	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeString(PARAMETER_ATTRIBUTE_NAME, "Name of the resulting attributes.", false));
@@ -187,10 +219,16 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 		type = new ParameterTypeBoolean(PARAMETER_KEEP_ALL, "Indicates if the all old attributes should be kept.", true);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_IGNORE_MISSINGS,
+		types.add(new ParameterTypeBoolean(PARAMETER_IGNORE_MISSINGS,
 				"Indicates if missings should be ignored and aggregation should be based only on existing values or not. In the latter case the aggregated value will be missing in the presence of missing values.",
 				true));
+
+		type = new ParameterTypeBoolean(PARAMETER_IGNORE_MISSING_ATTRIBUTES,
+				"If checked, no error will be shown when the attribute filter doesn't return any attributes.", false);
+		type.setExpert(true);
+		type.registerDependencyCondition(
+				new AboveOperatorVersionCondition(this, VERSION_BEFORE_HANDLING_EMPTY_ATTRIBUTE_SETS));
+		types.add(type);
 		return types;
 	}
 }

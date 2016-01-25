@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -411,7 +411,7 @@ public class ButtonDialog extends JDialog {
 	@Deprecated
 	public ButtonDialog(String key, Object... arguments) {
 		super(ApplicationFrame.getApplicationFrame(),
-		        I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title", arguments), false);
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title", arguments), false);
 		this.arguments = arguments;
 		configure(key);
 		pack();
@@ -425,7 +425,7 @@ public class ButtonDialog extends JDialog {
 	@Deprecated
 	public ButtonDialog(String key, boolean modal, Object... arguments) {
 		super(ApplicationFrame.getApplicationFrame(),
-		        I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title", arguments), modal);
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title", arguments), modal);
 		this.arguments = arguments;
 		configure(key);
 		pack();
@@ -439,7 +439,7 @@ public class ButtonDialog extends JDialog {
 	@Deprecated
 	public ButtonDialog(String key, ModalityType type, Object... arguments) {
 		super(ApplicationFrame.getApplicationFrame(),
-		        I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title", arguments), type);
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title", arguments), type);
 		this.arguments = arguments;
 		configure(key);
 		pack();
@@ -526,9 +526,9 @@ public class ButtonDialog extends JDialog {
 	 * @since 6.5.0
 	 */
 	protected ButtonDialog(Window owner, String key, ModalityType modalityType, GraphicsConfiguration graphicsConfig,
-	        Object... arguments) {
+			Object... arguments) {
 		super(owner, I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title", arguments), modalityType,
-		        graphicsConfig);
+				graphicsConfig);
 		this.arguments = arguments;
 		configure(key);
 
@@ -643,8 +643,8 @@ public class ButtonDialog extends JDialog {
 					int heightDiff = prefHeightAfter - prefHeightBefore;
 					if (heightDiff > 0) {
 						// re-pack this dialog if the infoTextLabel has changed its prefHeight after
-		                // the resize
-		                // fixes center component being overlapped/cut off
+						// the resize
+						// fixes center component being overlapped/cut off
 						ButtonDialog.this.pack();
 					}
 				}
@@ -661,6 +661,8 @@ public class ButtonDialog extends JDialog {
 				setPreferredSize(getDefaultSize(size));
 				break;
 		}
+
+		revalidate();
 		pack();
 		setDefaultLocation();
 	}
@@ -689,7 +691,7 @@ public class ButtonDialog extends JDialog {
 				// return the next smaller dimension instead to avoid components being too large for
 				// display
 				if (RapidMinerGUI.getMainFrame() != null
-				        && RapidMinerGUI.getMainFrame().getGraphicsConfiguration() != null) {
+						&& RapidMinerGUI.getMainFrame().getGraphicsConfiguration() != null) {
 					if (RapidMinerGUI.getMainFrame().getGraphicsConfiguration().getBounds().getHeight() <= MAX_HEIGHT) {
 						return getDefaultSize(LARGE);
 					} else {
@@ -744,7 +746,7 @@ public class ButtonDialog extends JDialog {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_DIALOG, key,
-				                button.getActionCommand());
+								button.getActionCommand());
 					}
 				});
 			}
@@ -791,7 +793,7 @@ public class ButtonDialog extends JDialog {
 			}
 		};
 		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-		        .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
 		getRootPane().getActionMap().put("CANCEL", cancelAction);
 		return new JButton(cancelAction);
 	}
@@ -809,7 +811,7 @@ public class ButtonDialog extends JDialog {
 			}
 		};
 		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-		        .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CLOSE");
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CLOSE");
 		getRootPane().getActionMap().put("CLOSE", action);
 		JButton button = new JButton(action);
 		getRootPane().setDefaultButton(button);

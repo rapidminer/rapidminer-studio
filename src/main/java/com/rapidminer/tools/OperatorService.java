@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -266,7 +266,20 @@ public class OperatorService {
 			bundle = XMLOperatorDocBundle.load(classLoader, docBundle);
 		}
 
-		parseOperators(groupTreeRoot, document.getDocumentElement(), classLoader, provider, bundle);
+		GroupTree root = groupTreeRoot;
+
+		/*
+		 * Check whether the operators should be placed in the Extensions top level folder
+		 */
+		if (provider != null && provider.useExtensionTreeRoot()) {
+			// get or create the Extensions group
+			root = groupTreeRoot.getOrCreateSubGroup(OperatorDescription.EXTENSIONS_GROUP_IDENTIFIER, bundle);
+
+			// get or create the Extension name group
+			root = root.getOrCreateSubGroup(provider.getName(), bundle);
+		}
+
+		parseOperators(root, document.getDocumentElement(), classLoader, provider, bundle);
 	}
 
 	private static void parseOperators(GroupTree currentGroup, Element groupElement, ClassLoader classLoader,
@@ -299,8 +312,10 @@ public class OperatorService {
 						extensionId = provider.getExtensionId();
 					}
 					try {
-						OperatorDescription desc = new OperatorDescription(currentGroup.getFullyQualifiedKey(), childElement,
-								classLoader, provider, bundle);
+						String groupKey = currentGroup.getFullyQualifiedKey();
+						OperatorDescription desc = new OperatorDescription(groupKey, childElement, classLoader, provider,
+								bundle);
+						desc.setUseExtensionTreeRoot(provider != null ? provider.useExtensionTreeRoot() : false);
 						registerOperator(desc, bundle);
 						if (desc.getReplacedKeys() != null) {
 							for (String replaces : desc.getReplacedKeys()) {

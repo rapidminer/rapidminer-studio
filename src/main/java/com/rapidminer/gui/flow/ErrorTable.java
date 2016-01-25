@@ -1,43 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow;
-
-import com.rapidminer.Process;
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.processeditor.ProcessEditor;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.gui.tools.ResourceMenu;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.ViewToolBar;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ProcessSetupError;
-import com.rapidminer.operator.ports.Port;
-import com.rapidminer.operator.ports.metadata.MetaDataError;
-import com.rapidminer.operator.ports.quickfix.QuickFix;
-import com.rapidminer.tools.I18N;
-import com.vlsolutions.swing.docking.DockKey;
-import com.vlsolutions.swing.docking.Dockable;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -66,36 +45,31 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
+import com.rapidminer.Process;
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.processeditor.ProcessEditor;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceDockKey;
+import com.rapidminer.gui.tools.ResourceMenu;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.ViewToolBar;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.ProcessSetupError;
+import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.metadata.MetaDataError;
+import com.rapidminer.operator.ports.quickfix.QuickFix;
+import com.rapidminer.tools.I18N;
+import com.vlsolutions.swing.docking.DockKey;
+import com.vlsolutions.swing.docking.Dockable;
+
 
 /**
- * 
+ *
  * @author Simon Fischer
  */
 public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
-
-	private static final long serialVersionUID = -954934789614113138L;
-
-	private static final ImageIcon IMAGE_WARNING = SwingTools.createIcon("16/sign_warning.png");
-
-	private static final ImageIcon IMAGE_ERROR = SwingTools.createIcon("16/error.png");
-
-	private static final ImageIcon IMAGE_NO_QUICKFIX = SwingTools.createIcon("16/"
-			+ I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.no_quickfix_available.icon"));
-
-	private static final ImageIcon IMAGE_QUICKFIX = SwingTools.createIcon("16/"
-			+ I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.choose_quickfix.icon"));
-
-	private static final String[] COLUMN_NAMES = {
-			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.message.label"),
-			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.fixes.label"),
-			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.location.label") };
-
-	private static final String[] COLUMN_TOOLTIPS = {
-			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.message.tip"),
-			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.fixes.tip"),
-			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.location.tip") };
-
-	private final MainFrame mainFrame;
 
 	private final TableCellRenderer iconRenderer = new DefaultTableCellRenderer() {
 
@@ -158,9 +132,9 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 		}
 	};
 
-	private final ExtendedJTable table = new ExtendedJTable() {
+	private final ExtendedJTable table = new ExtendedJTable(true, false, true) {
 
-		private static final long serialVersionUID = 3731781319040565353L;
+		private static final long serialVersionUID = 1L;
 
 		@Override
 		public TableCellRenderer getCellRenderer(int row, int column) {
@@ -217,19 +191,6 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 			return super.getToolTipText(e);
 		}
 	};
-	private final JLabel headerLabel = new JLabel();
-
-	private final JToggleButton onlyCurrent = new JToggleButton(new ResourceAction(true, "error_table_only_current") {
-
-		private static final long serialVersionUID = -1454330266199555397L;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			updateErrors();
-		}
-	});
-
-	private List<ProcessSetupError> errors = new LinkedList<ProcessSetupError>();
 
 	private final AbstractTableModel model = new AbstractTableModel() {
 
@@ -281,10 +242,59 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 			}
 		}
 	};
+
+	private static final long serialVersionUID = 1L;
+
+	private static final ImageIcon IMAGE_WARNING = SwingTools.createIcon("16/sign_warning.png");
+
+	private static final ImageIcon IMAGE_ERROR = SwingTools.createIcon("16/error.png");
+
+	private static final ImageIcon IMAGE_NO_QUICKFIX = SwingTools.createIcon("16/"
+			+ I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.no_quickfix_available.icon"));
+
+	private static final ImageIcon IMAGE_QUICKFIX = SwingTools.createIcon("16/"
+			+ I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.choose_quickfix.icon"));
+
+	private static final String[] COLUMN_NAMES = {
+			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.message.label"),
+			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.fixes.label"),
+			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.location.label") };
+
+	private static final String[] COLUMN_TOOLTIPS = {
+			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.message.tip"),
+			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.fixes.tip"),
+			I18N.getMessage(I18N.getGUIBundle(), "gui.errortable.header.location.tip") };
+
+	public static final String ERROR_TABLE_DOCK_KEY = "error_table";
+
+	private final DockKey DOCK_KEY = new ResourceDockKey(ERROR_TABLE_DOCK_KEY);
+	{
+		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
+	}
+
+	private final MainFrame mainFrame;
+
+	private Operator currentOperator;
+
 	private Process currentProcess;
+
+	private final JLabel headerLabel = new JLabel();
+
+	private final JToggleButton onlyCurrent = new JToggleButton(new ResourceAction(true, "error_table_only_current") {
+
+		private static final long serialVersionUID = -1454330266199555397L;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			updateErrors();
+		}
+	});
+
+	private List<ProcessSetupError> errors = new LinkedList<ProcessSetupError>();
 
 	public ErrorTable(final MainFrame mainFrame) {
 		super(new BorderLayout());
+
 		this.mainFrame = mainFrame;
 		onlyCurrent.setSelected(false);
 		table.setShowVerticalLines(false);
@@ -300,8 +310,9 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 
 		table.setBorder(null);
 		JScrollPane scrollPane = new ExtendedJScrollPane(table);
-		scrollPane.setBorder(null);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
 		add(scrollPane, BorderLayout.CENTER);
+
 		ViewToolBar toolBar = new ViewToolBar();
 		toolBar.add(onlyCurrent);
 		onlyCurrent.setText(null);
@@ -336,8 +347,36 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 		});
 	}
 
+	@Override
+	public void processChanged(Process process) {
+		currentProcess = process;
+		updateErrors();
+	}
+
+	@Override
+	public void processUpdated(Process process) {
+		currentProcess = process;
+		updateErrors();
+	}
+
+	@Override
+	public void setSelection(List<Operator> selection) {
+		this.currentOperator = selection.isEmpty() ? null : selection.get(0);
+		updateErrors();
+	}
+
+	@Override
+	public Component getComponent() {
+		return this;
+	}
+
+	@Override
+	public DockKey getDockKey() {
+		return DOCK_KEY;
+	}
+
 	private void updateErrors() {
-		if ((currentOperator != null) && onlyCurrent.isSelected()) {
+		if (currentOperator != null && onlyCurrent.isSelected()) {
 			fill(currentOperator);
 		} else {
 			if (currentProcess != null) {
@@ -366,41 +405,6 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 		}
 		headerLabel.setText(errorString);
 		model.fireTableDataChanged();
-	}
-
-	@Override
-	public void processChanged(Process process) {
-		currentProcess = process;
-		updateErrors();
-	}
-
-	@Override
-	public void processUpdated(Process process) {
-		currentProcess = process;
-		updateErrors();
-	}
-
-	@Override
-	public void setSelection(List<Operator> selection) {
-		this.currentOperator = selection.isEmpty() ? null : selection.get(0);
-		updateErrors();
-	}
-
-	public static final String ERROR_TABLE_DOCK_KEY = "error_table";
-	private final DockKey DOCK_KEY = new ResourceDockKey(ERROR_TABLE_DOCK_KEY);
-	{
-		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
-	}
-	private Operator currentOperator;
-
-	@Override
-	public Component getComponent() {
-		return this;
-	}
-
-	@Override
-	public DockKey getDockKey() {
-		return DOCK_KEY;
 	}
 
 }

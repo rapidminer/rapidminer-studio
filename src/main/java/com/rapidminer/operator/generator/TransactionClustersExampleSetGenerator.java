@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.generator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -38,14 +39,11 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 /**
  * Generates a random example set for testing purposes. The data represents a team profit example
  * set.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class TransactionClustersExampleSetGenerator extends AbstractExampleSource {
@@ -73,6 +71,7 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 		int numberOfCustomers = getParameterAsInt(PARAMETER_NUMBER_CUSTOMERS);
 		int numberOfClusters = getParameterAsInt(PARAMETER_NUMBER_CLUSTERS);
 		int numberOfItems = getParameterAsInt(PARAMETER_NUMBER_ITEMS);
+		getProgress().setTotal(numberOfClusters + numberOfTransactions);
 
 		// create table
 		List<Attribute> attributes = new ArrayList<Attribute>();
@@ -108,12 +107,14 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 				probs[c][i] /= sum;
 			}
 			maxItems[c] = random.nextIntInRange(5, 20);
+
+			getProgress().step();
 		}
 
 		double clusterSize = Math.ceil(numberOfCustomers / (double) numberOfClusters);
 		for (int n = 0; n < numberOfCustomers; n++) {
 			double[] values = new double[3];	// values for the data row in the table: [Id, Item,
-												// Amount]
+			// Amount]
 			values[0] = id.getMapping().mapString("Id " + (n + 1));
 			int clusterIndex = Math.max(0, Math.min(numberOfClusters - 1, (int) Math.floor((n + 1) / clusterSize)));
 			double p = random.nextDouble(); // random number in [0.0, 1.0[
@@ -134,6 +135,8 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 			values[2] = Math.round(Math.max(1, random.nextGaussian() * itemProb * maxItems[clusterIndex]));
 
 			table.addDataRow(new DoubleArrayDataRow(values));
+
+			getProgress().step();
 		}
 
 		for (int n = numberOfCustomers; n < numberOfTransactions; n++) {
@@ -163,7 +166,10 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 			values[2] = Math.round(Math.max(1, random.nextGaussian() * itemProb * maxItems[clusterIndex]));
 
 			table.addDataRow(new DoubleArrayDataRow(values));
+
+			getProgress().step();
 		}
+		getProgress().complete();
 
 		return table.createExampleSet(null, null, id);
 	}

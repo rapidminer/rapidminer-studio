@@ -1,36 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
-
-import com.rapidminer.gui.Perspective;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.actions.export.PrintableComponent;
-import com.rapidminer.gui.actions.export.PrintableComponentContainer;
-import com.rapidminer.gui.actions.export.ShowPrintAndExportDialogAction;
-import com.rapidminer.gui.actions.export.SimplePrintableComponent;
-import com.rapidminer.gui.tools.components.DropDownButton;
-import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
-import com.rapidminer.tools.I18N;
-import com.vlsolutions.swing.docking.Dockable;
-import com.vlsolutions.swing.docking.DockableState;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -47,13 +33,24 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.swing.JMenuItem;
 
+import com.rapidminer.gui.Perspective;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.actions.export.PrintableComponent;
+import com.rapidminer.gui.actions.export.PrintableComponentContainer;
+import com.rapidminer.gui.actions.export.ShowPrintAndExportDialogAction;
+import com.rapidminer.gui.actions.export.SimplePrintableComponent;
+import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
+import com.rapidminer.tools.I18N;
+import com.vlsolutions.swing.docking.Dockable;
+import com.vlsolutions.swing.docking.DockableState;
+
 
 /**
  * This class has static references to a printer job and page format. It also serves as a factory
  * for printer menus.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class PrintingTools {
 
@@ -104,33 +101,23 @@ public class PrintingTools {
 	}
 
 	/**
-	 * @deprecated Do not add an export button to your component anymore. Instead let your component
-	 *             extend the {@link PrintableComponent} interface.
-	 */
-	@Deprecated
-	public static DropDownButton makeExportPrintDropDownButton(Component component, String componentName) {
-		return DropDownButton.makeDropDownButton(new ShowPrintAndExportDialogAction(new SimplePrintableComponent(component,
-				componentName), false));
-	}
-
-	/**
 	 * Creates a export menu item for the provided component.
-	 * 
+	 *
 	 * @param component
 	 *            the component the menu should be created for
 	 * @param componentName
 	 *            the name of the component
 	 */
 	public static JMenuItem makeExportPrintMenu(Component component, String componentName) {
-		JMenuItem menuItem = new JMenuItem(new ShowPrintAndExportDialogAction(new SimplePrintableComponent(component,
-				componentName), true));
+		JMenuItem menuItem = new JMenuItem(
+				new ShowPrintAndExportDialogAction(new SimplePrintableComponent(component, componentName), true));
 		return menuItem;
 	}
 
 	/**
 	 * Prompt a file chooser dialog where the user selects a file location and returns a
 	 * {@link File} at this location.
-	 * 
+	 *
 	 * @param i18nKey
 	 *            the i18n key for the dialog to be shown. The provided i18nKey must be contained in
 	 *            the GUI properties file (gui.dialog.i18nKey.[title|message|icon]).
@@ -158,7 +145,7 @@ public class PrintingTools {
 	/**
 	 * Prompt a file chooser dialog where the user selects a file location and returns a
 	 * {@link File} at this location.
-	 * 
+	 *
 	 * @param i18nKey
 	 *            the i18n key for the dialog to be shown. The provided i18nKey must be contained in
 	 *            the GUI properties file (gui.dialog.i18nKey.[title|message|icon]).
@@ -208,7 +195,7 @@ public class PrintingTools {
 	 * Returns a list of printable components below the root component. If the root component is a
 	 * {@link PrintableComponent} itself, it will be first in the list. The first component in list
 	 * is always showing. Other might not be visible on screen.
-	 * 
+	 *
 	 * @return the components that can be exported as an image.
 	 */
 	public static final List<PrintableComponent> findExportComponents(Component root) {
@@ -219,7 +206,7 @@ public class PrintingTools {
 
 	/**
 	 * Returns a list of printable components from the currently visible perspective.
-	 * 
+	 *
 	 * @return the components that can be exported as an image.
 	 */
 	public static final List<PrintableComponent> findExportComponents() {
@@ -240,11 +227,12 @@ public class PrintingTools {
 		}
 
 		// at last add MainFrame as printable component
-		Perspective currentPerspective = RapidMinerGUI.getMainFrame().getPerspectives().getCurrentPerspective();
+		Perspective currentPerspective = RapidMinerGUI.getMainFrame().getPerspectiveController().getModel()
+				.getSelectedPerspective();
 		String perspectiveName = I18N.getGUIMessage("gui.action.workspace_" + currentPerspective.getName() + ".label");
 
-		components.add(new SimplePrintableComponent(RapidMinerGUI.getMainFrame(), perspectiveName, I18N
-				.getGUIMessage("gui.action.workspace_" + currentPerspective.getName() + ".icon")));
+		components.add(new SimplePrintableComponent(RapidMinerGUI.getMainFrame(), perspectiveName,
+				I18N.getGUIMessage("gui.action.workspace_" + currentPerspective.getName() + ".icon")));
 
 		return components;
 	}

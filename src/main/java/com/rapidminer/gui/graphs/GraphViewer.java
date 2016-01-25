@@ -1,60 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.graphs;
-
-import com.rapidminer.RapidMiner;
-import com.rapidminer.gui.actions.export.ExportImageAction;
-import com.rapidminer.gui.actions.export.PrintableComponent;
-import com.rapidminer.gui.actions.export.SimplePrintableComponent;
-import com.rapidminer.gui.graphs.actions.PickingModeAction;
-import com.rapidminer.gui.graphs.actions.TransformingModeAction;
-import com.rapidminer.gui.graphs.actions.ZoomInAction;
-import com.rapidminer.gui.graphs.actions.ZoomOutAction;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJToolBar;
-import com.rapidminer.gui.tools.IconSize;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.report.Renderable;
-import com.rapidminer.tools.I18N;
-import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.algorithms.layout.StaticLayout;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.visualization.Layer;
-import edu.uci.ics.jung.visualization.MultiLayerTransformer;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
-import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
-import edu.uci.ics.jung.visualization.control.GraphMouseListener;
-import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
-import edu.uci.ics.jung.visualization.control.ScalingControl;
-import edu.uci.ics.jung.visualization.decorators.ConstantDirectionalEdgeValueTransformer;
-import edu.uci.ics.jung.visualization.decorators.EdgeShape;
-import edu.uci.ics.jung.visualization.layout.LayoutTransition;
-import edu.uci.ics.jung.visualization.renderers.BasicVertexRenderer;
-import edu.uci.ics.jung.visualization.renderers.EdgeLabelRenderer;
-import edu.uci.ics.jung.visualization.renderers.Renderer;
-import edu.uci.ics.jung.visualization.renderers.VertexLabelRenderer;
-import edu.uci.ics.jung.visualization.util.Animator;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -80,17 +42,55 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 
 import org.apache.commons.collections15.Transformer;
 
+import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.actions.export.PrintableComponent;
+import com.rapidminer.gui.graphs.actions.PickingModeAction;
+import com.rapidminer.gui.graphs.actions.TransformingModeAction;
+import com.rapidminer.gui.graphs.actions.ZoomInAction;
+import com.rapidminer.gui.graphs.actions.ZoomOutAction;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
+import com.rapidminer.gui.properties.PropertyPanel;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJToolBar;
+import com.rapidminer.gui.tools.IconSize;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.report.Renderable;
+import com.rapidminer.tools.I18N;
+
+import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.StaticLayout;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.visualization.Layer;
+import edu.uci.ics.jung.visualization.MultiLayerTransformer;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
+import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.GraphMouseListener;
+import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.ScalingControl;
+import edu.uci.ics.jung.visualization.decorators.ConstantDirectionalEdgeValueTransformer;
+import edu.uci.ics.jung.visualization.decorators.EdgeShape;
+import edu.uci.ics.jung.visualization.layout.LayoutTransition;
+import edu.uci.ics.jung.visualization.renderers.BasicVertexRenderer;
+import edu.uci.ics.jung.visualization.renderers.EdgeLabelRenderer;
+import edu.uci.ics.jung.visualization.renderers.Renderer;
+import edu.uci.ics.jung.visualization.renderers.VertexLabelRenderer;
+import edu.uci.ics.jung.visualization.util.Animator;
+
 
 /**
  * The basic graph viewer component for graphs.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableComponent {
@@ -99,21 +99,11 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 	public static final int MARGIN = 10;
 
-	public static final Font EDGE_FONT = new Font("SansSerif", Font.PLAIN, 10);
+	public static final Font EDGE_FONT = new Font("Dialog", Font.PLAIN, 10);
 
-	public static final Font VERTEX_BOLD_FONT = new Font("SansSerif", Font.BOLD, 11);
+	public static final Font VERTEX_BOLD_FONT = new Font("Dialog", Font.BOLD, 11);
 
-	public static final Font VERTEX_PLAIN_FONT = new Font("SansSerif", Font.PLAIN, 11);
-
-	private static final String INSTRUCTIONS = "<html>" + "<h3>General Info:</h3>" + "<ul>"
-			+ "<li>Mousewheel scales the view</li>" + "</ul>" + "<h3>Transforming Mode:</h3>" + "<ul>"
-			+ "<li>Mouse1+drag pans the graph" + "<li>Mouse1+Shift+drag rotates the graph"
-			+ "<li>Mouse1+CTRL(or Command)+drag shears the graph" + "</ul>" + "<h3>Picking Mode:</h3>" + "<ul>"
-			+ "<li>Mouse1 on a node selects the node" + "<li>Mouse1 elsewhere unselects all nodes"
-			+ "<li>Mouse1+Shift on a node adds/removes node selection"
-			+ "<li>Mouse1+drag on a node moves all selected nodes" + "<li>Mouse1+drag elsewhere selects modes in a region"
-			+ "<li>Mouse1+Shift+drag adds selection of modes in a new region"
-			+ "<li>Mouse1+CTRL on a mode selects the mode and centers the display on it" + "</ul>" + "</html>";
+	public static final Font VERTEX_PLAIN_FONT = new Font("Dialog", Font.PLAIN, 11);
 
 	private final transient Action transformAction = new TransformingModeAction<>(this, IconSize.SMALL);
 	private final transient Action pickingAction = new PickingModeAction<>(this, IconSize.SMALL);
@@ -152,6 +142,8 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 		Graph<V, E> graph = graphCreator.createGraph();
 		this.layoutSelection = new LayoutSelection<>(this, graph);
+		this.layoutSelection.putClientProperty(RapidLookTools.PROPERTY_INPUT_BACKGROUND_DARK, true);
+		this.layoutSelection.setPreferredSize(new Dimension(200, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		this.layout = new ISOMLayout<>(graph);
 		vv = new VisualizationViewer<V, E>(layout) {
 
@@ -176,7 +168,7 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 			}
 		};
 		vv.setBorder(BorderFactory.createEmptyBorder());
-		vv.setBackground(Color.white);
+		vv.setBackground(Colors.WHITE);
 
 		// === design ===
 
@@ -244,7 +236,7 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 		// EDGE LABEL POSITION
 		vv.getRenderContext()
-				.setEdgeLabelClosenessTransformer(new ConstantDirectionalEdgeValueTransformer<V, E>(0.5d, 0.5d));
+		.setEdgeLabelClosenessTransformer(new ConstantDirectionalEdgeValueTransformer<V, E>(0.5d, 0.5d));
 		int labelOffset = graphCreator.getLabelOffset();
 		if (labelOffset >= 0) {
 			vv.getRenderContext().setLabelOffset(labelOffset);
@@ -265,34 +257,34 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		}
 		vv.getRenderContext().setEdgeLabelRenderer(new EdgeLabelRenderer() { // ...context!
 
-					private JLabel renderer = new JLabel();
+			private JLabel renderer = new JLabel();
 
-					@Override
-					public <T> Component getEdgeLabelRendererComponent(JComponent parent, Object value, Font font,
-							boolean isSelected, T edge) {
-						this.renderer.setFont(font);
-						if (graphCreator.isEdgeLabelDecorating()) {
-							this.renderer.setOpaque(true);
-							renderer.setBackground(Color.WHITE);
-							// use this for a more fancy look and feel
-							// renderer.setBackground(SwingTools.TRANSPARENT_YELLOW);
-							// this.renderer.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(SwingTools.DARK_BLUE),
-							// BorderFactory.createEmptyBorder(1,1,1,1)));
-						}
-						this.renderer.setText(value.toString());
-						return this.renderer;
-					}
+			@Override
+			public <T> Component getEdgeLabelRendererComponent(JComponent parent, Object value, Font font,
+					boolean isSelected, T edge) {
+				this.renderer.setFont(font);
+				if (graphCreator.isEdgeLabelDecorating()) {
+					this.renderer.setOpaque(true);
+					renderer.setBackground(Color.WHITE);
+					// use this for a more fancy look and feel
+					// renderer.setBackground(SwingTools.TRANSPARENT_YELLOW);
+					// this.renderer.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(SwingTools.DARK_BLUE),
+					// BorderFactory.createEmptyBorder(1,1,1,1)));
+				}
+				this.renderer.setText(value.toString());
+				return this.renderer;
+			}
 
-					/** Let the graph model decide. */
-					@Override
-					public boolean isRotateEdgeLabels() {
-						return graphCreator.isRotatingEdgeLabels();
-					}
+			/** Let the graph model decide. */
+			@Override
+			public boolean isRotateEdgeLabels() {
+				return graphCreator.isRotatingEdgeLabels();
+			}
 
-					/** Does nothing. */
-					@Override
-					public void setRotateEdgeLabels(boolean rotate) {}
-				});
+			/** Does nothing. */
+			@Override
+			public void setRotateEdgeLabels(boolean rotate) {}
+		});
 
 		// ## vertex layout ##
 
@@ -394,6 +386,7 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		// === main panel ===
 
 		if (graphCreator.getObjectViewer() == null) {
+			vv.setBorder(BorderFactory.createMatteBorder(10, 0, 5, 10, Colors.WHITE));
 			add(vv, BorderLayout.CENTER);
 		} else {
 			JComponent viewer = graphCreator.getObjectViewer().getViewerComponent();
@@ -403,8 +396,10 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 				objectViewerSplitPane.setResizeWeight(1);
 				objectViewerSplitPane.add(vv, 0);
 				objectViewerSplitPane.add(viewer, 1);
+				objectViewerSplitPane.setBorder(BorderFactory.createMatteBorder(10, 0, 5, 10, Colors.WHITE));
 				add(objectViewerSplitPane, BorderLayout.CENTER);
 			} else {
+				vv.setBorder(BorderFactory.createMatteBorder(10, 0, 5, 10, Colors.WHITE));
 				add(vv, BorderLayout.CENTER);
 			}
 		}
@@ -412,7 +407,9 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		// === control panel ===
 
 		Component controlPanel = createControlPanel();
-		add(new ExtendedJScrollPane(controlPanel), BorderLayout.WEST);
+		JScrollPane sp = new ExtendedJScrollPane(controlPanel);
+		sp.setBorder(null);
+		add(sp, BorderLayout.WEST);
 
 		this.showEdgeLabels = !graphCreator.showEdgeLabelsDefault();
 		togglePaintEdgeLabels();
@@ -457,6 +454,9 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		});
 
 		JPanel controls = new JPanel();
+		controls.setOpaque(true);
+		controls.setBackground(Colors.WHITE);
+		controls.setBorder(BorderFactory.createMatteBorder(10, 5, 5, 10, Colors.WHITE));
 		GridBagLayout gbLayout = new GridBagLayout();
 		controls.setLayout(gbLayout);
 		GridBagConstraints c = new GridBagConstraints();
@@ -468,9 +468,16 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		// zooming
 		JToolBar zoomBar = new ExtendedJToolBar();
 		zoomBar.setLayout(new FlowLayout(FlowLayout.CENTER));
-		zoomBar.add(new ZoomInAction(this, IconSize.SMALL));
-		zoomBar.add(new ZoomOutAction(this, IconSize.SMALL));
 		zoomBar.setBorder(BorderFactory.createTitledBorder("Zoom"));
+		zoomBar.setBackground(Colors.WHITE);
+		JButton zoomIn = new JButton(new ZoomInAction(this, IconSize.SMALL));
+		zoomIn.setContentAreaFilled(false);
+		zoomIn.setText("");
+		zoomBar.add(zoomIn);
+		JButton zoomOut = new JButton(new ZoomOutAction(this, IconSize.SMALL));
+		zoomOut.setContentAreaFilled(false);
+		zoomOut.setText("");
+		zoomBar.add(zoomOut);
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		gbLayout.setConstraints(zoomBar, c);
 		controls.add(zoomBar);
@@ -478,8 +485,15 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		// mode
 		JToolBar modeBar = new ExtendedJToolBar();
 		modeBar.setLayout(new FlowLayout(FlowLayout.CENTER));
-		modeBar.add(transformAction);
-		modeBar.add(pickingAction);
+		modeBar.setBackground(Colors.WHITE);
+		JButton transformButton = new JButton(transformAction);
+		transformButton.setContentAreaFilled(false);
+		transformButton.setText("");
+		modeBar.add(transformButton);
+		JButton pickingButton = new JButton(pickingAction);
+		pickingButton.setContentAreaFilled(false);
+		pickingButton.setText("");
+		modeBar.add(pickingButton);
 		modeBar.setBorder(BorderFactory.createTitledBorder("Mode"));
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		gbLayout.setConstraints(modeBar, c);
@@ -526,48 +540,11 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 			}
 		}
 
-		// save image
-		JButton imageButton = new JButton("Save Image...");
-		imageButton.setToolTipText("Saves an image of the current graph.");
-		imageButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				final Component tosave = vv;
-				new ExportImageAction(false) {
-
-					private static final long serialVersionUID = 1L;
-
-					@Override
-					protected PrintableComponent getPrintableComponent() {
-						return new SimplePrintableComponent(tosave, "Graph");
-					}
-
-				}.actionPerformed(e);
-			}
-		});
+		JLabel filler = new JLabel();
+		c.weighty = 1.0;
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		gbLayout.setConstraints(imageButton, c);
-		controls.add(imageButton);
-
-		// help
-		JButton help = new JButton("Help");
-		help.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(vv, INSTRUCTIONS);
-			}
-		});
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		gbLayout.setConstraints(help, c);
-		controls.add(help);
-
-		JPanel fillPanel = new JPanel();
-		c.weighty = 1.0d;
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		gbLayout.setConstraints(fillPanel, c);
-		controls.add(fillPanel);
+		gbLayout.setConstraints(filler, c);
+		controls.add(filler);
 
 		return controls;
 	}
@@ -582,7 +559,7 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 			double scale = transformer.getTransformer(Layer.VIEW).getScale();
 
 			// set desired size
-			if ((desiredWidth > 0) && (desiredHeight > 0)) {
+			if (desiredWidth > 0 && desiredHeight > 0) {
 				vv.setSize(desiredWidth, desiredHeight);
 				try {
 					newLayout.setSize(new Dimension(desiredWidth, desiredHeight));

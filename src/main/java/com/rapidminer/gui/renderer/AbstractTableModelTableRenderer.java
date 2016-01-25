@@ -1,25 +1,39 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.renderer;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.table.TableModel;
+
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
+import com.rapidminer.gui.look.ui.TableHeaderUI;
+import com.rapidminer.gui.processeditor.results.ResultDisplayTools;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.operator.IOContainer;
@@ -34,19 +48,11 @@ import com.rapidminer.report.Reportable;
 import com.rapidminer.report.Tableable;
 import com.rapidminer.tools.Tools;
 
-import java.awt.Component;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-
-import javax.swing.JLabel;
-import javax.swing.table.TableModel;
-
 
 /**
  * This is the abstract renderer superclass for all renderers which should be a table based on a
  * given {@link TableModel}.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractTableModelTableRenderer extends NonGraphicalRenderer {
@@ -156,13 +162,13 @@ public abstract class AbstractTableModelTableRenderer extends NonGraphicalRender
 							public int compare(Integer o1, Integer o2) {
 								Comparable c2 = (Comparable) model.getValueAt(minRow + o1, sortColumn);
 								Comparable c1 = (Comparable) model.getValueAt(minRow + o2, sortColumn);
-								if ((c1 == null) & (c2 == null)) {
+								if (c1 == null & c2 == null) {
 									return 0;
 								}
-								if ((c1 == null) && (c2 != null)) {
+								if (c1 == null && c2 != null) {
 									return -1;
 								}
-								if ((c1 != null) && (c2 == null)) {
+								if (c1 != null && c2 == null) {
 									return +1;
 								}
 								if (sortDecreasing) {
@@ -253,17 +259,30 @@ public abstract class AbstractTableModelTableRenderer extends NonGraphicalRender
 	}
 
 	public boolean isAutoresize() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public Component getVisualizationComponent(Object renderable, IOContainer ioContainer) {
 		TableModel tableModel = getTableModel(renderable, ioContainer, false);
 		if (tableModel != null) {
-			return new ExtendedJScrollPane(new ExtendedJTable(getTableModel(renderable, ioContainer, false), isSortable(),
-					isColumnMovable(), isAutoresize()));
+			ExtendedJTable table = new ExtendedJTable(getTableModel(renderable, ioContainer, false), isSortable(),
+					isColumnMovable(), isAutoresize());
+			table.setRowHighlighting(true);
+			table.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
+			table.getTableHeader().putClientProperty(RapidLookTools.PROPERTY_TABLE_HEADER_BACKGROUND, Colors.WHITE);
+			((TableHeaderUI) table.getTableHeader().getUI()).installDefaults();
+
+			JScrollPane sp = new ExtendedJScrollPane(table);
+			sp.setBorder(BorderFactory.createEmptyBorder(42, 10, 10, 10));
+			sp.setBackground(Colors.WHITE);
+			sp.getViewport().setBackground(Colors.WHITE);
+
+			JPanel panel = new JPanel(new BorderLayout());
+			panel.add(sp, BorderLayout.CENTER);
+			return panel;
 		} else {
-			return new JLabel("No visualization possible for table.");
+			return ResultDisplayTools.createErrorComponent("No visualization possible for table.");
 		}
 	}
 

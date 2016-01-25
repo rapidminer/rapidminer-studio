@@ -29,10 +29,10 @@ dependencies {
 	compile 'com.rapidminer.license:rapidminer-license-commons:3.1.0'
 
 	// RapidMiner API
-	compile 'com.rapidminer:rapidminer-api:0.1.1'
+	compile 'com.rapidminer:rapidminer-api:0.2.0'
 
 	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
-	compile 'com.rapidminer.external:vldocking:1.0.0'
+	compile 'com.rapidminer.external:vldocking:1.1.0'
 
 	// Freehep for vector graphic export (http://java.freehep.org/)
 	compile('org.freehep:freehep-graphicsio-ps:2.3') {
@@ -123,9 +123,12 @@ dependencies {
 	
 	// Microba adds a Swing date picker (http://microba.sf.net/)
 	compile 'com.github.tdbear:microba:0.4.4.3'
+	
+	// Apache Tika for file MIME type detection (https://tika.apache.org/)
+	compile 'org.apache.tika:tika-core:1.11'
 }
 
-task wrapper(type: Wrapper) { gradleVersion = '2.6' }
+task wrapper(type: Wrapper) { gradleVersion = '2.8' }
 
 apply from: 'gradle/wsimport.gradle'
 apply from: 'gradle/props.gradle'

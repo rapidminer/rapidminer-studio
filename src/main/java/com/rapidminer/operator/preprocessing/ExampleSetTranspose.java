@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
@@ -38,10 +40,6 @@ import com.rapidminer.operator.preprocessing.filter.ChangeAttributeRole;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * <p>
@@ -49,7 +47,7 @@ import java.util.List;
  * rows will become the columns. Hence, this operator works very similar to the well know transpose
  * operation for matrices.
  * </p>
- * 
+ *
  * <p>
  * If an Id attribute is part of the given example set, the ids will become the names of the new
  * attributes. The names of the old attributes will be transformed into the id values of a new
@@ -58,18 +56,18 @@ import java.util.List;
  * {@link ChangeAttributeRole} operator in order to change one of these into a special type
  * afterwards.
  * </p>
- * 
+ *
  * <p>
  * If all old attribute have the same value type, all new attributes will have this value type.
  * Otherwise, the new value types will all be &quot;nominal&quot; if at least one nominal attribute
  * was part of the given example set and &quot;real&quot; if the types contained mixed numbers.
  * </p>
- * 
+ *
  * <p>
  * This operator produces a copy of the data in the main memory and it therefore not suggested to
  * use it on very large data sets.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ExampleSetTranspose extends AbstractExampleSetProcessing {
@@ -85,6 +83,14 @@ public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
+		// init operator progress
+		int numberOfAllAttributeRoles = 0;
+		Iterator<AttributeRole> aIter = exampleSet.getAttributes().allAttributeRoles();
+		while (aIter.hasNext()) {
+			aIter.next();
+			numberOfAllAttributeRoles++;
+		}
+		getProgress().setTotal(numberOfAllAttributeRoles);
 		// determine new value types
 		int valueType = Ontology.REAL;
 		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
@@ -102,7 +108,6 @@ public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 		List<Attribute> newAttributes = new ArrayList<Attribute>(exampleSet.size());
 		Attribute newIdAttribute = AttributeFactory.createAttribute(Attributes.ID_NAME, Ontology.NOMINAL);
 		newAttributes.add(newIdAttribute);
-
 		Attribute oldIdAttribute = exampleSet.getAttributes().getId();
 		if (oldIdAttribute != null) {
 			for (Example e : exampleSet) {
@@ -152,9 +157,11 @@ public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 				}
 				table.addDataRow(new DoubleArrayDataRow(data));
 			}
+			getProgress().step();
 		}
 
 		// create and deliver example set
+		getProgress().complete();
 		ExampleSet result = table.createExampleSet(null, null, newIdAttribute);
 		result.getAnnotations().addAll(exampleSet.getAnnotations());
 		return result;

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties.celleditors.value;
 
@@ -89,32 +87,32 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 			public void actionPerformed(ActionEvent e) {
 				com.rapidminer.Process process = RepositoryLocationValueCellEditor.this.operator != null ? RepositoryLocationValueCellEditor.this.operator
 						.getProcess() : null;
-				RepositoryLocation processLocation = null;
-				if (process != null) {
-					processLocation = process.getRepositoryLocation();
-					if (processLocation != null) {
-						processLocation = processLocation.parent();
-					}
-				}
+						RepositoryLocation processLocation = null;
+						if (process != null) {
+							processLocation = process.getRepositoryLocation();
+							if (processLocation != null) {
+								processLocation = processLocation.parent();
+							}
+						}
 
-				String locationName = RepositoryLocationChooser.selectLocation(processLocation, textField.getText(), panel,
-						type.isAllowEntries(), type.isAllowFolders(), false, type.isEnforceValidRepositoryEntryName(),
-						type.isOnlyWriteableLocations());
-				// if (locationName != null) {
-				// if ((operator != null) && (operator.getProcess() != null)) {
-				// try {
-				// RepositoryLocation loc = new RepositoryLocation(processLocation, locationName);
-				// locationName = operator.getProcess().makeRelativeRepositoryLocation(loc);
-				// } catch (Exception ex) {
-				// LogService.getRoot().log(Level.WARNING,
-				// "Cannot make relative process location for '"+locationName+"': "+ex, ex);
-				// }
-				// }
-				// }
-				if (locationName != null) {
-					textField.setText(locationName);
-				}
-				fireEditingStopped();
+						String locationName = RepositoryLocationChooser.selectLocation(processLocation, textField.getText(), panel,
+								type.isAllowEntries(), type.isAllowFolders(), false, type.isEnforceValidRepositoryEntryName(),
+								type.isOnlyWriteableLocations());
+						// if (locationName != null) {
+						// if ((operator != null) && (operator.getProcess() != null)) {
+						// try {
+						// RepositoryLocation loc = new RepositoryLocation(processLocation, locationName);
+						// locationName = operator.getProcess().makeRelativeRepositoryLocation(loc);
+						// } catch (Exception ex) {
+						// LogService.getRoot().log(Level.WARNING,
+						// "Cannot make relative process location for '"+locationName+"': "+ex, ex);
+						// }
+						// }
+						// }
+						if (locationName != null) {
+							textField.setText(locationName);
+						}
+						fireEditingStopped();
 			}
 		});
 		button.addFocusListener(new FocusListener() {
@@ -142,6 +140,7 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 		button.setMargin(new Insets(0, 0, 0, 0));
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.weightx = 0;
+		c.insets = new Insets(0, 5, 0, 0);
 		panel.add(button, c);
 
 		textField.addFocusListener(new FocusListener() {

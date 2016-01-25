@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -32,10 +33,8 @@ import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -43,7 +42,7 @@ import java.util.List;
  * combinations of attribute selections. It returns the example set containing the subset of
  * attributes which produced the best performance. As this operator works on the powerset of the
  * attributes set it has exponential runtime.
- * 
+ *
  * @author Simon Fischer, Ingo Mierswa
  */
 public class BruteForceSelection extends FeatureOperator {
@@ -96,6 +95,7 @@ public class BruteForceSelection extends FeatureOperator {
 		} else {
 			addAllInRange(pop, weights, 0, minNumberOfFeatures, maxNumberOfFeatures);
 		}
+
 		return pop;
 	}
 
@@ -141,8 +141,8 @@ public class BruteForceSelection extends FeatureOperator {
 		Individual newIndividual = new Individual(clone2);
 		numberOfFeatures = newIndividual.getNumberOfUsedAttributes();
 		if (numberOfFeatures > 0) {
-			if (((maxNumberOfFeatures < 1) || (numberOfFeatures <= maxNumberOfFeatures))
-					&& (numberOfFeatures >= minNumberOfFeatures)) {
+			if ((maxNumberOfFeatures < 1 || numberOfFeatures <= maxNumberOfFeatures)
+					&& numberOfFeatures >= minNumberOfFeatures) {
 				pop.add(newIndividual);
 			}
 		}
@@ -202,5 +202,12 @@ public class BruteForceSelection extends FeatureOperator {
 
 		types.addAll(super.getParameterTypes());
 		return types;
+	}
+
+	@Override
+	protected int getMaximumGenerations() throws UndefinedParameterError {
+		// return null because we perform no generation step but exactly the initial evaluation will
+		// be performed
+		return 0;
 	}
 }

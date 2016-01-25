@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model;
 
@@ -25,15 +23,12 @@ import static com.rapidminer.operator.nio.ExcelExampleSource.PARAMETER_SHEET_NUM
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Map;
 import java.util.zip.ZipFile;
 
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import javax.xml.parsers.ParserConfigurationException;
-
-import jxl.Workbook;
-import jxl.WorkbookSettings;
-import jxl.read.biff.BiffException;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.xml.sax.SAXException;
@@ -43,7 +38,6 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.nio.ExcelExampleSource;
 import com.rapidminer.operator.nio.ExcelSheetTableModel;
-import com.rapidminer.operator.nio.ImportWizardUtils;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet.XlsxReadMode;
 import com.rapidminer.operator.nio.model.xlsx.XlsxSheetTableModel;
@@ -54,6 +48,10 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.io.Encoding;
+
+import jxl.Workbook;
+import jxl.WorkbookSettings;
+import jxl.read.biff.BiffException;
 
 
 /**
@@ -124,8 +122,8 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 
 		encoding = Encoding.getEncoding(excelExampleSource);
 
-		isEmulatingOldNames = excelExampleSource.getCompatibilityLevel().isAtMost(
-				ExcelExampleSource.CHANGE_5_0_11_NAME_SCHEMA);
+		isEmulatingOldNames = excelExampleSource.getCompatibilityLevel()
+				.isAtMost(ExcelExampleSource.CHANGE_5_0_11_NAME_SCHEMA);
 	}
 
 	/**
@@ -149,7 +147,7 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 
 	/**
 	 * Returns if there is an active workbook.
-	 * */
+	 */
 	public boolean hasWorkbook() {
 		return workbookJXL != null;
 	}
@@ -160,25 +158,28 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 	 *
 	 * @param sheetIndex
 	 *            the index of the sheet (0-based)
+	 * @param readMode
+	 *            the read mode for {@link XlsxSheetTableModel} creation. It defines whether only a
+	 *            preview or the whole sheet content will be loaded
+	 * @param progressListener
+	 *            the progress listener to report progress to
 	 * @return
 	 * @throws BiffException
 	 * @throws IOException
 	 * @throws InvalidFormatException
 	 */
-	public AbstractTableModel createExcelTableModel(int sheetIndex, XlsxReadMode readMode) throws BiffException,
-	IOException, InvalidFormatException, OperatorException, ParseException {
+	public AbstractTableModel createExcelTableModel(int sheetIndex, XlsxReadMode readMode, ProgressListener progressListener)
+			throws BiffException, IOException, InvalidFormatException, OperatorException, ParseException {
 		if (getFile().getAbsolutePath().endsWith(XLSX_FILE_ENDING)) {
 			// excel 2007 file
-			int previewSize = readMode == XlsxReadMode.WIZARD_WORKPANE ? Integer.MAX_VALUE : ImportWizardUtils
-					.getPreviewLength();
-			return new XlsxSheetTableModel(this, sheetIndex, previewSize, readMode, getFile().getAbsolutePath());
+			return new XlsxSheetTableModel(this, sheetIndex, readMode, getFile().getAbsolutePath(), progressListener);
 		} else {
 			// excel pre 2007 file
 			if (workbookJXL == null) {
 				createWorkbookJXL();
 			}
-			ExcelSheetTableModel excelSheetTableModel = new ExcelSheetTableModel(workbookJXL.getSheet(sheetIndex));
-			return excelSheetTableModel;
+			progressListener.setCompleted(50);
+			return new ExcelSheetTableModel(workbookJXL.getSheet(sheetIndex));
 		}
 	}
 
@@ -213,8 +214,8 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 		return workbook.xlsxWorkbookSheets.size();
 	}
 
-	private XlsxWorkbook parseWorkbook(ZipFile zipFile) throws UserError, IOException, ParserConfigurationException,
-			SAXException {
+	private XlsxWorkbook parseWorkbook(ZipFile zipFile)
+			throws UserError, IOException, ParserConfigurationException, SAXException {
 		return new XlsxWorkbookParser().parseZipEntry(zipFile);
 	}
 
@@ -259,6 +260,14 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 	 */
 	public Charset getEncoding() {
 		return this.encoding;
+	}
+
+	/**
+	 * @param encoding
+	 *            the new encoding
+	 */
+	public void setEncoding(Charset encoding) {
+		this.encoding = encoding;
 	}
 
 	/**
@@ -330,6 +339,27 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 
 	@Override
 	public DataResultSet makeDataResultSet(Operator operator) throws OperatorException {
+		return makeDataResultSet(operator, XlsxReadMode.OPERATOR);
+	}
+
+	/**
+	 * Creates a {@link DataResultSet} based on the current configuration and the provided
+	 * {@link XlsxReadMode}.
+	 *
+	 * @param operator
+	 *            the operator to create the {@link DataResultSet} for. Might be {@code null} in
+	 *            case no operator is available
+	 * @param readMode
+	 *            the read mode
+	 * @param provider
+	 *            a {@link DateFormatProvider}, can be {@code null} in which case the date format is
+	 *            fixed by the current value of {@link configuration#getDatePattern()}
+	 * @return the created {@link DataResultSet}
+	 * @throws OperatorException
+	 *             in case the creation fails because of an invalid configuration
+	 */
+	public DataResultSet makeDataResultSet(Operator operator, XlsxReadMode readMode, DateFormatProvider provider)
+			throws OperatorException {
 		File file = getFile();
 		if (file == null) {
 			throw new UndefinedParameterError(ExcelExampleSource.PARAMETER_EXCEL_FILE, operator);
@@ -337,22 +367,39 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 		String absolutePath = file.getAbsolutePath();
 		DataResultSet resultSet;
 		if (absolutePath.endsWith(XLSX_FILE_ENDING)) {
-			resultSet = createExcel2007ResultSet(operator);
+			resultSet = createExcel2007ResultSet(operator, readMode, provider);
 		} else if (absolutePath.endsWith(XLS_FILE_ENDING)) {
 			// excel pre 2007 file
-			resultSet = new ExcelResultSet(operator, this);
+			resultSet = new ExcelResultSet(operator, this, provider);
 		} else {
 			// we might also get a file object that has neither .xlsx nor .xls as file ending,
 			// so we have no choice but to try and open the file with the pre 2007 JXL lib to
 			// see if it works. If it does not work, it's an excel 2007 file.
 			try {
 				Workbook.getWorkbook(file);
-				resultSet = new ExcelResultSet(operator, this);
+				resultSet = new ExcelResultSet(operator, this, provider);
 			} catch (Exception e) {
-				resultSet = createExcel2007ResultSet(operator);
+				resultSet = createExcel2007ResultSet(operator, readMode, provider);
 			}
 		}
 		return resultSet;
+	}
+
+	/**
+	 * Creates a {@link DataResultSet} based on the current configuration and the provided
+	 * {@link XlsxReadMode}.
+	 *
+	 * @param operator
+	 *            the operator to create the {@link DataResultSet} for. Might be {@code null} in
+	 *            case no operator is available
+	 * @param readMode
+	 *            the read mode
+	 * @return the created {@link DataResultSet}
+	 * @throws OperatorException
+	 *             in case the creation fails because of an invalid configuration
+	 */
+	public DataResultSet makeDataResultSet(Operator operator, XlsxReadMode readMode) throws OperatorException {
+		return makeDataResultSet(operator, readMode, null);
 	}
 
 	/**
@@ -360,19 +407,24 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 	 *
 	 * @param operator
 	 *            the operator which is used as error source in case something goes wrong
+	 * @param readMode
+	 *            the read mode which should be used to read the file. The read mode defines how
+	 *            many lines should actually be read.
 	 * @return the new XLSX DataResultSet
 	 */
 	@SuppressWarnings("deprecation")
-	private DataResultSet createExcel2007ResultSet(Operator operator) throws OperatorException {
+	private DataResultSet createExcel2007ResultSet(Operator operator, XlsxReadMode readMode, DateFormatProvider provider)
+			throws OperatorException {
 		if (operator == null || operator.getCompatibilityLevel().isAbove(ExcelExampleSource.CHANGE_6_2_0_OLD_XLSX_IMPORT)) {
-			return createXLSXResultSet(operator, XlsxReadMode.OPERATOR);
+			return createXLSXResultSet(operator, readMode, provider);
 		} else {
 			return new Excel2007ResultSet(operator, this);
 		}
 	}
 
-	private XlsxResultSet createXLSXResultSet(Operator operator, XlsxReadMode readMode) throws UserError {
-		return new XlsxResultSet(operator, this, getSheet(), readMode);
+	private XlsxResultSet createXLSXResultSet(Operator operator, XlsxReadMode readMode, DateFormatProvider provider)
+			throws UserError {
+		return new XlsxResultSet(operator, this, getSheet(), readMode, provider);
 	}
 
 	/**
@@ -389,7 +441,7 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 		String absolutePath = file.getAbsolutePath();
 		if (absolutePath.endsWith(XLSX_FILE_ENDING)) {
 			try {
-				return createExcelTableModel(getSheet(), XlsxReadMode.WIZARD_PREVIEW);
+				return createExcelTableModel(getSheet(), XlsxReadMode.WIZARD_PREVIEW, listener);
 			} catch (BiffException | InvalidFormatException | IOException | ParseException e) {
 				throw new UserError(null, e, "xlsx_content_malformed");
 			}
@@ -538,6 +590,23 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory {
 	 */
 	public void setDatePattern(String datePattern) {
 		this.datePattern = datePattern;
+	}
+
+	/**
+	 * Write the parameters of the {@link ExcelResultSetConfiguration} into a map. Each parameter
+	 * value is written as a string value.
+	 *
+	 * @param parameters
+	 *            the map to store the parameter to
+	 */
+	public void storeConfiguration(Map<String, String> parameters) {
+		File file = getFile();
+		parameters.put("excel.fileLocation", file != null ? file.toString() : "");
+		parameters.put("excel.sheet", String.valueOf(getSheet()));
+		parameters.put("excel.rowOffset", String.valueOf(getRowOffset()));
+		parameters.put("excel.rowLast", String.valueOf(getRowLast()));
+		parameters.put("excel.columnOffset", String.valueOf(getColumnOffset()));
+		parameters.put("excel.columnLast", String.valueOf(getColumnLast()));
 	}
 
 }

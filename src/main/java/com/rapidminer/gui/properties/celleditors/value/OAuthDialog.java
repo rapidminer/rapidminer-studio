@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties.celleditors.value;
 
@@ -47,14 +45,14 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.look.borders.RoundTitledBorder;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.components.LinkButton;
+import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.parameter.OAuthMechanism;
-import com.rapidminer.template.gui.RoundTitledBorder;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.RMUrlHandler;
 
@@ -209,7 +207,7 @@ public class OAuthDialog extends ButtonDialog {
 		});
 		panel.add(authUrlText, gbc);
 
-		LinkButton showUrlButton = new LinkButton(new ResourceAction(true, "oauth_dialog.show_url") {
+		LinkLocalButton showUrlButton = new LinkLocalButton(new ResourceAction(true, "oauth_dialog.show_url") {
 
 			private static final long serialVersionUID = -5000971936611417944L;
 

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
 
@@ -61,34 +59,51 @@ public class FileIterator extends AbstractFileIterator {
 		super.doWork();
 	}
 
-	@Override
-	protected void iterate(Object currentParent, Pattern filter, boolean iterateSubDirs, boolean iterateFiles,
-			boolean recursive) throws OperatorException {
-		if (currentParent == null) {
-			currentParent = directory;
-		}
-		File dir = (File) currentParent;
+	private List<EntryContainer> calcObjectsOfIntrest(File dir, Pattern filter, boolean iterateSubDirs,
+			boolean iterateFiles, boolean recursive, List<EntryContainer> toFill) throws OperatorException {
+
 		File[] directoryListFiles = dir.listFiles();
 		if (dir.isDirectory() && directoryListFiles != null) {
 			for (File child : dir.listFiles()) {
+				String fileName = child.getName();
+				String fullPath = child.getAbsolutePath();
+				String parentPath = child.getParent();
 				if (iterateSubDirs && child.isDirectory() || iterateFiles && child.isFile()) {
-					String fileName = child.getName();
-					String fullPath = child.getAbsolutePath();
-					String parentPath = child.getParent();
 					if (matchesFilter(filter, fileName, fullPath, parentPath)) {
 						FileObject fileObject = new SimpleFileObject(child);
-						doWorkForSingleIterationStep(fileName, fullPath, parentPath, fileObject);
+						toFill.add(new EntryContainer(fileName, fullPath, parentPath, fileObject));
 					}
 				}
 
 				if (recursive && child.isDirectory()) {
-					iterate(child, filter, iterateSubDirs, iterateFiles, recursive);
+					calcObjectsOfIntrest(child, filter, iterateSubDirs, iterateFiles, recursive, toFill);
 				}
 			}
 		} else if (getCompatibilityLevel().isAbove(CHANGE_6_4_0_ERROR_WHEN_DIRECTORY_NOT_EXISTS) || dir.isDirectory()
 				&& directoryListFiles == null) {
 			throw new UserError(this, 324, getParameterAsString(PARAMETER_DIRECTORY));
 		}
+		return toFill;
+	}
+
+	@Override
+	protected void iterate(Object currentParent, Pattern filter, boolean iterateSubDirs, boolean iterateFiles,
+			boolean recursive) throws OperatorException {
+		if (currentParent == null) {
+			currentParent = directory;
+
+		}
+		// init Operator progress and compute objects which meet all criteria
+		List<EntryContainer> objectsOfIntrest = this.calcObjectsOfIntrest((File) currentParent, filter, iterateSubDirs,
+				iterateFiles, recursive, new LinkedList<EntryContainer>());
+		getProgress().setTotal(objectsOfIntrest.size());
+
+		// do the actual work
+		for (EntryContainer entry : objectsOfIntrest) {
+			doWorkForSingleIterationStep(entry.fileName, entry.fullPath, entry.parentPath, entry.fileObject);
+			getProgress().step();
+		}
+
 	}
 
 	@Override

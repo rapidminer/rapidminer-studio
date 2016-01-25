@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
 
@@ -42,9 +40,9 @@ import com.rapidminer.repository.RepositoryLocation;
 
 /**
  * Operator to iterate over entries in a repository.
- * 
+ *
  * @author Vaclav Uher
- * 
+ *
  */
 public class RepositoryIterator extends AbstractRepositoryIterator {
 
@@ -58,24 +56,56 @@ public class RepositoryIterator extends AbstractRepositoryIterator {
 
 	@Override
 	protected void iterate(Object currentParent, Pattern filter, boolean recursive, int type) throws OperatorException {
-
-		this.checkForStop();
-
-		if (currentParent == null) {
-			currentParent = repositoryLocation;
+		// transform Repository Entry
+		Entry entry = null;
+		if (currentParent != null && currentParent instanceof RepositoryLocation) {
+			repositoryLocation = (RepositoryLocation) currentParent;
 		}
 		try {
-			Entry entry;
-			if (currentParent instanceof RepositoryLocation) {
-				entry = ((RepositoryLocation) currentParent).locateEntry();
-				if (entry == null) {
-					throw new UserError(this, 323, getParameterAsString(PARAMETER_DIRECTORY));
-				}
-			} else {
-				entry = (Entry) currentParent;
+			entry = repositoryLocation.locateEntry();
+			if (entry == null) {
+				throw new UserError(this, 323, getParameterAsString(PARAMETER_DIRECTORY));
 			}
+		} catch (RepositoryException e) {
+			throw new UserError(this, 323, getParameterAsString(PARAMETER_DIRECTORY));
+		}
+		// calculate total number of iterations
+		getProgress().setTotal(countIterations(entry, recursive) + 1);
+		getProgress().setCompleted(1);
+		// start to iterate
+		this.iterate(entry, filter, recursive, type);
+		getProgress().complete();
+	}
+
+	private int countIterations(Entry entry, boolean recursive) throws OperatorException {
+		int iterations = 0;
+		try {
+			if (!recursive) {
+				iterations = ((Folder) entry).getDataEntries().size();
+			} else {
+				iterations = ((Folder) entry).getDataEntries().size();
+				for (Entry child : ((Folder) entry).getSubfolders()) {
+					if (child.getType().equals(Folder.TYPE_NAME)) {
+						iterations += countIterations(child, recursive);
+					} else {
+						iterations++;
+					}
+				}
+
+			}
+		} catch (RepositoryException e) {
+			throw new UserError(this, 312, entry.getLocation().getAbsoluteLocation(), e.getCause());
+		}
+		return iterations;
+	}
+
+	private void iterate(Entry currentParent, Pattern filter, boolean recursive, int type) throws OperatorException {
+		getProgress().step();
+		try {
+			Entry entry = currentParent;
 			String entryType = entry.getType();
 			if (entryType.equals(Folder.TYPE_NAME)) {
+
 				for (Entry child : ((Folder) entry).getDataEntries()) {
 					iterate(child, filter, recursive, type);
 				}
@@ -119,14 +149,14 @@ public class RepositoryIterator extends AbstractRepositoryIterator {
 				}
 			}
 		} catch (RepositoryException e) {
-			throw new OperatorException("Error ocured during working with repository: " + e.toString(), e);
+			throw new UserError(this, 312, currentParent.getLocation().getAbsoluteLocation(), e.getCause());
 		}
 	}
 
 	@Override
 	public void doWork() throws OperatorException {
 		repositoryLocation = getParameterAsRepositoryLocation(PARAMETER_DIRECTORY);
-
+		getProgress().setTotal(1);
 		super.doWork();
 	}
 

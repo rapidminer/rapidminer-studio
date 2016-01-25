@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.components;
 
@@ -47,16 +45,17 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import com.rapidminer.gui.look.borders.Borders;
 import com.rapidminer.gui.tools.ArrowButton;
 import com.rapidminer.gui.tools.ViewToolBar;
 import com.vlsolutions.swing.toolbars.VLToolBar;
 
 
 /**
- * 
+ *
  * @author Tobias Malbrecht
+ * @deprecated use {@link DropDownPopupButton} instead
  */
+@Deprecated
 public abstract class DropDownButton extends JButton {
 
 	private static final long serialVersionUID = -5987392204641149649L;
@@ -124,6 +123,7 @@ public abstract class DropDownButton extends JButton {
 
 	private boolean rightAlign = false;
 
+	@Deprecated
 	public static class DropDownArrowButton extends ArrowButton {
 
 		private static final long serialVersionUID = -398619111521186260L;
@@ -158,20 +158,20 @@ public abstract class DropDownButton extends JButton {
 		}
 
 		/**
-		 * 
+		 *
 		 * This method gets the factor for enlargement or reduction of the arrow, if it should be
 		 * displayed in a non-standard size.
-		 * 
+		 *
 		 */
 		public float getSizeFactor() {
 			return sizeFactor;
 		}
 
 		/**
-		 * 
+		 *
 		 * This method determines the factor for enlargement or reduction of the arrow, if it should
 		 * be displayed in a non-standard size. Standard is a width of 4 px and a height of 8 px.
-		 * 
+		 *
 		 * @param sizeFactor
 		 */
 		public void setSizeFactor(float sizeFactor) {
@@ -180,8 +180,8 @@ public abstract class DropDownButton extends JButton {
 
 		@Override
 		public Dimension getPreferredSize() {
-			Dimension dim = new Dimension((int) super.getPreferredSize().getWidth(), (int) attachedButton.getPreferredSize()
-					.getHeight());
+			Dimension dim = new Dimension((int) super.getPreferredSize().getWidth(),
+					(int) attachedButton.getPreferredSize().getHeight());
 			return dim;
 		}
 
@@ -193,15 +193,15 @@ public abstract class DropDownButton extends JButton {
 
 		@Override
 		public Dimension getMaximumSize() {
-			Dimension dim = new Dimension((int) super.getMaximumSize().getWidth(), (int) attachedButton.getMaximumSize()
-					.getHeight());
+			Dimension dim = new Dimension((int) super.getMaximumSize().getWidth(),
+					(int) attachedButton.getMaximumSize().getHeight());
 			return dim;
 		}
 
 		@Override
 		public Dimension getMinimumSize() {
-			Dimension dim = new Dimension((int) super.getMinimumSize().getWidth(), (int) attachedButton.getMinimumSize()
-					.getHeight());
+			Dimension dim = new Dimension((int) super.getMinimumSize().getWidth(),
+					(int) attachedButton.getMinimumSize().getHeight());
 			return dim;
 		}
 	}
@@ -212,14 +212,15 @@ public abstract class DropDownButton extends JButton {
 
 	public DropDownButton(Action mainAction, Action arrowAction, boolean showButton) {
 		super(mainAction != null ? mainAction : arrowAction);	// if main action is null, use
-																// dropdown action for it as well so
-																// user is not confused
+		// dropdown action for it as well so
+		// user is not confused
 		mainButton.setText(null);
 		mainButton.setOpaque(showButton);
 		mainButton.setBorderPainted(showButton);
 		mainButton.setMargin(new Insets(0, 0, 0, 0));
 		mainButton.getModel().addChangeListener(changeListener);
 		arrowButton.getModel().addChangeListener(changeListener);
+		arrowButton.setFocusable(false);
 		if (arrowAction != null) {
 			arrowButton.addActionListener(arrowAction);
 		} else {
@@ -325,7 +326,6 @@ public abstract class DropDownButton extends JButton {
 		panel.add(arrowButton, gbc); // , BorderLayout.EAST);
 		mainButton.setBorder(null);
 		arrowButton.setBorder(null);
-		panel.setBorder(Borders.BUTTON_BORDER);
 		panel.setBackground(UIManager.getColor("Button.background"));
 		return panel;
 	}

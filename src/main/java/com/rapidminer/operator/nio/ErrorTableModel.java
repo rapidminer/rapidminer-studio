@@ -1,26 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio;
-
-import com.rapidminer.operator.nio.model.ParsingError;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,16 +24,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
+import com.rapidminer.operator.nio.model.ParsingError;
+import com.rapidminer.studio.io.gui.internal.steps.configuration.AbstractErrorWarningTableModel;
 
 
 /**
  * A table model to display {@link ParsingError}s.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
-public class ErrorTableModel extends AbstractTableModel {
+public class ErrorTableModel extends AbstractErrorWarningTableModel {
 
 	private static final long serialVersionUID = 1L;
 
@@ -75,9 +72,13 @@ public class ErrorTableModel extends AbstractTableModel {
 		switch (columnIndex) {
 			case 0:
 				if (error.getRow() < 0 && error.getColumn() < 0) {
-					return "columns " + listToString(error.getColumns());
+					if (error.getColumns() == null) {
+						return "";
+					} else {
+						return "columns " + listToString(error.getColumns());
+					}
 				} else {
-					return (error.getRow() + 1) + ", " + (error.getColumn() + 1);
+					return error.getRow() + 1 + ", " + (error.getColumn() + 1);
 				}
 			case 1:
 				return error.getErrorCode().getMessage();
@@ -132,6 +133,16 @@ public class ErrorTableModel extends AbstractTableModel {
 			}
 		}
 		return output;
+	}
+
+	@Override
+	public int getErrorCount() {
+		return 0;
+	}
+
+	@Override
+	public int getWarningCount() {
+		return getRowCount();
 	}
 
 }

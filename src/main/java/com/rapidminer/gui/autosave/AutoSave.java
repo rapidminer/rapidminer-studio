@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -42,10 +42,7 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.processeditor.ExtendedProcessEditor;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.UpdateQueue;
-import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryLocation;
@@ -75,10 +72,11 @@ public class AutoSave {
 	private Path autoSavedProcessPath;
 	private UpdateQueue autoSaveQueue;
 	private boolean autoSaveEnabled;
+	private boolean isRecoveryProcessPresent;
 
 	/**
 	 * Initializes auto save functionality for current Studio session and also checks if an auto
-	 * save exists. If so, it asks the user if he wants it to be recovered.
+	 * save exists.
 	 */
 	public void init() {
 		// already initialized
@@ -112,59 +110,13 @@ public class AutoSave {
 		// if properties file exists we have an auto saved process
 		if (Files.exists(autoSavedProcessPropertiesPath)) {
 			try (InputStream inputStream = new FileInputStream(autoSavedProcessPropertiesPath.toFile());
-			        Reader autoSavePropertiesReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+					Reader autoSavePropertiesReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 				if (Files.exists(autoSavedProcessPropertiesPath)) {
 					autoSaveProperties.load(autoSavePropertiesReader);
-					String processType = autoSaveProperties.getProperty(PROPERTY_PROCESS_TYPE);
-					String processPath = autoSaveProperties.getProperty(PROPERTY_PROCESS_PATH);
 
 					if (this.autoSaveEnabled) {
 						// ask if user wants to recover his previous process
-						if (askForRecovery(processPath)) {
-							ProcessLocation autoSaveProcessLocation = new FileProcessLocation(autoSavedProcessPath.toFile());
-							ProcessLocation actualProcessLocation = null;
-							if (processType.equals(LOCATION_TYPE_REPOSITORY)) {
-								try {
-									actualProcessLocation = new RepositoryProcessLocation(
-									        new RepositoryLocation(processPath));
-								} catch (MalformedRepositoryLocationException e) {
-									// in that case location just stays null
-								}
-							} else if (processType.equals(LOCATION_TYPE_FILE)) {
-								actualProcessLocation = new FileProcessLocation(Paths.get(processPath).toFile());
-							}
-
-							// try restoring the process
-							Process process = null;
-							try {
-								process = autoSaveProcessLocation.load(null);
-							} catch (IOException | XMLException e) {
-								// failed to recover process but can continue to auto save new ones
-								LogService.getRoot().log(Level.WARNING,
-								        "com.rapidminer.gui.autosave.AutoSave.load_process_failed", e);
-							}
-
-							// if process successfully restored, open it in Studio
-							if (process != null) {
-								if (actualProcessLocation != null) {
-									process.setProcessLocation(actualProcessLocation);
-									RapidMinerGUI.getMainFrame().setOpenedProcess(process, false,
-									        actualProcessLocation.toString());
-								} else {
-									process.setProcessLocation(null);
-									RapidMinerGUI.getMainFrame().setProcess(process, true);
-								}
-								process.updateNotify();
-
-								SwingUtilities.invokeLater(new Runnable() {
-
-									@Override
-									public void run() {
-										RapidMinerGUI.getMainFrame().SAVE_ACTION.setEnabled(true);
-									}
-								});
-							}
-						}
+						isRecoveryProcessPresent = true;
 
 					}
 				}
@@ -213,6 +165,80 @@ public class AutoSave {
 	}
 
 	/**
+	 * Returns whether there is an autosaved process, which can be used for recovery. Should be
+	 * called after {@link #init()}.
+	 *
+	 * @return {@code true} if there is an autosaved process for recovery
+	 */
+	public boolean isRecoveryProcessPresent() {
+		return isRecoveryProcessPresent;
+	}
+
+	/**
+	 * Returns the path of the autosaved process if the process has a path. Should be called after
+	 * {@link #init()}.
+	 *
+	 * @return the path of the autosaved process or {@code null} if no path was associated to the
+	 *         process
+	 */
+	public String getAutosavedPath() {
+		String processPath = autoSaveProperties.getProperty(PROPERTY_PROCESS_PATH);
+		return LOCATION_TYPE_NONE.equals(processPath) ? null : processPath;
+	}
+
+	/**
+	 * Recovers the autosaved process, if present.
+	 */
+	public void recoverAutosavedProcess() {
+		if (!isRecoveryProcessPresent()) {
+			return;
+		}
+		String processType = autoSaveProperties.getProperty(PROPERTY_PROCESS_TYPE);
+		String processPath = autoSaveProperties.getProperty(PROPERTY_PROCESS_PATH);
+
+		ProcessLocation autoSaveProcessLocation = new FileProcessLocation(autoSavedProcessPath.toFile());
+		ProcessLocation actualProcessLocation = null;
+		if (processType.equals(LOCATION_TYPE_REPOSITORY)) {
+			try {
+				actualProcessLocation = new RepositoryProcessLocation(new RepositoryLocation(processPath));
+			} catch (MalformedRepositoryLocationException e) {
+				// in that case location just stays null
+			}
+		} else if (processType.equals(LOCATION_TYPE_FILE)) {
+			actualProcessLocation = new FileProcessLocation(Paths.get(processPath).toFile());
+		}
+
+		// try restoring the process
+		Process process = null;
+		try {
+			process = autoSaveProcessLocation.load(null);
+		} catch (IOException | XMLException e) {
+			// failed to recover process but can continue to auto save new ones
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.autosave.AutoSave.load_process_failed", e);
+		}
+
+		// if process successfully restored, open it in Studio
+		if (process != null) {
+			if (actualProcessLocation != null) {
+				process.setProcessLocation(actualProcessLocation);
+				RapidMinerGUI.getMainFrame().setOpenedProcess(process, false, actualProcessLocation.toString());
+			} else {
+				process.setProcessLocation(null);
+				RapidMinerGUI.getMainFrame().setProcess(process, true);
+			}
+			process.updateNotify();
+
+			SwingUtilities.invokeLater(new Runnable() {
+
+				@Override
+				public void run() {
+					RapidMinerGUI.getMainFrame().SAVE_ACTION.setEnabled(true);
+				}
+			});
+		}
+	}
+
+	/**
 	 * Save the given process as an auto save.
 	 *
 	 * @param process
@@ -234,11 +260,11 @@ public class AutoSave {
 				if (processLocation != null) {
 					if (processLocation instanceof FileProcessLocation) {
 						autoSaveProperties.put(PROPERTY_PROCESS_PATH,
-		                        ((FileProcessLocation) processLocation).getFile().getAbsolutePath());
+								((FileProcessLocation) processLocation).getFile().getAbsolutePath());
 						autoSaveProperties.put(PROPERTY_PROCESS_TYPE, LOCATION_TYPE_FILE);
 					} else if (processLocation instanceof RepositoryProcessLocation) {
 						autoSaveProperties.put(PROPERTY_PROCESS_PATH,
-		                        ((RepositoryProcessLocation) processLocation).getRepositoryLocation().getAbsoluteLocation());
+								((RepositoryProcessLocation) processLocation).getRepositoryLocation().getAbsoluteLocation());
 						autoSaveProperties.put(PROPERTY_PROCESS_TYPE, LOCATION_TYPE_REPOSITORY);
 					}
 				} else {
@@ -249,13 +275,16 @@ public class AutoSave {
 				String processXML = process.getRootOperator().getXML(false);
 
 				try (OutputStreamWriter infoWriter = new OutputStreamWriter(
-		                new FileOutputStream(autoSavedProcessPropertiesPath.toFile()), StandardCharsets.UTF_8);
-		                OutputStreamWriter processWriter = new OutputStreamWriter(
-		                        new FileOutputStream(autoSavedProcessPath.toFile()), StandardCharsets.UTF_8)) {
+						new FileOutputStream(autoSavedProcessPropertiesPath.toFile()), StandardCharsets.UTF_8);
+						OutputStreamWriter processWriter = new OutputStreamWriter(
+								new FileOutputStream(autoSavedProcessPath.toFile()), StandardCharsets.UTF_8)) {
 					autoSaveProperties.store(infoWriter, null);
 
 					processWriter.write(processXML);
 					processWriter.flush();
+
+					// process has been overwritten, we do not longer provide the recovery process
+					isRecoveryProcessPresent = false;
 				} catch (IOException e) {
 					LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.autosave.AutoSave.dir_creation_failed", e);
 					AutoSave.this.autoSaveEnabled = false;
@@ -263,27 +292,6 @@ public class AutoSave {
 
 			}
 		});
-	}
-
-	/**
-	 * Asks the user if the auto save should be recovered by opening a dialog.
-	 *
-	 * @param processPath
-	 *            the repository path of the process to be recovered
-	 * @return {@code true} if user wants the auto save to be recovered; {@code false} otherwise
-	 */
-	private boolean askForRecovery(final String processPath) {
-		int result = SwingTools.invokeAndWaitWithResult(new ResultRunnable<Integer>() {
-
-			@Override
-			public Integer run() {
-				RecoverDialog recoverDialog = new RecoverDialog(LOCATION_TYPE_NONE.equals(processPath) ? "" : processPath);
-				recoverDialog.setVisible(true);
-				return recoverDialog.getReturnOption();
-			}
-		});
-
-		return result == ConfirmDialog.YES_OPTION;
 	}
 
 	/**

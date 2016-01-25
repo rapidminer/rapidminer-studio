@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -55,7 +55,7 @@ public class FunctionInputPanel extends JPanel {
 
 	/** functions that should be highlighted in the description of date function constants */
 	public static final String[] HIGHLIGHT_FUNCTIONS_DESCRIPTIONS = { "date_str_loc", "date_str", "date_add", "date_set",
-			"date_get", "eval" };
+		"date_get", "eval" };
 
 	/**
 	 * As the FunctionDescriptionPanel is a Panel, it cannot be an observable. It owns an
@@ -111,11 +111,11 @@ public class FunctionInputPanel extends JPanel {
 
 	private static final String HTML_TAB = "&nbsp;";
 
-	private static final ImageIcon ICON_ATTRIBUTE_VALUE = SwingTools.createIcon("16/symbol_questionmark.png");
+	private static final ImageIcon ICON_ATTRIBUTE_VALUE = SwingTools.createIcon("16/question.png");
 
-	private static final ImageIcon ICON_CUSTOM_MACRO = SwingTools.createIcon("16/keyboard_key_edit.png");
+	private static final ImageIcon ICON_CUSTOM_MACRO = SwingTools.createIcon("16/keyboard_key_a_edit.png");
 
-	private static final ImageIcon ICON_PREDEFINED_MACRO = SwingTools.createIcon("16/keyboard_key.png");
+	private static final ImageIcon ICON_PREDEFINED_MACRO = SwingTools.createIcon("16/keyboard_key_a.png");
 
 	private static final String NAME_CUSTOM_MACRO = "Custom Macro";
 

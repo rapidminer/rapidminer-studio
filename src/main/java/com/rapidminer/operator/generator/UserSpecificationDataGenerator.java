@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -83,7 +83,7 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 	private static final String REGULAR_NAME = "regular";
 
 	private static final String[] TARGET_ROLES = new String[] { REGULAR_NAME, Attributes.ID_NAME, Attributes.LABEL_NAME,
-			Attributes.PREDICTION_NAME, Attributes.CLUSTER_NAME, Attributes.WEIGHT_NAME, Attributes.BATCH_NAME };
+		Attributes.PREDICTION_NAME, Attributes.CLUSTER_NAME, Attributes.WEIGHT_NAME, Attributes.BATCH_NAME };
 
 	public UserSpecificationDataGenerator(OperatorDescription description) {
 		super(description);
@@ -166,12 +166,22 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 		table.addDataRow(new DoubleArrayDataRow(new double[0]));
 
 		ExampleSet exampleSet = table.createExampleSet();
+		List<String[]> paramValues = getParameterList(PARAMETER_VALUES);
+
+		// init operator progress
+		List<String[]> roleList = null;
+		if (isParameterSet(PARAMETER_ROLES)) {
+			roleList = getParameterList(PARAMETER_ROLES);
+			getProgress().setTotal(paramValues.size() + roleList.size());
+		} else {
+			getProgress().setTotal(paramValues.size());
+		}
 
 		// create resolver and parser
 		ExampleResolver resolver = new ExampleResolver(exampleSet);
 		ExpressionParser parser = ExpressionParserUtils.createAllModulesParser(this, resolver);
 
-		for (String[] nameFunctionPair : getParameterList(PARAMETER_VALUES)) {
+		for (String[] nameFunctionPair : paramValues) {
 			String name = nameFunctionPair[0];
 			String function = nameFunctionPair[1];
 			try {
@@ -180,16 +190,19 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 				throw ExpressionParserUtils.convertToUserError(this, function, e);
 			}
 
-			checkForStop();
+			getProgress().step();
 		}
 
 		// now set roles
-		if (isParameterSet(PARAMETER_ROLES)) {
-			List<String[]> list = getParameterList(PARAMETER_ROLES);
-			for (String[] pairs : list) {
+		if (roleList != null) {
+			for (String[] pairs : roleList) {
 				setRole(exampleSet, pairs[0], pairs[1]);
+				getProgress().step();
 			}
 		}
+
+		getProgress().complete();
+
 		return exampleSet;
 	}
 
@@ -224,8 +237,8 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 		types.add(new ParameterTypeList(PARAMETER_ROLES, "This parameter defines additional attribute role combinations.",
 				new ParameterTypeString(PARAMETER_NAME, "The name of the attribute whose role should be changed.", false,
 						false), new ParameterTypeStringCategory(PARAMETER_TARGET_ROLE,
-						"The target role of the attribute (only changed if parameter change_attribute_type is true).",
-						TARGET_ROLES, TARGET_ROLES[0]), false));
+								"The target role of the attribute (only changed if parameter change_attribute_type is true).",
+								TARGET_ROLES, TARGET_ROLES[0]), false));
 		return types;
 	}
 

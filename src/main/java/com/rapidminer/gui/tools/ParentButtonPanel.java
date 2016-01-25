@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -19,6 +19,7 @@
 package com.rapidminer.gui.tools;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -26,20 +27,19 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
-import javax.swing.SwingConstants;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import com.rapidminer.gui.tools.components.DropDownButton;
+import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.tools.I18N;
 
 
@@ -49,9 +49,19 @@ import com.rapidminer.tools.I18N;
  */
 public class ParentButtonPanel<T> extends ExtendedJToolBar {
 
-	private static final int HISTORY_SIZE = 20;
+	private static final String BREADCRUMB_ABBREVIATION = "...";
 
-	private static final long serialVersionUID = 7115627292465260984L;
+	private static final int MAX_BREADCRUMB_LENGTH = 28;
+
+	private static final long serialVersionUID = 1L;
+
+	private static final String RIGHT_ARROW = "<html><span style=\"color: 4F4F4F;\">" + Ionicon.ARROW_RIGHT_B.getHtml()
+			+ "</span></html>";
+
+	private static final String DOWN_ARROW = "<html><span style=\"color: 4F4F4F;\">" + Ionicon.ARROW_DOWN_B.getHtml()
+			+ "</span></html>";
+
+	private static final int HISTORY_SIZE = 20;
 
 	private LinkedList<T> backward = new LinkedList<>();
 
@@ -64,52 +74,6 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 	private T selectedNode;
 
 	private boolean selectionByHistory = false;
-
-	private DropDownButton backwardButton = new DropDownButton(new ResourceAction(true, "select_backward") {
-
-		private static final long serialVersionUID = 3096873810683015968L;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			if (backward.size() > 1) {
-				forward.addFirst(backward.removeFirst());
-				selectedNode = backward.getFirst();
-				selectionByHistory = true;
-				fireAction();
-			}
-		}
-	}) {
-
-		private static final long serialVersionUID = -770314831566061205L;
-
-		@Override
-		protected JPopupMenu getPopupMenu() {
-			return createBackwardMenu();
-		}
-	};
-
-	private DropDownButton forwardButton = new DropDownButton(new ResourceAction(true, "select_forward") {
-
-		private static final long serialVersionUID = -5189987068889279439L;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			if (forward.size() > 0) {
-				backward.addFirst(forward.removeFirst());
-				selectedNode = backward.getFirst();
-				selectionByHistory = true;
-				fireAction();
-			}
-		}
-	}) {
-
-		private static final long serialVersionUID = -770314831566061205L;
-
-		@Override
-		protected JPopupMenu getPopupMenu() {
-			return createForwardMenu();
-		}
-	};
 
 	private JButton upButton = new JButton(new ResourceAction(true, "select_parent") {
 
@@ -136,14 +100,14 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 
 		@Override
 		public void mouseEntered(MouseEvent e) {
-			if (!(e.getComponent() instanceof Separator)) {
+			if (e.getComponent() instanceof AbstractButton) {
 				((AbstractButton) e.getComponent()).setBorderPainted(true);
 			}
 		}
 
 		@Override
 		public void mouseExited(MouseEvent e) {
-			if (!(e.getComponent() instanceof Separator)) {
+			if (e.getComponent() instanceof AbstractButton) {
 				((AbstractButton) e.getComponent()).setBorderPainted(false);
 			}
 		}
@@ -159,8 +123,6 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 	public void setSelectedNode(T node) {
 		this.currentNode = node;
 		upButton.setEnabled(model.getParent(currentNode) != null);
-		backwardButton.setEnabled(backward.size() > 1);
-		forwardButton.setEnabled(forward.size() > 0);
 		setup();
 	}
 
@@ -171,14 +133,9 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 
 	private void setup() {
 		removeAll();
-		backwardButton.addToToolBar(this);
-		forwardButton.addToToolBar(this);
+		addSeparator();
+		addSeparator();
 		add(upButton);
-
-		// add some space between the buttons and the actual breadcrumbs
-		addSeparator();
-		addSeparator();
-		addSeparator();
 
 		if (model != null) {
 
@@ -200,7 +157,7 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 						add(makeDropdownButton(n));
 					}
 				} else if (!maxDepthReached) {
-					JButton emptyButton = new JButton("...");
+					JButton emptyButton = new JButton(BREADCRUMB_ABBREVIATION);
 					// remove all mouse actions for this button, so it can't be clicked or
 					// highlighted
 					MouseListener[] actions = emptyButton.getMouseListeners();
@@ -208,12 +165,6 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 						emptyButton.removeMouseListener(a);
 					}
 					add(emptyButton);
-					ArrowButton arrow = new ArrowButton(SwingConstants.EAST);
-					actions = arrow.getMouseListeners();
-					for (MouseListener a : actions) {
-						arrow.removeMouseListener(a);
-					}
-					add(arrow);
 					maxDepthReached = true;
 				} else {
 					// don't add anymore buttons
@@ -224,106 +175,69 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 		repaint();
 	}
 
-	private JPopupMenu createBackwardMenu() {
-		JPopupMenu menu = new JPopupMenu("History");
-		boolean first = true;
-		for (final T node : backward) {
-			if (first) {
-				first = false;
-				continue;
-			}
-			menu.add(new AbstractAction(model.toString(node)) {
-
-				private static final long serialVersionUID = 1L;
-
-				{
-					putValue(SMALL_ICON, model.getIcon(node));
-				}
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					selectedNode = node;
-					Iterator<T> iterator = backward.iterator();
-					while (iterator.hasNext()) {
-						T nextNode = iterator.next();
-						if (nextNode == node) {
-							break;
-						}
-						iterator.remove();
-						forward.addFirst(nextNode);
-					}
-					selectionByHistory = true;
-					fireAction();
-				}
-			});
+	private LinkLocalButton makeButton(final T node) {
+		String name = model.toString(node);
+		if (name.length() > MAX_BREADCRUMB_LENGTH) {
+			name = name.substring(0, MAX_BREADCRUMB_LENGTH - BREADCRUMB_ABBREVIATION.length()) + BREADCRUMB_ABBREVIATION;
 		}
-		return menu;
-	}
 
-	private JPopupMenu createForwardMenu() {
-		JPopupMenu menu = new JPopupMenu("History");
-		for (final T node : forward) {
-			menu.add(new AbstractAction(model.toString(node)) {
-
-				private static final long serialVersionUID = 1L;
-
-				{
-					putValue(SMALL_ICON, model.getIcon(node));
-				}
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					selectedNode = node;
-					Iterator<T> iterator = forward.iterator();
-					while (iterator.hasNext()) {
-						T nextNode = iterator.next();
-						iterator.remove();
-						backward.addFirst(nextNode);
-						if (nextNode == node) {
-							break;
-						}
-					}
-					selectionByHistory = true;
-					fireAction();
-				}
-			});
-		}
-		return menu;
-	}
-
-	private AbstractButton makeButton(final T node) {
-		JToggleButton button = new JToggleButton(model.toString(node), model.getIcon(node));
-		button.setOpaque(false);
-		button.setBorderPainted(false);
-		button.setToolTipText(I18N.getGUIMessage("gui.button.process_panel.breadcrumbs.any.tip"));
-		button.setMargin(new Insets(0, 0, 0, 0));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				selectedNode = node;
-				fireAction();
-			}
-		});
 		if (node.equals(currentNode)) {
-			button.setSelected(true);
-			button.setFont(button.getFont().deriveFont(java.awt.Font.BOLD));
+			Action action = new AbstractAction("<span style=\"font-weight: bold; text-decoration: none; color: #000000\">"
+					+ name + "</span>") {
+
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					selectedNode = node;
+					fireAction();
+				}
+			};
+			LinkLocalButton button = new LinkLocalButton(action);
 			button.setToolTipText(I18N.getGUIMessage("gui.button.process_panel.breadcrumbs.current.tip"));
+			button.setBorder(BorderFactory.createEmptyBorder(7, 0, 0, 0));
+			return button;
+		} else {
+			Action action = new AbstractAction(name) {
+
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					selectedNode = node;
+					fireAction();
+				}
+			};
+			LinkLocalButton button = new LinkLocalButton(action);
+			button.setToolTipText(I18N.getGUIMessage("gui.button.process_panel.breadcrumbs.any.tip"));
+			button.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
+			return button;
 		}
-		return button;
 	}
 
 	private JButton makeDropdownButton(final T node) {
-		final ArrowButton button = new ArrowButton(SwingConstants.EAST);
+		final JButton button = new JButton(RIGHT_ARROW);
 		button.setOpaque(false);
 		button.setBorderPainted(false);
 		button.setMargin(new Insets(0, 0, 0, 0));
+		button.setPreferredSize(new Dimension(16, 16));
 		button.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				// hack to prevent filter popup from opening itself again when you click the button
+				// to actually close it while it is open
+				try {
+					long lastClose = Long.parseLong(String.valueOf(button.getClientProperty("lastCloseTime")));
+					if (System.currentTimeMillis() - lastClose < 250) {
+						return;
+					}
+				} catch (NumberFormatException e1) {
+					// ignore
+				}
+
 				JPopupMenu menu = makeMenu(node);
-				button.setDirection(SwingConstants.SOUTH);
+				button.setText(DOWN_ARROW);
 				menu.addPopupMenuListener(new PopupMenuListener() {
 
 					@Override
@@ -331,13 +245,14 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 
 					@Override
 					public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-						button.setDirection(SwingConstants.EAST);
+						button.setText(RIGHT_ARROW);
+						button.putClientProperty("lastCloseTime", System.currentTimeMillis());
 					}
 
 					@Override
 					public void popupMenuWillBecomeVisible(PopupMenuEvent e) {}
 				});
-				menu.show(button, 0, button.getHeight());
+				menu.show(button, 0, button.getHeight() - 1);
 			}
 		});
 		return button;
@@ -409,8 +324,6 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 			backward.removeLast();
 		}
 		selectionByHistory = false;
-		backwardButton.setEnabled(backward.size() > 1);
-		forwardButton.setEnabled(forward.size() > 0);
 	}
 
 	private void fireAction() {
@@ -419,8 +332,6 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 			l.actionPerformed(e);
 		}
 		upButton.setEnabled(model.getParent(currentNode) != null);
-		backwardButton.setEnabled(backward.size() > 1);
-		forwardButton.setEnabled(forward.size() > 0);
 	}
 
 	@Override

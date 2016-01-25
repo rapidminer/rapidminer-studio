@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation;
+
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
@@ -50,8 +50,6 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.math.AverageVector;
 
-import java.util.List;
-
 
 /**
  * Abstract superclass of operator chains that split an {@link ExampleSet} into a training and test
@@ -59,7 +57,7 @@ import java.util.List;
  * {@link Model} and an operator or operator chain that can apply this model and returns a
  * {@link PerformanceVector}. Hence the second inner operator usually is an operator chain
  * containing a model applier and a performance evaluator.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer
  */
 public abstract class ValidationChain extends OperatorChain implements CapabilityProvider {
@@ -219,7 +217,7 @@ public abstract class ValidationChain extends OperatorChain implements Capabilit
 
 	/**
 	 * Returns the first subprocess (or operator chain), i.e. the learning operator (chain).
-	 * 
+	 *
 	 * @throws OperatorException
 	 */
 	protected void executeLearner() throws OperatorException {
@@ -229,7 +227,7 @@ public abstract class ValidationChain extends OperatorChain implements Capabilit
 	/**
 	 * Returns the second encapsulated inner operator (or operator chain), i.e. the application and
 	 * evaluation operator (chain)
-	 * 
+	 *
 	 * @throws OperatorException
 	 */
 	protected void executeEvaluator() throws OperatorException {
@@ -248,8 +246,8 @@ public abstract class ValidationChain extends OperatorChain implements Capabilit
 		if (pv != null) {
 			// main result
 			PerformanceCriterion mainCriterion = pv.getMainCriterion();
-			if ((mainCriterion == null) && (pv.size() > 0)) { // use first if no main criterion was
-																// defined
+			if (mainCriterion == null && pv.size() > 0) { // use first if no main criterion was
+				// defined
 				mainCriterion = pv.getCriterion(0);
 			}
 			if (mainCriterion != null) {
@@ -340,8 +338,8 @@ public abstract class ValidationChain extends OperatorChain implements Capabilit
 		Attribute predictedAfter = testSet.getAttributes().getPredictedLabel();
 		// remove predicted label and confidence attributes if there is a new prediction which is
 		// not equal to an old one
-		if ((predictedAfter != null)
-				&& ((predictedBefore == null) || (predictedBefore.getTableIndex() != predictedAfter.getTableIndex()))) {
+		if (predictedAfter != null
+				&& (predictedBefore == null || predictedBefore.getTableIndex() != predictedAfter.getTableIndex())) {
 			PredictionModel.removePredictedLabel(testSet);
 		}
 	}

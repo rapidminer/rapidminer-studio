@@ -1,24 +1,28 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math.optimization.ec.es;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
@@ -38,16 +42,10 @@ import com.rapidminer.tools.LoggingHandler;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.optimization.Optimization;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 
 /**
  * Evolutionary Strategy approach for all real-valued optimization tasks.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class ESOptimization implements Optimization {
@@ -188,12 +186,10 @@ public abstract class ESOptimization implements Optimization {
 	 * executingOperator is set.
 	 */
 	@Deprecated
-	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize,
-			int initType, // population paras
-			int maxGenerations,
-			int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction,
-			boolean keepBest, // selection paras
+	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize, int initType, // population
+																														 // paras
+			int maxGenerations, int generationsWithoutImprovement, // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
 			int mutationType, // type of mutation
 			double defaultSigma, double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot,
 			RandomGenerator random, LoggingHandler logging) {
@@ -205,12 +201,10 @@ public abstract class ESOptimization implements Optimization {
 
 	/** Creates a new evolutionary SVM optimization. */
 	@Deprecated
-	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize,
-			int initType, // population paras
-			int maxGenerations,
-			int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction,
-			boolean keepBest, // selection paras
+	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize, int initType, // population
+																													 // paras
+			int maxGenerations, int generationsWithoutImprovement, // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
 			int mutationType, // type of mutation
 			double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot, RandomGenerator random,
 			LoggingHandler logging) {
@@ -223,16 +217,14 @@ public abstract class ESOptimization implements Optimization {
 	/**
 	 * Creates a new evolutionary SVM optimization which also checks for Stop if the
 	 * executingOperator is set.
-	 * 
+	 *
 	 * @param executingOperator
 	 *            If this parameter is null, no exception will be thrown.
 	 */
-	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize,
-			int initType, // population paras
-			int maxGenerations,
-			int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction,
-			boolean keepBest, // selection paras
+	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize, int initType, // population
+																													 // paras
+			int maxGenerations, int generationsWithoutImprovement, // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
 			int mutationType, // type of mutation
 			double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot, RandomGenerator random,
 			LoggingHandler logging, Operator executingOperator) {
@@ -244,17 +236,15 @@ public abstract class ESOptimization implements Optimization {
 
 	/**
 	 * Creates a new evolutionary SVM optimization.
-	 * 
+	 *
 	 * @param executingOperator
 	 *            If this parameter is null, no exception will be thrown.
-	 * 
+	 *
 	 */
-	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize,
-			int initType, // population paras
-			int maxGenerations,
-			int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction,
-			boolean keepBest, // selection paras
+	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize, int initType, // population
+																														 // paras
+			int maxGenerations, int generationsWithoutImprovement, // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
 			int mutationType, // type of mutation
 			double defaultSigma, double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot,
 			RandomGenerator random, LoggingHandler logging, Operator executingOperator) {
@@ -274,7 +264,7 @@ public abstract class ESOptimization implements Optimization {
 		this.maxGenerations = maxGenerations;
 		this.generationsWithoutImprovement = generationsWithoutImprovement < 1 ? this.maxGenerations
 				: generationsWithoutImprovement;
-		// this.mutationType = mutationType;
+				// this.mutationType = mutationType;
 
 		// population operators
 		popOps = new LinkedList<>();
@@ -410,7 +400,7 @@ public abstract class ESOptimization implements Optimization {
 	public void optimize() throws OperatorException {
 		this.totalEvalCounter = new AtomicInteger();
 		this.currentEvalCounter = new AtomicInteger();
-		boolean executingOperatorExists = (executingOperator != null);
+		boolean executingOperatorExists = executingOperator != null;
 
 		switch (initType) {
 			case INIT_TYPE_RANDOM:
@@ -436,22 +426,23 @@ public abstract class ESOptimization implements Optimization {
 		DataTable dataTable = null;
 		SimplePlotterDialog plotter = null;
 		if (showConvergencePlot) {
-			dataTable = new SimpleDataTable("Fitness vs. Generations", new String[] { "Generations", "Best Fitness",
-					"Current Fitness" });
+			dataTable = new SimpleDataTable("Fitness vs. Generations",
+					new String[] { "Generations", "Best Fitness", "Current Fitness" });
 			plotter = new SimplePlotterDialog(dataTable, false);
 			plotter.setXAxis(0);
 			plotter.plotColumn(1, true);
 			plotter.plotColumn(2, true);
 			plotter.setVisible(true);
-			dataTable.add(new SimpleDataTableRow(new double[] { 0.0d,
-					population.getBestEver().getFitness().getMainCriterion().getFitness(),
-					population.getCurrentBest().getFitness().getMainCriterion().getFitness() }));
+			dataTable.add(new SimpleDataTableRow(
+					new double[] { 0.0d, population.getBestEver().getFitness().getMainCriterion().getFitness(),
+							population.getCurrentBest().getFitness().getMainCriterion().getFitness() }));
+		}
+
+		if (executingOperatorExists) {
+			executingOperator.getProgress().setTotal(maxGenerations);
 		}
 
 		while (true) {
-			if (executingOperatorExists) {
-				executingOperator.checkForStop();
-			}
 
 			if (population.getGeneration() >= maxGenerations) {
 				logging.log("ES finished: maximum number of iterations reached.");
@@ -462,9 +453,11 @@ public abstract class ESOptimization implements Optimization {
 						+ generationsWithoutImprovement + " generations.");
 				break;
 			}
-			Iterator i = popOps.iterator();
+			Iterator<PopulationOperator> i = popOps.iterator();
+
 			while (i.hasNext()) {
-				((PopulationOperator) i.next()).operate(population);
+
+				i.next().operate(population);
 			}
 			evaluate(population);
 			if (showConvergencePlot) {
@@ -472,6 +465,11 @@ public abstract class ESOptimization implements Optimization {
 						population.getBestEver().getFitness().getMainCriterion().getFitness(),
 						population.getCurrentBest().getFitness().getMainCriterion().getFitness() }));
 			}
+
+			if (executingOperatorExists) {
+				executingOperator.getProgress().setCompleted(population.getGeneration());
+			}
+
 			population.nextGeneration();
 			nextIteration();
 		}
@@ -494,9 +492,8 @@ public abstract class ESOptimization implements Optimization {
 		if (currentBest != null) {
 			population.setCurrentBest(currentBest);
 			Individual bestEver = population.getBestEver();
-			if ((bestEver == null)
-					|| (currentBest.getFitness().getMainCriterion().getFitness() > bestEver.getFitness().getMainCriterion()
-							.getFitness())) {
+			if (bestEver == null || currentBest.getFitness().getMainCriterion().getFitness() > bestEver.getFitness()
+					.getMainCriterion().getFitness()) {
 				Individual bestEverClone = (Individual) currentBest.clone();
 				bestEverClone.setFitness(currentBest.getFitness());
 				population.setBestEver(bestEverClone);
@@ -518,8 +515,8 @@ public abstract class ESOptimization implements Optimization {
 		PerformanceVector fitness = evaluateIndividual(current);
 		if (fitness != null) {
 			current.setFitness(fitness);
-			if ((currentBest == null)
-					|| (fitness.getMainCriterion().getFitness() > currentBest.getFitness().getMainCriterion().getFitness())) {
+			if (currentBest == null
+					|| fitness.getMainCriterion().getFitness() > currentBest.getFitness().getMainCriterion().getFitness()) {
 				currentBest = (Individual) current.clone();
 				currentBest.setFitness(current.getFitness());
 			}
@@ -671,20 +668,21 @@ public abstract class ESOptimization implements Optimization {
 		types.add(new ParameterTypeInt(PARAMETER_MAX_GENERATIONS, "Stop after this many evaluations.", 1, Integer.MAX_VALUE,
 				50, false));
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_EARLY_STOPPING,
-				"Enables early stopping. If unchecked, always the maximum number of generations is performed.", false, false));
-		type = (new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
-				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2,
+				"Enables early stopping. If unchecked, always the maximum number of generations is performed.", false,
 				false));
-		type.registerDependencyCondition(new BooleanParameterCondition(parameterHandler, PARAMETER_USE_EARLY_STOPPING, true,
-				true));
+		type = new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
+				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2,
+				false);
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(parameterHandler, PARAMETER_USE_EARLY_STOPPING, true, true));
 		type.setExpert(false);
 		types.add(type);
 
 		types.add(new ParameterTypeBoolean(PARAMETER_SPECIFIY_POPULATION_SIZE,
 				"If unchecked, one individuum per example of the delivered example set is used.", true, false));
-		type = (new ParameterTypeInt(PARAMETER_POPULATION_SIZE, "The population size.", 1, Integer.MAX_VALUE, 5, false));
-		type.registerDependencyCondition(new BooleanParameterCondition(parameterHandler, PARAMETER_SPECIFIY_POPULATION_SIZE,
-				true, true));
+		type = new ParameterTypeInt(PARAMETER_POPULATION_SIZE, "The population size.", 1, Integer.MAX_VALUE, 5, false);
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(parameterHandler, PARAMETER_SPECIFIY_POPULATION_SIZE, true, true));
 		types.add(type);
 
 		types.add(new ParameterTypeBoolean(PARAMETER_KEEP_BEST,
@@ -719,7 +717,7 @@ public abstract class ESOptimization implements Optimization {
 
 	/**
 	 * this method delivers the Operator which is internally used to perform checkForStopOperations.
-	 * 
+	 *
 	 * @return executing Operator which checks for Stop
 	 */
 	public Operator getExecutingOperator() {

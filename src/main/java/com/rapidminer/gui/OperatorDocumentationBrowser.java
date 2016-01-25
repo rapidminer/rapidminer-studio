@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -32,7 +30,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.swing.JPanel;
@@ -55,6 +55,7 @@ import org.xml.sax.SAXException;
 
 import com.rapidminer.Process;
 import com.rapidminer.gui.actions.SaveAction;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.gui.tools.ExtendedHTMLJEditorPane;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -64,6 +65,7 @@ import com.rapidminer.gui.tools.UpdateQueue;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.WebServiceTools;
@@ -102,6 +104,8 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 	private static final long serialVersionUID = 1L;
 
+	private static Map<URL, String> DOC_CACHE = new HashMap<>(100);
+
 	private UpdateQueue documentationUpdateQueue = new UpdateQueue("documentation_update_queue");
 
 	/**
@@ -112,11 +116,13 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 		// Instantiate Editor and set Settings
 		editor.installDefaultStylesheet();
-		editor.addHyperlinkListener(new ExampleProcessLinkListener());
+		editor.addHyperlinkListener(new OperatorHelpLinkListener());
 		editor.setEditable(false);
 		HTMLEditorKit hed = new HTMLEditorKit();
-		hed.setStyleSheet(createStyleSheet());
+		hed.setStyleSheet(createStyleSheet(hed.getStyleSheet()));
 		editor.setEditorKit(hed);
+		editor.setBackground(Colors.PANEL_BACKGROUND);
+		editor.setContentType("text/html");
 
 		// add editor to scrollPane
 		scrollPane = new ExtendedJScrollPane(editor);
@@ -198,9 +204,9 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	}
 
 	/**
-	 * Event handler that handles clicking on a link to a tutorial process.
+	 * Event handler that handles clicking on a link to a tutorial process or internal anchor
 	 */
-	private class ExampleProcessLinkListener implements HyperlinkListener {
+	private class OperatorHelpLinkListener implements HyperlinkListener {
 
 		@Override
 		public void hyperlinkUpdate(HyperlinkEvent e) {
@@ -210,7 +216,8 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 					// opening another one!
 					if (RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_RUNNING
 							|| RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED) {
-						if (SwingTools.showConfirmDialog("close_running_process", ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+						if (SwingTools.showConfirmDialog("close_running_process",
+								ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
 							return;
 						}
 					}
@@ -228,7 +235,8 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 						}
 					} else {
 						// current process is not flagged as unsaved
-						if (SwingTools.showConfirmDialog("show_tutorial_process", ConfirmDialog.OK_CANCEL_OPTION) == ConfirmDialog.CANCEL_OPTION) {
+						if (SwingTools.showConfirmDialog("show_tutorial_process",
+								ConfirmDialog.OK_CANCEL_OPTION) == ConfirmDialog.CANCEL_OPTION) {
 							return;
 						}
 					}
@@ -284,6 +292,11 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 								"com.rapidminer.tools.documentation.ExampleProcess.parsing_xml_error", e1);
 					}
 
+				} else if (e.getDescription().startsWith("#")) {
+					// go to internal anchor
+					String desc = e.getDescription();
+					desc = desc.substring(1);
+					editor.scrollToReference(desc);
 				} else {
 					// open url in default browser
 					Desktop desktop = Desktop.getDesktop();
@@ -315,38 +328,49 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 *            url to the xml resource
 	 */
 	private void changeDocumentation(final URL resourceURL) {
-		editor.setContentType("text/html");
-		editor.setText("<html><div style=\"height:100%;width:100%;text-align:center;vertical-align:middle;margin-top:50px;\"><img src=\"icon:///48/hourglass.png\"/></div></html>");
-		editor.setCaretPosition(0);
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				editor.setText(
+						"<html><div style=\"height:100%;width:100%;text-align:center;vertical-align:middle;margin-top:50px;\"><img src=\"icon:///48/hourglass.png\"/></div></html>");
+			}
+		});
 		documentationUpdateQueue.execute(new Runnable() {
 
 			@Override
 			public void run() {
 				InputStream xmlStream = null;
 				String html;
-				try {
-					if (resourceURL != null) {
-						xmlStream = WebServiceTools.openStreamFromURL(resourceURL);
-					}
-				} catch (IOException e) {
-					// do nothing
-				} finally {
-					html = parseXmlAndReturnHtml(xmlStream);
-					if (xmlStream != null) {
-						try {
-							xmlStream.close();
-						} catch (IOException e) {
-							// do nothing
+				if (DOC_CACHE.containsKey(resourceURL)) {
+					html = DOC_CACHE.get(resourceURL);
+				} else {
+					try {
+						if (resourceURL != null) {
+							xmlStream = WebServiceTools.openStreamFromURL(resourceURL);
+						}
+					} catch (IOException e) {
+						// do nothing
+					} finally {
+						// parse XML from stream in any case. In case an IOException has been thrown
+						// the method call below will fall back to the online documentation
+						html = parseXmlAndReturnHtml(xmlStream);
+						html = html.replace(" xmlns:rmdoc=\"com.rapidminer.gui.OperatorDocumentationBrowser\"", " ");
+						if (xmlStream != null) {
+							DOC_CACHE.put(resourceURL, html);
+							try {
+								xmlStream.close();
+							} catch (IOException e) {
+								// do nothing
+							}
 						}
 					}
 				}
-				html = html.replace(" xmlns:rmdoc=\"com.rapidminer.gui.OperatorDocumentationBrowser\"", " ");
 				final String finalHtml = html;
 				SwingUtilities.invokeLater(new Runnable() {
 
 					@Override
 					public void run() {
-						editor.setContentType("text/html");
 						editor.setText("<html>" + finalHtml + "</html>");
 						editor.setCaretPosition(0);
 					}
@@ -363,21 +387,23 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 *
 	 * @return the stylesheet
 	 */
-	private StyleSheet createStyleSheet() {
-		StyleSheet css = new HTMLEditorKit().getStyleSheet();
-		css.addRule("* {font-family: Arial}");
-
-		css.addRule("p {padding: 0px 20px 1px 20px; font-family: Arial;}");
-		css.addRule("ul li {padding-bottom:1ex}");
-		css.addRule("hr {color:red; background-color:red}");
-		css.addRule("h3 {color: #3399FF}");
-		css.addRule("h4 {color: #3399FF; font-size:13pt}");
-		css.addRule("h4 img {margin-right:8px;}");
+	private StyleSheet createStyleSheet(StyleSheet css) {
+		css.addRule("* {font-family: Open Sans; font-size: 10px;}");
+		css.addRule("p {font-size:10px; font-family: Open Sans; margin-top: 0px; padding-top: 0px;}");
+		css.addRule("ul li {padding-bottom:1ex; font-family: Open Sans; font-size:10px; list-style-type: circle;}");
+		css.addRule("h2 {font-size:14px; font-family: Open Sans; margin-bottom: 0px; margin-top: 0px;}");
+		css.addRule("h4 {color: #000000; font-size:10px; font-family: Open Sans; font-weight: bold; margin-bottom: 5px;}");
+		css.addRule("h5 {color: #3399FF; font-size:11px; font-family: Open Sans;}");
+		css.addRule("h5 img {margin-right:8px; font-family: Open Sans;}");
 		css.addRule(".typeIcon {height: 10px; width: 10px;}");
-		css.addRule("td {vertical-align: top}");
-		css.addRule(".lilIcon {padding: 2px 4px 2px 0px}");
-		css.addRule("td {font-style: normal}");
-
+		css.addRule("td {vertical-align: top; font-family: Open Sans;}");
+		css.addRule(".lilIcon {padding: 2px 4px 2px 0px;}");
+		css.addRule("td {font-size: 10px; font-family: Open Sans;}");
+		css.addRule(".packageName {color: #777777; font-size:10px; font-family: Open Sans; font-weight: normal;}");
+		css.addRule(".parameterDetails {color: #777777; font-size:9px; font-family: Open Sans;}");
+		css.addRule(".tutorialProcessLink {margin-top: 6px; margin-bottom: 5px}");
+		css.addRule("hr {border: 0;height: 1px;}");
+		css.addRule("a {color:" + SwingTools.getColorHexValue(Colors.LINKBUTTON_LOCAL) + "}");
 		return css;
 	}
 
@@ -387,24 +413,40 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * @param operator
 	 */
 	public void setDisplayedOperator(Operator operator) {
-		if (operator != null
-				&& !operator.getOperatorDescription().isDeprecated()
-				&& (this.displayedOperator == null || this.displayedOperator != null
-				&& !operator.getOperatorDescription().getName()
-				.equals(this.displayedOperator.getOperatorDescription().getName()))) {
+		if (operator != null && !operator.getOperatorDescription().isDeprecated()
+				&& (this.displayedOperator == null || this.displayedOperator != null && !operator.getOperatorDescription()
+						.getName().equals(this.displayedOperator.getOperatorDescription().getName()))) {
 			this.displayedOperator = operator;
 			assignDocumentation();
 		}
 	}
 
 	public static URL getDocResourcePath(Operator op) {
-		boolean isPlugin = op.getOperatorDescription().getProvider() != null;
-		String documentationRoot = isPlugin ? op.getOperatorDescription().getProvider().getPrefix() + "/"
-				: DOCUMENTATION_ROOT;
+		Plugin provider = op.getOperatorDescription().getProvider();
+		boolean isExtension = provider != null;
+		String documentationRoot = isExtension ? provider.getPrefix() + "/" : DOCUMENTATION_ROOT;
 		String groupPath = op.getOperatorDescription().getGroup().replace(".", "/");
+
+		// if extension uses the extension folder as tree root...
+		if (isExtension && provider.useExtensionTreeRoot()
+				&& groupPath.startsWith(OperatorDescription.EXTENSIONS_GROUP_IDENTIFIER)) {
+
+			// remove extension group identifier
+			groupPath = groupPath.substring(groupPath.indexOf('/') + 1, groupPath.length());
+
+			// remove extension name
+			int firstIndexOfSlash = groupPath.indexOf('/');
+			if (firstIndexOfSlash != -1) {
+				groupPath = groupPath.substring(firstIndexOfSlash + 1, groupPath.length()) + "/";
+			} else {
+				groupPath = "";
+			}
+		} else {
+			groupPath += "/";
+		}
 		String key = op.getOperatorDescription().getKeyWithoutPrefix();
 
-		String opDescXMLResourcePath = documentationRoot + groupPath + "/" + key + ".xml";
+		String opDescXMLResourcePath = documentationRoot + groupPath + key + ".xml";
 		URL resourceURL = Plugin.getMajorClassLoader().getResource(opDescXMLResourcePath);
 		return resourceURL;
 	}

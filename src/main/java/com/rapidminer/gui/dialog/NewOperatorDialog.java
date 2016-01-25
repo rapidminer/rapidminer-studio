@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
@@ -35,6 +33,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -49,6 +48,7 @@ import javax.swing.event.ListSelectionListener;
 
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.actions.Actions;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.CamelCaseFilter;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.OperatorList;
@@ -337,6 +337,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 		});
 		operatorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane listScrollPane = new ExtendedJScrollPane(operatorList);
+		listScrollPane.setBorder(null);
 		listScrollPane.setPreferredSize(new Dimension(250, 50));
 		GridBagLayout layout = new GridBagLayout();
 		JPanel listPanel = new JPanel(layout);
@@ -345,8 +346,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.weightx = 1;
 		c.weighty = 1;
-		listPanel.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.new_op_dialog.matching_operators")));
+		listPanel.setBorder(BorderFactory.createLineBorder(Colors.TEXTFIELD_BORDER));
 		layout.setConstraints(listScrollPane, c);
 		listPanel.add(listScrollPane);
 		mainPanel.add(listPanel, BorderLayout.WEST);
@@ -365,12 +365,11 @@ public final class NewOperatorDialog extends ButtonDialog {
 				}
 			});
 			layoutDefault(mainPanel, LARGE, addButton, makeCloseButton());
-			getRootPane().setDefaultButton(addButton);
 		} else {
 			JButton okButton = makeOkButton();
 			layoutDefault(mainPanel, LARGE, okButton, makeCancelButton());
-			getRootPane().setDefaultButton(okButton);
 		}
+		getRootPane().setDefaultButton(null);
 	}
 
 	private void updateOperatorList() {
@@ -391,6 +390,9 @@ public final class NewOperatorDialog extends ButtonDialog {
 		final Vector<OperatorDescription> operators = new Vector<OperatorDescription>();
 		for (String key : OperatorService.getOperatorKeys()) {
 			OperatorDescription description = OperatorService.getOperatorDescription(key);
+			if (description.isDeprecated()) {
+				continue;
+			}
 			if (searchText != null && searchText.length() > 0) {
 				if (isFullText) {
 					if (!description.getLongDescriptionHTML().toLowerCase().contains(searchText.toLowerCase())) {
@@ -465,8 +467,6 @@ public final class NewOperatorDialog extends ButtonDialog {
 		} else {
 			operatorInfo = new OperatorInfoPanel(null);
 		}
-		operatorInfo.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.new_op_dialog.operator_info")));
 		mainPanel.add(operatorInfo, BorderLayout.CENTER);
 		operatorInfo.revalidate();
 	}

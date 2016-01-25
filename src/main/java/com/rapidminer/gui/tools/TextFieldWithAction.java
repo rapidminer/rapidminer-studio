@@ -1,32 +1,31 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -35,10 +34,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.borders.TextFieldBorder;
 import com.rapidminer.tools.I18N;
 
@@ -47,9 +47,9 @@ import com.rapidminer.tools.I18N;
  * This component combines a {@link JTextField} with a {@link ResourceAction}. The icon of the
  * action is shown on the right side of the textfield, and can be clicked to invoke the action. If
  * the text field is empty the action will not be painted and cannot be invoked.
- * 
+ *
  * @author Marco Boeck, Nils Woehler
- * 
+ *
  */
 public class TextFieldWithAction extends JPanel {
 
@@ -58,15 +58,15 @@ public class TextFieldWithAction extends JPanel {
 	/** flag indicating if the user is hovering over the action icon */
 	private boolean hovered;
 
-	/***/
 	private ImageIcon actionIcon = null;
 
-	/***/
 	private ImageIcon hoverActionIcon = null;
+
+	private JTextField field;
 
 	/**
 	 * Creates a new {@link TextFieldWithAction} instance.
-	 * 
+	 *
 	 * @param field
 	 *            the textfield into which the action icon should be placed
 	 * @param action
@@ -79,7 +79,7 @@ public class TextFieldWithAction extends JPanel {
 
 	/**
 	 * Creates a new {@link TextFieldWithAction} instance.
-	 * 
+	 *
 	 * @param field
 	 *            the textfield into which the action icon should be placed
 	 * @param action
@@ -94,6 +94,7 @@ public class TextFieldWithAction extends JPanel {
 		if (action == null) {
 			throw new IllegalArgumentException("action must not be null!");
 		}
+		this.field = field;
 
 		setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -119,19 +120,13 @@ public class TextFieldWithAction extends JPanel {
 					if (hoverActionIcon == null && hovered) {
 						int xStart = 0;
 						int yStart = 0;
-						int xEnd = getWidth() - 1;
-						int yEnd = getHeight() - 1;
-						int arcWidth = 3;
+						int xEnd = getWidth();
+						int yEnd = getHeight();
 
 						// fill background
-						g2.setPaint(UIManager.getColor("Panel.background"));
-						g2.fillRoundRect(xStart, yStart, xEnd, yEnd, arcWidth, arcWidth);
+						g2.setPaint(Colors.TEXTFIELD_BACKGROUND);
+						g2.fillRect(xStart, yStart, xEnd, yEnd);
 
-						// draw border
-						g2.setPaint(SwingTools.RAPIDMINER_ORANGE);
-						g2.drawRoundRect(xStart, yStart, xEnd, yEnd, arcWidth, arcWidth);
-
-						g2.setPaint(Color.WHITE);
 					}
 
 					super.paintComponent(g2);
@@ -186,17 +181,47 @@ public class TextFieldWithAction extends JPanel {
 			}
 		});
 
+		field.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				TextFieldWithAction.this.repaint();
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				TextFieldWithAction.this.repaint();
+			}
+		});
+
 		gbc.insets = new Insets(0, 1, 0, 1);
 		gbc.weightx = 0.0;
 		gbc.fill = GridBagConstraints.NONE;
 		add(actionLabel, gbc);
 
-		// set panel background to textfield background
-		setBackground(field.getBackground());
 		// add textfield border to panel
 		setBorder(new TextFieldBorder());
 		// hide textfield border
 		field.setBorder(null);
+	}
+
+	@Override
+	public void paintComponent(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g;
+
+		// paint background and then field background to simulate round border textfield
+		if (isOpaque()) {
+			g2.setColor(getBackground());
+			g2.fillRect(0, 0, getWidth(), getHeight());
+		}
+		g2.setColor(field.getBackground());
+		g2.fillRoundRect(0, 0, getWidth(), getHeight(), RapidLookAndFeel.CORNER_DEFAULT_RADIUS,
+				RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+	}
+
+	@Override
+	public boolean hasFocus() {
+		return field.isFocusOwner();
 	}
 
 }

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer.metadata.dialogs;
 
@@ -61,7 +59,8 @@ public class NominalValueDialog extends ButtonDialog {
 		JPanel tablePanel = new JPanel();
 		tablePanel.setLayout(new GridLayout(1, 1));
 		TableModel model = new NominalValueTableModel(listOfValues);
-		JTable dataTable = new ExtendedJTable(model, true);
+		ExtendedJTable dataTable = new ExtendedJTable(model, true);
+		dataTable.setRowHighlighting(true);
 
 		// change JTable settings
 		dataTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
@@ -69,6 +68,7 @@ public class NominalValueDialog extends ButtonDialog {
 
 		// add to GUI
 		JScrollPane scrollpane = new ExtendedJScrollPane(dataTable);
+		scrollpane.setBorder(null);
 		tablePanel.add(scrollpane);
 
 		setDefaultSize(ButtonDialog.MESSAGE_EXTENDED);

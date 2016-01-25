@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.renderer.models;
+
+import java.util.Iterator;
 
 import com.rapidminer.datatable.AbstractDataTable;
 import com.rapidminer.datatable.DataTable;
@@ -28,13 +28,11 @@ import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.local.LocalPolynomialRegressionModel;
 import com.rapidminer.operator.learner.local.LocalPolynomialRegressionModel.RegressionData;
 
-import java.util.Iterator;
-
 
 /**
  * This class provides a viewer for the LocalPolynomialRegressionModel. It provides a table view on
  * all stored examples values.
- * 
+ *
  * @author Sebastian Land
  */
 public class LocalPolynomialRegressionModelTableRenderer extends AbstractDataTableTableRenderer {
@@ -223,6 +221,6 @@ public class LocalPolynomialRegressionModelTableRenderer extends AbstractDataTab
 
 	@Override
 	public boolean isAutoresize() {
-		return false;
+		return true;
 	}
 }

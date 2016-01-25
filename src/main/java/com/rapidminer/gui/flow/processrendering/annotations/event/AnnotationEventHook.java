@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow.processrendering.annotations.event;
 
@@ -53,6 +51,8 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.SystemInfoUtilities;
+import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 
 
 /**
@@ -102,7 +102,7 @@ public final class AnnotationEventHook {
 					if (!SwingUtilities.isLeftMouseButton(e)) {
 						break;
 					}
-					if (e.getClickCount() >= 2) {
+					if (process != null && e.getClickCount() >= 2) {
 						if (!AnnotationDrawer.isProcessInteractionHappening(rendererModel)) {
 							double x = Math.max(WorkflowAnnotation.MIN_X, point.getX());
 							double y = Math.max(WorkflowAnnotation.MIN_Y, point.getY());
@@ -387,6 +387,14 @@ public final class AnnotationEventHook {
 					decorator.editSelected();
 					e.consume();
 					break;
+				case KeyEvent.VK_BACK_SPACE:
+					if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX) {
+						model.deleteAnnotation(model.getSelected());
+						model.setResized(null);
+						model.setDragged(null);
+						e.consume();
+					}
+					break;
 				case KeyEvent.VK_DELETE:
 					model.deleteAnnotation(model.getSelected());
 					model.setResized(null);
@@ -434,8 +442,8 @@ public final class AnnotationEventHook {
 					model.reset();
 					decorator.reset();
 					drawer.reset();
-					List<WorkflowAnnotation> movedAnnos = positionOperatorAnnotations(rendererModel.getDisplayedChain()
-							.getAllInnerOperators());
+					List<WorkflowAnnotation> movedAnnos = positionOperatorAnnotations(
+							rendererModel.getDisplayedChain().getAllInnerOperators());
 					rendererModel.fireAnnotationsMoved(movedAnnos);
 					break;
 				case MISC_CHANGED:
@@ -497,7 +505,8 @@ public final class AnnotationEventHook {
 	 *            the annotations container, can be {@code null}
 	 * @return {@code true} if we are hovering over an annotation; {@code false} otherwise
 	 */
-	private boolean updateHoveredStatus(final Point point, final ExecutionUnit process, final WorkflowAnnotations annotations) {
+	private boolean updateHoveredStatus(final Point point, final ExecutionUnit process,
+			final WorkflowAnnotations annotations) {
 		if (annotations != null) {
 			// if we have a selected annotation, always check that first for hovering
 			if (model.getSelected() != null && model.getSelected().getProcess().equals(process)) {

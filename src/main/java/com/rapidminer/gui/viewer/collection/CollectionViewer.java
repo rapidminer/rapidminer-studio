@@ -1,27 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer.collection;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -42,10 +39,12 @@ import javax.swing.event.TreeSelectionListener;
 import com.rapidminer.gui.actions.StoreInRepositoryAction;
 import com.rapidminer.gui.actions.export.PrintableComponent;
 import com.rapidminer.gui.actions.export.PrintableComponentContainer;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.results.ResultDisplayTools;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.PrintingTools;
 import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.GroupedModel;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
@@ -128,7 +127,6 @@ public class CollectionViewer extends JPanel implements PrintableComponentContai
 			default:
 				final JTree tree = new JTree(new CollectionTreeModel(new CollectionTreeElement(collection)));
 				tree.setCellRenderer(new CollectionTreeCellRenderer(collection));
-				tree.setRowHeight(0);
 				// enables a PopupMenu to store single IOOBjects out of the collection
 				tree.addMouseListener(new MouseAdapter() {
 
@@ -158,7 +156,7 @@ public class CollectionViewer extends JPanel implements PrintableComponentContai
 								IOObject currentObject = ((CollectionTreeElement) tree.getLastSelectedPathComponent())
 										.getIOObject();
 								if (currentObject != collection
-										&& // prevent recursive trees
+										&&  // prevent recursive trees
 										!(currentObject instanceof IOObjectCollection)
 										&& !(currentObject instanceof GroupedModel) && !(currentObject instanceof MetaModel)) {
 									JPopupMenu menu = new JPopupMenu();
@@ -181,7 +179,7 @@ public class CollectionViewer extends JPanel implements PrintableComponentContai
 							IOObject currentObject = ((CollectionTreeElement) e.getPath().getLastPathComponent())
 									.getIOObject();
 							if (currentObject != collection
-									&& // prevent recursive trees
+									&&  // prevent recursive trees
 									!(currentObject instanceof IOObjectCollection)
 									&& !(currentObject instanceof GroupedModel) && !(currentObject instanceof MetaModel)) {
 								current = ResultDisplayTools.createVisualizationComponent(currentObject, container,
@@ -189,8 +187,8 @@ public class CollectionViewer extends JPanel implements PrintableComponentContai
 												: currentObject.getClass().getName());
 							} else {
 								current = new ResourceLabel("collectionviewer.select_leaf");
-								((JLabel) current).setVerticalAlignment(SwingConstants.TOP);
-								((JLabel) current).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+								((JLabel) current).setHorizontalAlignment(SwingConstants.CENTER);
+								((JLabel) current).setIcon(SwingTools.createIcon("16/information.png"));
 							}
 							add(current, BorderLayout.CENTER);
 							revalidate();
@@ -199,7 +197,9 @@ public class CollectionViewer extends JPanel implements PrintableComponentContai
 				});
 
 				JScrollPane listScrollPane = new ExtendedJScrollPane(tree);
-				listScrollPane.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Color.LIGHT_GRAY));
+				listScrollPane.setBorder(BorderFactory.createCompoundBorder(
+						BorderFactory.createMatteBorder(0, 0, 0, 1, Colors.TAB_BORDER),
+						BorderFactory.createEmptyBorder(10, 0, 0, 0)));
 				add(listScrollPane, BorderLayout.WEST);
 
 				// select first model

@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.resource;
+
+import java.util.logging.Level;
 
 import javax.swing.event.EventListenerList;
 
@@ -35,6 +35,7 @@ import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
 
 
 /**
@@ -50,14 +51,49 @@ public class ResourceRepository extends ResourceFolder implements Repository {
 
 	private String resourcePrefix;
 
+	private final boolean addTemplateFolder;
+
+	private final boolean addTutorialFolder;
+
 	public ResourceRepository(String name, String resourcePrefix) {
+		this(name, resourcePrefix, true, true);
+	}
+
+	public ResourceRepository(String name, String resourcePrefix, boolean addTemplateFolder, boolean addTutorialFolder) {
 		super(null, name, "", null);
 		this.resourcePrefix = resourcePrefix;
+		this.addTemplateFolder = addTemplateFolder;
+		this.addTutorialFolder = addTutorialFolder;
 		setRepository(this);
 	}
 
 	protected String getResourceRoot() {
 		return resourcePrefix;
+	}
+
+	@Override
+	protected void ensureLoaded() throws RepositoryException {
+		boolean noFoldersYet = folders == null;
+		super.ensureLoaded();
+
+		// add template and tutorial folder in case folders are not available yet
+		// and repository should contain the template or tutorial folder
+		if (noFoldersYet && addTemplateFolder) {
+			try {
+				addFolder(new TemplatesFolder(this, getPath(), getRepository()));
+			} catch (RepositoryException e) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.repository.resource.ResourceRepository.error_adding_template_folder", e);
+			}
+		}
+		if (noFoldersYet && addTutorialFolder) {
+			try {
+				addFolder(new TutorialFolder(this, getPath(), getRepository()));
+			} catch (RepositoryException e) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.repository.resource.ResourceRepository.error_adding_tutorial_folder", e);
+			}
+		}
 	}
 
 	@Override

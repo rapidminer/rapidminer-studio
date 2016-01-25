@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor.results;
 
@@ -70,6 +68,7 @@ public class ResultDisplayTools {
 
 	/** the icon shown for "under construction" tabs */
 	private static final ImageIcon WAIT_ICON = SwingTools.createIcon("24/hourglass.png");
+	private static final ImageIcon ERROR_ICON = SwingTools.createIcon("24/error.png");
 
 	private static Icon defaultResultIcon = null;
 
@@ -77,7 +76,7 @@ public class ResultDisplayTools {
 	 * In these cases the unnecessary additional panel is suppressed
 	 */
 	private static final Set<String> NO_CARD_KEYS = new HashSet<>(Arrays.asList(new String[] { "collection", "metamodel",
-	"delegation_model" }));
+			"delegation_model" }));
 
 	static {
 		defaultResultIcon = SwingTools.createIcon("16/" + DEFAULT_RESULT_ICON_NAME);
@@ -86,6 +85,20 @@ public class ResultDisplayTools {
 	public static JPanel createVisualizationComponent(IOObject resultObject, IOContainer resultContainer,
 			String usedResultName) {
 		return createVisualizationComponent(resultObject, resultContainer, usedResultName, true);
+	}
+
+	/**
+	 * Creates a panel which centers an error message.
+	 *
+	 * @param error
+	 *            the message to display
+	 * @return
+	 */
+	public static JPanel createErrorComponent(String error) {
+		JPanel panel = new JPanel(new BorderLayout());
+		JLabel label = new JLabel(error, ERROR_ICON, SwingConstants.CENTER);
+		panel.add(label, BorderLayout.CENTER);
+		return panel;
 	}
 
 	/**
@@ -167,12 +180,12 @@ public class ResultDisplayTools {
 				resultThread.start();
 			} catch (Exception e) {
 				LogService
-				.getRoot()
-				.log(Level.WARNING,
-						I18N.getMessage(
-								LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.processeditor.results.ResultDisplayTools.error_creating_renderer",
-								e), e);
+						.getRoot()
+						.log(Level.WARNING,
+								I18N.getMessage(
+										LogService.getRoot().getResourceBundle(),
+										"com.rapidminer.gui.processeditor.results.ResultDisplayTools.error_creating_renderer",
+										e), e);
 				String errorMsg = I18N.getMessage(I18N.getErrorBundle(), "result_display.error_creating_renderer",
 						renderer.getName());
 				visualisationComponent.addCard(card, new JLabel(errorMsg));
@@ -182,7 +195,7 @@ public class ResultDisplayTools {
 			// specified
 			// settings
 			visualisationComponent
-			.selectCard(toCardName((String) resultObject.getUserData(IOOBJECT_USER_DATA_KEY_RENDERER)));
+					.selectCard(toCardName((String) resultObject.getUserData(IOOBJECT_USER_DATA_KEY_RENDERER)));
 		}
 		// report statistics
 		visualisationComponent.addCardSelectionListener(new CardSelectionListener() {

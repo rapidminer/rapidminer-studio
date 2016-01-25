@@ -1,27 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -63,16 +63,23 @@ import com.rapidminer.tools.plugin.Plugin;
  */
 public class SplashScreen extends JPanel implements ActionListener {
 
+	private static final Font FONT_SANS_SERIF_11 = new Font("SansSerif", java.awt.Font.PLAIN, 11);
+	private static final Font FONT_SANS_SERIF_BOLD_11 = new Font("SansSerif", java.awt.Font.BOLD, 11);
+	private static final Font FONT_OPEN_SANS_15 = new Font("Open Sans", java.awt.Font.PLAIN, 15);
+	private static final Font FONT_OPEN_SANS_LIGHT_60 = new Font("Open Sans Light", java.awt.Font.PLAIN, 60);
+
 	private static final int EXTENSION_GAP = 400;
 	private static final float EXTENSION_FADE_TIME = 1000;
 
 	private static final int MAX_NUMBER_EXTENSION_ICONS_X = 4;
-	private static final float MAX_NUMBER_EXTENSION_ICONS_Y = 3f;
-	private static final int MAX_NUMBER_EXTENSION_ICONS = (int) (MAX_NUMBER_EXTENSION_ICONS_X * MAX_NUMBER_EXTENSION_ICONS_Y);
+	private static final float MAX_NUMBER_EXTENSION_ICONS_Y = 2f;
+	private static final int MAX_NUMBER_EXTENSION_ICONS = (int) (MAX_NUMBER_EXTENSION_ICONS_X
+			* MAX_NUMBER_EXTENSION_ICONS_Y);
 
 	private static final long serialVersionUID = -1525644776910410809L;
 
-	private static final Paint MAIN_PAINT = Color.BLACK;
+	private static final Paint MAIN_PAINT = new Color(96, 96, 96);
+	private static final Paint WHITE_PAINT = Color.WHITE;
 
 	public static Image backgroundImage = null;
 
@@ -102,8 +109,6 @@ public class SplashScreen extends JPanel implements ActionListener {
 
 	private String message = "Starting...";
 
-	private boolean infosVisible;
-
 	private Timer animationTimer;
 	private List<Runnable> animationRenderers = new LinkedList<>();
 
@@ -125,6 +130,7 @@ public class SplashScreen extends JPanel implements ActionListener {
 	public SplashScreen(Image productLogo, Properties properties) {
 		this.properties = properties;
 		this.productLogo = productLogo;
+		this.productName = I18N.getGUIMessage("gui.splash.product_name");
 
 		splashScreenFrame = new JFrame(properties.getProperty("name"));
 		splashScreenFrame.getContentPane().add(this);
@@ -134,7 +140,7 @@ public class SplashScreen extends JPanel implements ActionListener {
 		if (backgroundImage != null) {
 			splashScreenFrame.setSize(backgroundImage.getWidth(this), backgroundImage.getHeight(this));
 		} else {
-			splashScreenFrame.setSize(450, 350);
+			splashScreenFrame.setSize(550, 400);
 		}
 		splashScreenFrame.setLocationRelativeTo(null);
 
@@ -194,7 +200,7 @@ public class SplashScreen extends JPanel implements ActionListener {
 			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-			g2d.translate(305, 20);
+			g2d.translate(435, 340);
 			g2d.scale(0.5, 0.5);
 			long currentTimeMillis = System.currentTimeMillis();
 
@@ -230,6 +236,7 @@ public class SplashScreen extends JPanel implements ActionListener {
 	}
 
 	public void drawMain(Graphics2D g) {
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setPaint(MAIN_PAINT);
 		g.fillRect(0, 0, getWidth(), getHeight());
 
@@ -241,40 +248,53 @@ public class SplashScreen extends JPanel implements ActionListener {
 			g.drawImage(productLogo, getWidth() / 2 - productLogo.getWidth(this) / 2, 90, this);
 		}
 
-		int y = 255;
-		g.setColor(SwingTools.BROWN_FONT_COLOR);
+		int y = 355;
 		if (message != null) {
-			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 11));
+			g.setFont(FONT_SANS_SERIF_BOLD_11);
 			drawString(g, message, y);
-			y += 20;
+			y += 15;
 		}
-		if (infosVisible) {
-			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
+
+		// draw product name and version
+		{
+			g.setFont(FONT_OPEN_SANS_LIGHT_60);
+			g.setPaint(WHITE_PAINT);
+			FontMetrics fm = getFontMetrics(g.getFont());
+			int x_product = (getSize().width - fm.stringWidth(productName)) / 2;
+			int y_product = (getSize().height - 70 - fm.getHeight()) / 2 + fm.getAscent();
+			g.drawString(productName, x_product, y_product);
+
 			StringBuilder builder = new StringBuilder();
-			builder.append(productName);
+			builder.append(I18N.getGUILabel("version"));
 			builder.append(" ");
 			builder.append(properties.getProperty("version"));
+			String version = builder.toString();
+			int x_version = x_product + fm.stringWidth(productName);
+
+			g.setFont(FONT_OPEN_SANS_15);
+			fm = getFontMetrics(g.getFont());
+			int y_version = y_product + fm.getHeight();
+			x_version -= fm.stringWidth(version);
+			g.drawString(version, x_version, y_version);
+			g.setPaint(MAIN_PAINT);
+		}
+
+		// draw bottom text
+		if (license != null) {
+			g.setFont(FONT_SANS_SERIF_11);
+			StringBuilder builder = new StringBuilder();
+			builder.append(productEdition);
+			if (license.getLicenseUser().getName() != null) {
+				builder.append(" ");
+				builder.append(I18N.getGUILabel("registered_to", license.getLicenseUser().getName()));
+			}
 			drawString(g, builder.toString(), y);
 			y += 15;
-		}
-		if (license != null) {
-			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
-			drawString(g, productEdition, y);
-			y += 15;
-			if (license.getLicenseUser().getName() != null) {
-				drawString(g, I18N.getGUILabel("registered_to", license.getLicenseUser().getName()), y);
-			}
-			y += 15;
 		} else {
-			y += 30;
-		}
-		if (infosVisible) {
-			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
-			drawString(g, properties.getProperty("copyright"), y);
-			y += 15;
-			drawString(g, properties.getProperty("more"), y);
 			y += 15;
 		}
+		g.setFont(FONT_SANS_SERIF_11);
+		drawString(g, properties.getProperty("copyright"), y);
 	}
 
 	private void drawString(Graphics2D g, String text, int height) {
@@ -292,10 +312,6 @@ public class SplashScreen extends JPanel implements ActionListener {
 
 	public void setProperty(String key, String value) {
 		properties.setProperty(key, value);
-	}
-
-	public void setInfosVisible(boolean b) {
-		this.infosVisible = b;
 	}
 
 	public void addExtension(Plugin plugin) {
@@ -329,8 +345,7 @@ public class SplashScreen extends JPanel implements ActionListener {
 
 	@Override
 	/**
-	 * This method is used for being repainted for
-	 * splash animation.
+	 * This method is used for being repainted for splash animation.
 	 */
 	public void actionPerformed(ActionEvent e) {
 		List<Runnable> copiedAnimationRenderers = new LinkedList<>(animationRenderers);
@@ -347,6 +362,5 @@ public class SplashScreen extends JPanel implements ActionListener {
 	public void setLicense(License license) {
 		this.license = license;
 		this.productEdition = I18N.getGUILabel("license_edition", LicenseTools.translateProductEdition(license));
-		this.productName = LicenseTools.translateProductName(license);
 	}
 }

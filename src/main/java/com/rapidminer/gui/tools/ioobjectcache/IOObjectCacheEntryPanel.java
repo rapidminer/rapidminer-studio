@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.ioobjectcache;
 
@@ -25,6 +23,7 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -36,8 +35,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.components.LinkButton;
+import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.operator.IOObjectMap;
 
 
@@ -91,10 +91,12 @@ public class IOObjectCacheEntryPanel extends JPanel {
 	private static final Dimension buttonSize = new Dimension(24, 24);
 
 	/** Background color when highlighted. */
-	private static final Color COLOR_HIGHLIGHT = new Color(225, 225, 225);
+	private static final Color COLOR_HIGHLIGHT = Colors.MENU_ITEM_BACKGROUND_SELECTED;
 
 	/** Default background color, may be modified to create alternating rows. */
 	private Color defaultBackground;
+
+	private Action openAction;
 
 	/** Mouse movement adapter (required for hover effect). */
 	private MouseListener hoverMouseListener = new MouseAdapter() {
@@ -109,6 +111,16 @@ public class IOObjectCacheEntryPanel extends JPanel {
 		@Override
 		public void mouseEntered(MouseEvent e) {
 			highlight(true);
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if (SwingUtilities.isLeftMouseButton(e)) {
+				if (e.getClickCount() == 2) {
+					openAction.actionPerformed(new ActionEvent(IOObjectCacheEntryPanel.this, ActionEvent.ACTION_PERFORMED,
+							null));
+				}
+			}
 		}
 	};
 
@@ -162,6 +174,8 @@ public class IOObjectCacheEntryPanel extends JPanel {
 	public IOObjectCacheEntryPanel(Icon icon, String entryType, Action openAction, Action removeAction) {
 		super(ENTRY_LAYOUT);
 
+		this.openAction = openAction;
+
 		// add icon label
 		JLabel iconLabel = new JLabel(icon);
 		add(iconLabel, ICON_CONSTRAINTS);
@@ -174,7 +188,7 @@ public class IOObjectCacheEntryPanel extends JPanel {
 		add(typeLabel, TYPE_CONSTRAINTS);
 
 		// add link button performing the specified action, the label displays the entry's key name
-		LinkButton openButton = new LinkButton(openAction, true);
+		LinkLocalButton openButton = new LinkLocalButton(openAction);
 		openButton.setMargin(new Insets(0, 0, 0, 0));
 		add(openButton, KEY_CONSTRAINTS);
 

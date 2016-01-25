@@ -1,33 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.gui.tools.ExtendedJList;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedListModel;
-import com.rapidminer.operator.learner.associations.AssociationRule;
-import com.rapidminer.operator.learner.associations.AssociationRuleGenerator;
-import com.rapidminer.operator.learner.associations.AssociationRules;
-import com.rapidminer.operator.learner.associations.Item;
-
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -51,10 +42,21 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
+import com.rapidminer.gui.properties.PropertyPanel;
+import com.rapidminer.gui.tools.ExtendedJList;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedListModel;
+import com.rapidminer.operator.learner.associations.AssociationRule;
+import com.rapidminer.operator.learner.associations.AssociationRuleGenerator;
+import com.rapidminer.operator.learner.associations.AssociationRules;
+import com.rapidminer.operator.learner.associations.Item;
+
 
 /**
  * This is a gui component which can be used to define filter conditions for association rules.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class AssociationRuleFilter extends JPanel {
@@ -84,6 +86,9 @@ public class AssociationRuleFilter extends JPanel {
 	public AssociationRuleFilter(AssociationRules rules) {
 		this.rules = rules;
 		this.itemArray = rules.getAllConclusionItems();
+
+		setOpaque(true);
+		setBackground(Colors.WHITE);
 
 		// init min and max values
 		this.minValues = new double[AssociationRuleGenerator.CRITERIA.length];
@@ -147,6 +152,8 @@ public class AssociationRuleFilter extends JPanel {
 		c.insets = new Insets(4, 4, 4, 4);
 
 		// conjunction mode
+		conjunctionBox.setPreferredSize(new Dimension(200, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+		conjunctionBox.putClientProperty(RapidLookTools.PROPERTY_INPUT_BACKGROUND_DARK, true);
 		conjunctionBox.addActionListener(new ActionListener() {
 
 			@Override
@@ -179,11 +186,8 @@ public class AssociationRuleFilter extends JPanel {
 			}
 		});
 
-		// label = new JLabel("Conclusions:");
-		// layout.setConstraints(label, c);
-		// add(label);
-
 		ExtendedJScrollPane listPane = new ExtendedJScrollPane(conclusionList);
+		listPane.setBorder(null);
 		listPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		c.weighty = 1;
 		c.weightx = 0;
@@ -196,6 +200,9 @@ public class AssociationRuleFilter extends JPanel {
 		layout.setConstraints(label, c);
 		add(label);
 
+		criterionSelectorBox.setPreferredSize(new Dimension(criterionSelectorBox.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+		criterionSelectorBox.putClientProperty(RapidLookTools.PROPERTY_INPUT_BACKGROUND_DARK, true);
 		criterionSelectorBox.addActionListener(new ActionListener() {
 
 			@Override
@@ -223,11 +230,18 @@ public class AssociationRuleFilter extends JPanel {
 		add(criterionMinSlider);
 	}
 
+	/**
+	 * Triggers the filtering.
+	 */
+	public void triggerFilter() {
+		adjustFilter();
+	}
+
 	private void adjustFilter() {
 		int conjunctionMode = conjunctionBox.getSelectedIndex();
 		Item[] searchFilter = null;
 		int[] selectedIndices = conclusionList.getSelectedIndices();
-		if ((selectedIndices.length > 0) && (selectedIndices.length <= itemArray.length)) {
+		if (selectedIndices.length > 0 && selectedIndices.length <= itemArray.length) {
 			searchFilter = new Item[selectedIndices.length];
 			int counter = 0;
 			for (int s : selectedIndices) {
@@ -275,7 +289,7 @@ public class AssociationRuleFilter extends JPanel {
 
 	private double getCriterionMinValue(double minRatio) {
 		int criterionSelection = criterionSelectorBox.getSelectedIndex();
-		return minValues[criterionSelection] + ((maxValues[criterionSelection] - minValues[criterionSelection]) * minRatio);
+		return minValues[criterionSelection] + (maxValues[criterionSelection] - minValues[criterionSelection]) * minRatio;
 	}
 
 	private double getCriterionValue(AssociationRule rule) {

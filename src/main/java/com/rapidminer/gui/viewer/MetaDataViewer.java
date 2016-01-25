@@ -1,35 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
-
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ProgressThread;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.ViewToolBar;
-import com.rapidminer.gui.tools.components.DropDownButton;
-import com.rapidminer.gui.viewer.metadata.MetaDataStatisticsViewer;
-import com.rapidminer.report.Tableable;
-import com.rapidminer.tools.ProgressListener;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -43,10 +30,23 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceActionAdapter;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.ViewToolBar;
+import com.rapidminer.gui.tools.components.DropDownPopupButton;
+import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider;
+import com.rapidminer.gui.viewer.metadata.MetaDataStatisticsViewer;
+import com.rapidminer.report.Tableable;
+import com.rapidminer.tools.ProgressListener;
+
 
 /**
  * Can be used to display (parts of) the meta data by means of a JTable.
- * 
+ *
  * @author Ingo Mierswa, Tobias Malbrecht
  * @deprecated use {@link MetaDataStatisticsViewer} instead.
  */
@@ -64,7 +64,7 @@ public class MetaDataViewer extends JPanel implements Tableable {
 		ToggleShowColumnItem(String name, int index, boolean state, MetaDataViewerTable metaDataTable) {
 			super("Show column '" + name + "'", state);
 			setToolTipText("Toggles if the column with name '" + name + "' should be displayed");
-			setIcon(SwingTools.createIcon("16/table_column.png"));
+			setIcon(SwingTools.createIcon("16/table_selection_column.png"));
 			addActionListener(this);
 			this.index = index;
 			this.metaDataTable = metaDataTable;
@@ -79,6 +79,7 @@ public class MetaDataViewer extends JPanel implements Tableable {
 	private static final long serialVersionUID = 5466205420267797125L;
 
 	private JLabel generalInfo = new JLabel();
+
 	{
 		generalInfo.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
 	}
@@ -91,29 +92,23 @@ public class MetaDataViewer extends JPanel implements Tableable {
 		toolBar.add(generalInfo, ViewToolBar.LEFT);
 
 		if (showOptions) {
-			DropDownButton button = new DropDownButton(new ResourceAction(true, "select_columns") {
+			DropDownPopupButton button = new DropDownPopupButton(new ResourceActionAdapter(true, "select_columns"),
+					new PopupMenuProvider() {
 
-				private static final long serialVersionUID = -6470766941799410502L;
+						@Override
+						public JPopupMenu getPopupMenu() {
+							JPopupMenu menu = new JPopupMenu();
+							for (int i = 0; i < MetaDataViewerTableModel.COLUMN_NAMES.length; i++) {
+								menu.add(new ToggleShowColumnItem(MetaDataViewerTableModel.COLUMN_NAMES[i], i,
+										metaDataTable.getMetaDataModel().getShowColumn(i), metaDataTable));
+							}
+							return menu;
+						}
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
+					});
+			button.setText("");
+			toolBar.add(button, ViewToolBar.RIGHT);
 
-				}
-			}) {
-
-				private static final long serialVersionUID = 8545784128784421566L;
-
-				@Override
-				protected JPopupMenu getPopupMenu() {
-					JPopupMenu menu = new JPopupMenu();
-					for (int i = 0; i < MetaDataViewerTableModel.COLUMN_NAMES.length; i++) {
-						menu.add(new ToggleShowColumnItem(MetaDataViewerTableModel.COLUMN_NAMES[i], i, metaDataTable
-								.getMetaDataModel().getShowColumn(i), metaDataTable));
-					}
-					return menu;
-				}
-			};
-			button.addToToolBar(toolBar, ViewToolBar.RIGHT);
 			Action calculateStatisticsAction = new ResourceAction(true, "calculate_statistics") {
 
 				private static final long serialVersionUID = 8763079896628342561L;

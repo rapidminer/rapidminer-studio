@@ -1928,7 +1928,6 @@
       <replaceIOMultiplier />
       <deleteUnnecessaryOperatorChain />
       <passthroughShortcut />
-      <replaceIOContainerWriter />
       <repairOperatorEnabler />
    </Generics>
 </parserules>

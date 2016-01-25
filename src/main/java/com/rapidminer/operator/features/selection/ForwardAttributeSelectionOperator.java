@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -46,10 +48,6 @@ import com.rapidminer.tools.math.AnovaCalculator;
 import com.rapidminer.tools.math.SignificanceCalculationException;
 import com.rapidminer.tools.math.SignificanceTestResult;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * This operator starts with an empty selection of attributes and, in each round, it adds each
@@ -67,18 +65,18 @@ import java.util.List;
  * <li><b>without significant increase</b> stops as soon as the increase isn't significant to the
  * specified level.</li>
  * </ul>
- * 
+ *
  * The parameter speculative_rounds defines how many rounds will be performed in a row, after a
  * first time the stopping criterion was fulfilled. If the performance increases again during the
  * speculative rounds, the selection will be continued. Otherwise all additionally selected
  * attributes will be removed, as if no speculative rounds would have been executed. This might help
  * to avoid getting stuck in local optima. A following backward elimination operator might remove
  * unneeded attributes again.
- * 
+ *
  * The operator provides a value for logging the performance in each round using a ProcessLog.
- * 
+ *
  * @author Sebastian Land
- * 
+ *
  */
 public class ForwardAttributeSelectionOperator extends OperatorChain {
 
@@ -157,14 +155,14 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 		int maxNumberOfFails = getParameterAsInt(PARAMETER_ALLOWED_CONSECUTIVE_FAILS);
 		int behavior = getParameterAsInt(PARAMETER_STOPPING_BEHAVIOR);
 
-		boolean useRelativeIncrease = (behavior == WITHOUT_INCREASE_OF_AT_LEAST) ? getParameterAsBoolean(PARAMETER_USE_RELATIVE_INCREASE)
+		boolean useRelativeIncrease = behavior == WITHOUT_INCREASE_OF_AT_LEAST ? getParameterAsBoolean(PARAMETER_USE_RELATIVE_INCREASE)
 				: false;
 		double minimalIncrease = 0;
 		if (useRelativeIncrease) {
 			minimalIncrease = useRelativeIncrease ? getParameterAsDouble(PARAMETER_MIN_RELATIVE_INCREASE)
 					: getParameterAsDouble(PARAMETER_MIN_ABSOLUT_INCREASE);
 		}
-		double alpha = (behavior == WITHOUT_INCREASE_SIGNIFICANT) ? getParameterAsDouble(PARAMETER_ALPHA) : 0d;
+		double alpha = behavior == WITHOUT_INCREASE_SIGNIFICANT ? getParameterAsDouble(PARAMETER_ALPHA) : 0d;
 
 		// remembering attributes and removing all from example set
 		Attribute[] attributeArray = new Attribute[numberOfAttributes];
@@ -183,6 +181,9 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 		int numberOfFails = maxNumberOfFails;
 		PerformanceVector lastPerformance = null;
 		PerformanceVector bestPerformanceEver = null;
+		// init operator progress
+		getProgress().setTotal(maxNumberOfAttributes * numberOfAttributes);
+
 		for (i = 0; i < maxNumberOfAttributes && !earlyAbort; i++) {
 			// setting values for logging
 			currentNumberOfFeatures = i + 1;
@@ -211,6 +212,7 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 					attributes.remove(attributeArray[current]);
 					currentAttributes = null;
 				}
+				getProgress().step();
 			}
 			double currentFitness = currentBestPerformance.getMainCriterion().getFitness();
 			if (i != 0) {
@@ -279,6 +281,9 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 			// switching best index on
 			attributes.addRegular(attributeArray[bestIndex]);
 			selected[bestIndex] = true;
+
+			// update operator progress
+			getProgress().step();
 		}
 		// removing predictively added attributes: speculative execution did not yield good result
 		for (Integer removeIndex : speculativeList) {

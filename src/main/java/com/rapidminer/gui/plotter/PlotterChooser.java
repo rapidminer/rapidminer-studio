@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
@@ -60,9 +58,9 @@ import com.rapidminer.tools.LogService;
  * Selection field for the available {@link Plotter} which shows preview images for all plotters.
  * The look and feel is similar to a Combobox. A selection informs all listeners at
  * {@link PlotterControlPanel}.
- * 
+ *
  * @author David Arnu, Michael Knopf
- * 
+ *
  */
 public class PlotterChooser extends JButton {
 
@@ -188,8 +186,6 @@ public class PlotterChooser extends JButton {
 		plotterList.setVisibleRowCount(5);
 		plotterList.setCellRenderer(new PlotterListCellRenderer());
 		plotterList.setBackground(UIManager.getColor("Panel.background"));
-		plotterList.setSelectionBackground(Color.WHITE);
-		plotterList.setSelectionBackground(Color.LIGHT_GRAY);
 		plotterList.setSelectionForeground(Color.BLACK);
 		final PopupAction popupAction = new PopupAction("choose_plotter", plotterList);
 		setAction(popupAction);
@@ -291,7 +287,7 @@ public class PlotterChooser extends JButton {
 
 	/**
 	 * Query if the small plot preview icons are used
-	 * 
+	 *
 	 * @return true, if the small icons are used
 	 */
 	public boolean isSmallIconsUsed() {
@@ -300,7 +296,7 @@ public class PlotterChooser extends JButton {
 
 	/**
 	 * Set to true if the small plot preview icons should be used
-	 * 
+	 *
 	 * @param smallIcons
 	 *            true, for the small icons to be used
 	 */
@@ -322,16 +318,16 @@ public class PlotterChooser extends JButton {
 
 		Graphics2D g2 = (Graphics2D) g.create();
 		if (isEnabled()) {
-			g2.setColor(Color.GRAY);
+			g2.setColor(Color.BLACK);
 		} else {
-			g2.setColor(Color.DARK_GRAY);
+			g2.setColor(Color.GRAY);
 		}
 		g2.fill(arrow);
 		g2.dispose();
 	}
 
 	/**
-	 * 
+	 *
 	 * @return Returns true if a display has a too small resolution
 	 */
 	private boolean isResolutionTooSmall() {

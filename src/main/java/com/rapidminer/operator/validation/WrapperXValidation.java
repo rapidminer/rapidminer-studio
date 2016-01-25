@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation;
+
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -45,9 +46,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * This operator evaluates the performance of feature weighting and selection algorithms. The first
@@ -57,7 +55,7 @@ import java.util.List;
  * subprocess which hence has to return a performance vector. This performance vector serves as a
  * performance indicator for the actual algorithm. This implementation of a MethodValidationChain
  * works similar to the {@link XValidation}.
- * 
+ *
  * @see com.rapidminer.operator.validation.XValidation
  * @author Ingo Mierswa
  */
@@ -134,8 +132,9 @@ public class WrapperXValidation extends WrapperValidationChain {
 			globalWeights.setWeight(attribute.getName(), 0.0d);
 		}
 
+		getProgress().setTotal(number);
+		getProgress().setCheckForStop(false);
 		for (iteration = 0; iteration < number; iteration++) {
-
 			// training
 			inputSet.selectAllSubsetsBut(iteration);
 
@@ -165,13 +164,16 @@ public class WrapperXValidation extends WrapperValidationChain {
 
 			setResult(iterationPerformance.getMainCriterion());
 			inApplyLoop();
+			getProgress().step();
 		}
+
 		// end of cross validation
+		getProgress().complete();
 
 		// build average of weights
-		Iterator i = globalWeights.getAttributeNames().iterator();
+		Iterator<String> i = globalWeights.getAttributeNames().iterator();
 		while (i.hasNext()) {
-			String currentName = (String) i.next();
+			String currentName = i.next();
 			globalWeights.setWeight(currentName, globalWeights.getWeight(currentName) / number);
 		}
 
@@ -179,12 +181,13 @@ public class WrapperXValidation extends WrapperValidationChain {
 
 		performanceOutput.deliver(performanceVector);
 		attributeWeightsOutput.deliver(globalWeights);
+		getProgress().complete();
 	}
 
 	private void handleWeights(AttributeWeights globalWeights, AttributeWeights currentWeights) {
-		Iterator i = currentWeights.getAttributeNames().iterator();
+		Iterator<String> i = currentWeights.getAttributeNames().iterator();
 		while (i.hasNext()) {
-			String currentName = (String) i.next();
+			String currentName = i.next();
 			double globalWeight = globalWeights.getWeight(currentName);
 			double currentWeight = currentWeights.getWeight(currentName);
 			if (Double.isNaN(globalWeight)) {

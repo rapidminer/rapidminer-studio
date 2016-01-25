@@ -1,41 +1,46 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
+
+import java.awt.Color;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.parameter.ParameterTypeColor;
 import com.rapidminer.tools.ParameterService;
-
-import java.awt.Color;
+import com.rapidminer.tools.parameter.ParameterChangeListener;
 
 
 /**
  * This class delivers colors according to the user settings.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ColorProvider {
 
+	private static final Color MIN_DEFAULT_COLOR = new Color(58, 58, 255);
+	private static final Color MAX_DEFAULT_COLOR = new Color(255, 48, 48);
+
 	private boolean reduceBrightness;
+	private Color minColor;
+	private Color maxColor;
 
 	/**
 	 * Creates a new {@link ColorProvider}.
@@ -46,22 +51,62 @@ public class ColorProvider {
 
 	/**
 	 * Creates a new {@link ColorProvider} which reduces the brightness of the returned colors.
-	 * 
+	 *
 	 * @param reduceBrightness
 	 *            if <code>true</code>, will reduce brightness of returned colors
 	 */
 	public ColorProvider(boolean reduceBrightness) {
 		this.reduceBrightness = reduceBrightness;
+
+		ParameterService.registerParameterChangeListener(new ParameterChangeListener() {
+
+			@Override
+			public void informParameterSaved() {
+				// ignore
+			}
+
+			@Override
+			public void informParameterChanged(String key, String value) {
+				if (MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MINCOLOR.equals(key)) {
+					minColor = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MINCOLOR,
+							MIN_DEFAULT_COLOR);
+				}
+				if (MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR.equals(key)) {
+					minColor = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR,
+							MAX_DEFAULT_COLOR);
+				}
+			}
+		});
+
+		minColor = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MINCOLOR, MIN_DEFAULT_COLOR);
+		boolean fixed = false;
+		// this was the previous default and we cannot detect if the user has ever changed it so we
+		// force the new scheme here
+		if (minColor.equals(Color.BLUE)) {
+			ParameterService.setParameterValue(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MINCOLOR,
+					ParameterTypeColor.color2String(MIN_DEFAULT_COLOR));
+			fixed = true;
+		}
+		maxColor = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR, MAX_DEFAULT_COLOR);
+		// this was the previous default and we cannot detect if the user has ever changed it so we
+		// force the new scheme here
+		if (maxColor.equals(Color.RED)) {
+			ParameterService.setParameterValue(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR,
+					ParameterTypeColor.color2String(MAX_DEFAULT_COLOR));
+			fixed = true;
+		}
+
+		if (fixed) {
+			ParameterService.saveParameters();
+		}
 	}
 
 	public Color getMinLegendColor() {
-		Color colorFromProperty = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MINCOLOR, Color.BLUE);
-		return colorFromProperty;
+		return minColor;
 	}
 
 	public Color getMaxLegendColor() {
-		Color colorFromProperty = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR, Color.RED);
-		return colorFromProperty;
+		return maxColor;
 	}
 
 	private Color getColorFromProperty(String propertyName, Color errorColor) {
@@ -208,7 +253,7 @@ public class ColorProvider {
 
 	/**
 	 * Returns the original color, just slightly less bright.
-	 * 
+	 *
 	 * @param color
 	 * @return
 	 */

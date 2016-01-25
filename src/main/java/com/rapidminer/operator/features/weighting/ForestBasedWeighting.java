@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -31,10 +29,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.rapidminer.example.AttributeWeights;
+import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.PortUserError;
+import com.rapidminer.operator.learner.meta.MetaModel;
+import com.rapidminer.operator.learner.tree.ConfigurableRandomForestModel;
 import com.rapidminer.operator.learner.tree.Edge;
 import com.rapidminer.operator.learner.tree.RandomForestModel;
 import com.rapidminer.operator.learner.tree.Tree;
@@ -43,7 +45,9 @@ import com.rapidminer.operator.learner.tree.criterions.AbstractCriterion;
 import com.rapidminer.operator.learner.tree.criterions.Criterion;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.ModelMetaData;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
 import com.rapidminer.parameter.ParameterType;
@@ -71,31 +75,66 @@ public class ForestBasedWeighting extends Operator {
 	private OutputPort weightsOutput = getOutputPorts().createPort("weights");
 	private OutputPort forestOutput = getOutputPorts().createPort("random forest");
 
+	/**
+	 * {@link ModelMetaData} that accepts both {@link RandomForestModel}s and
+	 * {@link ConfigurableRandomForestModel}s.
+	 *
+	 * @author Michael Knopf
+	 * @since 7.0.0
+	 */
+	public static class RandomForestModelMetaData extends ModelMetaData {
+
+		private static final long serialVersionUID = 1L;
+
+		public RandomForestModelMetaData() {
+			super(ConfigurableRandomForestModel.class, new ExampleSetMetaData());
+		}
+
+		@Override
+		public boolean isCompatible(MetaData isData, CompatibilityLevel level) {
+			if (RandomForestModel.class.isAssignableFrom(isData.getObjectClass())) {
+				return true;
+			}
+
+			return super.isCompatible(isData, level);
+		}
+	}
+
 	public ForestBasedWeighting(OperatorDescription description) {
 		super(description);
-
-		forestInput.addPrecondition(new SimplePrecondition(forestInput, new ModelMetaData(RandomForestModel.class,
-				new ExampleSetMetaData()), true));
+		forestInput.addPrecondition(new SimplePrecondition(forestInput, new RandomForestModelMetaData(), true));
 		getTransformer().addPassThroughRule(forestInput, forestOutput);
 		getTransformer().addGenerationRule(weightsOutput, AttributeWeights.class);
 	}
 
 	@Override
 	public void doWork() throws OperatorException {
-		RandomForestModel forest = forestInput.getData(RandomForestModel.class);
+		// The old and new random forest model implementations are not related (class hierarchy).
+		// Thus, Port#getData() would fail for one or the other. For this reason, the implementation
+		// below request the common super-type Model and performs the compatibility check manually.
+		Model forest = forestInput.getData(Model.class);
+		if (!(forest instanceof MetaModel)
+				|| !(forest instanceof ConfigurableRandomForestModel || forest instanceof RandomForestModel)) {
+			PortUserError error = new PortUserError(forestInput, 156, RendererService.getName(forest.getClass()),
+					forestInput.getName(), RendererService.getName(ConfigurableRandomForestModel.class));
+			error.setExpectedType(ConfigurableRandomForestModel.class);
+			error.setActualType(forest.getClass());
+			throw error;
+		}
+
 		String[] labelValues = forest.getTrainingHeader().getAttributes().getLabel().getMapping().getValues()
 				.toArray(new String[0]);
 
 		// now start measuring weights
 		Criterion criterion = AbstractCriterion.createCriterion(this, 0);
 		HashMap<String, Double> attributeBenefitMap = new HashMap<>();
-		for (Model model : forest.getModels()) {
+		for (Model model : ((MetaModel) forest).getModels()) {
 			TreeModel treeModel = (TreeModel) model;
 			extractWeights(attributeBenefitMap, criterion, treeModel.getRoot(), labelValues);
 		}
 
 		AttributeWeights weights = new AttributeWeights();
-		int numberOfModels = forest.getModels().size();
+		int numberOfModels = ((MetaModel) forest).getModels().size();
 		for (Entry<String, Double> entry : attributeBenefitMap.entrySet()) {
 			weights.setWeight(entry.getKey(), entry.getValue() / numberOfModels);
 		}
@@ -161,8 +200,8 @@ public class ForestBasedWeighting extends Operator {
 				CRITERIA_NAMES[CRITERION_GAIN_RATIO], false);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeBoolean(PARAMETER_NORMALIZE_WEIGHTS, "Activates the normalization of all weights.",
-				false, false));
+		types.add(new ParameterTypeBoolean(PARAMETER_NORMALIZE_WEIGHTS, "Activates the normalization of all weights.", false,
+				false));
 		return types;
 	}
 }

@@ -1,45 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.gui.plotter.LabelRotatingPlotterAdapter;
-import com.rapidminer.gui.plotter.PlotterConfigurationModel;
-import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
-import com.rapidminer.gui.plotter.settings.ListeningJCheckBox;
-import com.rapidminer.gui.plotter.settings.ListeningJComboBox;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.operator.ports.metadata.ModelMetaData;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeAttribute;
-import com.rapidminer.parameter.ParameterTypeBoolean;
-import com.rapidminer.parameter.ParameterTypeCategory;
-import com.rapidminer.parameter.ParameterTypeString;
-import com.rapidminer.tools.Tools;
-
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -82,10 +62,30 @@ import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.TextAnchor;
 import org.jfree.util.SortOrder;
 
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.gui.plotter.LabelRotatingPlotterAdapter;
+import com.rapidminer.gui.plotter.PlotterConfigurationModel;
+import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
+import com.rapidminer.gui.plotter.settings.ListeningJCheckBox;
+import com.rapidminer.gui.plotter.settings.ListeningJComboBox;
+import com.rapidminer.gui.properties.PropertyPanel;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.ModelMetaData;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeAttribute;
+import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeCategory;
+import com.rapidminer.parameter.ParameterTypeString;
+import com.rapidminer.tools.Tools;
+
 
 /**
  * This is the Pareto chart plotter.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ParetoChartPlotter extends LabelRotatingPlotterAdapter {
@@ -142,6 +142,8 @@ public class ParetoChartPlotter extends LabelRotatingPlotterAdapter {
 		setBackground(Color.white);
 
 		countValues = new ListeningJComboBox(PARAMETER_COUNT_VALUE, 200);
+		countValues.setPreferredSize(new Dimension(countValues.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		countValues.addActionListener(new ActionListener() {
 
 			@Override
@@ -153,6 +155,8 @@ public class ParetoChartPlotter extends LabelRotatingPlotterAdapter {
 		});
 
 		sortingDirection = new ListeningJComboBox(settings, PARAMETER_SORTING_DIRECTION, SORTING_DIRECTIONS);
+		sortingDirection.setPreferredSize(new Dimension(sortingDirection.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		sortingDirection.setSelectedIndex(0);
 		sortingDirection.addActionListener(new ActionListener() {
 
@@ -334,7 +338,7 @@ public class ParetoChartPlotter extends LabelRotatingPlotterAdapter {
 		synchronized (dataTable) {
 			data.clear();
 
-			if ((this.groupByColumn < 0) || (this.countColumn < 0) || (countValueIndex < 0)) {
+			if (this.groupByColumn < 0 || this.countColumn < 0 || countValueIndex < 0) {
 				return;
 			}
 

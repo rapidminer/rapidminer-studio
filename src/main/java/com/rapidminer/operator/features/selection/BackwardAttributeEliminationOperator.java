@@ -1,24 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -47,11 +50,6 @@ import com.rapidminer.tools.math.AnovaCalculator;
 import com.rapidminer.tools.math.SignificanceCalculationException;
 import com.rapidminer.tools.math.SignificanceTestResult;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * This operator starts with the full set of attributes and, in each round, it removes each
@@ -69,17 +67,17 @@ import java.util.List;
  * <li><b>with significant decrease</b> stops as soon as the decrease is significant to the
  * specified level.</li>
  * </ul>
- * 
+ *
  * The parameter speculative_rounds defines how many rounds will be performed in a row, after a
  * first time the stopping criterion was fulfilled. If the performance increases again during the
  * speculative rounds, the elimination will be continued. Otherwise all additionally eliminated
  * attributes will be restored, as if no speculative rounds would have been executed. This might
  * help to avoid getting stuck in local optima.
- * 
+ *
  * The operator provides a value for logging the performance in each round using a ProcessLog.
- * 
+ *
  * @author Sebastian Land
- * 
+ *
  */
 public class BackwardAttributeEliminationOperator extends OperatorChain {
 
@@ -92,7 +90,7 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 	public static final String PARAMETER_ALLOWED_CONSECUTIVE_FAILS = "speculative_rounds";
 
 	public static final String[] STOPPING_BEHAVIORS = new String[] { "with decrease", "with decrease of more than",
-			"with significant decrease" };
+	"with significant decrease" };
 
 	public static final int WITH_DECREASE = 0;
 	public static final int WITH_DECREASE_EXCEEDS = 1;
@@ -160,14 +158,14 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 		int maxNumberOfFails = getParameterAsInt(PARAMETER_ALLOWED_CONSECUTIVE_FAILS);
 		int behavior = getParameterAsInt(PARAMETER_STOPPING_BEHAVIOR);
 
-		boolean useRelativeIncrease = (behavior == WITH_DECREASE_EXCEEDS) ? getParameterAsBoolean(PARAMETER_USE_RELATIVE_DECREASE)
+		boolean useRelativeIncrease = behavior == WITH_DECREASE_EXCEEDS ? getParameterAsBoolean(PARAMETER_USE_RELATIVE_DECREASE)
 				: false;
 		double maximalDecrease = 0;
 		if (useRelativeIncrease) {
 			maximalDecrease = useRelativeIncrease ? getParameterAsDouble(PARAMETER_MAX_RELATIVE_DECREASE)
 					: getParameterAsDouble(PARAMETER_MAX_ABSOLUT_DECREASE);
 		}
-		double alpha = (behavior == WITH_DECREASE_SIGNIFICANT) ? getParameterAsDouble(PARAMETER_ALPHA) : 0d;
+		double alpha = behavior == WITH_DECREASE_SIGNIFICANT ? getParameterAsDouble(PARAMETER_ALPHA) : 0d;
 
 		// remembering attributes and removing all from example set
 		Attribute[] attributeArray = new Attribute[numberOfAttributes];
@@ -189,6 +187,9 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 		currentAttributes = attributes;
 		PerformanceVector lastPerformance = getPerformance(exampleSet);
 		PerformanceVector bestPerformanceEver = lastPerformance;
+		// init operator progress
+		getProgress().setTotal(maxNumberOfAttributes * numberOfAttributes);
+
 		for (i = 0; i < maxNumberOfAttributes && !earlyAbort; i++) {
 			// setting values for logging
 			currentNumberOfFeatures = numberOfAttributes - i - 1;
@@ -213,6 +214,7 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 					attributes.addRegular(attributeArray[current]);
 					currentAttributes = null; // removing reference
 				}
+				getProgress().step();
 			}
 			double currentFitness = currentBestPerformance.getMainCriterion().getFitness();
 			if (i != 0) {
@@ -281,6 +283,9 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 			// switching best index off
 			attributes.remove(attributeArray[bestIndex]);
 			selected[bestIndex] = false;
+
+			// update operator progress
+			getProgress().step();
 		}
 		// add predictively removed attributes: speculative execution did not yield good result
 		for (Integer removeIndex : speculativeList) {

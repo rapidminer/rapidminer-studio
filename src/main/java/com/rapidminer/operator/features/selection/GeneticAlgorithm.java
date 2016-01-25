@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -42,16 +43,13 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * A genetic algorithm for feature selection (mutation=switch features on and off,
  * crossover=interchange used features). Selection is done by roulette wheel. Genetic algorithms are
  * general purpose optimization / search algorithms that are suitable in case of no or little
  * problem knowledge. <br/>
- * 
+ *
  * A genetic algorithm works as follows
  * <ol>
  * <li>Generate an initial population consisting of <code>population_size</code> individuals. Each
@@ -69,10 +67,10 @@ import java.util.List;
  * random according to their probability.</li>
  * <li>As long as the fitness improves, go to 2</li>
  * </ol>
- * 
+ *
  * If the example set contains value series attributes with blocknumbers, the whole block will be
  * switched on and off.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer
  */
 public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
@@ -202,8 +200,8 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 				if (weight > 1.0d) {
 					weight = 1.0d;
 				}
-				if ((weight > 0) && (weight < 1.0d)) {
-					if (weight < (1.0d - getParameterAsDouble(PARAMETER_P_INITIALIZE))) {
+				if (weight > 0 && weight < 1.0d) {
+					if (weight < 1.0d - getParameterAsDouble(PARAMETER_P_INITIALIZE)) {
 						weight = 1.0d;
 					} else {
 						weight = 0.0d;
@@ -214,7 +212,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 			if (!useExactNumber) {
 				Individual individual = new Individual(initialWeights);
 				int numberOfFeatures = individual.getNumberOfUsedAttributes();
-				if (((!restrictMaxNumber) || (numberOfFeatures <= maxNumber)) && (numberOfFeatures >= minNumber)) {
+				if ((!restrictMaxNumber || numberOfFeatures <= maxNumber) && numberOfFeatures >= minNumber) {
 					initP.add(individual);
 				} else {
 					logWarning("Input attribute weights found but number of selected features do not match specified minimum and maximum number, ignoring input weights.");
@@ -247,7 +245,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 			while (initP.getNumberOfIndividuals() < getParameterAsInt(PARAMETER_POPULATION_SIZE)) {
 				double[] weights = new double[numberOfAttributes];
 
-				if ((initialWeights != null) && (getRandom().nextBoolean())) {
+				if (initialWeights != null && getRandom().nextBoolean()) {
 					for (int i = 0; i < weights.length; i++) {
 						if (getRandom().nextDouble() < 1.0d / initialWeights.length) {
 							if (initialWeights[i] > 0.0d) {
@@ -262,7 +260,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 				} else {
 					double p = getParameterAsDouble(PARAMETER_P_INITIALIZE);
 					for (int i = 0; i < weights.length; i++) {
-						if (getRandom().nextDouble() < (1.0d - p)) {
+						if (getRandom().nextDouble() < 1.0d - p) {
 							weights[i] = 1.0d;
 						}
 					}
@@ -281,7 +279,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 				if (restrictMaxNumber && maxNumber > minNumber) {
 					while (numberOfSelectedAttributes > maxNumber) {
 						// double probability to converge faster
-						double deSelectProb = ((numberOfSelectedAttributes - maxNumber))
+						double deSelectProb = (numberOfSelectedAttributes - maxNumber)
 								/ ((double) numberOfSelectedAttributes - 1);
 						for (int i = 0; i < numberOfAttributes; i++) {
 							if (weights[i] > 0 && getRandom().nextDouble() < deSelectProb) {
@@ -291,8 +289,8 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 						}
 					}
 				}
-				if (((!restrictMaxNumber) || (numberOfSelectedAttributes <= maxNumber))
-						&& (numberOfSelectedAttributes >= minNumber)) {
+				if ((!restrictMaxNumber || numberOfSelectedAttributes <= maxNumber)
+						&& numberOfSelectedAttributes >= minNumber) {
 					initP.add(individual);
 				}
 			}
@@ -396,17 +394,17 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 		type.setExpert(false);
 		types.add(type);
 
-		type = (new ParameterTypeBoolean(
+		type = new ParameterTypeBoolean(
 				PARAMETER_INITIALIZE_WITH_INPUT_WEIGHTS,
 				"Indicates if this operator should look for attribute weights in the given input and use the input weights of all known attributes as starting point for the optimization.",
-				false));
+				false);
 		type.setDeprecated();
 		types.add(type);
 
 		types.addAll(super.getParameterTypes());
 
-		type = (new ParameterTypeDouble(PARAMETER_P_INITIALIZE, "Initial probability for an attribute to be switched on.",
-				0, 1, 0.5));
+		type = new ParameterTypeDouble(PARAMETER_P_INITIALIZE, "Initial probability for an attribute to be switched on.", 0,
+				1, 0.5);
 		types.add(type);
 		type = new ParameterTypeDouble(
 				PARAMETER_P_MUTATION,
@@ -416,10 +414,11 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 		type = new ParameterTypeDouble(PARAMETER_P_CROSSOVER, "Probability for an individual to be selected for crossover.",
 				0.0d, 1.0d, 0.5d);
 		types.add(type);
-		type = (new ParameterTypeCategory(PARAMETER_CROSSOVER_TYPE, "Type of the crossover.",
-				SelectionCrossover.CROSSOVER_TYPES, SelectionCrossover.UNIFORM));
+		type = new ParameterTypeCategory(PARAMETER_CROSSOVER_TYPE, "Type of the crossover.",
+				SelectionCrossover.CROSSOVER_TYPES, SelectionCrossover.UNIFORM);
 		type.setExpert(true);
 		types.add(type);
 		return types;
 	}
+
 }

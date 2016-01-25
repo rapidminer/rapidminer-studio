@@ -1,28 +1,45 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.renderer.models;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Collections;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.gui.actions.export.AbstractPrintableIOObjectPanel;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
 import com.rapidminer.gui.plotter.LabelRotatingPlotterAdapter;
 import com.rapidminer.gui.plotter.Plotter;
 import com.rapidminer.gui.plotter.PlotterAdapter;
@@ -30,6 +47,7 @@ import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.plotter.RangeablePlotterAdapter;
 import com.rapidminer.gui.plotter.charts.DistributionPlotter;
 import com.rapidminer.gui.plotter.settings.ListeningJComboBox;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.bayes.DistributionModel;
@@ -44,25 +62,10 @@ import com.rapidminer.parameter.ParameterTypeTupel;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.report.Reportable;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Collections;
-import java.util.List;
-
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
 
 /**
  * A renderer for the plot view of a distribution model.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class DistributionModelPlotRenderer extends AbstractRenderer {
@@ -90,10 +93,13 @@ public class DistributionModelPlotRenderer extends AbstractRenderer {
 			settings.setPlotter(plotter);
 
 			plotterComponent = plotter.getPlotter();
+			plotterComponent.setBorder(BorderFactory.createMatteBorder(15, 0, 10, 5, Colors.WHITE));
 			add(plotterComponent, BorderLayout.CENTER);
 
 			final ListeningJComboBox combo = new ListeningJComboBox(settings, PlotterAdapter.PARAMETER_PLOT_COLUMN + "_"
 					+ PlotterAdapter.transformParameterName(plotter.getPlotName()), distributionModel.getAttributeNames());
+			combo.setPreferredSize(new Dimension(200, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+			combo.putClientProperty(RapidLookTools.PROPERTY_INPUT_BACKGROUND_DARK, true);
 			GridBagLayout layout = new GridBagLayout();
 			GridBagConstraints c = new GridBagConstraints();
 			c.fill = GridBagConstraints.BOTH;
@@ -103,6 +109,9 @@ public class DistributionModelPlotRenderer extends AbstractRenderer {
 			c.gridwidth = GridBagConstraints.REMAINDER;
 
 			JPanel boxPanel = new JPanel(layout);
+			boxPanel.setBorder(BorderFactory.createMatteBorder(10, 8, 5, 10, Colors.WHITE));
+			boxPanel.setOpaque(true);
+			boxPanel.setBackground(Colors.WHITE);
 			JLabel label = new JLabel("Attribute:");
 			layout.setConstraints(label, c);
 			boxPanel.add(label);
@@ -114,10 +123,10 @@ public class DistributionModelPlotRenderer extends AbstractRenderer {
 			layout.setConstraints(rotateLabels, c);
 			boxPanel.add(rotateLabels);
 
-			c.weighty = 1.0d;
-			JPanel fillPanel = new JPanel();
-			layout.setConstraints(fillPanel, c);
-			boxPanel.add(fillPanel);
+			c.weighty = 1.0;
+			JLabel filler = new JLabel();
+			layout.setConstraints(filler, c);
+			boxPanel.add(filler);
 
 			add(boxPanel, BorderLayout.WEST);
 

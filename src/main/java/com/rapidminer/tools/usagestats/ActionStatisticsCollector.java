@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.usagestats;
 
@@ -43,6 +41,7 @@ import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.components.AbstractLinkButton;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.XMLException;
@@ -83,6 +82,12 @@ public enum ActionStatisticsCollector {
 	public static final String TYPE_TEMPLATE = "template";
 	public static final String TYPE_RENDERER = "renderer";
 	public static final String TYPE_CHART = "chart";
+
+	/** new data access dialog (since 7.0.0) */
+	public static final String TYPE_NEW_IMPORT = "new_import";
+
+	/** start-up dialog (since 7.0.0) */
+	public static final String TYPE_GETTING_STARTED = "getting_started";
 
 	public static final String OPERATOR_EVENT_EXECUTION = "EXECUTE";
 	public static final String OPERATOR_EVENT_STOPPED = "STOPPED";
@@ -199,8 +204,8 @@ public enum ActionStatisticsCollector {
 
 			@Override
 			public void dockableStateChanged(DockableStateChangeEvent e) {
-				log(TYPE_DOCKABLE, e.getNewState().getDockable().getDockKey().getKey(), e.getNewState().getLocation()
-						.toString());
+				log(TYPE_DOCKABLE, e.getNewState().getDockable().getDockKey().getKey(),
+						e.getNewState().getLocation().toString());
 			}
 		});
 		log(TYPE_CONSTANT, "start", null);
@@ -224,6 +229,13 @@ public enum ActionStatisticsCollector {
 						log(TYPE_ACTION, actionCommand, "clicked");
 					}
 				}
+			}
+		} else if (component instanceof AbstractLinkButton) {
+			AbstractLinkButton button = (AbstractLinkButton) component;
+			Action action = button.getAction();
+			// Only log ResourceActions
+			if (action instanceof ResourceAction) {
+				log(TYPE_ACTION, ((ResourceAction) action).getKey(), "clicked");
 			}
 		}
 	}
@@ -301,8 +313,8 @@ public enum ActionStatisticsCollector {
 			NodeList actionElements = element.getElementsByTagName(TYPE_ACTION);
 			for (int i = 0; i < actionElements.getLength(); i++) {
 				Element actionElement = (Element) actionElements.item(i);
-				Key key = new Key(XMLTools.getTagContents(actionElement, "type"), XMLTools.getTagContents(actionElement,
-						"value"), XMLTools.getTagContents(actionElement, "arg"));
+				Key key = new Key(XMLTools.getTagContents(actionElement, "type"),
+						XMLTools.getTagContents(actionElement, "value"), XMLTools.getTagContents(actionElement, "arg"));
 				counts.put(key, XMLTools.getTagContentsAsLong(actionElement, "count"));
 			}
 		}

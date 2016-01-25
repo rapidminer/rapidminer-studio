@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -36,7 +34,7 @@ import com.rapidminer.tools.LogService;
 
 /**
  * A renderer for operator list cells that displays the operator's icon and name.
- * 
+ *
  * @author Helge Homburg, Ingo Mierswa
  */
 public class OperatorListCellRenderer extends DefaultListCellRenderer {
@@ -64,15 +62,12 @@ public class OperatorListCellRenderer extends DefaultListCellRenderer {
 		if (coloredBackground && !isSelected && index % 2 != 0) {
 			label.setBackground(SwingTools.LIGHTEST_BLUE);
 		}
-		// label.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
 		Operator operator = null;
 		try {
 			operator = operatorDescription.createOperatorInstance();
 		} catch (OperatorCreationException e) {
 			// tries to create operator
-			// LogService.getGlobal().log("Problem during creation of operator instance: " +
-			// e.getMessage(), LogService.WARNING);
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.gui.tools.OperatorListCellRenderer.problem_during_creating_of_operator_instance",
 					e.getMessage());
@@ -88,6 +83,7 @@ public class OperatorListCellRenderer extends DefaultListCellRenderer {
 				&& operator.getOperatorDescription().getDeprecationInfo() != null) {
 			label.setForeground(Color.LIGHT_GRAY);
 		}
+		label.setBorder(null);
 		return label;
 	}
 }

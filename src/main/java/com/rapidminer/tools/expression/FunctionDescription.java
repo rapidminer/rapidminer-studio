@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,6 +18,8 @@
  */
 package com.rapidminer.tools.expression;
 
+import java.util.Objects;
+
 import com.rapidminer.gui.properties.ExpressionPropertyDialog;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
@@ -30,7 +32,7 @@ import com.rapidminer.tools.Ontology;
  */
 public class FunctionDescription {
 
-	private String displayName;
+	final private String displayName;
 
 	private String helpTextName;
 
@@ -38,7 +40,7 @@ public class FunctionDescription {
 	private String functionDescription;
 
 	/** name of the group under which this is shown in the {@link ExpressionPropertyDialog} */
-	private String groupName;
+	final private String groupName;
 
 	private int numberOfArguments;
 
@@ -166,4 +168,22 @@ public class FunctionDescription {
 		return this.functionNameWithParameters;
 	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(groupName, displayName);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (!(other instanceof FunctionDescription)) {
+			return false;
+		}
+		FunctionDescription otherFunctionDescription = (FunctionDescription) other;
+		return getGroupName().equals(otherFunctionDescription.getGroupName())
+		        && getDisplayName().equals(otherFunctionDescription.getDisplayName());
+	}
 }
+

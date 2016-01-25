@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
@@ -31,31 +29,30 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
-import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
 import com.rapidminer.gui.tools.AttributeGuiTools;
 import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ProgressThread;
-import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.DateTimeAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.NominalAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.NumericalAttributeStatisticsModel;
-import com.rapidminer.gui.viewer.renderer.DataTableNumericalRenderer;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 
 
 /**
- * Can be used to display (parts of) the data by means of a JTable.
- * 
+ * Can be used to display (parts of) the data by means of a JTable. Used to display
+ * {@link ExampleSet} results in the {@link DataViewer}.
+ *
  * @author Ingo Mierswa
  */
 public class DataViewerTable extends ExtendedJTable {
@@ -84,6 +81,9 @@ public class DataViewerTable extends ExtendedJTable {
 		setFixFirstColumnForRearranging(true);
 		installToolTip();
 		setRowHeight(getRowHeight() + 5);
+
+		// handles the highlighting of the currently hovered row
+		setRowHighlighting(true);
 	}
 
 	public void setExampleSet(ExampleSet exampleSet) {
@@ -120,8 +120,7 @@ public class DataViewerTable extends ExtendedJTable {
 		Iterator<Attribute> a = exampleSet.getAttributes().iterator();
 		while (a.hasNext()) {
 			Attribute attribute = a.next();
-			mappingAttributeNamesToColor.put(attribute.getName(),
-					AttributeGuiTools.getColorForAttributeRole(Attributes.ATTRIBUTE_NAME));
+			mappingAttributeNamesToColor.put(attribute.getName(), Colors.WHITE);
 			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE)) {
 				dateColumns[index] = DATE_FORMAT;
 			} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.TIME)) {
@@ -139,27 +138,20 @@ public class DataViewerTable extends ExtendedJTable {
 			@Override
 			public Color getCellColor(int row, int column) {
 				int col = convertColumnIndexToModel(column);
+				Color returnCol;
 				if (dvTableModel != null && dvTableModel.getColumnAttribute(col) != null) {
 					Color color = mappingAttributeNamesToColor.get(dvTableModel.getColumnAttribute(col).getName());
-					if (row % 2 == 0) {
-						return darkenColor(color, 0.95f);
-					} else {
-						return darkenColor(color, 0.90f);
-					}
+					returnCol = color;
 				} else {
-					if (row % 2 == 0) {
-						return SwingTools.FAINT_BLUE;
-					} else {
-						return SwingTools.FAINTER_BLUE;
-					}
+					returnCol = Colors.WHITE;
 				}
+
+				return returnCol;
 			}
+
 		});
 
-		TableCellRenderer renderer = new DataTableNumericalRenderer();
-		setDefaultRenderer(Double.class, renderer);
-
-		setGridColor(SwingTools.LIGHTEST_BLUE);
+		setGridColor(Colors.TABLE_CELL_BORDER);
 
 		setCutOnLineBreak(true);
 		setMaximalTextLength(MAXIMAL_CONTENT_LENGTH);
@@ -199,7 +191,7 @@ public class DataViewerTable extends ExtendedJTable {
 	/** This method ensures that the correct tool tip for the current column is delivered. */
 	@Override
 	protected JTableHeader createDefaultTableHeader() {
-		return new JTableHeader(columnModel) {
+		JTableHeader header = new JTableHeader(columnModel) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -211,6 +203,8 @@ public class DataViewerTable extends ExtendedJTable {
 				return DataViewerTable.this.getHeaderToolTipText(realColumnIndex);
 			}
 		};
+		header.putClientProperty(RapidLookTools.PROPERTY_TABLE_HEADER_BACKGROUND, Colors.WHITE);
+		return header;
 	}
 
 	@Override
@@ -291,19 +285,5 @@ public class DataViewerTable extends ExtendedJTable {
 		}
 
 		return null;
-	}
-
-	/**
-	 * Darkens the given {@link Color} by the specified factor.
-	 * 
-	 * @param color
-	 * @param factor
-	 * @return
-	 */
-	private static Color darkenColor(final Color color, final float factor) {
-		// convert to H(ue) S(aturation) B(rightness), which is designed for this kind of operation
-		float hsb[] = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
-		// turn down brightness and return color
-		return Color.getHSBColor(hsb[0], hsb[1], factor * hsb[2]);
 	}
 }

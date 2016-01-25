@@ -1,26 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.charts;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
@@ -57,6 +56,7 @@ import org.jfree.ui.RectangleEdge;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.plotter.PlotterAdapter;
 import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
@@ -65,6 +65,7 @@ import com.rapidminer.gui.plotter.settings.ListeningJCheckBox;
 import com.rapidminer.gui.plotter.settings.ListeningJComboBox;
 import com.rapidminer.gui.plotter.settings.ListeningJSlider;
 import com.rapidminer.gui.plotter.settings.ListeningListSelectionModel;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.ExtendedJList;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedListModel;
@@ -167,8 +168,10 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 		System.arraycopy(AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES, 0, allFunctions, 1,
 				AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES.length);
 		aggregationFunction = new ListeningJComboBox(settings, "_" + PARAMETERS_AGGREGATION, allFunctions);
+		aggregationFunction.setPreferredSize(new Dimension(aggregationFunction.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		aggregationFunction
-		.setToolTipText("Select the type of the aggregation function which should be used for grouped values.");
+				.setToolTipText("Select the type of the aggregation function which should be used for grouped values.");
 		aggregationFunction.addActionListener(new ActionListener() {
 
 			@Override
@@ -204,7 +207,6 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 		});
 		explodingGroupList.setForeground(Color.BLACK);
 		explodingGroupList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		explodingGroupList.setBorder(BorderFactory.createLoweredBevelBorder());
 		explodingGroupList.setCellRenderer(new PlotterPanel.LineStyleCellRenderer(this));
 
 		updateGroups();
@@ -371,10 +373,10 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 					// + selectedAggregationFunction +
 					// "', using 'average' as default.");
 					LogService
-					.getRoot()
-					.log(Level.WARNING,
-							"com.rapidminer.gui.plotter.charts.AbstractPieChartPlotter.instantiating_aggregation_function_error",
-							selectedAggregationFunction);
+							.getRoot()
+							.log(Level.WARNING,
+									"com.rapidminer.gui.plotter.charts.AbstractPieChartPlotter.instantiating_aggregation_function_error",
+									selectedAggregationFunction);
 					aggregation = new AverageFunction();
 				}
 			}
@@ -614,8 +616,9 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 			case 4:
 				if (isSupportingExplosion()) {
 					explodingGroupList
-					.setToolTipText("Select the groups which should explode, i.e. which should be located outside of the chart to the specified extent.");
+							.setToolTipText("Select the groups which should explode, i.e. which should be located outside of the chart to the specified extent.");
 					JScrollPane pane = new ExtendedJScrollPane(explodingGroupList);
+					pane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Colors.TEXTFIELD_BORDER));
 					return pane;
 				} else {
 					return null;

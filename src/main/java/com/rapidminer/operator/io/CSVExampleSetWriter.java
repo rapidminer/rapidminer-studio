@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -33,6 +31,8 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -99,10 +99,48 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	 * @param formatDate
 	 *            if {@code true} dates are formatted to "M/d/yy h:mm a", otherwise milliseconds
 	 *            since the epoch are used
+	 *
+	 * @deprecated please use
+	 *             {@link CSVExampleSetWriter#writeCSV(ExampleSet, PrintWriter, String, boolean, boolean, boolean, OperatorProgress)}
+	 *             instead to support operator progress.
 	 */
+	@Deprecated
 	public static void writeCSV(ExampleSet exampleSet, PrintWriter out, String colSeparator, boolean quoteNomValues,
 			boolean writeAttribNames, boolean formatDate) {
-		writeCSV(exampleSet, out, colSeparator, quoteNomValues, writeAttribNames, formatDate, null);
+		try {
+			writeCSV(exampleSet, out, colSeparator, quoteNomValues, writeAttribNames, formatDate, null, null);
+		} catch (ProcessStoppedException e) {
+			// can not happen because we provide no OperatorProgressListener
+		}
+	}
+
+	/**
+	 * Writes the exampleSet with the {@link PrintWriter} out, using colSeparator as column
+	 * separator.
+	 *
+	 * @param exampleSet
+	 *            the example set to write
+	 * @param out
+	 *            the {@link PrintWriter}
+	 * @param colSeparator
+	 *            the column separator
+	 * @param quoteNomValues
+	 *            if {@code true} nominal values are quoted
+	 * @param writeAttribNames
+	 *            if {@code true} the attribute names are written into the first row
+	 * @param formatDate
+	 *            if {@code true} dates are formatted to "M/d/yy h:mm a", otherwise milliseconds
+	 *            since the epoch are used
+	 * @param opProg
+	 *            the {@link OperatorProgress} is used to provide a more detailed progress.
+	 *            Within this method the progress will be increased by number of examples times the
+	 *            number of attributes. If you do not want the operator progress, just provide
+	 *            <code> null <code>.
+	 */
+	public static void writeCSV(ExampleSet exampleSet, PrintWriter out, String colSeparator, boolean quoteNomValues,
+			boolean writeAttribNames, boolean formatDate, OperatorProgress operatorProgress)
+					throws ProcessStoppedException {
+		writeCSV(exampleSet, out, colSeparator, quoteNomValues, writeAttribNames, formatDate, null, operatorProgress);
 	}
 
 	/**
@@ -125,9 +163,50 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	 * @param infinitySymbol
 	 *            the symbol to use for infinite values; if {@code null} the default symbol
 	 *            "Infinity" is used
+	 *
+	 * @deprecated please use
+	 *             {@link CSVExampleSetWriter#writeCSV(ExampleSet, PrintWriter, String, boolean, boolean, boolean, String, OperatorProgress)}
+	 *             to support operator progress.
 	 */
+	@Deprecated
 	public static void writeCSV(ExampleSet exampleSet, PrintWriter out, String colSeparator, boolean quoteNomValues,
 			boolean writeAttribNames, boolean formatDate, String infinitySymbol) {
+		try {
+			writeCSV(exampleSet, out, colSeparator, quoteNomValues, writeAttribNames, formatDate, infinitySymbol, null);
+		} catch (ProcessStoppedException e) {
+			// can not happen because we provide no OperatorProcessListener
+		}
+	}
+
+	/**
+	 * Writes the exampleSet with the {@link PrintWriter} out, using colSeparator as column
+	 * separator and infinitySybol to denote infinite values.
+	 *
+	 * @param exampleSet
+	 *            the example set to write
+	 * @param out
+	 *            the {@link PrintWriter}
+	 * @param colSeparator
+	 *            the column separator
+	 * @param quoteNomValues
+	 *            if {@code true} nominal values are quoted
+	 * @param writeAttribNames
+	 *            if {@code true} the attribute names are written into the first row
+	 * @param formatDate
+	 *            if {@code true} dates are formatted to "M/d/yy h:mm a", otherwise milliseconds
+	 *            since the epoch are used
+	 * @param infinitySymbol
+	 *            the symbol to use for infinite values; if {@code null} the default symbol
+	 *            "Infinity" is used
+	 * @param opProg
+	 *            the {@link OperatorProgress} is used to provide a more detailed progress.
+	 *            Within this method the progress will be increased by number of examples times the
+	 *            number of attributes. If you do not want the operator progress, just provide
+	 *            <code> null <code>.
+	 */
+	public static void writeCSV(ExampleSet exampleSet, PrintWriter out, String colSeparator, boolean quoteNomValues,
+			boolean writeAttribNames, boolean formatDate, String infinitySymbol, OperatorProgress opProg)
+					throws ProcessStoppedException {
 		String negativeInfinitySymbol = null;
 		if (infinitySymbol != null) {
 			negativeInfinitySymbol = "-" + infinitySymbol;
@@ -156,10 +235,12 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		}
 
 		// write data
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			Iterator<Attribute> a = exampleSet.getAttributes().allAttributes();
 			boolean first = true;
 			while (a.hasNext()) {
+
 				Attribute attribute = a.next();
 				if (!first) {
 					out.print(columnSeparator);
@@ -198,7 +279,17 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 				}
 				first = false;
 			}
+
 			out.println();
+
+			// trigger operator progress every 100 examples
+			if (opProg != null) {
+				++progressCounter;
+				if (progressCounter % 100 == 0) {
+					opProg.step(100);
+					progressCounter = 0;
+				}
+			}
 		}
 	}
 
@@ -212,8 +303,14 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		PrintWriter out = null;
 		try {
 			out = new PrintWriter(new OutputStreamWriter(outputStream, Encoding.getEncoding(this)));
-			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, formatDate);
+
+			// init operator progress
+			getProgress().setTotal(exampleSet.size() * exampleSet.getAttributes().allSize());
+
+			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, formatDate,
+					getProgress());
 			out.flush();
+			getProgress().complete();
 		} finally {
 			if (out != null) {
 				out.close();

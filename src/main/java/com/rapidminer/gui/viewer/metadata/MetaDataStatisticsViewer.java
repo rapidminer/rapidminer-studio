@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer.metadata;
 
@@ -73,8 +71,6 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 
 import org.jdesktop.swingx.prompt.PromptSupport;
 
@@ -83,11 +79,14 @@ import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.gui.actions.export.PrintableComponent;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ScrollableJPopupMenu;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.TextFieldWithAction;
+import com.rapidminer.gui.tools.components.DropDownPopupButton;
+import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider;
 import com.rapidminer.gui.viewer.metadata.actions.CopyAllMetaDataToClipboardAction;
 import com.rapidminer.gui.viewer.metadata.actions.ShowConstructionValueAction;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
@@ -126,8 +125,11 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 	private static final long serialVersionUID = -1027619839144846140L;
 
+	/** the background color */
+	private static final Color COLOR_BACKGROUND = Color.WHITE;
+
 	/** the dimension for the attribute name header */
-	private static final Dimension DIMENSION_HEADER_ATTRIBUTE_NAME = new Dimension(200, 20);
+	private static final Dimension DIMENSION_HEADER_ATTRIBUTE_NAME = new Dimension(200, 30);
 
 	/** the dimension for the attribute type header */
 	private static final Dimension DIMENSION_HEADER_TYPE = new Dimension(90, 20);
@@ -136,7 +138,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	private static final Dimension DIMENSION_HEADER_MISSINGS = new Dimension(75, 20);
 
 	/** the minimum size for the search field */
-	private static final Dimension DIMENSION_SEARCH_FIELD = new Dimension(50, 20);
+	private static final Dimension DIMENSION_SEARCH_FIELD = new Dimension(140, 20);
 
 	/** minimum margin which must be left when enlarging the name column */
 	private static final int RESIZE_MARGIN_ENLARGE = 450;
@@ -145,27 +147,29 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	private static final int RESIZE_MARGIN_SHRINK = 50;
 
 	/** the font size of the special/regular labels */
-	private static final float FONT_SIZE_LABEL = 16;
+	private static final float FONT_SIZE_LABEL = 12;
 
 	/** arrow icon with two arrows pointing left */
 	private static final ImageIcon ICON_ARROW_FIRST = SwingTools.createIcon("16/" + "navigate_left2.png");
 
 	/** arrow icon with an arrow pointing left */
-	private static final ImageIcon ICON_ARROW_LEFT = SwingTools.createIcon("16/" + "navigate_left.png");
+	static final ImageIcon ICON_ARROW_LEFT = SwingTools.createIcon("16/" + "navigate_left.png");
 
 	/** arrow icon with an arrow pointing right */
-	private static final ImageIcon ICON_ARROW_RIGHT = SwingTools.createIcon("16/" + "navigate_right.png");
+	static final ImageIcon ICON_ARROW_RIGHT = SwingTools.createIcon("16/" + "navigate_right.png");
 
 	/** arrow icon with two arrows pointing right */
-	private static final ImageIcon ICON_ARROW_LAST = SwingTools.createIcon("16/" + "navigate_right2.png");
+	static final ImageIcon ICON_ARROW_LAST = SwingTools.createIcon("16/" + "navigate_right2.png");
 
 	/** arrow icon with an arrow pointing up */
-	private static final ImageIcon ICON_ARROW_UP = SwingTools.createIcon("16/" + "navigate_open.png");
+	static final ImageIcon ICON_ARROW_UP = SwingTools.createIcon("16/" + "navigate_up.png");
 
 	/** arrow icon with an arrow pointing down */
-	private static final ImageIcon ICON_ARROW_DOWN = SwingTools.createIcon("16/" + "navigate_close.png");
+	static final ImageIcon ICON_ARROW_DOWN = SwingTools.createIcon("16/" + "navigate_down.png");
 
-	/** icon used in the {@link TextFieldWithAction} when the filter remove action is hovered */
+	/**
+	 * icon used in the {@link TextFieldWithAction} when the filter remove action is hovered
+	 */
 	private final ImageIcon CLEAR_FILTER_HOVERED_ICON = SwingTools.createIcon("16/x-mark_orange.png");
 
 	/**
@@ -179,12 +183,6 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 	/** the client property key to indicate the scrollbar should scroll down */
 	private static final String PROPERTY_SCROLL_DOWN = "scrollDown";
-
-	/**
-	 * hack to prevent filter popup from opening itself again when you click the button to actually
-	 * close it while it is open
-	 */
-	private long lastPopupCloseTime;
 
 	/** header panel which contains column header components */
 	private JPanel columnHeaderPanel;
@@ -255,7 +253,9 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	/** if set, the custom dimension for the attribute name column */
 	private Dimension nameDim;
 
-	/** this map maps the respective {@link AttributeStatisticsPanel} to their {@link Integer} index */
+	/**
+	 * this map maps the respective {@link AttributeStatisticsPanel} to their {@link Integer} index
+	 */
 	private final Map<Integer, AttributeStatisticsPanel> mapOfAttributeStatisticsPanels;
 
 	private JPanel outerPanel;
@@ -357,11 +357,13 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 				} else {
 					int newWidth = nameDim.width + diff;
 					int minWidth = RESIZE_MARGIN_SHRINK;
-					// max width is the size of the header panel minus the size of the other
+					// max width is the size of the header panel minus the size
+					// of the other
 					// elements to the right
 					int maxWidth = columnHeaderPanel.getWidth()
 							- (DIMENSION_HEADER_MISSINGS.width + DIMENSION_HEADER_TYPE.width + DIMENSION_SEARCH_FIELD.width + RESIZE_MARGIN_ENLARGE);
-					// do not allow shrinking/enlarging over a limit to prevent GUI breaking
+					// do not allow shrinking/enlarging over a limit to prevent
+					// GUI breaking
 					if (newWidth > maxWidth) {
 						newWidth = maxWidth;
 					}
@@ -409,7 +411,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 						revalidateAttributePanels();
 						break;
 					case ORDER_CHANGED:
-						// this is fired when UpdateQueue triggers, which is outside the EDT
+						// this is fired when UpdateQueue triggers, which is
+						// outside the EDT
 						SwingUtilities.invokeLater(new Runnable() {
 
 							@Override
@@ -463,7 +466,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 					listOfAttributes.add(regularAttributes.next().getAttribute());
 				}
 
-				// we want to be notified of enlarge events, because we want to keep the scrollbar
+				// we want to be notified of enlarge events, because we want to
+				// keep the scrollbar
 				// at the bottom
 				AttributeStatisticsEventListener attEventListener = new AttributeStatisticsEventListener() {
 
@@ -471,7 +475,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 					public void modelChanged(final AttributeStatisticsEvent e) {
 						if (e.getEventType() == EventType.ENLARGED_CHANGED) {
 							JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
-							// if the scrollbar was at the bottom before, ask it to place itself at
+							// if the scrollbar was at the bottom before, ask it
+							// to place itself at
 							// the bottom again next adjustment
 							if (scrollBar.getValue() + scrollBar.getHeight() >= scrollBar.getMaximum()) {
 								scrollBar.putClientProperty(PROPERTY_SCROLL_DOWN, true);
@@ -508,7 +513,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 			@Override
 			public void process(final List<AttributeStatisticsPanel> list) {
-				// add the AttributeStatisticsPanel on the attribute panel to display them
+				// add the AttributeStatisticsPanel on the attribute panel to
+				// display them
 				for (AttributeStatisticsPanel asp : list) {
 					gbcAttPanel.gridy += 1;
 					attPanel.add(asp, gbcAttPanel);
@@ -518,7 +524,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 			@Override
 			protected void done() {
 				try {
-					// do this to see if any errors popped up while doing the above
+					// do this to see if any errors popped up while doing the
+					// above
 					get();
 
 					// remove placeholder
@@ -547,11 +554,15 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	private void initGUI() {
 		outerPanel = new JPanel();
 		outerPanel.setLayout(new GridBagLayout());
+		outerPanel.setBackground(COLOR_BACKGROUND);
+
 		attPanel = new JPanel();
+		attPanel.setOpaque(false);
 		attPanel.setLayout(new GridBagLayout());
 		JPanel footerPanel = new JPanel();
 		footerPanel.setLayout(new GridBagLayout());
-		footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
+		footerPanel.setOpaque(false);
+		footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TEXTFIELD_BORDER));
 
 		GridBagConstraints gbcOuter = new GridBagConstraints();
 		gbcOuter.insets = new Insets(5, 30, 5, 30);
@@ -563,19 +574,21 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 		// create attribute 'column' headers
 		columnHeaderPanel = new JPanel();
+		columnHeaderPanel.setOpaque(false);
 		columnHeaderPanel.setLayout(new GridBagLayout());
+		columnHeaderPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 5));
 		GridBagConstraints gbc = new GridBagConstraints();
 
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.insets = new Insets(2, 35, 2, 10);
+		gbc.insets = new Insets(2, 53, 2, 10);
 		gbc.weightx = 0.0;
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.fill = GridBagConstraints.NONE;
 		sortingLabelAttName = new JLabel(
 				I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.headers.name.label"));
 		sortingLabelAttName
-				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.headers.name.tip"));
+		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.headers.name.tip"));
 		sortingLabelAttName.setMinimumSize(DIMENSION_HEADER_ATTRIBUTE_NAME);
 		sortingLabelAttName.setPreferredSize(DIMENSION_HEADER_ATTRIBUTE_NAME);
 		sortingLabelAttName.setFont(sortingLabelAttName.getFont().deriveFont(FONT_SIZE_LABEL));
@@ -594,7 +607,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		});
 		columnHeaderPanel.add(sortingLabelAttName, gbc);
 
-		// this label can be dragged and dropped to resize the attribute name column
+		// this label can be dragged and dropped to resize the attribute name
+		// column
 		resizeNameColumnLabel = new JLabel(SwingTools.createIcon("16/"
 				+ I18N.getGUIMessage("gui.label.meta_data_stats.resize.icon")));
 		resizeNameColumnLabel.setToolTipText(I18N.getGUIMessage("gui.label.meta_data_stats.resize.tip"));
@@ -607,15 +621,15 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		resizeNameColumnLabel.addMouseMotionListener(resizeMouseListener);
 
 		gbc.gridx += 1;
-		gbc.insets = new Insets(0, 0, 0, 10);
+		gbc.insets = new Insets(0, 10, 0, 10);
 		columnHeaderPanel.add(resizeNameColumnLabel, gbc);
 
 		gbc.gridx += 1;
-		gbc.insets = new Insets(2, 0, 2, 10);
+		gbc.insets = new Insets(2, 10, 2, 10);
 		sortingLabelAttType = new JLabel(
 				I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.headers.type.label"));
 		sortingLabelAttType
-				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.headers.type.tip"));
+		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.headers.type.tip"));
 		sortingLabelAttType.setMinimumSize(DIMENSION_HEADER_TYPE);
 		sortingLabelAttType.setPreferredSize(DIMENSION_HEADER_TYPE);
 		sortingLabelAttType.setFont(sortingLabelAttType.getFont().deriveFont(FONT_SIZE_LABEL));
@@ -689,7 +703,6 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 			final JCheckBox filterValueTypeCheckbox = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
 					"gui.label.meta_data_stats.filter.value_type.label", valueTypeString));
 			filterValueTypeCheckbox.setSelected(true);
-			filterValueTypeCheckbox.setOpaque(false);
 			filterValueTypeCheckbox.addActionListener(new ActionListener() {
 
 				@Override
@@ -705,7 +718,6 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		final JCheckBox filterMissingsCheckbox = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
 				"gui.label.meta_data_stats.filter.missings.label"));
 		filterMissingsCheckbox.setSelected(false);
-		filterMissingsCheckbox.setOpaque(false);
 		filterMissingsCheckbox.addActionListener(new ActionListener() {
 
 			@Override
@@ -717,7 +729,6 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		final JCheckBox filterSpecialCheckbox = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
 				"gui.label.meta_data_stats.filter.special.label"));
 		filterSpecialCheckbox.setSelected(true);
-		filterSpecialCheckbox.setOpaque(false);
 		filterSpecialCheckbox.addActionListener(new ActionListener() {
 
 			@Override
@@ -729,7 +740,6 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		final JCheckBox filterRegularCheckbox = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
 				"gui.label.meta_data_stats.filter.regular.label"));
 		filterRegularCheckbox.setSelected(true);
-		filterRegularCheckbox.setOpaque(false);
 		filterRegularCheckbox.addActionListener(new ActionListener() {
 
 			@Override
@@ -739,21 +749,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		});
 
 		final ScrollableJPopupMenu filterMenu = new ScrollableJPopupMenu();
-		// small hack to prevent the popup from opening itself when you click the button to actually
-		// close it
-		filterMenu.addPopupMenuListener(new PopupMenuListener() {
 
-			@Override
-			public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {}
-
-			@Override
-			public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
-				lastPopupCloseTime = System.currentTimeMillis();
-			}
-
-			@Override
-			public void popupMenuCanceled(final PopupMenuEvent e) {}
-		});
 		for (JCheckBox valueTypeBox : listOfValueTypeCheckboxses) {
 			filterMenu.add(valueTypeBox);
 		}
@@ -764,7 +760,9 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		filterMenu.add(filterRegularCheckbox);
 
 		final JTextField filterNameField = new JTextField(10);
-		filterNameField.setMinimumSize(DIMENSION_SEARCH_FIELD);
+		filterNameField.setMinimumSize(new Dimension(300, 20));
+		filterNameField.setPreferredSize(new Dimension(300, 20));
+
 		final ResourceAction filterAction = new ResourceAction(true, "meta_data_stats.filter") {
 
 			private static final long serialVersionUID = 5334802828535128169L;
@@ -780,6 +778,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		filterNameField.getDocument().addDocumentListener(new DocumentListener() {
 
 			private Timer updateTimer;
+
 			{
 				updateTimer = new Timer(FILTER_TIMER_DELAY, filterAction);
 				updateTimer.setRepeats(false);
@@ -826,34 +825,28 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		};
 		gbc.gridx += 1;
 		gbc.insets = new Insets(2, 0, 2, 0);
-		columnHeaderPanel.add(new TextFieldWithAction(filterNameField, deleteFilterAction, CLEAR_FILTER_HOVERED_ICON), gbc);
+		TextFieldWithAction searchField = new TextFieldWithAction(filterNameField, deleteFilterAction,
+				CLEAR_FILTER_HOVERED_ICON);
+		searchField.setMinimumSize(DIMENSION_SEARCH_FIELD);
+		searchField.setPreferredSize(DIMENSION_SEARCH_FIELD);
+		columnHeaderPanel.add(searchField, gbc);
 
-		final JButton filterDropdownButton = new JButton(ICON_ARROW_DOWN);
-		filterDropdownButton.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-		filterDropdownButton.setContentAreaFilled(false);
-		filterDropdownButton.addMouseListener(new HoverBorderMouseListener(filterDropdownButton));
-		filterDropdownButton.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.label.meta_data_stats.filter_select.tip"));
-		filterDropdownButton.addActionListener(new ActionListener() {
+		final DropDownPopupButton filterDropdownButton = new DropDownPopupButton("gui.label.meta_data_stats.filter_select",
+				new PopupMenuProvider() {
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
-				if (!filterMenu.isVisible()) {
-					// hack to prevent filter popup from opening itself again when you click the
-					// button to actually close it while it is open
-					if (System.currentTimeMillis() - lastPopupCloseTime < 250) {
-						return;
-					}
-
-					filterMenu.show(filterDropdownButton, 0, filterDropdownButton.getHeight());
-					filterMenu.requestFocusInWindow();
-				}
+			public JPopupMenu getPopupMenu() {
+				return filterMenu;
 			}
 		});
+		filterDropdownButton.setArrowSize(15);
+		filterDropdownButton.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+		filterDropdownButton.addMouseListener(new HoverBorderMouseListener(filterDropdownButton));
+
 		gbc.gridx += 1;
 		gbc.fill = GridBagConstraints.VERTICAL;
 		gbc.weightx = 0.0;
-		gbc.insets = new Insets(2, 0, 2, 5);
+		gbc.insets = new Insets(2, 5, 2, 5);
 		columnHeaderPanel.add(filterDropdownButton, gbc);
 
 		// add copy all meta data to clipboard popup
@@ -887,7 +880,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		gbcAttPanel.gridx = 0;
 		gbcAttPanel.gridy = 0;
 		gbcAttPanel.fill = GridBagConstraints.HORIZONTAL;
-		gbcAttPanel.insets = new Insets(5, 0, 0, 0);
+		gbcAttPanel.insets = new Insets(3, 0, 0, 0);
 		gbcAttPanel.weightx = 1.0;
 		// add placeholder loading label to top of panel
 		labelLoading = new JLabel(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.loading.label"));
@@ -907,7 +900,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 		// add to outer panel
 		gbcOuter.gridy += 1;
-		gbcOuter.insets = new Insets(5, 0, 5, 10);
+		gbcOuter.insets = new Insets(0, 10, 5, 10);
 		gbcOuter.fill = GridBagConstraints.HORIZONTAL;
 		outerPanel.add(attPanel, gbcOuter);
 
@@ -920,6 +913,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 		// footer panel
 		JPanel footerStatPanel = new JPanel();
+		footerStatPanel.setOpaque(false);
 		footerStatPanel.setLayout(new GridBagLayout());
 
 		GridBagConstraints gbcFooterStat = new GridBagConstraints();
@@ -949,7 +943,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 				model.getExampleSetOrNull().getAttributes().size());
 		JLabel countRegAttLabel = new JLabel(countRegAttHeader);
 		gbcFooterStat.gridx += 1;
-		gbcFooterStat.insets = new Insets(2, 5, 2, 35);
+		gbcFooterStat.insets = new Insets(2, 5, 2, 10);
 		footerStatPanel.add(countRegAttLabel, gbcFooterStat);
 
 		// add footer stat panel
@@ -958,7 +952,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		gbcFooter.gridy = 0;
 		gbcFooter.fill = GridBagConstraints.HORIZONTAL;
 		gbcFooter.weightx = 1.0;
-		gbcFooter.insets = new Insets(2, 20, 2, 0);
+		gbcFooter.insets = new Insets(2, 10, 5, 0);
 		labelDisplayedAttribute = new JLabel("...");
 		labelDisplayedAttribute.setMinimumSize(footerStatPanel.getPreferredSize());
 		labelDisplayedAttribute.setPreferredSize(footerStatPanel.getPreferredSize());
@@ -966,6 +960,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		footerPanel.add(labelDisplayedAttribute, gbcFooter);
 
 		paginationPanel = new JPanel();
+		paginationPanel.setOpaque(false);
 		paginationPanel.setLayout(new GridBagLayout());
 		buttonFirstPage = new JButton(ICON_ARROW_FIRST);
 		buttonFirstPage.setContentAreaFilled(false);
@@ -988,7 +983,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		buttonPreviousPage = new JButton(ICON_ARROW_LEFT);
 		buttonPreviousPage.setContentAreaFilled(false);
 		buttonPreviousPage
-				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.page_previous.tip"));
+		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.page_previous.tip"));
 		buttonPreviousPage.addActionListener(new ActionListener() {
 
 			@Override
@@ -1065,8 +1060,11 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		// add header panel
 		add(columnHeaderPanel, BorderLayout.NORTH);
 
-		// add outer panel which contains all attribute stat panels to scrollpane
+		// add outer panel which contains all attribute stat panels to
+		// scrollpane
 		scrollPane = new ExtendedJScrollPane(outerPanel);
+		scrollPane.setOpaque(false);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder());
 		scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
 
 			@Override
@@ -1083,6 +1081,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 		// add footer panel
 		add(footerPanel, BorderLayout.SOUTH);
+
+		setBackground(COLOR_BACKGROUND);
 	}
 
 	@Override
@@ -1179,7 +1179,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 			statModel.setAlternating(i % 2 == 1);
 			i++;
 		}
-		// we may have less than Math.min(size, PAGE_SIZE) panels to show, hide unused ones
+		// we may have less than Math.min(size, PAGE_SIZE) panels to show, hide
+		// unused ones
 		for (; i < Math.min(model.getTotalSize(), MetaDataStatisticsModel.PAGE_SIZE); i++) {
 			mapOfAttributeStatisticsPanels.get(i).setVisible(false);
 		}

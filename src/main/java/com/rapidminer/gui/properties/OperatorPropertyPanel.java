@@ -1,35 +1,29 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -42,17 +36,16 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JToggleButton;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.xml.stream.XMLInputFactory;
@@ -66,16 +59,13 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 
-import com.rapidminer.BreakpointListener;
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.OperatorDocToHtmlConverter;
 import com.rapidminer.gui.OperatorDocumentationBrowser;
 import com.rapidminer.gui.actions.ToggleAction;
-import com.rapidminer.gui.actions.ToggleAction.ToggleActionListener;
-import com.rapidminer.gui.operatortree.actions.DeleteOperatorAction;
-import com.rapidminer.gui.operatortree.actions.InfoOperatorAction;
-import com.rapidminer.gui.operatortree.actions.ToggleActivationItem;
+import com.rapidminer.gui.actions.ToggleExpertModeAction;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.gui.properties.celleditors.value.PropertyValueCellEditor;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -83,14 +73,15 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.ViewToolBar;
-import com.rapidminer.gui.tools.components.ToggleDropDownButton;
+import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.Parameters;
+import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
+import com.rapidminer.tools.PlatformUtilities;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 
@@ -123,80 +114,29 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 	 */
 	private static final ExecutorService PARAMETER_UPDATE_SERVICE = Executors.newCachedThreadPool();
 
+	private static final Icon OK_ICON = SwingTools.createIcon("16/check.png");
+	private static final Icon WARNING_ICON = SwingTools.createIcon("16/sign_warning.png");
+
+	private static final Border TOP_BORDER = BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.PANEL_SEPARATOR);
+	private static final Border BOTH_BORDERS = BorderFactory.createMatteBorder(1, 0, 1, 0, Colors.PANEL_SEPARATOR);
+
 	private static final XMLInputFactory XML_STREAM_FACTORY = XMLInputFactory.newFactory();
+
+	public static final String PROPERTY_EDITOR_DOCK_KEY = "property_editor";
+
 	static {
 		XML_STREAM_FACTORY.setProperty(XMLInputFactory.IS_COALESCING, true);
 	}
 
-	private class BreakpointButton extends ToggleDropDownButton implements ToggleActionListener {
+	private final DockKey DOCK_KEY = new ResourceDockKey(PROPERTY_EDITOR_DOCK_KEY);
 
-		private static final long serialVersionUID = 7364886954405951709L;
-
-		private final Icon IMAGE_BREAKPOINTS = SwingTools.createIcon("16/breakpoints.png");
-		private final Icon IMAGE_BREAKPOINT_BEFORE = SwingTools.createIcon("16/breakpoint_up.png");
-		private final Icon IMAGE_BREAKPOINT_AFTER = SwingTools.createIcon("16/breakpoint_down.png");
-
-		{
-			for (int i = 0; i < mainFrame.getActions().TOGGLE_BREAKPOINT.length; i++) {
-				mainFrame.getActions().TOGGLE_BREAKPOINT[i].addToggleActionListener(this);
-			}
-		}
-
-		public BreakpointButton() {
-			super(new ResourceAction(true, "breakpoint_after") {
-
-				private static final long serialVersionUID = -8913366165786891652L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					if (mainFrame.getActions().TOGGLE_BREAKPOINT[0].isSelected()
-							|| mainFrame.getActions().TOGGLE_BREAKPOINT[1].isSelected()) {
-						mainFrame.getActions().TOGGLE_BREAKPOINT[0].resetAction(false);
-						mainFrame.getActions().TOGGLE_BREAKPOINT[1].resetAction(false);
-						return;
-					}
-					mainFrame.getActions().TOGGLE_BREAKPOINT[1].actionPerformed(null);
-				}
-			});
-		}
-
-		@Override
-		public void setSelected(boolean selected) {
-			Icon breakpointIcon;
-			if (operator != null && operator.hasBreakpoint()) {
-				super.setSelected(true);
-				if (operator.getNumberOfBreakpoints() == 1) {
-					if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_BEFORE)) {
-						breakpointIcon = IMAGE_BREAKPOINT_BEFORE;
-					} else {
-						breakpointIcon = IMAGE_BREAKPOINT_AFTER;
-					}
-				} else {
-					breakpointIcon = IMAGE_BREAKPOINTS;
-				}
-			} else {
-				super.setSelected(false);
-				breakpointIcon = IMAGE_BREAKPOINT_AFTER;
-			}
-			setIcon(breakpointIcon);
-		}
-
-		@Override
-		protected JPopupMenu getPopupMenu() {
-			JPopupMenu menu = new JPopupMenu();
-			for (int i = 0; i < mainFrame.getActions().TOGGLE_BREAKPOINT.length; i++) {
-				menu.add(mainFrame.getActions().TOGGLE_BREAKPOINT[i].createMenuItem());
-			}
-			return menu;
-		}
-
+	{
+		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
 	}
 
-	private final BreakpointButton breakpointButton;
+	private JPanel dockableComponent;
 
-	private final MainFrame mainFrame;
-
-	private static final Icon WARNING_ICON = SwingTools.createIcon("16/sign_warning.png");
+	private final ToggleAction showHelpAction;
 
 	private final JLabel headerLabel = new JLabel("");
 
@@ -204,7 +144,9 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 
 	private final Font unselectedFont = headerLabel.getFont();
 
-	private final JLabel expertModeHintLabel = new JLabel("");
+	private final LinkLocalButton changeCompatibility;
+	private final LinkLocalButton showAdvancedParameters;
+	private final LinkLocalButton hideAdvancedParameters;
 
 	private final Map<String, String> parameterDescriptionCache = new HashMap<>();
 
@@ -229,26 +171,36 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 		}
 	};
 
+	final transient ToggleAction TOGGLE_EXPERT_MODE_ACTION = new ToggleExpertModeAction();
+
 	private final JSpinner compatibilityLevelSpinner = new JSpinner(new CompatibilityLevelSpinnerModel());
 	private final ResourceLabel compatibilityLabel = new ResourceLabel("compatibility_level");
-	private final JPanel compatibilityPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));;
+	private final JPanel compatibilityPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
 	public OperatorPropertyPanel(final MainFrame mainFrame) {
 		super();
-		this.mainFrame = mainFrame;
-		breakpointButton = new BreakpointButton();
-		headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		expertModeHintLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-		expertModeHintLabel.setIcon(WARNING_ICON);
-		expertModeHintLabel.addMouseListener(new MouseAdapter() {
+		headerLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+		changeCompatibility = new LinkLocalButton(createCompatibilityAction(PlatformUtilities.getReleaseVersion()));
+		showAdvancedParameters = new LinkLocalButton(new ResourceAction(true, "parameters.show_advanced") {
+
+			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				mainFrame.TOGGLE_EXPERT_MODE_ACTION.actionPerformed(null);
+			public void actionPerformed(ActionEvent e) {
+				TOGGLE_EXPERT_MODE_ACTION.actionPerformed(null);
 			}
 		});
-		expertModeHintLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		expertModeHintLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		hideAdvancedParameters = new LinkLocalButton(new ResourceAction(true, "parameters.hide_advanced") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TOGGLE_EXPERT_MODE_ACTION.actionPerformed(null);
+			}
+		});
+
 		setupComponents();
 
 		compatibilityLevelSpinner.addChangeListener(new ChangeListener() {
@@ -260,12 +212,12 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 
 				// sort to have an ascending order
 				Arrays.sort(versionChanges);
-				if (versionChanges.length != 0) {
+				if (versionChanges.length > 0) {
 					OperatorVersion latestChange = versionChanges[versionChanges.length - 1];
 					if (latestChange.isAtLeast(operator.getCompatibilityLevel())) {
 						compatibilityLabel.setIcon(WARNING_ICON);
 					} else {
-						compatibilityLabel.setIcon(SwingTools.createIcon("16/ok.png"));
+						compatibilityLabel.setIcon(OK_ICON);
 					}
 				}
 			}
@@ -280,45 +232,6 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 				mainFrame.getPropertyPanel().setupComponents();
 			}
 		};
-	}
-
-	@Override
-	protected String getValue(ParameterType type) {
-		return operator.getParameters().getParameterOrNull(type.getKey());
-	}
-
-	@Override
-	protected void setValue(Operator operator, ParameterType type, String value) {
-		if (value.length() == 0) {
-			value = null;
-		}
-		operator.setParameter(type.getKey(), value);
-	}
-
-	@Override
-	protected List<ParameterType> getProperties() {
-		List<ParameterType> visible = new LinkedList<ParameterType>();
-		int hidden = 0;
-		if (operator != null) {
-			for (ParameterType type : operator.getParameters().getParameterTypes()) {
-				if (type.isHidden()) {
-					continue;
-				}
-				if (!isExpertMode() && type.isExpert()) {
-					hidden++;
-					continue;
-				}
-				visible.add(type);
-			}
-		}
-
-		if (hidden > 0) {
-			expertModeHintLabel.setText(hidden + " hidden expert parameter" + (hidden == 1 ? "" : "s"));
-			expertModeHintLabel.setVisible(true);
-		} else {
-			expertModeHintLabel.setVisible(false);
-		}
-		return visible;
 	}
 
 	@Override
@@ -359,7 +272,6 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 		this.operator = operator;
 		if (operator != null) {
 			this.operator.getParameters().addObserver(parameterObserver, true);
-			breakpointButton.setEnabled(true);
 			if (isShowParameterHelp()) {
 				PARAMETER_UPDATE_SERVICE.execute(new Runnable() {
 
@@ -375,19 +287,155 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 			OperatorVersion[] versionChanges = operator.getIncompatibleVersionChanges();
 			if (versionChanges.length == 0) {
 				// no incompatible versions exist
-				compatibilityLevelSpinner.setVisible(false);
-				compatibilityLabel.setVisible(false);
+				changeCompatibility.setVisible(false);
 			} else {
-				compatibilityLevelSpinner.setVisible(true);
-				compatibilityLabel.setVisible(true);
 				((CompatibilityLevelSpinnerModel) compatibilityLevelSpinner.getModel()).setOperator(operator);
+				changeCompatibility.setAction(createCompatibilityAction(operator.getCompatibilityLevel().getLongVersion()));
+				changeCompatibility.setVisible(true);
 			}
+			compatibilityLabel.setVisible(false);
+			compatibilityLevelSpinner.setVisible(false);
 
-		} else {
-			breakpointButton.setEnabled(false);
 		}
+
 		setNameFor(operator);
 		setupComponents();
+	}
+
+	@Override
+	public Component getComponent() {
+		if (dockableComponent == null) {
+			final JScrollPane scrollPane = new ExtendedJScrollPane(this);
+			scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+			scrollPane.getViewport().addChangeListener(new ChangeListener() {
+
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					if (scrollPane.getVerticalScrollBar().isVisible()) {
+						scrollPane.setBorder(BOTH_BORDERS);
+					} else {
+						scrollPane.setBorder(TOP_BORDER);
+					}
+				}
+			});
+
+			dockableComponent = new JPanel(new BorderLayout());
+
+			JPanel headerPanel = new JPanel(new BorderLayout());
+			headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 5));
+			headerPanel.add(headerLabel, BorderLayout.CENTER);
+
+			dockableComponent.add(headerPanel, BorderLayout.NORTH);
+			dockableComponent.add(scrollPane, BorderLayout.CENTER);
+
+			// compatibility level and warnings
+
+			JPanel advancedPanel = new JPanel();
+			advancedPanel.setLayout(new BoxLayout(advancedPanel, BoxLayout.PAGE_AXIS));
+			advancedPanel.add(showAdvancedParameters);
+			advancedPanel.add(hideAdvancedParameters);
+			compatibilityLabel.setLabelFor(compatibilityLevelSpinner);
+			compatibilityLevelSpinner.setPreferredSize(new Dimension(80, (int) compatibilityLevelSpinner.getPreferredSize()
+					.getHeight()));
+
+			compatibilityPanel.add(compatibilityLabel);
+			compatibilityPanel.add(compatibilityLevelSpinner);
+			JPanel compPanel = new JPanel();
+			compPanel.setLayout(new BoxLayout(compPanel, BoxLayout.PAGE_AXIS));
+			compPanel.add(changeCompatibility);
+			compPanel.add(compatibilityPanel);
+
+			JPanel combiPanel = new JPanel();
+			combiPanel.setLayout(new BoxLayout(combiPanel, BoxLayout.PAGE_AXIS));
+			combiPanel.add(advancedPanel);
+			combiPanel.add(compPanel);
+			dockableComponent.add(combiPanel, BorderLayout.SOUTH);
+		}
+		return dockableComponent;
+	}
+
+	@Override
+	public DockKey getDockKey() {
+		return DOCK_KEY;
+	}
+
+	public boolean isExpertMode() {
+		return TOGGLE_EXPERT_MODE_ACTION.isSelected();
+	}
+
+	public void setExpertMode(boolean isExpert) {
+		TOGGLE_EXPERT_MODE_ACTION.setSelected(isExpert);
+	}
+
+	@Override
+	public void setShowParameterHelp(boolean showHelp) {
+		super.setShowParameterHelp(showHelp);
+		showHelpAction.setSelected(showHelp);
+	}
+
+	@Override
+	protected Operator getOperator() {
+		return operator;
+	}
+
+	@Override
+	protected String getToolTipText(String key, String title, String description, String range, boolean isOptional) {
+		if (parameterDescriptionCache.containsKey(key)) {
+			description = parameterDescriptionCache.get(key);
+		}
+		return super.getToolTipText(key, title, description, range, isOptional);
+	}
+
+	@Override
+	protected String getValue(ParameterType type) {
+		return operator.getParameters().getParameterOrNull(type.getKey());
+	}
+
+	@Override
+	protected void setValue(Operator operator, ParameterType type, String value) {
+		if (value.length() == 0) {
+			value = null;
+		}
+		operator.setParameter(type.getKey(), value);
+	}
+
+	@Override
+	protected List<ParameterType> getProperties() {
+		List<ParameterType> visible = new LinkedList<ParameterType>();
+		int hidden = 0;
+		int advancedCount = 0;
+		if (operator != null) {
+			for (ParameterType type : operator.getParameters().getParameterTypes()) {
+				if (type.isHidden()) {
+					continue;
+				}
+				if (type.isExpert()) {
+					advancedCount++;
+					if (!isExpertMode()) {
+						hidden++;
+						continue;
+					}
+				}
+				visible.add(type);
+			}
+		}
+
+		if (hidden > 0) {
+			hideAdvancedParameters.setVisible(false);
+			showAdvancedParameters.setVisible(true);
+			showAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.show_advanced.tip", hidden));
+		} else {
+			showAdvancedParameters.setVisible(false);
+			if (advancedCount > 0) {
+				hideAdvancedParameters.setVisible(true);
+				showAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.hide_advanced.tip",
+						advancedCount));
+			} else {
+				hideAdvancedParameters.setVisible(false);
+			}
+		}
+		return visible;
 	}
 
 	/**
@@ -505,129 +553,42 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 
 		} else {
 			headerLabel.setFont(unselectedFont);
-			headerLabel.setText("No Operator Selected");
+			headerLabel.setText("Select an operator to configure it.");
 			headerLabel.setIcon(null);
 		}
 	}
 
-	@Override
-	public Component getComponent() {
-		if (dockableComponent == null) {
-			JScrollPane scrollPane = new ExtendedJScrollPane(this);
-			scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-			scrollPane.setBorder(null);
+	/**
+	 * Creates the action to change compatibility mode.
+	 *
+	 * @param version
+	 * @return
+	 */
+	private ResourceAction createCompatibilityAction(String version) {
+		String key = "parameters.change_compatibility_current";
 
-			dockableComponent = new JPanel(new BorderLayout());
-
-			JPanel toolBarPanel = new JPanel(new BorderLayout());
-			ViewToolBar toolBar = new ViewToolBar();
-			JToggleButton toggleExpertModeButton = mainFrame.TOGGLE_EXPERT_MODE_ACTION.createToggleButton();
-			toggleExpertModeButton.setText(null);
-			toolBar.add(toggleExpertModeButton);
-
-			showHelpAction.setSelected(isShowParameterHelp());
-			JToggleButton helpToggleButton = showHelpAction.createToggleButton();
-			helpToggleButton.setText(null);
-			toolBar.add(helpToggleButton);
-
-			Action infoOperatorAction = new InfoOperatorAction() {
-
-				private static final long serialVersionUID = 6758272768665592429L;
-
-				@Override
-				protected Operator getOperator() {
-					return mainFrame.getFirstSelectedOperator();
+		// different action if old comp level
+		if (operator != null) {
+			OperatorVersion[] versionChanges = operator.getIncompatibleVersionChanges();
+			Arrays.sort(versionChanges);
+			if (versionChanges.length > 0) {
+				OperatorVersion latestChange = versionChanges[versionChanges.length - 1];
+				if (latestChange.isAtLeast(operator.getCompatibilityLevel())) {
+					key = "parameters.change_compatibility_old";
 				}
-			};
-			toolBar.add(infoOperatorAction);
-			JToggleButton enableOperatorButton = new ToggleActivationItem(mainFrame.getActions()).createToggleButton();
-			enableOperatorButton.setText(null);
-			toolBar.add(enableOperatorButton);
-			Action renameOperatorAction = new ResourceAction(true, "rename_in_processrenderer") {
-
-				{
-					setCondition(OPERATOR_SELECTED, MANDATORY);
-				}
-
-				private static final long serialVersionUID = -3104160320178045540L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Operator operator = mainFrame.getFirstSelectedOperator();
-					String name = SwingTools.showInputDialog("rename_operator", operator.getName());
-					if (name != null && name.length() > 0) {
-						operator.rename(name);
-					}
-				}
-			};
-			toolBar.add(renameOperatorAction);
-			toolBar.add(new DeleteOperatorAction());
-			breakpointButton.addToToolBar(toolBar);
-
-			// toolBar.add(mainFrame.getActions().MAKE_DIRTY_ACTION);
-			toolBarPanel.add(toolBar, BorderLayout.NORTH);
-
-			JPanel headerPanel = new JPanel();
-			headerPanel.setBackground(SwingTools.LIGHTEST_BLUE);
-			headerPanel.add(headerLabel);
-			headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-			toolBarPanel.add(headerPanel, BorderLayout.SOUTH);
-
-			dockableComponent.add(toolBarPanel, BorderLayout.NORTH);
-			dockableComponent.add(scrollPane, BorderLayout.CENTER);
-
-			// compatibility level and warnings
-			JPanel southPanel = new JPanel(new BorderLayout());
-			southPanel.add(expertModeHintLabel, BorderLayout.CENTER);
-			compatibilityLabel.setLabelFor(compatibilityLevelSpinner);
-			compatibilityLevelSpinner.setPreferredSize(new Dimension(80, (int) compatibilityLevelSpinner.getPreferredSize()
-					.getHeight()));
-			compatibilityPanel.add(compatibilityLabel);
-			compatibilityPanel.add(compatibilityLevelSpinner);
-			southPanel.add(compatibilityPanel, BorderLayout.SOUTH);
-
-			dockableComponent.add(southPanel, BorderLayout.SOUTH);
+			}
 		}
-		return dockableComponent;
-	}
 
-	// implements Dockable
+		return new ResourceAction(true, key, version) {
 
-	public static final String PROPERTY_EDITOR_DOCK_KEY = "property_editor";
-	private final DockKey DOCK_KEY = new ResourceDockKey(PROPERTY_EDITOR_DOCK_KEY);
-	{
-		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
-	}
-	private JPanel dockableComponent;
+			private static final long serialVersionUID = 1L;
 
-	private final ToggleAction showHelpAction;
-
-	@Override
-	public DockKey getDockKey() {
-		return DOCK_KEY;
-	}
-
-	public boolean isExpertMode() {
-		return mainFrame.TOGGLE_EXPERT_MODE_ACTION.isSelected();
-	}
-
-	@Override
-	protected Operator getOperator() {
-		return operator;
-	}
-
-	@Override
-	protected String getToolTipText(String key, String title, String description, String range, boolean isOptional) {
-		if (parameterDescriptionCache.containsKey(key)) {
-			description = parameterDescriptionCache.get(key);
-		}
-		return super.getToolTipText(key, title, description, range, isOptional);
-	}
-
-	@Override
-	public void setShowParameterHelp(boolean showHelp) {
-		super.setShowParameterHelp(showHelp);
-		showHelpAction.setSelected(showHelp);
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				compatibilityLevelSpinner.setVisible(true);
+				compatibilityLabel.setVisible(true);
+				changeCompatibility.setVisible(false);
+			}
+		};
 	}
 }

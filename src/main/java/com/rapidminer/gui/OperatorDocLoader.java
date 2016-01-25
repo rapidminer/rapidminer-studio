@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -77,9 +75,9 @@ import com.rapidminer.tools.xml.XHTMLEntityResolver;
  * user does not have an internet connection all operators are loaded from this resource. If the
  * user does have an internet connection the operators are loaded directly from the RapidWiki site.
  * The operator description is shown in the RapidMiner Help Window.
- * 
+ *
  * @author Miguel Buescher, Sebastian Land
- * 
+ *
  */
 public class OperatorDocLoader {
 
@@ -89,8 +87,6 @@ public class OperatorDocLoader {
 
 	private static final Logger logger = Logger.getLogger(OperatorDocLoader.class.getName());
 	private static String CORRECT_HTML_STRING_DIRTY = "<html xmlns=\"http://www.w3.org/1999/xhtml\" dir=\"ltr\" lang=\"en\">";
-	private static String CURRENT_OPERATOR_NAME_READ_FROM_RAPIDWIKI;
-	private static String CURRENT_OPERATOR_PLUGIN_NAME;
 	private static String ERROR_TEXT_FOR_WIKI;
 	private static String ERROR_TEXT_FOR_LOCAL;
 
@@ -100,38 +96,12 @@ public class OperatorDocLoader {
 
 	static {
 		// TODO: Transfer this to resource
-		ERROR_TEXT_FOR_WIKI = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-				+ "<html xmlns=\"http://www.w3.org/1999/xhtml\" dir=\"ltr\" lang=\"en\" xml:lang=\"en\">"
-				+ "<head>"
-				+ "<table cellpadding=0 cellspacing=0>"
-				+ "<tr><td>"
-				+ "<img src=\""
-				+ SwingTools.getIconPath("48/bug_yellow_error.png")
-				+ "\"/>"
-				+ "</td>"
-				+ "<td width=\"5\">"
-				+ "</td>"
-				+ "<td>"
-				+ "Could not retrieve documentation of selected operator from wiki."
-				+ "</td></tr>"
-				+ "</table>"
-				+ "</head>" + "</html>";
-		ERROR_TEXT_FOR_LOCAL = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-				+ "<html xmlns=\"http://www.w3.org/1999/xhtml\" dir=\"ltr\" lang=\"en\" xml:lang=\"en\">"
-				+ "<head>"
-				+ "<table cellpadding=0 cellspacing=0>"
-				+ "<tr><td>"
-				+ "<img src=\""
-				+ SwingTools.getIconPath("48/bug_yellow_error.png")
-				+ "\"/>"
-				+ "</td>"
-				+ "<td width=\"5\">"
-				+ "</td>"
-				+ "<td>"
-				+ "Selected Operator not documented locally. Try online version."
-				+ "</td></tr>"
-				+ "</table>"
-				+ "</head>" + "</html>";
+		ERROR_TEXT_FOR_WIKI = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\" dir=\"ltr\" lang=\"en\" xml:lang=\"en\"><head><table cellpadding=0 cellspacing=0><tr><td><img src=\""
+				+ SwingTools.getIconPath("48/bug_error.png")
+				+ "\"/></td><td width=\"5\"></td><td>Could not retrieve documentation of selected operator from wiki.</td></tr></table></head></html>";
+		ERROR_TEXT_FOR_LOCAL = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\" dir=\"ltr\" lang=\"en\" xml:lang=\"en\"><head><table cellpadding=0 cellspacing=0><tr><td><img src=\""
+				+ SwingTools.getIconPath("48/bug_error.png")
+				+ "\"/></td><td width=\"5\"></td><td>Selected Operator not documented locally. Try online version.</td></tr></table></head></html>";
 
 	}
 
@@ -176,7 +146,8 @@ public class OperatorDocLoader {
 		return OPERATOR_CACHE_MAP.containsKey(opDesc);
 	}
 
-	private static String customizeHTMLStringDirty(String HTMLString, String operatorIconPath) {
+	private static String customizeHTMLStringDirty(String HTMLString, OperatorDescription opDesc) {
+
 		HTMLString = HTMLString
 				.replaceFirst(
 						"\\<[^\\>]*>",
@@ -184,19 +155,19 @@ public class OperatorDocLoader {
 
 		// customize operator-name
 
-		String newHtmlString = "<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" dir=\"ltr\">" + "<head>"
-				+ "<table cellpadding=0 cellspacing=0>" + "<tr><td>" + "<img src=\"" + operatorIconPath + "\" /></td>"
-				+ "<td width=\"5\">" + "</td>" + "<td>" + "<h2 class=\"firstHeading\" id=\"firstHeading\">"
-				+ CURRENT_OPERATOR_NAME_READ_FROM_RAPIDWIKI;
+		StringBuilder newHtml = new StringBuilder(512);
+		newHtml.append("<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" dir=\"ltr\"><body><table><tr><td><img src=\"");
+		newHtml.append(SwingTools.getIconPath("24/" + opDesc.getIconName()));
+		newHtml.append("\" class=\"HeadIcon\" /></td><td valign=\"middle\" align=\"left\"> <h2 class=\"firstHeading\" id=\"firstHeading\">");
+		newHtml.append(opDesc.getName());
 
-		if (CURRENT_OPERATOR_PLUGIN_NAME != null && CURRENT_OPERATOR_PLUGIN_NAME.length() > 0) {
-			newHtmlString += "<small style=\"font-size:70%;color:#5F5F5F;font-weight:normal;\"> ("
-					+ CURRENT_OPERATOR_PLUGIN_NAME + ")</small>";
-		}
+		newHtml.append("<span class=\"packageName\"><br/>");
+		newHtml.append(opDesc.getProviderName());
 
-		newHtmlString += "</h2>" + "</td></tr>" + "</table>" + "<hr noshade=\"true\">" + "</head>";
+		newHtml.append("</span></h2></td></tr></table><div style=\"border-top: 1px solid #bbbbbb\"/>");
 
-		HTMLString = HTMLString.replaceFirst(CORRECT_HTML_STRING_DIRTY, newHtmlString);
+		HTMLString = HTMLString.replaceFirst("<body[^>]*>", "");
+		HTMLString = HTMLString.replaceFirst(CORRECT_HTML_STRING_DIRTY, newHtml.toString());
 
 		// customize all headlines
 		HTMLString = HTMLString.replaceAll("<h2>", "<h4>");
@@ -239,7 +210,7 @@ public class OperatorDocLoader {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param operatorWikiName
 	 * @param opDesc
 	 * @return The parsed <tt>Document</tt> (not finally parsed) of the selected operator.
@@ -260,9 +231,9 @@ public class OperatorDocLoader {
 			try {
 				document = documentBuilder.parse(WebServiceTools.openStreamFromURL(url));
 			} catch (IOException e) {
-				logger.warning("Could not open " + url.toExternalForm() + ": " + e.getMessage());
+				logger.fine("Could not open " + url.toExternalForm() + ": " + e.getMessage());
 			} catch (SAXException e) {
-				logger.warning("Could not parse operator documentation: " + e.getMessage());
+				logger.fine("Could not parse operator documentation: " + e.getMessage());
 			}
 
 			int i = 0;
@@ -439,14 +410,7 @@ public class OperatorDocLoader {
 				// removing firstHeading element from document
 				Element firstHeadingElement = document.getElementById("firstHeading");
 				if (firstHeadingElement != null) {
-					CURRENT_OPERATOR_NAME_READ_FROM_RAPIDWIKI = firstHeadingElement.getFirstChild().getNodeValue()
-							.replaceFirst(".*:", "");
 					firstHeadingElement.getParentNode().removeChild(firstHeadingElement);
-				}
-
-				// setting operator plugin name
-				if (opDesc != null && opDesc.getProvider() != null) {
-					CURRENT_OPERATOR_PLUGIN_NAME = opDesc.getProvider().getName();
 				}
 
 				// removing sitesub element from document
@@ -553,7 +517,7 @@ public class OperatorDocLoader {
 	 * Wiki in the internet.
 	 */
 	private static String loadSelectedOperatorDocuFromWiki(OperatorDescription opDesc) throws IOException,
-			ParserConfigurationException, OperatorCreationException, TransformerException, URISyntaxException {
+	ParserConfigurationException, OperatorCreationException, TransformerException, URISyntaxException {
 		String operatorWikiName = StringUtils.EMPTY;
 		if (!opDesc.isDeprecated()) {
 			operatorWikiName = opDesc.getName().replace(" ", "_");
@@ -576,7 +540,7 @@ public class OperatorDocLoader {
 				transformer.transform(source, result);
 
 				String HTMLString = result.getWriter().toString();
-				HTMLString = customizeHTMLStringDirty(HTMLString, SwingTools.getIconPath("24/" + opDesc.getIconName()));
+				HTMLString = customizeHTMLStringDirty(HTMLString, opDesc);
 
 				return HTMLString;
 			}
@@ -586,32 +550,26 @@ public class OperatorDocLoader {
 
 	private static String makeOperatorDocumentation(Operator displayedOperator) {
 		OperatorDescription descr = displayedOperator.getOperatorDescription();
-		StringBuilder buf = new StringBuilder("<html>");
-		buf.append("<table cellpadding=0 cellspacing=0><tr><td>");
+		StringBuilder buf = new StringBuilder(2048);
+		buf.append("<html><body><table><tr><td>");
 
 		String iconName = "icons/24/" + displayedOperator.getOperatorDescription().getIconName();
 		URL resource = Tools.getResource(iconName);
 		if (resource != null) {
-			buf.append("<img src=\"" + resource + "\"/> ");
+			buf.append("<img src=\"");
+			buf.append(resource);
+			buf.append("\" class=\"HeadIcon\"/> ");
 		}
 
-		buf.append("</td><td style=\"padding-left:4px;\">");
-		buf.append("<h2>" + descr.getName());
+		buf.append("<td valign=\"middle\" align=\"left\"> <h2 class=\"firstHeading\" id=\"firstHeading\">");
+		buf.append(descr.getName());
 
-		if (CURRENT_OPERATOR_PLUGIN_NAME != null && CURRENT_OPERATOR_PLUGIN_NAME.length() > 0) {
-			buf.append("<small style=\"font-size:70%;color:#5F5F5F;font-weight:normal;\"> (" + CURRENT_OPERATOR_PLUGIN_NAME
-					+ ")</small>");
-		}
+		buf.append("<span class=\"packageName\"><br/>");
+		buf.append(descr.getProviderName());
 
-		buf.append("</h2>");
-		buf.append("</td></tr></table>");
-		buf.append("<hr noshade=\"true\"/><br/>");
-		buf.append("<h4>Synopsis</h4>");
-		buf.append("<p>");
+		buf.append("</span></h2></td></tr></table><div style=\"border-top: 1px solid #bbbbbb\"><h4>Synopsis</h4><p>");
 		buf.append(descr.getShortDescription());
-		buf.append("</p>");
-		buf.append("</p><br/>");
-		buf.append("<h4>Description</h4>");
+		buf.append("</p></p><br/><h4>Description</h4>");
 		String descriptionText = descr.getLongDescriptionHTML();
 		if (descriptionText != null) {
 			if (!descriptionText.trim().startsWith("<p>")) {
@@ -655,10 +613,10 @@ public class OperatorDocLoader {
 				// description
 				buf.append(" ");
 				buf.append(type.getDescription() + "<br/><font color=\"#777777\" size=\"-2\">");
-				if (type.getDefaultValue() != null) {
-					if (!type.toString(type.getDefaultValue()).equals("")) {
-						buf.append(" Default value: ");
-						buf.append(type.toString(type.getDefaultValue()));
+				if (type.getRange() != null) {
+					if (!type.getRange().trim().isEmpty()) {
+						buf.append(" Range: ");
+						buf.append(type.getRange());
 						buf.append("<br/>");
 					}
 				}
@@ -693,7 +651,7 @@ public class OperatorDocLoader {
 			buf.append("</ul>");
 		}
 
-		buf.append("</html>");
+		buf.append("</div></body></html>");
 		return buf.toString();
 	}
 

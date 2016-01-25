@@ -1,33 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.operatortree;
-
-import com.rapidminer.BreakpointListener;
-import com.rapidminer.gui.dnd.OperatorTreeTransferHandler;
-import com.rapidminer.gui.dnd.OperatorTreeTransferHandler.Position;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.ExecutionUnit;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.ProcessSetupError;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -37,7 +26,6 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Polygon;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -51,11 +39,18 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
+import com.rapidminer.BreakpointListener;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.ExecutionUnit;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.ProcessSetupError;
+
 
 /**
  * A renderer for operator tree cells that displays the operator's icon, name, class, breakpoints,
  * droplines and error hints.
- * 
+ *
  * @author Ingo Mierswa, Helge Homburg ingomierswa Exp $
  */
 public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
@@ -63,9 +58,9 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 	/** The panel which will be used for the actual rendering. */
 	private static class OperatorPanel extends JPanel {
 
-		private static final String BREAKPOINT_BEFORE = "16/breakpoint_up.png";
+		private static final String BREAKPOINT_BEFORE = "16/breakpoint_left.png";
 
-		private static final String BREAKPOINT_AFTER = "16/breakpoint_down.png";
+		private static final String BREAKPOINT_AFTER = "16/breakpoint_right.png";
 
 		private static final String BREAKPOINTS = "16/breakpoints.png";
 
@@ -113,20 +108,6 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 
 		private boolean hasFocus = false;
 
-		private OperatorTreeTransferHandler.Position dndMarker;
-
-		private final int[] downArrowXPoints = { 4, 4, 6, 3, 0, 2, 2 };
-
-		private final int[] downArrowYPoints = { 0, 4, 4, 7, 4, 4, 0 };
-
-		private final int[] upArrowXPoints = { 3, 6, 4, 4, 2, 2, 0 };
-
-		private final int[] upArrowYPoints = { 0, 3, 3, 7, 7, 3, 3 };
-
-		private final Polygon upArrow = new Polygon(upArrowXPoints, upArrowYPoints, 7);
-
-		private final Polygon downArrow = new Polygon(downArrowXPoints, downArrowYPoints, 7);
-
 		public OperatorPanel() {
 			setBackground(new java.awt.Color(0, 0, 0, 0));
 			setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
@@ -147,12 +128,11 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 			GridBagLayout nameLayout = new GridBagLayout();
 			GridBagConstraints nameC = new GridBagConstraints();
 			nameC.fill = GridBagConstraints.BOTH;
-			nameC.insets = new Insets(0, 5, 0, 5); // new Insets(1, 1, 1, 1);
+			nameC.insets = new Insets(0, 5, 0, 5);
 			namePanel.setLayout(nameLayout);
 
 			nameLabel.setHorizontalAlignment(SwingConstants.LEFT);
 			nameLabel.setFont(getFont().deriveFont(Font.PLAIN, 12));
-			// nameLabel.setBorder(BorderFactory.createEmptyBorder(0, 3, 0, 3));
 			nameC.gridwidth = GridBagConstraints.REMAINDER;
 			nameLayout.setConstraints(nameLabel, nameC);
 			namePanel.add(nameLabel);
@@ -189,11 +169,6 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 				classLabel.setForeground(TEXT_NON_SELECTED_COLOR);
 			}
 
-			if (tree instanceof OperatorTree) {
-				dndMarker = ((OperatorTree) tree).getOperatorTreeTransferHandler().getMarkerPosition(operator);
-			} else {
-				dndMarker = Position.UNMARKED;
-			}
 			OperatorDescription descr = operator.getOperatorDescription();
 			Icon icon = descr.getSmallIcon();
 			if (icon != null) {
@@ -241,51 +216,7 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 			setEnabled(operator.isEnabled());
 			setPreferredSize(new Dimension((int) (Math.max(nameLabel.getPreferredSize().getWidth(), classLabel
 					.getPreferredSize().getWidth()) + 3 * 22), (int) (nameLabel.getPreferredSize().getHeight()
-					+ classLabel.getPreferredSize().getHeight() + 4)));
-		}
-
-		private void paintUpperDropline(Graphics graphics) {
-			Graphics g = graphics.create();
-			g.setColor(SwingTools.LIGHT_BLUE);
-			g.fillRect(0, 0, getWidth() - 1, 2);
-			g.setColor(SwingTools.DARK_BLUE);
-			g.drawRect(0, 0, getWidth() - 1, 2);
-
-			g.translate(1, 3);
-			g.setColor(SwingTools.LIGHT_BLUE);
-			g.fillPolygon(upArrow);
-			g.setColor(SwingTools.DARK_BLUE);
-			g.drawPolygon(upArrow);
-
-			g.translate(getWidth() - 10, 0);
-			g.setColor(SwingTools.LIGHT_BLUE);
-			g.fillPolygon(upArrow);
-			g.setColor(SwingTools.DARK_BLUE);
-			g.drawPolygon(upArrow);
-
-			g.dispose();
-		}
-
-		private void paintLowerDropline(Graphics graphics) {
-			Graphics g = graphics.create();
-			g.setColor(SwingTools.LIGHT_BLUE);
-			g.fillRect(0, getHeight() - 3, getWidth() - 1, 2);
-			g.setColor(SwingTools.DARK_BLUE);
-			g.drawRect(0, getHeight() - 3, getWidth() - 1, 2);
-
-			g.translate(1, getHeight() - 11);
-			g.setColor(SwingTools.LIGHT_BLUE);
-			g.fillPolygon(downArrow);
-			g.setColor(SwingTools.DARK_BLUE);
-			g.drawPolygon(downArrow);
-
-			g.translate(getWidth() - 10, 0);
-			g.setColor(SwingTools.LIGHT_BLUE);
-			g.fillPolygon(downArrow);
-			g.setColor(SwingTools.DARK_BLUE);
-			g.drawPolygon(downArrow);
-
-			g.dispose();
+							+ classLabel.getPreferredSize().getHeight() + 4)));
 		}
 
 		@Override
@@ -300,40 +231,16 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 				g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
 			}
 
-			switch (dndMarker) {
-				case ABOVE:
-					paintUpperDropline(g);
-					break;
-				case BELOW:
-					paintLowerDropline(g);
-					break;
-				case INTO:
-					g.setColor(BORDER_SELECTED_COLOR);
-					g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-					break;
-			}
 			super.paint(g);
 		}
 
-		/**
-		 * This is a workaround to fix a Swing bug with causes the drag cursor to flicker. See
-		 * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6700748 TODO: Occasionally check
-		 * whether this bug was resolved by Sun.
-		 */
-		@Override
-		public boolean isVisible() {
-			return false;
-		}
 	}
 
-	private static final long serialVersionUID = -8256080174651447518L;
+	private static final long serialVersionUID = 1L;
 
 	private static final Icon SUBPROCESS_ICON = SwingTools.createIcon("16/element_selection.png");
 
 	private static final Border SUBPROCESS_BORDER = BorderFactory.createEmptyBorder(2, 2, 2, 2);
-
-	private static final Border SUBPROCESS_MARKED_BORDER = BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(SwingTools.LIGHT_BLUE), BorderFactory.createEmptyBorder(2, 2, 2, 2));
 
 	private final OperatorPanel operatorPanel = new OperatorPanel();
 
@@ -342,26 +249,14 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 	@Override
 	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
 			boolean leaf, int row, boolean hasFocus) {
-		// operatorPanel = new OperatorPanel();
 		if (value instanceof Operator) {
-			// operatorPanel = new OperatorPanel();
 			operatorPanel.updateOperator(tree, (Operator) value, selected, hasFocus);
 			SwingTools.setEnabledRecursive(operatorPanel, operatorPanel.isEnabled());
 			return operatorPanel;
 		} else if (value instanceof ExecutionUnit) {
 			Component component = super.getTreeCellRendererComponent(tree, ((ExecutionUnit) value).getName(), selected,
 					expanded, leaf, row, hasFocus);
-			if (tree instanceof OperatorTree) {
-				OperatorTreeTransferHandler.Position dndMarker = ((OperatorTree) tree).getOperatorTreeTransferHandler()
-						.getMarkerPosition((ExecutionUnit) value);
-				if (dndMarker != OperatorTreeTransferHandler.Position.UNMARKED) {
-					((JComponent) component).setBorder(SUBPROCESS_MARKED_BORDER);
-				} else {
-					((JComponent) component).setBorder(SUBPROCESS_BORDER);
-				}
-			} else {
-				((JComponent) component).setBorder(SUBPROCESS_BORDER);
-			}
+			((JComponent) component).setBorder(SUBPROCESS_BORDER);
 			((JLabel) component).setIcon(SUBPROCESS_ICON);
 			SwingTools.setEnabledRecursive(component, tree.isEnabled());
 			return component;

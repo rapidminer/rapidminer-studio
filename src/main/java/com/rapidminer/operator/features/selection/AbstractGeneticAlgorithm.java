@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
+
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
@@ -33,18 +35,15 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
-
-import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
  * Genetic algorithms are general purpose optimization / search algorithms that are suitable in case
  * of no or little problem knowledge. <br/>
- * 
+ *
  * A genetic algorithm works as follows
  * <ol>
  * <li>Generate an initial population consisting of <code>population_size</code> individuals. Each
@@ -60,10 +59,10 @@ import java.util.List;
  * <li>Perform selection with a defined selection scheme.</li>
  * <li>As long as the fitness improves, go to 2</li>
  * </ol>
- * 
+ *
  * If the example set contains value series attributes with blocknumbers, the whole block should be
  * switched on and off.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractGeneticAlgorithm extends FeatureOperator {
@@ -116,7 +115,7 @@ public abstract class AbstractGeneticAlgorithm extends FeatureOperator {
 	public static final String PARAMETER_USE_EARLY_STOPPING = "use_early_stopping";
 
 	public static final String[] SELECTION_SCHEMES = { "uniform", "cut", "roulette wheel", "stochastic universal sampling",
-			"Boltzmann", "rank", "tournament", "non dominated sorting" };
+		"Boltzmann", "rank", "tournament", "non dominated sorting" };
 
 	public static final int UNIFORM_SELECTION = 0;
 
@@ -202,7 +201,7 @@ public abstract class AbstractGeneticAlgorithm extends FeatureOperator {
 		// selection
 		this.numberOfIndividuals = getParameterAsInt(PARAMETER_POPULATION_SIZE);
 		this.maxGen = getParameterAsInt(PARAMETER_MAXIMUM_NUMBER_OF_GENERATIONS);
-		this.generationsWithoutImproval = (getParameterAsBoolean(PARAMETER_USE_EARLY_STOPPING)) ? getParameterAsInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL)
+		this.generationsWithoutImproval = getParameterAsBoolean(PARAMETER_USE_EARLY_STOPPING) ? getParameterAsInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL)
 				: this.maxGen;
 		boolean keepBest = getParameterAsBoolean(PARAMETER_KEEP_BEST_INDIVIDUAL);
 		boolean dynamicSelection = getParameterAsBoolean(PARAMETER_DYNAMIC_SELECTION_PRESSURE);
@@ -262,7 +261,7 @@ public abstract class AbstractGeneticAlgorithm extends FeatureOperator {
 	 */
 	@Override
 	public boolean solutionGoodEnough(Population pop) {
-		return ((pop.getGeneration() >= maxGen) || (pop.getGenerationsWithoutImproval() >= generationsWithoutImproval));
+		return pop.getGeneration() >= maxGen || pop.getGenerationsWithoutImproval() >= generationsWithoutImproval;
 	}
 
 	@Override
@@ -281,8 +280,8 @@ public abstract class AbstractGeneticAlgorithm extends FeatureOperator {
 
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_EARLY_STOPPING,
 				"Enables early stopping. If unchecked, always the maximum number of generations is performed.", false));
-		type = (new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
-				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2));
+		type = new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
+				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_EARLY_STOPPING, true, true));
 		types.add(type);
 
@@ -327,5 +326,10 @@ public abstract class AbstractGeneticAlgorithm extends FeatureOperator {
 		types.add(type);
 
 		return types;
+	}
+
+	@Override
+	protected int getMaximumGenerations() throws UndefinedParameterError {
+		return maxGen;
 	}
 }

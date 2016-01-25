@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -21,6 +21,7 @@ package com.rapidminer.gui.properties.celleditors.value;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 
 import javax.swing.JButton;
@@ -153,6 +154,7 @@ public class RemoteFileValueCellEditor extends DefaultRMCellEditor implements Pr
 		});
 		gbc.gridx += 1;
 		gbc.weightx = 0;
+		gbc.insets = new Insets(0, 5, 0, 0);
 		container.add(fileOpenButton, gbc);
 	}
 

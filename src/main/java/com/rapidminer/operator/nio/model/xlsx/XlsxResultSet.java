@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model.xlsx;
 
@@ -48,6 +46,7 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.nio.model.ColumnMetaData;
 import com.rapidminer.operator.nio.model.DataResultSet;
+import com.rapidminer.operator.nio.model.DateFormatProvider;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.operator.nio.model.ParseException;
 import com.rapidminer.operator.nio.model.ParsingError;
@@ -73,13 +72,20 @@ public class XlsxResultSet implements DataResultSet {
 	 * Defines whether the Excel file is read by the operator or by the Wizard.
 	 */
 	public static enum XlsxReadMode {
-		WIZARD_WORKPANE, WIZARD_PREVIEW, OPERATOR
+		WIZARD_WORKPANE, WIZARD_PREVIEW, OPERATOR,
+		/**
+		 * Specifies that the {@link XlsxResultSet} was created to display preview content in the
+		 * sheet selection step of the new data import dialog. If used the
+		 * {@link XlsxSheetTableModel} will load a data preview instead of the full sheet content.
+		 */
+		WIZARD_SHEET_SELECTION
 	}
 
 	/**
 	 * The factory used to create XML StAX streams.
 	 */
 	private static final XMLInputFactory XML_STREAM_FACTORY = XMLInputFactory.newFactory();
+
 	static {
 		XML_STREAM_FACTORY.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false);
 		XML_STREAM_FACTORY.setProperty(XMLInputFactory.IS_VALIDATING, false);
@@ -118,9 +124,9 @@ public class XlsxResultSet implements DataResultSet {
 	private final XlsxSheetContentParser worksheetParser;
 
 	/**
-	 * The {@link DateFormat} used to parse cells that contain date entries
+	 * The {@link DateFormatProvider} used to parse cells that contain date entries
 	 */
-	private final DateFormat dateFormat;
+	private final DateFormatProvider dateFormatProvider;
 
 	/**
 	 * The parsed sheet meta data which, e.g., contains information about the cell range to parse.
@@ -142,12 +148,15 @@ public class XlsxResultSet implements DataResultSet {
 	 *            from within an operator.
 	 * @param configuration
 	 *            the result set configuration
+	 * @param provider
+	 *            a {@link DateFormatProvider}, can be {@code null} in which case the date format is
+	 *            fixed by the current value of {@link configuration#getDatePattern()}
 	 * @throws UserError
 	 *             in case something is configured in a wrong way so that the XLSX file cannot be
 	 *             parsed
 	 */
-	public XlsxResultSet(Operator callingOperator, ExcelResultSetConfiguration configuration, int sheetIndex,
-			XlsxReadMode readMode) throws UserError {
+	public XlsxResultSet(Operator callingOperator, final ExcelResultSetConfiguration configuration, int sheetIndex,
+			XlsxReadMode readMode, final DateFormatProvider provider) throws UserError {
 
 		// Check file presence
 		if (configuration.getFile() == null) {
@@ -171,7 +180,7 @@ public class XlsxResultSet implements DataResultSet {
 			}
 
 			this.sheetMetaData = new XlsxSheetMetaDataParser(xlsxFile, workbookRelations.worksheetsPath, XML_STREAM_FACTORY)
-			.parseMetaData(callingOperator, configuration, readMode);
+					.parseMetaData(callingOperator, configuration, readMode);
 
 			// Check if sheet is empty.
 			// Wizards should also be able to show empty sheets so also check if we are running from
@@ -212,12 +221,55 @@ public class XlsxResultSet implements DataResultSet {
 		this.readMode = readMode;
 		this.configuration = configuration;
 
-		String datePattern = configuration.getDatePattern();
-		this.dateFormat = new SimpleDateFormat(datePattern == null ? "" : datePattern);
-		String timezone = configuration.getTimezone();
-		if (timezone != null) {
-			this.dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+		final String timezone = configuration.getTimezone();
+		if (provider != null) {
+			if (timezone != null) {
+				this.dateFormatProvider = new DateFormatProvider() {
+
+					@Override
+					public DateFormat geDateFormat() {
+						DateFormat format = provider.geDateFormat();
+						format.setTimeZone(TimeZone.getTimeZone(timezone));
+						return null;
+					}
+
+				};
+			} else {
+				this.dateFormatProvider = provider;
+			}
+		} else {
+					String datePattern = configuration.getDatePattern();
+			final DateFormat dateFormat = new SimpleDateFormat(datePattern == null ? "" : datePattern);
+					if (timezone != null) {
+						dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+					}
+			this.dateFormatProvider = new DateFormatProvider() {
+
+				@Override
+				public DateFormat geDateFormat() {
+					return dateFormat;
+				}
+			};
 		}
+
+	}
+
+	/**
+	 * Configures the Excel result set with the provided configuration object. Also parses multiple
+	 * XML configuration files included in the XLSX file and creates the worksheet parser.
+	 *
+	 * @param callingOperator
+	 *            the calling operator. <code>null</code> is allowed in case the class isn't created
+	 *            from within an operator.
+	 * @param configuration
+	 *            the result set configuration
+	 * @throws UserError
+	 *             in case something is configured in a wrong way so that the XLSX file cannot be
+	 *             parsed
+	 */
+	public XlsxResultSet(Operator callingOperator, ExcelResultSetConfiguration configuration, int sheetIndex,
+			XlsxReadMode readMode) throws UserError {
+		this(callingOperator, configuration, sheetIndex, readMode, null);
 	}
 
 	@Override
@@ -266,7 +318,7 @@ public class XlsxResultSet implements DataResultSet {
 				// In case a date is stored as String, we try to parse it here
 				String dateString = dateValue;
 				try {
-					return dateFormat.parse(dateString);
+					return dateFormatProvider.geDateFormat().parse(dateString);
 				} catch (java.text.ParseException e) {
 					throw new ParseException(new ParsingError(getCurrentRow() + 1, columnIndex,
 							ParsingError.ErrorCode.UNPARSEABLE_DATE, dateString));
@@ -455,11 +507,11 @@ public class XlsxResultSet implements DataResultSet {
 				worksheetParser.close();
 			}
 		} catch (XMLStreamException | IOException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
+			LogService.getRoot().log(Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.operator.nio.model.ExcelResultSetConfiguration.close_workbook_error",
-							e.getMessage()), e);
+							e.getMessage()),
+					e);
 		}
 	}
 

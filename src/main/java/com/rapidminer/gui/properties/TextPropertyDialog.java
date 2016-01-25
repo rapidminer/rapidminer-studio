@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -93,6 +93,7 @@ public class TextPropertyDialog extends PropertyDialog {
 		switch (type.getTextType()) {
 			case SQL:
 				textArea = new SQLEditor();
+				textArea.setBorder(null);
 				break;
 			case GROOVY:
 			case HTML:
@@ -103,6 +104,7 @@ public class TextPropertyDialog extends PropertyDialog {
 			default:
 				textArea = new RSyntaxTextArea();
 				textArea.setDocument(new RSyntaxDocument(type.getTextType().getSyntaxIdentifier()));
+				textArea.setBorder(null);
 				break;
 		}
 		// if no text is set show the template text
@@ -122,6 +124,7 @@ public class TextPropertyDialog extends PropertyDialog {
 		resizeButton = new JButton(resizeAction);
 
 		RTextScrollPane rTextScrollPane = new RTextScrollPane(textArea);
+		rTextScrollPane.setBorder(null);
 		rTextScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		layoutDefault(rTextScrollPane, NORMAL, resizeButton, makeOkButton("text_property_dialog_apply"), makeCancelButton());
 

@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -38,9 +39,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * <p>
@@ -51,7 +49,7 @@ import java.util.List;
  * last <code>k</code> features does not increase the performance or if all features were added. The
  * value of <code>k</code> can be set with the parameter <code>generations_without_improval</code>.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class WeightGuidedSelectionOperator extends FeatureOperator {
@@ -154,8 +152,8 @@ public class WeightGuidedSelectionOperator extends FeatureOperator {
 	 */
 	@Override
 	public boolean solutionGoodEnough(Population pop) throws OperatorException {
-		return pop.empty() || ((generationsWOImp > 0) && (pop.getGenerationsWithoutImproval() >= generationsWOImp))
-				|| (pop.getGeneration() >= maxGenerations);
+		return pop.empty() || generationsWOImp > 0 && pop.getGenerationsWithoutImproval() >= generationsWOImp
+				|| pop.getGeneration() >= maxGenerations;
 	}
 
 	@Override
@@ -163,8 +161,8 @@ public class WeightGuidedSelectionOperator extends FeatureOperator {
 		List<ParameterType> types = new LinkedList<ParameterType>();
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_EARLY_STOPPING,
 				"Enables early stopping. If unchecked, always the maximum number of generations is performed.", false));
-		ParameterType type = (new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
-				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2));
+		ParameterType type = new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
+				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_EARLY_STOPPING, true, true));
 		types.add(type);
 
@@ -175,5 +173,10 @@ public class WeightGuidedSelectionOperator extends FeatureOperator {
 
 		types.addAll(super.getParameterTypes());
 		return types;
+	}
+
+	@Override
+	protected int getMaximumGenerations() {
+		return maxGenerations;
 	}
 }

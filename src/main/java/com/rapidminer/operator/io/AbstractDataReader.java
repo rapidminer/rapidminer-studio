@@ -1,24 +1,36 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeTypeException;
@@ -32,6 +44,7 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.nio.ExcelExampleSource;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MDInteger;
@@ -52,24 +65,10 @@ import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.container.Range;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
 
 /**
  * Abstract super class of all example sources reading from files.
- * 
+ *
  * @author Tobias Malbrecht
  * @author Sebastian Loh (29.04.2010)
  */
@@ -80,7 +79,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * DO NOT SET THIS PARAMETER DIRECTLY. USE THE
 	 * {@link AbstractDataReader#setErrorTolerant(boolean)} in order to cache the value.
-	 * 
+	 *
 	 * Indicates whether the reader tolerates values, which do not match a attributes value type.
 	 * <p>
 	 * For example if the value type is NUMERICAL and the reader reads a string. If
@@ -141,6 +140,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	public static final String PARAMETER_COLUM_ROLE = "attribute_role";
 
 	public static final ArrayList<String> ROLE_NAMES = new ArrayList<String>();
+
 	{
 		ROLE_NAMES.clear();
 		for (int i = 0; i < Attributes.KNOWN_ATTRIBUTE_TYPES.length; i++) {
@@ -162,7 +162,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * the row count is the number of row/lines which are read during the guessing process. It is
 	 * only used for the operator's MetaData prediction.
-	 * 
+	 *
 	 * @see AbstractDataReader#guessValueTypes()
 	 */
 	private int rowCountFromGuessing = 0;
@@ -170,7 +170,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Indicated whether the operator MetaData is only guessed ( <code>metaDataFixed == false</code>
 	 * ) or somebody called {@link AbstractDataReader#fixMetaDataDefinition()}.
-	 * 
+	 *
 	 */
 	private boolean metaDataFixed = false;
 
@@ -201,9 +201,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Data structure to manage the background highlighting for cells, which can not be parsed as
 	 * the specified value type.
-	 * 
+	 *
 	 * Maps the column to a set of row which in which the parsing failed.
-	 * 
+	 *
 	 * @see AbstractDataReader#hasParseError(int, int)
 	 * @see AbstractDataReader#hasParseErrorInColumn(int)
 	 */
@@ -211,7 +211,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * The columns of the created {@link ExampleSet}.
-	 * 
+	 *
 	 * @see AbstractDataReader#createExampleSet()
 	 * @see AbstractDataReader#guessValueTypes()
 	 */
@@ -254,7 +254,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * Returns all <b>activated</b> attribute columns.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<AttributeColumn> getActiveAttributeColumns() {
@@ -269,7 +269,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * Returns all attribute columns, despite they are activated or not.
-	 * 
+	 *
 	 * @return
 	 */
 	public List<AttributeColumn> getAllAttributeColumns() {
@@ -282,7 +282,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Returns the attribute column with the given index if it exists (it does not matter if the
 	 * column is activated or not). Else a {@link IllegalArgumentException} is thrown
-	 * 
+	 *
 	 * @param index
 	 *            the index of the requested column.
 	 * @return
@@ -297,7 +297,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Returns the index of the given {@link AttributeColumn} (it does not matter if it is activated
 	 * or not). If the attribute column does not exist, -1 is returned.
-	 * 
+	 *
 	 * @param column
 	 * @return the index of the attribute column, -1 else.
 	 */
@@ -308,7 +308,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Returns the index of the given <b>activated</b> {@link AttributeColumn}. Returns -1 if the
 	 * column is not activated or does not exist.
-	 * 
+	 *
 	 * @param column
 	 * @return
 	 */
@@ -329,7 +329,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 * Returns <code>true</code> when somebody called
 	 * {@link AbstractDataReader#fixMetaDataDefinition()}. Otherwise the operator MetaData is only
 	 * guessed (<code>metaDataFixed == false</code>) or
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isMetaDatafixed() {
@@ -379,7 +379,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * Returns the number of all columns, regardless a column is activated or not.
-	 * 
+	 *
 	 * @return
 	 */
 	public int getColumnCount() {
@@ -388,9 +388,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * Returns the number of row which are read during the value type guessing.
-	 * 
+	 *
 	 * @see AbstractDataReader#guessValueTypes()
-	 * 
+	 *
 	 * @return
 	 */
 	private int getRowCountFromGuessing() {
@@ -399,7 +399,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.rapidminer.operator.io.AbstractExampleSource#getGeneratedMetaData()
 	 */
 	@Override
@@ -467,15 +467,6 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 			UnexpectedRowLenghtException e = new TooLongRowLengthException(rowNumber, set.getNumberOfColumnsInCurrentRow(),
 					allAttributeColumns.size());
 			if (isErrorTolerant()) {
-				// adjust columns in case a longer row is read
-				if (this instanceof CSVDataReader) {
-					adjustAttributeColumnsNumbers(set.getNumberOfColumnsInCurrentRow());
-					for (AttributeColumn col : getActiveAttributeColumns()) {
-						if (!activeAttributes.contains(col.getAttribute())) {
-							activeAttributes.add(col.getAttribute());
-						}
-					}
-				}
 				this.logReadingError(e);
 			} else {
 				throw e;
@@ -586,7 +577,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * Sets the name of each attribute to the given name.
-	 * 
+	 *
 	 * @param newColumnNames
 	 */
 	protected void setAttributeNames(String[] newColumnNames) {
@@ -627,8 +618,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	}
 
 	/**
-     * 
-     */
+	 *
+	 */
 	public void stopReading() {
 		stopReading = true;
 
@@ -672,7 +663,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		return getPreviewAsList(progress, false, trimAttributeColumns, PREVIEW_LINES);
 	}
 
-	public List<Object[]> getPreviewAsList(ProgressListener progress, boolean trimAttributeColumns) throws OperatorException {
+	public List<Object[]> getPreviewAsList(ProgressListener progress, boolean trimAttributeColumns)
+			throws OperatorException {
 		if (detectErrorsInPreview) {
 			return getPreviewAsList(progress, true, trimAttributeColumns, -1);
 		} else {
@@ -697,9 +689,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	}
 
 	/**
-	 * 
+	 *
 	 * @see AbstractDataReader#PREVIEW_LINES
-	 * 
+	 *
 	 * @return
 	 * @throws OperatorException
 	 */
@@ -850,7 +842,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	public boolean hasParseErrorInColumn(int column) {
 		TreeSet<Integer> treeSet = errorCells.get(column);
-		return (treeSet != null && !treeSet.isEmpty());
+		return treeSet != null && !treeSet.isEmpty();
 	}
 
 	public boolean hasParseErrorInRow(int row) {
@@ -885,7 +877,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * Returns a new column name for new column to build. Probably something like "attribute_1".
-	 * 
+	 *
 	 * @param column
 	 * @return a unique column name
 	 */
@@ -903,9 +895,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * Returns a generic column name, probably something like proposedName+"_"+columnIndex.
-	 * 
+	 *
 	 * @param oldColumnNames
-	 * 
+	 *
 	 * @param proposedName
 	 *            can be null, then "attribute" the proposed name is "attribute"
 	 * @param columnIndex
@@ -939,9 +931,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Guesses the attribute value types based on the values in the first
 	 * {@link AbstractDataReader#PREVIEW_LINES} rows.
-	 * 
+	 *
 	 * @see {@link AbstractDataReader#PREVIEW_LINES}
-	 * 
+	 *
 	 * @throws OperatorException
 	 */
 	public void guessValueTypes(ProgressListener progress) throws OperatorException {
@@ -966,10 +958,10 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		while (!stopReading && set.next() && linesTried <= PREVIEW_LINES) {
 			rowCountFromGuessing++;
 			// only read every 10'th line to see more diverse cells
-			if ((rowCountFromGuessing > 20) && (rowCountFromGuessing % 10 != 0)) {
+			if (rowCountFromGuessing > 20 && rowCountFromGuessing % 10 != 0) {
 				continue;
 			}
-			if ((progress != null) && (linesTried % tenPercent == 0)) {
+			if (progress != null && linesTried % tenPercent == 0) {
 				progress.setCompleted(linesTried);
 			}
 			linesTried++;
@@ -1146,8 +1138,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Creates an {@link ExampleSet} with the given {@link ExampleSetMetaData} and reads at the most
 	 * <code>limitOfReadLines</code> lines.
-	 * 
-	 * 
+	 *
+	 *
 	 * @param metaData
 	 * @param limitOfReadLines
 	 *            max number of read lines.
@@ -1250,7 +1242,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.rapidminer.operator.io.AbstractReader#getParameterTypes()
 	 */
 	@Override
@@ -1281,8 +1273,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		types.add(typeList);
 
 		// hidden param
-		ParameterTypeBoolean typeBool = new ParameterTypeBoolean(
-				PARAMETER_ATTRIBUTE_NAMES_DEFINED_BY_USER,
+		ParameterTypeBoolean typeBool = new ParameterTypeBoolean(PARAMETER_ATTRIBUTE_NAMES_DEFINED_BY_USER,
 				"the parameter describes whether the attribute names were set by the user manually or were generated by the the reader (generic names or first row of the file)",
 				false);
 		typeBool.setHidden(true);
@@ -1293,7 +1284,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Use this method to set the parameter {@link AbstractDataReader#PARAMETER_ERROR_TOLERANT}. Do
 	 * not set the parameter directly because its value need to be cached.
-	 * 
+	 *
 	 * @param flag
 	 */
 	public void setErrorTolerant(boolean flag) {
@@ -1313,9 +1304,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * Observer that clears the reader settings if the source file is changed. Only relevant for
 	 * {@link CSVDataReader} and {@link ExcelExampleSource}
-	 * 
+	 *
 	 * @author Sebastian Loh (14.07.2010)
-	 * 
+	 *
 	 */
 	protected class CacheResetParameterObserver implements Observer<String> {
 
@@ -1328,13 +1319,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		@Override
 		public void update(Observable<String> observable, String arg) {
-			if (arg == null || !arg.equals(CSVDataReader.PARAMETER_CSV_FILE)
-					|| arg.equals(ExcelExampleSource.PARAMETER_EXCEL_FILE)) {
-				return;
-			}
 			String newFilename = getParameters().getParameterOrNull(parameterKey);
-			if (((newFilename == null) && (oldFilename != null)) || ((newFilename != null) && (oldFilename == null))
-					|| ((newFilename != null) && (oldFilename != null) && !newFilename.equals(oldFilename))) {
+			if (newFilename == null && oldFilename != null || newFilename != null && oldFilename == null
+					|| newFilename != null && oldFilename != null && !newFilename.equals(oldFilename)) {
 				clearAllReaderSettings();
 				this.oldFilename = newFilename;
 			}
@@ -1350,8 +1337,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		int expectedRowLenght = -1;
 
 		/**
-         * 
-         */
+		 *
+		 */
 		public UnexpectedRowLenghtException(String message, int rowNumber, int rowLenght, int expectedRowLenght) {
 			super(message);
 			this.rowNumber = rowNumber;
@@ -1360,8 +1347,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		}
 
 		/**
-         * 
-         */
+		 *
+		 */
 		public UnexpectedRowLenghtException(int rowNumber, int rowLenght, int expectedRowLenght) {
 			super("NO MESSAGE");
 			this.rowNumber = rowNumber;
@@ -1371,8 +1358,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Returns the row where the error occurred. <b>Warning:</b> you might want to add +1 if you
 		 * intend to present this number to the user.
-		 * 
-		 * 
+		 *
+		 *
 		 * @return
 		 */
 		public int getRow() {
@@ -1381,7 +1368,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * Returns the length of the the row {@link UnexpectedRowLenghtException#rowNumber}
-		 * 
+		 *
 		 * @return
 		 */
 		public int getRowLenght() {
@@ -1443,7 +1430,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * Creates a proper error message;
-		 * 
+		 *
 		 * @param expectedValueType
 		 * @param column
 		 * @param row
@@ -1459,7 +1446,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Returns the row where the error occurred. <b>Warning:</b> you might want to add +1 if you
 		 * intend to present this number to the user.
-		 * 
+		 *
 		 * @return
 		 */
 		public int getRow() {
@@ -1469,7 +1456,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Returns the column where the error occurred. <b>Warning:</b> you might want to add +1 if
 		 * you intend to present this number to the user.
-		 * 
+		 *
 		 * @return
 		 */
 		public int getColumn() {
@@ -1478,7 +1465,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * Returns the value which caused the error
-		 * 
+		 *
 		 * @return
 		 */
 		public Object getValue() {
@@ -1495,7 +1482,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	/**
 	 * @author Sebastian Loh (28.04.2010)
-	 * 
+	 *
 	 *         <p>
 	 *         Private class describing a column of the created ExampleSet. Holds all information
 	 *         (name, value type, annotations) in order to create the actual attribute for this
@@ -1503,11 +1490,11 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 *         status (is the column actual selected to be read?) and missing values - in order to
 	 *         build proper meta data description.
 	 *         </p>
-	 * 
+	 *
 	 * @see AbstractDataReader#getGeneratedMetaData()
 	 * @see AbstractDataReader#guessValueTypes()
 	 * @see AbstractDataReader#createExampleSet(ExampleSetMetaData, int)
-	 * 
+	 *
 	 */
 	public class AttributeColumn {
 
@@ -1599,7 +1586,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * increase the number of read missing value by one.
-		 * 
+		 *
 		 * @return the number after the increasement.
 		 */
 		public int incNummerOfMissing() {
@@ -1616,7 +1603,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Creates the actual attribute object that is described by this column's properties (name,
 		 * value type, annotations).
-		 * 
+		 *
 		 * @return the created attribute.
 		 */
 		private Attribute createAttribute() {
@@ -1662,7 +1649,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * Activates or deactivates this column.
-		 * 
+		 *
 		 * @param flag
 		 */
 		public void activateColumn(boolean flag) {
@@ -1671,9 +1658,9 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * Returns the value type of the columns attribute.
-		 * 
+		 *
 		 * @see Ontology
-		 * 
+		 *
 		 * @return
 		 */
 		public int getValueType() {
@@ -1683,7 +1670,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Sets the value type of the columns attribute by actually replacing the existing attribute
 		 * with a new generated attribute with same name and the new type.
-		 * 
+		 *
 		 * @param newValueType
 		 */
 		public void setValueType(int newValueType) {
@@ -1693,7 +1680,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Returns the name of this column, which is also the name of the attribute that is created
 		 * from this column's properties.
-		 * 
+		 *
 		 * @return the name
 		 */
 		public String getName() {
@@ -1710,7 +1697,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * Returns the attribute's role as a String.
-		 * 
+		 *
 		 * @return
 		 */
 		public String getRole() {
@@ -1719,7 +1706,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * Set the role of the attribute column
-		 * 
+		 *
 		 * @param role
 		 */
 		public void setRole(String role) {
@@ -1776,8 +1763,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		}
 
 		/**
-		 * 
-		 * 
+		 *
+		 *
 		 * Sets the meta data value with entry <code>parameterIndex</code> of this
 		 * {@link AttributeColumn}.
 		 * <p>
@@ -1785,13 +1772,13 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		 * set. (the first time means that this attribute column does not have an index, ie.
 		 * <code>getIndexOfAttributeColumn(this) == -1</code>.
 		 * </p>
-		 * 
+		 *
 		 * @param parameterIndex
 		 *            legal parameters are: {@link AttributeColumn#NAME_PARAMETER},
 		 *            {@link AttributeColumn#IS_ACTIVATED_PARAMETER},
 		 *            {@link AttributeColumn#VALUE_TYPE_PARAMETER},
 		 *            {@link AttributeColumn#ROLE_PARAMETER}.
-		 * 
+		 *
 		 * @param value
 		 *            the new value
 		 */
@@ -1846,7 +1833,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 		/**
 		 * creates a new column and generated a attribute with the given name and nominal value type
-		 * 
+		 *
 		 * @param attributeName
 		 */
 		public AttributeColumn(String attributeName) {
@@ -1861,21 +1848,21 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Proceed to the next row if existent. Should return true if such a row exists or false, if
 		 * no such next row exists.
-		 * 
+		 *
 		 * @return
 		 */
 		public abstract boolean next();
 
 		/**
 		 * Returns the number of columns in the current row, i.e. the length of the row.
-		 * 
+		 *
 		 * @return
 		 */
 		public abstract int getNumberOfColumnsInCurrentRow();
 
 		/**
 		 * Returns whether the value in the specified column in the current row is missing.
-		 * 
+		 *
 		 * @param columnIndex
 		 *            index of the column
 		 * @return
@@ -1885,7 +1872,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Returns a numerical value contained in the specified column in the current row. Should
 		 * return null if the value is not a numerical or if the value is missing.
-		 * 
+		 *
 		 * @param columnIndex
 		 * @return
 		 */
@@ -1895,7 +1882,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		 * Returns a nominal value contained in the specified column in the current row. Should
 		 * return null if the value is not a nominal or a kind of string type or if the value is
 		 * missing.
-		 * 
+		 *
 		 * @param columnIndex
 		 * @return
 		 */
@@ -1905,7 +1892,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		 * Returns a date, time or date_time value contained in the specified column in the current
 		 * row. Should return null if the value is not a date or time value or if the value is
 		 * missing.
-		 * 
+		 *
 		 * @param columnIndex
 		 * @return
 		 */
@@ -1914,7 +1901,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		/**
 		 * Closes the data source. May tear down a database connection or close a file which is re`
 		 * from.
-		 * 
+		 *
 		 * @throws OperatorException
 		 */
 		public abstract void close() throws OperatorException;

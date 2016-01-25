@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
@@ -42,6 +40,7 @@ import javax.swing.SwingConstants;
 
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.OperatorDocumentationBrowser;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.FixedWidthLabel;
@@ -148,7 +147,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 
 			for (ExecutionUnit subprocess : chain.getSubprocesses()) {
 				JPanel subprocessPanel = new JPanel(new BorderLayout());
-				JLabel label = new JLabel(SwingTools.createIcon("24/elements_selection.png"));
+				JLabel label = new JLabel(SwingTools.createIcon("24/elements_tree.png"));
 				label.setHorizontalTextPosition(SwingConstants.CENTER);
 				label.setVerticalTextPosition(SwingConstants.BOTTOM);
 				label.setText(subprocess.getName());
@@ -170,7 +169,8 @@ public class OperatorInfoScreen extends ButtonDialog {
 		c.fill = GridBagConstraints.BOTH;
 		c.weighty = 1;
 		overviewPanel.add(new JPanel(new BorderLayout()), c);
-		final JScrollPane overviewPane = new JScrollPane(overviewPanel);
+		final JScrollPane overviewPane = new ExtendedJScrollPane(overviewPanel);
+		overviewPane.setBorder(null);
 		overviewPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		overviewPane.getViewport().addComponentListener(new ComponentListener() {
 
@@ -255,7 +255,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 				FixedWidthLabel label = new FixedWidthLabel(rowPanel.getWidth() / 2, port.getName());
 				label.setIcon(inIcon);
 				label.setText(// (numberOfInputPorts > 1 ? ("<em>" + (i + 1) + ":</em> ") : "") +
-						port.getName() + (port.getDescription().equals("") ? "" : " (" + port.getDescription() + ")"));
+				port.getName() + (port.getDescription().equals("") ? "" : " (" + port.getDescription() + ")"));
 				labels.add(label);
 				rowPanel.add(label);
 			} else {
@@ -266,7 +266,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 				FixedWidthLabel label = new FixedWidthLabel(rowPanel.getWidth() / 2, port.getName());
 				label.setIcon(outIcon);
 				label.setText(// (numberOfOutputPorts > 1 ? ("<em>" + (i + 1) + ":</em> ") : "") +
-						port.getName() + (port.getDescription().equals("") ? "" : " (" + port.getDescription() + ")"));
+				port.getName() + (port.getDescription().equals("") ? "" : " (" + port.getDescription() + ")"));
 				labels.add(label);
 				rowPanel.add(label);
 			} else {

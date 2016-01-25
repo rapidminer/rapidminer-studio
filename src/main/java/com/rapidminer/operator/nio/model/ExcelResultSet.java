@@ -1,27 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -29,6 +28,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.TimeZone;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.Tools;
 
 import jxl.Cell;
 import jxl.CellType;
@@ -38,12 +43,6 @@ import jxl.Sheet;
 import jxl.Workbook;
 import jxl.WorkbookSettings;
 import jxl.read.biff.BiffException;
-
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
-import com.rapidminer.tools.ProgressListener;
-import com.rapidminer.tools.Tools;
 
 
 /**
@@ -74,21 +73,18 @@ public class ExcelResultSet implements DataResultSet {
 
 	private String[] attributeNames;
 
-	private String timeZone;
-	private String dateFormat;
+	private final DateFormatProvider dateFormatProvider;
 
 	/**
 	 * The constructor to build an ExcelResultSet from the given configuration. The calling operator
 	 * might be null. It is only needed for error handling.
 	 */
-	public ExcelResultSet(Operator callingOperator, ExcelResultSetConfiguration configuration) throws OperatorException {
+	public ExcelResultSet(Operator callingOperator, final ExcelResultSetConfiguration configuration,
+			final DateFormatProvider dateFormatProvider) throws OperatorException {
 		// reading configuration
 		columnOffset = configuration.getColumnOffset();
-		rowOffset = configuration.getRowOffset();
+		rowOffset = Math.max(configuration.getRowOffset(), 0);
 		currentRow = configuration.getRowOffset() - 1;
-
-		timeZone = configuration.getTimezone();
-		dateFormat = configuration.getDatePattern();
 
 		// check range
 		if (columnOffset > configuration.getColumnLast() || rowOffset > configuration.getRowLast() || columnOffset < 0
@@ -179,6 +175,37 @@ public class ExcelResultSet implements DataResultSet {
 				}
 			}
 		}
+
+		final String timezone = configuration.getTimezone();
+		if (dateFormatProvider != null) {
+			if (timezone != null) {
+				this.dateFormatProvider = new DateFormatProvider() {
+
+					@Override
+					public DateFormat geDateFormat() {
+						DateFormat format = dateFormatProvider.geDateFormat();
+						format.setTimeZone(TimeZone.getTimeZone(timezone));
+						return format;
+					}
+
+				};
+			} else {
+				this.dateFormatProvider = dateFormatProvider;
+			}
+		} else {
+			String datePattern = configuration.getDatePattern();
+			final DateFormat dateFormat = datePattern == null ? new SimpleDateFormat() : new SimpleDateFormat(datePattern);
+			if (timezone != null) {
+				dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+			}
+			this.dateFormatProvider = new DateFormatProvider() {
+
+				@Override
+				public DateFormat geDateFormat() {
+					return dateFormat;
+				}
+			};
+		}
 	}
 
 	@Override
@@ -264,8 +291,8 @@ public class ExcelResultSet implements DataResultSet {
 			try {
 				return Double.valueOf(valueString);
 			} catch (NumberFormatException e) {
-				throw new ParseException(new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_REAL,
-						valueString));
+				throw new ParseException(
+						new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_REAL, valueString));
 			}
 		}
 	}
@@ -284,12 +311,10 @@ public class ExcelResultSet implements DataResultSet {
 		} else {
 			String valueString = cell.getContents();
 			try {
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
-				simpleDateFormat.setTimeZone(TimeZone.getTimeZone(this.timeZone));
-				return simpleDateFormat.parse(valueString);
+				return dateFormatProvider.geDateFormat().parse(valueString);
 			} catch (java.text.ParseException e) {
-				throw new ParseException(new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_DATE,
-						valueString));
+				throw new ParseException(
+						new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_DATE, valueString));
 			}
 		}
 	}

@@ -1,26 +1,34 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.renderer;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+
 import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.processeditor.results.ResultDisplayTools;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.CellColorProviderAlternating;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -36,16 +44,11 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.report.Reportable;
 import com.rapidminer.report.Tableable;
 
-import java.awt.Component;
-import java.util.List;
-
-import javax.swing.JLabel;
-
 
 /**
  * This is the abstract renderer superclass for all renderers which should be a table based on a
  * given {@link DataTable}.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractDataTableTableRenderer extends NonGraphicalRenderer {
@@ -191,17 +194,27 @@ public abstract class AbstractDataTableTableRenderer extends NonGraphicalRendere
 		if (dataTable != null) {
 			DataTableViewerTable resultTable = new DataTableViewerTable(dataTable, isSortable(), isColumnMovable(),
 					isAutoresize());
+			resultTable.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
+			resultTable.setRowHighlighting(true);
 			resultTable.setCellColorProvider(getCellColorProvider(resultTable, renderable));
-			return new ExtendedJScrollPane(resultTable);
+
+			ExtendedJScrollPane scrollPane = new ExtendedJScrollPane(resultTable);
+			scrollPane.setBorder(BorderFactory.createEmptyBorder(42, 10, 15, 10));
+			scrollPane.setBackground(Colors.WHITE);
+			scrollPane.getViewport().setBackground(Colors.WHITE);
+
+			JPanel component = new JPanel(new BorderLayout());
+			component.add(scrollPane, BorderLayout.CENTER);
+			return component;
 		} else {
-			return new JLabel("No visualization possible for table.");
+			return ResultDisplayTools.createErrorComponent("No visualization possible for table.");
 		}
 	}
 
 	/**
 	 * Subclasses might override this method in order to change the color provider like for
 	 * correlation matrices.
-	 * 
+	 *
 	 * @param renderable
 	 */
 	protected CellColorProvider getCellColorProvider(ExtendedJTable table, Object renderable) {

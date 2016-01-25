@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow.processrendering.draw;
 
@@ -53,6 +51,7 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.tools.ClassColorMap;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParentResolvingMap;
+import com.rapidminer.tools.plugin.Plugin;
 
 
 /**
@@ -68,8 +67,8 @@ public final class ProcessDrawUtils {
 	private static final JLabel DUMMY_LABEL = new JLabel();
 
 	/** shadow color */
-	private static final Color TRANSPARENT_GRAY = new Color(Color.GRAY.getRed(), Color.GRAY.getGreen(),
-			Color.GRAY.getBlue(), 0);
+	private static final Color TRANSPARENT_GRAY = new Color(Color.GRAY.getRed(), Color.GRAY.getGreen(), Color.GRAY.getBlue(),
+			0);
 
 	/** map containing IOObject colors */
 	private static ParentResolvingMap<Class<?>, Color> IO_CLASS_TO_COLOR_MAP = new ClassColorMap();
@@ -77,7 +76,7 @@ public final class ProcessDrawUtils {
 	static {
 		try {
 			IO_CLASS_TO_COLOR_MAP.parseProperties("com/rapidminer/resources/groups.properties", "io.", ".color",
-					OperatorDescription.class.getClassLoader());
+					OperatorDescription.class.getClassLoader(), null);
 		} catch (IOException e) {
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.gui.flow.ProcessRenderer.loading_operator_group_colors_error");
@@ -100,10 +99,12 @@ public final class ProcessDrawUtils {
 	 *            the name of the plugin
 	 * @param classLoader
 	 *            the classloader responsible who registered the colors
+	 * @param provider
+	 *            the extension for the registered group color
 	 */
 	public static void registerAdditionalGroupColors(final String groupProperties, final String pluginName,
-			final ClassLoader classLoader) {
-		SwingTools.registerAdditionalGroupColors(groupProperties, pluginName, classLoader);
+			final ClassLoader classLoader, final Plugin provider) {
+		SwingTools.registerAdditionalGroupColors(groupProperties, pluginName, classLoader, provider);
 	}
 
 	/**
@@ -115,14 +116,16 @@ public final class ProcessDrawUtils {
 	 *            the name of the plugin
 	 * @param classLoader
 	 *            the classloader responsible who registered the colors
+	 * @param provider
+	 *            the extension to registered IOObjects for
 	 */
 	public static void registerAdditionalObjectColors(final String groupProperties, final String pluginName,
-			final ClassLoader classLoader) {
+			final ClassLoader classLoader, final Plugin provider) {
 		try {
-			IO_CLASS_TO_COLOR_MAP.parseProperties(groupProperties, "io.", ".color", classLoader);
+			IO_CLASS_TO_COLOR_MAP.parseProperties(groupProperties, "io.", ".color", classLoader, provider);
 		} catch (IOException e) {
-			LogService.getRoot().log(Level.WARNING,
-					"com.rapidminer.gui.flow.ProcessRenderer.loading_io_object_colors_error", pluginName);
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.flow.ProcessRenderer.loading_io_object_colors_error",
+					pluginName);
 		}
 	}
 
@@ -233,8 +236,8 @@ public final class ProcessDrawUtils {
 			return null;
 		}
 
-		return new Rectangle2D.Double(Math.min(start.getX(), end.getX()), Math.min(start.getY(), end.getY()), Math.abs(start
-				.getX() - end.getX()), Math.abs(start.getY() - end.getY()));
+		return new Rectangle2D.Double(Math.min(start.getX(), end.getX()), Math.min(start.getY(), end.getY()),
+				Math.abs(start.getX() - end.getX()), Math.abs(start.getY() - end.getY()));
 	}
 
 	/**
@@ -248,7 +251,8 @@ public final class ProcessDrawUtils {
 	public static void drawShadow(final Rectangle2D rect, final Graphics2D g2) {
 		Graphics2D g2S = (Graphics2D) g2.create();
 
-		Rectangle2D shadow = new Rectangle2D.Double(rect.getX() + 5, rect.getY() + 5, rect.getWidth(), rect.getHeight());
+		Rectangle2D shadow = new Rectangle2D.Double(rect.getX() + 5, rect.getY() + ProcessDrawer.HEADER_HEIGHT + 5,
+				rect.getWidth(), rect.getHeight() - ProcessDrawer.HEADER_HEIGHT);
 		GeneralPath bottom = new GeneralPath();
 		bottom.moveTo(shadow.getX(), rect.getMaxY());
 		bottom.lineTo(rect.getMaxX(), rect.getMaxY());
@@ -341,6 +345,7 @@ public final class ProcessDrawUtils {
 		Operator op = port.getPorts().getOwner().getOperator();
 		int index = port.getPorts().getAllPorts().indexOf(port);
 		int addOffset = 0;
+		int xOffset = 1;
 		for (int i = 0; i <= index; i++) {
 			addOffset += model.getPortSpacing(port.getPorts().getPortByIndex(i));
 		}
@@ -351,11 +356,12 @@ public final class ProcessDrawUtils {
 			// this is an inner port
 			process = port.getPorts().getOwner().getConnectionContext();
 			if (port instanceof OutputPort) {
-				point = new Point(0, ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET + index
-						* ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
+				point = new Point(0 + xOffset, ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET
+						+ index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
 			} else {
-				point = new Point((int) Math.ceil(model.getProcessWidth(process)), ProcessDrawer.OPERATOR_MIN_HEIGHT / 2
-						+ ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
+				point = new Point((int) Math.ceil(model.getProcessWidth(process) - xOffset),
+						ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET
+								+ index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
 			}
 		} else {
 			// this is an outer port of a nested operator
@@ -368,11 +374,11 @@ public final class ProcessDrawUtils {
 			}
 
 			if (port instanceof InputPort) {
-				point = new Point((int) Math.ceil(opRect.getX()), (int) Math.ceil(opRect.getY() + ProcessDrawer.PORT_OFFSET
-						+ index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset));
+				point = new Point((int) Math.ceil(opRect.getX()), (int) Math.ceil(
+						opRect.getY() + ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset));
 			} else {
-				point = new Point((int) Math.ceil(opRect.getMaxX()), (int) Math.ceil(opRect.getY()
-						+ ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset));
+				point = new Point((int) Math.ceil(opRect.getMaxX()), (int) Math.ceil(
+						opRect.getY() + ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset));
 			}
 		}
 		return point;
@@ -390,7 +396,8 @@ public final class ProcessDrawUtils {
 	 * @return the absolute point (relative to the process renderer view) or {@code null} if the
 	 *         process index is invalid
 	 */
-	public static Point convertToAbsoluteProcessPoint(final Point p, final int processIndex, final ProcessRendererModel model) {
+	public static Point convertToAbsoluteProcessPoint(final Point p, final int processIndex,
+			final ProcessRendererModel model) {
 		double xOffset = 0;
 		for (int i = 0; i < model.getProcesses().size(); i++) {
 			xOffset += ProcessDrawer.WALL_WIDTH;
@@ -446,7 +453,7 @@ public final class ProcessDrawUtils {
 		}
 
 		Rectangle2D bounds = g2.getFont().getStringBounds(string, g2.getFontRenderContext());
-		if (bounds.getWidth() < maxWidth) {
+		if (bounds.getWidth() <= maxWidth) {
 			return string;
 		}
 		while (g2.getFont().getStringBounds(string + "...", g2.getFontRenderContext()).getWidth() > maxWidth) {
@@ -536,11 +543,12 @@ public final class ProcessDrawUtils {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Returns the height for the specified {@link Operator}.
+	 *
 	 * @param operator
-	 * 		the operator in question
+	 *            the operator in question
 	 * @return
 	 */
 	public static double calcHeighForOperator(Operator operator) {

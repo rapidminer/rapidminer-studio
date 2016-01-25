@@ -1,54 +1,40 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.fc;
 
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dialog;
-import java.awt.Frame;
 import java.awt.Graphics;
-import java.awt.HeadlessException;
 import java.awt.Image;
-import java.awt.Window;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.io.File;
 
 import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-
-import sun.awt.AppContext;
 
 
 /**
  * A helper class containing some tools.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class Tools {
-
-	private static final Object sharedFrameKey = JOptionPane.class;
-
-	private static final Object sharedOwnerFrameKey = new StringBuffer("SwingUtilities.sharedOwnerFrame");
 
 	private static int width;
 
@@ -72,68 +58,14 @@ public class Tools {
 
 	private static BufferedImage srcBImage;
 
-	private static Object getAppContext(Object key) {
-		return AppContext.getAppContext().get(key);
-	}
-
-	private static void putAppContext(Object key, Object value) {
-		AppContext.getAppContext().put(key, value);
-	}
-
-	private static Frame getSharedOwnerFrame() throws HeadlessException {
-		Frame sharedOwnerFrame = (Frame) getAppContext(sharedOwnerFrameKey);
-		if (sharedOwnerFrame == null) {
-			sharedOwnerFrame = new Frame() {
-
-				private static final long serialVersionUID = -3949166916666457066L;
-
-				@Override
-				public void setVisible(boolean value) {
-					// This frame can never be shown
-				}
-
-				@Override
-				public synchronized void dispose() {
-					try {
-						getToolkit().getSystemEventQueue();
-						super.dispose();
-					} catch (Exception e) {
-						// untrusted code not allowed to dispose
-					}
-				}
-			};
-			putAppContext(sharedOwnerFrameKey, sharedOwnerFrame);
-		}
-		return sharedOwnerFrame;
-	}
-
-	private static Frame getRootFrame() throws HeadlessException {
-		Frame sharedFrame = (Frame) getAppContext(sharedFrameKey);
-		if (sharedFrame == null) {
-			sharedFrame = getSharedOwnerFrame();
-			putAppContext(sharedFrameKey, sharedFrame);
-		}
-		return sharedFrame;
-	}
-
-	public static Window getWindowForComponent(Component parentComponent) throws HeadlessException {
-		if (parentComponent == null) {
-			return getRootFrame();
-		}
-		if ((parentComponent instanceof Frame) || (parentComponent instanceof Dialog)) {
-			return (Window) parentComponent;
-		}
-		return getWindowForComponent(parentComponent.getParent());
-	}
-
 	public static ImageIcon getSmallSystemIcon(Image img) throws Exception {
-		if ((img.getWidth(null) > 20) || (img.getHeight(null) > 20)) {
+		if (img.getWidth(null) > 20 || img.getHeight(null) > 20) {
 			if (img.getWidth(null) > img.getHeight(null)) {
 				width = 18;
-				height = (img.getHeight(null) * 18) / img.getWidth(null);
+				height = img.getHeight(null) * 18 / img.getWidth(null);
 			} else {
 				height = 18;
-				width = (img.getWidth(null) * 18) / img.getHeight(null);
+				width = img.getWidth(null) * 18 / img.getHeight(null);
 			}
 		} else {
 			return new ImageIcon(img);
@@ -153,13 +85,13 @@ public class Tools {
 	}
 
 	public static ImageIcon getBigSystemIcon(Image image) throws Exception {
-		if ((image.getWidth(null) < 20) || (image.getHeight(null) < 20)) {
+		if (image.getWidth(null) < 20 || image.getHeight(null) < 20) {
 			if (image.getWidth(null) > image.getHeight(null)) {
 				width = 24;
-				height = (image.getHeight(null) * 24) / image.getWidth(null);
+				height = image.getHeight(null) * 24 / image.getWidth(null);
 			} else {
 				height = 24;
-				width = (image.getWidth(null) * 24) / image.getHeight(null);
+				width = image.getWidth(null) * 24 / image.getHeight(null);
 			}
 		} else {
 			return new ImageIcon(image);
@@ -185,10 +117,10 @@ public class Tools {
 
 		if (srcBImage.getWidth() > srcBImage.getHeight()) {
 			width = 100;
-			height = (srcBImage.getHeight() * 100) / srcBImage.getWidth();
+			height = srcBImage.getHeight() * 100 / srcBImage.getWidth();
 		} else {
 			height = 100;
-			width = (srcBImage.getWidth() * 100) / srcBImage.getHeight();
+			width = srcBImage.getWidth() * 100 / srcBImage.getHeight();
 		}
 
 		dest = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);

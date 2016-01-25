@@ -1,24 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.linear;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.math3.distribution.FDistribution;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ProcessStoppedException;
@@ -26,10 +29,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.math.FDistribution;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -38,7 +37,7 @@ import java.util.List;
  * backward selection is performed and all attributes for which in the combination the null
  * hypothesis can't be denied are dropped. The next round then starts with the remaining attributes
  * until there's no further change or the maximal number of rounds are exceeded.
- * 
+ *
  * @author Sebastian Land
  */
 public class IterativeTTestLinearRegressionMethod extends TTestLinearRegressionMethod {
@@ -56,8 +55,14 @@ public class IterativeTTestLinearRegressionMethod extends TTestLinearRegressionM
 		double alphaForward = regression.getParameterAsDouble(PARAMETER_FORWARD_SELECTION_THRESHOLD);
 		double alphaBackward = regression.getParameterAsDouble(PARAMETER_BACKWARD_SELECTION_THRESHOLD);
 
-		// retrieving statistics
-		FDistribution fdistribution = new FDistribution(1, exampleSet.size() - coefficientsOnFullData.length);
+		FDistribution fdistribution;
+		// check if the F-distribution can be calculated
+		int secondDegreeOfFreedom = exampleSet.size() - coefficientsOnFullData.length;
+		if (secondDegreeOfFreedom > 0) {
+			fdistribution = new FDistribution(1, secondDegreeOfFreedom);
+		} else {
+			fdistribution = null;
+		}
 
 		double generalCorrelation = regression.getCorrelation(exampleSet, isUsedAttribute, coefficientsOnFullData, useBias);
 		generalCorrelation *= generalCorrelation;
@@ -71,7 +76,7 @@ public class IterativeTTestLinearRegressionMethod extends TTestLinearRegressionM
 
 		// do until nothing changes or max rounds exceeded
 		int iteration = 0;
-		while (iteration == 0 || (iteration < maxIterations && isSelectionDiffering(isUsedAttribute, isLastRoundUsed))) {
+		while (iteration == 0 || iteration < maxIterations && isSelectionDiffering(isUsedAttribute, isLastRoundUsed)) {
 			System.arraycopy(isUsedAttribute, 0, isLastRoundUsed, 0, isUsedAttribute.length);
 
 			// first do forward selection for all single non-selected and
@@ -83,11 +88,15 @@ public class IterativeTTestLinearRegressionMethod extends TTestLinearRegressionM
 					isUsedAttribute[i] = true;
 					double[] coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean,
 							ridge);
-
-					double pValue = getPValue(coefficients[coefficientIndex], i, regression, useBias, ridge, exampleSet,
-							isUsedAttribute, standardDeviations, labelStandardDeviation, fdistribution, generalCorrelation);
-					if ((pValue < 0 ? 1.0d : Math.max(0.0d, 1.0d - pValue)) <= alphaForward) {
-						isToUseNextRound[i] = true;
+					// only if it is possible to calculate the probabilities, the p-value for this
+					// attribute is checked
+					if (fdistribution != null) {
+						double pValue = getPValue(coefficients[coefficientIndex], i, regression, useBias, ridge, exampleSet,
+								isUsedAttribute, standardDeviations, labelStandardDeviation, fdistribution,
+								generalCorrelation);
+						if (1.0d - pValue <= alphaForward) {
+							isToUseNextRound[i] = true;
+						}
 					}
 					isUsedAttribute[i] = false;
 				} else if (isUsedAttribute[i]) {

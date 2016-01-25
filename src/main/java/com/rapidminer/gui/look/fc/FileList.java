@@ -1,28 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.fc;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dialog;
 import java.awt.Dimension;
@@ -31,8 +30,8 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Paint;
 import java.awt.Point;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -67,7 +66,8 @@ import javax.swing.filechooser.FileSystemView;
 
 import sun.awt.shell.ShellFolder;
 
-import com.rapidminer.gui.look.RapidLookTools;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.ui.TableHeaderUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.SwingTools;
@@ -107,13 +107,13 @@ public class FileList extends JPanel implements PropertyChangeListener {
 
 	private static final long serialVersionUID = 8893252970970228545L;
 
-	private static final ImageIcon SMALL_FILE_IMAGE = SwingTools.createImage("plaf/unknown_file_small.png");
+	private static final ImageIcon SMALL_FILE_IMAGE = SwingTools.createImage("plaf/document_empty_16.png");
 
-	private static final ImageIcon SMALL_FOLDER_IMAGE = SwingTools.createImage("plaf/tree_open.png");
+	private static final ImageIcon SMALL_FOLDER_IMAGE = SwingTools.createImage("plaf/folder_open_16.png");
 
-	private static final ImageIcon BIG_FILE_IMAGE = SwingTools.createImage("plaf/unknown_file_big.png");
+	private static final ImageIcon BIG_FILE_IMAGE = SwingTools.createImage("plaf/document_empty_32.png");
 
-	private static final ImageIcon BIG_FOLDER_IMAGE = SwingTools.createImage("plaf/unknown_folder_big.png");
+	private static final ImageIcon BIG_FOLDER_IMAGE = SwingTools.createImage("plaf/folder_open_32.png");
 
 	private final Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
 
@@ -136,8 +136,6 @@ public class FileList extends JPanel implements PropertyChangeListener {
 	private final JSplitPane mainSplitPane = new JSplitPane();
 
 	private JMenuItem menuItem;
-
-	private Window window;
 
 	protected JPanel cardPanel = new JPanel(new CardLayout());
 
@@ -404,15 +402,18 @@ public class FileList extends JPanel implements PropertyChangeListener {
 	}
 
 	public void renameBookmark(Bookmark bookmark) {
-		this.window = Tools.getWindowForComponent(this);
+		Container topLevelAncestor = getTopLevelAncestor();
+
 		BookmarkDialog dialog;
-		if (this.window instanceof Frame) {
-			dialog = new BookmarkDialog((Frame) this.window, true);
+		if (topLevelAncestor instanceof Frame) {
+			dialog = new BookmarkDialog((Frame) topLevelAncestor, true);
+		} else if (topLevelAncestor instanceof Dialog) {
+			dialog = new BookmarkDialog((Dialog) topLevelAncestor, true);
 		} else {
-			dialog = new BookmarkDialog((Dialog) this.window, true);
+			dialog = new BookmarkDialog((Frame) null, true);
 		}
 
-		dialog.setLocationRelativeTo(this.window);
+		dialog.setLocationRelativeTo(topLevelAncestor);
 		dialog.updateDefaults(bookmark.getName(), bookmark.getPath());
 
 		dialog.setVisible(true);
@@ -437,7 +438,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		this.setLayout(new BorderLayout());
 		this.mainSplitPane.setName("");
 		this.mainSplitPane.setAutoscrolls(true);
-		this.mainSplitPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
+		this.mainSplitPane.setBorder(null);
 		this.mainSplitPane.setMinimumSize(new Dimension(40, 25));
 		this.mainSplitPane.setOpaque(true);
 		this.mainSplitPane.setContinuousLayout(false);
@@ -446,11 +447,10 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		this.mainSplitPane.setDividerLocation(170);
 		this.mainSplitPane.setLastDividerLocation(170);
 
-		this.mainSplitPane.setOneTouchExpandable(true);
 		this.tableScrollPane.getViewport().setBackground(Color.white);
 		this.tableScrollPane.setFocusable(false);
 		this.tableScrollPane.getVerticalScrollBar().setUnitIncrement(10);
-		this.tableScrollPane.setBorder(null);
+		this.tableScrollPane.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Colors.TAB_BORDER));
 
 		this.browseScrollPane.setName("");
 		this.browseScrollPane.getVerticalScrollBar().setUnitIncrement(10);
@@ -471,29 +471,21 @@ public class FileList extends JPanel implements PropertyChangeListener {
 				int h = this.getHeight();
 				int w = this.getWidth();
 
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[6]);
-				g.drawLine(0, 0, w - 1, 0);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[7]);
-				g.drawLine(0, h - 2, w - 1, h - 2);
-
 				Graphics2D g2 = (Graphics2D) g;
-				g2.setPaint(new GradientPaint(0, 1, RapidLookTools.getColors().getTableHeaderColors()[8], 0, h - 5,
-						RapidLookTools.getColors().getTableHeaderColors()[9]));
-				g2.fillRect(0, 1, w, h - 5);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[10]);
-				g.drawLine(0, h - 5, w - 1, h - 5);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[11]);
-				g.drawLine(0, h - 4, w - 1, h - 4);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[12]);
-				g.drawLine(0, h - 3, w - 1, h - 3);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[13]);
-				g.drawLine(0, h - 1, w - 1, h - 1);
+
+				Paint gp = new GradientPaint(0, 0, Colors.TABLE_HEADER_BACKGROUND_GRADIENT_START, 0, h,
+						Colors.TABLE_HEADER_BACKGROUND_GRADIENT_END);
+				g2.setPaint(gp);
+				g2.fill(TableHeaderUI.createHeaderShape(0, 0, w, h, true, true));
+				g2.setColor(Colors.TABLE_HEADER_BORDER);
+				g2.draw(TableHeaderUI.createHeaderShape(0, 0, w, h, true, true));
+
 				super.paint(g);
 			}
 		};
 		bookmarkPanel.add(bookmarkLabel, BorderLayout.NORTH);
 		JScrollPane bookmarkPane = new JScrollPane(this.bookmarkList);
-		bookmarkPane.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
+		bookmarkPane.setBorder(BorderFactory.createMatteBorder(0, 1, 1, 0, Colors.TAB_BORDER));
 		bookmarkPanel.add(bookmarkPane, BorderLayout.CENTER);
 
 		this.tablePanel = new FileTable(this);

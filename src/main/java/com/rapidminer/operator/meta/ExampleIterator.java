@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorChain;
@@ -35,8 +35,6 @@ import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 
-import java.util.List;
-
 
 /**
  * <p>
@@ -44,12 +42,12 @@ import java.util.List;
  * examples of the input data is. Inner operators can access the current example number (begins with
  * 0) by a macro, whose name can be specified via the parameter <code>iteration_macro</code>.
  * </p>
- * 
+ *
  * <p>
  * As input example will be used either the {@link ExampleSet} delivered on the {@link OutputPort}
  * of this operator or if not connected the initial unmodified {@link ExampleSet}.
  * </p>
- * 
+ *
  * @author Marcin Skirzynski, Tobias Malbrecht
  */
 public class ExampleIterator extends OperatorChain {
@@ -110,6 +108,12 @@ public class ExampleIterator extends OperatorChain {
 		String iterationMacroName = getParameterAsString(PARAMETER_ITERATION_MACRO);
 		boolean innerSinkIsConnected = exampleSetInnerSink.isConnected();
 
+		// init Operator progress
+		getProgress().setTotal(exampleSet.size());
+
+		// disable call to checkForStop as inApplyLoop will call it anyway
+		getProgress().setCheckForStop(false);
+
 		for (iteration = 1; iteration <= exampleSet.size(); iteration++) {
 
 			getProcess().getMacroHandler().addMacro(iterationMacroName, String.valueOf(iteration));
@@ -118,6 +122,7 @@ public class ExampleIterator extends OperatorChain {
 			exampleSetInnerSource.deliver(innerSinkIsConnected ? exampleSet : (ExampleSet) exampleSet.clone());
 			getSubprocess(0).execute();
 			inApplyLoop();
+			getProgress().step();
 
 			if (innerSinkIsConnected) {
 				exampleSet = exampleSetInnerSink.getData(ExampleSet.class);
@@ -128,6 +133,7 @@ public class ExampleIterator extends OperatorChain {
 
 		getProcess().getMacroHandler().removeMacro(iterationMacroName);
 		exampleSetOutput.deliver(exampleSet);
+		getProgress().complete();
 	}
 
 	/**

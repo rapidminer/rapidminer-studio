@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor;
 
@@ -27,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultRowSorter;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -255,10 +254,6 @@ class RepositoryLocationsEditor<T extends Ports> extends JPanel {
 			fireTableStructureChanged();
 		}
 
-		// public void removeAll() {
-		// locations.clear();
-		// fireTableRowsDeleted(0, 0);
-		// }
 	};
 
 	private static final long serialVersionUID = 1L;
@@ -284,8 +279,11 @@ class RepositoryLocationsEditor<T extends Ports> extends JPanel {
 		this.prefix = prefix;
 		this.model = new RepositoryLocationTableModel(input);
 		this.table = new RepositoryLocationTable(model);
+		this.table.setAutoCreateRowSorter(true);
+		((DefaultRowSorter<?, ?>) this.table.getRowSorter()).setMaxSortKeys(1);
 		setLayout(new BorderLayout());
 		JScrollPane tablePane = new ExtendedJScrollPane(table);
+		tablePane.setBorder(null);
 		tablePane.getViewport().setBackground(Color.WHITE);
 		add(tablePane, BorderLayout.CENTER);
 		JLabel label = new ResourceLabel(i18nKey);
@@ -335,15 +333,11 @@ class RepositoryLocationsEditor<T extends Ports> extends JPanel {
 		if (this.ports != null) {
 			this.ports.removeObserver(portObserver);
 		}
-		// clear();
+
 		this.ports = ports;
 		if (this.ports != null) {
 			this.ports.addObserver(portObserver, true);
 		}
-
-		// for (RepositoryLocationValueCellEditor editor : editors) {
-		//
-		// }
 
 		model.setContext(context);
 		adaptModelToPorts();

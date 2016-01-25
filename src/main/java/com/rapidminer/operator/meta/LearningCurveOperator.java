@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
@@ -40,15 +40,13 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-
 
 /**
  * This operator first divides the input example set into two parts, a training set and a test set
  * according to the parameter &quot;training_ratio&quot;. It then uses iteratively bigger subsets
  * from the fixed training set for learning (the first subprocess) and calculates the corresponding
  * performance values on the fixed test set (with the second subprocess).
- * 
+ *
  * @author Ingo Mierswa
  */
 public class LearningCurveOperator extends OperatorChain {
@@ -147,6 +145,12 @@ public class LearningCurveOperator extends OperatorChain {
 		double startFraction = getParameterAsDouble(PARAMETER_START_FRACTION);
 		int samplingType = getParameterAsInt(PARAMETER_SAMPLING_TYPE);
 
+		// init Operator progress
+		getProgress().setTotal((int) Math.round((1 - startFraction) / stepFraction));
+
+		// disable checkForStop, will be called in #inApplyLoop() anyway
+		getProgress().setCheckForStop(false);
+
 		// fix training and test set
 		SplittedExampleSet trainTestSplittedExamples = new SplittedExampleSet(originalExampleSet, trainingRatio,
 				samplingType, getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
@@ -177,7 +181,9 @@ public class LearningCurveOperator extends OperatorChain {
 			this.lastDeviation = performance.getMainCriterion().getStandardDeviation();
 			this.lastFraction += stepFraction;
 			inApplyLoop();
+			getProgress().step();
 		}
+		getProgress().complete();
 	}
 
 	@Override

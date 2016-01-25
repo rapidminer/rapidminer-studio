@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.gui;
 
@@ -52,15 +50,16 @@ public class RepositoryTreeCellRenderer extends DefaultTreeCellRenderer {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final Icon ICON_FOLDER_OPEN = SwingTools.createIcon("16/folder.png");
-	private static final Icon ICON_FOLDER_CLOSED = SwingTools.createIcon("16/folder_closed.png");
-	private static final Icon ICON_FOLDER_LOCKED = SwingTools.createIcon("16/folder_lock.png");
-	private static final Icon ICON_PROCESS = SwingTools.createIcon("16/gear.png");
+	private static final Icon ICON_FOLDER_OPEN = SwingTools.createIcon("16/folder_open.png");
+	private static final Icon ICON_FOLDER_CLOSED = SwingTools.createIcon("16/folder.png");
+	private static final Icon ICON_FOLDER_OPEN_LOCKED = SwingTools.createIcon("16/folder_open_lock.png");
+	private static final Icon ICON_FOLDER_CLOSED_LOCKED = SwingTools.createIcon("16/folder_lock.png");
+	private static final Icon ICON_PROCESS = SwingTools.createIcon("16/gearwheels.png");
 	private static final Icon ICON_DATA = SwingTools.createIcon("16/data.png");
-	private static final Icon ICON_BLOB = SwingTools.createIcon("16/document_plain.png");
+	private static final Icon ICON_BLOB = SwingTools.createIcon("16/document_empty.png");
 	private static final Icon ICON_TEXT = SwingTools.createIcon("16/text.png");
-	private static final Icon ICON_TABLE = SwingTools.createIcon("16/table2.png");
-	private static final Icon ICON_IMAGE = SwingTools.createIcon("16/photo_landscape2.png");
+	private static final Icon ICON_TABLE = SwingTools.createIcon("16/spreadsheet.png");
+	private static final Icon ICON_IMAGE = SwingTools.createIcon("16/photo_landscape.png");
 
 	/** stores the icons for all repository implementations */
 	private static Map<String, Icon> ICON_REPOSITORY_MAP = new HashMap<>();
@@ -128,9 +127,11 @@ public class RepositoryTreeCellRenderer extends DefaultTreeCellRenderer {
 				}
 				label.setIcon(ICON_REPOSITORY_MAP.get(repo.getIconName()));
 			} else if (entry.getType().equals(Folder.TYPE_NAME)) {
-				if (entry.isReadOnly()) {
-					label.setIcon(ICON_FOLDER_LOCKED);
-				} else if (expanded) {
+				if (entry.isReadOnly() && !expanded) {
+					label.setIcon(ICON_FOLDER_CLOSED_LOCKED);
+				} else if (entry.isReadOnly() && expanded) {
+					label.setIcon(ICON_FOLDER_OPEN_LOCKED);
+				} else if (!entry.isReadOnly() && expanded) {
 					label.setIcon(ICON_FOLDER_OPEN);
 				} else {
 					label.setIcon(ICON_FOLDER_CLOSED);

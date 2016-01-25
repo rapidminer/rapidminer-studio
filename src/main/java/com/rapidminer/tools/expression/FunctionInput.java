@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -17,6 +17,8 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.expression;
+
+import java.util.Objects;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.tools.Ontology;
@@ -181,6 +183,25 @@ public class FunctionInput {
 	 */
 	public boolean isVisible() {
 		return !invisible;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(category, categoryName, name);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (!(other instanceof FunctionInput)) {
+			return false;
+		}
+		FunctionInput otherFunctionInput = (FunctionInput) other;
+		return getCategory().equals(otherFunctionInput.getCategory())
+		        && getCategoryName().equals(otherFunctionInput.getCategoryName())
+		        && getName().equals(otherFunctionInput.getName());
 	}
 
 }

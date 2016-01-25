@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -31,6 +31,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -52,6 +54,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.BreakpointListener;
@@ -89,7 +92,6 @@ import com.rapidminer.gui.flow.processrendering.view.actions.AutoFitAction;
 import com.rapidminer.gui.flow.processrendering.view.actions.DeleteSelectedConnectionAction;
 import com.rapidminer.gui.flow.processrendering.view.actions.RenameAction;
 import com.rapidminer.gui.flow.processrendering.view.actions.SelectAllAction;
-import com.rapidminer.gui.flow.processrendering.view.components.InterpolationMap;
 import com.rapidminer.gui.flow.processrendering.view.components.ProcessRendererTooltipProvider;
 import com.rapidminer.gui.tools.PrintingTools;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -113,6 +115,8 @@ import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.SystemInfoUtilities;
+import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 
 
 /**
@@ -501,19 +505,46 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					e.consume();
 					break;
 				case KeyEvent.VK_ESCAPE:
+					// remove currently dragged connection. Afterwards: first come, first served
+					boolean abortedConnection = false;
 					if (model.getConnectingPortSource() != null) {
 						model.setConnectingPortSource(null);
 						model.fireMiscChanged();
+						abortedConnection = true;
 					}
 
-					// remove currently dragged connection. Afterwards: first come, first served
-					for (RenderPhase phase : RenderPhase.eventOrder()) {
+					// process render phases that come before the OPERATORS phase, abort in case the
+					// event was consumed
+					for (RenderPhase phase : new RenderPhase[] { RenderPhase.FOREGROUND, RenderPhase.OVERLAY,
+							RenderPhase.OPERATOR_ADDITIONS }) {
 						wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, phase);
-						// abort if event was consumed
 						if (wasConsumed) {
 							return;
 						}
 					}
+
+					// OPERATORS phase event in case we are in a nested operator (consume event and
+					// abort)
+					if (!abortedConnection && model.getDisplayedChain().getRoot() != model.getDisplayedChain()) {
+						OperatorChain parent = model.getDisplayedChain().getParent();
+						if (parent != null) {
+							model.setDisplayedChain(parent);
+							model.fireDisplayedChainChanged();
+							ProcessRendererView.this.mainFrame.addViewSwitchToUndo();
+						}
+						e.consume();
+						return;
+					}
+
+					// remaining render phases, abort in case the event was consumed
+					for (RenderPhase phase : new RenderPhase[] { RenderPhase.CONNECTIONS, RenderPhase.OPERATOR_BACKGROUND,
+							RenderPhase.OPERATOR_ANNOTATIONS, RenderPhase.ANNOTATIONS, RenderPhase.BACKGROUND }) {
+						wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, phase);
+						if (wasConsumed) {
+							return;
+						}
+					}
+
 					break;
 				case KeyEvent.VK_ENTER:
 					wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, RenderPhase.FOREGROUND);
@@ -554,8 +585,11 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 						return;
 					}
 
-					// operator phase event, no more decorator processing afterwards
-					if (model.getDisplayedChain().getRoot() != model.getDisplayedChain()) {
+					// OS X: Trigger deletion action.
+					// Other: Navigate up (same as ESC).
+					if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX) {
+						deleteSelectedAction.actionPerformed(null);
+					} else if (model.getDisplayedChain().getRoot() != model.getDisplayedChain()) {
 						OperatorChain parent = model.getDisplayedChain().getParent();
 						if (parent != null) {
 							model.setDisplayedChain(parent);
@@ -563,7 +597,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 							ProcessRendererView.this.mainFrame.addViewSwitchToUndo();
 						}
 					}
+					// operator phase event, no more decorator processing afterwards
 					e.consume();
+
 					break;
 				default:
 					// first come, first served, no limit to specific phases
@@ -615,15 +651,12 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				return;
 			}
 
-			mainFrame.getComicRenderer().dragStarted(t);
-
 			model.setDragStarted(true);
 			model.fireMiscChanged();
 		}
 
 		@Override
 		public void dragEnded() {
-			mainFrame.getComicRenderer().dragEnded();
 
 			model.setDragStarted(false);
 			model.fireMiscChanged();
@@ -724,6 +757,18 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			public void operatorsChanged(ProcessRendererOperatorEvent e, Collection<Operator> operators) {
 				switch (e.getEventType()) {
 					case SELECTED_OPERATORS_CHANGED:
+						Operator firstOp = operators.iterator().hasNext() ? operators.iterator().next() : null;
+						if (firstOp != null) {
+							// only switch displayed chain if not in selected chain and selected op
+							// is not visible
+							OperatorChain displayChain = (OperatorChain) (firstOp instanceof ProcessRootOperator ? firstOp
+									: model.getDisplayedChain() == firstOp ? firstOp : firstOp.getParent());
+							if (displayChain != null && model.getDisplayedChain() != displayChain) {
+								model.setDisplayedChain(displayChain);
+								model.fireDisplayedChainChanged();
+								return;
+							}
+						}
 						repaint();
 						break;
 					case OPERATORS_MOVED:
@@ -785,15 +830,19 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		arrangeOperatorsAction = new ArrangeOperatorsAction(this, controller);
 		autoFitAction = new AutoFitAction(controller);
 
-		// operator name rollout feature
-		model.setNameRolloutInterpolationMap(new InterpolationMap(this));
-
 		// listen for process panel resizing events to adapt the render size
 		processPanel.addComponentListener(new ComponentAdapter() {
 
 			@Override
 			public void componentResized(final ComponentEvent e) {
 				super.componentResized(e);
+				controller.autoFit();
+			}
+		});
+		processPanel.addHierarchyListener(new HierarchyListener() {
+
+			@Override
+			public void hierarchyChanged(HierarchyEvent e) {
 				controller.autoFit();
 			}
 		});
@@ -1195,7 +1244,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	 * @param op
 	 *            the operator to be renamed
 	 */
-	void rename(final Operator op) {
+	public void rename(final Operator op) {
 		if (op == null) {
 			throw new IllegalArgumentException("op must not be null!");
 		}
@@ -1210,20 +1259,21 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		}
 		renameField = new JTextField(10);
 		Rectangle2D rect = model.getOperatorRect(op);
-		double rollout = model.getNameRolloutInterpolationMap().getValue(op);
 		int width = 0;
-		if (rollout > 0) {
-			width = (int) ProcessDrawer.OPERATOR_FONT
-					.getStringBounds(op.getName(), ((Graphics2D) getGraphics()).getFontRenderContext()).getWidth();
-		}
+		width = (int) ProcessDrawer.OPERATOR_FONT
+				.getStringBounds(op.getName(), ((Graphics2D) getGraphics()).getFontRenderContext()).getWidth();
 		width = Math.max(width, ProcessDrawer.OPERATOR_WIDTH);
-
+		double offset = (ProcessDrawer.OPERATOR_WIDTH - width) / 2;
+		renameField.setHorizontalAlignment(SwingConstants.CENTER);
 		renameField.setText(op.getName());
 		renameField.selectAll();
 		Point p = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point((int) rect.getX(), (int) rect.getY()),
 				processIndex, model);
-		renameField.setBounds((int) p.getX(), (int) p.getY() - 4, width + 1, 21);
+
+		int padding = 7;
+		renameField.setBounds((int) (p.getX() + offset - padding), (int) p.getY() - 3, width + padding * 2, 21);
 		renameField.setFont(ProcessDrawer.OPERATOR_FONT);
+		renameField.setBorder(null);
 		add(renameField);
 		renameField.requestFocusInWindow();
 		// accepting changes on enter and focus lost
@@ -1419,9 +1469,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				}
 			});
 		} else {
-			// add workflow annotation actions
+			// add workflow annotation and background image actions
 			int index = model.getHoveringProcessIndex();
-			Action[] annotationActions = new Action[2];
+			Action[] annotationActions = new Action[4];
 			final Operator hoveredOp = model.getHoveringOperator();
 			if (index != -1) {
 				ExecutionUnit process = model.getProcess(index);
@@ -1429,6 +1479,13 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				if (hoveredOp == null) {
 					annotationActions[0] = mainFrame.getProcessPanel().getAnnotationsHandler()
 							.makeAddProcessAnnotationAction(process, point);
+					annotationActions[1] = mainFrame.getProcessPanel().getAnnotationsHandler().getToggleAnnotationsAction();
+					annotationActions[2] = mainFrame.getProcessPanel().getBackgroundImageHandler()
+							.makeSetBackgroundImageAction(process);
+					if (model.getBackgroundImage(process) != null) {
+						annotationActions[3] = mainFrame.getProcessPanel().getBackgroundImageHandler()
+								.makeRemoveBackgroundImageAction(process);
+					}
 				} else {
 					WorkflowAnnotations annotations = model.getOperatorAnnotations(hoveredOp);
 					if (annotations == null || annotations.isEmpty()) {
@@ -1440,7 +1497,6 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					}
 				}
 			}
-			annotationActions[1] = mainFrame.getProcessPanel().getAnnotationsHandler().getToggleAnnotationsAction();
 
 			// add operator actions
 			mainFrame.getActions().addToOperatorPopupMenu(menu, renameAction, annotationActions);
@@ -1448,10 +1504,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			// if not hovering on operator, add process panel actions
 			if (hoveredOp == null) {
 				menu.addSeparator();
-				JMenu orderMenu = new ResourceMenu("execution_order");
-				orderMenu.add(mainFrame.getProcessPanel().getFlowVisualizer().ALTER_EXECUTION_ORDER.createMenuItem());
-				orderMenu.add(mainFrame.getProcessPanel().getFlowVisualizer().SHOW_EXECUTION_ORDER);
-				menu.add(orderMenu);
+				menu.add(mainFrame.getProcessPanel().getFlowVisualizer().ALTER_EXECUTION_ORDER.createMenuItem());
 
 				JMenu layoutMenu = new ResourceMenu("process_layout");
 
@@ -1515,6 +1568,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			menu.show(this, e.getX(), e.getY());
 		}
 		return true;
+
 	}
 
 	/**
@@ -1535,14 +1589,6 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	 *            the operator or {@code null}
 	 */
 	void setHoveringOperator(final Operator hoveringOperator) {
-		if (hoveringOperator != model.getHoveringOperator()) {
-			if (model.getHoveringOperator() != null) {
-				model.getNameRolloutInterpolationMap().rollIn(model.getHoveringOperator());
-			}
-			if (hoveringOperator != null) {
-				model.getNameRolloutInterpolationMap().rollOut(hoveringOperator);
-			}
-		}
 		model.setHoveringOperator(hoveringOperator);
 		updateCursor();
 		model.fireMiscChanged();

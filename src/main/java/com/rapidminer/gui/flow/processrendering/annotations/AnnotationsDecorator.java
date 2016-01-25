@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow.processrendering.annotations;
 
@@ -51,6 +49,8 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -58,6 +58,7 @@ import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -83,6 +84,7 @@ import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.flow.processrendering.view.RenderPhase;
+import com.rapidminer.gui.tools.Ionicon;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
@@ -131,7 +133,7 @@ public final class AnnotationsDecorator {
 	private JDialog colorOverlay;
 
 	/** the button opening the color overlay */
-	private JButton colorButton;
+	private JToggleButton colorButton;
 
 	/** the process renderer */
 	private final ProcessRendererView view;
@@ -286,21 +288,11 @@ public final class AnnotationsDecorator {
 						drawer.drawAnnotation(selected, g2P, printing);
 						g2P.dispose();
 					} else {
-						// only paint shadow
+						// only paint border
 						Rectangle2D loc = selected.getLocation();
+						g2.setColor(Color.BLACK);
 						g2.draw(new Rectangle2D.Double(loc.getX() - 1, loc.getY() - 1, editPane.getBounds().getWidth() + 1,
 								editPane.getBounds().getHeight() + 1));
-						Rectangle2D shadowFrameEditor = new Rectangle2D.Double(loc.getX(), loc.getY(), editPane.getBounds()
-								.getWidth() + 1, editPane.getBounds().getHeight() + 1);
-						ProcessDrawUtils.drawShadow(shadowFrameEditor, g2);
-						if (editPanel != null) {
-							Point absolute = new Point(editPanel.getX(), editPanel.getY());
-							Point relative = ProcessDrawUtils.convertToRelativePoint(absolute,
-									rendererModel.getProcessIndex(process), rendererModel);
-							Rectangle2D shadowFramePanel = new Rectangle2D.Double(relative.getX(), relative.getY(),
-									EDIT_PANEL_WIDTH, EDIT_PANEL_HEIGHT);
-							ProcessDrawUtils.drawShadow(shadowFramePanel, g2);
-						}
 					}
 				}
 			}
@@ -325,7 +317,11 @@ public final class AnnotationsDecorator {
 		 */
 		private void draw(final Operator operator, final Graphics2D g2, final ProcessRendererModel rendererModel,
 				final boolean printing) {
-			// Draw annotation icons regardless of active state
+			// Draw annotation icons only if hidden
+			if (visualizer.isActive()) {
+				return;
+			}
+
 			WorkflowAnnotations annotations = rendererModel.getOperatorAnnotations(operator);
 			if (annotations == null || annotations.isEmpty()) {
 				return;
@@ -637,27 +633,37 @@ public final class AnnotationsDecorator {
 		});
 
 		// add alignment controls
-		final List<JButton> alignmentButtonList = new LinkedList<JButton>();
+		final List<JToggleButton> alignmentButtonList = new LinkedList<JToggleButton>();
+		ButtonGroup nonSelectionGroup = new ButtonGroup() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void setSelected(ButtonModel model, boolean selected) {
+				if (selected) {
+					super.setSelected(model, selected);
+				} else {
+					clearSelection();
+				}
+			}
+		};
 		for (AnnotationAlignment align : AnnotationAlignment.values()) {
 			final Action action = align.makeAlignmentChangeAction(model, model.getSelected());
-			final JButton alignButton = new JButton();
+			final JToggleButton alignButton = new JToggleButton();
+			nonSelectionGroup.add(alignButton);
 			alignButton.setIcon((Icon) action.getValue(Action.SMALL_ICON));
 			alignButton.setBorderPainted(false);
 			alignButton.setBorder(null);
 			alignButton.setFocusable(false);
 			if (align == selected.getStyle().getAnnotationAlignment()) {
-				alignButton.setBackground(Color.LIGHT_GRAY);
+				alignButton.setSelected(true);
 			}
 			alignButton.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					removeColorPanel();
-					colorButton.setBackground(null);
-					for (JButton button : alignmentButtonList) {
-						button.setBackground(null);
-					}
-					alignButton.setBackground(Color.LIGHT_GRAY);
+					colorButton.setSelected(false);
 
 					int caretPos = editPane.getCaretPosition();
 					// remember if we were at last position because doc length can change after 1st
@@ -748,7 +754,7 @@ public final class AnnotationsDecorator {
 					// adapt color of main button, remove color panel
 					colorButton.setIcon(icon);
 					if (removeColorPanel()) {
-						colorButton.setBackground(null);
+						colorButton.setSelected(false);
 						view.repaint();
 					}
 				}
@@ -757,7 +763,8 @@ public final class AnnotationsDecorator {
 			colorOverlay.getRootPane().add(colChangeButton);
 		}
 
-		colorButton = new JButton("\u25BE");
+		colorButton = new JToggleButton("<html><span style=\"color: 4F4F4F;\">" + Ionicon.ARROW_DOWN_B.getHtml()
+				+ "</span></html>");
 		colorButton.setBorderPainted(false);
 		colorButton.setFocusable(false);
 		AnnotationColor color = selected.getStyle().getAnnotationColor();
@@ -768,14 +775,13 @@ public final class AnnotationsDecorator {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (removeColorPanel()) {
-					colorButton.setBackground(null);
+					colorButton.setSelected(false);
 					view.repaint();
 					return;
 				}
 
 				updateColorPanelPosition();
 				colorOverlay.setVisible(true);
-				colorButton.setBackground(Color.LIGHT_GRAY);
 				editPane.requestFocusInWindow();
 				view.repaint();
 			}
@@ -805,6 +811,7 @@ public final class AnnotationsDecorator {
 		deleteButton.setForeground(Color.RED);
 		deleteButton.setContentAreaFilled(false);
 		deleteButton.setFocusable(false);
+		deleteButton.setBorderPainted(false);
 		deleteButton.addActionListener(new ActionListener() {
 
 			@Override

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.clustering.clusterer;
 
@@ -96,16 +94,15 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 		int maxRuns = getParameterAsInt(PARAMETER_MAX_RUNS);
 		boolean kpp = getParameterAsBoolean(KMeanspp.PARAMETER_USE_KPP);
 
+		// init operator progress
+		getProgress().setTotal(maxRuns * maxOptimizationSteps);
+
 		DistanceMeasure measure;
 		if (presetMeasure != null) {
 			measure = presetMeasure;
 			measure.init(exampleSet);
 		} else {
-			// try {
 			measure = measureHelper.getInitializedMeasure(exampleSet);
-			// } catch (NullPointerException e){
-			// measure = new SquaredEuclideanDistance();
-			// }
 		}
 
 		// checking and creating ids if necessary
@@ -131,7 +128,6 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 		double[] values = new double[attributes.size()];
 
 		for (int iter = 0; iter < maxRuns; iter++) {
-			checkForStop();
 			CentroidClusterModel model = new CentroidClusterModel(exampleSet, k, attributeNames, measure,
 					getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
 					getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
@@ -159,9 +155,9 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 			int[] centroidAssignments = new int[exampleSet.size()];
 			boolean stable = false;
 			for (int step = 0; step < maxOptimizationSteps && !stable; step++) {
-				checkForStop();
+				getProgress().step();
 
-				// assign examles to new centroids
+				// assign examples to new centroids
 				i = 0;
 				for (Example example : exampleSet) {
 					double[] exampleValues = getAsDoubleArray(example, attributes, values);
@@ -197,6 +193,7 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 				minimalIntraClusterDistance = distanceSum;
 				bestAssignments = centroidAssignments;
 			}
+			getProgress().setCompleted((iter + 1) * maxOptimizationSteps);
 		}
 		bestModel.setClusterAssignments(bestAssignments, exampleSet);
 
@@ -218,6 +215,8 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 				i++;
 			}
 		}
+
+		getProgress().complete();
 
 		return bestModel;
 	}

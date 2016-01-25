@@ -1,32 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties.celleditors.value;
-
-import com.michaelbaranov.microba.calendar.DatePicker;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeDate;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -42,13 +37,17 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 
+import com.michaelbaranov.microba.calendar.DatePicker;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeDate;
+
 
 /**
  * A cell editor for date parameters. It renders a {@TextField} and {@link DatePicker}
  * to choose dates comfortable.
- * 
+ *
  * @author Nils Woehler
- * 
+ *
  */
 public class DateValueCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
 
@@ -116,6 +115,7 @@ public class DateValueCellEditor extends AbstractCellEditor implements PropertyV
 		});
 
 		c.weightx = 0;
+		c.insets = new Insets(0, 5, 0, 0);
 		panel.add(datePicker, c);
 	}
 
@@ -152,7 +152,7 @@ public class DateValueCellEditor extends AbstractCellEditor implements PropertyV
 
 	private void updateComponents(Object value) {
 		updatingComponents.set(true);
-		textField.setText((value == null) ? "" : value.toString());
+		textField.setText(value == null ? "" : value.toString());
 		Date parsedDate;
 		try {
 			parsedDate = ParameterTypeDate.DATE_FORMAT.get().parse(textField.getText());

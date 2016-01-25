@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -87,11 +87,11 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 	private static final long serialVersionUID = 187660784321413390L;
 
-	private static final String ADD_ICON_NAME = "add2.png";
-	private static final String LEFT_ICON_NAME = "nav_left_green.png";
-	private static final String RIGHT_ICON_NAME = "nav_right_green.png";
-	private static final String UP_ICON_NAME = "nav_up_green.png";
-	private static final String DOWN_ICON_NAME = "nav_down_green.png";
+	private static final String ADD_ICON_NAME = "add.png";
+	private static final String LEFT_ICON_NAME = "nav_left.png";
+	private static final String RIGHT_ICON_NAME = "nav_right.png";
+	private static final String UP_ICON_NAME = "nav_up.png";
+	private static final String DOWN_ICON_NAME = "nav_down.png";
 
 	private static Icon ADD_ICON;
 	private static Icon LEFT_ICON;
@@ -183,8 +183,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		this.mode = parameterOperatorChain.getParameterValueMode();
 		List<ParameterValues> readParameterValues = null;
 		try {
-			List<String[]> parameterValueList = ParameterTypeList.transformString2List(parameterOperatorChain
-					.getParameters().getParameter(ParameterIteratingOperatorChain.PARAMETER_PARAMETERS));
+			List<String[]> parameterValueList = ParameterTypeList.transformString2List(parameterOperatorChain.getParameters()
+					.getParameter(ParameterIteratingOperatorChain.PARAMETER_PARAMETERS));
 			readParameterValues = parameterOperatorChain.parseParameterValues(parameterValueList);
 		} catch (Exception e) {
 			parameterOperatorChain.logWarning(e.getMessage());
@@ -241,13 +241,13 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 					// only update if an element is selected
 					if (selectedParametersList.getSelectedIndex() != -1) {
-						int previousIndex = selectedParametersList.getSelectedIndex() == e.getFirstIndex() ? e
-								.getLastIndex() : e.getFirstIndex();
+						int previousIndex = selectedParametersList.getSelectedIndex() == e.getFirstIndex() ? e.getLastIndex()
+								: e.getFirstIndex();
 
-								if (previousIndex != selectedParametersList.getSelectedIndex() && previousIndex >= 0
+						if (previousIndex != selectedParametersList.getSelectedIndex() && previousIndex >= 0
 								&& previousIndex < selectedParametersListModel.getSize()) {
-									updateNumericalParameterValues(previousIndex);
-								}
+							updateNumericalParameterValues(previousIndex);
+						}
 					}
 					showParameterValues((String) selectedParametersList.getSelectedValue());
 				}
@@ -556,8 +556,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel.get(selectedParametersList
-						.getLeadSelectionIndex());
+				String selectedParameter = (String) selectedParametersListModel
+						.get(selectedParametersList.getLeadSelectionIndex());
 				Object[] selectedValues = categoriesList.getSelectedValues();
 				for (int i = 0; i < selectedValues.length; i++) {
 					categoriesListModel.removeElement(selectedValues[i]);
@@ -581,8 +581,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel.get(selectedParametersList
-						.getLeadSelectionIndex());
+				String selectedParameter = (String) selectedParametersListModel
+						.get(selectedParametersList.getLeadSelectionIndex());
 				Object[] selectedValues = selectedCategoriesList.getSelectedValues();
 				for (int i = 0; i < selectedValues.length; i++) {
 					selectedCategoriesListModel.removeElement(selectedValues[i]);
@@ -642,8 +642,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel.get(selectedParametersList
-						.getLeadSelectionIndex());
+				String selectedParameter = (String) selectedParametersListModel
+						.get(selectedParametersList.getLeadSelectionIndex());
 				int[] selectedIndices = selectedCategoriesList.getSelectedIndices();
 				if (selectedIndices.length == 1) {
 					ParameterValues parameterValue = parameterValuesMap.get(selectedParameter);
@@ -674,8 +674,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel.get(selectedParametersList
-						.getLeadSelectionIndex());
+				String selectedParameter = (String) selectedParametersListModel
+						.get(selectedParametersList.getLeadSelectionIndex());
 				int[] selectedIndices = selectedCategoriesList.getSelectedIndices();
 				if (selectedIndices.length == 1) {
 					ParameterValues parameterValue = parameterValuesMap.get(selectedParameter);
@@ -787,8 +787,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 					int values = parameterValues.getNumberOfValues();
 					combinations *= values == 0 ? 1 : values;
 				}
-				infoLabel.setText(size + " parameter" + (size > 1 ? "s" : "") + " / " + combinations
-						+ " combinations selected");
+				infoLabel.setText(
+						size + " parameter" + (size > 1 ? "s" : "") + " / " + combinations + " combinations selected");
 			} else {
 				infoLabel.setText(size + " parameter" + (size > 1 ? "s" : "") + " selected");
 			}

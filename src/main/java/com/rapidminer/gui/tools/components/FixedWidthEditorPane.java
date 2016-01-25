@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -17,6 +17,10 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.components;
+
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -92,6 +96,17 @@ public class FixedWidthEditorPane extends ExtendedHTMLJEditorPane {
 	 * Updates the text with the given width.
 	 */
 	public void updateLabel() {
-		super.setText("<html><body><div style=\"width:" + width + "pt\">" + rootlessHTML + "</div></body></html>");
+		try {
+			super.setText("<html><body><div style=\"width:" + width + "pt\">" + rootlessHTML + "</div></body></html>");
+		} catch (RuntimeException e) {
+			// ignore
+		}
 	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		super.paintComponent(g);
+	}
+
 }

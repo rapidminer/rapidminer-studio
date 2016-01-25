@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.clustering.clusterer;
 
@@ -112,6 +110,9 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 			// }
 		}
 
+		// init operator progress
+		getProgress().setTotal(maxRuns);
+
 		// checking and creating ids if necessary
 		Tools.checkAndCreateIds(exampleSet);
 
@@ -134,8 +135,6 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 		int[] bestAssignments = null;
 
 		for (int iter = 0; iter < maxRuns; iter++) {
-
-			checkForStop();
 			CentroidClusterModel model = new CentroidClusterModel(exampleSet, k, attributeNames, measure,
 					getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
 					getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
@@ -216,8 +215,8 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 						for (int c = 0; c < k; c++) {
 							if (c != centroidAssignments[x]  // (i)
 									&& u[x] > l[x][c] 			// (ii)
-											&& u[x] > 0.5 * centroidDistances.get(centroidAssignments[x], c) // (iii)
-									) {
+									&& u[x] > 0.5 * centroidDistances.get(centroidAssignments[x], c) // (iii)
+							) {
 								// step 3a.
 								final double d_x_c;   // d(x,c(x))
 								if (r[x]) {
@@ -292,6 +291,7 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 				minimalIntraClusterDistance = distanceSum;
 				bestAssignments = centroidAssignments;
 			}
+			getProgress().step();
 		}
 		bestModel.setClusterAssignments(bestAssignments, exampleSet);
 
@@ -305,6 +305,7 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 				i++;
 			}
 		}
+		getProgress().complete();
 
 		return bestModel;
 	}

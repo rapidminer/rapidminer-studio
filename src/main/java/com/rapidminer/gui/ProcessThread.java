@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -139,7 +139,7 @@ public class ProcessThread extends Thread {
 						LogService.getRoot().log(Level.SEVERE, e.toString(), e);
 						SwingTools.showVerySimpleErrorMessage("proc_failed_without_obv_reason");
 					} else {
-						SwingTools.showSimpleErrorMessage("process_failed_simple", e, false, new Object[] {});
+						SwingTools.showSimpleErrorMessage("process_failed_simple", e, true, new Object[] {});
 					}
 				}
 			}

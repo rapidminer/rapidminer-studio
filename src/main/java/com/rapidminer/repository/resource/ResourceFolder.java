@@ -1,24 +1,28 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.resource;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -32,21 +36,15 @@ import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * Reference on a folder in the repository.
- * 
+ *
  * @author Simon Fischer
  */
 public class ResourceFolder extends ResourceEntry implements Folder {
 
-	private List<Folder> folders;
+	protected List<Folder> folders;
 	private List<DataEntry> data;
 
 	protected ResourceFolder(ResourceFolder parent, String name, String resource, ResourceRepository repository) {
@@ -96,8 +94,8 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 		return data;
 	}
 
-	private void ensureLoaded() throws RepositoryException {
-		if ((folders != null) && (data != null)) {
+	protected void ensureLoaded() throws RepositoryException {
+		if (folders != null && data != null) {
 			return;
 		}
 		String resourcePath = getResource() + "/CONTENTS";
@@ -115,15 +113,17 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 				line = line.trim();
 				if (!line.isEmpty()) {
 					int space = line.indexOf(" ");
-					String name = (space != -1) ? line.substring(space + 1).trim() : null;
+					String name = space != -1 ? line.substring(space + 1).trim() : null;
 					if (line.startsWith("FOLDER ")) {
 						folders.add(new ResourceFolder(this, name, getPath() + "/" + name, getRepository()));
 					} else if (line.startsWith("ENTRY")) {
 						String nameWOExt = name.substring(0, name.length() - 4);
 						if (name.endsWith(".rmp")) {
-							data.add(new ResourceProcessEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository()));
+							data.add(
+									new ResourceProcessEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository()));
 						} else if (name.endsWith(".ioo")) {
-							data.add(new ResourceIOObjectEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository()));
+							data.add(new ResourceIOObjectEntry(this, nameWOExt, getPath() + "/" + nameWOExt,
+									getRepository()));
 						} else {
 							throw new RepositoryException("Unknown entry type infolder '" + getName() + "': " + name);
 						}
@@ -132,6 +132,7 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 					}
 				}
 			}
+
 		} catch (Exception e) {
 			throw new RepositoryException("Error reading contents of folder " + getName() + ": " + e, e);
 		} finally {
@@ -168,6 +169,17 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 	@Override
 	public boolean canRefreshChild(String childName) throws RepositoryException {
 		return containsEntry(childName);
+	}
+
+	/**
+	 * Adds a folder to the list of folders.
+	 *
+	 * @param folder
+	 *            the folder to add
+	 * @throws RepositoryException
+	 */
+	void addFolder(Folder folder) throws RepositoryException {
+		this.folders.add(folder);
 	}
 
 }

@@ -1,27 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.ioobjectcache;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -44,6 +41,7 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJToolBar;
@@ -154,7 +152,7 @@ public class IOObjectCacheViewer extends JPanel implements Dockable {
 	private void initView() {
 		// the viewer's toolbar
 		JToolBar toolBar = new ExtendedJToolBar(true);
-		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Colors.TEXTFIELD_BORDER));
 
 		// add actions that clears all entries
 		Action clearAction = new ClearCacheAction(map);
@@ -173,6 +171,7 @@ public class IOObjectCacheViewer extends JPanel implements Dockable {
 
 		// create entries panel and embed in scroll pane
 		scrollPane = new ExtendedJScrollPane(createEntriesPanel());
+		scrollPane.setBorder(null);
 
 		// panel containing the header row and the actual entries
 		JPanel contentPanel = new JPanel(new BorderLayout());
@@ -224,7 +223,7 @@ public class IOObjectCacheViewer extends JPanel implements Dockable {
 
 			IOObjectCacheEntryPanel entry = new IOObjectCacheEntryPanel(icon, type, openAction, removeAction);
 			if (alternatingRow) {
-				entry.setDefaultBackground(Color.WHITE);
+				entry.setDefaultBackground(Colors.WHITE);
 			}
 			alternatingRow = !alternatingRow;
 

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow;
 
@@ -90,26 +88,6 @@ public class FlowVisualizer {
 			view.requestFocusInWindow();
 		}
 
-	};
-
-	public final Action SHOW_EXECUTION_ORDER = new ResourceAction("show_execution_order") {
-
-		private static final long serialVersionUID = 3932329413268066576L;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			setActive(true);
-			StringBuilder b = new StringBuilder();
-			for (ExecutionUnit unit : view.getModel().getDisplayedChain().getSubprocesses()) {
-				b.append("<strong>").append(unit.getName()).append("</strong><br/><ol>");
-				for (Operator op : unit.topologicalSort()) {
-					b.append("<li>").append(op.getName()).append("</li>");
-				}
-				b.append("</ol>");
-			}
-			SwingTools.showLongMessage("execution_order_info", b.toString());
-			setActive(ALTER_EXECUTION_ORDER.isSelected());
-		}
 	};
 
 	protected JToggleButton SHOW_ORDER_TOGGLEBUTTON = ALTER_EXECUTION_ORDER.createToggleButton();
@@ -190,7 +168,7 @@ public class FlowVisualizer {
 				case MOUSE_RELEASED:
 					showPopupMenu(e);
 					break;
-				// $CASES-OMITTED$
+					// $CASES-OMITTED$
 				default:
 					break;
 
@@ -475,15 +453,28 @@ public class FlowVisualizer {
 	 */
 	private boolean showPopupMenu(MouseEvent e) {
 		if (e.isPopupTrigger()) {
+			JPopupMenu menu = new JPopupMenu();
 			if (hoveringOperator != null) {
-				JPopupMenu menu = new JPopupMenu();
 				menu.add(BRING_TO_FRONT);
-				menu.show(view, e.getX(), e.getY());
-				e.consume();
-				return true;
-			} else {
-				return false;
 			}
+
+			// Add action to leave FlowVisualiser and add seperator if it is not the only action.
+			if (menu.getSubElements().length > 0) {
+				menu.addSeparator();
+			}
+			menu.add(new ResourceAction("render_execution_order_apply") {
+
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					ALTER_EXECUTION_ORDER.actionPerformed(e);
+				}
+			});
+
+			menu.show(view, e.getX(), e.getY());
+			e.consume();
+			return true;
 		} else {
 			return false;
 		}

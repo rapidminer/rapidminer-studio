@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
 
@@ -46,7 +44,7 @@ import com.rapidminer.tools.Ontology;
  * example set to have a special cluster attribute which can be either created by a
  * {@link com.rapidminer.operator.clustering.AbstractClusterer} or might be declared in the
  * attribute description file that was used when the data was loaded.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ClusterIterator extends OperatorChain {
@@ -89,6 +87,10 @@ public class ClusterIterator extends OperatorChain {
 
 		SplittedExampleSet splitted = SplittedExampleSet.splitByAttribute(exampleSet, clusterAttribute);
 		numberOfClusters = splitted.getNumberOfSubsets();
+
+		// init Operator progress
+		getProgress().setTotal(numberOfClusters);
+
 		for (int i = 0; i < numberOfClusters; i++) {
 			splitted.selectSingleSubset(i);
 
@@ -97,8 +99,10 @@ public class ClusterIterator extends OperatorChain {
 			inputExtender.passCloneThrough();
 			super.doWork();
 			inApplyLoop();
+			getProgress().step();
 		}
 
 		outputExtender.passDataThrough();
+		getProgress().complete();
 	}
 }

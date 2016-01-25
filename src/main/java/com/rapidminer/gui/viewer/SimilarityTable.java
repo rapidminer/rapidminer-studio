@@ -1,30 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
-
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.report.Tableable;
-import com.rapidminer.tools.math.similarity.DistanceMeasure;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -32,10 +24,16 @@ import java.awt.GridBagLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.report.Tableable;
+import com.rapidminer.tools.math.similarity.DistanceMeasure;
+
 
 /**
  * The table for the similarity viewer.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SimilarityTable extends JPanel implements Tableable {
@@ -58,6 +56,7 @@ public class SimilarityTable extends JPanel implements Tableable {
 		similarityTable.setModel(model);
 
 		JScrollPane tablePane = new ExtendedJScrollPane(similarityTable);
+		tablePane.setBorder(null);
 		layout.setConstraints(tablePane, c);
 		add(tablePane);
 	}

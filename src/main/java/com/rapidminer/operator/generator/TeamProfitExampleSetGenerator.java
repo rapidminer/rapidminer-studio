@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.generator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -38,14 +39,11 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 /**
  * Generates a random example set for testing purposes. The data represents a team profit example
  * set.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class TeamProfitExampleSetGenerator extends AbstractExampleSource {
@@ -95,6 +93,10 @@ public class TeamProfitExampleSetGenerator extends AbstractExampleSource {
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
+
+		// init operator progress
+		getProgress().setTotal(numberOfExamples);
+
 		for (int n = 0; n < numberOfExamples; n++) {
 			double[] values = new double[ATTRIBUTE_NAMES.length + 2];
 			values[0] = attributes.get(0).getMapping().mapString("team_" + n);
@@ -102,7 +104,7 @@ public class TeamProfitExampleSetGenerator extends AbstractExampleSource {
 			// "average years of experience", "structure"
 			values[1] = random.nextIntInRange(5, 20);
 			values[2] = random.nextInt(POSSIBLE_VALUES[1].length);
-			values[3] = Math.round((random.nextDouble() * (values[1] - 1)) + 1);
+			values[3] = Math.round(random.nextDouble() * (values[1] - 1) + 1);
 			values[4] = random.nextInt(POSSIBLE_VALUES[3].length);
 			values[5] = random.nextIntInRange(1, 10);
 			values[6] = random.nextInt(POSSIBLE_VALUES[5].length);
@@ -122,7 +124,11 @@ public class TeamProfitExampleSetGenerator extends AbstractExampleSource {
 				}
 			}
 			table.addDataRow(new DoubleArrayDataRow(values));
+
+			getProgress().step();
 		}
+
+		getProgress().complete();
 
 		// create example set and return it
 		return table.createExampleSet(label);

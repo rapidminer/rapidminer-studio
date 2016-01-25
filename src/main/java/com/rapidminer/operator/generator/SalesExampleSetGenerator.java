@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.generator;
+
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -38,14 +40,10 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.ArrayList;
-import java.util.GregorianCalendar;
-import java.util.List;
-
 
 /**
  * Generates a random example set for testing purposes. The data represents a sales example set.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SalesExampleSetGenerator extends AbstractExampleSource {
@@ -58,7 +56,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 	private static final int MAX_CUSTOMERS = 2000;
 
 	private static final String[] ATTRIBUTE_NAMES = { "transaction_id", "store_id", "customer_id", "product_id",
-			"product_category", "date", "amount", "single_price" };
+		"product_category", "date", "amount", "single_price" };
 
 	private static final int ATT_TRANSACTION_ID = 0;
 	private static final int ATT_STORE_ID = 1;
@@ -70,7 +68,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 	private static final int ATT_SINGLE_PRICE = 7;
 
 	private static final String[] PRODUCT_CATEGORIES = new String[] { "Books", "Movies", "Electronics", "Home/Garden",
-			"Health", "Toys", "Sports", "Clothing" };
+		"Health", "Toys", "Sports", "Clothing" };
 
 	public SalesExampleSetGenerator(OperatorDescription description) {
 		super(description);
@@ -126,6 +124,10 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
+
+		// init operator progress
+		getProgress().setTotal(numberOfExamples);
+
 		for (int n = 0; n < numberOfExamples; n++) {
 			double[] values = new double[ATTRIBUTE_NAMES.length];
 			// "transaction_id", "store_id", "customer_id", "product_id", "product_category",
@@ -142,7 +144,11 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 			values[7] = random.nextDoubleInRange(10, 100);
 
 			table.addDataRow(new DoubleArrayDataRow(values));
+
+			getProgress().step();
 		}
+
+		getProgress().complete();
 
 		// create example set and return it
 		return table.createExampleSet(null, null, transactionId);

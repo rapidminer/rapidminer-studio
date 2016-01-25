@@ -1,36 +1,35 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
-
-import com.rapidminer.tools.Tools;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.util.Date;
 
 import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
+
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -38,30 +37,23 @@ import javax.swing.table.TableCellRenderer;
  * Numbers will be formatted with the generic number of fraction digits. It is possible to restrict
  * the maximum length of strings shown. This might speed up rendering for very large strings, which
  * of course can't be shown completely anyway.
- * 
- * @author Ingo Mierswa
+ *
+ * @author Ingo Mierswa, Marco Boeck
  */
 public class ColoredTableCellRenderer implements TableCellRenderer {
 
-	private static final Color SELECTED_COLOR = UIManager.getColor("Tree.selectionBackground");
+	private static final Border CELL_BORDER = BorderFactory.createEmptyBorder(0, 10, 0, 5);
 
-	private static final Color TEXT_SELECTED_COLOR = UIManager.getColor("Tree.selectionForeground");
-
-	private static final Color TEXT_NON_SELECTED_COLOR = UIManager.getColor("Table.textForeground");
+	/** use default Java one for best performance */
+	private final DefaultTableCellRenderer defaultCellRenderer = new DefaultTableCellRenderer();
 
 	private int maximalTextLength = Integer.MAX_VALUE;
 	private boolean cutOnFirstLineBreak = false;
 
-	private JTextField renderer = new JTextField();
-
 	private int dateFormat = ExtendedJTable.NO_DATE_FORMAT;
 
-	public ColoredTableCellRenderer() {
-		renderer.setBorder(BorderFactory.createEmptyBorder(0, 3, 0, 3));
-	}
-
 	public void setColor(Color color) {
-		renderer.setBackground(color);
+		defaultCellRenderer.setBackground(color);
 	}
 
 	public void setDateFormat(int dateFormat) {
@@ -87,6 +79,8 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 			int row, int column) {
+
+		// prepare text
 		String text = null;
 		if (value instanceof Number) {
 			Number number = (Number) value;
@@ -128,15 +122,23 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 				text = "?";
 			}
 		}
-		renderer.setText(text);
 
-		if (isSelected) {
-			renderer.setBackground(SELECTED_COLOR);
-			renderer.setForeground(TEXT_SELECTED_COLOR);
-		} else {
-			renderer.setForeground(TEXT_NON_SELECTED_COLOR);
+		// use java renderer to draw text
+		JLabel l = (JLabel) defaultCellRenderer
+				.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
+		l.setBorder(CELL_BORDER);
+
+		// highlight hovered row?
+		if (table instanceof ExtendedJTable) {
+			ExtendedJTable t = (ExtendedJTable) table;
+			if (t.isRowHighlighting()) {
+				if (t.isRowHighlighted(row)) {
+					t.setLastHighlightedRow(row);
+					l.setBackground(SwingTools.darkenColor(l.getBackground(), 0.95f));
+				}
+			}
 		}
 
-		return renderer;
+		return l;
 	}
 }

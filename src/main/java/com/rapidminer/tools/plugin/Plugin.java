@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -199,6 +199,8 @@ public class Plugin {
 	private boolean disabled = false;
 
 	private ResourceBundle settingsRessourceBundle;
+
+	private Boolean useExtensionTreeRoot = null;
 
 	/** List of all plugins. */
 	private static final List<Plugin> ALL_PLUGINS = new LinkedList<>();
@@ -494,11 +496,11 @@ public class Plugin {
 				try {
 					in = operatorsURL.openStream();
 				} catch (IOException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
+					LogService.getRoot().log(Level.WARNING,
 							I18N.getMessage(LogService.getRoot().getResourceBundle(),
 									"com.rapidminer.tools.plugin.Plugin.operator_descriptor_reading_error", operatorsURL,
-									archive.getName()), e);
+									archive.getName()),
+							e);
 					return;
 				}
 			}
@@ -539,20 +541,22 @@ public class Plugin {
 			if (resource != null) {
 				XMLImporter.importParseRules(resource, this);
 			} else {
-				throw new PluginException("Cannot find parse rules '" + pluginParseRules + "' for plugin " + getName() + ".");
+				throw new PluginException(
+						"Cannot find parse rules '" + pluginParseRules + "' for plugin " + getName() + ".");
 			}
 		}
 
 		// registering settings for internationalization
 		if (pluginErrorDescriptions != null) {
-			I18N.registerErrorBundle(ResourceBundle.getBundle(pluginErrorDescriptions, Locale.getDefault(), this.classLoader));
+			I18N.registerErrorBundle(
+					ResourceBundle.getBundle(pluginErrorDescriptions, Locale.getDefault(), this.classLoader));
 		}
 		if (pluginGUIDescriptions != null) {
 			I18N.registerGUIBundle(ResourceBundle.getBundle(pluginGUIDescriptions, Locale.getDefault(), this.classLoader));
 		}
 		if (pluginUserErrorDescriptions != null) {
-			I18N.registerUserErrorMessagesBundle(ResourceBundle.getBundle(pluginUserErrorDescriptions, Locale.getDefault(),
-					this.classLoader));
+			I18N.registerUserErrorMessagesBundle(
+					ResourceBundle.getBundle(pluginUserErrorDescriptions, Locale.getDefault(), this.classLoader));
 		}
 		if (pluginSettingsDescriptions != null) {
 			settingsRessourceBundle = ResourceBundle.getBundle(pluginSettingsDescriptions, Locale.getDefault(),
@@ -575,8 +579,8 @@ public class Plugin {
 
 			// registering colors
 			if (pluginGroupDescriptions != null) {
-				ProcessDrawUtils.registerAdditionalObjectColors(pluginGroupDescriptions, name, classLoader);
-				ProcessDrawUtils.registerAdditionalGroupColors(pluginGroupDescriptions, name, classLoader);
+				ProcessDrawUtils.registerAdditionalObjectColors(pluginGroupDescriptions, name, classLoader, this);
+				ProcessDrawUtils.registerAdditionalGroupColors(pluginGroupDescriptions, name, classLoader, this);
 			}
 		}
 	}
@@ -611,7 +615,8 @@ public class Plugin {
 	 * Scans the directory for jar files and calls {@link #registerPlugins(List, boolean)} on the
 	 * list of files.
 	 */
-	private static void findAndRegisterPlugins(File pluginDir, boolean showWarningForNonPluginJars) {
+	private static void findAndRegisterPlugins(File pluginDir, boolean showWarningForNonPluginJars,
+			boolean overwritePluginsWithHigherVersions) {
 		List<File> files = new LinkedList<>();
 		if (pluginDir == null) {
 			LogService.getRoot().log(Level.WARNING,
@@ -630,14 +635,15 @@ public class Plugin {
 				}
 			})));
 		}
-		registerPlugins(files, showWarningForNonPluginJars);
+		registerPlugins(files, showWarningForNonPluginJars, overwritePluginsWithHigherVersions);
 	}
 
 	/**
 	 * Makes {@link Plugin} s from all files and adds them to {@link #ALL_PLUGINS}. After all
 	 * Plugins are loaded, they must be assigend their final class loader.
 	 */
-	private static void registerPlugins(List<File> files, boolean showWarningForNonPluginJars) {
+	private static void registerPlugins(List<File> files, boolean showWarningForNonPluginJars,
+			boolean overwritePluginsWithHigherVersions) {
 		List<Plugin> newPlugins = new LinkedList<>();
 		for (File file : files) {
 			try (JarFile jarFile = new JarFile(file)) {
@@ -659,10 +665,8 @@ public class Plugin {
 					}
 				}
 			} catch (Throwable e) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.tools.plugin.Plugin.plugin_loading_error", file, e.getMessage()), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.tools.plugin.Plugin.plugin_loading_error", file, e.getMessage()), e);
 			}
 		}
 		for (Plugin newPlugin : newPlugins) {
@@ -671,7 +675,12 @@ public class Plugin {
 			if (oldPlugin == null) {
 				ALL_PLUGINS.add(newPlugin);
 			} else {
-				resolveVersionConflict(newPlugin, oldPlugin, ALL_PLUGINS);
+				if (overwritePluginsWithHigherVersions) {
+					ALL_PLUGINS.remove(oldPlugin);
+					ALL_PLUGINS.add(newPlugin);
+				} else {
+					resolveVersionConflict(newPlugin, oldPlugin, ALL_PLUGINS);
+				}
 			}
 		}
 	}
@@ -702,8 +711,7 @@ public class Plugin {
 		}
 
 		if (LogService.getRoot().isLoggable(Level.WARNING)) {
-			LogService.getRoot().log(
-					Level.WARNING,
+			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.tools.plugin.Plugin.duplicate_plugin_definition_higher_version",
 					new Object[] { newExtension.getExtensionId(), newExtension.file, conflictingExtension.file,
 							higherNumber.toString() });
@@ -736,10 +744,8 @@ public class Plugin {
 				try {
 					plugin.registerDescriptions();
 				} catch (Exception e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.tools.plugin.Plugin.plugin_initializing_error", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.tools.plugin.Plugin.plugin_initializing_error", e), e);
 					i.remove();
 					plugin.disabled = true;
 					INCOMPATIBLE_PLUGINS.add(plugin);
@@ -911,11 +917,11 @@ public class Plugin {
 			initMethod.invoke(null, argumentValues);
 			return true;
 		} catch (Throwable e) {
-			LogService.getRoot().log(
-					Level.WARNING,
+			LogService.getRoot().log(Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.tools.plugin.Plugin.plugin_initializer_error", pluginInitClassName, methodName,
-							getName(), e.getMessage()), e);
+							getName(), e.getMessage()),
+					e);
 			return false;
 		}
 	}
@@ -944,6 +950,31 @@ public class Plugin {
 				| IllegalArgumentException | InvocationTargetException e) {
 		}
 		return true;
+	}
+
+	/**
+	 * Defines whether the extension is using the "extensions.EXTENSION_NAME" folder as tree root.
+	 *
+	 * @return {@code true} by default
+	 */
+	public synchronized boolean useExtensionTreeRoot() {
+		if (pluginInitClassName == null) {
+			return true;
+		}
+
+		// lookup only once
+		if (useExtensionTreeRoot == null) {
+			try {
+				Class<?> pluginInitator = Class.forName(pluginInitClassName, false, getClassLoader());
+				Method initGuiMethod = pluginInitator.getMethod("useExtensionTreeRoot", new Class[] {});
+				useExtensionTreeRoot = (Boolean) initGuiMethod.invoke(null, new Object[] {});
+			} catch (Throwable e) {
+				useExtensionTreeRoot = Boolean.TRUE;
+			}
+		}
+
+		// return cached value
+		return useExtensionTreeRoot.booleanValue();
 	}
 
 	/**
@@ -977,7 +1008,7 @@ public class Plugin {
 			}
 
 			if (webstartPluginDir != null) {
-				findAndRegisterPlugins(webstartPluginDir, true);
+				findAndRegisterPlugins(webstartPluginDir, true, false);
 			}
 
 			// Check if an extension directory is specified in the preferences and load extensions
@@ -1001,20 +1032,7 @@ public class Plugin {
 						pluginDir.getAbsolutePath());
 			}
 			if (pluginDir != null) {
-				findAndRegisterPlugins(pluginDir, true);
-			}
-
-			if (loadFromGlobalFolder()) {
-				try {
-					// Load globally installed extensions if RAPIDMINER_HOME is specified
-					File globalPluginDir = getPluginLocation();
-					if (globalPluginDir != null) {
-						findAndRegisterPlugins(globalPluginDir, true);
-					}
-				} catch (IOException e) {
-					LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.plugin.Plugin.no_properties_set",
-							new Object[] { PlatformUtilities.PROPERTY_RAPIDMINER_HOME });
-				}
+				findAndRegisterPlugins(pluginDir, true, false);
 			}
 
 			// Check for additional extension directories and load extensions from there (if the
@@ -1022,12 +1040,30 @@ public class Plugin {
 			for (String additionalExtensionDir : additionalExtensionDirs) {
 				File extensionDir = new File(additionalExtensionDir);
 				if (extensionDir.isDirectory()) {
-					findAndRegisterPlugins(extensionDir, true);
+					findAndRegisterPlugins(extensionDir, true, false);
 				}
 			}
 
 			// Check for managed extensions and register them
-			registerPlugins(ManagedExtension.getActivePluginJars(), true);
+			registerPlugins(ManagedExtension.getActivePluginJars(), true, false);
+
+			// Check global folder for extensions and register them
+			// CAUTION: This extensions overwrite extensions from other folders, even if they have a
+			// lower version number.
+			// Otherwise plugins that are too new for the running studio version could not work.
+			// After this registerPlugins or findAndRegisterPlugins must not be called anymore.
+			if (loadFromGlobalFolder()) {
+				try {
+					// Load globally installed extensions if RAPIDMINER_HOME is specified
+					File globalPluginDir = getPluginLocation();
+					if (globalPluginDir != null) {
+						findAndRegisterPlugins(globalPluginDir, true, true);
+					}
+				} catch (IOException e) {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.plugin.Plugin.no_properties_set",
+							new Object[] { PlatformUtilities.PROPERTY_RAPIDMINER_HOME });
+				}
+			}
 
 			registerAllPluginDescriptions();
 			finalizePluginLoading();
@@ -1122,10 +1158,8 @@ public class Plugin {
 						}
 					}
 				} catch (ParserConfigurationException | SAXException | IOException | URISyntaxException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							"Could not parse XML settings file: " + SettingsXmlHandler.SETTINGS_XML_FILE + " of extension "
-									+ getName() + " " + getVersion());
+					LogService.getRoot().log(Level.WARNING, "Could not parse XML settings file: "
+							+ SettingsXmlHandler.SETTINGS_XML_FILE + " of extension " + getName() + " " + getVersion());
 					// Must not throw an exception, as the settings work without the structure
 					// inside XML.
 				}
@@ -1155,8 +1189,8 @@ public class Plugin {
 				if (settingsKey.endsWith(SettingsType.DESCRIPTION.toString())) {
 
 					// Extract key of ParameterType by removing suffix of description
-					String parameterTypeKey = settingsKey.substring(0, settingsKey.length()
-							- SettingsType.DESCRIPTION.toString().length());
+					String parameterTypeKey = settingsKey.substring(0,
+							settingsKey.length() - SettingsType.DESCRIPTION.toString().length());
 
 					ParameterType parameterType = ParameterService.getParameterType(parameterTypeKey);
 					if (parameterType != null) {
@@ -1181,10 +1215,8 @@ public class Plugin {
 			final byte[] md5hash = MessageDigest.getInstance("MD5").digest(homeUrl.getBytes());
 			dirName = DatatypeConverter.printBase64Binary(md5hash);
 		} catch (NoSuchAlgorithmException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.tools.plugin.Plugin.hashing_remote_url_error", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.tools.plugin.Plugin.hashing_remote_url_error", e), e);
 			return null;
 		}
 
@@ -1192,15 +1224,13 @@ public class Plugin {
 		cacheDir.mkdirs();
 		File readmeFile = new File(cacheDir, "README.txt");
 		try {
-			Tools.writeTextFile(readmeFile, "This directory contains plugins downloaded from RapidMiner Server instance \n"
-					+ "  " + homeUrl + ".\n"
-					+ "These plugins are only used if RapidMiner is started via WebStart from this \n"
-					+ "server. You can delete the directory if you no longer need the cached plugins.");
+			Tools.writeTextFile(readmeFile,
+					"This directory contains plugins downloaded from RapidMiner Server instance \n" + "  " + homeUrl + ".\n"
+							+ "These plugins are only used if RapidMiner is started via WebStart from this \n"
+							+ "server. You can delete the directory if you no longer need the cached plugins.");
 		} catch (IOException e1) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.tools.plugin.Plugin.creating_file_error", readmeFile, e1), e1);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.tools.plugin.Plugin.creating_file_error", readmeFile, e1), e1);
 		}
 
 		Document pluginsDoc;
@@ -1208,10 +1238,8 @@ public class Plugin {
 			URL pluginsListUrl = new URL(homeUrl + "/RAWS/dependencies/resources.xml");
 			pluginsDoc = XMLTools.parse(pluginsListUrl.openStream());
 		} catch (Exception e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.tools.plugin.Plugin.loading_extensions_list_error", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.tools.plugin.Plugin.loading_extensions_list_error", e), e);
 			return null;
 		}
 
@@ -1232,13 +1260,11 @@ public class Plugin {
 						pluginName);
 				try {
 					URL pluginUrl = new URL(homeUrl + "/RAWS/dependencies/plugins/" + pluginName);
-					Tools.copyStreamSynchronously(WebServiceTools.openStreamFromURL(pluginUrl), new FileOutputStream(
-							pluginFile), true);
+					Tools.copyStreamSynchronously(WebServiceTools.openStreamFromURL(pluginUrl),
+							new FileOutputStream(pluginFile), true);
 				} catch (Exception e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.tools.plugin.Plugin.downloading_extension_error", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.tools.plugin.Plugin.downloading_extension_error", e), e);
 					errorOccurred = true; // Don't clear unknown files in this case.
 				}
 			}
@@ -1250,8 +1276,8 @@ public class Plugin {
 					continue;
 				}
 				if (!cachedFiles.contains(file)) {
-					LogService.getRoot()
-					.log(Level.CONFIG, "com.rapidminer.tools.plugin.Plugin.deleting_obsolete_file", file);
+					LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.plugin.Plugin.deleting_obsolete_file",
+							file);
 					file.delete();
 				}
 			}

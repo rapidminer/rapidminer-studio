@@ -1,32 +1,30 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.charts;
 
 import java.awt.Adjustable;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -67,6 +65,7 @@ import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
 import com.rapidminer.gui.plotter.settings.ListeningJCheckBox;
 import com.rapidminer.gui.plotter.settings.ListeningJComboBox;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -158,8 +157,10 @@ public class BarChartPlotter extends LabelRotatingPlotterAdapter implements Chan
 		System.arraycopy(AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES, 0, allFunctions, 1,
 				AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES.length);
 		aggregationFunction = new ListeningJComboBox(settings, PARAMETER_AGGREGATION, allFunctions);
+		aggregationFunction.setPreferredSize(new Dimension(aggregationFunction.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		aggregationFunction
-		.setToolTipText("Select the type of the aggregation function which should be used for grouped values.");
+				.setToolTipText("Select the type of the aggregation function which should be used for grouped values.");
 		aggregationFunction.addActionListener(new ActionListener() {
 
 			@Override
@@ -179,6 +180,8 @@ public class BarChartPlotter extends LabelRotatingPlotterAdapter implements Chan
 		});
 
 		orientationType = new ListeningJComboBox(settings, "_" + PARAMETER_ORIENTATION, ORIENTATION_TYPES);
+		orientationType.setPreferredSize(new Dimension(aggregationFunction.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		orientationType.addActionListener(new ActionListener() {
 
 			@Override
@@ -497,9 +500,9 @@ public class BarChartPlotter extends LabelRotatingPlotterAdapter implements Chan
 					null,                     // range axis label
 					usedCategoryDataSet,      // data
 					orientationIndex == ORIENTATION_TYPE_VERTICAL ? PlotOrientation.VERTICAL : PlotOrientation.HORIZONTAL, // orientation
-							false,      			  // include legend if group by column is set
-							true,                     // tooltips
-							false                     // URLs
+					false,      			  // include legend if group by column is set
+					true,                     // tooltips
+					false                     // URLs
 					);
 
 			// set the background color for the chart...

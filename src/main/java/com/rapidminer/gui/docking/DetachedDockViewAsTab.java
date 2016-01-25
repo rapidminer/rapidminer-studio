@@ -1,24 +1,32 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.docking;
+
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.UIManager;
 
 import com.vlsolutions.swing.docking.DockGroup;
 import com.vlsolutions.swing.docking.DockKey;
@@ -33,20 +41,10 @@ import com.vlsolutions.swing.docking.event.DockingActionCreateTabEvent;
 import com.vlsolutions.swing.tabbedpane.JTabbedPaneSmartIcon;
 import com.vlsolutions.swing.tabbedpane.SmartIconJButton;
 
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.UIManager;
-
 
 /**
  * Detached dock view, that also shows a tab in the floating dialog.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class DetachedDockViewAsTab extends DockViewAsTab {
@@ -89,7 +87,7 @@ public class DetachedDockViewAsTab extends DockViewAsTab {
 		}
 		if (icons.size() > 0) {
 			SmartIconJButton[] iconsArray = icons.toArray(new SmartIconJButton[0]);
-			smartIcon = new JTabbedPaneSmartIcon(dockKey.getIcon(), dockKey.getName(), iconsArray);
+			smartIcon = new JTabbedPaneSmartIcon(dockKey.getIcon(), dockKey.getName(), null, null, true, iconsArray);
 			smartIcon.setIconForTabbedPane(tabHeader);
 			tabHeader.addTab("", smartIcon, getDockable().getComponent());
 		} else {

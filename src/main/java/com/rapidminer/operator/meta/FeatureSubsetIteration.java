@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
@@ -38,8 +38,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.math.CombinationGenerator;
-
-import java.util.List;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**
@@ -50,7 +49,7 @@ import java.util.List;
  * feature selection, which performs a similar task, this iterative approach needs much less memory
  * and can be performed on larger data sets.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class FeatureSubsetIteration extends OperatorChain {
@@ -122,7 +121,7 @@ public class FeatureSubsetIteration extends OperatorChain {
 			log("Using exact number of features for feature subset iteration (" + exactNumberOfFeatures
 					+ "), ignoring possibly defined range for the number of features.");
 		} else {
-			if ((maxNumberOfFeatures > 0) && (minNumberOfFeatures > maxNumberOfFeatures)) {
+			if (maxNumberOfFeatures > 0 && minNumberOfFeatures > maxNumberOfFeatures) {
 				throw new UserError(this, 210, PARAMETER_MAX_NUMBER_OF_ATTRIBUTES, PARAMETER_MIN_NUMBER_OF_ATTRIBUTES);
 			}
 			if (maxNumberOfFeatures > allAttributes.length) {
@@ -144,10 +143,27 @@ public class FeatureSubsetIteration extends OperatorChain {
 						PARAMETER_EXACT_NUMBER_OF_ATTRIBUTES,
 						" the parameter value must be larger than the number of attributes of the input example set." });
 			}
+			// init Operator progress
+			getProgress().setTotal(
+					MathFunctions.factorial(exampleSet.getAttributes().size())
+							/ MathFunctions.factorial(exactNumberOfFeatures)
+							* MathFunctions.factorial(exampleSet.getAttributes().size() - exactNumberOfFeatures));
+
 			applyOnAllWithExactNumber(exampleSet, allAttributes, exactNumberOfFeatures);
 		} else {
+			// init Operator progress
+			int totalIterations = 0;
+			for (int i = minNumberOfFeatures; i <= maxNumberOfFeatures; i++) {
+				totalIterations += MathFunctions.factorial(exampleSet.getAttributes().size())
+						/ (MathFunctions.factorial(i) * MathFunctions.factorial(exampleSet.getAttributes().size() - i));
+			}
+			if (totalIterations > 0 && totalIterations <= Integer.MAX_VALUE) {
+				getProgress().setTotal(totalIterations);
+			}
+
 			applyOnAllInRange(exampleSet, allAttributes, minNumberOfFeatures, maxNumberOfFeatures);
 		}
+		getProgress().complete();
 
 		exampleSetOutput.deliver(exampleSet);
 	}
@@ -171,6 +187,7 @@ public class FeatureSubsetIteration extends OperatorChain {
 				this.iteration++;
 				this.featureNames = allAttributes[i].getName();
 				applyInnerOperators(workingSet);
+				getProgress().setCompleted(iteration);
 			}
 		} else if (exactNumberOfFeatures == allAttributes.length) {
 			// create current example set
@@ -191,6 +208,7 @@ public class FeatureSubsetIteration extends OperatorChain {
 			this.iteration++;
 			this.featureNames = nameBuffer.toString();
 			applyInnerOperators(workingSet);
+			getProgress().setCompleted(iteration);
 		} else {
 			CombinationGenerator combinationGenerator = new CombinationGenerator(allAttributes.length, exactNumberOfFeatures);
 			while (combinationGenerator.hasMore()) {
@@ -214,6 +232,7 @@ public class FeatureSubsetIteration extends OperatorChain {
 				this.iteration++;
 				this.featureNames = nameBuffer.toString();
 				applyInnerOperators(workingSet);
+				getProgress().setCompleted(iteration);
 			}
 		}
 	}
@@ -256,4 +275,5 @@ public class FeatureSubsetIteration extends OperatorChain {
 		types.add(type);
 		return types;
 	}
+
 }

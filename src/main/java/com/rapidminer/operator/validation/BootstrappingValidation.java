@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.MappedExampleSet;
@@ -35,8 +35,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-
 
 /**
  * <p>
@@ -45,13 +43,13 @@ import java.util.List;
  * not sampled, build a test set on which the model is evaluated. This process is repeated for the
  * specified number of iterations after which the average performance is calculated.
  * </p>
- * 
+ *
  * <p>
  * The basic setup is the same as for the usual cross validation operator. The first inner operator
  * must provide a model and the second a performance vector. Please note that this operator does not
  * regard example weights, i.e. weights specified in a weight column.
  * </p>
- * 
+ *
  * <p>
  * This validation operator provides several values which can be logged by means of a
  * {@link ProcessLogOperator}. All performance estimation operators of RapidMiner provide access to
@@ -67,7 +65,7 @@ import java.util.List;
  * <li>for the main criterion, also the variance and the standard deviation can be accessed where
  * applicable.</li>
  * </ul>
- * 
+ *
  * @author Ingo Mierswa, Tobias Malbrecht
  */
 public class BootstrappingValidation extends ValidationChain {
@@ -102,8 +100,10 @@ public class BootstrappingValidation extends ValidationChain {
 
 		// start bootstrapping loop
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
-		for (iteration = 0; iteration < number; iteration++) {
+		getProgress().setTotal(number);
+		getProgress().setCheckForStop(false);
 
+		for (iteration = 0; iteration < number; iteration++) {
 			int[] mapping = null;
 			if (getParameterAsBoolean(PARAMETER_USE_WEIGHTS) && inputSet.getAttributes().getWeight() != null) {
 				mapping = MappedExampleSet.createWeightedBootstrappingMapping(inputSet, size, random);
@@ -116,8 +116,10 @@ public class BootstrappingValidation extends ValidationChain {
 			MappedExampleSet inverseExampleSet = new MappedExampleSet((ExampleSet) inputSet.clone(), mapping, false);
 			evaluate(inverseExampleSet);
 			inApplyLoop();
+			getProgress().step();
 		}
 		// end loop
+		getProgress().complete();
 	}
 
 	@Override

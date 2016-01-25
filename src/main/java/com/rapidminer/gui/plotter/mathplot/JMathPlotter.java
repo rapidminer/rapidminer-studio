@@ -1,24 +1,37 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.mathplot;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+
+import javax.swing.AbstractButton;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+
+import org.math.plot.PlotPanel;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.plotter.Plotter;
@@ -26,30 +39,18 @@ import com.rapidminer.gui.plotter.PlotterAdapter;
 import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.plotter.PlotterLegend;
 
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-
-import javax.swing.Icon;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-
-import org.math.plot.PlotPanel;
-
 
 /**
  * The abstract super class for all plotters using the JMathPlot library. The actual plotting must
  * be done in the method {@link #paintComponent(Graphics)} where some helper methods defined in this
  * class can be used. Another method usually implemented is {@link #getNumberOfAxes()}.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land
  */
 public abstract class JMathPlotter extends PlotterAdapter {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -7018389000051768349L;
 
@@ -249,6 +250,12 @@ public abstract class JMathPlotter extends PlotterAdapter {
 			// removes the icon for dataview in the toolbar
 			while (this.plotpanel.plotToolBar.getComponentCount() > getNumberOfOptionIcons()) {
 				this.plotpanel.plotToolBar.remove(this.plotpanel.plotToolBar.getComponentCount() - 1);
+			}
+			for (int i = 0; i < plotpanel.plotToolBar.getComponentCount(); i++) {
+				Component c = plotpanel.plotToolBar.getComponent(i);
+				if (c instanceof JButton) {
+					((AbstractButton) c).setContentAreaFilled(false);
+				}
 			}
 			return this.plotpanel.plotToolBar;
 		} else {

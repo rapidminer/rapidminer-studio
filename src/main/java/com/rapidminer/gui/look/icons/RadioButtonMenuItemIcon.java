@@ -1,126 +1,98 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.icons;
 
-import java.awt.Color;
+import java.awt.BasicStroke;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.Stroke;
+import java.awt.geom.Ellipse2D;
 import java.io.Serializable;
 
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.UIResource;
+
+import com.rapidminer.gui.look.Colors;
 
 
 /**
  * The menu item radio button icon.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class RadioButtonMenuItemIcon implements Icon, UIResource, Serializable {
 
-	private static final long serialVersionUID = -7415345504361964833L;
+	private static final long serialVersionUID = 1L;
+
+	private static final Stroke RADIO_STROKE = new BasicStroke(1f);
 
 	@Override
 	public void paintIcon(Component c, Graphics g, int x, int y) {
 		JMenuItem b = (JMenuItem) c;
-		ButtonModel model = b.getModel();
-		boolean isSelected = model.isSelected();
-		boolean isEnabled = model.isEnabled();
-		boolean isPressed = model.isPressed();
-		boolean isArmed = model.isArmed();
+		ButtonModel bm = b.getModel();
 
 		g.translate(x, y);
-		if (isEnabled) {
-			if (isPressed || isArmed) {
-				drawCircles(g, new ColorUIResource(250, 250, 250), new ColorUIResource(162, 188, 241), new ColorUIResource(
-						206, 220, 245));
-			} else {
-				drawCircles(g, new ColorUIResource(150, 150, 150), new ColorUIResource(230, 230, 230), new ColorUIResource(
-						190, 190, 190));
-			}
+
+		boolean isSelected = bm.isSelected();
+		boolean isEnabled = bm.isEnabled();
+		boolean isPressed = bm.isPressed();
+
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+		// drawing background section
+		if (!isEnabled) {
+			g2.setColor(Colors.RADIOBUTTON_BORDER_DISABLED);
 		} else {
-			drawCircles(g, new ColorUIResource(160, 160, 160), new ColorUIResource(210, 210, 210), new ColorUIResource(190,
-					190, 190));
-		}
-
-		if (isSelected) {
-			Color c1;
-			Color c2;
-			if (isEnabled) {
-				if (model.isArmed() || ((c instanceof JMenu) && model.isSelected())) {
-					c1 = new ColorUIResource(162, 188, 241);
-					c2 = Color.white;
-				} else {
-					c1 = new ColorUIResource(200, 200, 200);
-					c2 = new ColorUIResource(120, 120, 120);
-				}
+			if (isPressed) {
+				g2.setColor(Colors.RADIOBUTTON_BORDER_FOCUS);
 			} else {
-				c1 = new ColorUIResource(200, 200, 200);
-				c2 = new ColorUIResource(150, 150, 150);
+				g2.setColor(Colors.RADIOBUTTON_BORDER);
 			}
-			g.setColor(c1);
-			g.drawLine(5, 3, 5, 7);
-			g.drawLine(3, 5, 7, 5);
-
-			g.setColor(c2);
-			g.fillRect(4, 4, 3, 3);
 		}
+		g2.setStroke(RADIO_STROKE);
+		Shape circle = new Ellipse2D.Double(0, 0, 9, 9);
+		g2.draw(circle);
+
+		// drawing sphere
+		if (isSelected) {
+			if (isEnabled) {
+				g2.setColor(Colors.RADIOBUTTON_CHECKED);
+			} else {
+				g2.setColor(Colors.RADIOBUTTON_CHECKED_DISABLED);
+			}
+			circle = new Ellipse2D.Double(3, 3, 4, 4);
+			g2.fill(circle);
+		}
+
 		g.translate(-x, -y);
-	}
-
-	static void drawCircles(Graphics g, Color c1, Color c2, Color c3) {
-		g.setColor(c1);
-		g.drawLine(3, 1, 7, 1);
-		g.drawLine(9, 3, 9, 7);
-		g.drawLine(3, 9, 7, 9);
-		g.drawLine(1, 3, 1, 7);
-		g.drawLine(2, 2, 2, 2);
-		g.drawLine(8, 2, 8, 2);
-		g.drawLine(8, 8, 8, 8);
-		g.drawLine(2, 8, 2, 8);
-
-		g.setColor(c2);
-		g.drawLine(1, 2, 2, 1);
-		g.drawLine(4, 0, 6, 0);
-		g.drawLine(8, 1, 9, 2);
-		g.drawLine(10, 4, 10, 6);
-		g.drawLine(9, 8, 8, 9);
-		g.drawLine(4, 10, 6, 10);
-		g.drawLine(1, 8, 2, 9);
-		g.drawLine(0, 4, 0, 6);
-
-		g.setColor(c3);
-		g.drawLine(5, 1, 5, 1);
-		g.drawLine(5, 9, 5, 9);
-		g.drawLine(1, 5, 1, 5);
-		g.drawLine(9, 5, 9, 5);
 	}
 
 	@Override
 	public int getIconWidth() {
-		return IconFactory.MENU_ICON_SIZE.width;
+		return (int) (IconFactory.MENU_ICON_SIZE.width * 1.5);
 	}
 
 	@Override

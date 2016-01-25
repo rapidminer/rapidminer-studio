@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,10 +18,8 @@
  */
 package com.rapidminer.gui.processeditor;
 
-import java.awt.Color;
 import java.awt.GridLayout;
 
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
 import com.rapidminer.Process;
@@ -67,9 +65,6 @@ public class ProcessContextEditor extends JPanel {
 		setLayout(new GridLayout(3, 1));
 		((GridLayout) getLayout()).setHgap(0);
 		((GridLayout) getLayout()).setVgap(10);
-
-		inputEditor.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-		outputEditor.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
 
 		add(inputEditor);
 		add(outputEditor);

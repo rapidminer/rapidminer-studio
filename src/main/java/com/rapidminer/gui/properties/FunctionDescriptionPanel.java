@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -113,13 +113,13 @@ public class FunctionDescriptionPanel extends JPanel {
 	private static final String[] PARAMETER_TYPES = { "Condition", "Attribute_value", "Nominal", "Numeric", "Integer",
 			"Constant", "Date" };
 
-	private static final ImageIcon INFO_ICON = SwingTools.createIcon("16/"
+	private static final ImageIcon INFO_ICON = SwingTools.createIcon("13/"
 			+ I18N.getGUILabel("function_description.info.icon"));
 
-	private static final ImageIcon INFO_ICON_HOVERED = SwingTools.createIcon("16/"
+	private static final ImageIcon INFO_ICON_HOVERED = SwingTools.createIcon("13/"
 			+ I18N.getGUILabel("function_description.info.hovered.icon"));
 
-	private static final ImageIcon ICON_ATTRIBUTE_VALUE = SwingTools.createIcon("16/symbol_questionmark.png");
+	private static final ImageIcon ICON_ATTRIBUTE_VALUE = SwingTools.createIcon("16/question.png");
 
 	private static final Color COLOR_LABEL = Color.DARK_GRAY;
 
@@ -221,6 +221,7 @@ public class FunctionDescriptionPanel extends JPanel {
 		});
 		btShowInfo.setIcon(INFO_ICON);
 		btShowInfo.setContentAreaFilled(false);
+		btShowInfo.setBorderPainted(false);
 		btShowInfo.addMouseListener(new MouseAdapter() {
 
 			@Override
@@ -337,9 +338,9 @@ public class FunctionDescriptionPanel extends JPanel {
 		// panel is toggled. Do not delete them!
 		String croppedText = "<html>"
 				+ SwingTools
-				.getStrippedJComponentText(this,
-						HTML_TAB + HTML_TAB + HTML_TAB + functionEntry.getFunctionNameWithParameters(),
-						MAX_WIDTH_OF_TEXT, 0) + "<tt> </tt></html>";
+						.getStrippedJComponentText(this,
+								HTML_TAB + HTML_TAB + HTML_TAB + functionEntry.getFunctionNameWithParameters(),
+								MAX_WIDTH_OF_TEXT, 0) + "<tt> </tt></html>";
 		for (String parameterType : PARAMETER_TYPES) {
 			croppedText = croppedText.replaceAll(parameterType, "<tt>" + parameterType + "</tt>");
 		}
@@ -519,6 +520,10 @@ public class FunctionDescriptionPanel extends JPanel {
 				&& functionEntry != null && isExpanded && initialized) {
 			double numberOfLines = Math.ceil(getContentHeight(textareaInfoText.getText(), getWidth()) / 16.0);
 			totalHeight += numberOfLines * ROW_HEIGHT;
+			// add magic number 7 for one line descriptions
+			if (numberOfLines == 1) {
+				totalHeight += 7;
+			}
 		}
 
 		infoPanel.setMinimumSize(new Dimension(getPreferredSize().width, totalHeight - FIRST_ROW_HEIGHT));

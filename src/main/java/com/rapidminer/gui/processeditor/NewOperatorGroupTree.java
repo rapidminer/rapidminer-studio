@@ -1,28 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -30,21 +28,16 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
 import javax.swing.JTree;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeExpansionListener;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
@@ -53,20 +46,19 @@ import javax.swing.tree.TreeSelectionModel;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.actions.ToggleAction;
 import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
 import com.rapidminer.gui.dnd.OperatorTransferHandler;
+import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.operatortree.actions.InfoOperatorAction;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.FilterListener;
 import com.rapidminer.gui.tools.FilterTextField;
 import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.SelectionNavigationListener;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.TextFieldWithAction;
-import com.rapidminer.gui.tools.components.DropDownButton;
 import com.rapidminer.gui.tools.components.ToolTipWindow;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TipProvider;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TooltipLocation;
@@ -79,8 +71,6 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
-import com.rapidminer.tools.parameter.ParameterChangeListener;
-import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
 /**
@@ -89,49 +79,6 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  * @author Ingo Mierswa, Tobias Malbrecht, Sebastian Land
  */
 public class NewOperatorGroupTree extends JPanel implements FilterListener, SelectionNavigationListener {
-
-	/**
-	 * A checkbox menu item which always resembles the current state of a boolean parameter from
-	 * ParameterService.
-	 *
-	 * @author Marius Helf
-	 *
-	 */
-	private static class CheckBoxMenuItemParameterServiceListener extends JCheckBoxMenuItem implements
-			ParameterChangeListener {
-
-		private static final long serialVersionUID = 1L;
-
-		private final String parameterKey;
-
-		/**
-		 * Instantiates a new CheckBoxMenuItemParameterServiceListener.
-		 *
-		 * @param parameterKey
-		 *            The key of the parameter whose state this checkbox should resemble.
-		 */
-		public CheckBoxMenuItemParameterServiceListener(final String parameterKey, final ResourceAction resourceAction) {
-			super(resourceAction);
-			this.parameterKey = parameterKey;
-
-			setSelected("true".equals(ParameterService.getParameterValue(parameterKey)));
-
-			ParameterService.registerParameterChangeListener(this);
-		}
-
-		@Override
-		public void informParameterChanged(final String key, final String value) {
-			if (key != null && key.equals(parameterKey)) {
-				setSelected("true".equals(value));
-			}
-		}
-
-		@Override
-		public void informParameterSaved() {
-			// Do nothing
-		}
-
-	}
 
 	private static final long serialVersionUID = 133086849304885475L;
 
@@ -156,42 +103,6 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 
 	private final ImageIcon CLEAR_FILTER_HOVERED_ICON = SwingTools.createIcon("16/x-mark_orange.png");
 
-	private transient final ToggleAction FILTER_DEPRECATED_ACTION = new ToggleAction(true, "filter_deprecated") {
-
-		private static final long serialVersionUID = -35181409559416043L;
-
-		{
-			setSelected(true);
-			actionToggled(null);
-		}
-
-		@Override
-		public void actionToggled(final ActionEvent e) {
-			Enumeration<TreePath> expandedPaths = operatorGroupTree.getExpandedDescendants(new TreePath(operatorGroupTree
-					.getModel().getRoot()));
-			TreePath selectedPath = operatorGroupTree.getSelectionPath();
-			model.setFilterDeprecated(isSelected());
-			while (expandedPaths.hasMoreElements()) {
-				operatorGroupTree.expandPath(expandedPaths.nextElement());
-			}
-			operatorGroupTree.setSelectionPath(selectedPath);
-		}
-	};
-
-	private transient final ToggleAction SORT_BY_USAGE_ACTION = new ToggleAction(true, "sort_by_usage") {
-
-		private static final long serialVersionUID = 1L;
-		{
-			setSelected(true);
-			actionToggled(null);
-		}
-
-		@Override
-		public void actionToggled(final ActionEvent e) {
-			model.setSortByUsage(isSelected());
-		}
-	};
-
 	public transient final Action INFO_OPERATOR_ACTION = new InfoOperatorAction() {
 
 		private static final long serialVersionUID = 7157100643209732656L;
@@ -202,39 +113,12 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		}
 	};
 
-	private final JCheckBoxMenuItem autoWireInputsItem = new CheckBoxMenuItemParameterServiceListener(
-			RapidMinerGUI.PROPERTY_AUTOWIRE_INPUT, new ResourceAction("auto_wire_inputs_on_add") {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(final ActionEvent e) {
-					ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_AUTOWIRE_INPUT,
-							Boolean.toString(autoWireInputsItem.isSelected()));
-					ParameterService.saveParameters();
-				}
-			});
-
-	private final JCheckBoxMenuItem autoWireOutputsItem = new CheckBoxMenuItemParameterServiceListener(
-			RapidMinerGUI.PROPERTY_AUTOWIRE_OUTPUT, new ResourceAction("auto_wire_outputs_on_add") {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(final ActionEvent e) {
-					ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_AUTOWIRE_OUTPUT,
-							Boolean.toString(autoWireOutputsItem.isSelected()));
-					ParameterService.saveParameters();
-				}
-			});
-
 	private NewOperatorGroupTreeRenderer renderer;
 
 	public NewOperatorGroupTree(final NewOperatorEditor editor) {
 		this.editor = editor;
 		setLayout(new BorderLayout());
 
-		// operatorGroupTree.setRootVisible(true);
 		operatorGroupTree.setShowsRootHandles(true);
 		renderer = new NewOperatorGroupTreeRenderer();
 		operatorGroupTree.setCellRenderer(renderer);
@@ -242,33 +126,27 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		operatorGroupTree.setRowHeight(0);
 
 		JScrollPane scrollPane = new ExtendedJScrollPane(operatorGroupTree);
-		scrollPane.setBorder(null);
+		scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TEXTFIELD_BORDER));
 		add(scrollPane, BorderLayout.CENTER);
 
-		filterField.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.field.filter_deprecated.tip"));
+		filterField.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.field.filter_operators.tip"));
 		filterField.addFilterListener(this);
 		filterField.addSelectionNavigationListener(this);
+		filterField.setDefaultFilterText(I18N.getMessage(I18N.getGUIBundle(), "gui.field.filter_operators.prompt"));
 
-		JToolBar toolBar = new ExtendedJToolBar();
-		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-		toolBar.setFloatable(false);
-		DropDownButton autoWireMenuButton = DropDownButton.makeDropDownButton(new ResourceActionAdapter(true,
-				"auto_wire_on_add"));
-		autoWireMenuButton.setUsePopupActionOnMainButton();
-		autoWireMenuButton.add(autoWireInputsItem);
-		autoWireMenuButton.add(autoWireOutputsItem);
-		autoWireMenuButton.addToToolBar(toolBar);
-		toolBar.addSeparator();
-		toolBar.add(new TextFieldWithAction(filterField, CLEAR_FILTER_ACTION, CLEAR_FILTER_HOVERED_ICON));
-		JToggleButton filterDeprecatedButton = FILTER_DEPRECATED_ACTION.createToggleButton();
-		filterDeprecatedButton.setText("");
-		toolBar.add(filterDeprecatedButton);
+		JPanel headerBar = new JPanel(new BorderLayout());
+		TextFieldWithAction tf = new TextFieldWithAction(filterField, CLEAR_FILTER_ACTION, CLEAR_FILTER_HOVERED_ICON) {
 
-		JToggleButton sortButton = SORT_BY_USAGE_ACTION.createToggleButton();
-		sortButton.setText("");
-		toolBar.add(sortButton);
+			private static final long serialVersionUID = 1L;
 
-		add(toolBar, BorderLayout.NORTH);
+			@Override
+			public Dimension getPreferredSize() {
+				return new Dimension(super.getPreferredSize().width, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
+			}
+		};
+		headerBar.add(tf, BorderLayout.CENTER);
+		headerBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		add(headerBar, BorderLayout.NORTH);
 
 		operatorGroupTree.setRootVisible(false);
 		operatorGroupTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -279,22 +157,8 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 			public void valueChanged(final TreeSelectionEvent e) {
 				Operator op = getSelectedOperator();
 				if (op != null) {
-					// TODO: Re-enable when documentation is ready
-					// RapidMinerGUI.getMainFrame().getOperatorDocumentationBrowser().setSelection(op);
 					RapidMinerGUI.getMainFrame().getOperatorDocViewer().setDisplayedOperator(op);
 				}
-			}
-		});
-		operatorGroupTree.addTreeExpansionListener(new TreeExpansionListener() {
-
-			@Override
-			public void treeExpanded(final TreeExpansionEvent event) {
-				updateMaxUsageCount();
-			}
-
-			@Override
-			public void treeCollapsed(final TreeExpansionEvent event) {
-				updateMaxUsageCount();
 			}
 		});
 
@@ -313,6 +177,29 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 			}
 		});
 		operatorGroupTree.addMouseListener(new MouseAdapter() {
+
+			@Override
+			public void mouseEntered(final MouseEvent e) {
+				// don't do on resize drag
+				if (SwingUtilities.isLeftMouseButton(e)) {
+					return;
+				}
+
+				ProcessRendererModel modelRenderer = RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer()
+						.getModel();
+
+				modelRenderer.setOperatorSourceHovered(true);
+				modelRenderer.fireMiscChanged();
+			}
+
+			@Override
+			public void mouseExited(final MouseEvent e) {
+				ProcessRendererModel modelRenderer = RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer()
+						.getModel();
+
+				modelRenderer.setOperatorSourceHovered(false);
+				modelRenderer.fireMiscChanged();
+			}
 
 			@Override
 			public void mouseClicked(final MouseEvent e) {
@@ -579,32 +466,6 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 	@Override
 	public void selected() {
 		insertSelected();
-	}
-
-	private void updateMaxUsageCount() {
-		if (SORT_BY_USAGE_ACTION.isSelected()) {
-			renderer.setMaxVisibleUsageCount(getMaxVisibleUsage());
-		} else {
-			renderer.setMaxVisibleUsageCount(0);
-		}
-	}
-
-	private int getMaxVisibleUsage() {
-		int max = 0;
-		for (int i = 0; i < operatorGroupTree.getRowCount(); i++) {
-			TreePath path = operatorGroupTree.getPathForRow(i);
-			Object leaf = path.getLastPathComponent();
-			if (leaf instanceof OperatorDescription) {
-				OperatorDescription operatorDescription = (OperatorDescription) leaf;
-				if (operatorDescription.getDeprecationInfo() == null) {
-					int usageCount1 = (int) ActionStatisticsCollector.getInstance().getCount(
-							ActionStatisticsCollector.TYPE_OPERATOR, operatorDescription.getKey(),
-							ActionStatisticsCollector.OPERATOR_EVENT_EXECUTION);
-					max = Math.max(max, usageCount1);
-				}
-			}
-		}
-		return max;
 	}
 
 	public AbstractPatchedTransferHandler getOperatorTreeTransferhandler() {

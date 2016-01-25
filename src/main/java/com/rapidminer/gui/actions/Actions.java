@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -82,19 +82,15 @@ public class Actions implements ProcessEditor {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Operator operator = getFirstSelectedOperator();
-			String name = SwingTools.showInputDialog("rename_operator", operator.getName());
-			if (name != null && name.length() > 0) {
-				operator.rename(name);
-			}
+			mainFrame.getProcessPanel().getProcessRenderer().rename(getFirstSelectedOperator());
 		}
 	};
 
 	public final Action DELETE_OPERATOR_ACTION = new DeleteOperatorAction();
 
 	public final ToggleBreakpointItem TOGGLE_BREAKPOINT[] = {
-	        new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_BEFORE),
-	        new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_AFTER) };
+			new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_BEFORE),
+			new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_AFTER) };
 
 	public transient final ToggleAllBreakpointsItem TOGGLE_ALL_BREAKPOINTS = new ToggleAllBreakpointsItem(this);
 
@@ -244,14 +240,13 @@ public class Actions implements ProcessEditor {
 			}
 		}
 
-		menu.addSeparator();
-		if (op != null && singleSelection) {
+		if (op != null && !(op instanceof ProcessRootOperator) && singleSelection) {
+			menu.addSeparator();
 			for (int i = 0; i < TOGGLE_BREAKPOINT.length; i++) {
 				JMenuItem item = TOGGLE_BREAKPOINT[i].createMenuItem();
 				menu.add(item);
 			}
 		}
-		menu.add(TOGGLE_ALL_BREAKPOINTS.createMenuItem());
 
 	}
 
@@ -309,7 +304,7 @@ public class Actions implements ProcessEditor {
 		currentStates[ConditionalAction.EDIT_IN_PROGRESS] = EditBlockingProgressThread.isEditing();
 		currentStates[ConditionalAction.PROCESS_SAVED] = process.hasSaveDestination();
 		currentStates[ConditionalAction.PROCESS_RENDERER_IS_VISIBLE] = mainFrame.getProcessPanel().getProcessRenderer()
-		        .isShowing();
+				.isShowing();
 		currentStates[ConditionalAction.PROCESS_RENDERER_HAS_UNDO_STEPS] = mainFrame.hasUndoSteps();
 		currentStates[ConditionalAction.PROCESS_RENDERER_HAS_REDO_STEPS] = mainFrame.hasRedoSteps();
 		ConditionalAction.updateAll(currentStates);
@@ -343,8 +338,11 @@ public class Actions implements ProcessEditor {
 			return;
 		} else if (mainFrame.getProcessPanel().getProcessRenderer().getModel().getDisplayedChain() == selectedNode) {
 			for (Operator newOperator : newOperators) {
-				int index = mainFrame.getProcessPanel().getProcessRenderer().getProcessIndexUnder(
-				        mainFrame.getProcessPanel().getProcessRenderer().getModel().getCurrentMousePosition());
+				int index = mainFrame
+						.getProcessPanel()
+						.getProcessRenderer()
+						.getProcessIndexUnder(
+								mainFrame.getProcessPanel().getProcessRenderer().getModel().getCurrentMousePosition());
 				if (index == -1) {
 					index = 0;
 				}

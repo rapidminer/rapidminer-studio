@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,17 +22,20 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
 
 import com.rapidminer.Process;
+import com.rapidminer.ProcessLocation;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.actions.export.PrintableComponent;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.gui.tools.ViewToolBar;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.tools.I18N;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 
@@ -40,29 +43,19 @@ import com.vlsolutions.swing.docking.Dockable;
 /**
  * @author Tobias Malbrecht
  */
-public class OperatorTreePanel extends JPanel implements Dockable, ProcessEditor {
+public class OperatorTreePanel extends JPanel implements Dockable, ProcessEditor, PrintableComponent {
 
-	private static final long serialVersionUID = -6121229143892782298L;
+	private static final long serialVersionUID = 1L;
 
 	private final OperatorTree operatorTree;
 
 	public OperatorTreePanel(final MainFrame mainFrame) {
 		operatorTree = new OperatorTree(mainFrame);
 
-		ViewToolBar toolBar = new ViewToolBar();
-		toolBar.add(mainFrame.REWIRE_RECURSIVELY);
-		JToggleButton toggleAllBreakpointsButton = mainFrame.getActions().TOGGLE_ALL_BREAKPOINTS.createToggleButton();
-		toggleAllBreakpointsButton.setText(null);
-		toolBar.add(toggleAllBreakpointsButton);
-
-		toolBar.add(operatorTree.EXPAND_ALL_ACTION, ViewToolBar.RIGHT);
-		toolBar.add(operatorTree.COLLAPSE_ALL_ACTION, ViewToolBar.RIGHT);
-
 		setLayout(new BorderLayout());
-		add(toolBar, BorderLayout.NORTH);
 
 		JScrollPane scrollPane = new ExtendedJScrollPane(operatorTree);
-		scrollPane.setBorder(null);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		add(scrollPane, BorderLayout.CENTER);
 	}
 
@@ -80,6 +73,33 @@ public class OperatorTreePanel extends JPanel implements Dockable, ProcessEditor
 			component = this;
 		}
 		return component;
+	}
+
+	@Override
+	public Component getExportComponent() {
+		return this;
+	}
+
+	@Override
+	public String getExportIconName() {
+		return I18N.getGUIMessage("gui.dockkey.operator_tree.icon");
+	}
+
+	@Override
+	public String getExportName() {
+		return I18N.getGUIMessage("gui.dockkey.operator_tree.name");
+	}
+
+	@Override
+	public String getIdentifier() {
+		Process process = RapidMinerGUI.getMainFrame().getProcess();
+		if (process != null) {
+			ProcessLocation processLocation = process.getProcessLocation();
+			if (processLocation != null) {
+				return processLocation.toString();
+			}
+		}
+		return null;
 	}
 
 	@Override

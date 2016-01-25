@@ -1,24 +1,31 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.aggregation;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.example.Attribute;
@@ -46,20 +53,11 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-
 
 /**
  * Performs an evolutionary feature aggregation. Each base feature is only allowed to be used as
  * base feature, in one merged feature, or it may not be used at all.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class EvolutionaryFeatureAggregation extends OperatorChain {
@@ -197,15 +195,16 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 		// initial population
 		List<AggregationIndividual> population = createInitialPopulation(popSize, exampleSet.getAttributes().size(), random);
 
+		getProgress().setTotal(maxGeneration);
 		// start optimization loop
 		while (!solutionGoodEnough()) {
-			generation++;
 			crossover.crossover(population);
 			mutation.mutate(population);
 			evaluate(population, exampleSet);
 			selection.performSelection(population);
 			plotter.operate(population);
 			inApplyLoop();
+			getProgress().setCompleted(++generation);
 		}
 
 		// write criteria data of the final population into a file
@@ -224,6 +223,7 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 					out.close();
 				}
 			}
+			getProgress().complete();
 		}
 
 		// return result
@@ -234,7 +234,7 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 		while (i.hasNext()) {
 			AggregationIndividual current = i.next();
 			PerformanceVector currentPerf = current.getPerformance();
-			if ((bestPerformance == null) || (currentPerf.compareTo(bestPerformance) > 0)) {
+			if (bestPerformance == null || currentPerf.compareTo(bestPerformance) > 0) {
 				bestPerformance = currentPerf;
 				bestEver = current;
 			}
@@ -275,10 +275,10 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 	 * Creates example sets from all individuals and invoke the inner operators in order to estimate
 	 * the performance.
 	 */
-	public void evaluate(List population, ExampleSet originalExampleSet) throws OperatorException {
-		Iterator i = population.iterator();
+	public void evaluate(List<AggregationIndividual> population, ExampleSet originalExampleSet) throws OperatorException {
+		Iterator<AggregationIndividual> i = population.iterator();
 		while (i.hasNext()) {
-			AggregationIndividual individual = (AggregationIndividual) i.next();
+			AggregationIndividual individual = i.next();
 			if (individual.getPerformance() == null) {
 				ExampleSet exampleSet = individual.createExampleSet(originalExampleSet, allAttributes, generator);
 				if (exampleSet.getAttributes().size() == 0) {

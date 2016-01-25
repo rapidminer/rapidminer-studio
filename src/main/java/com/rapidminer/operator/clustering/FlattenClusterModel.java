@@ -1,24 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.clustering;
+
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.PriorityQueue;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
@@ -32,16 +35,11 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
 
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.PriorityQueue;
-
 
 /**
  * Creates a flat cluster model from a hierarchical one by expanding nodes in the order of their
  * distance until the desired number of clusters is reached.
- * 
+ *
  * @author Sebastian Land
  */
 public class FlattenClusterModel extends Operator {
@@ -76,16 +74,16 @@ public class FlattenClusterModel extends Operator {
 		PriorityQueue<HierarchicalClusterNode> queue = new PriorityQueue<HierarchicalClusterNode>(numberOfClusters,
 				new Comparator<HierarchicalClusterNode>() {
 
-					@Override
-					public int compare(HierarchicalClusterNode o1, HierarchicalClusterNode o2) {
-						int value = -1 * Double.compare(o1.getDistance(), o2.getDistance());
-						if (value != 0) {
-							return value;
-						} else {
-							return -1 * Double.compare(o1.getNumberOfExamplesInSubtree(), o2.getNumberOfExamplesInSubtree());
-						}
-					}
-				});
+			@Override
+			public int compare(HierarchicalClusterNode o1, HierarchicalClusterNode o2) {
+				int value = -1 * Double.compare(o1.getDistance(), o2.getDistance());
+				if (value != 0) {
+					return value;
+				} else {
+					return -1 * Double.compare(o1.getNumberOfExamplesInSubtree(), o2.getNumberOfExamplesInSubtree());
+				}
+			}
+		});
 
 		// Iteratively descend within graph by splitting at greatest node until queue is full or
 		// enough leafs are collected

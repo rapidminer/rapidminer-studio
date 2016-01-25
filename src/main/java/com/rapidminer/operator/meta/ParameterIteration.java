@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
 
@@ -47,7 +45,7 @@ import com.rapidminer.parameter.value.ParameterValues;
  * configuring the parameters for the inner operators as a sort of meta step (e.g. learning curve
  * generation).
  * </p>
- * 
+ *
  * <p>
  * This operator iterates through a set of parameters by using all possible parameter combinations.
  * The parameter <var>parameters</var> is a list of key value pairs where the keys are of the form
@@ -55,7 +53,7 @@ import com.rapidminer.parameter.value.ParameterValues;
  * values (e.g. 10,15,20,25) or an interval definition in the format [start;end;stepsize] (e.g.
  * [10;25;5]). Additionally, the format [start;end;steps;scale] is allowed.
  * </p>
- * 
+ *
  * <p>
  * Please note that this operator has two modes: synchronized and non-synchronized. In the latter,
  * all parameter combinations are generated and the inner operators are applied for each
@@ -64,12 +62,12 @@ import com.rapidminer.parameter.value.ParameterValues;
  * no difference between both modes. Please note that the number of parameter possibilities must be
  * the same for all parameters in the synchronized mode.
  * </p>
- * 
+ *
  * Compatibility note: This operator no longer returns all of its input. In most applications all
  * that can be done with such a collection of IOOBjects is iterating over them again, and that can
  * as well be done inside the ParameterIteration. Where this is not possible, please group them into
  * a collection (using a IOCollector) and store the collection using an IOStorage operator.
- * 
+ *
  * @author Ingo Mierswa, Tobias Malbrecht
  */
 public class ParameterIteration extends ParameterIteratingOperatorChain {
@@ -141,6 +139,10 @@ public class ParameterIteration extends ParameterIteratingOperatorChain {
 			numberOfCombinations *= parameterValues.getNumberOfValues();
 		}
 
+		// init Operator progress
+		getProgress().setTotal(numberOfCombinations);
+		getProgress().setCheckForStop(false);
+
 		// initialize data structures
 		Operator[] operators = new Operator[parameterList.size()];
 		String[] parameters = new String[parameterList.size()];
@@ -176,7 +178,6 @@ public class ParameterIteration extends ParameterIteratingOperatorChain {
 		// iterate parameter combinations
 		this.iteration = 0;
 		while (true) {
-			checkForStop();
 			String[] currentValues = new String[parameters.length];
 			// set all parameter values
 			for (int j = 0; j < operators.length; j++) {
@@ -216,7 +217,9 @@ public class ParameterIteration extends ParameterIteratingOperatorChain {
 			}
 
 			inApplyLoop();
+			getProgress().step();
 		}
+		getProgress().complete();
 	}
 
 	protected void evaluateParameterSet(ParameterSet set) throws OperatorException {

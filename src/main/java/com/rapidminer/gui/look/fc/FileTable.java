@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.fc;
 
@@ -319,7 +317,7 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 		this.setRowHeight(Math.max(getFont().getSize(), 18) + 2);
 		this.getTableHeader().setPreferredSize(new Dimension(20, 20));
 		this.getTableHeader().setSize(new Dimension(20, 20));
-		createPopupMenu();
+		initPopupMenu();
 
 		this.getTableHeader().addMouseListener(this.tableHeaderListener);
 		this.getTableHeader().addMouseMotionListener(this.tableHeaderListener);
@@ -330,6 +328,8 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 		this.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		this.setCellSelectionEnabled(true);
 
+		this.setAutoCreateRowSorter(true);
+
 		clearSelection();
 	}
 
@@ -338,7 +338,7 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 		// do nothing
 	}
 
-	private void createPopupMenu() {
+	private void initPopupMenu() {
 		this.panePopup = this.fileList.getPanePopup();
 
 		this.headerPopup = new JPopupMenu();
@@ -714,9 +714,9 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 		} else {
 			this.getColumnModel().getColumn(index).setMaxWidth(2147483647);
 			this.getColumnModel().getColumn(index)
-			.setPreferredWidth(this.originalColumsWidth.get(this.columnNames.indexOf(col)).intValue());
+					.setPreferredWidth(this.originalColumsWidth.get(this.columnNames.indexOf(col)).intValue());
 			this.getColumnModel().getColumn(index)
-			.setWidth(this.originalColumsWidth.get(this.columnNames.indexOf(col)).intValue());
+					.setWidth(this.originalColumsWidth.get(this.columnNames.indexOf(col)).intValue());
 			this.originalColumsWidth.set(this.columnNames.indexOf(col), Integer.valueOf(0));
 			this.getTableHeader().resizeAndRepaint();
 		}

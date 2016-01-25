@@ -1,29 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.ui;
 
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 
 import javax.swing.JButton;
@@ -34,11 +32,13 @@ import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
+import com.rapidminer.gui.look.Colors;
+
 
 /**
  * The UI for split pane dividers.
- * 
- * 
+ *
+ *
  * @author Ingo Mierswa
  */
 public final class SplitPaneDividerUI extends BasicSplitPaneDivider {
@@ -54,9 +54,10 @@ public final class SplitPaneDividerUI extends BasicSplitPaneDivider {
 	@Override
 	public Dimension getPreferredSize() {
 		if (this.orientation == JSplitPane.HORIZONTAL_SPLIT) {
-			return new Dimension(getDividerSize(), 9);
+			return new Dimension(getDividerSize(), 5);
+		} else {
+			return new Dimension(5, getDividerSize());
 		}
-		return new Dimension(9, getDividerSize());
 	}
 
 	@Override
@@ -71,46 +72,28 @@ public final class SplitPaneDividerUI extends BasicSplitPaneDivider {
 		int w = this.getWidth();
 		int h = this.getHeight();
 
-		if (!this.horizontal) {
-			g.setColor(new ColorUIResource(249, 249, 249));
-			g.drawLine(0, 0, w, 0);
-			g.setColor(new ColorUIResource(245, 245, 245));
-			g.drawLine(0, 1, w, 1);
-			g.setColor(new ColorUIResource(242, 242, 242));
-			g.drawLine(0, 2, w, 2);
+		Graphics2D g2 = (Graphics2D) g.create();
 
-			g.setColor(new ColorUIResource(238, 238, 238));
-			g.fillRect(0, 3, w, h - 8);
-			g.setColor(new ColorUIResource(234, 234, 234));
-			g.drawLine(0, h - 5, w, h - 5);
-			g.setColor(new ColorUIResource(229, 229, 229));
-			g.drawLine(0, h - 4, w, h - 4);
-			g.setColor(new ColorUIResource(227, 227, 227));
-			g.drawLine(0, h - 3, w, h - 3);
-			g.setColor(new ColorUIResource(225, 225, 225));
-			g.drawLine(0, h - 2, w, h - 2);
-			g.setColor(new ColorUIResource(221, 221, 221));
-			g.drawLine(0, h - 1, w, h - 1);
+		if (this.horizontal) {
+			// left + right
+			g2.setColor(Colors.SPLITPANE_BORDER);
+			g2.fillRect(0, 0, 5, h);
+
+			g2.setColor(Colors.SPLITPANE_DOTS);
+			g2.fillRect(1, h / 2 - 12, 1, 24);
+			g2.fillRect(w - 2, h / 2 - 12, 1, 24);
 		} else {
-			g.setColor(new ColorUIResource(120, 120, 120));
-			g.drawLine(0, 0, 0, h);
-			g.setColor(new ColorUIResource(253, 253, 253));
-			g.drawLine(1, 0, 1, h);
-			g.setColor(new ColorUIResource(243, 243, 243));
-			g.drawLine(2, 0, 2, h);
-			g.setColor(new ColorUIResource(238, 238, 238));
-			g.fillRect(3, 0, w - 8, h);
-			g.setColor(new ColorUIResource(234, 234, 234));
-			g.drawLine(w - 5, 0, w - 5, h);
-			g.setColor(new ColorUIResource(229, 229, 229));
-			g.drawLine(w - 4, 0, w - 4, h);
-			g.setColor(new ColorUIResource(227, 227, 227));
-			g.drawLine(w - 3, 0, w - 3, h);
-			g.setColor(new ColorUIResource(225, 225, 225));
-			g.drawLine(w - 2, 0, w - 2, h);
-			g.setColor(new ColorUIResource(221, 221, 221));
-			g.drawLine(w - 1, 0, w - 1, h);
+			// top + bottom
+			g2.setColor(Colors.SPLITPANE_BORDER);
+			g2.fillRect(0, 0, w, 5);
+
+			g2.setColor(Colors.SPLITPANE_DOTS);
+			g2.fillRect(w / 2 - 12, 1, 24, 1);
+			g2.fillRect(w / 2 - 12, h - 2, 24, 1);
 		}
+
+		g2.dispose();
+
 		super.paint(g);
 	}
 
@@ -175,21 +158,8 @@ public final class SplitPaneDividerUI extends BasicSplitPaneDivider {
 		b.setBorderPainted(false);
 		b.setRequestFocusEnabled(false);
 
-		return b;
-	}
-
-	protected JButton createLeftOneTouchButton1() {
-		JButton b = new JButton() {
-
-			private static final long serialVersionUID = 8292762190701962839L;
-
-			@Override
-			public void paint(Graphics g) {
-				g.setColor(Color.white);
-				g.fillRect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-			}
-		};
-		return b;
+		// return b;
+		return null;
 	}
 
 	@Override
@@ -257,6 +227,7 @@ public final class SplitPaneDividerUI extends BasicSplitPaneDivider {
 		b.setRolloverEnabled(false);
 		b.setBorderPainted(false);
 		b.setRequestFocusEnabled(false);
-		return b;
+		// return b;
+		return null;
 	}
 }

@@ -1,29 +1,53 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.util.Arrays;
+import java.util.Date;
+
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.JViewport;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+
 import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.actions.MoveColumnAction;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.operatortree.actions.CutCopyPasteDeleteAction;
-import com.rapidminer.gui.tools.actions.AddToSortingColumnsAction;
 import com.rapidminer.gui.tools.actions.EqualColumnWidthsAction;
 import com.rapidminer.gui.tools.actions.FitAllColumnWidthsAction;
 import com.rapidminer.gui.tools.actions.FitColumnWidthAction;
@@ -39,32 +63,6 @@ import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.Pair;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.Arrays;
-import java.util.Date;
-
-import javax.swing.Action;
-import javax.swing.JMenu;
-import javax.swing.JPopupMenu;
-import javax.swing.JTable;
-import javax.swing.JViewport;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.TableColumnModelEvent;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
-
 
 /**
  * <p>
@@ -72,14 +70,14 @@ import javax.swing.table.TableModel;
  * properly stopped during focus losts, resizing, or column movement. The current value is then set
  * to the model. The only way to abort the value change is by pressing the escape key.
  * </p>
- * 
+ *
  * <p>
  * The extended table is sortable per default. Developers should note that this feature might lead
  * to problems if the columns contain different class types and different editors. In this case one
  * of the constructors should be used which set the sortable flag to false.
  * </p>
- * 
- * @author Ingo Mierswa
+ *
+ * @author Ingo Mierswa, Marco Boeck
  */
 public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 
@@ -94,7 +92,6 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	public static final int TIME_FORMAT = 1;
 	public static final int DATE_TIME_FORMAT = 2;
 
-	private final Action COPY_ACTION = CutCopyPasteDeleteAction.COPY_ACTION;
 	private final Action ROW_ACTION = new SelectRowAction(this, IconSize.SMALL);
 	private final Action COLUMN_ACTION = new SelectColumnAction(this, IconSize.SMALL);
 	private final Action FIT_COLUMN_ACTION = new FitColumnWidthAction(this, IconSize.SMALL);
@@ -104,10 +101,6 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 			IconSize.SMALL);
 	private final Action SORTING_ASCENDING_ACTION = new SortByColumnAction(this, ExtendedJTableSorterModel.ASCENDING,
 			IconSize.SMALL);
-	private final Action ADD_TO_SORTING_DESCENDING_ACTION = new AddToSortingColumnsAction(this,
-			ExtendedJTableSorterModel.DESCENDING, IconSize.SMALL);
-	private final Action ADD_TO_SORTING_ASCENDING_ACTION = new AddToSortingColumnsAction(this,
-			ExtendedJTableSorterModel.ASCENDING, IconSize.SMALL);
 	private final Action SORT_COLUMNS_BY_NAME_ACTION = new SortColumnsAccordingToNameAction(this, IconSize.SMALL);
 	private final Action RESTORE_COLUMN_ORDER_ACTION = new RestoreOriginalColumnOrderAction(this, IconSize.SMALL);
 
@@ -134,6 +127,11 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	private boolean[] cutOnLineBreaks;
 
 	private int[] maximalTextLengths;
+
+	private boolean rowHighlightingEnabled;
+	private int rowHighlight = -1;
+	private int lastColoredHighlightedRow = -1;
+	private boolean checkHighlight = false;
 
 	public ExtendedJTable() {
 		this(null, true);
@@ -172,7 +170,7 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 		setColumnSelectionAllowed(true);
 		setRowSelectionAllowed(true);
 
-		setRowHeight(getRowHeight() + SwingTools.TABLE_ROW_EXTRA_HEIGHT);
+		setRowHeight(Math.max(getRowHeight(), 25));
 		getTableHeader().setReorderingAllowed(columnMovable);
 
 		// necessary in order to fix changes after focus was lost
@@ -181,6 +179,8 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 		// auto resize?
 		if (!autoResize) {
 			setAutoResizeMode(AUTO_RESIZE_OFF);
+		} else {
+			setAutoResizeMode(AUTO_RESIZE_ALL_COLUMNS);
 		}
 
 		if (model != null) {
@@ -192,10 +192,41 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 
 		addMouseListener(this);
 
+		// handles the highlighting of the currently hovered row
+		addMouseMotionListener(new MouseMotionListener() {
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				if (!rowHighlightingEnabled) {
+					return;
+				}
+
+				if (checkHighlight) {
+					rowHighlight = convertRowIndexToView(rowAtPoint(e.getPoint()));
+					if (rowHighlight != lastColoredHighlightedRow) {
+						repaint();
+					}
+				} else {
+					rowHighlight = -1;
+				}
+			}
+
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				if (!rowHighlightingEnabled) {
+					return;
+				}
+
+				// row highlight feels weird while dragging
+				rowHighlight = -1;
+			}
+
+		});
+
+		setBorder(BorderFactory.createMatteBorder(0, 1, 1, 1, Colors.TABLE_CELL_BORDER));
 	}
 
 	/** Registers a new {@link ToolTipWindow} on this table. */
-	@SuppressWarnings("unused")
 	public void installToolTip() {
 		// adding a new extended tool tip window
 		new ToolTipWindow(new TableToolTipProvider(), this);
@@ -240,6 +271,10 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 		return this.cellColorProvider;
 	}
 
+	public void setColoredTableCellRenderer(ColoredTableCellRenderer renderer) {
+		this.renderer = renderer;
+	}
+
 	public void setSortable(final boolean sortable) {
 		this.sortable = sortable;
 	}
@@ -258,6 +293,60 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 
 	public void setMaximalTextLength(final int maximalTextLength) {
 		Arrays.fill(maximalTextLengths, maximalTextLength);
+	}
+
+	/**
+	 * Sets whether row highlighting (aka darken the row the mouse is currently over) is active or
+	 * not. By default it is active. Can only be activated if {@link #useColoredCellRenderer} is
+	 * {@code true}.
+	 *
+	 * @param enabled
+	 */
+	public void setRowHighlighting(boolean enabled) {
+		if (!useColoredCellRenderer) {
+			return;
+		}
+
+		rowHighlightingEnabled = enabled;
+	}
+
+	/**
+	 * If row highlighting is enabled (see {@link #setRowHighlighting(boolean)}, returns whether the
+	 * given row is the currently highlighted row.
+	 *
+	 * @param row
+	 *            the row to check
+	 * @return {@code true} if it is currently highlighted; {@code false} otherwise
+	 */
+	public boolean isRowHighlighted(int row) {
+		if (!rowHighlightingEnabled) {
+			return false;
+		}
+
+		return row == rowHighlight;
+	}
+
+	/**
+	 * Sets the last highlighted row.
+	 *
+	 * @param row
+	 *            the last highlighted row
+	 */
+	public void setLastHighlightedRow(int row) {
+		if (!rowHighlightingEnabled) {
+			return;
+		}
+
+		lastColoredHighlightedRow = row;
+	}
+
+	/**
+	 * Returns whether row highlighting (see {@link #setRowHighlighting(boolean)} is enabled.
+	 *
+	 * @return
+	 */
+	public boolean isRowHighlighting() {
+		return rowHighlightingEnabled;
 	}
 
 	public void setMaximalTextLength(final int maximalTextLength, final int column) {
@@ -645,10 +734,22 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 		return false;
 	}
 
+	@Override
+	public boolean getScrollableTracksViewportWidth() {
+		// in case of the auto resize for all columns, either make the table fill the available
+		// space or grow the needed space
+		// this fixes the issue that otherwise it will never exceed the viewport width regardless of
+		// column count
+		if (autoResizeMode == AUTO_RESIZE_ALL_COLUMNS) {
+			return getPreferredSize().width < getParent().getWidth();
+		}
+		return super.getScrollableTracksViewportWidth();
+	}
+
 	/**
 	 * Converts the index of the row in the view to the corresponding row in the original model.
 	 * They might difer if the table is sorted.
-	 * 
+	 *
 	 * @param rowIndex
 	 *            The index of the row in the view.
 	 * @return The index of the row in the original model.
@@ -677,10 +778,25 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	}
 
 	@Override
-	public void mouseEntered(final MouseEvent e) {}
+	public void mouseEntered(final MouseEvent e) {
+		if (!rowHighlightingEnabled) {
+			return;
+		}
+
+		checkHighlight = true;
+		repaint();
+	}
 
 	@Override
-	public void mouseExited(final MouseEvent e) {}
+	public void mouseExited(final MouseEvent e) {
+		if (!rowHighlightingEnabled) {
+			return;
+		}
+
+		checkHighlight = false;
+		rowHighlight = -1;
+		repaint();
+	}
 
 	@Override
 	public void mouseClicked(final MouseEvent e) {
@@ -705,8 +821,8 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 					return;
 				}
 				// only set cell selection if clicked cell is outside current selection
-				if ((row != -1 && (row < getSelectedRow() || row > getSelectedRow() + getSelectedRowCount() - 1))
-						|| (c != -1 && (c < getSelectedColumn() || c > getSelectedColumn() + getSelectedColumnCount() - 1))) {
+				if (row != -1 && (row < getSelectedRow() || row > getSelectedRow() + getSelectedRowCount() - 1)
+						|| c != -1 && (c < getSelectedColumn() || c > getSelectedColumn() + getSelectedColumnCount() - 1)) {
 					if (row < getRowCount() && c < getColumnCount()) {
 						// needed because sometimes row could be outside [0, getRowCount()-1]
 						setRowSelectionInterval(row, row);
@@ -732,8 +848,6 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	}
 
 	public void populatePopupMenu(final JPopupMenu menu) {
-		menu.add(COPY_ACTION);
-		menu.addSeparator();
 		menu.add(ROW_ACTION);
 		menu.add(COLUMN_ACTION);
 
@@ -748,9 +862,6 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 			menu.addSeparator();
 			menu.add(SORTING_ASCENDING_ACTION);
 			menu.add(SORTING_DESCENDING_ACTION);
-			menu.addSeparator();
-			menu.add(ADD_TO_SORTING_ASCENDING_ACTION);
-			menu.add(ADD_TO_SORTING_DESCENDING_ACTION);
 		}
 
 		if (getTableHeader() != null) {
@@ -758,21 +869,8 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 				menu.addSeparator();
 				menu.add(SORT_COLUMNS_BY_NAME_ACTION);
 				menu.add(RESTORE_COLUMN_ORDER_ACTION);
-				menu.add(generateMoveColumnMenu());
 			}
 		}
-	}
-
-	private JMenu generateMoveColumnMenu() {
-		JMenu subMenu = new ResourceMenu("move_column_menu");
-		int first = 0;
-		if (this.fixFirstColumn) {
-			first = 1;
-		}
-		for (int i = first; i < this.getColumnCount(); i++) {
-			subMenu.add(new MoveColumnAction(this, IconSize.SMALL, i));
-		}
-		return subMenu;
 	}
 
 	private class TableToolTipProvider implements TipProvider {

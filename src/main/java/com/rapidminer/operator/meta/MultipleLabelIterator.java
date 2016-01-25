@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
@@ -38,17 +40,13 @@ import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 import com.rapidminer.parameter.UndefinedParameterError;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * Performs the inner operator for all label attributes, i.e. special attributes whose role name
  * starts with &quot;label&quot;. In each iteration one of the multiple labels is used as label. The
  * results of the inner operators are collected and returned. The example set will be consumed
  * during the iteration.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class MultipleLabelIterator extends OperatorChain {
@@ -91,6 +89,10 @@ public class MultipleLabelIterator extends OperatorChain {
 			throw new UserError(this, 105);
 		}
 
+		// initProgressListener
+		getProgress().setTotal(labels.length);
+		getProgress().setCheckForStop(false);
+
 		outExtender.reset();
 		for (int i = 0; i < labels.length; i++) {
 			ExampleSet cloneSet = (ExampleSet) exampleSet.clone();
@@ -100,7 +102,9 @@ public class MultipleLabelIterator extends OperatorChain {
 			getSubprocess(0).execute();
 			outExtender.collect();
 			inApplyLoop();
+			getProgress().step();
 		}
+		getProgress().complete();
 	}
 
 	private Attribute[] getLabels(ExampleSet exampleSet) {

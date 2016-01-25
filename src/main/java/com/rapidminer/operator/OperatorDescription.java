@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator;
 
@@ -60,16 +58,18 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	private static final ImageIcon[] EMPTY_ICONS = new ImageIcon[3];
 
 	/** the small icon for the constraint violation operators */
-	private static final ImageIcon UNSUPPORTED_ICON_SMALL = SwingTools.createIcon("16/"
-			+ I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
+	private static final ImageIcon UNSUPPORTED_ICON_SMALL = SwingTools
+			.createIcon("16/" + I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
 
 	/** the icon for the constraint violation operators */
-	private static final ImageIcon UNSUPPORTED_ICON = SwingTools.createIcon("24/"
-			+ I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
+	private static final ImageIcon UNSUPPORTED_ICON = SwingTools
+			.createIcon("24/" + I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
 
 	/** the large icon for the constraint violation operators */
-	private static final ImageIcon UNSUPPORTED_ICON_LARGE = SwingTools.createIcon("48/"
-			+ I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
+	private static final ImageIcon UNSUPPORTED_ICON_LARGE = SwingTools
+			.createIcon("48/" + I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
+
+	public static final String EXTENSIONS_GROUP_IDENTIFIER = "extensions";
 
 	private final String key;
 	private final Class<? extends Operator> clazz;
@@ -93,7 +93,16 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 
 	private boolean enabled = true;
 
-	/** flag indicating if the operator is supported by the license */
+	/**
+	 * Flag that indicates whether the operator is using the extension grouping, i.e. whether the
+	 * group tree root is the "extensions.EXTENSION_NAME" group instead of the default group tree
+	 * root.
+	 */
+	private boolean isUsingExtensionTreeRoot = false;
+
+	/**
+	 * flag indicating if the operator is supported by the license
+	 */
 	private Boolean isSupportedByLicense;
 
 	/**
@@ -158,7 +167,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	 * Constructor for programmatic (non-parsed) creation of OperatorDescriptions, e.g. by a
 	 * {@link GenericOperatorFactory}. Additionally this allows to specify an operator documentation
 	 * bundle where the docu is retrieved from.
-	 * */
+	 */
 	public OperatorDescription(final String fullyQualifiedGroupKey, final String key, final Class<? extends Operator> clazz,
 			final ClassLoader classLoader, final String iconName, final Plugin provider, final OperatorDocBundle bundle) {
 		this.isSupportedByLicense = null;
@@ -338,7 +347,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	}
 
 	public boolean isDeprecated() {
-		return deprecationInfo != null;
+		return getDeprecationInfo() != null;
 	}
 
 	public String getProviderName() {
@@ -418,24 +427,24 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	 */
 	public final Operator createOperatorInstance() throws OperatorCreationException {
 		if (!isEnabled()) {
-			throw new OperatorCreationException(OperatorCreationException.OPERATOR_DISABLED_ERROR, key + "("
-					+ clazz.getName() + ")", null);
+			throw new OperatorCreationException(OperatorCreationException.OPERATOR_DISABLED_ERROR,
+					key + "(" + clazz.getName() + ")", null);
 		}
 		Operator operator = null;
 		try {
 			operator = createOperatorInstanceByDescription(this);
 		} catch (InstantiationException e) {
-			throw new OperatorCreationException(OperatorCreationException.INSTANTIATION_ERROR, key + "(" + clazz.getName()
-					+ ")", e);
+			throw new OperatorCreationException(OperatorCreationException.INSTANTIATION_ERROR,
+					key + "(" + clazz.getName() + ")", e);
 		} catch (IllegalAccessException e) {
-			throw new OperatorCreationException(OperatorCreationException.ILLEGAL_ACCESS_ERROR, key + "(" + clazz.getName()
-					+ ")", e);
+			throw new OperatorCreationException(OperatorCreationException.ILLEGAL_ACCESS_ERROR,
+					key + "(" + clazz.getName() + ")", e);
 		} catch (NoSuchMethodException e) {
-			throw new OperatorCreationException(OperatorCreationException.NO_CONSTRUCTOR_ERROR, key + "(" + clazz.getName()
-					+ ")", e);
+			throw new OperatorCreationException(OperatorCreationException.NO_CONSTRUCTOR_ERROR,
+					key + "(" + clazz.getName() + ")", e);
 		} catch (java.lang.reflect.InvocationTargetException e) {
-			throw new OperatorCreationException(OperatorCreationException.CONSTRUCTION_ERROR, key + "(" + clazz.getName()
-					+ ")", e);
+			throw new OperatorCreationException(OperatorCreationException.CONSTRUCTION_ERROR,
+					key + "(" + clazz.getName() + ")", e);
 		} catch (Throwable t) {
 			throw new OperatorCreationException(OperatorCreationException.INSTANTIATION_ERROR, "(" + clazz.getName() + ")",
 					t);
@@ -540,10 +549,10 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 		if (isSupportedByLicense == null) {
 			try {
 				// check for operator annotations
-				isSupportedByLicense = Boolean.valueOf(ProductConstraintManager.INSTANCE
-						.isAllowedByAnnotations(createOperatorInstance()));
+				isSupportedByLicense = Boolean
+						.valueOf(ProductConstraintManager.INSTANCE.isAllowedByAnnotations(createOperatorInstance()));
 			} catch (OperatorCreationException e) {
-			} // does not really matter
+			}      // does not really matter
 		}
 		if (isSupportedByLicense == null) {
 			isSupportedByLicense = Boolean.TRUE;
@@ -558,5 +567,22 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	public void refresh() {
 		isSupportedByLicense = null;
 		updateIcons();
+	}
+
+	/**
+	 * @return whether the operator is using the "extensions.EXTENSION_NAME group" group as tree
+	 *         root
+	 */
+	public boolean isUsingExtensionTreeRoot() {
+		return isUsingExtensionTreeRoot;
+	}
+
+	/**
+	 * @param isUsingExtensionGrouping
+	 *            defines whether the operator using the "extensions.EXTENSION_NAME group" group as
+	 *            tree root
+	 */
+	public void setUseExtensionTreeRoot(boolean isUsingExtensionGrouping) {
+		this.isUsingExtensionTreeRoot = isUsingExtensionGrouping;
 	}
 }

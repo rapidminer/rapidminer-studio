@@ -9,7 +9,7 @@
     <parameter key="logverbosity" value="warning"/>
     <process expanded="true">
       <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
-        <parameter key="repository_entry" value="../../data/Transactions"/>
+        <parameter key="repository_entry" value="../../data/Purchases"/>
       </operator>
       <operator activated="true" class="nominal_to_binominal" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Nominal2Binominal" width="90" x="180" y="30">
         <parameter key="transform_binominal" value="true"/>

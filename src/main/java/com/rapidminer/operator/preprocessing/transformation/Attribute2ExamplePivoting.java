@@ -1,24 +1,30 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.transformation;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -50,14 +56,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 /**
  * This operator converts an example set by dividing examples which consist of multiple observations
@@ -68,7 +66,7 @@ import java.util.regex.Pattern;
  * create_nominal_index is only applicable if only one time series per example exists. Instead of
  * using a numeric index, then the names of the attributes representing the single time points are
  * used as index attribute.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator {
@@ -167,6 +165,9 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
+		// init operator progress
+		getProgress().setTotal(exampleSet.size());
+
 		List<String[]> seriesList = getParameterList(PARAMETER_SERIES);
 
 		int numberOfSeries = seriesList.size();
@@ -275,8 +276,16 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 		}
 
 		MemoryExampleTable table = new MemoryExampleTable(newAttributes);
-
+		int counter = 0;
 		for (Example example : exampleSet) {
+
+			// report progress every 100 examples
+			++counter;
+			if (counter % 100 == 0) {
+				getProgress().step(100);
+				counter = 0;
+			}
+
 			int l = 0;
 			for (int k = 0; k < seriesLength; k++) {
 				l++;
@@ -328,6 +337,8 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 		ExampleSet result = table.createExampleSet();
 		result.recalculateAllAttributeStatistics();
 		result.getAnnotations().addAll(exampleSet.getAnnotations());
+
+		getProgress().complete();
 		return result;
 	}
 
@@ -337,7 +348,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 		ParameterType type = new ParameterTypeList(PARAMETER_SERIES,
 				"Maps a number of source attributes onto result attributes.", new ParameterTypeString("attribute_name",
 						"Specifies the name of the resulting attribute"), new ParameterTypeRegexp(
-						PARAMETER_ATTRIBUTE_NAME_REGEX, "Attributes that forms series.", false));
+								PARAMETER_ATTRIBUTE_NAME_REGEX, "Attributes that forms series.", false));
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeString(PARAMETER_INDEX_ATTRIBUTE, "Name of newly created index attribute.", false, false);

@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.collections;
+
+import java.util.List;
 
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
@@ -38,15 +38,13 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 
-import java.util.List;
-
 
 /**
  * Iterates over a collection and executes the subprocess on each element. The outputs of the
  * subprocesses are collected and returned as collections.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class CollectionIterationOperator extends OperatorChain {
 
@@ -72,7 +70,7 @@ public class CollectionIterationOperator extends OperatorChain {
 			@Override
 			public void transformMD() {
 				MetaData md = collectionInput.getMetaData();
-				if ((md != null) && (md instanceof CollectionMetaData)) {
+				if (md != null && md instanceof CollectionMetaData) {
 					if (getParameterAsBoolean(PARAMETER_UNFOLD)) {
 						singleInnerSource.deliverMD(((CollectionMetaData) md).getElementMetaDataRecursive());
 					} else {
@@ -96,6 +94,11 @@ public class CollectionIterationOperator extends OperatorChain {
 		} else {
 			list = data.getObjects();
 		}
+
+		// init Operator progress
+		getProgress().setTotal(list.size());
+		getProgress().setCheckForStop(false);
+
 		outExtender.reset();
 		String iterationMacroName = null;
 		int macroIterationOffset = 0;
@@ -114,7 +117,10 @@ public class CollectionIterationOperator extends OperatorChain {
 			getSubprocess(0).execute();
 			outExtender.collect();
 			currentIteration++;
+			inApplyLoop();
+			getProgress().step();
 		}
+		getProgress().complete();
 		// outExtender.passDataThrough();
 	}
 

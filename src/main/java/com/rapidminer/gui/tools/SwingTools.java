@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -19,33 +19,42 @@
 package com.rapidminer.gui.tools;
 
 import java.awt.AlphaComposite;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Shape;
+import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -67,10 +76,14 @@ import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.look.fc.Bookmark;
 import com.rapidminer.gui.look.fc.BookmarkIO;
+import com.rapidminer.gui.tools.components.ToolTipWindow;
+import com.rapidminer.gui.tools.components.ToolTipWindow.TipProvider;
+import com.rapidminer.gui.tools.components.ToolTipWindow.TooltipLocation;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.gui.tools.dialogs.ErrorDialog;
 import com.rapidminer.gui.tools.dialogs.ExtendedErrorDialog;
 import com.rapidminer.gui.tools.dialogs.InputDialog;
+import com.rapidminer.gui.tools.dialogs.InputValidator;
 import com.rapidminer.gui.tools.dialogs.LongMessageDialog;
 import com.rapidminer.gui.tools.dialogs.MessageDialog;
 import com.rapidminer.gui.tools.dialogs.RepositoryEntryInputDialog;
@@ -93,6 +106,7 @@ import com.rapidminer.tools.StringColorMap;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.plugin.Plugin;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -256,14 +270,52 @@ public class SwingTools {
 	/** separator used between two parts of a cropped string */
 	public static final String SEPARATOR = "[...]";
 
+	/** delay before showing the tool tip for help icons */
+	private static final int TOOL_TIP_DELAY = 80;
+
+	/**
+	 * the path to the icon that is used when displaying help texts, the icon itself cannot be a
+	 * constant since icons are cached and the cache is only initialized later
+	 */
+	private static final String HELP_ICON_PATH = "13/" + I18N.getGUIMessage("gui.label.operator_pararameters.help_icon");
+
+	/**
+	 * the property that can be used on windows to disable clear type for a component, see
+	 * {@link #disableClearType(JComponent)}
+	 */
+	private static final Object AA_TEXT_PROPERTY = getAaTextProperty();
+
+	/** The replacement icon for missing icons */
+	private static final String UNKNOWN_ICON_NAME = "symbol_questionmark.png";
+	private static final URL UNKNOWN_ICON_URL = Tools.getResource("icons/16/" + UNKNOWN_ICON_NAME);
+	private static final ImageIcon UNKNOWN_ICON = new ImageIcon(UNKNOWN_ICON_URL);
+
+	/** The prefix for mono color icons */
+	private static final String MONO_COLOR_ICON_PREFIX = "/mono";
+
+	/** The prefix for retina icons */
+	private static final String RETINA_ICON_PREFIX = "/@2x";
+
+	private static enum Scaling {
+		DEFAULT, RETINA
+	}
+
+	private static Scaling scaling = Scaling.DEFAULT;
+
 	static {
 		setupFrameIcons(DEFAULT_FRAME_ICON_BASE_NAME);
 		try {
 			GROUP_TO_COLOR_MAP.parseProperties("com/rapidminer/resources/groups.properties", "group.", ".color",
-			        OperatorDescription.class.getClassLoader());
+					OperatorDescription.class.getClassLoader(), null);
 		} catch (IOException e) {
 			LogService.getRoot().log(Level.WARNING,
-			        "com.rapidminer.gui.tools.SwingTools.loading_operator_group_colors_error");
+					"com.rapidminer.gui.tools.SwingTools.loading_operator_group_colors_error");
+		}
+
+		// Detect apple retina display. Will return 2.0 with retina, 1.0 without and null if not
+		// running an apple system.
+		if (isRetina()) {
+			scaling = Scaling.RETINA;
 		}
 	}
 
@@ -283,6 +335,29 @@ public class SwingTools {
 		} else {
 			allFrameIcons = frameIconProvider.getFrameIcons();
 		}
+	}
+
+	private static boolean isRetina() {
+		if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX) {
+			GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			final GraphicsDevice device = env.getDefaultScreenDevice();
+
+			try {
+				Field field = device.getClass().getDeclaredField("scale");
+
+				if (field != null) {
+					field.setAccessible(true);
+					Object scale = field.get(device);
+
+					if (scale instanceof Integer && ((Integer) scale).intValue() >= 2) {
+						return true;
+					}
+				}
+			} catch (Exception e) {
+				LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.tools.SwingTools.retina_detection_error", e);
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -338,7 +413,7 @@ public class SwingTools {
 	/** Creates a red gradient paint. */
 	public static GradientPaint makeRedPaint(final double width, final double height) {
 		return new GradientPaint(0f, 0f, new Color(200, 50, 50), (float) width / 2, (float) height / 2,
-		        new Color(255, 100, 100), true);
+				new Color(255, 100, 100), true);
 	}
 
 	/** Creates a blue gradient paint. */
@@ -351,28 +426,60 @@ public class SwingTools {
 		return new GradientPaint(0f, 0f, LIGHT_YELLOW, (float) width / 2, (float) height / 2, LIGHTEST_YELLOW, true);
 	}
 
-	private static final Map<String, ImageIcon> ICON_CACHE = new HashMap<>();
+	private static final Map<String, ImageIcon> ICON_CACHE = new HashMap<>(1000);
 
 	private static final Object ICON_LOCK = new Object();
 
 	private static final String BRACKETS = " [...] ";
 
 	/**
-	 * Tries to load the icon for the given resource. Returns null (and writes a warning) if the
-	 * resource file cannot be loaded. This method automatically adds all icon paths specified since
-	 * startup time. The default /icons is always searched. Additional paths might be specified by
-	 * {@link SwingTools#addIconStoragePath(String)}.
+	 * Tries to load the icon for the given resource. Returns {@code null} (and writes a warning) if
+	 * the resource file cannot be loaded. This method automatically adds all icon paths specified
+	 * since startup time. The default /icons is always searched. Additional paths might be
+	 * specified by {@link SwingTools#addIconStoragePath(String)}.
 	 *
 	 * The given names must contain '/' instead of backslashes!
 	 */
 	public static ImageIcon createIcon(final String iconName) {
+		return createIcon(iconName, false);
+	}
+
+	/**
+	 * Tries to load the icon for the given resource. Returns {@code null} (and writes a warning) if
+	 * the resource file cannot be loaded. This method automatically adds all icon paths specified
+	 * since startup time. The default /icons is always searched. Additional paths might be
+	 * specified by {@link SwingTools#addIconStoragePath(String)}.
+	 *
+	 * The given names must contain '/' instead of backslashes!
+	 *
+	 * @param iconName
+	 *            the name of the icon including the size path component
+	 * @param preferMonochrome
+	 *            if {@code true} will chose a monochrome version over a colored version if it
+	 *            exists (looking in the {@code [size]/mono} folder). Will fall back to colored if
+	 *            no monochrome version exists.
+	 */
+	public static ImageIcon createIcon(final String iconName, final boolean preferMonochrome) {
+		ImageIcon icon = null;
 		for (String path : iconPaths) {
-			ImageIcon icon = createImage(path + iconName);
-			if (icon != null) {
-				return icon;
+			if (preferMonochrome) {
+				String newIconName = null;
+				if (iconName.contains("16/")) {
+					newIconName = iconName.replaceFirst("16/", "16/mono/");
+				} else if (iconName.contains("24/")) {
+					newIconName = iconName.replaceFirst("24/", "24/mono/");
+				} else if (iconName.contains("32/")) {
+					newIconName = iconName.replaceFirst("32/", "32/mono/");
+				} else if (iconName.contains("48/")) {
+					newIconName = iconName.replaceFirst("48/", "48/mono/");
+				}
+				icon = createImage(path + newIconName);
+			} else {
+				icon = createImage(path + iconName);
 			}
+			return icon;
 		}
-		return null;
+		return icon;
 	}
 
 	/**
@@ -385,10 +492,13 @@ public class SwingTools {
 		for (String path : iconPaths) {
 			ImageIcon icon = createImage(path + iconName);
 			if (icon != null) {
-				return Tools.getResource(path + iconName).toString();
+				URL resource = Tools.getResource(path + iconName);
+				if (resource != null) {
+					return resource.toString();
+				}
 			}
 		}
-		return null;
+		return UNKNOWN_ICON_URL.toString();
 	}
 
 	/**
@@ -406,44 +516,86 @@ public class SwingTools {
 	}
 
 	/**
-	 * Tries to load the image for the given resource. Returns null (and writes a warning) if the
-	 * resource file cannot be loaded.
+	 * Tries to load the image for the given resource. Returns {@code null} (and writes a warning)
+	 * if the resource file cannot be loaded.
 	 */
 	public static ImageIcon createImage(final String imageName) {
+		return createImage(imageName, true);
+	}
+
+	/**
+	 * Same as {@link #createImage(String)} but can return {@code null} if no placeholder should be
+	 * used. Uses a retina image, if running on a retina display and an icon is available.
+	 *
+	 * @param imageName
+	 * @param usePlaceholder
+	 *            if {@code true} will try to replace missing icons via placeholder. Otherwise,
+	 *            returns {@code null}
+	 * @return
+	 */
+	private static ImageIcon createImage(final String imageName, final boolean usePlaceholder) {
 		synchronized (ICON_LOCK) {
 			if (ICON_CACHE.containsKey(imageName)) {
 				return ICON_CACHE.get(imageName);
 			} else {
-				URL url = Tools.getResource(imageName);
+				URL url;
+				// Handling retina icons
+				if (scaling == Scaling.RETINA) {
+					// detect desired icon size
+					// an icon path of the format ".../size(/mono)/icon.png" is expected
+					int indexOfLastSlash = imageName.lastIndexOf("/");
+					if (indexOfLastSlash != -1) {
+						String prefix = imageName.substring(0, indexOfLastSlash);
+						if (prefix.endsWith(MONO_COLOR_ICON_PREFIX)) {
+							prefix = prefix.substring(0, prefix.length() - MONO_COLOR_ICON_PREFIX.length());
+						}
+
+						int indexOfSlashBeforeResolution = prefix.lastIndexOf("/");
+						if (indexOfSlashBeforeResolution >= 0) {
+							String potentialSizeString = prefix.substring(indexOfSlashBeforeResolution + 1);
+							try {
+								int iconSize = Integer.parseInt(potentialSizeString);
+
+								// load icon from high-dpi subfolder
+								StringBuilder scaledIconName = new StringBuilder(32);
+								scaledIconName.append(imageName.substring(0, indexOfLastSlash));
+								scaledIconName.append(RETINA_ICON_PREFIX);
+								scaledIconName.append(imageName.substring(indexOfLastSlash, imageName.length()));
+								url = Tools.getResource(scaledIconName.toString());
+								if (url != null) {
+									ImageIcon icon = new ScaledImageIcon(url, iconSize, iconSize);
+									ICON_CACHE.put(imageName, icon);
+									return icon;
+								}
+
+							} catch (NumberFormatException e) {
+								// Do nothing and fallback to normal icon
+							}
+						}
+					}
+				}
+				url = Tools.getResource(imageName);
 				if (url != null) {
 					ImageIcon icon = new ImageIcon(url);
 					ICON_CACHE.put(imageName, icon);
 					return icon;
 				} else {
-					LogService.getRoot().log(Level.FINE, "com.rapidminer.gui.tools.SwingTools.loading_image_error",
-					        imageName);
-					return null;
-				}
-			}
-		}
-	}
-
-	public static void loadIcons() {
-		ResourceBundle guiBundle = I18N.getGUIBundle();
-		Enumeration<String> e = guiBundle.getKeys();
-		while (e.hasMoreElements()) {
-			String key = e.nextElement();
-			if (key.endsWith(".icon")) {
-				String resource = guiBundle.getString(key);
-				if (!resource.isEmpty()) {
-					if (Character.isDigit(resource.charAt(0))) {
-						// We start with a number, size explicitly stated, so
-						// load directly
-						createIcon(resource);
+					if (usePlaceholder) {
+						LogService.getRoot().log(Level.FINE, "com.rapidminer.gui.tools.SwingTools.loading_image_error",
+								imageName);
+						int indexOfLastSlash = imageName.lastIndexOf("/");
+						if (indexOfLastSlash != -1) {
+							String errorIconName = imageName.substring(0, indexOfLastSlash + 1) + UNKNOWN_ICON_NAME;
+							url = Tools.getResource(errorIconName);
+							if (url != null) {
+								ImageIcon icon = new ImageIcon(url);
+								return icon;
+							}
+						}
+						// return default 16x16 unknown icon
+						return UNKNOWN_ICON;
 					} else {
-						// Otherwise prepend sizes
-						createIcon("16/" + resource);
-						createIcon("24/" + resource);
+						return null;
 					}
 				}
 			}
@@ -479,7 +631,7 @@ public class SwingTools {
 	 *            Indicates if previously added html tags are escaped
 	 */
 	public static String transformToolTipText(final String description, final boolean escapeSlashes,
-	        final boolean escapeHTML) {
+			final boolean escapeHTML) {
 		return transformToolTipText(description, true, TOOL_TIP_LINE_LENGTH, escapeSlashes, escapeHTML);
 	}
 
@@ -495,7 +647,7 @@ public class SwingTools {
 	 *            Inidicates if forward slashes ("/") are escaped by the html code "&#47;"
 	 */
 	public static String transformToolTipText(final String description, final boolean addHTMLTags, final int lineLength,
-	        final boolean escapeSlashes) {
+			final boolean escapeSlashes) {
 		return transformToolTipText(description, addHTMLTags, lineLength, escapeSlashes, true);
 	}
 
@@ -510,7 +662,7 @@ public class SwingTools {
 	 *            <div style="width:XXXpx">
 	 */
 	public static String transformToolTipText(final String description, final boolean addHTMLTags, final int lineLength,
-	        final boolean escapeSlashes, final boolean escapeHTML) {
+			final boolean escapeSlashes, final boolean escapeHTML) {
 		String completeText = description.trim();
 		if (escapeHTML) {
 			completeText = Tools.escapeHTML(completeText);
@@ -655,8 +807,9 @@ public class SwingTools {
 
 	/**
 	 * This method will present a dialog to enter a text. This text will be returned if the user
-	 * confirmed the edit. Otherwise null is returned. The key will be used for the properties
-	 * gui.dialog.input.-key-.title, gui.dialog.input.-key-.message and gui.dialog.input.-key-.icon
+	 * confirmed the edit. Otherwise {@code null} is returned. The key will be used for the
+	 * properties gui.dialog.input.-key-.title, gui.dialog.input.-key-.message and
+	 * gui.dialog.input.-key-.icon
 	 */
 	public static String showInputDialog(final String key, final String text, final Object... keyArguments) {
 		return invokeAndWaitWithResult(new ResultRunnable<String>() {
@@ -675,8 +828,33 @@ public class SwingTools {
 	}
 
 	/**
+	 * This method will present a dialog to enter a text. This text will be returned if the user
+	 * confirmed the edit and the validator does not report an error. Otherwise {@code null} is
+	 * returned. The key will be used for the properties gui.dialog.input.-key-.title,
+	 * gui.dialog.input.-key-.message and gui.dialog.input.-key-.icon
+	 *
+	 * @since 7.0.0
+	 */
+	public static String showInputDialog(final Window owner, final String key, final String text,
+			final InputValidator<String> inputValidator, final Object... keyArguments) {
+		return invokeAndWaitWithResult(new ResultRunnable<String>() {
+
+			@Override
+			public String run() {
+				InputDialog dialog = new InputDialog(owner, key, text, inputValidator, keyArguments);
+				dialog.setVisible(true);
+				if (dialog.wasConfirmed()) {
+					return dialog.getInputText();
+				} else {
+					return null;
+				}
+			}
+		});
+	}
+
+	/**
 	 * This method will present a repository entry dialog to enter a text. This text will be
-	 * returned if the user confirmed the edit. Otherwise null is returned. Prevents invalid
+	 * returned if the user confirmed the edit. Otherwise {@code null} is returned. Prevents invalid
 	 * repository names. The key will be used for the properties gui.dialog.input.-key-.title,
 	 * gui.dialog.input.-key-.message and gui.dialog.input.-key-.icon
 	 */
@@ -701,13 +879,13 @@ public class SwingTools {
 	 * gui.dialog.input.-key-.icon
 	 */
 	public static Object showInputDialog(final String key, final Object[] selectionValues, final Object initialSelectionVale,
-	        final Object... keyArguments) {
+			final Object... keyArguments) {
 		return invokeAndWaitWithResult(new ResultRunnable<Object>() {
 
 			@Override
 			public Object run() {
 				SelectionInputDialog dialog = new SelectionInputDialog(key, selectionValues, initialSelectionVale,
-		                keyArguments);
+						keyArguments);
 				dialog.setVisible(true);
 				if (dialog.wasConfirmed()) {
 					return dialog.getInputSelection();
@@ -727,13 +905,43 @@ public class SwingTools {
 	 * gui.dialog.input.-key-.icon
 	 */
 	public static Object showInputDialog(final String key, final boolean editable, final Object[] selectionValues,
-	        final Object initialSelectionVale, final Object... keyArguments) {
+			final Object initialSelectionVale, final Object... keyArguments) {
 		return invokeAndWaitWithResult(new ResultRunnable<Object>() {
 
 			@Override
 			public Object run() {
 				SelectionInputDialog dialog = new SelectionInputDialog(key, editable, selectionValues, initialSelectionVale,
-		                keyArguments);
+						keyArguments);
+				dialog.setVisible(true);
+				if (dialog.wasConfirmed()) {
+					return dialog.getInputSelection();
+				} else {
+					return null;
+				}
+			}
+		});
+	}
+
+	/**
+	 * This will open a simple input dialog, where a comboBox presents the given values. The
+	 * Combobox might be editable depending on parameter setting. The selection will be returned if
+	 * the user confirmed the dialog and the validator does not report an error. Otherwise
+	 * {@code null} is returned.
+	 *
+	 * The key will be used for the properties gui.dialog.-key-.title and
+	 * gui.dialog.input.-key-.icon
+	 *
+	 * @since 7.0.0
+	 */
+	public static <T> T showInputDialog(final Window owner, final String key, final boolean editable,
+			final Collection<T> selectionValues, final T initialSelectionVale, final InputValidator<T> inputValidator,
+			final Object... keyArguments) {
+		return invokeAndWaitWithResult(new ResultRunnable<T>() {
+
+			@Override
+			public T run() {
+				SelectionInputDialog<T> dialog = new SelectionInputDialog<>(owner, key, editable, selectionValues,
+						initialSelectionVale, inputValidator, keyArguments);
 				dialog.setVisible(true);
 				if (dialog.wasConfirmed()) {
 					return dialog.getInputSelection();
@@ -812,13 +1020,13 @@ public class SwingTools {
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
 	 */
 	public static void showSimpleErrorMessage(final String key, final Throwable e, final boolean displayExceptionMessage,
-	        final Object... arguments) {
+			final Object... arguments) {
 		ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_ERROR, key,
-		        e != null ? e.getClass().getName() : null);
+				e != null ? e.getClass().getName() : null);
 		// if debug mode is enabled, send exception to logger
 		if ("true".equals(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE))) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-			        "com.rapidminer.gui.tools.SwingTools.show_simple_get_message", e.getMessage()), e);
+					"com.rapidminer.gui.tools.SwingTools.show_simple_get_message", e.getMessage()), e);
 		}
 		invokeLater(new Runnable() {
 
@@ -879,7 +1087,7 @@ public class SwingTools {
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
 	 */
 	public static void showFinalErrorMessage(final String key, final Throwable e, final boolean displayExceptionMessage,
-	        final Object... objects) {
+			final Object... objects) {
 		// if debug modus is enabled, print throwable into logger
 		if (ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE).equals("true")) {
 			LogService.getRoot().log(Level.SEVERE, e.getMessage(), e);
@@ -915,12 +1123,12 @@ public class SwingTools {
 	 * filters will be used.
 	 */
 	public static File chooseFile(final Component parent, final File file, final boolean open, final String extension,
-	        final String extensionDescription) {
+			final String extensionDescription) {
 		return chooseFile(parent, null, file, open, extension, extensionDescription);
 	}
 
 	public static File chooseFile(final Component parent, final String i18nKey, final File file, final boolean open,
-	        final String extension, final String extensionDescription) {
+			final String extension, final String extensionDescription) {
 		return chooseFile(parent, i18nKey, file, open, false, extension, extensionDescription);
 	}
 
@@ -929,26 +1137,26 @@ public class SwingTools {
 	 * filters will be used. This method allows choosing directories.
 	 */
 	public static File chooseFile(final Component parent, final File file, final boolean open, final boolean onlyDirs,
-	        final String extension, final String extensionDescription) {
+			final String extension, final String extensionDescription) {
 		return chooseFile(parent, null, file, open, onlyDirs, extension, extensionDescription);
 	}
 
 	public static File chooseFile(final Component parent, final String i18nKey, final File file, final boolean open,
-	        final boolean onlyDirs, final String extension, final String extensionDescription) {
+			final boolean onlyDirs, final String extension, final String extensionDescription) {
 		return chooseFile(parent, i18nKey, file, open, onlyDirs, extension == null ? null : new String[] { extension },
-		        extensionDescription == null ? null : new String[] { extensionDescription });
+				extensionDescription == null ? null : new String[] { extensionDescription });
 	}
 
 	public static File chooseFile(final Component parent, final String i18nKey, final File file, final boolean open,
-	        final boolean onlyDirs, final String extension, final String extensionDescription,
-	        final boolean acceptAllFiles) {
+			final boolean onlyDirs, final String extension, final String extensionDescription,
+			final boolean acceptAllFiles) {
 		return chooseFile(parent, i18nKey, file, open, onlyDirs, extension == null ? null : new String[] { extension },
-		        extensionDescription == null ? null : new String[] { extensionDescription }, acceptAllFiles);
+				extensionDescription == null ? null : new String[] { extensionDescription }, acceptAllFiles);
 	}
 
 	/** Returns the user selected file. */
 	public static File chooseFile(final Component parent, final File file, final boolean open, final boolean onlyDirs,
-	        final String[] extensions, final String[] extensionDescriptions) {
+			final String[] extensions, final String[] extensionDescriptions) {
 		return chooseFile(parent, null, file, open, onlyDirs, extensions, extensionDescriptions);
 	}
 
@@ -963,20 +1171,20 @@ public class SwingTools {
 	 * @return the user selected file.
 	 */
 	public static File chooseFile(final Component parent, final File file, final boolean open, final boolean onlyDirs,
-	        final String[] extensions, final String[] extensionDescriptions,
-	        final boolean addDefaultAllFileExtensionFilter) {
+			final String[] extensions, final String[] extensionDescriptions,
+			final boolean addDefaultAllFileExtensionFilter) {
 		return chooseFile(parent, null, file, open, onlyDirs, addDefaultAllFileExtensionFilter, extensions,
-		        extensionDescriptions);
+				extensionDescriptions);
 	}
 
 	public static File chooseFile(final Component parent, final String i18nKey, final File file, final boolean open,
-	        final boolean onlyDirs, final String[] extensions, final String[] extensionDescriptions) {
+			final boolean onlyDirs, final String[] extensions, final String[] extensionDescriptions) {
 		return chooseFile(parent, i18nKey, file, open, onlyDirs, false, extensions, extensionDescriptions);
 	}
 
 	public static File chooseFile(final Component parent, final String i18nKey, final File file, final boolean open,
-	        final boolean onlyDirs, boolean addDefaultAllFileExtensionFilter, final String[] extensions,
-	        final String[] extensionDescriptions) {
+			final boolean onlyDirs, boolean addDefaultAllFileExtensionFilter, final String[] extensions,
+			final String[] extensionDescriptions) {
 		List<FileFilter> fileFilters = new LinkedList<>();
 		if (extensions != null) {
 			int i = 0;
@@ -990,13 +1198,13 @@ public class SwingTools {
 			for (String extension : extensions) {
 				if (extension != null) {
 					fileFilters
-					        .add(new SimpleFileFilter(extensionDescriptions[i] + " (*." + extension + ")", "." + extension));
+							.add(new SimpleFileFilter(extensionDescriptions[i] + " (*." + extension + ")", "." + extension));
 				}
 				++i;
 			}
 		}
 		return chooseFile(parent, i18nKey, file, open, onlyDirs, fileFilters.toArray(new FileFilter[fileFilters.size()]),
-		        true);
+				true);
 	}
 
 	private static String getAllExtensionFilterDescription(String[] extensions) {
@@ -1014,14 +1222,14 @@ public class SwingTools {
 	}
 
 	public static File chooseFile(final Component parent, final String i18nKey, final File file, final boolean open,
-	        final boolean onlyDirs, final String[] extensions, final String[] extensionDescriptions,
-	        final boolean acceptAllFiles) {
+			final boolean onlyDirs, final String[] extensions, final String[] extensionDescriptions,
+			final boolean acceptAllFiles) {
 		FileFilter[] filters = null;
 		if (extensions != null) {
 			filters = new FileFilter[extensions.length];
 			for (int i = 0; i < extensions.length; i++) {
 				filters[i] = new SimpleFileFilter(extensionDescriptions[i] + " (*." + extensions[i] + ")",
-				        "." + extensions[i]);
+						"." + extensions[i]);
 			}
 		}
 		return chooseFile(parent, i18nKey, file, open, onlyDirs, filters, acceptAllFiles);
@@ -1041,7 +1249,7 @@ public class SwingTools {
 	 *            List of FileFilters to use
 	 */
 	private static File chooseFile(Component parent, String i18nKey, File file, boolean open, boolean onlyDirs,
-	        FileFilter[] fileFilters, boolean acceptAllFiles) {
+			FileFilter[] fileFilters, boolean acceptAllFiles) {
 		if (parent == null) {
 			parent = RapidMinerGUI.getMainFrame();
 		}
@@ -1066,29 +1274,39 @@ public class SwingTools {
 					}
 				}
 
-				if (selectedFile != null) {
-					File parentFile = selectedFile.getParentFile();
-					if (parentFile != null) {
-						List<Bookmark> bookmarks = null;
-						File bookmarksFile = new File(FileSystemService.getUserRapidMinerDir(), ".bookmarks");
-						if (bookmarksFile.exists()) {
-							bookmarks = BookmarkIO.readBookmarks(bookmarksFile);
-							Iterator<Bookmark> b = bookmarks.iterator();
-							while (b.hasNext()) {
-								Bookmark bookmark = b.next();
-								if (bookmark.getName().equals("--- Last Directory")) {
-									b.remove();
-								}
-							}
-							bookmarks.add(new Bookmark("--- Last Directory", parentFile.getAbsolutePath()));
-							Collections.sort(bookmarks);
-							BookmarkIO.writeBookmarks(bookmarks, bookmarksFile);
-						}
-					}
-				}
+				storeLastDirectory(selectedFile.toPath());
 				return selectedFile;
 			default:
 				return null;
+		}
+	}
+
+	/**
+	 * Stores the directory of the selectedFile under the bookmark "--- Last Directory"
+	 *
+	 * @param selectedFile
+	 *            the file defining the last selected directory
+	 * @since 7.0
+	 */
+	public static void storeLastDirectory(Path selectedFile) {
+		if (selectedFile != null) {
+			Path parentFile = selectedFile.getParent();
+			if (parentFile != null) {
+				File bookmarksFile = new File(FileSystemService.getUserRapidMinerDir(), ".bookmarks");
+				if (bookmarksFile.exists()) {
+					List<Bookmark> bookmarks = BookmarkIO.readBookmarks(bookmarksFile);
+					Iterator<Bookmark> b = bookmarks.iterator();
+					while (b.hasNext()) {
+						Bookmark bookmark = b.next();
+						if (bookmark.getName().equals("--- Last Directory")) {
+							b.remove();
+						}
+					}
+					bookmarks.add(new Bookmark("--- Last Directory", parentFile.toAbsolutePath().toString()));
+					Collections.sort(bookmarks);
+					BookmarkIO.writeBookmarks(bookmarks, bookmarksFile);
+				}
+			}
 		}
 	}
 
@@ -1113,7 +1331,7 @@ public class SwingTools {
 	 *            List of FileFilters to use
 	 */
 	public static JFileChooser createFileChooser(final String i18nKey, final File file, final boolean onlyDirs,
-	        final FileFilter[] fileFilters) {
+			final FileFilter[] fileFilters) {
 		File directory = null;
 
 		if (file != null) {
@@ -1220,7 +1438,7 @@ public class SwingTools {
 	 */
 	public static String text2DisplayHtml(final String text) {
 		String result = "<html><head><style type=text/css>body { font-family:sans-serif; font-size:12pt; }</style></head><body>"
-		        + text + "</body></html>";
+				+ text + "</body></html>";
 		result = text2SimpleHtml(result);
 		// result = result.replaceAll("#yquot#", "&quot;");
 		while (result.indexOf("<icon>") != -1) {
@@ -1399,7 +1617,23 @@ public class SwingTools {
 	}
 
 	public static Color getOperatorColor(final Operator operator) {
-		return GROUP_TO_COLOR_MAP.get(operator.getOperatorDescription().getGroup());
+		OperatorDescription operatorDescription = operator.getOperatorDescription();
+		String groupKey = operatorDescription.getGroup();
+
+		/*
+		 * Operators that use the extension tree root need to be handled differently.
+		 */
+		if (operatorDescription.isUsingExtensionTreeRoot()
+				&& groupKey.startsWith(OperatorDescription.EXTENSIONS_GROUP_IDENTIFIER)) {
+
+			// remove extension group identifier
+			groupKey = groupKey.substring(groupKey.indexOf('.') + 1, groupKey.length());
+
+			// either remove extension name (if more groups are present) or use extension name in
+			// case of top-level operator
+			groupKey = groupKey.substring(groupKey.indexOf('.') + 1, groupKey.length());
+		}
+		return GROUP_TO_COLOR_MAP.get(groupKey, operatorDescription.getProvider());
 	}
 
 	public static Color getOperatorColor(final String operatorGroup) {
@@ -1410,9 +1644,9 @@ public class SwingTools {
 	 * This method adds the colors of the given property file to the global group colors
 	 */
 	public static void registerAdditionalGroupColors(final String groupProperties, final String pluginName,
-	        final ClassLoader classLoader) {
+			final ClassLoader classLoader, Plugin provider) {
 		try {
-			GROUP_TO_COLOR_MAP.parseProperties(groupProperties, "group.", ".color", classLoader);
+			GROUP_TO_COLOR_MAP.parseProperties(groupProperties, "group.", ".color", classLoader, provider);
 		} catch (IOException e) {
 			LogService.getRoot().warning("Cannot load operator group colors for plugin " + pluginName + ".");
 		}
@@ -1452,6 +1686,24 @@ public class SwingTools {
 	}
 
 	/**
+	 * Changes the saturation of the given {@link Color} by multiplying the saturation with the
+	 * specified factor.
+	 *
+	 * @param color
+	 *            the color to change
+	 * @param factor
+	 *            the factor to multiply the current saturation with
+	 * @return color with changed saturation
+	 */
+	public static Color saturateColor(final Color color, final float factor) {
+		// convert to H(ue) S(aturation) B(rightness), which is designed for
+		// this kind of operation
+		float hsb[] = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
+		// adjust saturation and return color
+		return Color.getHSBColor(hsb[0], factor * hsb[1], hsb[2]);
+	}
+
+	/**
 	 * Makes the given {@link Color} a bit brighter, though not as much as {@link Color#brighter()}.
 	 *
 	 * @param color
@@ -1476,6 +1728,18 @@ public class SwingTools {
 	}
 
 	/**
+	 * Returns the hex value of this color to use in html with starting #
+	 * 
+	 * @param color
+	 *            the color that should be converted to a hex string representation
+	 * @return the hex value of this color to use in html
+	 * @since 7.0
+	 */
+	public static String getColorHexValue(Color color) {
+		return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+	}
+
+	/**
 	 * Paints the given overlay icon over the base icon. This can be used for example to cross out
 	 * icons. Provided the overlay icon has a transparent background, the base icon will still be
 	 * visible.
@@ -1493,7 +1757,7 @@ public class SwingTools {
 		}
 
 		BufferedImage bufferedImg = new BufferedImage(baseIcon.getIconWidth(), baseIcon.getIconHeight(),
-		        BufferedImage.TYPE_INT_ARGB);
+				BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2 = (Graphics2D) bufferedImg.getGraphics();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		AffineTransform identityAT = new AffineTransform();
@@ -1521,7 +1785,7 @@ public class SwingTools {
 	 * @return the icon, never {@code null}
 	 */
 	public static ImageIcon createIconFromColor(final Color color, final Color borderColor, final int width,
-	        final int height, final Shape shape) {
+			final int height, final Shape shape) {
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2 = img.createGraphics();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -1780,6 +2044,146 @@ public class SwingTools {
 		} else {
 			SwingUtilities.invokeLater(runnable);
 		}
+	}
+
+	/**
+	 * Adds a help icon to the provided JPanel which shows a tooltip when hovering over it.
+	 *
+	 * @param tooltipContent
+	 *            the content of the tooltip
+	 * @param labelPanel
+	 *            the panel which will be used to add the label. The panel needs to have a
+	 *            {@link BorderLayout} as layout manager as the label will be added with the
+	 *            constraint {@link BorderLayout#EAST}.
+	 * @param owner
+	 *            the dialog owner of the labelPanel
+	 * @since 7.0.0
+	 */
+	public static void addTooltipHelpIconToLabel(final String tooltipContent, JPanel labelPanel, final JDialog owner) {
+		final JLabel helpLabel = initializeHelpLabel(labelPanel);
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				TipProvider tipProvider = new TipProvider() {
+
+					@Override
+					public String getTip(Object id) {
+						if (id == null) {
+							return null;
+						} else {
+							return tooltipContent;
+						}
+					}
+
+					@Override
+					public Object getIdUnder(Point point) {
+						return helpLabel;
+					}
+
+					@Override
+					public Component getCustomComponent(Object id) {
+						return null;
+					}
+
+				};
+				setupTooltip(tipProvider, owner, helpLabel);
+			}
+
+		});
+	}
+
+	/**
+	 * Adds a tooltip associated with the tipProvider to the helpLabel.
+	 *
+	 * @param tipProvider
+	 *            provides the tooltip.
+	 * @param owner
+	 *            the owner of the dialog of which contains the helpLabel
+	 * @param helpLabel
+	 *            the label for which to display the tooltip
+	 * @since 7.0.0
+	 */
+	public static void setupTooltip(TipProvider tipProvider, final JDialog owner, final JLabel helpLabel) {
+		ToolTipWindow toolTipWindow = new ToolTipWindow(owner, tipProvider, helpLabel, TooltipLocation.BELOW);
+		toolTipWindow.setOnlyWhenFocussed(false);
+		toolTipWindow.setToolTipDelay(TOOL_TIP_DELAY);
+	}
+
+	/**
+	 * Creates a helpLabel and adds it to the labelPanel. The helpLabel shows a help icon.
+	 *
+	 * @param labelPanel
+	 *            the panel which will be used to add the label. The panel needs to have a
+	 *            {@link BorderLayout} as layout manager as the label will be added with the
+	 *            constraint {@link BorderLayout#EAST}.
+	 * @return the helpLabel for further use
+	 * @since 7.0.0
+	 */
+	public static JLabel initializeHelpLabel(JPanel labelPanel) {
+		JPanel helpPanel = new JPanel();
+		helpPanel.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.anchor = GridBagConstraints.NORTH;
+		gbc.weightx = 1.0;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.insets = new Insets(0, 3, 0, 0);
+
+		final JLabel helpLabel = new JLabel();
+		helpLabel.setIcon(createIcon(HELP_ICON_PATH));
+		helpLabel.setFocusable(false);
+
+		gbc.anchor = GridBagConstraints.CENTER;
+		helpPanel.add(helpLabel, gbc);
+		gbc.gridy += 1;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.weighty = 1.0;
+		gbc.insets = new Insets(0, 0, 0, 0);
+		helpPanel.add(new JLabel(), gbc);
+
+		labelPanel.add(helpPanel, BorderLayout.EAST);
+		return helpLabel;
+	}
+
+	/**
+	 * Attempts to disable the default clear type rendering on Windows such that rendering hints can
+	 * be used. Has no effect on operating systems other than Microsoft Windows. Might fail
+	 * silently.
+	 *
+	 * @param component
+	 *            the component for which to disable clear type in order to use rendering hints
+	 */
+	public static void disableClearType(JComponent component) {
+		if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.WINDOWS && AA_TEXT_PROPERTY != null) {
+			component.putClientProperty(AA_TEXT_PROPERTY, null);
+		}
+	}
+
+	/**
+	 * Looks up the internal property {@code SwingUtilities2.AA_TEXT_PROPERTY_KEY}, returns
+	 * {@code null} if not defined or if running on an operating system other than Microsoft
+	 * Windows.
+	 * <p>
+	 * The implementation uses reflection to look up the property, since it it not part of the
+	 * official Swing specification and might not be available.
+	 *
+	 * @return the property to disable clear type on windows or {@code null}
+	 * @see http://stackoverflow.com/questions/18764585/text-antialiasing-broken-in-java-1-7-windows
+	 */
+	private static Object getAaTextProperty() {
+		Object aatextProperty = null;
+		if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.WINDOWS) {
+			try {
+				Class<?> clazz = Class.forName("sun.swing.SwingUtilities2");
+				Field field = clazz.getField("AA_TEXT_PROPERTY_KEY");
+				if (field != null) {
+					aatextProperty = field.get(null);
+				}
+			} catch (Throwable e) {
+				// do nothing, cannot use the property
+			}
+		}
+		return aatextProperty;
 	}
 
 }

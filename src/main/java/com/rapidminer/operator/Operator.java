@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -47,7 +47,6 @@ import com.rapidminer.BreakpointListener;
 import com.rapidminer.MacroHandler;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
-import com.rapidminer.core.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.gui.wizards.PreviewListener;
@@ -89,6 +88,7 @@ import com.rapidminer.parameter.UndefinedMacroError;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.DelegatingObserver;
 import com.rapidminer.tools.I18N;
@@ -146,7 +146,7 @@ import com.rapidminer.tools.patterns.Visitor;
  * @author Ralf Klinkenberg, Ingo Mierswa, Simon Fischer, Marius Helf
  */
 public abstract class Operator extends AbstractObservable<Operator>
-        implements ConfigurationListener, PreviewListener, LoggingHandler, ParameterHandler, ResourceConsumer {
+		implements ConfigurationListener, PreviewListener, LoggingHandler, ParameterHandler, ResourceConsumer {
 
 	private static final boolean CPU_TIME_SUPPORTED = ManagementFactory.getThreadMXBean().isThreadCpuTimeSupported();
 
@@ -297,6 +297,11 @@ public abstract class Operator extends AbstractObservable<Operator>
 	private boolean shouldStopStandaloneExecution = false;
 
 	private OperatorVersion compatibilityLevel;
+
+	/**
+	 * The {@link OperatorProgress} used to track progress during the execution of the operator.
+	 */
+	private final OperatorProgress operatorProgress = new OperatorProgress(this);
 
 	// -------------------- INITIALISATION --------------------
 
@@ -500,7 +505,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	@Deprecated
 	public void setUserDescription(String description) {
 		getLogger().log(Level.WARNING,
-		        "Setting comments directly on operators has been deprecated. See JavaDoc for details.");
+				"Setting comments directly on operators has been deprecated. See JavaDoc for details.");
 	}
 
 	/**
@@ -547,7 +552,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	@Deprecated
 	public String getUserDescription() {
 		getLogger().log(Level.WARNING,
-		        "Getting comments directly from operators has been deprecated. See JavaDoc for details.");
+				"Getting comments directly from operators has been deprecated. See JavaDoc for details.");
 		return null;
 	}
 
@@ -782,7 +787,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 		for (Class<?> inputClasse : inputClasses) {
 			InputDescription description = getInputDescription(inputClasse);
 			if (description.showParameter() && getParameterAsBoolean(description.getParameterName())
-			        || description.getKeepDefault()) {
+					|| description.getKeepDefault()) {
 				result.add(inputClasse);
 			}
 		}
@@ -858,15 +863,15 @@ public abstract class Operator extends AbstractObservable<Operator>
 					boolean parameterSet = getParameters().isSet(type.getKey());
 					if (type.getDefaultValue() == null && !parameterSet) {
 						addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
-						        Collections.singletonList(new ParameterSettingQuickFix(this, type.getKey())),
-						        "undefined_parameter", new Object[] { type.getKey().replace('_', ' ') }));
+								Collections.singletonList(new ParameterSettingQuickFix(this, type.getKey())),
+								"undefined_parameter", new Object[] { type.getKey().replace('_', ' ') }));
 						errorCount++;
 					} else if (type instanceof ParameterTypeAttribute && parameterSet) {
 						try {
 							if ("".equals(getParameter(type.getKey()))) {
 								addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
-								        Collections.singletonList(new ParameterSettingQuickFix(this, type.getKey())),
-								        "undefined_parameter", new Object[] { type.getKey().replace('_', ' ') }));
+										Collections.singletonList(new ParameterSettingQuickFix(this, type.getKey())),
+										"undefined_parameter", new Object[] { type.getKey().replace('_', ' ') }));
 								errorCount++;
 							}
 						} catch (UndefinedParameterError e) {
@@ -879,17 +884,17 @@ public abstract class Operator extends AbstractObservable<Operator>
 					if (value != null && !((ParameterTypeRepositoryLocation) type).isAllowAbsoluteEntries()) {
 						if (value.startsWith(RepositoryLocation.REPOSITORY_PREFIX)) {
 							if (!value.startsWith(
-							        RepositoryLocation.REPOSITORY_PREFIX + RepositoryManager.SAMPLE_REPOSITORY_NAME)) {
+									RepositoryLocation.REPOSITORY_PREFIX + RepositoryManager.SAMPLE_REPOSITORY_NAME)) {
 								addError(new SimpleProcessSetupError(Severity.WARNING, portOwner,
-								        Collections.<QuickFix> emptyList(), "accessing_repository_by_name",
-								        new Object[] { type.getKey().replace('_', ' '), value }));
+										Collections.<QuickFix> emptyList(), "accessing_repository_by_name",
+										new Object[] { type.getKey().replace('_', ' '), value }));
 							}
 						} else if (value.startsWith(String.valueOf(RepositoryLocation.SEPARATOR))) {
 							addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
-							        Collections.singletonList(
-							                new RelativizeRepositoryLocationQuickfix(this, type.getKey(), value)),
-							        "absolute_repository_location",
-							        new Object[] { type.getKey().replace('_', ' '), value }));
+									Collections.singletonList(
+											new RelativizeRepositoryLocationQuickfix(this, type.getKey(), value)),
+									"absolute_repository_location",
+									new Object[] { type.getKey().replace('_', ' '), value }));
 
 						}
 					}
@@ -897,7 +902,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 					String value = getParameters().getParameterOrNull(type.getKey());
 					if (value != null && !ParameterTypeDate.isValidDate(value)) {
 						addError(new SimpleProcessSetupError(Severity.WARNING, portOwner, "invalid_date_format",
-						        new Object[] { type.getKey().replace('_', ' '), value }));
+								new Object[] { type.getKey().replace('_', ' '), value }));
 					}
 				}
 			}
@@ -915,7 +920,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 		int deprecationCount = 0;
 		if (deprecationString != null) {
 			addError(new SimpleProcessSetupError(Severity.WARNING, portOwner, "deprecation",
-			        new Object[] { getOperatorDescription().getName(), deprecationString }));
+					new Object[] { getOperatorDescription().getName(), deprecationString }));
 			deprecationCount = 1;
 		}
 		return deprecationCount;
@@ -937,7 +942,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 		Process process = getProcess();
 		if (process == null) {
 			getLogger().fine("Process of operator " + this.getName()
-			        + " is not set, probably not registered! Trying to use this operator (should work in most cases anyway)...");
+					+ " is not set, probably not registered! Trying to use this operator (should work in most cases anyway)...");
 		}
 
 		if (process != null && process.getExecutionMode() == ExecutionMode.ONLY_DIRTY && !isDirty()) {
@@ -947,7 +952,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 		if (getOperatorDescription().getDeprecationInfo() != null) {
 			if (applyCount.get() == 0) {
 				getLogger().warning("Deprecation warning for " + getOperatorDescription().getName() + ": "
-				        + getOperatorDescription().getDeprecationInfo());
+						+ getOperatorDescription().getDeprecationInfo());
 			}
 		}
 
@@ -1652,7 +1657,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 			InputDescription description = getInputDescription(inputClasse);
 			if (description.showParameter()) {
 				types.add(new ParameterTypeBoolean(description.getParameterName(),
-				        "Indicates if this input object should also be returned as output.", description.getKeepDefault()));
+						"Indicates if this input object should also be returned as output.", description.getKeepDefault()));
 			}
 		}
 		return types;
@@ -1689,7 +1694,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	public void writeXML(Writer out, boolean hideDefault) throws IOException {
 		try {
 			XMLTools.stream(new XMLExporter().exportProcess(this, hideDefault), new StreamResult(out),
-			        XMLImporter.PROCESS_FILE_CHARSET);
+					XMLImporter.PROCESS_FILE_CHARSET);
 		} catch (XMLException e) {
 			throw new IOException("Cannot create process XML: " + e, e);
 		}
@@ -1728,13 +1733,13 @@ public abstract class Operator extends AbstractObservable<Operator>
 			return XMLTools.toString(new XMLExporter(onlyCoreElements).exportProcess(this, hideDefault));
 		} catch (Exception e) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-			        "com.rapidminer.operator.Operator.generating_xml_process_error", e), e);
+					"com.rapidminer.operator.Operator.generating_xml_process_error", e), e);
 			return e.toString();
 		}
 	}
 
 	public static Operator createFromXML(Element element, Process targetProcess,
-	        List<UnknownParameterInformation> unknownParameterInformation) throws XMLException {
+			List<UnknownParameterInformation> unknownParameterInformation) throws XMLException {
 		return createFromXML(element, targetProcess, unknownParameterInformation, null);
 	}
 
@@ -1744,7 +1749,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 * changes.
 	 */
 	public static Operator createFromXML(Element element, Process process,
-	        List<UnknownParameterInformation> unknownParameterInformation, ProgressListener l) throws XMLException {
+			List<UnknownParameterInformation> unknownParameterInformation, ProgressListener l) throws XMLException {
 		XMLImporter importer = new XMLImporter(l);
 		return importer.parseOperator(element, XMLImporter.CURRENT_VERSION, process, unknownParameterInformation);
 	}
@@ -1755,8 +1760,8 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 * been created from this version. See {@link XMLImporter#VERSION_RM_5} for details.
 	 */
 	public static Operator createFromXML(Element element, Process process,
-	        List<UnknownParameterInformation> unknownParameterInformation, ProgressListener progressListener,
-	        VersionNumber originatingVersion) throws XMLException {
+			List<UnknownParameterInformation> unknownParameterInformation, ProgressListener progressListener,
+			VersionNumber originatingVersion) throws XMLException {
 		XMLImporter importer = new XMLImporter(progressListener);
 		return importer.parseOperator(element, originatingVersion, process, unknownParameterInformation);
 	}
@@ -1958,32 +1963,32 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 */
 	@Deprecated
 	protected String createExperimentTree(int indent, String selfPrefix, String childPrefix, Operator markOperator,
-	        String mark) {
+			String mark) {
 		return createProcessTree(indent, selfPrefix, childPrefix, markOperator, mark);
 	}
 
 	/** Returns this operator's name and class. */
 	protected String createProcessTree(int indent, String selfPrefix, String childPrefix, Operator markOperator,
-	        String mark) {
+			String mark) {
 		return createProcessTreeEntry(indent, selfPrefix, childPrefix, markOperator, mark);
 	}
 
 	/** Returns this operator's name and class in a list. */
 	protected List<String> createProcessTreeList(int indent, String selfPrefix, String childPrefix, Operator markOperator,
-	        String mark) {
+			String mark) {
 		List<String> processTreeList = new LinkedList<>();
 		processTreeList.add(createProcessTreeEntry(indent, selfPrefix, childPrefix, markOperator, mark));
 		return processTreeList;
 	}
 
 	private String createProcessTreeEntry(int indent, String selfPrefix, String childPrefix, Operator markOperator,
-	        String mark) {
+			String mark) {
 		if (markOperator != null && getName().equals(markOperator.getName())) {
 			return Tools.indent(indent - mark.length()) + mark + selfPrefix + getName() + "[" + applyCount + "]" + " ("
-			        + getOperatorClassName() + ")";
+					+ getOperatorClassName() + ")";
 		} else {
 			return Tools.indent(indent) + selfPrefix + getName() + "[" + applyCount + "]" + " (" + getOperatorClassName()
-			        + ")";
+					+ ")";
 		}
 	}
 
@@ -2003,7 +2008,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 			if (process.getRootOperator().isParameterSet(ProcessRootOperator.PARAMETER_ENCODING)) {
 				try {
 					return Process.getEncoding(
-					        process.getRootOperator().getParameterAsString(ProcessRootOperator.PARAMETER_ENCODING));
+							process.getRootOperator().getParameterAsString(ProcessRootOperator.PARAMETER_ENCODING));
 				} catch (UndefinedParameterError e) {
 					// cannot happen
 					return Process.getEncoding(null);
@@ -2352,6 +2357,20 @@ public abstract class Operator extends AbstractObservable<Operator>
 	}
 
 	/**
+	 * The {@link OperatorProgress} should be initialized when starting the operator execution by
+	 * setting the total amount of progress (which is {@link OperatorProgress#NO_PROGRESS} by
+	 * default) by calling {@link OperatorProgress#setTotal(int)}. Afterwards the progress can be
+	 * reported by calling {@link OperatorProgress#setCompleted(int)}. The progress will be reset
+	 * before the operator is being executed.
+	 *
+	 * @return the {@link OperatorProgress} to report progress during operator execution.
+	 * @since 7.0.0
+	 */
+	public final OperatorProgress getProgress() {
+		return operatorProgress;
+	}
+
+	/**
 	 * Returns if this operators {@link #execute()} method is currently executed.
 	 */
 	public boolean isRunning() {
@@ -2404,7 +2423,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	/** Returns the current CPU time if supported, or the current system time otherwise. */
 	private static long getThreadCpuTime() {
 		return CPU_TIME_SUPPORTED ? ManagementFactory.getThreadMXBean().getThreadCpuTime(Thread.currentThread().getId())
-		        : System.currentTimeMillis() * 1000000l;
+				: System.currentTimeMillis() * 1000000l;
 	}
 
 }

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model.xlsx;
 
@@ -313,8 +311,8 @@ class XlsxSheetContentParser implements AutoCloseable {
 						try {
 							parsedRowIndex = Integer.parseInt(indexValue) - 1;
 						} catch (NumberFormatException e) {
-							throw new ParseException(new ParsingError(parsedRowIndex, columnIndex,
-									ErrorCode.FILE_SYNTAX_ERROR, indexValue));
+							throw new ParseException(
+									new ParsingError(parsedRowIndex, columnIndex, ErrorCode.FILE_SYNTAX_ERROR, indexValue));
 						}
 					} else if (startLocalName.equals(XlsxUtilities.TAG_CELL)) {
 						Attributes attributes = XlsxUtilities.getAttributes(reader);
@@ -322,8 +320,8 @@ class XlsxSheetContentParser implements AutoCloseable {
 						// Update column index
 						String cellReference = attributes.getValue(XlsxUtilities.TAG_CELL_REFERENCE);
 						try {
-							columnIndex = sheetMetaData.mapColumnIndex(XlsxUtilities
-									.convertCellRefToCoordinates(cellReference).columnNumber);
+							columnIndex = sheetMetaData
+									.mapColumnIndex(XlsxUtilities.convertCellRefToCoordinates(cellReference).columnNumber);
 						} catch (IllegalArgumentException e) {
 							throw new ParseException(new ParsingError(parsedRowIndex, columnIndex,
 									ParsingError.ErrorCode.FILE_SYNTAX_ERROR, cellReference));
@@ -399,8 +397,8 @@ class XlsxSheetContentParser implements AutoCloseable {
 				// If a row was found..
 				if (reader.getLocalName().equals(XlsxUtilities.TAG_ROW)) {
 					// ... parse the row index (subtract 1 as XLSX indices start with 1)
-					parsedRowIndex = Integer.parseInt(XlsxUtilities.getAttributes(reader).getValue(
-							XlsxUtilities.TAG_ROW_INDEX)) - 1;
+					parsedRowIndex = Integer
+							.parseInt(XlsxUtilities.getAttributes(reader).getValue(XlsxUtilities.TAG_ROW_INDEX)) - 1;
 
 					// Check whether the parsed index is already
 					// behind the desired end index (which means that all rows before were
@@ -459,7 +457,7 @@ class XlsxSheetContentParser implements AutoCloseable {
 	 *         available.
 	 */
 	boolean hasNext() {
-		return hasMoreContent && currentRowIndex < sheetMetaData.getLastRowIndex();
+		return hasMoreContent && sheetMetaData.getLastRowIndex() >= 0 && currentRowIndex < sheetMetaData.getLastRowIndex();
 	}
 
 	/**

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
@@ -249,8 +247,8 @@ public class SearchDialog extends ButtonDialog {
 			text = Tools.transformAllLineSeparators(text);
 		}
 		if (regExp.isSelected()) {
-			Matcher matcher = Pattern.compile(pattern, caseSensitive.isSelected() ? 0 : Pattern.CASE_INSENSITIVE).matcher(
-					text.subSequence(start, text.length()));
+			Matcher matcher = Pattern.compile(pattern, caseSensitive.isSelected() ? 0 : Pattern.CASE_INSENSITIVE)
+					.matcher(text.subSequence(start, text.length()));
 			if (matcher.find()) {
 				return new Result(start + matcher.start(), start + matcher.end());
 			} else {
@@ -273,14 +271,14 @@ public class SearchDialog extends ButtonDialog {
 	private void noMoreHits() {
 		String restartAt = backwardRadioButton.isSelected() ? "end" : "beginning";
 		switch (SwingTools.showConfirmDialog("editor.search_replace.no_more_hits", ConfirmDialog.YES_NO_OPTION, restartAt)) {
-					case ConfirmDialog.YES_OPTION:
-						textComponent.setCaretPosition(backwardRadioButton.isSelected() ? textComponent.getText()
-								.replaceAll("\r", "").length() : 0);
-						search();
-						break;
-					case ConfirmDialog.NO_OPTION:
-					default:
-						return;
+			case ConfirmDialog.YES_OPTION:
+				textComponent.setCaretPosition(
+						backwardRadioButton.isSelected() ? textComponent.getText().replaceAll("\r", "").length() : 0);
+				search();
+				break;
+			case ConfirmDialog.NO_OPTION:
+			default:
+				return;
 		}
 	}
 }

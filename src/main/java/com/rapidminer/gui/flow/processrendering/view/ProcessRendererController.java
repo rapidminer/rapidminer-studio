@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -32,6 +32,7 @@ import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -113,80 +114,101 @@ public class ProcessRendererController {
 	 *            the operators of this process will be arranged
 	 */
 	public void autoArrange(final ExecutionUnit process) {
-		if (process == null) {
-			throw new IllegalArgumentException("process must not be null!");
-		}
+		List<ExecutionUnit> list = new ArrayList<>(1);
+		list.add(0, process);
+		autoArrange(list);
+	}
 
-		Collection<Operator> sorted = process.getOperators();
+	/**
+	 * Automatically arranges the operators in the specified process according to a layouting
+	 * algorithm.
+	 *
+	 * @param process
+	 *            the operators of this process will be arranged
+	 */
+	public void autoArrange(final List<ExecutionUnit> processes) {
+		int unitNumber = processes.size();
+		List<Map<Operator, Rectangle2D>> newPositions = new ArrayList<>(unitNumber);
 
-		mxGraphModel graphModel = new mxGraphModel();
-		mxGraph graph = new mxGraph(graphModel);
+		for (int i = 0; i < unitNumber; i++) {
 
-		Map<Operator, Object> vertexMap = new HashMap<>();
-		List<Operator> unconnectedOps = new LinkedList<>();
-		List<Operator> connectedOps = new LinkedList<>();
-
-		// insert vertices
-		for (Operator op : sorted) {
-
-			// skip unconnected operators
-			if (!isOperatorConnected(op)) {
-				unconnectedOps.add(op);
-				continue;
+			if (processes.get(i) == null) {
+				throw new IllegalArgumentException("process must not be null!");
 			}
 
-			connectedOps.add(op);
+			Collection<Operator> sorted = processes.get(i).getOperators();
 
-			Rectangle2D operatorRect = model.getOperatorRect(op);
-			Object opVert = graph.insertVertex(null, null, op.getName(), operatorRect.getX(), operatorRect.getY(),
-					operatorRect.getWidth(), operatorRect.getHeight(), null);
-			vertexMap.put(op, opVert);
-		}
+			mxGraphModel graphModel = new mxGraphModel();
+			mxGraph graph = new mxGraph(graphModel);
 
-		// connect vertices
-		for (Operator source : sorted) {
-			for (OutputPort out : source.getOutputPorts().getAllPorts()) {
-				if (out.isConnected()) {
-					Operator dest = out.getDestination().getPorts().getOwner().getOperator();
-					if (!(dest instanceof ProcessRootOperator)) {
-						String value = source.getName() + " to " + dest.getName();
-						graph.insertEdge(null, null, value, vertexMap.get(source), vertexMap.get(dest), null);
+			Map<Operator, Object> vertexMap = new HashMap<>();
+			List<Operator> unconnectedOps = new LinkedList<>();
+			List<Operator> connectedOps = new LinkedList<>();
+
+			// insert vertices
+			for (Operator op : sorted) {
+
+				// skip unconnected operators
+				if (!isOperatorConnected(op)) {
+					unconnectedOps.add(op);
+					continue;
+				}
+
+				connectedOps.add(op);
+
+				Rectangle2D operatorRect = model.getOperatorRect(op);
+				Object opVert = graph.insertVertex(null, null, op.getName(), operatorRect.getX(), operatorRect.getY(),
+						operatorRect.getWidth(), operatorRect.getHeight(), null);
+				vertexMap.put(op, opVert);
+			}
+
+			// connect vertices
+			for (Operator source : sorted) {
+				for (OutputPort out : source.getOutputPorts().getAllPorts()) {
+					if (out.isConnected()) {
+						Operator dest = out.getDestination().getPorts().getOwner().getOperator();
+						if (!(dest instanceof ProcessRootOperator)) {
+							String value = source.getName() + " to " + dest.getName();
+							graph.insertEdge(null, null, value, vertexMap.get(source), vertexMap.get(dest), null);
+						}
 					}
 				}
 			}
-		}
 
-		// calculate new layout
-		mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, SwingConstants.WEST);
-		layout.setInterRankCellSpacing(ProcessDrawer.GRID_X_OFFSET);
+			// calculate new layout
+			mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, SwingConstants.WEST);
+			layout.setInterRankCellSpacing(ProcessDrawer.GRID_X_OFFSET);
 
-		layout.execute(graph.getDefaultParent());
+			layout.execute(graph.getDefaultParent());
 
-		Map<Operator, Rectangle2D> newPositions = new HashMap<>();
+			newPositions.add(i, new HashMap<Operator, Rectangle2D>());
 
-		for (Operator op : connectedOps) {
-			mxRectangle cellBounds = graph.getCellBounds(vertexMap.get(op));
+			for (Operator op : connectedOps) {
+				mxRectangle cellBounds = graph.getCellBounds(vertexMap.get(op));
 
-			double x = cellBounds.getX() + ProcessDrawer.GRID_X_OFFSET;
-			double y = cellBounds.getY() + ProcessDrawer.GRID_Y_OFFSET;
-			if (!unconnectedOps.isEmpty()) {
-				y += ProcessDrawer.OPERATOR_MIN_HEIGHT + ProcessDrawer.GRID_Y_OFFSET;
+				double x = cellBounds.getX() + ProcessDrawer.GRID_X_OFFSET;
+				double y = cellBounds.getY() + ProcessDrawer.GRID_Y_OFFSET;
+				if (!unconnectedOps.isEmpty()) {
+					y += ProcessDrawer.OPERATOR_MIN_HEIGHT + ProcessDrawer.GRID_Y_OFFSET;
+				}
+				if (model.isSnapToGrid()) {
+					Point snappedPoint = ProcessDrawUtils.snap(new Point2D.Double(x, y));
+					newPositions.get(i).put(op, new Rectangle2D.Double(snappedPoint.getX(), snappedPoint.getY(),
+							cellBounds.getWidth(), cellBounds.getHeight()));
+				} else {
+					newPositions.get(i).put(op, new Rectangle2D.Double(x, y, cellBounds.getWidth(), cellBounds.getHeight()));
+				}
 			}
-			if (model.isSnapToGrid()) {
-				Point snappedPoint = ProcessDrawUtils.snap(new Point2D.Double(x, y));
-				newPositions.put(op, new Rectangle2D.Double(snappedPoint.getX(), snappedPoint.getY(), cellBounds.getWidth(),
-						cellBounds.getHeight()));
-			} else {
-				newPositions.put(op, new Rectangle2D.Double(x, y, cellBounds.getWidth(), cellBounds.getHeight()));
+
+			int index = 0;
+			for (Operator op : unconnectedOps) {
+				newPositions.get(i).put(op, autoPosition(op, index, false));
+				++index;
 			}
+
 		}
 
-		int index = 0;
-		for (Operator op : unconnectedOps) {
-			newPositions.put(op, autoPosition(op, index, false));
-			++index;
-		}
-		moveOperators(process, newPositions, 10, 100);
+		moveOperators(processes, newPositions, 10, 100);
 	}
 
 	/**
@@ -213,8 +235,7 @@ public class ProcessRendererController {
 	 * @return the position and size of the operator, never {@code null}
 	 */
 	public Rectangle2D autoPosition(Operator op, int index, boolean setPosition) {
-		int maxPerRow = (int) Math.max(
-				1,
+		int maxPerRow = (int) Math.max(1,
 				Math.floor((model.getProcessWidth(op.getExecutionUnit()) + ProcessDrawer.WALL_WIDTH)
 						/ (ProcessDrawer.GRID_AUTOARRANGE_WIDTH + 10)));
 		int col = index % maxPerRow;
@@ -922,7 +943,8 @@ public class ProcessRendererController {
 
 		// if connected (e.g. because inserted by quick fix), place in the middle
 		if (op.getInputPorts().getNumberOfPorts() > 0 && op.getOutputPorts().getNumberOfPorts() > 0
-				&& op.getInputPorts().getPortByIndex(0).isConnected() && op.getOutputPorts().getPortByIndex(0).isConnected()) {
+				&& op.getInputPorts().getPortByIndex(0).isConnected()
+				&& op.getOutputPorts().getPortByIndex(0).isConnected()) {
 
 			// to avoid that this method is called again from getPortLocation() we check whether
 			// all children know where they are.
@@ -935,8 +957,8 @@ public class ProcessRendererController {
 			if (dependenciesOk) {
 				Point2D sourcePos = ProcessDrawUtils.createPortLocation(op.getInputPorts().getPortByIndex(0).getSource(),
 						model);
-				Point2D destPos = ProcessDrawUtils.createPortLocation(
-						op.getOutputPorts().getPortByIndex(0).getDestination(), model);
+				Point2D destPos = ProcessDrawUtils.createPortLocation(op.getOutputPorts().getPortByIndex(0).getDestination(),
+						model);
 				double x = Math.floor((sourcePos.getX() + destPos.getX()) / 2 - ProcessDrawer.OPERATOR_WIDTH / 2);
 				double y = Math.floor((sourcePos.getY() + destPos.getY()) / 2 - ProcessDrawer.PORT_OFFSET);
 				rect = new Rectangle2D.Double(x, y, ProcessDrawer.OPERATOR_WIDTH, ProcessDrawer.OPERATOR_MIN_HEIGHT);
@@ -1025,18 +1047,25 @@ public class ProcessRendererController {
 	 * @param time
 	 *            the time in ms for the animation
 	 */
-	private void moveOperators(final ExecutionUnit process, final Map<Operator, Rectangle2D> newPositions, final int steps,
-			final int time) {
+	private void moveOperators(final List<ExecutionUnit> processes, final List<Map<Operator, Rectangle2D>> newPositions,
+			final int steps, final int time) {
 		// store current position, dx, and dy for each operator
-		final Map<Operator, Rectangle2D> current = new HashMap<>();
-		final Map<Operator, Double> dxs = new HashMap<>();
-		final Map<Operator, Double> dys = new HashMap<>();
-		for (Operator op : newPositions.keySet()) {
-			Rectangle2D currentPos = model.getOperatorRect(op);
-			Rectangle2D endPos = newPositions.get(op);
-			current.put(op, currentPos);
-			dxs.put(op, Math.floor((endPos.getX() - currentPos.getX()) / steps));
-			dys.put(op, Math.floor((endPos.getY() - currentPos.getY()) / steps));
+		final int listSize = processes.size();
+		final List<Map<Operator, Rectangle2D>> current = new ArrayList<>(listSize);
+		final List<Map<Operator, Double>> dxs = new ArrayList<>(listSize);
+		final List<Map<Operator, Double>> dys = new ArrayList<>(listSize);
+		for (int i = 0; i < listSize; i++) {
+			current.add(i, new HashMap<Operator, Rectangle2D>());
+			dxs.add(i, new HashMap<Operator, Double>());
+			dys.add(i, new HashMap<Operator, Double>());
+
+			for (Operator op : newPositions.get(i).keySet()) {
+				Rectangle2D currentPos = model.getOperatorRect(op);
+				Rectangle2D endPos = newPositions.get(i).get(op);
+				current.get(i).put(op, currentPos);
+				dxs.get(i).put(op, Math.floor((endPos.getX() - currentPos.getX()) / steps));
+				dys.get(i).put(op, Math.floor((endPos.getY() - currentPos.getY()) / steps));
+			}
 		}
 
 		final Timer operatorMoverTimer = new Timer((int) (time / (double) steps), null);
@@ -1048,38 +1077,42 @@ public class ProcessRendererController {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				// iterate over all moving operators
-				Iterator<Operator> iterator = current.keySet().iterator();
-				while (iterator.hasNext()) {
-					Operator op = iterator.next();
+				// iterate over all ExecutionUnits
+				for (int i = 0; i < listSize; i++) {
 
-					// check if display rect equals current stored rect
-					Rectangle2D displayRect = model.getOperatorRect(op);
-					Rectangle2D currentRect = current.get(op);
-					if (currentRect.getX() != displayRect.getX() || currentRect.getY() != displayRect.getY()) {
-						// remove operator as it has been moved by the user
-						iterator.remove();
+					// iterate over all moving operators
+					Iterator<Operator> iterator = current.get(i).keySet().iterator();
+					while (iterator.hasNext()) {
+						Operator op = iterator.next();
+
+						// check if display rect equals current stored rect
+						Rectangle2D displayRect = model.getOperatorRect(op);
+						Rectangle2D currentRect = current.get(i).get(op);
+						if (currentRect.getX() != displayRect.getX() || currentRect.getY() != displayRect.getY()) {
+							// remove operator as it has been moved by the user
+							iterator.remove();
+						}
+
+						// calculate new display position for operator
+						double dx = dxs.get(i).get(op);
+						double dy = dys.get(i).get(op);
+						double x, y;
+						// during animation, we don't really care about exact positioning
+						if (count < steps - 1) {
+							x = currentRect.getX() + dx;
+							y = currentRect.getY() + dy;
+						} else {
+							// this is the final position, it has to be exact
+							x = newPositions.get(i).get(op).getX();
+							y = newPositions.get(i).get(op).getY();
+						}
+						currentRect = new Rectangle2D.Double(x, y, currentRect.getWidth(), currentRect.getHeight());
+
+						// update current rect in map and also set position as display position
+						current.get(i).put(op, currentRect);
+						model.setOperatorRect(op, currentRect);
+						model.fireOperatorMoved(op);
 					}
-
-					// calculate new display position for operator
-					double dx = dxs.get(op);
-					double dy = dys.get(op);
-					double x, y;
-					// during animation, we don't really care about exact positioning
-					if (count < steps - 1) {
-						x = currentRect.getX() + dx;
-						y = currentRect.getY() + dy;
-					} else {
-						// this is the final position, it has to be exact
-						x = newPositions.get(op).getX();
-						y = newPositions.get(op).getY();
-					}
-					currentRect = new Rectangle2D.Double(x, y, currentRect.getWidth(), currentRect.getHeight());
-
-					// update current rect in map and also set position as display position
-					current.put(op, currentRect);
-					model.setOperatorRect(op, currentRect);
-					model.fireOperatorMoved(op);
 				}
 
 				// after moving all operators, update UI, increase counter, and reset timer
@@ -1088,7 +1121,7 @@ public class ProcessRendererController {
 				if (count == steps) {
 					operatorMoverTimer.stop();
 					autoFit();
-					process.getEnclosingOperator().getProcess().updateNotify();
+					processes.get(0).getEnclosingOperator().getProcess().updateNotify();
 				}
 			}
 		};

@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
 
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.OperatorChain;
@@ -34,11 +34,9 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 
-import java.util.List;
-
 
 /**
- * 
+ *
  * @author Sebastian Land
  */
 public abstract class AbstractIteratingOperatorChain extends OperatorChain {
@@ -78,6 +76,10 @@ public abstract class AbstractIteratingOperatorChain extends OperatorChain {
 		outExtender.reset();
 		String iterationMacroName = null;
 		int macroIterationOffset = 0;
+
+		// disable call to checkForStop as inApplyLoop will call it anyway
+		getProgress().setCheckForStop(false);
+
 		boolean setIterationMacro = getParameterAsBoolean(PARAMETER_SET_MACRO);
 		if (setIterationMacro) {
 			iterationMacroName = getParameterAsString(PARAMETER_MACRO_NAME);
@@ -93,10 +95,11 @@ public abstract class AbstractIteratingOperatorChain extends OperatorChain {
 			inputPortPairExtender.passDataThrough();
 			getSubprocess(0).execute();
 			outExtender.collect();
+			getLogger().fine("Completed iteration " + (++currentIteration));
 			inApplyLoop();
-			getLogger().fine("Completed iteration " + (currentIteration + 1));
-			currentIteration++;
+			getProgress().step();
 		}
+		getProgress().complete();
 	}
 
 	protected int getIteration() {

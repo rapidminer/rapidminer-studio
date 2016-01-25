@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
@@ -44,8 +44,6 @@ import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-
 
 /**
  * <p>
@@ -55,14 +53,14 @@ import java.util.List;
  * using {@rapidminer.math S_i} as the test set (input of the second inner operator) and
  * {@rapidminer.math S\backslash S_i} training set (input of the first inner operator).
  * </p>
- * 
+ *
  * <p>
  * The first inner operator must accept an {@link com.rapidminer.example.ExampleSet} while the
  * second must accept an {@link com.rapidminer.example.ExampleSet} and the output of the first
  * (which is in most cases a {@link com.rapidminer.operator.Model}) and must produce a
  * {@link com.rapidminer.operator.performance.PerformanceVector}.
  * </p>
- * 
+ *
  * <p>
  * Like other validation schemes the RapidMiner cross validation can use several types of sampling
  * for building the subsets. Linear sampling simply divides the example set into partitions without
@@ -70,7 +68,7 @@ import java.util.List;
  * Stratifed sampling builds random subsets and ensures that the class distribution in the subsets
  * is the same as in the whole example set.
  * </p>
- * 
+ *
  * <p>
  * The cross validation operator provides several values which can be logged by means of a
  * {@link ProcessLogOperator}. Of course the number of the current iteration can be logged which
@@ -87,7 +85,7 @@ import java.util.List;
  * <li>for the main criterion, also the variance and the standard deviation can be accessed where
  * applicable.</li>
  * </ul>
- * 
+ *
  * @rapidminer.index cross-validation
  * @author Ingo Mierswa
  */
@@ -156,19 +154,23 @@ public class XValidation extends ValidationChain {
 		int samplingType = getParameterAsInt(PARAMETER_SAMPLING_TYPE);
 		SplittedExampleSet splittedES = new SplittedExampleSet(inputSet, number, samplingType,
 				getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-				getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED), getCompatibilityLevel().isAtMost(
-						SplittedExampleSet.VERSION_SAMPLING_CHANGED));
+				getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
+				getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 
 		// start crossvalidation
+		getProgress().setTotal(number);
+		getProgress().setCheckForStop(false);
+
 		for (iteration = 0; iteration < number; iteration++) {
 			performIteration(splittedES, iteration);
 		}
 
 		// end crossvalidation
+		getProgress().complete();
 	}
 
-	protected void performIteration(SplittedExampleSet splittedES, int iteration) throws OperatorException,
-			ProcessStoppedException {
+	protected void performIteration(SplittedExampleSet splittedES, int iteration)
+			throws OperatorException, ProcessStoppedException {
 		splittedES.selectAllSubsetsBut(iteration);
 		learn(splittedES);
 
@@ -176,6 +178,7 @@ public class XValidation extends ValidationChain {
 		evaluate(splittedES);
 
 		inApplyLoop();
+		getProgress().step();
 	}
 
 	@Override

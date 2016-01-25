@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.generator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -38,14 +39,11 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 /**
  * Generates a random example set for testing purposes. The data represents an up-selling example
  * set.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class UpSellingExampleSetGenerator extends AbstractExampleSource {
@@ -54,13 +52,13 @@ public class UpSellingExampleSetGenerator extends AbstractExampleSource {
 	public static final String PARAMETER_NUMBER_EXAMPLES = "number_examples";
 
 	private static String[] ATTRIBUTE_NAMES = { "name", "age", "lifestyle", "zip code", "family status", "car", "sports",
-			"earnings" };
+	"earnings" };
 
 	private static int[] VALUE_TYPES = { Ontology.NOMINAL, Ontology.INTEGER, Ontology.NOMINAL, Ontology.INTEGER,
-			Ontology.NOMINAL, Ontology.NOMINAL, Ontology.NOMINAL, Ontology.INTEGER };
+		Ontology.NOMINAL, Ontology.NOMINAL, Ontology.NOMINAL, Ontology.INTEGER };
 
 	private static String[][] POSSIBLE_VALUES = { null, null, { "healthy", "active", "cozily" }, null,
-			{ "married", "single" }, { "practical", "expensive" }, { "soccer", "badminton", "athletics" }, null };
+		{ "married", "single" }, { "practical", "expensive" }, { "soccer", "badminton", "athletics" }, null };
 
 	public UpSellingExampleSetGenerator(OperatorDescription description) {
 		super(description);
@@ -93,6 +91,10 @@ public class UpSellingExampleSetGenerator extends AbstractExampleSource {
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
+
+		// init operator progress
+		getProgress().setTotal(numberOfExamples);
+
 		for (int n = 0; n < numberOfExamples; n++) {
 			double[] values = new double[ATTRIBUTE_NAMES.length + 1];
 			values[0] = attributes.get(0).getMapping().mapString(random.nextString(8));
@@ -126,7 +128,11 @@ public class UpSellingExampleSetGenerator extends AbstractExampleSource {
 				values[8] = label.getMapping().mapString("product_3");
 			}
 			table.addDataRow(new DoubleArrayDataRow(values));
+
+			getProgress().step();
 		}
+
+		getProgress().complete();
 
 		// create example set and return it
 		return table.createExampleSet(label);

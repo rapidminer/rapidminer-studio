@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -150,8 +150,9 @@ public class ProgressThreadDialog extends ButtonDialog {
 		outerPanel.add(scrollPane, BorderLayout.CENTER);
 
 		setDefaultSize(ButtonDialog.NORMAL);
-		layoutDefault(outerPanel, makeCloseButton());
-		setModal(true);
+		layoutDefault(outerPanel, makeCancelButton("hide"));
+		setModalExclusionType(ModalExclusionType.APPLICATION_EXCLUDE);
+		setModalityType(ModalityType.APPLICATION_MODAL);
 	}
 
 	/**

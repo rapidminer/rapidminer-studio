@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.linear;
 
@@ -27,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -62,7 +61,6 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.math.FDistribution;
 import com.rapidminer.tools.math.MathFunctions;
 
 
@@ -138,6 +136,7 @@ public class LinearRegression extends AbstractLearner {
 		boolean cleanUpLabel = false;
 		String firstClassName = null;
 		String secondClassName = null;
+		getProgress().setTotal(9);
 
 		com.rapidminer.example.Tools.onlyNonMissingValues(exampleSet, getOperatorClassName(), this, Attributes.LABEL_NAME);
 
@@ -171,6 +170,8 @@ public class LinearRegression extends AbstractLearner {
 			}
 		}
 
+		getProgress().step();
+
 		// search all attributes and keep numerical
 		int numberOfAttributes = exampleSet.getAttributes().size();
 		boolean[] isUsedAttribute = new boolean[numberOfAttributes];
@@ -181,6 +182,8 @@ public class LinearRegression extends AbstractLearner {
 			attributeNames[counter] = attribute.getName();
 			counter++;
 		}
+
+		getProgress().step();
 
 		// compute and store statistics and turn off attributes with zero
 		// standard deviation
@@ -206,6 +209,8 @@ public class LinearRegression extends AbstractLearner {
 
 		int numberOfExamples = exampleSet.size();
 
+		getProgress().step();
+
 		// determine the number of used attributes + 1
 		int numberOfUsedAttributes = 1;
 		for (int i = 0; i < isUsedAttribute.length; i++) {
@@ -213,6 +218,8 @@ public class LinearRegression extends AbstractLearner {
 				numberOfUsedAttributes++;
 			}
 		}
+
+		getProgress().step();
 
 		// remove colinear attributes
 		double[] coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
@@ -245,8 +252,12 @@ public class LinearRegression extends AbstractLearner {
 			coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
 		}
 
+		getProgress().step();
+
 		// calculate error on full data
 		double errorOnFullData = getSquaredError(exampleSet, isUsedAttribute, coefficientsOnFullData, useBias);
+
+		getProgress().step();
 
 		// apply attribute selection method
 
@@ -271,27 +282,32 @@ public class LinearRegression extends AbstractLearner {
 				numberOfExamples, numberOfUsedAttributes, means, labelMean, standardDeviations, labelStandardDeviation,
 				coefficientsOnFullData, errorOnFullData);
 
-		// clean up eventually if was classification
+		// clean up eventually if was classification const
 		if (cleanUpLabel) {
 			exampleSet.getAttributes().remove(workingLabel);
 			exampleSet.getExampleTable().removeAttribute(workingLabel);
 			exampleSet.getAttributes().setLabel(label);
 		}
 
+		getProgress().step();
+
 		// +++++++++++++++++++++++++++++++++++++++++++++
 		// calculating statistics of the resulting model
 		// +++++++++++++++++++++++++++++++++++++++++++++
-		FDistribution fdistribution = new FDistribution(1, exampleSet.size() - result.coefficients.length);
 		int length = result.coefficients.length;
+		FDistribution fdistribution;
+		if (exampleSet.size() - length <= 0) {
+			// In this case the F-distribution is not defined (the second parameter of the
+			// F-distribution has to be >0).
+			fdistribution = null;
+		} else {
+			fdistribution = new FDistribution(1, exampleSet.size() - length);
+		}
 		double[] standardErrors = new double[length];
 		double[] standardizedCoefficients = new double[length];
 		double[] tolerances = new double[length];
 		double[] tStatistics = new double[length];
 		double[] pValues = new double[length];
-
-		// calculating standard error matrix, (containing the error of
-		// intercept)
-		double mse = result.error / (exampleSet.size() - 1);
 
 		int finalNumberOfAttributes = 0;
 		for (boolean b : result.isUsedAttribute) {
@@ -299,15 +315,23 @@ public class LinearRegression extends AbstractLearner {
 				finalNumberOfAttributes++;
 			}
 		}
-		double[][] data = new double[exampleSet.size() + 1][finalNumberOfAttributes + 1];
-		for (int i = 0; i < data[0].length; i++) {
-			data[0][i] = 1;
-		}
-		for (int i = 0; i < exampleSet.size() + 1; i++) {
+
+		getProgress().step();
+
+		// calculating standard error matrix, (containing the error of
+		// intercept and estimated coefficients)
+		int degreeOfFreedom = finalNumberOfAttributes + 1;
+
+		double mse = result.error / (exampleSet.size() - degreeOfFreedom);
+
+		// add a additional column of 1s to the design matrix for the intercept
+		double[][] data = new double[exampleSet.size()][finalNumberOfAttributes + 1];
+
+		for (int i = 0; i < exampleSet.size(); i++) {
 			data[i][0] = 1;
 		}
 
-		int eIndex = 1;
+		int eIndex = 0;
 		for (Example e : exampleSet) {
 			int aIndex = 0;
 			int aCounter = 1;
@@ -320,6 +344,9 @@ public class LinearRegression extends AbstractLearner {
 			}
 			eIndex++;
 		}
+
+		getProgress().step();
+
 		RealMatrix matrix = MatrixUtils.createRealMatrix(data);
 		RealMatrix matrixT = matrix.transpose();
 		RealMatrix productMatrix = matrixT.multiply(matrix);
@@ -336,20 +363,16 @@ public class LinearRegression extends AbstractLearner {
 					standardErrors[index] = Math.sqrt(mse * invertedMatrix.getEntry(index + 1, index + 1));
 					// calculate standardized Coefficients
 
-					//
 					// Be careful, use in the calculation of standardizedCoefficients the i instead
-					// of index for
-					// standardDeviations, because all other arrays
-					// refer to the selected attributes, whereas standardDeviations refers to
-					// all attributes
-					//
+					// of index for standardDeviations, because all other arrays refer to the
+					// selected attributes, whereas standardDeviations refers to all attributes
 					standardizedCoefficients[index] = result.coefficients[index]
 							* (standardDeviations[i] / labelStandardDeviation);
 
-					if (!Tools.isZero(standardErrors[index])) {
+					if (!Tools.isZero(standardErrors[index]) && fdistribution != null) {
 						tStatistics[index] = result.coefficients[index] / standardErrors[index];
-						double probability = fdistribution.getProbabilityForValue(tStatistics[index] * tStatistics[index]);
-						pValues[index] = probability < 0 ? 1.0d : Math.max(0.0d, 1.0d - probability);
+						double probability = fdistribution.cumulativeProbability(tStatistics[index] * tStatistics[index]);
+						pValues[index] = 1.0d - probability;
 					} else {
 						if (Tools.isZero(result.coefficients[index])) {
 							tStatistics[index] = 0.0d;
@@ -381,20 +404,16 @@ public class LinearRegression extends AbstractLearner {
 					// calculating beta and test statistics
 					// calculate standardized coefficients
 
-					//
 					// Be careful, use in the calculation of standardizedCoefficients the i instead
-					// of index for
-					// standardDeviations, because all other arrays
-					// refer to the selected attributes, whereas standardDeviations refers to
-					// all attributes
-					//
+					// of index for standardDeviations, because all other arrays refer to the
+					// selected attributes, whereas standardDeviations refers to all attributes
 					standardizedCoefficients[index] = result.coefficients[index]
 							* (standardDeviations[i] / labelStandardDeviation);
 
-					if (!Tools.isZero(standardErrors[index])) {
+					if (!Tools.isZero(standardErrors[index]) && fdistribution != null) {
 						tStatistics[index] = result.coefficients[index] / standardErrors[index];
-						double probability = fdistribution.getProbabilityForValue(tStatistics[index] * tStatistics[index]);
-						pValues[index] = probability < 0 ? 1.0d : Math.max(0.0d, 1.0d - probability);
+						double probability = fdistribution.cumulativeProbability(tStatistics[index] * tStatistics[index]);
+						pValues[index] = 1.0d - probability;
 					} else {
 						if (Tools.isZero(result.coefficients[index])) {
 							tStatistics[index] = 0.0d;
@@ -417,12 +436,12 @@ public class LinearRegression extends AbstractLearner {
 		}
 		tolerances[tolerances.length - 1] = Double.NaN;
 		standardizedCoefficients[standardizedCoefficients.length - 1] = Double.NaN;
-		if (!Tools.isZero(standardErrors[standardErrors.length - 1])) {
+		if (!Tools.isZero(standardErrors[standardErrors.length - 1]) && fdistribution != null) {
 			tStatistics[tStatistics.length - 1] = result.coefficients[result.coefficients.length - 1]
 					/ standardErrors[standardErrors.length - 1];
-			double probability = fdistribution.getProbabilityForValue(tStatistics[tStatistics.length - 1]
+			double probability = fdistribution.cumulativeProbability(tStatistics[tStatistics.length - 1]
 					* tStatistics[tStatistics.length - 1]);
-			pValues[pValues.length - 1] = probability < 0 ? 1.0d : Math.max(0.0d, 1.0d - probability);
+			pValues[pValues.length - 1] = 1.0d - probability;
 		} else {
 			if (Tools.isZero(result.coefficients[result.coefficients.length - 1])) {
 				tStatistics[tStatistics.length - 1] = 0.0d;
@@ -447,6 +466,8 @@ public class LinearRegression extends AbstractLearner {
 			}
 			weightOutput.deliver(weights);
 		}
+
+		getProgress().complete();
 
 		return new LinearRegressionModel(exampleSet, result.isUsedAttribute, result.coefficients, standardErrors,
 				standardizedCoefficients, tolerances, tStatistics, pValues, useBias, firstClassName, secondClassName);

@@ -1,44 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties.tablepanel;
-
-import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeCheckBoxImpl;
-import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeComboBoxImpl;
-import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeDateImpl;
-import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeRegexImpl;
-import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeTextFieldDefaultImpl;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeCheckBox;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeComboBox;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeDate;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeDateTime;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeRegex;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldInteger;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldTime;
-import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.tools.container.Pair;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -63,6 +41,26 @@ import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+
+import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeCheckBoxImpl;
+import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeComboBoxImpl;
+import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeDateImpl;
+import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeRegexImpl;
+import com.rapidminer.gui.properties.tablepanel.cells.implementations.CellTypeTextFieldDefaultImpl;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeCheckBox;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeComboBox;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeDate;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeDateTime;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeRegex;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldInteger;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldTime;
+import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -100,18 +98,18 @@ import javax.swing.event.TableModelListener;
  * {@link TablePanelModel#isContentAssistPossibleForCell(int, int)},<br/>
  * {@link TablePanelModel#getPossibleValuesForCellOrNull(int, int)} and<br/>
  * {@link TablePanelModel#canCellHaveMultipleValues(int, int)}.
- * 
+ *
  * @author Marco Boeck
- * 
+ *
  */
 public class TablePanel extends JPanel {
 
 	/**
 	 * Defines how additional space is distributed when using fixed width mode.
-	 * 
-	 * 
+	 *
+	 *
 	 * @author Marco Boeck
-	 * 
+	 *
 	 */
 	public static enum FillerMode {
 		/**
@@ -161,7 +159,7 @@ public class TablePanel extends JPanel {
 
 	/**
 	 * Creates a new {@link TablePanel} instance.
-	 * 
+	 *
 	 * @param model
 	 * @param useScrollPane
 	 *            if set to <code>true</code>, will add a scrollpane around the GUI.
@@ -282,6 +280,8 @@ public class TablePanel extends JPanel {
 			});
 			removeRowButton.setText(null);
 			removeRowButton.setPreferredSize(new Dimension(44, 33));
+			removeRowButton.setContentAreaFilled(false);
+			removeRowButton.setBorderPainted(false);
 			innerPanel.add(removeRowButton, gbc);
 
 			// if filler mode is REMAINDER, add filler component here
@@ -309,7 +309,7 @@ public class TablePanel extends JPanel {
 
 	/**
 	 * Set the backing model.
-	 * 
+	 *
 	 * @param model
 	 */
 	public void setModel(TablePanelModel model) {
@@ -327,7 +327,7 @@ public class TablePanel extends JPanel {
 
 	/**
 	 * Returns the {@link TablePanelModel} instance of this {@link TablePanel}.
-	 * 
+	 *
 	 * @return
 	 */
 	public TablePanelModel getModel() {
@@ -338,7 +338,7 @@ public class TablePanel extends JPanel {
 	 * Defines how additional space is distributed in each row if dimension constraints have been
 	 * set via {@link #setDimensionConstraints(Dimension[])}. See {@link FillerMode} for a
 	 * description of each mode.
-	 * 
+	 *
 	 * @param fillerMode
 	 */
 	public void setFillerMode(FillerMode fillerMode) {
@@ -359,7 +359,7 @@ public class TablePanel extends JPanel {
 	 * after this method has been called and has more or less columns than the constraints specify,
 	 * the constraints are ignored! Set to <code>null</code> to remove the constraints. <br/>
 	 * See {@link #setFillerMode(FillerMode)} for options to distribute additional space
-	 * 
+	 *
 	 * @param constraints
 	 *            the {@link Dimension} array consisting of n entries, where n is the number of
 	 *            columns of the {@link TablePanelModel}.
@@ -385,7 +385,7 @@ public class TablePanel extends JPanel {
 
 	/**
 	 * Creates the appropriate GUI component for the specified cell of the {@link TablePanelModel}.
-	 * 
+	 *
 	 * @param rowIndex
 	 * @param columnIndex
 	 */
@@ -435,7 +435,7 @@ public class TablePanel extends JPanel {
 	/**
 	 * Creates a {@link JLabel} for the specified cell. Does not validate the model, so make sure
 	 * this call works!
-	 * 
+	 *
 	 * @param rowIndex
 	 * @param columnIndex
 	 * @return
@@ -450,7 +450,7 @@ public class TablePanel extends JPanel {
 	 * Creates a {@link JFormattedTextField} for the specified cell and adds it to a {@link JPanel}
 	 * which is returned. Only allows double values as input! Does not validate the model, so make
 	 * sure this call works!
-	 * 
+	 *
 	 * @param rowIndex
 	 * @param columnIndex
 	 * @param cellClass
@@ -474,7 +474,7 @@ public class TablePanel extends JPanel {
 	 * which is returned. Adds content assist of applicable via
 	 * {@link TablePanelModel#getPossibleValuesForColumnOrNull(int, int)}. Does not validate the
 	 * model, so make sure this call works!
-	 * 
+	 *
 	 * @param rowIndex
 	 * @param columnIndex
 	 * @param cellClass
@@ -486,7 +486,7 @@ public class TablePanel extends JPanel {
 
 	/**
 	 * Updates the component in the specified cell.
-	 * 
+	 *
 	 * @param rowIndex
 	 * @param columnIndex
 	 */

@@ -1,31 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
-
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.gui.plotter.PlotterAdapter;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.math.similarity.DistanceMeasure;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -46,19 +37,28 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.plotter.PlotterAdapter;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.math.similarity.DistanceMeasure;
+
 
 /**
  * A k-distance visualization for similarities.
- * 
+ *
  * WARNING: Although extending PlotterAdapter, this is no real plotter! It does not support
  * PlotterSettings or anything else needed for a "real" plotter.
- * 
+ *
  * @author Peter B. Volk, Michael Wurst, Ingo Mierswa
  */
 public class SimilarityKDistanceVisualization extends PlotterAdapter implements ActionListener {
@@ -105,12 +105,17 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 		k_distance_jtext.setColumns(5);
 
 		JPanel updatePanel = new JPanel(new FlowLayout());
+		updatePanel.setOpaque(true);
+		updatePanel.setBackground(Colors.WHITE);
 		updatePanel.add(label);
 		updatePanel.add(k_distance_jtext);
 		updatePanel.add(updateButton);
 
 		JPanel updatePanelAligned = new JPanel(new BorderLayout());
-		updatePanelAligned.add(updatePanel, BorderLayout.WEST);
+		updatePanelAligned.setOpaque(true);
+		updatePanelAligned.setBackground(Colors.WHITE);
+		updatePanelAligned.add(updatePanel, BorderLayout.CENTER);
+		updatePanelAligned.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
 		add(updatePanelAligned, BorderLayout.NORTH);
 		this.updatePanelHeight = updatePanelAligned.getHeight();

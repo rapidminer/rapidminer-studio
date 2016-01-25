@@ -1,27 +1,38 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.renderer;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Annotations;
@@ -30,22 +41,11 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.report.Reportable;
 import com.rapidminer.report.Tableable;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-
 
 /**
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class AnnotationsRenderer extends AbstractRenderer {
 
@@ -202,13 +202,20 @@ public class AnnotationsRenderer extends AbstractRenderer {
 
 		JPanel component = new JPanel(new BorderLayout());
 		final AnnotationsTableModel model = new AnnotationsTableModel(ioobject);
-		final JTable table = new JTable(model);
+		final ExtendedJTable table = new ExtendedJTable(model, true);
 		table.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
+		table.setRowHighlighting(true);
+
 		JScrollPane scrollPane = new ExtendedJScrollPane(table);
-		scrollPane.setBorder(null);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder(42, 10, 15, 10));
+		scrollPane.setBackground(Colors.WHITE);
+		scrollPane.getViewport().setBackground(Colors.WHITE);
 		component.add(scrollPane, BorderLayout.CENTER);
 
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		buttons.setOpaque(true);
+		buttons.setBackground(Colors.WHITE);
+		buttons.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 10));
 		buttons.add(new JButton(new ResourceAction("add_annotation") {
 
 			private static final long serialVersionUID = 1L;

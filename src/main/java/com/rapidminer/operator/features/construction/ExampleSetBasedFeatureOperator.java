@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.construction;
+
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -28,6 +29,7 @@ import com.rapidminer.gui.dialog.StopDialog;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ValueDouble;
 import com.rapidminer.operator.performance.PerformanceVector;
@@ -42,9 +44,6 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * This class is the superclass of all feature selection and generation operators. It provides an
@@ -53,7 +52,7 @@ import java.util.List;
  * <tt>getPreEvalutaionPopulationOperators()</tt> and
  * <tt>getPostEvalutaionPopulationOperators()</tt> during a loop which will terminate if
  * <tt>solutionGoodEnough()</tt> returns true.
- * 
+ *
  * @author Ingo Mierswa <br>
  */
 public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
@@ -239,8 +238,8 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 			throw new UserError(this, 125, 0, 1);
 		}
 
-		List preOps = getPreEvaluationPopulationOperators(es);
-		List postOps = getPostEvaluationPopulationOperators(es);
+		List<ExampleSetBasedPopulationOperator> preOps = getPreEvaluationPopulationOperators(es);
+		List<ExampleSetBasedPopulationOperator> postOps = getPostEvaluationPopulationOperators(es);
 
 		// stop dialog
 		boolean userDialogOk = true;
@@ -257,6 +256,9 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 		log("Initial population has " + population.getNumberOfIndividuals() + " individuals.");
 		evaluate(population);
 
+		getProgress().setTotal(getMaxGenerations());
+		getProgress().setCheckForStop(false);
+
 		// optimization loop
 		while (userDialogOk && !solutionGoodEnough(population) && !isMaximumReached()) {
 			population.nextGeneration();
@@ -272,7 +274,8 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 			applyOpList(postOps, population);
 
 			userDialogOk = stopDialog == null ? true : stopDialog.isStillRunning();
-			inApplyLoop();
+
+			applyLoopOperations();
 		}
 
 		if (stopDialog != null) {
@@ -312,10 +315,11 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 	}
 
 	/** Applies all PopulationOperators in opList to the population. */
-	void applyOpList(List opList, ExampleSetBasedPopulation population) throws OperatorException {
-		Iterator i = opList.listIterator();
+	void applyOpList(List<ExampleSetBasedPopulationOperator> opList, ExampleSetBasedPopulation population)
+			throws OperatorException {
+		Iterator<ExampleSetBasedPopulationOperator> i = opList.listIterator();
 		while (i.hasNext()) {
-			ExampleSetBasedPopulationOperator op = (ExampleSetBasedPopulationOperator) i.next();
+			ExampleSetBasedPopulationOperator op = i.next();
 			if (op.performOperation(population.getGeneration())) {
 				try {
 					op.operate(population);
@@ -414,5 +418,27 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 				"The optimization will stop if the fitness reaches the defined maximum.", 0.0d, Double.POSITIVE_INFINITY,
 				Double.POSITIVE_INFINITY));
 		return types;
+	}
+
+	/**
+	 * This method should call {@link #inApplyLoop()} and perform operations which should be done
+	 * after each iteration of the inner Process.
+	 *
+	 * @throws ProcessStoppedException
+	 */
+	protected void applyLoopOperations() throws ProcessStoppedException {
+		inApplyLoop();
+	}
+
+	/**
+	 * This method returns the number of the maximum generations. This is used to determine the
+	 * total progress of the operators progress bar. The default value -1 leads to an alternating
+	 * progress bar. This should be overwritten by a subclass, if the number of max generations can
+	 * be determined.
+	 *
+	 * @return Number of maximum generations or -1 (if the max generations cannot be determined)
+	 */
+	protected int getMaxGenerations() {
+		return -1;
 	}
 }

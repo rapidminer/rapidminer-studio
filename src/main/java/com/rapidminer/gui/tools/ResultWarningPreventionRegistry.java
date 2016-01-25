@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -24,20 +24,11 @@ import java.util.HashSet;
 import com.rapidminer.operator.IOPublishToAppOperator;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessRootOperator;
-import com.rapidminer.operator.io.AttributeConstructionsWriter;
-import com.rapidminer.operator.io.AttributeWeightsWriter;
 import com.rapidminer.operator.io.CSVExampleSetWriter;
-import com.rapidminer.operator.io.ClusterModelWriter;
 import com.rapidminer.operator.io.ExcelExampleSetWriter;
-import com.rapidminer.operator.io.GNUPlotOperator;
-import com.rapidminer.operator.io.IOObjectWriter;
-import com.rapidminer.operator.io.ModelWriter;
-import com.rapidminer.operator.io.ParameterSetWriter;
-import com.rapidminer.operator.io.PerformanceWriter;
 import com.rapidminer.operator.io.RepositoryStorer;
 import com.rapidminer.operator.io.ResultWriter;
 import com.rapidminer.operator.io.SpecialFormatExampleSetWriter;
-import com.rapidminer.operator.io.ThresholdWriter;
 import com.rapidminer.operator.nio.file.WriteFileOperator;
 
 
@@ -55,18 +46,9 @@ public final class ResultWarningPreventionRegistry {
 
 	static {
 		// writer operators
-		REGISTERED_OPERATORS.add(IOObjectWriter.class);
 		REGISTERED_OPERATORS.add(ExcelExampleSetWriter.class);
 		REGISTERED_OPERATORS.add(CSVExampleSetWriter.class);
 		REGISTERED_OPERATORS.add(SpecialFormatExampleSetWriter.class);
-		REGISTERED_OPERATORS.add(ModelWriter.class);
-		REGISTERED_OPERATORS.add(ClusterModelWriter.class);
-		REGISTERED_OPERATORS.add(AttributeWeightsWriter.class);
-		REGISTERED_OPERATORS.add(AttributeConstructionsWriter.class);
-		REGISTERED_OPERATORS.add(PerformanceWriter.class);
-		REGISTERED_OPERATORS.add(ParameterSetWriter.class);
-		REGISTERED_OPERATORS.add(ThresholdWriter.class);
-		REGISTERED_OPERATORS.add(GNUPlotOperator.class);
 		REGISTERED_OPERATORS.add(WriteFileOperator.class);
 		REGISTERED_OPERATORS.add(ResultWriter.class);
 

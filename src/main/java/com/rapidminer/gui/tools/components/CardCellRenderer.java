@@ -1,26 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.components;
-
-import com.rapidminer.gui.look.borders.Borders;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -35,15 +31,17 @@ import javax.swing.JLabel;
 import javax.swing.JLayer;
 import javax.swing.JList;
 import javax.swing.SwingConstants;
-import javax.swing.UIManager;
 import javax.swing.plaf.LayerUI;
+
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.tools.ListHoverHelper;
 
 
 /**
  * A cell renderer for lists containing {@link Card}s.
- * 
+ *
  * @author Nils Woehler
- * 
+ *
  */
 public class CardCellRenderer extends DefaultListCellRenderer {
 
@@ -53,6 +51,8 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 
 	private boolean selected = false;
 
+	private boolean highlighted = false;
+
 	private JLayer<JLabel> layer;
 
 	private class CardLayerUI extends LayerUI<JLabel> {
@@ -61,18 +61,31 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 
 		@Override
 		public void paint(Graphics g, JComponent c) {
-			if (selected) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-				g2.setColor(UIManager.getColor("Panel.background"));
-				Rectangle rec = getBounds();
-				g2.fillRoundRect((int) rec.getX() + 3, (int) rec.getY() + 2, rec.width + 8, rec.height - 4, 20, 20);
-				g2.dispose();
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			Rectangle rec = getBounds();
+
+			g2.setColor(Colors.CARD_PANEL_BACKGROUND);
+			g2.fillRect(rec.x, rec.y, rec.width - 1, rec.height);
+
+			int w = (int) rec.getWidth();
+			int h = (int) rec.getHeight();
+			int x = (int) rec.getX();
+			int y = (int) rec.getY();
+			if (highlighted) {
+				g2.setColor(Colors.CARD_PANEL_BACKGROUND_HIGHLIGHT);
+				g2.fillRect(x, y, w, h);
 			}
+			if (selected) {
+				g2.setColor(Colors.CARD_PANEL_BACKGROUND_SELECTED);
+				g2.fillRect(x, y, w, h);
+			}
+
+			g2.dispose();
+
 			super.paint(g, c);
 		}
-
 	}
 
 	/**
@@ -93,10 +106,15 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 
 		if (isSelected) {
 			selected = true;
-			label.setBorder(Borders.getCardPanelListCellRendererFocusBorder());
+			label.setBorder(null);
 		} else {
 			selected = false;
 			label.setBorder(BorderFactory.createEmptyBorder(8, 2, 8, 2));
+		}
+		if (ListHoverHelper.index(list) == index) {
+			highlighted = true;
+		} else {
+			highlighted = false;
 		}
 
 		Card card = (Card) value;
@@ -136,7 +154,7 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 	/**
 	 * @param caption
 	 *            the full length caption
-	 * 
+	 *
 	 * @return a shortened caption that has at most {@link #MAX_CAPTION_LENGTH} characters.
 	 */
 	private Object getShortenedCaption(String caption) {
@@ -186,7 +204,7 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 				captionBuilder.append(captionParts[i]);
 
 				// add spaces for all parts except the last one
-				if (i < (captionParts.length - 1)) {
+				if (i < captionParts.length - 1) {
 					captionBuilder.append(" ");
 				}
 			}

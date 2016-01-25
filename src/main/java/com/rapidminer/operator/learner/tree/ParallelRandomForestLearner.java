@@ -1,33 +1,31 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.tree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-import com.rapidminer.core.internal.Resources;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
@@ -36,15 +34,20 @@ import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.PredictionModel;
+import com.rapidminer.operator.learner.tree.ConfigurableRandomForestModel.VotingStrategy;
 import com.rapidminer.operator.preprocessing.sampling.BootstrappingOperator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
+import com.rapidminer.studio.internal.Resources;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.RandomGenerator;
 
@@ -65,13 +68,22 @@ public class ParallelRandomForestLearner extends ParallelDecisionTreeLearner {
 	/** The parameter name for the number of trees. */
 	public static final String PARAMETER_NUMBER_OF_TREES = "number_of_trees";
 
+	/** Voting strategy used to compare trees. */
+	public static final String PARAMETER_VOTING_STRATEGY = "voting_strategy";
+
+	public static final String[] VOTING_STRATEGIES = { VotingStrategy.CONFIDENCE_VOTE.toString(),
+			VotingStrategy.MAJORITY_VOTE.toString() };
+
+	/** The last version which did not allow to specify the voting strategy. */
+	public static final OperatorVersion ONLY_MAJORITY_VOTING = new OperatorVersion(6, 5, 0);
+
 	public ParallelRandomForestLearner(OperatorDescription description) {
 		super(description);
 	}
 
 	@Override
 	public Class<? extends PredictionModel> getModelClass() {
-		return RandomForestModel.class;
+		return ConfigurableRandomForestModel.class;
 	}
 
 	@Override
@@ -132,8 +144,17 @@ public class ParallelRandomForestLearner extends ParallelDecisionTreeLearner {
 			}
 		}
 
+		// determine voting strategy
+		VotingStrategy strategy = VotingStrategy.MAJORITY_VOTE;
+		if (getCompatibilityLevel().isAbove(ONLY_MAJORITY_VOTING)) {
+			String strategyParameter = getParameterAsString(PARAMETER_VOTING_STRATEGY);
+			if (VotingStrategy.CONFIDENCE_VOTE.toString().equals(strategyParameter)) {
+				strategy = VotingStrategy.CONFIDENCE_VOTE;
+			}
+		}
+
 		// create and return model
-		return new RandomForestModel(exampleSet, baseModels);
+		return new ConfigurableRandomForestModel(exampleSet, baseModels, strategy);
 	}
 
 	/**
@@ -201,8 +222,7 @@ public class ParallelRandomForestLearner extends ParallelDecisionTreeLearner {
 	protected AbstractParallelTreeBuilder getTreeBuilder(ExampleSet exampleSet, Random random) throws OperatorException {
 		return new NonParallelPreprocessingTreeBuilder(this, createCriterion(), getTerminationCriteria(exampleSet),
 				getPruner(), getSplitPreprocessing(random.nextInt(Integer.MAX_VALUE)),
-				getParameterAsBoolean(PARAMETER_PRE_PRUNING),
-				getParameterAsInt(PARAMETER_NUMBER_OF_PREPRUNING_ALTERNATIVES),
+				getParameterAsBoolean(PARAMETER_PRE_PRUNING), getParameterAsInt(PARAMETER_NUMBER_OF_PREPRUNING_ALTERNATIVES),
 				getParameterAsInt(PARAMETER_MINIMAL_SIZE_FOR_SPLIT), getParameterAsInt(PARAMETER_MINIMAL_LEAF_SIZE),
 				getExampleSetPreprocessing(random.nextInt(Integer.MAX_VALUE)));
 	}
@@ -296,14 +316,29 @@ public class ParallelRandomForestLearner extends ParallelDecisionTreeLearner {
 
 		type = new ParameterTypeDouble(PARAMETER_SUBSET_RATIO, "Ratio of randomly chosen attributes to test", 0.0d, 1.0d,
 				0.2d);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_HEURISTIC_SUBSET_RATION, false,
-				false));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_USE_HEURISTIC_SUBSET_RATION, false, false));
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeCategory(PARAMETER_VOTING_STRATEGY, "Voting strategy used to determine prediction.",
+				VOTING_STRATEGIES, 0);
+		type.registerDependencyCondition(new AboveOperatorVersionCondition(this, ONLY_MAJORITY_VOTING));
 		type.setExpert(false);
 		types.add(type);
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 
 		return types;
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] incompatibleVersions = super.getIncompatibleVersionChanges();
+		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
+				incompatibleVersions.length + 1);
+		extendedIncompatibleVersions[incompatibleVersions.length] = ONLY_MAJORITY_VOTING;
+		return extendedIncompatibleVersions;
 	}
 
 }

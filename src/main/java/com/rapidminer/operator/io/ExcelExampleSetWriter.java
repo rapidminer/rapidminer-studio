@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -29,19 +27,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-
-import jxl.Workbook;
-import jxl.WorkbookSettings;
-import jxl.write.DateFormat;
-import jxl.write.DateTime;
-import jxl.write.Label;
-import jxl.write.Number;
-import jxl.write.NumberFormat;
-import jxl.write.WritableCellFormat;
-import jxl.write.WritableFont;
-import jxl.write.WritableSheet;
-import jxl.write.WritableWorkbook;
-import jxl.write.WriteException;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -57,6 +42,8 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
@@ -67,6 +54,19 @@ import com.rapidminer.tools.DateParser;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.io.Encoding;
+
+import jxl.Workbook;
+import jxl.WorkbookSettings;
+import jxl.write.DateFormat;
+import jxl.write.DateTime;
+import jxl.write.Label;
+import jxl.write.Number;
+import jxl.write.NumberFormat;
+import jxl.write.WritableCellFormat;
+import jxl.write.WritableFont;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
 
 
 /**
@@ -106,8 +106,43 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	/**
 	 * Writes the example set into a excel file with XLS format. If you want to write it in XLSX
 	 * format use {@link #writeXLSX(ExampleSet, String, String, String, OutputStream)}
+	 *
+	 * @param exampleSet
+	 *            the exampleSet to write.
+	 * @param encoding
+	 *            the Charset to use for the file.
+	 * @param out
+	 *            the stream to use.
+	 *
+	 * @deprecated please use
+	 *             {@link ExcelExampleSetWriter#write(ExampleSet, Charset, OutputStream, OperatorProgress)}
+	 *             to support operator progress.
 	 */
+	@Deprecated
 	public static void write(ExampleSet exampleSet, Charset encoding, OutputStream out) throws IOException, WriteException {
+		try {
+			write(exampleSet, encoding, out, null);
+		} catch (ProcessStoppedException e) {
+			// can not happen because we do not deliver an OperatorProgressListener
+		}
+	}
+
+	/**
+	 * Writes the example set into a excel file with XLS format. If you want to write it in XLSX
+	 * format use {@link #writeXLSX(ExampleSet, String, String, String, OutputStream)}
+	 *
+	 * @param exampleSet
+	 *            the exampleSet to write.
+	 * @param encoding
+	 *            the Charset to use for the file.
+	 * @param out
+	 *            the stream to use.
+	 * @param opProg
+	 *            will be used to provide a more detailed operator progress. The progress will be
+	 *            increased by the number of examples.
+	 */
+	public static void write(ExampleSet exampleSet, Charset encoding, OutputStream out, OperatorProgress opProg)
+			throws IOException, WriteException, ProcessStoppedException {
 		try {
 			// .xls files can only store up to 256 columns, so throw error in case of more
 			if (exampleSet.getAttributes().allSize() > 256) {
@@ -121,7 +156,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 			WritableWorkbook workbook = Workbook.createWorkbook(out, ws);
 			WritableSheet s = workbook.createSheet(RAPID_MINER_DATA, 0);
-			writeDataSheet(s, exampleSet);
+			writeDataSheet(s, exampleSet, opProg);
 			workbook.write();
 			workbook.close();
 		} finally {
@@ -133,7 +168,22 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 		}
 	}
 
-	private static void writeDataSheet(WritableSheet s, ExampleSet exampleSet) throws WriteException {
+	/**
+	 * Writes the provided {@link ExampleSet} to the {@link WritableSheet}.
+	 *
+	 * @param s
+	 *            the DataSheet to be filled
+	 * @param exampleSet
+	 *            the data to write
+	 * @param opProg
+	 *            an {@link OperatorProgress} of the executing operator to track the
+	 *            progress.
+	 * @throws WriteException
+	 * @throws ProcessStoppedException
+	 *             will be thrown if the process of the executing operator has stopped.
+	 */
+	private static void writeDataSheet(WritableSheet s, ExampleSet exampleSet, OperatorProgress opProg)
+			throws WriteException, ProcessStoppedException {
 
 		// Format the Font
 		WritableFont wf = new WritableFont(WritableFont.ARIAL, 10, WritableFont.BOLD);
@@ -155,6 +205,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 		WritableCellFormat dfCell = new WritableCellFormat(df);
 		int rowCounter = 1;
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			a = exampleSet.getAttributes().allAttributes();
 			int columnCounter = 0;
@@ -162,24 +213,33 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 				Attribute attribute = a.next();
 				if (!Double.isNaN(example.getValue(attribute))) {
 					if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NOMINAL)) {
-						s.addCell(new Label(columnCounter, rowCounter, replaceForbiddenChars(example
-								.getValueAsString(attribute)), cf2));
+						s.addCell(new Label(columnCounter, rowCounter,
+								replaceForbiddenChars(example.getValueAsString(attribute)), cf2));
 					} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
-						DateTime dateTime = new DateTime(columnCounter, rowCounter, new Date(
-								(long) example.getValue(attribute)), dfCell);
+						DateTime dateTime = new DateTime(columnCounter, rowCounter,
+								new Date((long) example.getValue(attribute)), dfCell);
 						s.addCell(dateTime);
 					} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NUMERICAL)) {
 						Number number = new Number(columnCounter, rowCounter, example.getValue(attribute), nfCell);
 						s.addCell(number);
 					} else {
 						// default: write as a String
-						s.addCell(new Label(columnCounter, rowCounter, replaceForbiddenChars(example
-								.getValueAsString(attribute)), cf2));
+						s.addCell(new Label(columnCounter, rowCounter,
+								replaceForbiddenChars(example.getValueAsString(attribute)), cf2));
 					}
 				}
 				columnCounter++;
 			}
 			rowCounter++;
+
+			// trigger operator progress every 100 examples
+			if (opProg != null) {
+				++progressCounter;
+				if (progressCounter % 100 == 0) {
+					opProg.step(100);
+					progressCounter = 0;
+				}
+			}
 		}
 	}
 
@@ -237,6 +297,9 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	protected void writeStream(ExampleSet exampleSet, OutputStream outputStream) throws OperatorException {
 		File file = getParameterAsFile(PARAMETER_EXCEL_FILE, true);
 
+		// init operator progress
+		getProgress().setTotal(exampleSet.size());
+
 		if (getParameterAsString(PARAMETER_FILE_FORMAT).equals(FILE_FORMAT_XLSX)) {
 
 			String dateFormat = isParameterSet(PARAMETER_DATE_FORMAT) ? getParameterAsString(PARAMETER_DATE_FORMAT) : null;
@@ -249,8 +312,8 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			}
 
 			try {
-				writeXLSX(exampleSet, sheetName, dateFormat, numberFormat, outputStream);
-			} catch (Exception e) {
+				writeXLSX(exampleSet, sheetName, dateFormat, numberFormat, outputStream, getProgress());
+			} catch (WriteException | IOException e) {
 				throw new UserError(this, 303, file.getName(), e.getMessage());
 			}
 
@@ -261,20 +324,65 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			ws.setLocale(Locale.US);
 
 			try {
-				write(exampleSet, encoding, outputStream);
-			} catch (Exception e) {
+				write(exampleSet, encoding, outputStream, getProgress());
+			} catch (WriteException | IOException e) {
 				throw new UserError(this, 303, file.getName(), e.getMessage());
 			}
 		}
+		getProgress().complete();
 
 	}
 
 	/**
 	 * Writes the example set into a excel file with XLSX format. If you want to write it in XLS
 	 * format use {@link #write(ExampleSet, Charset, OutputStream)}.
+	 *
+	 * @param exampleSet
+	 *            the exampleSet to write
+	 * @param sheetName
+	 *            name of the excel sheet which will be created.
+	 * @param dateFormat
+	 *            a string which describes the format used for dates.
+	 * @param numberFormat
+	 *            a string which describes the format used for numbers.
+	 * @param outputStream
+	 *            the stream to write the file to
+	 *
+	 * @deprecated please use
+	 *             {@link ExcelExampleSetWriter#writeXLSX(ExampleSet, String, String, String, OutputStream, OperatorProgress)}
+	 *             to support operator progress.
 	 */
+	@Deprecated
 	public static void writeXLSX(ExampleSet exampleSet, String sheetName, String dateFormat, String numberFormat,
 			OutputStream outputStream) throws WriteException, IOException {
+		try {
+			writeXLSX(exampleSet, sheetName, dateFormat, numberFormat, outputStream, null);
+		} catch (ProcessStoppedException e) {
+			// can not happen because we provide no OperatorProgressListener
+		}
+	}
+
+	/**
+	 * Writes the example set into a excel file with XLSX format. If you want to write it in XLS
+	 * format use {@link #write(ExampleSet, Charset, OutputStream)}.
+	 *
+	 * @param exampleSet
+	 *            the exampleSet to write
+	 * @param sheetName
+	 *            name of the excel sheet which will be created.
+	 * @param dateFormat
+	 *            a string which describes the format used for dates.
+	 * @param numberFormat
+	 *            a string which describes the format used for numbers.
+	 * @param outputStream
+	 *            the stream to write the file to
+	 * @param opProg
+	 *            increases the progress by the number of examples to provide a more detailed
+	 *            progress.
+	 */
+	public static void writeXLSX(ExampleSet exampleSet, String sheetName, String dateFormat, String numberFormat,
+			OutputStream outputStream, OperatorProgress opProg) throws WriteException, IOException,
+			ProcessStoppedException {
 		// .xlsx files can only store up to 16384 columns, so throw error in case of more
 		if (exampleSet.getAttributes().allSize() > 16384) {
 			throw new IllegalArgumentException(I18N.getMessage(I18N.getErrorBundle(),
@@ -289,7 +397,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 			numberFormat = numberFormat == null ? "#.0" : numberFormat;
 
-			writeXLSXDataSheet(workbook, sheet, dateFormat, numberFormat, exampleSet);
+			writeXLSXDataSheet(workbook, sheet, dateFormat, numberFormat, exampleSet, opProg);
 			workbook.write(outputStream);
 		} finally {
 			outputStream.flush();
@@ -297,8 +405,28 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 		}
 	}
 
+	/**
+	 * Writes the provided {@link ExampleSet} to a XLSX formatted data sheet.
+	 *
+	 * @param wb
+	 *            the workbook to use
+	 * @param sheet
+	 *            the excel sheet to write to.
+	 * @param dateFormat
+	 *            a string which describes the format used for dates.
+	 * @param numberFormat
+	 *            a string which describes the format used for numbers.
+	 * @param exampleSet
+	 *            the exampleSet to write
+	 * @param opProg
+	 *            increases the progress by the number of examples.
+	 * @throws ProcessStoppedException
+	 *             if the process was stopped by the user.
+	 * @throws WriteException
+	 */
 	private static void writeXLSXDataSheet(org.apache.poi.ss.usermodel.Workbook wb, Sheet sheet, String dateFormat,
-			String numberFormat, ExampleSet exampleSet) throws WriteException {
+			String numberFormat, ExampleSet exampleSet, OperatorProgress opProg) throws WriteException,
+			ProcessStoppedException {
 
 		Font headerFont = wb.createFont();
 		headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -341,6 +469,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 		nominalStyle.setFont(bodyFont);
 
 		// fill body
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 
 			// create new row
@@ -369,6 +498,15 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 				columnCounter++;
 			}
 			rowCounter++;
+
+			// trigger operator progress every 100 examples
+			if (opProg != null) {
+				++progressCounter;
+				if (progressCounter % 100 == 0) {
+					opProg.step(100);
+					progressCounter = 0;
+				}
+			}
 		}
 	}
 }

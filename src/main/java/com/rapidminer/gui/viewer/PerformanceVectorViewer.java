@@ -1,35 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.gui.processeditor.results.ResultDisplayTools;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.operator.IOContainer;
-import com.rapidminer.operator.performance.PerformanceCriterion;
-import com.rapidminer.operator.performance.PerformanceVector;
-
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.LinkedList;
@@ -42,15 +32,21 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.UIManager;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.processeditor.results.ResultDisplayTools;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.operator.IOContainer;
+import com.rapidminer.operator.performance.PerformanceCriterion;
+import com.rapidminer.operator.performance.PerformanceVector;
 
 
 /**
  * Can be used to display the criteria of a {@link PerformanceVector}.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class PerformanceVectorViewer extends JPanel {
@@ -77,7 +73,7 @@ public class PerformanceVectorViewer extends JPanel {
 			JLabel listCellRendererComponent = (JLabel) super.getListCellRendererComponent(list,
 					value.toString().replace('_', ' '), index, isSelected, cellHasFocus);
 			if (!isSelected) {
-				listCellRendererComponent.setBackground(UIManager.getColor("Panel.background"));
+				listCellRendererComponent.setBackground(Colors.PANEL_BACKGROUND);
 			}
 			return spacerPanel;
 		}
@@ -95,10 +91,11 @@ public class PerformanceVectorViewer extends JPanel {
 		for (int i = 0; i < performanceVector.getSize(); i++) {
 			PerformanceCriterion criterion = performanceVector.getCriterion(i);
 			criteriaNameList.add(criterion.getName());
-			Component component = ResultDisplayTools.createVisualizationComponent(criterion, container,
+			JPanel component = ResultDisplayTools.createVisualizationComponent(criterion, container,
 					"Performance Criterion", false);
 			JScrollPane criterionPane = new ExtendedJScrollPane(component);
 			criterionPane.setBorder(null);
+			criterionPane.setBackground(Colors.WHITE);
 			mainPanel.add(criterionPane, criterion.getName());
 		}
 		if (criteriaNameList.isEmpty()) {
@@ -124,8 +121,7 @@ public class PerformanceVectorViewer extends JPanel {
 		criteriaList.setCellRenderer(new CriterionListCellRenderer());
 		criteriaList.setOpaque(false);
 
-		criteriaList.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black, 1, true),
-				"Criterion", TitledBorder.CENTER, TitledBorder.TOP));
+		criteriaList.setBorder(BorderFactory.createTitledBorder("Criterion"));
 		criteriaList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		criteriaList.addListSelectionListener(new ListSelectionListener() {

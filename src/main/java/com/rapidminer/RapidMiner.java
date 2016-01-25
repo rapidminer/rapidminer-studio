@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -168,7 +168,9 @@ public class RapidMiner {
 	/** The name of the property indicating the version of RapidMiner (read only). */
 	public static final String PROPERTY_RAPIDMINER_VERSION = "rapidminer.version";
 
-	/** Enables special features for developers: Validate process action, operator doc editor, etc. */
+	/**
+	 * Enables special features for developers: Validate process action, operator doc editor, etc.
+	 */
 	public static final String PROPERTY_DEVELOPER_MODE = "rapidminer.developermode";
 
 	/**
@@ -218,7 +220,9 @@ public class RapidMiner {
 	/** The property name for &quot;The number of fraction digits of formatted numbers.&quot; */
 	public static final String PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS = "rapidminer.general.fractiondigits.numbers";
 
-	/** The property name for &quot;The number of fraction digits of formatted percent values.&quot; */
+	/**
+	 * The property name for &quot;The number of fraction digits of formatted percent values.&quot;
+	 */
 	public static final String PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_PERCENT = "rapidminer.general.fractiondigits.percent";
 
 	/**
@@ -316,7 +320,9 @@ public class RapidMiner {
 
 	// --- INIT PROPERTIES ---
 
-	/** this property can be used to limit the maximum amount of memory RM Studio will use (in MB) */
+	/**
+	 * this property can be used to limit the maximum amount of memory RM Studio will use (in MB)
+	 */
 	public static final String PROPERTY_RAPIDMINER_MAX_MEMORY = "maxMemory";
 
 	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_SET = "http.proxySet";
@@ -347,7 +353,7 @@ public class RapidMiner {
 	/**
 	 * This map of {@link IOObject}s is used to remember {@link IOObject}s during the runtime of
 	 * RapidMiner Studio (default state to remember {@link IOObject}s of {@link Process}es)
-	 * */
+	 */
 	private static IOObjectMap ioObjectCache;
 
 	static {
@@ -431,9 +437,9 @@ public class RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_HTTP_PROXY_SET, "", false), "system");
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_HOST, "", true), "system");
 		RapidMiner
-				.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTP_PROXY_PORT, "", 0, 65535, true), "system");
+		.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTP_PROXY_PORT, "", 0, 65535, true), "system");
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_USERNAME, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_PASSWORD, "", true), "system");
+		RapidMiner.registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_HTTP_PROXY_PASSWORD, ""), "system");
 
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_NON_PROXY_HOSTS, "", true),
 				"system");
@@ -443,14 +449,14 @@ public class RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTPS_PROXY_PORT, "", 0, 65535, true),
 				"system");
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTPS_PROXY_USERNAME, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTPS_PROXY_PASSWORD, "", true), "system");
+		RapidMiner.registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_HTTPS_PROXY_PASSWORD, ""), "system");
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_FTP_PROXY_SET, "", false), "system");
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_HOST, "", true), "system");
 		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_FTP_PROXY_PORT, "", 0, 65535, true), "system");
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_NON_PROXY_HOSTS, "", true),
 				"system");
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_USERNAME, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_PASSWORD, "", true), "system");
+		RapidMiner.registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_FTP_PROXY_PASSWORD, ""), "system");
 
 		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST, "", true), "system");
 		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT, "", 0, 65535, true),
@@ -503,12 +509,12 @@ public class RapidMiner {
 	 */
 	@Deprecated
 	public static Process readExperimentFile(final File experimentfile) throws XMLException, IOException,
-			InstantiationException, IllegalAccessException {
+	InstantiationException, IllegalAccessException {
 		return readProcessFile(experimentfile);
 	}
 
 	public static Process readProcessFile(final File processFile) throws XMLException, IOException, InstantiationException,
-			IllegalAccessException {
+	IllegalAccessException {
 		return readProcessFile(processFile, null);
 	}
 
@@ -588,7 +594,6 @@ public class RapidMiner {
 
 		// show product name, version, edition and registered to
 		License activeLicense = ProductConstraintManager.INSTANCE.getActiveLicense();
-		RapidMiner.showSplashInfos();
 		RapidMiner.splashLicense(activeLicense);
 
 		// install action statistics license event listener
@@ -678,12 +683,6 @@ public class RapidMiner {
 			Plugin.initPluginTests();
 			RapidAssert.ASSERTER_REGISTRY.registerAllAsserters(new AsserterFactoryRapidMiner());
 			assertersInitialized = true;
-		}
-	}
-
-	private static void showSplashInfos() {
-		if (getSplashScreen() != null) {
-			getSplashScreen().setInfosVisible(true);
 		}
 	}
 
@@ -964,7 +963,7 @@ public class RapidMiner {
 	/**
 	 * Use {@link ParameterService#getDefinedParameterTypes()} instead. Returns a set of
 	 * {@link ParameterType}s for the RapidMiner system properties.
-	 * */
+	 */
 	@Deprecated
 	public static Set<ParameterType> getRapidMinerProperties() {
 		return ParameterService.getDefinedParameterTypes();

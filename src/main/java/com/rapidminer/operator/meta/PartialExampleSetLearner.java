@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -45,8 +45,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-
 
 /**
  * This operator works similar to the {@link LearningCurveOperator}. In contrast to this, it just
@@ -55,7 +53,7 @@ import java.util.List;
  * {@link GridSearchParameterOptimizationOperator} which sets the fraction parameter to values
  * between 0 and 1. The advantage is, that this operator can then be used inside of a
  * {@link XValidation}, which delivers more stable result estimations.
- * 
+ *
  * @author Martin Mauch, Ingo Mierswa
  */
 public class PartialExampleSetLearner extends OperatorChain {
@@ -96,12 +94,14 @@ public class PartialExampleSetLearner extends OperatorChain {
 
 	@Override
 	public void doWork() throws OperatorException {
+		getProgress().setIndeterminate(true);
+
 		ExampleSet originalExampleSet = exampleSetInput.getData(ExampleSet.class);
 
 		double fraction = getParameterAsDouble(PARAMETER_FRACTION);
 		if (fraction < 0 || fraction > 1.0) {
 			throw new UserError(this, 207, new Object[] { fraction, "fraction",
-					"Cannot use fractions of less than 0.0 or more than 1.0" });
+			"Cannot use fractions of less than 0.0 or more than 1.0" });
 		}
 		SplittedExampleSet splitted = new SplittedExampleSet(originalExampleSet, fraction,
 				getParameterAsInt(PARAMETER_SAMPLING_TYPE),

@@ -5,84 +5,12 @@
       <name>Core</name>
    </group>
    <group>
-      <key>modeling.associations</key>
-      <name>Association and Item Set Mining</name>
+      <key>blending.attributes.names_and_roles</key>
+      <name>Names &amp; Roles</name>
    </group>
-   <group>
-      <key>modeling.classification_and_regression</key>
-      <name>Classification and Regression</name>
-   </group>
-   <group>
-      <key>data_transformation.value_modification.nominal</key>
-      <name>Nominal Value Modification</name>
-   </group>
-   <group>
-      <key>data_transformation.value_modification.numerical</key>
-      <name>Numerical Value Modification</name>
-   </group>
-   <group>
-      <key>data_transformation.value_modification.date</key>
-      <name>Date Value Modification</name>
-   </group>
-   <group>
-      <key>data_transformation.attribute_space_transformation</key>
-      <name>Attribute Set Reduction and Transformation</name>
-   </group>
-   <group>
-      <key>data_transformation.name_and_role_modification</key>
-      <name>Name and Role Modification</name>
-   </group>
-   <group>
-      <key>modeling.classification_and_regression.svm</key>
-      <name>Support Vector Modeling</name>
-   </group>
-   <group>
-      <key>modeling.classification_and_regression.meta</key>
-      <name>Meta Modeling</name>
-   </group>
-   <group>
-      <key>modeling.clustering</key>
-      <name>Clustering and Segmentation</name>
-   </group>
-   <group>
-      <key>modeling.weighting</key>
-      <name>Attribute Weighting</name>
-   </group>
-   <group>
-      <key>modeling.similarities</key>
-      <name>Similarity Computation</name>
-   </group>
-   <group>
-      <key>modeling.dependencies</key>
-      <name>Correlation and Dependency Computation</name>
-   </group>
-   <group>
-      <key>modeling.application</key>
-      <name>Model Application</name>
-   </group>
-   <group>
-      <key>evaluation.performance</key>
-      <name>Performance Measurement</name>
-   </group>
-   <group>
-      <key>evaluation.performance.classification_and_regression</key>
-      <name>Classification and Regression</name>
-   </group>
-   <group>
-      <key>evaluation.visual</key>
-      <name>Visual Evaluation</name>
-   </group>
-   <group>
-      <key>utility.macro</key>
-      <name>Macro Definition and Usage</name>
-   </group>
-   <group>
-   	  <key>utility.annotations</key>
-   	  <name>Annotations</name>
-   </group>
-   <group>
-      <key>utility.misc</key>
-      <name>Miscellaneous</name>
+   	<group>
+      <key>data_access.nosql</key>
+      <name>NoSQL</name>
    </group>
    <operator>
       <key>write_special</key>
@@ -131,14 +59,6 @@
       <help/>
       <key>sort_by_pareto_rank</key>
    </operator>
-   <operator>
-      <name>Read Clustering</name>
-      <synopsis>Reads a single cluster model from a file.</synopsis>
-      <help>Reads a single cluster model from a file.</help>
-      <key>read_clustering</key>
-   </operator>
-   
-   
    <operator>
       <name>BasicRuleLearner</name>
       <synopsis>Learns a set of rules minimizing the training error without pruning.</synopsis>
@@ -865,36 +785,6 @@
             mapping contains other values than the specified ones, the mapping is
             not corrected and the attribute is simply skipped.</help>
     <key>remap_binominals</key>
-  </operator>
-    <operator>
-        <name>Write Model</name>
-        <synopsis>Writes a model to a given file.</synopsis>
-        <help>&lt;p&gt;Writes the input model in the file specified by the
-            corresponding parameter. Since models are often written into files
-            and loaded and applied in other processes or applications, this
-            operator offers three different writing modes for models:&lt;/p&gt;
-            &lt;ul&gt; &lt;li&gt;&lt;em&gt;XML&lt;/em&gt;: in this mode, the
-            models are written as plain text XML files. The file size is usually
-            the biggest in this mode (might be several hundred mega bytes so you
-            should be cautious) but this model type has the advantage that the
-            user can inspect and change the files.&lt;/li&gt;
-            &lt;li&gt;&lt;em&gt;XML Zipped (default)&lt;/em&gt;: In this mode,
-            the models are written as zipped XML files. Users can simply unzip
-            the files and read or change the contents. The file sizes are
-            smallest for most models. For these reasons, this mode is the default
-            writing mode for models although the loading times are the longest
-            due to the XML parsing and unzipping.&lt;/li&gt;
-            &lt;li&gt;&lt;em&gt;Binary&lt;/em&gt;: In this mode, the models are
-            written in an proprietary binary format. The resulting model files
-            cannot be inspected by the user and the file sizes are usually
-            slightly bigger then for the zipped XML files. The loading time,
-            however, is smallers than the time needed for the other
-            modes.&lt;/li&gt; &lt;/ul&gt; &lt;p&gt;This operator is also able to
-            keep old files if the overwriting flag is set to false. However, this
-            could also be achieved by using some of the parameter macros provided
-            by RapidMiner like %{t} or %{a} (please refer to the tutorial section
-            about macros).&lt;/p&gt;</help>
-    <key>write_model</key>
   </operator>
     <operator>
         <name>Generate Extract</name>
@@ -2316,16 +2206,6 @@
     <key>anova</key>
   </operator>
     <operator>
-        <name>Write Threshold</name>
-        <synopsis>Writes a threshold to a file (used for transforming soft
-            into crisp predictions).</synopsis>
-        <help>Writes the given threshold into a file. The first line holds the
-            threshold, the second the value of the first class, and the second
-            the value of the second class. This file can be read in another
-            process using the &lt;i&gt;ThresholdLoader&lt;/i&gt;.</help>
-    <key>write_threshold</key>
-  </operator>
-    <operator>
         <name>Cluster Distance Performance</name>
         <synopsis>Delivers a performance based on cluster centroids.
         </synopsis>
@@ -2412,13 +2292,6 @@
             set during loading but the operator ChangeAttributeRole has to be
             used after loading in order to change the roles. &lt;/p&gt;</help>
     <key>read_url</key>
-  </operator>
-    <operator>
-        <name>Read</name>
-        <synopsis>Generic reader for all types of IOObjects.</synopsis>
-        <help>Generic reader for all types of IOObjects. Reads an IOObject
-            from a file.</help>
-    <key>read</key>
   </operator>
     <operator>
         <name>Add</name>
@@ -2851,15 +2724,7 @@
             the n-th object of the type.</help>
     <key>ioconsumer</key>
   </operator>
-    <operator>
-        <name>Read Performance</name>
-        <synopsis>This operator can be used to load a performance vector from
-            a file.</synopsis>
-        <help>Reads a performance vector from a given file. This performance
-            vector must have been written before with a
-            &lt;i&gt;PerformanceWriter&lt;/i&gt;.</help>
-    <key>read_performance</key>
-  </operator>
+    
     <operator>
         <name>Read AML</name>
         <synopsis>&lt;p&gt;This operator reads an example set from file. The operator can be     configured to read almost all line based file formats.&lt;/p&gt;</synopsis>
@@ -3097,14 +2962,6 @@
         <synopsis>Renames a file.</synopsis>
         <help>This operator entitles the selected file with the entered name.</help>
     <key>rename_file</key>
-  </operator>
-    <operator>
-        <name>Write Gnuplot</name>
-        <synopsis>Creates gnuplot files from the data generated by a process
-            log operator.</synopsis>
-        <help>Writes the data generated by a ProcessLogOperator to a file in
-            gnuplot format.</help>
-    <key>write_gnuplot</key>
   </operator>
     <operator>
         <name>Quadratic Discriminant Analysis</name>
@@ -3359,13 +3216,7 @@
     <key>optimize_by_generation_gga</key>
     <shortName>Generate</shortName>
   </operator>
-    <operator>
-        <name>Write</name>
-        <synopsis>Generic writer for all types of IOObjects.</synopsis>
-        <help>Generic writer for all types of IOObjects. Writes one of the
-            input objects into a given file.</help>
-    <key>write</key>
-  </operator>
+    
 
     <operator>
         <name>Attributes2RealValues</name>
@@ -3759,16 +3610,6 @@
     <key>generate_team_profit_data</key>
   </operator>
     <operator>
-        <name>Write Performance</name>
-        <synopsis>This operator can be used to write the input performance
-            into a file.</synopsis>
-        <help>Writes the input performance vector in a given file. You also
-            might want to use the &lt;i&gt;ResultWriter&lt;/i&gt; operator which
-            writes all current results in the main result file.</help>
-    <key>write_performance</key>
-  </operator>
-
-    <operator>
         <name>Decision Stump</name>
         <synopsis>Learns only a root node of a decision tree. Can be very
             efficient when boosted.</synopsis>
@@ -4068,18 +3909,6 @@
         </synopsis>
         <help>Adds a value to a nominal attribute definition.</help>
     </operator>
-    <operator>
-        <name>Read Weights</name>
-        <synopsis>Reads the weights of all attributes of an example set from a
-            file. Each line must hold the name and the weight of one attribute.
-        </synopsis>
-        <help>Reads the weights for all attributes of an example set from a
-            file and creates a new &lt;i&gt;AttributeWeights&lt;/i&gt; IOObject.
-            This object can be used for scaling the values of an example set with
-            help of the &lt;i&gt;AttributeWeightsApplier&lt;/i&gt; operator.
-        </help>
-    <key>read_weights</key>
-  </operator>
     <operator>
         <name>Logistic Regression (Evolutionary)</name>
         <synopsis>A kernel logistic regression learner for binary
@@ -4659,19 +4488,6 @@
     <key>de_pivot</key>
   </operator>
     <operator>
-        <name>Write Weights</name>
-        <synopsis>Writes the weights of all attributes of an example set to a
-            file. Each line holds the name and the weight of one attribute.
-        </synopsis>
-        <help>Writes the weights of all attributes of an example set to a
-            file. Therefore a &lt;i&gt;AttributeWeights&lt;/i&gt; object is
-            needed in the input of this operator. Each line holds the name of one
-            attribute and its weight. This file can be read in another process
-            using the &lt;i&gt;AttributeWeightsLoader&lt;/i&gt; and the
-            &lt;i&gt;AttributeWeightsApplier&lt;/i&gt;.</help>
-    <key>write_weights</key>
-  </operator>
-    <operator>
         <name>Performance (Attribute Count)</name>
         <synopsis>This operator created a performance vector containing the
             number of features of the input example set.</synopsis>
@@ -4963,13 +4779,6 @@
             estimations.</help>
     <key>loop_data_fractions</key>
   </operator>
-
-    <operator>
-        <name>Write Clustering</name>
-        <synopsis>Writes a cluster model to a file.</synopsis>
-        <help>Write a single cluster model to a file.</help>
-    <key>write_clustering</key>
-  </operator>
     <operator>
         <name>Optimize Parameters (Evolutionary)</name>
         <synopsis>This operator finds the optimal values for parameters using
@@ -5232,16 +5041,6 @@
             attributes will be changed to regular for the inner operators and
             role changes can afterwards not be delivered.&lt;/p&gt;</help>
     <key>work_on_subset</key>
-  </operator>
-    <operator>
-        <name>Write Parameters</name>
-        <synopsis>Writes a parameter set into a file.</synopsis>
-        <help>Writes a parameter set into a file. This can be created by one
-            of the parameter optimization operators, e.g.
-            &lt;i&gt;GridSearchParameterOptimizationOperator&lt;/i&gt;. It can
-            then be applied to the operators of the process using a
-            &lt;i&gt;ParameterSetter&lt;/i&gt;.</help>
-    <key>write_parameters</key>
   </operator>
     <operator>
         <name>Weights to Data</name>
@@ -5534,16 +5333,6 @@
     <shortName>Generate</shortName>
   </operator>
     <operator>
-        <name>Read Threshold</name>
-        <synopsis>Loads a threshold from a file (used for transforming soft
-            into crisp predictions).</synopsis>
-        <help>Reads a threshold from a file. The first line must hold the
-            threshold, the second the value of the first class, and the second
-            the value of the second class. This file can be written in another
-            process using the &lt;i&gt;ThresholdWriter&lt;/i&gt;.</help>
-    <key>read_threshold</key>
-  </operator>
-    <operator>
         <name>Remove Useless Attributes</name>
         <synopsis>Remove all useless attributes from an example set.
         </synopsis>
@@ -5643,17 +5432,7 @@
         </help>
     <key>split_file_by_point</key>
   </operator>
-    <operator>
-        <name>Write Constructions</name>
-        <synopsis>Writes all attributes of an example set to a file. Each line
-            holds the construction description of one attribute.</synopsis>
-        <help>Writes all attributes of an example set to a file. Each line
-            holds the construction description of one attribute. This file can be
-            read in another process using the
-            &lt;i&gt;FeatureGenerationOperator&lt;/i&gt; or
-            &lt;i&gt;AttributeConstructionsLoader&lt;/i&gt;.</help>
-    <key>write_constructions</key>
-  </operator>
+    
     <operator>
         <name>Agglomerative Clustering</name>
         <synopsis>Agglomerative buttom-up clustering</synopsis>
@@ -5755,16 +5534,6 @@
       </help>
     <key>generate_attributes</key>
   </operator>
-    <operator>
-        <name>Read Parameters</name>
-        <synopsis>Reads a parameter set from a file.</synopsis>
-        <help>Reads a set of parameters from a file that was written by a
-            &lt;i&gt;ParameterOptimizationOperator&lt;/i&gt;. It can then be
-            applied to the operators of the process using a
-            &lt;i&gt;ParameterSetter&lt;/i&gt;.</help>
-    <key>read_parameters</key>
-  </operator>
-    
     <operator>
         <name>IOMultiplier</name>
         <synopsis>This operators simply multiplies selected input objects.
@@ -6285,18 +6054,6 @@
         <help>This operator allows to create a TextObject filled with the text
             of the parameter text.</help>
     <key>create_document</key>
-  </operator>
-    
-    <operator>
-        <name>Read Model</name>
-        <synopsis>Reads a model from a given file.</synopsis>
-        <help>Reads a &lt;i&gt;Model&lt;/i&gt; from a file that was generated
-            by an operator like &lt;i&gt;Learner&lt;/i&gt; in a previous process.
-            Once a model is generated, it can be applied several times to newly
-            acquired data using a model loader, an
-            &lt;i&gt;ExampleSource&lt;/i&gt;, and a
-            &lt;i&gt;ModelApplier&lt;/i&gt;.</help>
-    <key>read_model</key>
   </operator>
     <operator>
         <name>Create Lift Chart</name>
@@ -7133,17 +6890,6 @@
             but the mean value (or mode) of the non-missing values instead.
         </help>
     <key>missingvaluereplenishmentview</key>
-  </operator>
-    <operator>
-        <name>Read Constructions</name>
-        <synopsis>Loads all attributes of an example set from a file. Each
-            line holds the construction description of one attribute.</synopsis>
-        <help>Loads an attribute set from a file and constructs the desired
-            features. If keep_all is false, original attributes are deleted
-            before the new ones are created. This also means that a feature
-            selection is performed if only a subset of the original features was
-            given in the file.</help>
-    <key>read_constructions</key>
   </operator>
     <operator>
         <name>Filter Stopwords (Czech)</name>

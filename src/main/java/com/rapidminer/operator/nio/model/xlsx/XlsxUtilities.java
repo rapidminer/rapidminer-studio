@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model.xlsx;
 
@@ -27,6 +25,8 @@ import javax.xml.stream.XMLStreamReader;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 
+import com.rapidminer.operator.nio.ImportWizardUtils;
+
 
 /**
  * A class that contains utility methods for parsing XLSX files.
@@ -35,6 +35,12 @@ import org.xml.sax.helpers.AttributesImpl;
  * @since 6.3.0
  */
 public final class XlsxUtilities {
+
+	/**
+	 * The minimum limit for number of row shown in the new data access sheet selection panel
+	 * preview table.
+	 */
+	private static final int SHEET_SELECTION_ROW_NUMBER_LIMIT = 5_000;
 
 	/** @see ECMA-376, 4th Edition, 18.3.1.4 Cell (p. 1599), 18.18.7 Cell Reference (p. 2432) */
 	public static final String TAG_CELL_REFERENCE = "r";
@@ -112,23 +118,50 @@ public final class XlsxUtilities {
 	 * end example]
 	 *
 	 * @see ECMA-376, 4th Edition, 18.3.1.4 Cell (pp. 1588 ff.)
-	 * */
+	 */
 	public static final String TAG_CELL = "c";
 
 	/** Default prefix of paths defined inside XLSX */
-	public final static String XLSX_PATH_PREFIX = "xl/";
+	public static final String XLSX_PATH_PREFIX = "xl/";
 
 	/**
 	 * Container class that contains Excel cell coordinates.
 	 */
-	static final class XlsxCellCoordinates {
+	public static final class XlsxCellCoordinates {
+
+		/**
+		 * Value used to specify that the coordinates reference a column only.
+		 */
+		public static final int NO_ROW_NUMBER = -1;
 
 		/** {@code 0} based column number */
-		int columnNumber;
+		public int columnNumber;
 
-		/** {@code 0} based row number */
-		int rowNumber;
+		/**
+		 * {@code 0} based row number or {@value #NO_ROW_NUMBER} in case only a column is specified.
+		 */
+		public int rowNumber;
 
+		/**
+		 * Creates an {@link XlsxCellCoordinates} instance with only the column number defined. The
+		 * row number is set to {@value #NO_ROW_NUMBER}.
+		 *
+		 * @param columnNumber
+		 *            the column number
+		 */
+		public XlsxCellCoordinates(int columnNumber) {
+			this(columnNumber, NO_ROW_NUMBER);
+		}
+
+		/**
+		 * Constructs a new {@link XlsxCellCoordinates} instance with both the column and the row
+		 * number defined.
+		 *
+		 * @param columnNumber
+		 *            the column number
+		 * @param rowNumber
+		 *            the row number
+		 */
 		public XlsxCellCoordinates(int columnNumber, int rowNumber) {
 			this.columnNumber = columnNumber;
 			this.rowNumber = rowNumber;
@@ -236,7 +269,7 @@ public final class XlsxUtilities {
 	 *            the column name
 	 * @return {@code 0} based index of the column
 	 */
-	static int convertToColumnIndex(String columnName) {
+	public static int convertToColumnIndex(String columnName) {
 		// ensure provided String is upper case
 		columnName = columnName.toUpperCase(Locale.ENGLISH);
 		int index = 0;
@@ -254,7 +287,7 @@ public final class XlsxUtilities {
 	 *            the {@code 0} based column index
 	 * @return the column name
 	 */
-	static String convertToColumnName(int index) {
+	public static String convertToColumnName(int index) {
 		if (index < 0) {
 			throw new IllegalArgumentException("Indices below 0 are not allowed");
 		}
@@ -277,21 +310,24 @@ public final class XlsxUtilities {
 	 *            the cell reference string that starts with letters and ends with digits (e.g.
 	 *            'AA123')
 	 * @return the pair with column number as first (starts with {@code 0}) and row number as second
-	 *         content (starts with {@code 0})
+	 *         content (starts with {@code 0}, is {@link XlsxCellCoordinates#NO_ROW_NUMBER} in case
+	 *         no row number is defined)
 	 */
-	static XlsxCellCoordinates convertCellRefToCoordinates(String cellReference) {
+	public static XlsxCellCoordinates convertCellRefToCoordinates(String cellReference) {
 		for (int i = 0; i < cellReference.length(); i++) {
 			if (Character.isDigit(cellReference.charAt(i))) {
 				if (i == 0) {
-					throw new IllegalArgumentException("The provided cell reference does not contain any letters ("
-							+ cellReference + ")");
+					throw new IllegalArgumentException(
+							"The provided cell reference does not contain any letters (" + cellReference + ")");
 				}
 				int columnNumber = XlsxUtilities.convertToColumnIndex(cellReference.substring(0, i));
 				int rowNumber = Integer.parseInt(cellReference.substring(i, cellReference.length())) - 1;
 				return new XlsxCellCoordinates(columnNumber, rowNumber);
 			}
 		}
-		throw new IllegalArgumentException("The provided cell reference does not contain a digits (" + cellReference + ")");
+
+		// no digits specified -> return coordinates without row number
+		return new XlsxCellCoordinates(XlsxUtilities.convertToColumnIndex(cellReference));
 	}
 
 	/**
@@ -311,5 +347,12 @@ public final class XlsxUtilities {
 					reader.getAttributeType(i), reader.getAttributeValue(i));
 		}
 		return attributes;
+	}
+
+	/**
+	 * @return the row limit for the read mode WIZARD_SHEET_SELECTION
+	 */
+	public static int getSheetSelectionLength() {
+		return Math.max(ImportWizardUtils.getPreviewLength(), SHEET_SELECTION_ROW_NUMBER_LIMIT);
 	}
 }

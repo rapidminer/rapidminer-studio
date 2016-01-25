@@ -1,26 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties;
-
-import groovy.swing.impl.DefaultAction;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -71,12 +67,15 @@ import javax.swing.text.StyleConstants;
 import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.PlainArrowDropDownButton;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
+
+import groovy.swing.impl.DefaultAction;
 
 
 /**
@@ -111,7 +110,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 			{ "+", I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.constructs.one_more_quantifier") },
 			{ "{n}", I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.constructs.exact_quantifier") },
 			{ "{min,}", I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.constructs.min_quantifier") },
-			{ "{min,max}", I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.constructs.min_max_quantifier") },
+			{ "{min,max}",
+					I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.constructs.min_max_quantifier") },
 			{ "|", I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.constructs.disjunction") }, };
 
 	// adjust the caret by this amount upon insertion
@@ -122,8 +122,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 			{ 1, 1 }, { 1, 1 }, { 1, 2 }, { 1, 4 }, { 1, 8 }, { 1, 1 }, };
 
 	// enclose selected by construct
-	private static boolean[] regexpConstructInsertionEncloseSelected = { false, true, true, true, false, false, false,
-			false, false, false, false, };
+	private static boolean[] regexpConstructInsertionEncloseSelected = { false, true, true, true, false, false, false, false,
+			false, false, false, };
 
 	private static String[][] regexpShortcuts = {
 			{ ".*", I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.shortcuts.arbitrary") },
@@ -141,14 +141,14 @@ public class RegexpPropertyDialog extends ButtonDialog {
 	private static final String ERROR_MESSAGE = I18N.getMessage(I18N.getGUIBundle(),
 			"gui.dialog.parameter.regexp.error.label");
 
-	private static final Icon ERROR_ICON = SwingTools.createIcon("16/"
-			+ I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.error.icon"));
+	private static final Icon ERROR_ICON = SwingTools
+			.createIcon("16/" + I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.error.icon"));
 
 	private static final String NO_ERROR_MESSAGE = I18N.getMessage(I18N.getGUIBundle(),
 			"gui.dialog.parameter.regexp.no_error.label");
 
-	private static final Icon NO_ERROR_ICON = SwingTools.createIcon("16/"
-			+ I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.no_error.icon"));
+	private static final Icon NO_ERROR_ICON = SwingTools
+			.createIcon("16/" + I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.no_error.icon"));
 
 	private String infoText;
 
@@ -197,30 +197,27 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		public String toString() {
 			String output = "";
 			if (!empty) {
-				output += "<html>" + "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">"
-						+
+				output += "<html>" + "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">" +
 						// "Match "+number+": <b>'"+match+"'</b>" +
 						I18N.getMessage(I18N.getGUIBundle(),
 								"gui.dialog.parameter.regexp.regular_expression.result_list.match", number,
-								"<b>'" + Tools.escapeHTML(match) + "'</b>") + "</span>";
+								"<b>'" + Tools.escapeHTML(match) + "'</b>")
+						+ "</span>";
 				if (groups.length > 0) {
 					output += "<ol style=\"margin:1px 0 0 24px\">";
 					for (int i = 0; i < groups.length; i++) {
 						// output += "<li>Group matches: <b>'" + groups[i] +"'</b></li>";
-						output += "<li>"
-								+ I18N.getMessage(I18N.getGUIBundle(),
-										"gui.dialog.parameter.regexp.regular_expression.result_list.group_match", "<b>'"
-												+ Tools.escapeHTML(groups[i]) + "'</b>") + "</li>";
+						output += "<li>" + I18N.getMessage(I18N.getGUIBundle(),
+								"gui.dialog.parameter.regexp.regular_expression.result_list.group_match",
+								"<b>'" + Tools.escapeHTML(groups[i]) + "'</b>") + "</li>";
 
 					}
 					output += "</ul>";
 				}
 				output += "</html>";
 			} else {
-				output += "<html>"
-						+ "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">"
-						+ I18N.getMessage(I18N.getGUIBundle(),
-								"gui.dialog.parameter.regexp.regular_expression.result_list.empty") + "</span>";
+				output += "<html>" + "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">" + I18N.getMessage(
+						I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.result_list.empty") + "</span>";
 				output += "</html>";
 			}
 			return output;
@@ -236,6 +233,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		Style keyStyle;
 		Style rootStyle;
+
 		{
 			rootStyle = addStyle("root", null);
 
@@ -272,8 +270,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 					for (int i = 1; i <= matcher.groupCount(); i++) {
 						groups[i - 1] = matcher.group(i);
 					}
-					resultsListModel.addElement(new RegExpResult(this.getText(matcher.start(),
-							matcher.end() - matcher.start()), groups, count + 1));
+					resultsListModel.addElement(new RegExpResult(
+							this.getText(matcher.start(), matcher.end() - matcher.start()), groups, count + 1));
 					count++;
 				}
 
@@ -282,10 +280,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 					resultsListModel.addElement(new RegExpResult());
 				}
 
-				testExp.setTitleAt(
-						1,
-						I18N.getMessage(I18N.getGUIBundle(),
-								"gui.dialog.parameter.regexp.regular_expression.result_list.title") + " (" + count + ")");
+				testExp.setTitleAt(1, I18N.getMessage(I18N.getGUIBundle(),
+						"gui.dialog.parameter.regexp.regular_expression.result_list.title") + " (" + count + ")");
 				inlineReplaceDocument.setText(matcher.replaceAll(replacementTextField.getText()));
 				updateRegexpOptions();
 			} catch (BadLocationException ex) {
@@ -342,8 +338,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		// create regexp text field
 		regexpTextField = new JTextField(predefinedRegexp);
-		regexpTextField.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.parameter.regexp.regular_expression.tip"));
+		regexpTextField
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.tip"));
 		regexpTextField.addKeyListener(new KeyListener() {
 
 			@Override
@@ -362,8 +358,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		// create replacement text field
 		replacementTextField = new JTextField();
-		replacementTextField.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.parameter.regexp.replacement.tip"));
+		replacementTextField
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.replacement.tip"));
 		replacementTextField.addKeyListener(new KeyListener() {
 
 			@Override
@@ -411,8 +407,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		// regexp panel on left side of dialog
 		JPanel regexpPanel = new JPanel(new GridBagLayout());
-		regexpPanel.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.parameter.regexp.regular_expression.border")));
+		regexpPanel.setBorder(createTitledBorder(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.border")));
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(4, 4, 4, 0);
 		c.gridx = 0;
@@ -427,9 +423,9 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		for (String[] popupItem : (String[][]) ArrayUtils.addAll(regexpConstructs, regexpShortcuts)) {
 			String shortcut = popupItem[0].length() > 14 ? popupItem[0].substring(0, 14) + "..." : popupItem[0];
-			autoWireDropDownButton.add(new InsertionAction(
-					"<html><table border=0 cellpadding=0 cellspacing=0><tr><td width=100>" + shortcut + "</td><td>"
-							+ popupItem[1] + "</td></tr></table></html>", popupItem[0]));
+			autoWireDropDownButton
+					.add(new InsertionAction("<html><table border=0 cellpadding=0 cellspacing=0><tr><td width=100>"
+							+ shortcut + "</td><td>" + popupItem[1] + "</td></tr></table></html>", popupItem[0]));
 		}
 		c.insets = new Insets(4, 0, 4, 0);
 		c.gridx = 1;
@@ -442,7 +438,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		c.gridx = 2;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		JButton clearRegexpTextFieldButton = new JButton(SwingTools.createIcon("16/delete2.png"));
+		JButton clearRegexpTextFieldButton = new JButton(SwingTools.createIcon("16/delete.png"));
 		clearRegexpTextFieldButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -467,8 +463,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		// create replacement panel
 		JPanel replacementPanel = new JPanel(new GridBagLayout());
-		replacementPanel.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.parameter.regexp.replacement.border")));
+		replacementPanel.setBorder(
+				createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.replacement.border")));
 
 		JPanel testerPanel = new JPanel(new GridBagLayout());
 
@@ -516,6 +512,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		c.fill = GridBagConstraints.BOTH;
 		JTextPane replaceTextPane = new JTextPane(inlineReplaceDocument);
 		replaceTextPane.setEditable(false);
+		JScrollPane scrollpane = new JScrollPane(replaceTextPane);
+		scrollpane.setBorder(null);
 		inlineSearchPanel.add(new JScrollPane(replaceTextPane), c);
 
 		// create regexp options panel
@@ -579,12 +577,15 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.fill = GridBagConstraints.BOTH;
 		testExp = new JTabbedPane();
+		JScrollPane spInline = new ExtendedJScrollPane(inlineSearchPanel);
+		spInline.setBorder(null);
 		testExp.add(
 				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.inline_search.title"),
-				new JScrollPane(inlineSearchPanel));
-		testExp.add(
-				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.result_list.title"),
-				new JScrollPane(regexpFindingsList));
+				spInline);
+		JScrollPane spFindings = new ExtendedJScrollPane(regexpFindingsList);
+		spFindings.setBorder(null);
+		testExp.add(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.result_list.title"),
+				spFindings);
 		testExp.add(
 				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.regexp_options.title"),
 				regexpOptionsPanelWrapper);
@@ -620,8 +621,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		if (supportsItems) {
 			// item shortcuts list
 			itemShortcutsList = new JList<String>(items.toArray(new String[items.size()]));
-			itemShortcutsList.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-					"gui.dialog.parameter.regexp.item_shortcuts.tip"));
+			itemShortcutsList
+					.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.item_shortcuts.tip"));
 			itemShortcutsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			itemShortcutsList.addMouseListener(new MouseListener() {
 
@@ -655,15 +656,15 @@ public class RegexpPropertyDialog extends ButtonDialog {
 				@Override
 				public void mouseReleased(MouseEvent e) {}
 			});
-			JScrollPane itemShortcutsPane = new JScrollPane(itemShortcutsList);
-			itemShortcutsPane.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-					"gui.dialog.parameter.regexp.item_shortcuts.border")));
+			JScrollPane itemShortcutsPane = new ExtendedJScrollPane(itemShortcutsList);
+			itemShortcutsPane.setBorder(createTitledBorder(
+					I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.item_shortcuts.border")));
 
 			// matched items list
 			matchedItemsListModel = new DefaultListModel<String>();
 			JList<String> matchedItemsList = new JList<String>(matchedItemsListModel);
-			matchedItemsList.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-					"gui.dialog.parameter.regexp.matched_items.tip"));
+			matchedItemsList
+					.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.matched_items.tip"));
 			// add custom cell renderer to disallow selections
 			matchedItemsList.setCellRenderer(new DefaultListCellRenderer() {
 
@@ -675,9 +676,9 @@ public class RegexpPropertyDialog extends ButtonDialog {
 					return super.getListCellRendererComponent(list, value, index, false, false);
 				}
 			});
-			JScrollPane matchedItemsPanel = new JScrollPane(matchedItemsList);
-			matchedItemsPanel.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-					"gui.dialog.parameter.regexp.matched_items.border")));
+			JScrollPane matchedItemsPanel = new ExtendedJScrollPane(matchedItemsList);
+			matchedItemsPanel.setBorder(createTitledBorder(
+					I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.matched_items.border")));
 
 			// item panel on right side of dialog
 			JPanel itemPanel = new JPanel(createGridLayout(1, 2));
@@ -864,9 +865,9 @@ public class RegexpPropertyDialog extends ButtonDialog {
 					int selectionEnd = regexpTextField.getSelectionEnd();
 					String newText = text.substring(0, selectionStart)
 							+ insertionString.substring(0, regexpConstructInsertionSelectionIndices[row][0])
-							+ text.substring(selectionStart, selectionEnd)
-							+ insertionString.substring(regexpConstructInsertionSelectionIndices[row][0],
-									insertionString.length()) + text.substring(selectionEnd, text.length());
+							+ text.substring(selectionStart, selectionEnd) + insertionString
+									.substring(regexpConstructInsertionSelectionIndices[row][0], insertionString.length())
+							+ text.substring(selectionEnd, text.length());
 					regexpTextField.setText(newText);
 					regexpTextField.setCaretPosition(selectionEnd - regexpConstructInsertionCaretAdjustment[row]);
 					regexpTextField.setSelectionStart(selectionStart + regexpConstructInsertionSelectionIndices[row][0]);
@@ -876,8 +877,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 					String newText = text.substring(0, cursorPosition) + insertionString
 							+ (cursorPosition < text.length() ? text.substring(cursorPosition) : "");
 					regexpTextField.setText(newText);
-					regexpTextField.setCaretPosition(cursorPosition + insertionString.length()
-							+ regexpConstructInsertionCaretAdjustment[row]);
+					regexpTextField.setCaretPosition(
+							cursorPosition + insertionString.length() + regexpConstructInsertionCaretAdjustment[row]);
 					regexpTextField.setSelectionStart(cursorPosition + regexpConstructInsertionSelectionIndices[row][0]);
 					regexpTextField.setSelectionEnd(cursorPosition + regexpConstructInsertionSelectionIndices[row][1]);
 				}

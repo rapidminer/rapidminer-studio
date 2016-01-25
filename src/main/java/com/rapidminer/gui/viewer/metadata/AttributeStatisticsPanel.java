@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer.metadata;
 
@@ -28,7 +26,6 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -45,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -57,7 +55,9 @@ import org.jfree.chart.ChartPanel;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
+import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.tools.AttributeGuiTools;
+import com.rapidminer.gui.tools.AttributeGuiTools.ColorScope;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.metadata.actions.AttributePopupMenu;
 import com.rapidminer.gui.viewer.metadata.actions.CopyAttributeNameAction;
@@ -105,20 +105,11 @@ public class AttributeStatisticsPanel extends JPanel {
 	/** the font size of value labels */
 	private static final float FONT_SIZE_LABEL_VALUE = 14;
 
-	/** the arc width of the corner of this panel */
-	private static final int CORNER_ARC_WIDTH = 12;
-
 	/** the identifier for custom special attributes */
 	public static final String GENERIC_SPECIAL_NAME = "special";
 
-	/** the first gradient border color */
-	private static final Color COLOR_BORDER_GRADIENT_FIRST = new Color(125, 125, 125);
-
-	/** the second gradient border color */
-	private static final Color COLOR_BORDER_GRADIENT_SECOND = new Color(100, 100, 100);
-
 	/** the dimension for the attribute name label */
-	private static final Dimension DIMENSION_LABEL_ATTRIBUTE = new Dimension(230, 20);
+	private static final Dimension DIMENSION_LABEL_ATTRIBUTE = new Dimension(230, 30);
 
 	/** the dimension for the attribute type label */
 	private static final Dimension DIMENSION_LABEL_TYPE = new Dimension(90, 20);
@@ -133,13 +124,19 @@ public class AttributeStatisticsPanel extends JPanel {
 	private static final Dimension DIMENSION_CHART_PANEL_ENLARGED = new Dimension(200, 100);
 
 	/** preferred size of a date_time panel so each column is aligned vertically */
-	private static final Dimension DIMENSION_PANEL_DATE_PREF_SIZE = new Dimension(165, 35);
+	private static final Dimension DIMENSION_PANEL_DATE_PREF_SIZE = new Dimension(165, 50);
 
 	/** preferred size of a numerical panel so each column is aligned vertically */
-	private static final Dimension DIMENSION_PANEL_NUMERIC_PREF_SIZE = new Dimension(110, 35);
+	private static final Dimension DIMENSION_PANEL_NUMERIC_PREF_SIZE_ENLARGED = new Dimension(110, 50);
 
 	/** preferred size of a numerical panel so each column is aligned vertically */
-	private static final Dimension DIMENSION_PANEL_NOMINAL_PREF_SIZE = new Dimension(165, 35);
+	private static final Dimension DIMENSION_PANEL_NUMERIC_PREF_SIZE = new Dimension(165, 50);
+
+	/** preferred size of a numerical panel so each column is aligned vertically */
+	private static final Dimension DIMENSION_PANEL_NOMINAL_PREF_SIZE = new Dimension(165, 50);
+
+	/** the dimension of the the filler which is used to correctly align the nominal value column */
+	private static final Dimension DIMENSION_FILLER_NOMINAL_VALUE_SIZE = new Dimension(1, 20);
 
 	/** a transparent color */
 	private static final Color COLOR_TRANSPARENT = new Color(255, 255, 255, 0);
@@ -203,6 +200,12 @@ public class AttributeStatisticsPanel extends JPanel {
 	/** list containing all panels which display a chart */
 	protected List<JPanel> listOfChartPanels;
 
+	/** list containing all panels which should only displayed if the model is enlarged */
+	private List<JPanel> listOfNumStatPanels;
+
+	/** list containing all panels which should only displayed if the model is enlarged */
+	private List<JPanel> listOfAdditionalNumStatPanels;
+
 	/** label displaying the attribute header (special role) if it has one */
 	private JLabel labelAttHeader;
 
@@ -257,11 +260,17 @@ public class AttributeStatisticsPanel extends JPanel {
 	/** label displaying the until value */
 	private JLabel labelStatsUntil;
 
+	/** label displaying the expansion status of the model */
+	private JLabel labelStatsExp;
+
 	/** the panel which contains the cards for the different types */
 	private JPanel cardStatsPanel;
 
 	/** the card layout used to switch between stat panels */
 	private CardLayout cardLayout;
+
+	/** this component is used to fix the alignment for the nominal value panel */
+	private Component nominalValueFiller;
 
 	/** the {@link AbstractAttributeStatisticsModel} backing the GUI */
 	private AbstractAttributeStatisticsModel model;
@@ -277,6 +286,8 @@ public class AttributeStatisticsPanel extends JPanel {
 	 */
 	public AttributeStatisticsPanel() {
 		listOfChartPanels = new LinkedList<>();
+		listOfNumStatPanels = new LinkedList<>();
+		listOfAdditionalNumStatPanels = new LinkedList<>();
 
 		// create listener which listens for hovering/enlarge mouse events on this panel
 		enlargeAndHoverAndPopupMouseAdapter = new MouseAdapter() {
@@ -357,7 +368,11 @@ public class AttributeStatisticsPanel extends JPanel {
 						break;
 					case ENLARGED_CHANGED:
 						updateCharts();
+						updateExpandInfoLabel();
 						updateVisibilityOfChartPanels();
+						if (AttributeStatisticsPanel.this.model.getAttribute().isNumerical()) {
+							updateVisibilityOfNumStatPanels();
+						}
 						if (AttributeStatisticsPanel.this.model.getAttribute().isNominal()) {
 							displayNominalValues();
 						}
@@ -399,6 +414,16 @@ public class AttributeStatisticsPanel extends JPanel {
 		setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 
+		// add expansion arrow
+		labelStatsExp = new JLabel(MetaDataStatisticsViewer.ICON_ARROW_DOWN, SwingConstants.RIGHT);
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.insets = new Insets(3, 10, 3, 10);
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.weighty = 1.0;
+		gbc.gridheight = 2;
+		add(labelStatsExp, gbc);
+
 		// add attribute name
 		panelAttName = new JPanel();
 		panelAttName.setLayout(new BoxLayout(panelAttName, BoxLayout.PAGE_AXIS));
@@ -417,9 +442,8 @@ public class AttributeStatisticsPanel extends JPanel {
 		labelAttName.setPreferredSize(DIMENSION_LABEL_ATTRIBUTE);
 		panelAttName.add(labelAttName);
 
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		gbc.insets = new Insets(3, 20, 3, 10);
+		gbc.gridx += 1;
+		gbc.insets = new Insets(3, 5, 3, 10);
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.weightx = 0.0;
@@ -523,6 +547,7 @@ public class AttributeStatisticsPanel extends JPanel {
 
 		labelStatsMin = new JLabel(LABEL_DOTS);
 		labelStatsMin.setFont(labelStatsMin.getFont().deriveFont(FONT_SIZE_LABEL_VALUE));
+		listOfNumStatPanels.add(panelStatsMin);
 		panelStatsMin.add(labelStatsMin);
 
 		// max value panel
@@ -537,6 +562,7 @@ public class AttributeStatisticsPanel extends JPanel {
 
 		labelStatsMax = new JLabel(LABEL_DOTS);
 		labelStatsMax.setFont(labelStatsMax.getFont().deriveFont(FONT_SIZE_LABEL_VALUE));
+		listOfNumStatPanels.add(panelStatsMax);
 		panelStatsMax.add(labelStatsMax);
 
 		// average value panel
@@ -551,6 +577,7 @@ public class AttributeStatisticsPanel extends JPanel {
 
 		labelStatsAvg = new JLabel(LABEL_DOTS);
 		labelStatsAvg.setFont(labelStatsAvg.getFont().deriveFont(FONT_SIZE_LABEL_VALUE));
+		listOfNumStatPanels.add(panelStatsAvg);
 		panelStatsAvg.add(labelStatsAvg);
 
 		// deviance value panel
@@ -567,11 +594,16 @@ public class AttributeStatisticsPanel extends JPanel {
 		labelStatsDeviation.setFont(labelStatsDeviation.getFont().deriveFont(FONT_SIZE_LABEL_VALUE));
 		panelStatsDeviance.add(labelStatsDeviation);
 
+		// the deviance value panel should only be visible if the model is enlarged
+		listOfAdditionalNumStatPanels.add(panelStatsDeviance);
+		listOfNumStatPanels.add(panelStatsDeviance);
+		updateVisibilityOfNumStatPanels();
+
 		// add sub panels to stats panel
 		gbcStatPanel.gridx = 0;
 		gbcStatPanel.weightx = 0.0;
 		gbcStatPanel.fill = GridBagConstraints.NONE;
-		gbcStatPanel.insets = new Insets(0, 0, 0, 4);
+		gbcStatPanel.insets = new Insets(0, 0, 0, 6);
 		panelStatsMin.setPreferredSize(DIMENSION_PANEL_NUMERIC_PREF_SIZE);
 		statsNumPanel.add(panelStatsMin, gbcStatPanel);
 		gbcStatPanel.gridx += 1;
@@ -586,6 +618,7 @@ public class AttributeStatisticsPanel extends JPanel {
 		gbcStatPanel.gridx += 1;
 		gbcStatPanel.weightx = 1.0;
 		gbcStatPanel.fill = GridBagConstraints.HORIZONTAL;
+		gbcStatPanel.anchor = GridBagConstraints.EAST;
 		statsNumPanel.add(new JLabel(), gbcStatPanel);
 		cardStatsPanel.add(statsNumPanel, CARD_NUMERICAL);
 
@@ -642,6 +675,9 @@ public class AttributeStatisticsPanel extends JPanel {
 		labelStatsValues.setFont(labelStatsValues.getFont().deriveFont(FONT_SIZE_LABEL_VALUE));
 		panelStatsValues.add(labelStatsValues);
 
+		nominalValueFiller = Box.createRigidArea(DIMENSION_FILLER_NOMINAL_VALUE_SIZE);
+		panelStatsValues.add(nominalValueFiller);
+
 		detailsButton = new JButton(new ShowNomValueAction(this));
 		detailsButton.setVisible(false);
 		detailsButton.setOpaque(false);
@@ -656,6 +692,7 @@ public class AttributeStatisticsPanel extends JPanel {
 		attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
 		detailsButton.setFont(font.deriveFont(attributes));
 		panelStatsValues.add(detailsButton);
+		panelStatsValues.add(new JLabel());
 
 		// add sub panel to stats panel
 		gbcStatPanel.gridx = 0;
@@ -733,6 +770,7 @@ public class AttributeStatisticsPanel extends JPanel {
 		gbcStatPanel.fill = GridBagConstraints.NONE;
 		gbcStatPanel.insets = new Insets(0, 0, 0, 6);
 		panelStatsFrom.setPreferredSize(DIMENSION_PANEL_DATE_PREF_SIZE);
+
 		statsDateTimePanel.add(panelStatsFrom, gbcStatPanel);
 		gbcStatPanel.gridx += 1;
 		panelStatsUntil.setPreferredSize(DIMENSION_PANEL_DATE_PREF_SIZE);
@@ -796,18 +834,18 @@ public class AttributeStatisticsPanel extends JPanel {
 		// make sure model is of correct type
 		if (model.getAttribute().isNumerical()) {
 			if (!(model instanceof NumericalAttributeStatisticsModel)) {
-				throw new IllegalArgumentException("model must be of type "
-						+ NumericalAttributeStatisticsModel.class.getName());
+				throw new IllegalArgumentException(
+						"model must be of type " + NumericalAttributeStatisticsModel.class.getName());
 			}
 		} else if (model.getAttribute().isNominal()) {
 			if (!(model instanceof NominalAttributeStatisticsModel)) {
-				throw new IllegalArgumentException("model must be of type "
-						+ NominalAttributeStatisticsModel.class.getName());
+				throw new IllegalArgumentException(
+						"model must be of type " + NominalAttributeStatisticsModel.class.getName());
 			}
 		} else {
 			if (!(model instanceof DateTimeAttributeStatisticsModel)) {
-				throw new IllegalArgumentException("model must be of type "
-						+ DateTimeAttributeStatisticsModel.class.getName());
+				throw new IllegalArgumentException(
+						"model must be of type " + DateTimeAttributeStatisticsModel.class.getName());
 			}
 		}
 		// switch listener
@@ -835,7 +873,11 @@ public class AttributeStatisticsPanel extends JPanel {
 			if (model.isEnlarged()) {
 				updateCharts();
 			}
+			updateExpandInfoLabel();
 			updateVisibilityOfChartPanels();
+			if (model.getAttribute().isNumerical()) {
+				updateVisibilityOfNumStatPanels();
+			}
 			if (model.getAttribute().isNominal()) {
 				displayNominalValues();
 			}
@@ -898,50 +940,79 @@ public class AttributeStatisticsPanel extends JPanel {
 		int height = (int) getSize().getHeight();
 
 		// draw background depending special roles and hovering
-		if (getModel() != null && getModel().isSpecialAtt()) {
-			if (Attributes.LABEL_NAME.equals(getModel().getSpecialAttName())) {
-				// label special attributes have a distinct color
-				g2.setPaint(new GradientPaint(x, y, getColorForSpecialAttribute(Attributes.LABEL_NAME, true, hovered), x,
-						height, getColorForSpecialAttribute(Attributes.LABEL_NAME, false, hovered)));
-			} else if (Attributes.WEIGHT_NAME.equals(getModel().getSpecialAttName())) {
-				// weight special attributes have another distinct color
-				g2.setPaint(new GradientPaint(x, y, getColorForSpecialAttribute(Attributes.WEIGHT_NAME, true, hovered), x,
-						height, getColorForSpecialAttribute(Attributes.WEIGHT_NAME, false, hovered)));
-			} else if (Attributes.PREDICTION_NAME.equals(getModel().getSpecialAttName())) {
-				// prediction special attributes have another distinct color
-				g2.setPaint(new GradientPaint(x, y, getColorForSpecialAttribute(Attributes.PREDICTION_NAME, true, hovered),
-						x, height, getColorForSpecialAttribute(Attributes.PREDICTION_NAME, false, hovered)));
-			} else if (getModel().getSpecialAttName().startsWith(Attributes.CONFIDENCE_NAME + "_")) {
-				// confidence special attributes have another distinct color
-				g2.setPaint(new GradientPaint(x, y, getColorForSpecialAttribute(Attributes.CONFIDENCE_NAME, true, hovered),
-						x, height, getColorForSpecialAttribute(Attributes.CONFIDENCE_NAME, false, hovered)));
-			} else if (Attributes.ID_NAME.equals(getModel().getSpecialAttName())) {
-				// id special attributes have another distinct color
-				g2.setPaint(new GradientPaint(x, y, getColorForSpecialAttribute(Attributes.ID_NAME, true, hovered), x,
-						height, getColorForSpecialAttribute(Attributes.ID_NAME, false, hovered)));
-			} else {
-				// other special attributes have another color
-				g2.setPaint(new GradientPaint(x, y, getColorForSpecialAttribute(GENERIC_SPECIAL_NAME, true, hovered), x,
-						height, getColorForSpecialAttribute(GENERIC_SPECIAL_NAME, false, hovered)));
-			}
-		} else {
-			// regular attributes
-			g2.setPaint(new GradientPaint(x, y, getColorForSpecialAttribute(Attributes.ATTRIBUTE_NAME, true, hovered), x,
-					height, getColorForSpecialAttribute(Attributes.ATTRIBUTE_NAME, false, hovered)));
-		}
-		g2.fillRoundRect(x, y, width, height, CORNER_ARC_WIDTH, CORNER_ARC_WIDTH);
+		g2.setPaint(AttributeGuiTools.getColorForAttributeRole(mapAttributeRoleName(),
+				hovered ? ColorScope.HOVER : ColorScope.BACKGROUND));
 
-		// draw border
-		g2.setPaint(new GradientPaint(x, y, COLOR_BORDER_GRADIENT_FIRST, x, height, COLOR_BORDER_GRADIENT_SECOND));
+		g2.fillRoundRect(x, y, width, height, RapidLookAndFeel.CORNER_DEFAULT_RADIUS,
+				RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+
+		// draw background depending special roles and hovering
+		g2.setPaint(AttributeGuiTools.getColorForAttributeRole(mapAttributeRoleName(), ColorScope.BORDER));
 		if (hovered) {
 			g2.setStroke(new BasicStroke(1.0f));
 		} else {
 			g2.setStroke(new BasicStroke(0.5f));
 		}
-		g2.drawRoundRect(x, y, width - 1, height - 1, CORNER_ARC_WIDTH, CORNER_ARC_WIDTH);
+		g2.drawRoundRect(x, y, width - 1, height - 1, RapidLookAndFeel.CORNER_DEFAULT_RADIUS,
+				RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
 
 		// let Swing draw its components
 		super.paintComponent(g2);
+	}
+
+	/**
+	 * Gets the attribute role name from the current {@link #model}.
+	 *
+	 * @return the name of the role
+	 */
+	private String mapAttributeRoleName() {
+		if (getModel() != null && getModel().isSpecialAtt()) {
+			if (Attributes.LABEL_NAME.equals(getModel().getSpecialAttName())) {
+				return Attributes.LABEL_NAME;
+			} else if (Attributes.WEIGHT_NAME.equals(getModel().getSpecialAttName())) {
+				return Attributes.WEIGHT_NAME;
+			} else if (Attributes.PREDICTION_NAME.equals(getModel().getSpecialAttName())) {
+				return Attributes.PREDICTION_NAME;
+			} else if (getModel().getSpecialAttName().startsWith(Attributes.CONFIDENCE_NAME + "_")) {
+				return Attributes.CONFIDENCE_NAME;
+			} else if (Attributes.ID_NAME.equals(getModel().getSpecialAttName())) {
+				return Attributes.ID_NAME;
+			} else {
+				return GENERIC_SPECIAL_NAME;
+			}
+		} else {
+			return Attributes.ATTRIBUTE_NAME;
+		}
+	}
+
+	/**
+	 * Updates the visibility of num stat panels depending on enlarged status.
+	 */
+	private void updateExpandInfoLabel() {
+		if (model.isEnlarged()) {
+			labelStatsExp.setIcon(MetaDataStatisticsViewer.ICON_ARROW_UP);
+		} else {
+			labelStatsExp.setIcon(MetaDataStatisticsViewer.ICON_ARROW_DOWN);
+		}
+	}
+
+	/**
+	 * Updates the visibility of num stat panels depending on enlarged status.
+	 */
+	private void updateVisibilityOfNumStatPanels() {
+		for (JPanel statPanel : listOfNumStatPanels) {
+			if (getModel() != null && getModel().isEnlarged()) {
+				statPanel.setPreferredSize(DIMENSION_PANEL_NUMERIC_PREF_SIZE_ENLARGED);
+				if (listOfAdditionalNumStatPanels.contains(statPanel)) {
+					statPanel.setVisible(true);
+				}
+			} else {
+				statPanel.setPreferredSize(DIMENSION_PANEL_NUMERIC_PREF_SIZE);
+				if (listOfAdditionalNumStatPanels.contains(statPanel)) {
+					statPanel.setVisible(false);
+				}
+			}
+		}
 	}
 
 	/**
@@ -1090,6 +1161,7 @@ public class AttributeStatisticsPanel extends JPanel {
 			valueString = builderDefault.toString();
 		}
 
+		nominalValueFiller.setVisible(getModel() != null && !getModel().isEnlarged());
 		detailsButton.setVisible(getModel() != null && getModel().isEnlarged());
 		labelStatsValues.setText(valueString);
 		labelStatsValues.setToolTipText(valueString);
@@ -1108,11 +1180,17 @@ public class AttributeStatisticsPanel extends JPanel {
 		String construction = model.getConstruction();
 		construction = construction == null ? "-" : construction;
 
-		labelAttHeader.setText(attRole);
+		labelAttHeader.setText(attRole == null || attRole.isEmpty() ? " "
+				: Character.toUpperCase(attRole.charAt(0)) + attRole.substring(1));
+		labelAttHeader.setForeground(AttributeGuiTools.getColorForAttributeRole(mapAttributeRoleName(), ColorScope.BORDER));
+
+		panelAttName.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1,
+				AttributeGuiTools.getColorForAttributeRole(mapAttributeRoleName(), ColorScope.CONTENT)));
+
 		labelAttName.setText(attLabel);
 		labelAttName.setToolTipText(attLabel);
 		labelAttType.setText(valueTypeString);
-		labelAttType.setIcon(AttributeGuiTools.getIconForValueType(model.getAttribute().getValueType(), true));
+		labelAttType.setIcon(null);
 		labelStatsMissing.setText(Tools.formatIntegerIfPossible(model.getNumberOfMissingValues(), 0));
 		labelStatsMissing.setToolTipText(labelStatsMissing.getText());
 		labelStatsConstruction.setText(construction);
@@ -1161,46 +1239,17 @@ public class AttributeStatisticsPanel extends JPanel {
 	 * @param model
 	 */
 	private void updateDateTimeElements(final AbstractAttributeStatisticsModel model) {
-		labelStatsValues.setVisible(false);	// because cardLayout dimensions are determined by all
+		// because cardLayout dimensions are determined by all
 		// cards, not only the visible one
+		nominalValueFiller.setVisible(false);
+		labelStatsValues.setVisible(false);
+
 		labelStatsDuration.setText(((DateTimeAttributeStatisticsModel) model).getDuration());
 		labelStatsDuration.setToolTipText(labelStatsDuration.getText());
 		labelStatsFrom.setText(((DateTimeAttributeStatisticsModel) model).getFrom());
 		labelStatsFrom.setToolTipText(labelStatsFrom.getText());
 		labelStatsUntil.setText(((DateTimeAttributeStatisticsModel) model).getUntil());
 		labelStatsUntil.setToolTipText(labelStatsUntil.getText());
-	}
-
-	/**
-	 * Returns the color for the specified special attribute {@link String}. See
-	 * {@link Attributes#KNOWN_ATTRIBUTE_TYPES}.
-	 *
-	 * @param specialAtt
-	 * @param gradientFirst
-	 *            if <code>true</code>, will return the color, if <code>false</code> will darken it
-	 * @param hovered
-	 *            different color shading to highlight hovering
-	 * @return
-	 */
-	private static Color getColorForSpecialAttribute(final String specialAtt, final boolean gradientFirst,
-			final boolean hovered) {
-		Color color = AttributeGuiTools.getColorForAttributeRole(specialAtt);
-
-		// darken second gradient color so a 3D effect is created
-		if (!gradientFirst) {
-			color = SwingTools.darkenColor(color, 0.83f);
-		}
-
-		// highlight selected attribute with a 3D effect highlight
-		if (hovered) {
-			if (gradientFirst) {
-				color = SwingTools.brightenColor(color);
-			} else {
-				color = SwingTools.darkenColor(color);
-			}
-		}
-
-		return color;
 	}
 
 	/**

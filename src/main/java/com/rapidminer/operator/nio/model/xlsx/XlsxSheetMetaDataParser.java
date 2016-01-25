@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model.xlsx;
 
@@ -120,7 +118,9 @@ public class XlsxSheetMetaDataParser {
 	public XlsxSheetMetaData parseMetaData(Operator callingOperator, ExcelResultSetConfiguration configuration,
 			XlsxReadMode readMode) throws XMLStreamException, IOException, UserError {
 
-		int firstRowIndex = configuration.getRowOffset();
+		// use 0 as first row index in case the whole column is specified
+		// offset via -1 for row number
+		int firstRowIndex = Math.max(configuration.getRowOffset(), 0);
 		int firstColumnIndex = configuration.getColumnOffset();
 		int userSpecifiedLastRow = configuration.getRowLast();
 		int userSpecifiedLastColumn = configuration.getColumnLast();
@@ -134,9 +134,9 @@ public class XlsxSheetMetaDataParser {
 
 		if (readMode != XlsxReadMode.WIZARD_WORKPANE) {
 			// If the user has specified an end range just return the specified range
-			if (userSpecifiedLastRow != Integer.MAX_VALUE && userSpecifiedLastColumn != Integer.MAX_VALUE) {
-				return new XlsxSheetMetaData(firstColumnIndex, firstRowIndex, Math.min(userSpecifiedLastColumn,
-						MAXIMUM_XLSX_ROW_INDEX), Math.min(userSpecifiedLastRow, MAXIMUM_XLSX_ROW_INDEX));
+			if (userSpecifiedLastColumn != Integer.MAX_VALUE) {
+				return new XlsxSheetMetaData(firstColumnIndex, firstRowIndex, userSpecifiedLastColumn,
+						Math.min(userSpecifiedLastRow, MAXIMUM_XLSX_ROW_INDEX));
 			}
 		} else {
 			firstRowIndex = 0;
@@ -183,6 +183,12 @@ public class XlsxSheetMetaDataParser {
 								try {
 									XlsxCellCoordinates cellRange = XlsxUtilities.convertCellRefToCoordinates(maxCellRange);
 									return new XlsxSheetMetaData(firstColumnIndex, firstRowIndex, cellRange.columnNumber,
+											/*
+											 * Always return the maximum Integer value for the last
+											 * row index to be able to read the whole excel file in
+											 * case the internal format is broken (e.g. files
+											 * created by Libre Office)
+											 */
 											Integer.MAX_VALUE);
 								} catch (IllegalArgumentException e) {
 									// ignore malformed cell reference and continue parsing whole
@@ -246,6 +252,11 @@ public class XlsxSheetMetaDataParser {
 			}
 		}
 
+		/*
+		 * Always return the maximum Integer value for the last row index to be able to read the
+		 * whole excel file in case the internal format is broken (e.g. files created by Libre
+		 * Office)
+		 */
 		return new XlsxSheetMetaData(firstColumnIndex, firstRowIndex, maximumColumn, Integer.MAX_VALUE);
 	}
 

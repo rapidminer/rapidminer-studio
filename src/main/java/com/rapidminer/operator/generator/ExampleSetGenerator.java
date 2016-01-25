@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.generator;
 
@@ -84,49 +82,49 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
 
 	private static final String[] KNOWN_FUNCTION_NAMES = new String[] {
-		"random", // regression
-		"sum", "polynomial", "non linear", "one variable non linear", "complicated function", "complicated function2",
-		"simple sinus", "sinus", "simple superposition",
-		"sinus frequency",
-		"sinus with trend",
-		"sinc",
-		"triangular function",
-		"square pulse function",
-		"random classification", // classification
-		"one third classification", "sum classification", "quadratic classification",
-		"simple non linear classification", "interaction classification", "simple polynomial classification",
-		"polynomial classification", "checkerboard classification", "random dots classification",
-		"global and local models classification", "sinus classification", "multi classification",
-		"two gaussians classification",
-		"transactions dataset", // transactions
-		"grid function", // clusters
-		"three ring clusters", "spiral cluster", "single gaussian cluster", "gaussian mixture clusters",
-		"driller oscillation timeseries" // timeseries
+			"random", // regression
+			"sum", "polynomial", "non linear", "one variable non linear", "complicated function", "complicated function2",
+			"simple sinus", "sinus", "simple superposition",
+			"sinus frequency",
+			"sinus with trend",
+			"sinc",
+			"triangular function",
+			"square pulse function",
+			"random classification", // classification
+			"one third classification", "sum classification", "quadratic classification",
+			"simple non linear classification", "interaction classification", "simple polynomial classification",
+			"polynomial classification", "checkerboard classification", "random dots classification",
+			"global and local models classification", "sinus classification", "multi classification",
+			"two gaussians classification",
+			"transactions dataset", // transactions
+			"grid function", // clusters
+			"three ring clusters", "spiral cluster", "single gaussian cluster", "gaussian mixture clusters",
+			"driller oscillation timeseries" // timeseries
 
 	};
 
 	private static final Class[] KNOWN_FUNCTION_IMPLEMENTATIONS = new Class[] {
-		RandomFunction.class, // regression
-		SumFunction.class, PolynomialFunction.class, NonLinearFunction.class, OneVariableNonLinearFunction.class,
-		ComplicatedFunction.class, ComplicatedFunction2.class, SimpleSinusFunction.class,
-		SinusFunction.class,
-		SimpleSuperpositionFunction.class,
-		SinusFrequencyFunction.class,
-		SinusWithTrendFunction.class,
-		SincFunction.class,
-		TriangularFunction.class,
-		SquarePulseFunction.class,
-		RandomClassificationFunction.class, // classification
-		OneThirdClassification.class, SumClassificationFunction.class, QuadraticClassificationFunction.class,
-		SimpleNonLinearClassificationFunction.class, InteractionClassificationFunction.class,
-		SimplePolynomialClassificationFunction.class, PolynomialClassificationFunction.class,
-		CheckerboardClassificationFunction.class, RandomDotsClassificationFunction.class,
-		GlobalAndLocalPatternsFunction.class, SinusClassificationFunction.class, MultiClassificationFunction.class,
-		TwoGaussiansClassificationFunction.class,
-		TransactionDatasetFunction.class, // transactions
-		GridFunction.class, // clusters
-		RingClusteringFunction.class, SpiralClusteringFunction.class, GaussianFunction.class,
-		GaussianMixtureFunction.class, DrillerOscillationFunction.class // timeseries
+			RandomFunction.class, // regression
+			SumFunction.class, PolynomialFunction.class, NonLinearFunction.class, OneVariableNonLinearFunction.class,
+			ComplicatedFunction.class, ComplicatedFunction2.class, SimpleSinusFunction.class,
+			SinusFunction.class,
+			SimpleSuperpositionFunction.class,
+			SinusFrequencyFunction.class,
+			SinusWithTrendFunction.class,
+			SincFunction.class,
+			TriangularFunction.class,
+			SquarePulseFunction.class,
+			RandomClassificationFunction.class, // classification
+			OneThirdClassification.class, SumClassificationFunction.class, QuadraticClassificationFunction.class,
+			SimpleNonLinearClassificationFunction.class, InteractionClassificationFunction.class,
+			SimplePolynomialClassificationFunction.class, PolynomialClassificationFunction.class,
+			CheckerboardClassificationFunction.class, RandomDotsClassificationFunction.class,
+			GlobalAndLocalPatternsFunction.class, SinusClassificationFunction.class, MultiClassificationFunction.class,
+			TwoGaussiansClassificationFunction.class,
+			TransactionDatasetFunction.class, // transactions
+			GridFunction.class, // clusters
+			RingClusteringFunction.class, SpiralClusteringFunction.class, GaussianFunction.class,
+			GaussianMixtureFunction.class, DrillerOscillationFunction.class // timeseries
 	};
 
 	public ExampleSetGenerator(OperatorDescription description) {
@@ -165,8 +163,8 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 		DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
 		try {
 			function.init(random);
+			getProgress().setTotal(numberOfExamples);
 			for (int n = 0; n < numberOfExamples; n++) {
-				this.checkForStop();
 
 				double[] features = function.createArguments(numberOfAttributes, random);
 				double[] example = features;
@@ -181,6 +179,8 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 				}
 				row.trim();
 				data.add(row);
+
+				getProgress().step();
 			}
 		} catch (TargetFunction.FunctionException e) {
 			throw new UserError(this, 918, e.getFunctionName(), e.getMessage());
@@ -191,6 +191,8 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 
 		// create example set and return it
 		ExampleSet result = table.createExampleSet(label);
+
+		getProgress().complete();
 
 		return result;
 	}
@@ -226,7 +228,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 	// ================================================================================
 
 	public static TargetFunction getFunctionForName(String functionName) throws IllegalAccessException,
-	InstantiationException, ClassNotFoundException {
+			InstantiationException, ClassNotFoundException {
 		for (int i = 0; i < KNOWN_FUNCTION_NAMES.length; i++) {
 			if (KNOWN_FUNCTION_NAMES[i].equals(functionName)) {
 				return (TargetFunction) KNOWN_FUNCTION_IMPLEMENTATIONS[i].newInstance();

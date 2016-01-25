@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
@@ -36,8 +36,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 
-import java.util.List;
-
 
 /**
  * This operator groups the input examples into batches of the specified size and performs the inner
@@ -48,7 +46,7 @@ import java.util.List;
  * Note that the output of this operator is not composed of the results of the nested subprocess. In
  * fact the subprocess does not need to deliver any output since it operates on a subset view of the
  * input example set.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class BatchProcessing extends OperatorChain {
@@ -80,6 +78,13 @@ public class BatchProcessing extends OperatorChain {
 		int batchSize = getParameterAsInt(PARAMETER_BATCH_SIZE);
 		int size = exampleSet.size();
 		int currentStart = 0;
+
+		// init Operator progress
+		getProgress().setTotal(size);
+
+		// disable call to checkForStop as inApplyLoop will call it anyway
+		getProgress().setCheckForStop(false);
+
 		while (currentStart < size) {
 			ExampleSet materializedSet = Tools.getLinearSubsetCopy(exampleSet, batchSize, currentStart);
 			exampleSetInnerSource.deliver(materializedSet);
@@ -88,9 +93,11 @@ public class BatchProcessing extends OperatorChain {
 
 			currentStart += batchSize;
 			inApplyLoop();
+			getProgress().step();
 		}
 
 		exampleSetOutput.deliver(exampleSet);
+		getProgress().complete();
 	}
 
 	@Override

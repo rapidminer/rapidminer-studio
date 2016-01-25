@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -26,7 +26,7 @@ import com.rapidminer.tools.ProgressListener;
  */
 class ProgressDisplay {
 
-	private int total = 0;
+	private int total = 100;
 	private int completed = 0;
 	private String message;
 

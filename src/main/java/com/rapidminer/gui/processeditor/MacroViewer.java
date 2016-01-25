@@ -1,35 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor;
-
-import com.rapidminer.Process;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.gui.tools.UpdateQueue;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.tools.container.Pair;
-import com.vlsolutions.swing.docking.DockKey;
-import com.vlsolutions.swing.docking.Dockable;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -41,19 +28,31 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 
+import com.rapidminer.Process;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.properties.PropertyPanel;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.ResourceDockKey;
+import com.rapidminer.gui.tools.UpdateQueue;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.tools.container.Pair;
+import com.vlsolutions.swing.docking.DockKey;
+import com.vlsolutions.swing.docking.Dockable;
+
 
 /**
- * 
+ *
  * A Dockable, that can display all defined macros and their values and allows the user to modify
  * the while the process is running.
- * 
+ *
  * @author Philipp Kersting
- * 
+ *
  */
 
 public class MacroViewer extends JPanel implements Dockable, ProcessEditor {
@@ -63,7 +62,7 @@ public class MacroViewer extends JPanel implements Dockable, ProcessEditor {
 	private static final String MACRO_VIEWER_DOCK_KEY = "macro_viewer";
 	private static final DockKey DOCK_KEY = new ResourceDockKey(MACRO_VIEWER_DOCK_KEY);
 
-	private JTable macroTable;
+	private ExtendedJTable macroTable;
 	private ExtendedJScrollPane scrollPane = new ExtendedJScrollPane();
 
 	private List<Pair<String, String>> data = new ArrayList<>();
@@ -76,7 +75,7 @@ public class MacroViewer extends JPanel implements Dockable, ProcessEditor {
 	private AbstractTableModel dataModel = new AbstractTableModel() {
 
 		/**
-		 * 
+		 *
 		 */
 		private static final long serialVersionUID = 1L;
 
@@ -129,10 +128,11 @@ public class MacroViewer extends JPanel implements Dockable, ProcessEditor {
 		setLayout(new BorderLayout());
 
 		macroTable = new ExtendedJTable(dataModel, true, false, true);
-		// macroTable.setModel(dataModel);
-		macroTable.setFillsViewportHeight(true);
+		macroTable.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
+		macroTable.setRowHighlighting(true);
 
 		scrollPane = new ExtendedJScrollPane(macroTable);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 5, 0, 5));
 		add(scrollPane, BorderLayout.CENTER);
 
 		updateQueue = new UpdateQueue(MACRO_VIEWER_DOCK_KEY);

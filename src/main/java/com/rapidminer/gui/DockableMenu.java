@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -35,12 +33,14 @@ import javax.swing.event.MenuListener;
 import com.rapidminer.gui.processeditor.ProcessLogTab;
 import com.rapidminer.gui.processeditor.results.ResultDisplay;
 import com.rapidminer.gui.processeditor.results.ResultTab;
+import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.ResourceMenu;
-import com.rapidminer.gui.tools.WelcomeScreen;
-import com.rapidminer.template.gui.TemplateView;
+import com.rapidminer.tools.SystemInfoUtilities;
+import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.DockableState;
 import com.vlsolutions.swing.docking.DockingContext;
+import com.vlsolutions.swing.docking.DummyDockable;
 
 
 /**
@@ -103,10 +103,13 @@ public class DockableMenu extends ResourceMenu {
 			}
 		});
 		for (final DockableState state : sorted) {
-			String key = state.getDockable().getDockKey().getKey();
+			if (state.getDockable() instanceof DummyDockable) {
+				continue;
+			}
+			DockKey dockKey = state.getDockable().getDockKey();
 			boolean cont = false;
 			for (String prefix : HIDE_IN_DOCKABLE_MENU_PREFIX_REGISTRY) {
-				if (key.startsWith(prefix)) {
+				if (dockKey.getKey().startsWith(prefix)) {
 					cont = true;
 					break;
 				}
@@ -114,8 +117,18 @@ public class DockableMenu extends ResourceMenu {
 			if (cont) {
 				continue;
 			}
-			JCheckBoxMenuItem item = new JCheckBoxMenuItem(state.getDockable().getDockKey().getName(), state.getDockable()
-					.getDockKey().getIcon());
+			String description = null;
+			if (dockKey instanceof ResourceDockKey) {
+				description = ((ResourceDockKey) dockKey).getShortDescription();
+			}
+			description = description != null ? description : "";
+			String text = dockKey.getName();
+			if (SystemInfoUtilities.getOperatingSystem() != OperatingSystem.OSX) {
+				// OS X cannot use html in menus so only do it for other OS
+				text = "<html><p style='margin-left:5'><b>" + dockKey.getName() + "</b><br/>" + description + "</p></html>";
+			}
+			JCheckBoxMenuItem item = new JCheckBoxMenuItem(text, dockKey.getIcon());
+
 			item.setSelected(!state.isClosed());
 			item.addActionListener(new ActionListener() {
 
@@ -133,21 +146,10 @@ public class DockableMenu extends ResourceMenu {
 			// special handling for results overview dockable in Results perspective
 			// this dockable is not allowed to be closed so we disable this item while in said
 			// perspective
-			if (RapidMinerGUI.getMainFrame().getPerspectives().getCurrentPerspective().getName().equals(Perspectives.RESULT)
+			if (RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName()
+					.equals(PerspectiveModel.RESULT)
 					&& ResultDisplay.RESULT_DOCK_KEY.equals(state.getDockable().getDockKey().getKey())) {
 				item.setEnabled(false);
-			}
-
-			// special handling for accelerator view
-			// this dockable is not allowed to be closed/opened anywhere so we skip this item
-			if (TemplateView.TEMPLATES_DOCK_KEY.equals(state.getDockable().getDockKey().getKey())) {
-				continue;
-			}
-
-			// special handling for welcome overview view
-			// this dockable is not allowed to be closed/opened anywhere so we skip this item
-			if (WelcomeScreen.WELCOME_SCREEN_DOCK_KEY.equals(state.getDockable().getDockKey().getKey())) {
-				continue;
 			}
 
 			add(item);

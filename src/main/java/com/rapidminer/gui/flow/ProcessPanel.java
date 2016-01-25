@@ -1,37 +1,32 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
 import javax.swing.JViewport;
 
 import com.rapidminer.Process;
@@ -39,21 +34,20 @@ import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.actions.AutoWireAction;
 import com.rapidminer.gui.flow.processrendering.annotations.AnnotationsVisualizer;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
+import com.rapidminer.gui.flow.processrendering.background.ProcessBackgroundImageVisualizer;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererAnnotationEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererEventListener;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererModelEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.ViewToolBar;
-import com.rapidminer.gui.tools.components.DropDownButton;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
-import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 
@@ -77,6 +71,9 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 	/** the workflow annotations handler instance */
 	private final AnnotationsVisualizer annotationsHandler;
 
+	/** the background image handler */
+	private final ProcessBackgroundImageVisualizer backgroundImageHandler;
+
 	private final ProcessButtonBar processButtonBar;
 
 	private OperatorChain operatorChain;
@@ -84,6 +81,8 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 	private final JScrollPane scrollPane;
 
 	public ProcessPanel(final MainFrame mainFrame) {
+		setOpaque(true);
+		setBackground(Colors.PANEL_BACKGROUND);
 		processButtonBar = new ProcessButtonBar(mainFrame);
 
 		ProcessRendererModel model = new ProcessRendererModel();
@@ -115,38 +114,18 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 			}
 		});
 		renderer = new ProcessRendererView(model, this, mainFrame);
-		renderer.setBackground(SwingTools.LIGHTEST_BLUE);
 
 		flowVisualizer = new FlowVisualizer(renderer);
 		annotationsHandler = new AnnotationsVisualizer(renderer, flowVisualizer);
+		backgroundImageHandler = new ProcessBackgroundImageVisualizer(renderer);
 
 		ViewToolBar toolBar = new ViewToolBar(ViewToolBar.LEFT);
 
-		// overwrite the default border
-		toolBar.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.LIGHT_GRAY));
-
 		toolBar.add(annotationsHandler.makeAddAnnotationAction(null), ViewToolBar.RIGHT);
-		JToggleButton toggleAnnotations = annotationsHandler.getToggleAnnotationsAction().createToggleButton();
-		toggleAnnotations.setText(null);
-		toggleAnnotations.doClick();
-		toolBar.add(toggleAnnotations, ViewToolBar.RIGHT);
+		toolBar.add(new AutoWireAction(mainFrame), ViewToolBar.RIGHT);
 
-		final Action autoWireAction = new AutoWireAction(mainFrame, "wire", CompatibilityLevel.PRE_VERSION_5, false, true);
-		DropDownButton autoWireDropDownButton = DropDownButton.makeDropDownButton(autoWireAction);
-		autoWireDropDownButton.add(autoWireAction);
-		autoWireDropDownButton.add(new AutoWireAction(mainFrame, "wire_recursive", CompatibilityLevel.PRE_VERSION_5, true,
-				true));
-		autoWireDropDownButton.add(new AutoWireAction(mainFrame, "rewire", CompatibilityLevel.PRE_VERSION_5, false, false));
-		autoWireDropDownButton.add(new AutoWireAction(mainFrame, "rewire_recursive", CompatibilityLevel.PRE_VERSION_5, true,
-				false));
-		autoWireDropDownButton.addToToolBar(toolBar, ViewToolBar.RIGHT);
-
-		toolBar.add(renderer.getArrangeOperatorsAction(), ViewToolBar.RIGHT);
 		toolBar.add(flowVisualizer.SHOW_ORDER_TOGGLEBUTTON, ViewToolBar.RIGHT);
 		toolBar.add(renderer.getAutoFitAction(), ViewToolBar.RIGHT);
-		JToggleButton toggleRealMetadataPropagationButton = new JToggleButton(mainFrame.PROPAGATE_REAL_METADATA_ACTION);
-		toggleRealMetadataPropagationButton.setText("");
-		toolBar.add(toggleRealMetadataPropagationButton, ViewToolBar.RIGHT);
 
 		setLayout(new BorderLayout());
 
@@ -154,7 +133,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 		processLayeredPane.setLayout(new BorderLayout());
 		processLayeredPane.add(processButtonBar, BorderLayout.WEST, 1);
 		processLayeredPane.add(toolBar, BorderLayout.EAST, 0);
-		processLayeredPane.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+		processLayeredPane.setBorder(BorderFactory.createEmptyBorder(7, 0, 0, 0));
 		add(processLayeredPane, BorderLayout.NORTH);
 
 		scrollPane = new ExtendedJScrollPane(renderer);
@@ -234,8 +213,18 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 		return annotationsHandler;
 	}
 
+	/**
+	 * The {@link ProcessBackgroundImageVisualizer} instance tied to the process renderer.
+	 *
+	 * @return the instance, never {@code null}
+	 */
+	public ProcessBackgroundImageVisualizer getBackgroundImageHandler() {
+		return backgroundImageHandler;
+	}
+
 	public static final String PROCESS_PANEL_DOCK_KEY = "process_panel";
 	private final DockKey DOCK_KEY = new ResourceDockKey(PROCESS_PANEL_DOCK_KEY);
+
 	{
 		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
 	}

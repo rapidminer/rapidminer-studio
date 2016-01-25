@@ -1,26 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.som;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -51,6 +50,7 @@ import com.rapidminer.gui.plotter.PlotterAdapter;
 import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.plotter.conditions.BasicPlotterCondition;
 import com.rapidminer.gui.plotter.conditions.PlotterCondition;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.tools.I18N;
@@ -173,6 +173,8 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 			}
 		});
 
+		matrixSelection.setPreferredSize(new Dimension(matrixSelection.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		matrixSelection.setToolTipText("Select the matrix type which should be visualized.");
 		matrixSelection.addItemListener(new ItemListener() {
 
@@ -187,6 +189,8 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 			}
 		});
 
+		colorSelection.setPreferredSize(new Dimension(colorSelection.getPreferredSize().width,
+				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		colorSelection.setToolTipText("Select the color scheme used for the visualization of the matrix values.");
 		colorSelection.addItemListener(new ItemListener() {
 

@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.construction;
 
@@ -32,6 +30,8 @@ import com.rapidminer.generator.FeatureGenerator;
 import com.rapidminer.generator.ReciprocalValueGenerator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.features.selection.GeneticAlgorithm;
 import com.rapidminer.operator.features.selection.SelectionCrossover;
 import com.rapidminer.parameter.ParameterType;
@@ -48,20 +48,20 @@ import com.rapidminer.parameter.conditions.BooleanParameterCondition;
  * generates new attributes and thus can change the length of an individual. Therfore specialized
  * mutation and crossover operators are being applied. Generators are chosen at random from a list
  * of generators specified by boolean parameters. <br/>
- * 
+ *
  * Since this operator does not contain algorithms to extract features from value series, it is
  * restricted to example sets with only single attributes. For automatic feature extraction from
  * values series the value series plugin for RapidMiner written by Ingo Mierswa should be used. It
  * is available at <a href="http://rapidminer.com">http://rapidminer.com</a>
- * 
+ *
  * @rapidminer.reference Ritthoff/etal/2001a
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractGeneratingGeneticAlgorithm extends ExampleSetBasedFeatureOperator {
 
 	public static final String[] SELECTION_SCHEMES = { "uniform", "cut", "roulette wheel", "stochastic universal sampling",
-			"Boltzmann", "rank", "tournament", "non dominated sorting" };
+		"Boltzmann", "rank", "tournament", "non dominated sorting" };
 
 	public static final int UNIFORM_SELECTION = 0;
 
@@ -340,4 +340,20 @@ public abstract class AbstractGeneratingGeneticAlgorithm extends ExampleSetBased
 				SelectionCrossover.CROSSOVER_TYPES, SelectionCrossover.UNIFORM));
 		return types;
 	}
+
+	@Override
+	protected int getMaxGenerations() {
+		try {
+			return getParameterAsInt(AbstractGeneratingGeneticAlgorithm.PARAMETER_MAXIMUM_NUMBER_OF_GENERATIONS);
+		} catch (UndefinedParameterError e) {
+			return OperatorProgress.NO_PROGRESS;
+		}
+	}
+
+	@Override
+	protected void applyLoopOperations() throws ProcessStoppedException {
+		super.applyLoopOperations();
+		getProgress().step();
+	}
+
 }

@@ -1,27 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
@@ -35,15 +32,14 @@ import javax.swing.JToolBar;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rtextarea.RTextAreaEditorKit;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceActionTransmitter;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.LogService;
@@ -65,6 +61,13 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 
 	private static final long serialVersionUID = 4172143138689034659L;
 
+	public static final String XML_EDITOR_DOCK_KEY = "xml_editor";
+
+	private final DockKey DOCK_KEY = new ResourceDockKey(XML_EDITOR_DOCK_KEY);
+	{
+		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
+	}
+
 	private final RSyntaxTextArea editor;
 
 	private final MainFrame mainFrame;
@@ -77,10 +80,11 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 		this.editor = new RSyntaxTextArea(new RSyntaxDocument(SyntaxConstants.SYNTAX_STYLE_XML));
 		this.editor.setAnimateBracketMatching(true);
 		this.editor.setAutoIndentEnabled(true);
+		this.editor.setSelectionColor(Colors.TEXT_HIGHLIGHT_BACKGROUND);
 		this.editor.setBorder(null);
 
 		JToolBar toolBar = new ExtendedJToolBar();
-		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+		toolBar.setBorder(null);
 		toolBar.add(new ResourceAction(true, "xml_editor.apply_changes") {
 
 			private static final long serialVersionUID = 1L;
@@ -95,15 +99,12 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 				}
 			}
 		});
-		toolBar.addSeparator();
-		toolBar.add(new ResourceActionTransmitter(true, "editor.copy", new RTextAreaEditorKit.CopyAction(), this));
-		toolBar.add(new ResourceActionTransmitter(true, "editor.cut", new RTextAreaEditorKit.CutAction(), this));
-		toolBar.add(new ResourceActionTransmitter(true, "editor.paste", new RTextAreaEditorKit.PasteAction(), this));
-
-		toolBar.addSeparator();
+		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Colors.TEXTFIELD_BORDER));
 
 		add(toolBar, BorderLayout.NORTH);
-		add(new RTextScrollPane(editor), BorderLayout.CENTER);
+		RTextScrollPane rTextScrollPane = new RTextScrollPane(editor);
+		rTextScrollPane.setBorder(null);
+		add(rTextScrollPane, BorderLayout.CENTER);
 	}
 
 	public void setText(String text) {
@@ -147,12 +148,6 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 
 	public String getXMLFromEditor() {
 		return this.editor.getText().trim();
-	}
-
-	public static final String XML_EDITOR_DOCK_KEY = "xml_editor";
-	private final DockKey DOCK_KEY = new ResourceDockKey(XML_EDITOR_DOCK_KEY);
-	{
-		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
 	}
 
 	@Override

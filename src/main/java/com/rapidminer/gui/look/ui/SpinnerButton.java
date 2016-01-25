@@ -1,36 +1,37 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.ui;
 
-import com.rapidminer.gui.look.RapidLookTools;
-
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.RenderingHints;
 
 import javax.swing.JButton;
+
+import com.rapidminer.gui.look.Colors;
 
 
 /**
  * A spinner button.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SpinnerButton extends JButton {
@@ -49,183 +50,17 @@ public class SpinnerButton extends JButton {
 		setContentAreaFilled(false);
 	}
 
-	private void paintDownButton(Graphics g) {
-		int w = (int) getSize().getWidth();
-		int h = (int) getSize().getHeight();
-
-		if (getModel().isEnabled()) {
-			if (getModel().isPressed()) {
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[0]);
-				g.drawLine(1, 0, w - 1, 0);
-				g.fillRect(1, 1, w - 1, h - 3);
-				g.drawLine(1, h - 4, w - 1, h - 4);
-				g.drawLine(1, h - 3, w - 2, h - 3);
-				g.drawLine(1, h - 2, w - 3, h - 2);
-				g.drawLine(1, h - 1, w - 5, h - 1);
-				g.drawLine(1, 0, w - 1, 0);
-				g.drawLine(w - 1, 1, w - 1, h - 3);
-				g.drawLine(w - 2, 1, w - 2, h - 4);
-				g.drawLine(w - 3, 1, w - 3, h - 4);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[1]);
-				g.drawLine(0, 0, 0, h);
-			} else {
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[2]);
-				g.drawLine(1, 0, w - 1, 0);
-				g.fillRect(1, 1, w - 1, h - 3);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[3]);
-				g.drawLine(1, h - 4, w - 1, h - 4);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[4]);
-				g.drawLine(1, h - 3, w - 2, h - 3);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[5]);
-				g.drawLine(1, h - 2, w - 3, h - 2);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[6]);
-				g.drawLine(1, h - 1, w - 5, h - 1);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[3]);
-				g.drawLine(1, 0, w - 1, 0);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[7]);
-				g.drawLine(0, 0, 0, h);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[4]);
-				g.drawLine(w - 1, 1, w - 1, h - 3);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[8]);
-				g.drawLine(w - 2, 1, w - 2, h - 4);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[3]);
-				g.drawLine(w - 3, 1, w - 3, h - 4);
-			}
-		} else {
-			g.setColor(RapidLookTools.getColors().getSpinnerColors()[8]);
-			g.drawLine(1, 0, w - 1, 0);
-			g.fillRect(1, 1, w - 1, h - 3);
-			g.drawLine(1, h - 4, w - 1, h - 4);
-			g.drawLine(1, h - 3, w - 2, h - 3);
-			g.drawLine(1, h - 2, w - 3, h - 2);
-			g.drawLine(1, h - 1, w - 5, h - 1);
-			g.drawLine(1, 0, w - 1, 0);
-			g.drawLine(w - 1, 1, w - 1, h - 3);
-			g.drawLine(w - 2, 1, w - 2, h - 4);
-			g.drawLine(w - 3, 1, w - 3, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getSpinnerColors()[7]);
-			g.drawLine(0, 0, 0, h);
-		}
-	}
-
-	private void paintUpButton(Graphics g) {
-		this.dimension = getSize();
-		int h = (int) this.dimension.getHeight();
-		int w = (int) this.dimension.getWidth();
-
-		if (getModel().isEnabled()) {
-			if (getModel().isPressed()) {
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[0]);
-				g.drawLine(1, 0, w - 5, 0);
-				g.drawLine(1, 1, w - 3, 1);
-				g.drawLine(1, 2, w - 2, 2);
-				g.fillRect(1, 3, w - 1, h - 3);
-				g.drawLine(1, h - 4, w - 1, h - 4);
-				g.drawLine(1, h - 3, w - 1, h - 3);
-				g.drawLine(1, h - 2, w - 1, h - 2);
-				g.drawLine(1, h - 1, w - 1, h - 1);
-				g.drawLine(1, h - 1, w - 1, h - 1);
-				g.drawLine(w - 1, 3, w - 1, h - 3);
-				g.drawLine(w - 2, 2, w - 2, h - 4);
-				g.drawLine(w - 3, 1, w - 3, h - 4);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[1]);
-				g.drawLine(0, 0, 0, h);
-			} else {
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[3]);
-				g.drawLine(1, 0, w - 5, 0);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[2]);
-				g.drawLine(1, 1, w - 3, 1);
-				g.drawLine(1, 2, w - 2, 2);
-				g.fillRect(1, 3, w - 1, h - 3);
-
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[3]);
-				g.drawLine(1, h - 4, w - 1, h - 4);
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[4]);
-				g.drawLine(1, h - 3, w - 1, h - 3);
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[5]);
-				g.drawLine(1, h - 2, w - 1, h - 2);
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[6]);
-				g.drawLine(1, h - 1, w - 1, h - 1);
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[7]);
-				g.drawLine(1, h - 1, w - 1, h - 1);
-				g.drawLine(0, 0, 0, h);
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[4]);
-				g.drawLine(w - 1, 3, w - 1, h - 3);
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[8]);
-				g.drawLine(w - 2, 2, w - 2, h - 4);
-				g.setColor(RapidLookTools.getColors().getSpinnerColors()[3]);
-				g.drawLine(w - 3, 1, w - 3, h - 4);
-			}
-		} else {
-			g.setColor(RapidLookTools.getColors().getSpinnerColors()[8]);
-			g.drawLine(1, 0, w - 5, 0);
-			g.drawLine(1, 1, w - 3, 1);
-			g.drawLine(1, 2, w - 2, 2);
-			g.fillRect(1, 3, w - 1, h - 3);
-			g.drawLine(1, h - 4, w - 1, h - 4);
-			g.drawLine(1, h - 3, w - 1, h - 3);
-			g.drawLine(1, h - 2, w - 1, h - 2);
-			g.drawLine(1, h - 1, w - 1, h - 1);
-			g.drawLine(1, h - 1, w - 1, h - 1);
-			g.drawLine(w - 1, 3, w - 1, h - 3);
-			g.drawLine(w - 2, 2, w - 2, h - 4);
-			g.drawLine(w - 3, 1, w - 3, h - 4);
-
-			g.setColor(RapidLookTools.getColors().getSpinnerColors()[1]);
-			g.drawLine(0, 0, 0, h);
-		}
-	}
-
 	@Override
 	public void paintComponent(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
 		if (this.up) {
-			paintUpButton(g);
+			paintUpButton(g2);
 		} else {
-			paintDownButton(g);
+			paintDownButton(g2);
 		}
-		drawArrow(g);
-	}
-
-	protected void drawArrow(Graphics g) {
-		this.dimension = getSize();
-
-		if (getModel().isEnabled()) {
-			g.setColor(RapidLookTools.getColors().getSpinnerColors()[9]);
-		} else {
-			g.setColor(RapidLookTools.getColors().getSpinnerColors()[10]);
-		}
-
-		int baseY = (int) ((this.dimension.getHeight() / 2) - 2);
-		if (!this.up) {
-			baseY++;
-		}
-
-		g.translate(5, baseY);
-		if (this.up) {
-			g.drawLine(2, 0, 3, 0);
-			g.drawLine(1, 1, 4, 1);
-			g.drawLine(0, 2, 1, 2);
-			g.drawLine(4, 2, 5, 2);
-		} else {
-			g.drawLine(2, 2, 3, 2);
-			g.drawLine(1, 1, 4, 1);
-			g.drawLine(0, 0, 1, 0);
-			g.drawLine(4, 0, 5, 0);
-		}
-		g.translate(-6, -baseY);
+		drawArrow(g2);
 	}
 
 	@Override
@@ -244,5 +79,65 @@ public class SpinnerButton extends JButton {
 	@Override
 	public Dimension getMaximumSize() {
 		return new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
+	}
+
+	private void paintDownButton(Graphics2D g2) {
+		int w = (int) getSize().getWidth();
+		int h = (int) getSize().getHeight();
+
+		if (getModel().isEnabled()) {
+			if (getModel().isPressed()) {
+				g2.setColor(Colors.SPINNER_BUTTON_PRESSED);
+			} else if (getModel().isRollover()) {
+				g2.setColor(Colors.SPINNER_BUTTON_ROLLOVER);
+			} else {
+				g2.setColor(Colors.SPINNER_BUTTON_BACKGROUND);
+			}
+		} else {
+			g2.setColor(Colors.SPINNER_BUTTON_DISABLED);
+		}
+
+		g2.fillRect(1, 0, w - 1, h);
+	}
+
+	private void paintUpButton(Graphics2D g2) {
+		this.dimension = getSize();
+		int h = (int) this.dimension.getHeight();
+		int w = (int) this.dimension.getWidth();
+
+		if (getModel().isEnabled()) {
+			if (getModel().isPressed()) {
+				g2.setColor(Colors.SPINNER_BUTTON_PRESSED);
+			} else if (getModel().isRollover()) {
+				g2.setColor(Colors.SPINNER_BUTTON_ROLLOVER);
+			} else {
+				g2.setColor(Colors.SPINNER_BUTTON_BACKGROUND);
+			}
+		} else {
+			g2.setColor(Colors.SPINNER_BUTTON_DISABLED);
+		}
+
+		g2.fillRect(1, 0, w, h);
+	}
+
+	private void drawArrow(Graphics2D g2) {
+		this.dimension = getSize();
+
+		int baseY = (int) (this.dimension.getHeight() / 2 - 2);
+		if (!this.up) {
+			baseY++;
+		}
+
+		g2.translate(5, baseY);
+		g2.setColor(Colors.SPINNER_ARROW);
+
+		if (this.up) {
+			Polygon triangle = new Polygon(new int[] { 0, 6, 3 }, new int[] { 4, 4, 0 }, 3);
+			g2.fillPolygon(triangle);
+		} else {
+			Polygon triangle = new Polygon(new int[] { 0, 6, 3 }, new int[] { 0, 0, 4 }, 3);
+			g2.fillPolygon(triangle);
+		}
+		g2.translate(-6, -baseY);
 	}
 }

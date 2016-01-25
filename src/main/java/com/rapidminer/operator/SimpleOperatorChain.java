@@ -1,25 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator;
 
+import com.rapidminer.Process;
+import com.rapidminer.ProcessListener;
 import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 
@@ -56,6 +56,42 @@ public class SimpleOperatorChain extends OperatorChain {
 
 	@Override
 	public void doWork() throws OperatorException {
+		final int numOperators = this.getSubprocess(0).getNumberOfOperators();
+		getProgress().setTotal(numOperators);
+		getProcess().getRootOperator().addProcessListener(new ProcessListener() {
+
+			int counter = 0;
+
+			@Override
+			public void processStarts(Process process) {
+				// dont care
+
+			}
+
+			@Override
+			public void processStartedOperator(Process process, Operator op) {
+				// dont care
+
+			}
+
+			@Override
+			public void processFinishedOperator(Process process, Operator op) {
+				try {
+					SimpleOperatorChain.this.getProgress().setCompleted(++counter);
+				} catch (ProcessStoppedException e) {
+					SimpleOperatorChain.this.getProcess().getRootOperator().removeProcessListener(this);
+				}
+				if (counter == numOperators) {
+					SimpleOperatorChain.this.getProcess().getRootOperator().removeProcessListener(this);
+				}
+
+			}
+
+			@Override
+			public void processEnded(Process process) {
+				SimpleOperatorChain.this.getProcess().getRootOperator().removeProcessListener(this);
+			}
+		});
 		clearAllInnerSinks();
 		inputExtender.passDataThrough();
 		super.doWork();

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.tools.RepositoryGuiTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.repository.internal.db.DBRepository;
@@ -74,7 +75,9 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 
 	private final List<Repository> repositories = new LinkedList<>();
 
-	/** listener which reacts on repository changes like renaming and sorts the list of repositories */
+	/**
+	 * listener which reacts on repository changes like renaming and sorts the list of repositories
+	 */
 	private final RepositoryListener repositoryListener = new RepositoryListener() {
 
 		@Override
@@ -384,8 +387,8 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 					if (parentEntry instanceof Folder) {
 						parentFolder = (Folder) parentEntry;
 					} else {
-						throw new RepositoryException("Parent '" + parentLocation + "' of '" + location
-								+ "' is not a folder.");
+						throw new RepositoryException(
+								"Parent '" + parentLocation + "' of '" + location + "' is not a folder.");
 					}
 				} else {
 					parentFolder = parentLocation.createFoldersRecursively();
@@ -416,8 +419,8 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 					if (parentEntry instanceof Folder) {
 						parentFolder = (Folder) parentEntry;
 					} else {
-						throw new RepositoryException("Parent '" + parentLocation + "' of '" + location
-								+ "' is not a folder.");
+						throw new RepositoryException(
+								"Parent '" + parentLocation + "' of '" + location + "' is not a folder.");
 					}
 				} else {
 					parentFolder = parentLocation.createFoldersRecursively();
@@ -562,13 +565,13 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			String destinationAbsolutePath = destination.getLocation().getAbsoluteLocation();
 			// make sure same folder moves are forbidden
 			if (sourceAbsolutePath.equals(destinationAbsolutePath)) {
-				throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-						"repository.repository_copy_same_folder"));
+				throw new RepositoryException(
+						I18N.getMessage(I18N.getErrorBundle(), "repository.repository_copy_same_folder"));
 			}
 			// make sure moving parent folder into subfolder is forbidden
 			if (destinationAbsolutePath.contains(sourceAbsolutePath)) {
-				throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-						"repository.repository_copy_into_subfolder"));
+				throw new RepositoryException(
+						I18N.getMessage(I18N.getErrorBundle(), "repository.repository_copy_into_subfolder"));
 			}
 			Folder destinationFolder = destination.createFolder(newName);
 			List<Entry> allChildren = new LinkedList<>();
@@ -617,13 +620,13 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			}
 			// make sure same folder moves are forbidden
 			if (sourceAbsolutePath.equals(destinationAbsolutePath)) {
-				throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-						"repository.repository_move_same_folder"));
+				throw new RepositoryException(
+						I18N.getMessage(I18N.getErrorBundle(), "repository.repository_move_same_folder"));
 			}
 			// make sure moving parent folder into subfolder is forbidden
-			if (destinationAbsolutePath.contains(sourceAbsolutePath)) {
-				throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-						"repository.repository_move_into_subfolder"));
+			if (RepositoryGuiTools.isSuccessor(sourceAbsolutePath, destinationAbsolutePath)) {
+				throw new RepositoryException(
+						I18N.getMessage(I18N.getErrorBundle(), "repository.repository_move_into_subfolder"));
 			}
 			if (destination.getLocation().getRepository() != source.getRepository()) {
 				copy(source, destination, newName, listener);
@@ -754,7 +757,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	 * types. (Recursion happens also if the type is not a Folder.
 	 *
 	 * @throws RepositoryException
-	 * */
+	 */
 	public <T extends Entry> void walk(Entry start, RepositoryVisitor<T> visitor, Class<T> visitedType)
 			throws RepositoryException {
 		boolean continueChildren = true;

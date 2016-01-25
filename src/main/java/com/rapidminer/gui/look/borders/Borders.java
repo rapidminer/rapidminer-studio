@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.borders;
 
@@ -27,7 +25,7 @@ import javax.swing.border.Border;
  * The border creation and maintaining class used for all components. This class creates all borders
  * once and use these singletons for painting. Therefore, this class mainly serves as access point
  * for the border singletons.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class Borders {
@@ -36,11 +34,9 @@ public class Borders {
 	public static Border DUMMY_BORDER = new DummyBorder();
 	public static Border POPUP_BORDER = new PopupBorder();
 	public static Border SHADOWED_POPUP_MENU_BORDER = new ShadowedPopupMenuBorder();
-	public static Border MENU_BORDER = new MenuBorder();
 	public static Border TABLE_HEADER_BORDER = new TableHeaderBorder();
 	public static Border SPLIT_PANE_BORDER = new SplitPaneBorder();
 	public static Border INTERNAL_FRAME_BORDER = new InternalFrameBorder();
-	public static Border BUTTON_BORDER = new ButtonBorder();
 	public static Border COMBO_BOX_BORDER = new ComboBoxBorder();
 	public static Border TOOL_BAR_BORDER = new ToolBarBorder();
 	public static Border PROGRESS_BAR_BORDER = new ProgressBarBorder();
@@ -49,22 +45,11 @@ public class Borders {
 	public static Border EMPTY_BUTTON_BORDER = new EmptyButtonBorder();
 	public static Border POPUP_MENU_BORDER = new PopupMenuBorder();
 	public static Border TEXT_FIELD_BORDER = new TextFieldBorder();
-	public static Border COMBO_BOX_EDITOR_BORDER = new ComboBoxEditorBorder();
 	public static Border SCROLL_PANE_BORDER = new ScrollPaneBorder();
 	public static Border SPINNER_BORDER = new SpinnerBorder();
 	public static Border EMPTY_COMBO_BOX_BORDER = new EmptyComboBoxBorder();
 	public static Border CHECK_BOX_BORDER = new CheckBoxBorder();
 	public static Border COMBO_BOX_LIST_CELL_RENDERER_FOCUS_BORDER = new ComboBoxListCellRendererFocusBorder();
-	public static Border CARD_PANEL_BORDER = new CardPanelBorder();
-	public static Border CARD_PANEL_LIST_CELL_RENDERER_FOCUS_BORDER = new CardPanelListCellRendererFocusBorder();
-
-	public static Border getCardPanelListCellRendererFocusBorder() {
-		return CARD_PANEL_LIST_CELL_RENDERER_FOCUS_BORDER;
-	}
-
-	public static Border getCardPanelBorder() {
-		return CARD_PANEL_BORDER;
-	}
 
 	public static Border getCheckBoxBorder() {
 		return CHECK_BOX_BORDER;
@@ -86,10 +71,6 @@ public class Borders {
 		return SHADOWED_POPUP_MENU_BORDER;
 	}
 
-	public static Border getMenuBorder() {
-		return MENU_BORDER;
-	}
-
 	public static Border getTableHeaderBorder() {
 		return TABLE_HEADER_BORDER;
 	}
@@ -100,10 +81,6 @@ public class Borders {
 
 	public static Border getInternalFrameBorder() {
 		return INTERNAL_FRAME_BORDER;
-	}
-
-	public static Border getButtonBorder() {
-		return BUTTON_BORDER;
 	}
 
 	public static Border getComboBoxBorder() {
@@ -136,10 +113,6 @@ public class Borders {
 
 	public static Border getTextFieldBorder() {
 		return TEXT_FIELD_BORDER;
-	}
-
-	public static Border getComboBoxEditorBorder() {
-		return COMBO_BOX_EDITOR_BORDER;
 	}
 
 	public static Border getScrollPaneBorder() {

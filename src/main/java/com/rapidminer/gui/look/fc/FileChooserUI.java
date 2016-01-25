@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.fc;
 
@@ -43,6 +41,7 @@ import java.util.Locale;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.AbstractListModel;
 import javax.swing.Action;
 import javax.swing.ActionMap;
@@ -87,7 +86,8 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.ResourceActionTransmitter;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.components.DropDownButton;
+import com.rapidminer.gui.tools.components.DropDownPopupButton;
+import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.io.remote.RemoteFileSystemView;
 import com.rapidminer.tools.I18N;
@@ -100,7 +100,6 @@ import com.rapidminer.tools.I18N;
  */
 public class FileChooserUI extends BasicFileChooserUI {
 
-	// TODO: add property specification via I18N
 	public static final String FILECHOOSER_VIEW_TYPE = "FILECHOOSER_VIEW_TYPE";
 
 	public static final String FILECHOOSER_VIEW_THUMBNAIL = I18N.getMessage(I18N.getGUIBundle(),
@@ -115,9 +114,9 @@ public class FileChooserUI extends BasicFileChooserUI {
 	public static final String FILECHOOSER_VIEW_DETAILS = I18N.getMessage(I18N.getGUIBundle(),
 			"gui.menu.file_chooser.view.details.label");
 
-	public static final Icon FILECHOOSER_OPEN_ICON = SwingTools.createIcon("24/folder.png");
+	public static final Icon FILECHOOSER_OPEN_ICON = SwingTools.createIcon("24/folder_open.png");
 
-	public static final Icon FILECHOOSER_SELECT_ICON = SwingTools.createIcon("24/folder.png");
+	public static final Icon FILECHOOSER_SELECT_ICON = SwingTools.createIcon("24/folder_open.png");
 
 	public static final Icon FILECHOOSER_SAVE_ICON = SwingTools.createIcon("24/floppy_disk.png");
 
@@ -230,7 +229,8 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 	}
 
-	private class FilterComboBoxModel extends AbstractListModel implements ComboBoxModel, PropertyChangeListener {
+	private class FilterComboBoxModel extends AbstractListModel<Object> implements ComboBoxModel<Object>,
+			PropertyChangeListener {
 
 		private static final long serialVersionUID = -7578988904254755349L;
 
@@ -306,7 +306,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		private static final long serialVersionUID = 7024419790190737084L;
 
 		@Override
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+		public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
 				boolean cellHasFocus) {
 			super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 			if (value != null && value instanceof FileFilter) {
@@ -319,7 +319,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 	}
 
-	private class DirectoryComboBoxModel extends AbstractListModel implements ComboBoxModel {
+	private class DirectoryComboBoxModel extends AbstractListModel<Object> implements ComboBoxModel<Object> {
 
 		private static final long serialVersionUID = -7566898679781533334L;
 
@@ -473,7 +473,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		private IndentIcon indentIcon = new IndentIcon();
 
 		@Override
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+		public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
 				boolean cellHasFocus) {
 			super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
@@ -602,7 +602,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 	public transient final Action NEW_FOLDER_ACTION = new NewFolderAction();
 
-	public final Action CHANGE_VIEW_ACTION = new ChangeViewAction();
+	public final ResourceActionAdapter CHANGE_VIEW_ACTION = new ChangeViewAction();
 
 	public final Action ADD_TO_BOOKMARKS_ACTION = new BookmarkAction();
 
@@ -628,13 +628,13 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 	private final Border roundComboboxListRendererBorder = Borders.getComboBoxListCellRendererFocusBorder();
 
-	private DropDownButton changeViewButton;
+	private DropDownPopupButton changeViewButton;
 
 	protected FileList fileList;
 
 	private JLabel lookInLabel;
 
-	private JComboBox directoryComboBox;
+	private JComboBox<Object> directoryComboBox;
 
 	private DirectoryComboBoxModel directoryComboBoxModel;
 
@@ -652,7 +652,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 	private JPanel bottomPanel;
 
-	private JComboBox filterComboBox;
+	private JComboBox<Object> filterComboBox;
 
 	private int lookInLabelMnemonic = 0;
 
@@ -772,7 +772,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		topPanel.add(this.lookInLabel, BorderLayout.BEFORE_LINE_BEGINS);
 
 		// CurrentDir ComboBox
-		this.directoryComboBox = new JComboBox();
+		this.directoryComboBox = new JComboBox<>();
 		this.directoryComboBox.setOpaque(false);
 		this.directoryComboBox.getAccessibleContext().setAccessibleDescription(this.lookInLabelText);
 		this.directoryComboBox.putClientProperty("JComboBox.lightweightKeyboardNavigation", "Lightweight");
@@ -809,8 +809,8 @@ public class FileChooserUI extends BasicFileChooserUI {
 		upFolderButton.setRolloverEnabled(true);
 		upFolderButton.setIcon((Icon) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.SMALL_ICON));
 		upFolderButton.setToolTipText((String) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.SHORT_DESCRIPTION));
-		upFolderButton.getAccessibleContext().setAccessibleName(
-				(String) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.ACCELERATOR_KEY));
+		upFolderButton.getAccessibleContext()
+				.setAccessibleName((String) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.ACCELERATOR_KEY));
 		upFolderButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 		upFolderButton.setAlignmentY(Component.CENTER_ALIGNMENT);
 		upFolderButton.setBackground((Color) UIManager.get("control"));
@@ -828,8 +828,8 @@ public class FileChooserUI extends BasicFileChooserUI {
 			this.bookmarksButton.setIcon((Icon) ADD_TO_BOOKMARKS_ACTION.getValue(Action.SMALL_ICON));
 			this.bookmarksButton.setFocusable(false);
 			this.bookmarksButton.setToolTipText((String) ADD_TO_BOOKMARKS_ACTION.getValue(Action.SHORT_DESCRIPTION));
-			this.bookmarksButton.getAccessibleContext().setAccessibleName(
-					(String) ADD_TO_BOOKMARKS_ACTION.getValue(Action.ACCELERATOR_KEY));
+			this.bookmarksButton.getAccessibleContext()
+					.setAccessibleName((String) ADD_TO_BOOKMARKS_ACTION.getValue(Action.ACCELERATOR_KEY));
 			this.bookmarksButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 			this.bookmarksButton.setAlignmentY(Component.CENTER_ALIGNMENT);
 			this.bookmarksButton.setBackground((Color) UIManager.get("control"));
@@ -876,16 +876,15 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 
 		// views button
-		this.changeViewButton = new DropDownButton(CHANGE_VIEW_ACTION) {
-
-			private static final long serialVersionUID = -2115601230879074911L;
+		this.changeViewButton = new DropDownPopupButton(CHANGE_VIEW_ACTION, new PopupMenuProvider() {
 
 			@Override
-			protected JPopupMenu getPopupMenu() {
+			public JPopupMenu getPopupMenu() {
 				return changeViewPopup;
 			}
-		};
-		this.changeViewButton.setText(null);
+
+		});
+		this.changeViewButton.setText("");
 		this.changeViewButton.setRolloverEnabled(true);
 		this.changeViewButton.setIcon((Icon) CHANGE_VIEW_ACTION.getValue(Action.SMALL_ICON));
 		this.changeViewButton.setToolTipText((String) CHANGE_VIEW_ACTION.getValue(Action.SHORT_DESCRIPTION));
@@ -893,11 +892,11 @@ public class FileChooserUI extends BasicFileChooserUI {
 				(String) CHANGE_VIEW_ACTION.getValue(Action.ACCELERATOR_KEY));
 		this.changeViewButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 		this.changeViewButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+		this.changeViewButton.setMaximumSize(new Dimension(50, 30));
 		this.changeViewButton.setBackground((Color) UIManager.get("control"));
 		this.changeViewButton.setOpaque(false);
 		this.changeViewButton.setFocusable(false);
-
-		this.changeViewButton.addToToolBar(topPanel);
+		topPanel.add(this.changeViewButton);
 
 		topPanel.setBackground((Color) UIManager.get("control"));
 
@@ -974,7 +973,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 		this.filterComboBoxModel = createFilterComboBoxModel();
 		fc.addPropertyChangeListener(this.filterComboBoxModel);
-		this.filterComboBox = new JComboBox(this.filterComboBoxModel);
+		this.filterComboBox = new JComboBox<>(this.filterComboBoxModel);
 		this.filterComboBox.setPreferredSize(new Dimension(filterComboBox.getWidth(), 26));
 		this.filterComboBox.setOpaque(false);
 		this.filterComboBox.getAccessibleContext().setAccessibleDescription(this.filesOfTypeLabelText);
@@ -1054,31 +1053,11 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 		this.filesOfTypeLabelMnemonic = UIManager.getInt("FileChooser.filesOfTypeLabelMnemonic");
 		this.filesOfTypeLabelText = UIManager.getString("FileChooser.filesOfTypeLabelText", l);
-
-		// this.upFolderToolTipText = UIManager.getString("FileChooser.upFolderToolTipText", l);
-		// this.upFolderAccessibleName = UIManager.getString("FileChooser.upFolderAccessibleName",
-		// l);
-		//
-		// this.homeFolderToolTipText = UIManager.getString("FileChooser.homeFolderToolTipText", l);
-		// this.homeFolderAccessibleName =
-		// UIManager.getString("FileChooser.homeFolderAccessibleName", l);
-
-		// this.newFolderToolTipText = UIManager.getString("FileChooser.newFolderToolTipText", l);
-		// this.newFolderAccessibleName = UIManager.getString("FileChooser.newFolderAccessibleName",
-		// l);
 	}
 
 	@Override
 	protected void installListeners(JFileChooser fc) {
 		super.installListeners(fc);
-
-		// this.changeViewPopup.addPropertyChangeListener(new PropertyChangeListener() {
-		// public void propertyChange(PropertyChangeEvent e) {
-		// if (e.getPropertyName().toLowerCase().equals("visible")) {
-		// FileChooserUI.this.changeViewButton.setSelected(Boolean.parseBoolean(e.getNewValue().toString()));
-		// }
-		// }
-		// });
 
 		ActionMap actionMap = getActions();
 		SwingUtilities.replaceUIActionMap(fc, actionMap);
@@ -1149,8 +1128,8 @@ public class FileChooserUI extends BasicFileChooserUI {
 	private void doSelectedFileChanged(PropertyChangeEvent e) {
 		File f = (File) e.getNewValue();
 		JFileChooser fc = getFileChooser();
-		if (f != null
-				&& (fc.isFileSelectionEnabled() && !f.isDirectory() || f.isDirectory() && fc.isDirectorySelectionEnabled())) {
+		if (f != null && (fc.isFileSelectionEnabled() && !f.isDirectory()
+				|| f.isDirectory() && fc.isDirectorySelectionEnabled())) {
 			setFileName(fileNameString(f));
 			setFileSelected();
 		}
@@ -1506,7 +1485,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 		// synchronizing menu's
 		JRadioButtonMenuItem rbm;
-		Enumeration en = this.changeViewButtonGroup.getElements();
+		Enumeration<AbstractButton> en = this.changeViewButtonGroup.getElements();
 		while (en.hasMoreElements()) {
 			rbm = (JRadioButtonMenuItem) en.nextElement();
 

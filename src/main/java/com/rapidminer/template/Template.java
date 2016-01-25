@@ -1,40 +1,30 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.template;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -42,236 +32,202 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import com.rapidminer.Process;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.operator.Annotations;
-import com.rapidminer.operator.tools.IOObjectSerializer;
+import com.rapidminer.RepositoryProcessLocation;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.resource.ZipStreamResource;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.NonClosingZipInputStream;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
 
 
 /**
- * Description of a process template, i.e. a use cases from a business perspective. A template
- * consists of description texts, a process, configuration options for that process, and a
- * description of the output.
- * 
- * @author Simon Fischer
- * 
+ * Templates for new processes. The template must be a .zip file renamed to .template containing
+ *
+ * <ul>
+ * <li>an {@code icon.png} of size 64x64</li>
+ * <li>a {@code template.properties} file</li>
+ * <li>one {@code .rmp} process file</li>
+ * <li>an arbitrarily number of {@code .ioo} and {@code .md} files that are used in the process</li>
+ * </ul>
+ * The {@code template.properties} file has to contain the keys
+ * <ul>
+ * <li>template.name (which defines the title of the template)</li>
+ * <li>template.short_description (which defines the description of the template)</li>
+ * </ul>
+ * The process and the data files are automatically added to the folder
+ * //Samples/Templates/[template.title] and the data files must be referred from the process with an
+ * absolute path accordingly. </br> </br> The template files can be added into
+ * .Rapidminer/templates/ or under template/ in the extension resources (
+ * {@code src/main/resources/com.rapidminer.resources.template/[fileName].template}). Template files
+ * in the resources have to be registered via {@link TemplateManager#registerTemplate(String)} while
+ * the files from the .Rapidminer folder are loaded automatically.
+ *
+ * @author Simon Fischer, Gisa Schaefer
+ *
  */
-public class Template {
+public class Template implements ZipStreamResource {
 
-	private static final Pattern RESULT_PLOT_PATTERN = Pattern.compile("result_([0-9]+).*.properties");
+	/** the repository location for templates */
+	private static final String TEMPLATES_PATH = "//Samples/Templates/";
 
-	/**
-	 * ZipInputStream with a noop close() method so we can actually pass this stream to utility
-	 * methods which illegally call close().
-	 */
-	private final class NonClosingZipInputStream extends ZipInputStream {
+	/** the resources location for templates */
+	private static final String RESOURCES_LOCATION = "template/";
 
-		private NonClosingZipInputStream(InputStream in) {
-			super(in);
-		}
+	private static final String NO_DESCRIPTION = I18N.getGUILabel("template.no_description");
+	private static final String NO_TITLE = I18N.getGUILabel("template.no_title");
+
+	/** special template which is not loaded from a resource but simply creates a new, empty process */
+	public static final Template BLANK_PROCESS_TEMPLATE = new Template() {
 
 		@Override
-		public void close() throws IOException {
-			// noop to prevent utility methods from closing the zip.
+		public Process makeProcess() throws IOException, XMLException, MalformedRepositoryLocationException {
+			return new Process();
 		}
+	};
 
-		public void close2() throws IOException {
-			super.close();
-		}
-	}
-
-	private String title = "Unnamed template";
-	private String shortDescription = "This template does not have a description.";
-	private String processXML;
-	private List<Properties> resultPlotterSettings = new ArrayList<>();
+	private String title = NO_TITLE;
+	private String shortDescription = NO_DESCRIPTION;
+	private String processName;
+	private List<String> demoData;
 	private Icon icon;
-	/** Resources found in the resources/ folder of the zip file. */
-	private Map<String, byte[]> resources = new HashMap<>();
 
-	private EnumMap<Step, String> helpTexts = new EnumMap<>(Step.class);
+	private final Path path;
+	private final String name;
 
-	private List<RoleRequirement> roleRequirements = new ArrayList<>();
+	/**
+	 * Private constructor for special blank process template only.
+	 */
+	private Template() {
+		this.title = I18N.getGUILabel("getting_started.new.empty.title");
+		this.shortDescription = I18N.getGUILabel("getting_started.new.empty.description");
+		this.icon = SwingTools.createIcon("64/" + I18N.getGUILabel("getting_started.new.empty.icon"));
+		this.demoData = new LinkedList<>();
+		this.name = this.title;
+		this.processName = null;
+		this.path = null;
+	}
 
-	private String name;
-	private String learnMoreURL;
-	private ExampleSet demoData;
-	private String requiredExtensions;
-	private String requiredExtensionNames;
-
-	public Template(String name) throws IOException, RepositoryException {
+	Template(String name) throws IOException, RepositoryException {
 		this.name = name;
-		InputStream in = Tools.getResourceInputStream("template/" + name + ".zip");
-		try {
-			load(in);
-		} finally {
-			in.close();
-		}
+		this.path = null;
+		load();
 	}
 
-	public Template(File file) throws IOException, RepositoryException {
-		this.name = file.getName().replaceAll("\\.zip", "");
-		FileInputStream in = new FileInputStream(file);
-		try {
-			load(in);
-		} finally {
-			in.close();
-		}
+	Template(Path path) throws IOException, RepositoryException {
+		this.name = path.getFileName().toString().replaceAll("\\.template", "");
+		this.path = path;
+		load();
 	}
 
+	/**
+	 * @return the {@link ZipInputStream} to load resources associated with this template
+	 */
+	@Override
+	public ZipInputStream getStream() throws IOException, RepositoryException {
+		return new ZipInputStream(getInputStream());
+	}
+
+	@Override
 	public String getTitle() {
 		return title;
 	}
 
-	public String getShortDescription() {
+	@Override
+	public String getDescription() {
 		return shortDescription;
 	}
 
-	public Process makeProcess() {
-		try {
-			return new Process(processXML);
-		} catch (IOException | XMLException e) {
-			throw new RuntimeException("Illegal process file format: " + e, e);
-		}
+	@Override
+	public String getStreamPath() {
+		return null;
 	}
 
-	public int getNumberOfRoleRequirements() {
-		return roleRequirements.size();
-	}
-
-	public RoleRequirement getRoleRequirement(int i) {
-		return roleRequirements.get(i);
-	}
-
-	public List<RoleRequirement> getRoleRequirements() {
-		return Collections.unmodifiableList(roleRequirements);
-	}
-
-	public String getHelpText(Step step) {
-		return helpTexts.get(step);
-	}
-
-	public Icon getIcon() {
-		return icon;
-	}
-
-	public List<Properties> getResultPlotterSettings() {
-		return Collections.unmodifiableList(resultPlotterSettings);
-	}
-
-	private void load(InputStream rawIn) throws IOException {
-		NonClosingZipInputStream zip = new NonClosingZipInputStream(rawIn);
-
-		try {
-			ZipEntry entry;
-			while ((entry = zip.getNextEntry()) != null) {
-				if (entry.isDirectory()) {
-					continue;
-				}
-				String entryName = entry.getName();
-				if ("template.properties".equals(entryName)) {
-					Properties props = new Properties();
-					props.load(zip);
-					title = props.getProperty("template.name", "Unnamed template");
-					shortDescription = props.getProperty("template.short_description",
-							"This template does not have a description.");
-					learnMoreURL = props.getProperty("template.learn_more_url");
-					requiredExtensions = props.getProperty("template.required_extensions");
-					requiredExtensionNames = props.getProperty("template.required_extension_names");
-					int numberOfInputRoles = parseInt(props.getProperty("template.number_role_requirements", "1"),
-							"Illegal number of input roles");
-					for (int i = 0; i < numberOfInputRoles; i++) {
-						roleRequirements.add(new RoleRequirement(props, i + 1));
-					}
-				} else if ("process.xml".equals(entryName)) {
-					processXML = Tools.readTextFile(zip);
-				} else if ("input.ioo".equals(entryName)) {
-					this.demoData = (ExampleSet) IOObjectSerializer.getInstance().deserialize(zip);
-					this.demoData.getAnnotations().removeAnnotation(Annotations.KEY_SOURCE);
-				} else if ("icon.png".equals(entryName)) {
-					icon = new ImageIcon(Tools.readInputStream(zip));
-				} else if ("template.html".equals(entryName)) { // documentation texts
-					helpTexts.put(Step.TEMPLATE, Tools.readTextFile(zip));
-				} else if ("data.html".equals(entryName)) {
-					helpTexts.put(Step.DATA, Tools.readTextFile(zip));
-				} else if ("results.html".equals(entryName)) {
-					helpTexts.put(Step.RESULTS, Tools.readTextFile(zip));
-				} else if (entryName.matches("resources/.+")) { // Need to have at least one more
-																// character! Otherwise matches
-																// folder
-					String resourceName = entryName.substring("resources/".length());
-					byte[] resource = Tools.readInputStream(zip);
-					resources.put(resourceName, resource);
-				} else {
-					Matcher matcher = RESULT_PLOT_PATTERN.matcher(entryName);
-					if (matcher.matches()) {
-						// The index in the file name indicates what result port these settings
-						// refer to
-						String indexString = matcher.group(1);
-						int index;
-						try {
-							index = Integer.parseInt(indexString);
-						} catch (NumberFormatException e) {
-							throw new IOException("Illegal result properties name in template file: " + entry.getName(), e);
-						}
-						while (resultPlotterSettings.size() < index) {
-							resultPlotterSettings.add(null);
-						}
-						Properties props = new Properties();
-						props.load(zip);
-						// numbering starts at 0, file name numbering at 1
-						resultPlotterSettings.set(index - 1, props);
-					}
-				}
-			}
-		} finally {
-			zip.close(); // noop ; to avoid compile time warning about resource leek
-			zip.close2();
-		}
-	}
-
-	/** Throws an IOException upon unsuccessful parse. */
-	private static int parseInt(String intStr, String errorMessage) throws IOException {
-		try {
-			return Integer.parseInt(intStr);
-		} catch (NumberFormatException e) {
-			throw new IOException(errorMessage + ": " + intStr, e);
-		}
-	}
-
+	/**
+	 * @return the name of the template which is also the name of the zip file
+	 */
 	public String getName() {
 		return name;
 	}
 
-	public InputStream getResource(String resourceName) {
-		return new ByteArrayInputStream(resources.get(resourceName));
+	/**
+	 * @return a new process that contains the template process
+	 * @throws XMLException
+	 * @throws IOException
+	 * @throws MalformedRepositoryLocationException
+	 */
+	public Process makeProcess() throws IOException, XMLException, MalformedRepositoryLocationException {
+		String processLocation = TEMPLATES_PATH + title + "/" + processName;
+		RepositoryProcessLocation repoLocation = new RepositoryProcessLocation(new RepositoryLocation(processLocation));
+		return new Process(repoLocation.getRawXML());
 	}
 
-	public Collection<String> getResourceNames() {
-		return resources.keySet();
+	/**
+	 * @return the name of the process behind this template
+	 */
+	public String getProcessName() {
+		return processName;
 	}
 
-	public ExampleSet getDemoData() {
+	/**
+	 * @return the icon to display
+	 */
+	public Icon getIcon() {
+		return icon;
+	}
+
+	/**
+	 * @return the list of demo data names
+	 */
+	public List<String> getDemoData() {
 		return demoData;
 	}
 
-	public String getLearnMoreURL() {
-		return learnMoreURL;
-	}
-
-	public String[] getRequiredExtensions() {
-		if (requiredExtensions == null) {
-			return null;
+	/**
+	 * Loads the content of the zip file.
+	 */
+	private void load() throws IOException, RepositoryException {
+		try (InputStream rawIn = getInputStream()) {
+			demoData = new LinkedList<>();
+			NonClosingZipInputStream zip = new NonClosingZipInputStream(rawIn);
+			try {
+				ZipEntry entry;
+				while ((entry = zip.getNextEntry()) != null) {
+					if (entry.isDirectory()) {
+						throw new RepositoryException("Template malformed. A template must not contain a directory.");
+					}
+					String entryName = entry.getName();
+					if ("template.properties".equals(entryName)) {
+						Properties props = new Properties();
+						props.load(zip);
+						title = props.getProperty("template.name", NO_TITLE);
+						shortDescription = props.getProperty("template.short_description", NO_DESCRIPTION);
+					} else if (entryName.endsWith(".rmp")) {
+						processName = entryName.split("\\.")[0];
+					} else if (entryName.endsWith(".ioo")) {
+						demoData.add(entryName.split("\\.")[0]);
+					} else if ("icon.png".equals(entryName)) {
+						icon = new ImageIcon(Tools.readInputStream(zip));
+					}
+				}
+			} finally {
+				zip.close(); // noop ; to avoid compile time warning about resource leak
+				zip.close2();
+			}
 		}
-		return requiredExtensions.trim().split(",");
 	}
 
-	public String getRequiredExtensionNames() {
-		if (requiredExtensionNames == null) {
-			return null;
+	/**
+	 * @return the {@link InputStream} to of this template
+	 */
+	private InputStream getInputStream() throws IOException, RepositoryException {
+		if (path != null) {
+			return Files.newInputStream(path);
+		} else {
+			return Tools.getResourceInputStream(RESOURCES_LOCATION + name + ".template");
 		}
-		return requiredExtensionNames;
 	}
-
 }

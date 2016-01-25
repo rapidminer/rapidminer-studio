@@ -1,31 +1,30 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation.significance;
+
+import org.apache.commons.math3.distribution.FDistribution;
 
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.performance.PerformanceCriterion;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.report.Readable;
 import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.math.FDistribution;
 import com.rapidminer.tools.math.SignificanceTestResult;
 
 
@@ -36,7 +35,7 @@ import com.rapidminer.tools.math.SignificanceTestResult;
  * this test will be applied to all possible pairs. The result is a significance matrix. However,
  * pairwise t-test may introduce a larger type I error. It is recommended to apply an additional
  * ANOVA test to determine if the null hypothesis is wrong at all.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class TTestSignificanceTestOperator extends SignificanceTestOperator {
@@ -120,7 +119,7 @@ public class TTestSignificanceTestOperator extends SignificanceTestOperator {
 	public SignificanceTestResult performSignificanceTest(PerformanceVector[] allVectors, double alpha) {
 		double[][] resultMatrix = new double[allVectors.length][allVectors.length];
 		for (int i = 0; i < allVectors.length; i++) {
-			for (int j = 0; j < (i + 1); j++) {
+			for (int j = 0; j < i + 1; j++) {
 				resultMatrix[i][j] = Double.NaN; // fill lower triangle with
 			}
 			// NaN --> empty in result
@@ -139,9 +138,18 @@ public class TTestSignificanceTestOperator extends SignificanceTestOperator {
 		double factor = 1.0d / (1.0d / pc1.getAverageCount() + 1.0d / pc2.getAverageCount());
 		double diff = pc1.getAverage() - pc2.getAverage();
 		double t = factor * diff * diff / totalDeviation;
-		FDistribution fDist = new FDistribution(1, pc1.getAverageCount() + pc2.getAverageCount() - 2);
-		double prob = fDist.getProbabilityForValue(t);
-		prob = prob < 0 ? 1.0d : 1.0d - prob;
+		int secondDegreeOfFreedom = pc1.getAverageCount() + pc2.getAverageCount() - 2;
+		double prob;
+		// make sure the F-distribution is well defined
+		if (secondDegreeOfFreedom > 0) {
+			FDistribution fDist = new FDistribution(1, secondDegreeOfFreedom);
+			prob = 1 - fDist.cumulativeProbability(t);
+		} else {
+			// in this case the probability cannot calculated correctly and a 1 is returned, as
+			// this result is not significant
+			prob = 1;
+		}
+
 		return prob;
 	}
 

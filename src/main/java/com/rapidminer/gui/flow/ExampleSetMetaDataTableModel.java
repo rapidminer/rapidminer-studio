@@ -1,30 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow;
-
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.operator.Annotations;
-import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.tools.Ontology;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -35,10 +27,17 @@ import javax.swing.JScrollPane;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.operator.Annotations;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.tools.Ontology;
+
 
 /**
  * This is a table model for the example set meta data.
- * 
+ *
  * @author Simon Fischer
  */
 public class ExampleSetMetaDataTableModel implements TableModel {
@@ -130,7 +129,10 @@ public class ExampleSetMetaDataTableModel implements TableModel {
 	public static Component makeTableForToolTip(ExampleSetMetaData emd) {
 		ExtendedJTable table = new ExtendedJTable(new ExampleSetMetaDataTableModel(emd), true, true, true, false, false);
 		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setBorder(null);
 		scrollPane.setPreferredSize(new Dimension(300, 200));
+		scrollPane.setBackground(Colors.WHITE);
+		scrollPane.getViewport().setBackground(Colors.WHITE);
 		return scrollPane;
 	}
 }

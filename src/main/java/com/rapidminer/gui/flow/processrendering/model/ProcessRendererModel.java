@@ -1,26 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow.processrendering.model;
 
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Point;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ import com.rapidminer.gui.flow.processrendering.annotations.model.OperatorAnnota
 import com.rapidminer.gui.flow.processrendering.annotations.model.ProcessAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotations;
+import com.rapidminer.gui.flow.processrendering.background.ProcessBackgroundImage;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererAnnotationEvent;
@@ -48,7 +48,6 @@ import com.rapidminer.gui.flow.processrendering.event.ProcessRendererModelEvent.
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent.OperatorEvent;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
-import com.rapidminer.gui.flow.processrendering.view.components.InterpolationMap;
 import com.rapidminer.io.process.GUIProcessXMLFilter;
 import com.rapidminer.io.process.ProcessXMLFilterRegistry;
 import com.rapidminer.operator.ExecutionUnit;
@@ -81,20 +80,23 @@ import com.rapidminer.tools.parameter.ParameterChangeListener;
  */
 public final class ProcessRendererModel {
 
+	/** the font for the operator name */
+	public static final Font OPERATOR_FONT = new Font(Font.DIALOG, Font.BOLD, 11);
+
+	/** the height of the operator name header */
+	public static final int HEADER_HEIGHT = OPERATOR_FONT.getSize() + 7;
+
 	/** the width of each operator */
 	public static final int OPERATOR_WIDTH = 5 * 16 + 2 * 5;  // 5 mini icons + padding
 
 	/** the minimum height of an operator */
-	public static final int MIN_OPERATOR_HEIGHT = 60;
+	public static final int MIN_OPERATOR_HEIGHT = 50 + HEADER_HEIGHT;
 
 	/** the size of each operator/process port */
-	public static final int PORT_SIZE = 12;
+	public static final int PORT_SIZE = 14;
 
 	/** event listener for this model */
 	private final EventListenerList eventListener;
-
-	/** the operator name rollout helper instance */
-	private InterpolationMap nameRolloutInterpolationMap;
 
 	/** a list of the currently selected operators */
 	private List<Operator> selectedOperators;
@@ -143,6 +145,9 @@ public final class ProcessRendererModel {
 
 	/** indicates if the droptarget could be set */
 	private boolean dropTargetSet;
+
+	/** indicates if an operator source (tree, WoC, ...) is hovered */
+	private boolean operatorSourceHovered;
 
 	/** the position the mouse is currently at */
 	private Point currentMousePosition;
@@ -400,6 +405,26 @@ public final class ProcessRendererModel {
 	 */
 	public void setDropTargetSet(boolean dropTargetSet) {
 		this.dropTargetSet = dropTargetSet;
+	}
+
+	/**
+	 * Whether an an operator source (tree, WoC, ...) is hovered or not.
+	 *
+	 * @return {@code true} if an operator source (tree, WoC, ...); {@code false} otherwise
+	 */
+	public boolean isOperatorSourceHovered() {
+		return operatorSourceHovered;
+	}
+
+	/**
+	 * Sets whether an an operator source (tree, WoC, ...) is hovered or not.
+	 *
+	 * @param operatorSourceHovered
+	 *            {@code true} if a an operator source (tree, WoC, ...) is hovered; {@code false}
+	 *            otherwise
+	 */
+	public void setOperatorSourceHovered(boolean operatorSourceHovered) {
+		this.operatorSourceHovered = operatorSourceHovered;
 	}
 
 	/**
@@ -751,6 +776,37 @@ public final class ProcessRendererModel {
 	}
 
 	/**
+	 * Returns the {@link ProcessBackgroundImage} for the given {@link ExecutionUnit}.
+	 *
+	 * @param process
+	 *            the process in question
+	 * @return the background image. Can be {@code null} if none is set for this process
+	 */
+	public ProcessBackgroundImage getBackgroundImage(ExecutionUnit process) {
+		return GUIProcessXMLFilter.lookupBackgroundImage(process);
+	}
+
+	/**
+	 * Removes the given {@link ProcessBackgroundImage}.
+	 *
+	 * @param process
+	 *            the process for which to remove the background image
+	 */
+	public void removeBackgroundImage(ExecutionUnit process) {
+		GUIProcessXMLFilter.removeBackgroundImage(process);
+	}
+
+	/**
+	 * Sets the given {@link ProcessBackgroundImage}.
+	 *
+	 * @param image
+	 *            the image to add
+	 */
+	public void setBackgroundImage(ProcessBackgroundImage image) {
+		GUIProcessXMLFilter.setBackgroundImage(image);
+	}
+
+	/**
 	 * Returns the number of ports for the given {@link Operator}.
 	 *
 	 * @param op
@@ -836,28 +892,6 @@ public final class ProcessRendererModel {
 			throw new IllegalArgumentException("port must not be null!");
 		}
 		GUIProcessXMLFilter.resetPortSpacing(port);
-	}
-
-	/**
-	 * Returns the {@link InterpolationMap} used for rolling out operator names on hover.
-	 *
-	 * @return the map or {@code null}
-	 */
-	public InterpolationMap getNameRolloutInterpolationMap() {
-		return nameRolloutInterpolationMap;
-	}
-
-	/**
-	 * Sets the {@link InterpolationMap} used for rolling out operator names on hover.
-	 *
-	 * @param nameRolloutInterpolationMap
-	 *            the map instance
-	 */
-	public void setNameRolloutInterpolationMap(InterpolationMap nameRolloutInterpolationMap) {
-		if (nameRolloutInterpolationMap == null) {
-			throw new IllegalArgumentException("nameRolloutInterpolationMap must not be null!");
-		}
-		this.nameRolloutInterpolationMap = nameRolloutInterpolationMap;
 	}
 
 	/**

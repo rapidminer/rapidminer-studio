@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -304,7 +304,7 @@ public class ConfigurableDialog extends ButtonDialog {
 						String source = e.getConfigurable().getSource().getName();
 
 						boolean notYetManuallyConnected = addingConfigurablesFirstTime.get(source) == null
-	                            || !addingConfigurablesFirstTime.get(source).booleanValue();
+								|| !addingConfigurablesFirstTime.get(source).booleanValue();
 						boolean notYetAutoConnected = remoteControllers.get(source).getModel().wasVersionCheckDone();
 						lastSelected = e.getConfigurable();
 
@@ -354,8 +354,8 @@ public class ConfigurableDialog extends ButtonDialog {
 						} else {
 							// if there are no connections available
 							remoteInfoLabelListModels.get(source).removeAllElements();
-							remoteInfoLabelListModels.get(source)
-	                                .addElement(ConfigurableInfoLabelType.NO_CONNECTIONS.toString());
+							remoteInfoLabelListModels.get(source).addElement(
+									ConfigurableInfoLabelType.NO_CONNECTIONS.toString());
 							remoteTaskPanes.get(source).repaint();
 						}
 						remoteConfigLists.get(source).setSelectedIndex(index);
@@ -365,7 +365,7 @@ public class ConfigurableDialog extends ButtonDialog {
 				case LOADED_FROM_REPOSITORY:
 
 					// new remote connections are loaded and displayed in one block instead
-	                // of flying in separately
+					// of flying in separately
 					Configurable c = e.getConfigurable();
 
 					if (c != null) {
@@ -381,7 +381,7 @@ public class ConfigurableDialog extends ButtonDialog {
 							configurablesFetching.remove(source);
 
 							// update UI
-	                        // remove loading label
+							// remove loading label
 							remoteInfoLabelListModels.get(source).removeAllElements();
 							remoteTaskPanes.get(source).add(remoteConfigLists.get(source));
 
@@ -408,8 +408,8 @@ public class ConfigurableDialog extends ButtonDialog {
 							} else {
 								// if there are no connections available
 								remoteInfoLabelListModels.get(source).removeAllElements();
-								remoteInfoLabelListModels.get(source)
-	                                    .addElement(ConfigurableInfoLabelType.NO_CONNECTIONS.toString());
+								remoteInfoLabelListModels.get(source).addElement(
+										ConfigurableInfoLabelType.NO_CONNECTIONS.toString());
 								remoteTaskPanes.get(source).repaint();
 								updateParameterPanel(null);
 							}
@@ -469,8 +469,8 @@ public class ConfigurableDialog extends ButtonDialog {
 
 		Repository processLoc = null;
 		try {
-			processLoc = openProcess == null || openProcess.getRepositoryLocation() == null ? null
-			        : openProcess.getRepositoryLocation().getRepository();
+			processLoc = openProcess == null || openProcess.getRepositoryLocation() == null ? null : openProcess
+					.getRepositoryLocation().getRepository();
 			if (processLoc instanceof RemoteRepository) {
 				processLocation = (RemoteRepository) processLoc;
 			} else {
@@ -645,7 +645,7 @@ public class ConfigurableDialog extends ButtonDialog {
 
 		outerLayer = new JLayer<JPanel>(realOuterPanel);
 		savingGlassPane = new TransparentGlassPanePanel(WAITING_ICON,
-		        I18N.getGUILabel("configurable_dialog.saving_configurables"), getBackground(), 0.5f);
+				I18N.getGUILabel("configurable_dialog.saving_configurables"), getBackground(), 0.5f);
 		outerLayer.setGlassPane(savingGlassPane);
 		savingGlassPane.setVisible(false);
 
@@ -721,19 +721,19 @@ public class ConfigurableDialog extends ButtonDialog {
 				localController.saveConfigurable(previousConfigurable, configParamPanel.getParameters());
 			} else {
 				remoteControllers.get(previousConfigurable.getSource().getName()).saveConfigurable(previousConfigurable,
-				        configParamPanel.getParameters());
+						configParamPanel.getParameters());
 			}
 		}
 		if (config != null) {
 			try {
 				// stripped text depending on the size of the panel
-				String text = SwingTools.getStrippedJComponentText(outerPanel, config.getName(), outerPanel.getWidth() - 100,
-				        0);
+				String text = SwingTools.getStrippedJComponentText(outerPanel, config.getName(),
+						outerPanel.getWidth() - 100, 0);
 				nameLabel.setText("<html><b>" + text + "</b></html>");
 
 				// Get parameters based on Configurator implementation
 				Parameters parameters = ConfigurationManager.getInstance().getAbstractConfigurator(config.getTypeId())
-				        .getParameterHandler(config).getParameters();
+						.getParameterHandler(config).getParameters();
 
 				// fill in real values of configurable
 				for (String key : config.getParameters().keySet()) {
@@ -750,15 +750,14 @@ public class ConfigurableDialog extends ButtonDialog {
 				parameterPanel.add(parameterLayer, BorderLayout.CENTER);
 			} catch (Exception e) {
 				LogService.getRoot().log(Level.WARNING,
-				        "com.rapidminer.tools.config.gui.ConfigurableDialog.error_setting_parameters", e);
+						"com.rapidminer.tools.config.gui.ConfigurableDialog.error_setting_parameters", e);
 
 				// display error in GUI
 				parameterPanel.removeAll();
 
-				JLabel errorLabel = new JLabel(
-				        I18N.getGUIMessage(I18N
-				                .getGUIMessage("gui.dialog.configurable_dialog.error.display_stored_configurable.label")),
-				        FAILURE_ICON, SwingConstants.LEADING);
+				JLabel errorLabel = new JLabel(I18N.getGUIMessage(I18N
+						.getGUIMessage("gui.dialog.configurable_dialog.error.display_stored_configurable.label")),
+						FAILURE_ICON, SwingConstants.LEADING);
 				errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
 				parameterPanel.add(errorLabel, BorderLayout.CENTER);
 				configParamPanel = null;
@@ -824,9 +823,9 @@ public class ConfigurableDialog extends ButtonDialog {
 		for (ConfigurableController controller : remoteControllers.values()) {
 			ConfigurableModel model = controller.getModel();
 			boolean notUpdating = addingConfigurablesFirstTime.get(model.getSource().getName()) == null
-			        || !addingConfigurablesFirstTime.get(model.getSource().getName()).booleanValue();
+					|| !addingConfigurablesFirstTime.get(model.getSource().getName()).booleanValue();
 			boolean notFetching = configurablesFetching.get(model.getSource().getName()) == null
-			        || !configurablesFetching.get(model.getSource().getName()).booleanValue();
+					|| !configurablesFetching.get(model.getSource().getName()).booleanValue();
 
 			if (model.getSource().isConnected()) {
 				if (notUpdating && notFetching) {
@@ -886,7 +885,7 @@ public class ConfigurableDialog extends ButtonDialog {
 
 		// only add remote task panes in case the license permits collaboration features
 		if (LicenseManagerRegistry.INSTANCE.get().isAllowed(ProductConstraintManager.INSTANCE.getProduct(),
-		        LicenseConstants.SERVER_EDITION_CONSTRAINT, ServerEditions.COLLABORATION)) {
+				LicenseConstants.SERVER_EDITION_CONSTRAINT, ServerEditions.COLLABORATION)) {
 			for (final String source : remoteConfigListModels.keySet()) {
 				final JXTaskPane remoteTaskPane = new JXTaskPane();
 				remoteTaskPane.setName("remoteGroup" + i);
@@ -903,7 +902,7 @@ public class ConfigurableDialog extends ButtonDialog {
 					public void componentResized(ComponentEvent e) {
 						if (remoteConfigListModels.get(source).isEmpty()) {
 							boolean notFetching = configurablesFetching.get(source) == null
-				                    || !configurablesFetching.get(source).booleanValue();
+									|| !configurablesFetching.get(source).booleanValue();
 							if (notFetching) {
 
 								ProgressThread pt = new ProgressThread("load_configurables") {
@@ -915,7 +914,7 @@ public class ConfigurableDialog extends ButtonDialog {
 										getProgressListener().setTotal(100);
 										getProgressListener().setCompleted(10);
 										List<RemoteRepository> remotes = RepositoryManager.getInstance(null)
-				                                .getRemoteRepositories();
+												.getRemoteRepositories();
 										for (RemoteRepository repository : remotes) {
 											if (repository.getName().equals(source)) {
 												// if the remote task pane was opened
@@ -926,8 +925,8 @@ public class ConfigurableDialog extends ButtonDialog {
 
 														addingConfigurablesFirstTime.put(source, true);
 														remoteInfoLabelListModels.get(source).removeAllElements();
-														remoteInfoLabelListModels.get(source)
-				                                                .addElement(ConfigurableInfoLabelType.LOADING.toString());
+														remoteInfoLabelListModels.get(source).addElement(
+																ConfigurableInfoLabelType.LOADING.toString());
 														remoteTaskPane.repaint();
 
 														// try to connect
@@ -943,8 +942,8 @@ public class ConfigurableDialog extends ButtonDialog {
 
 															// timeout or connection failed
 															remoteInfoLabelListModels.get(source).removeAllElements();
-															remoteInfoLabelListModels.get(source)
-				                                                    .addElement(ConfigurableInfoLabelType.FAILED.toString());
+															remoteInfoLabelListModels.get(source).addElement(
+																	ConfigurableInfoLabelType.FAILED.toString());
 															addingConfigurablesFirstTime.remove(source);
 															configurablesFetching.remove(source);
 														}
@@ -956,10 +955,10 @@ public class ConfigurableDialog extends ButtonDialog {
 													} else {
 														// if there are no connections available
 														if (remoteControllers.get(source).getModel().getConfigurables()
-				                                                .isEmpty()) {
+																.isEmpty()) {
 															remoteInfoLabelListModels.get(source).removeAllElements();
 															remoteInfoLabelListModels.get(source).addElement(
-				                                                    ConfigurableInfoLabelType.NO_CONNECTIONS.toString());
+																	ConfigurableInfoLabelType.NO_CONNECTIONS.toString());
 															remoteTaskPane.repaint();
 														}
 													}
@@ -1149,7 +1148,7 @@ public class ConfigurableDialog extends ButtonDialog {
 
 				if (editingPossible && editingAllowed) {
 					// show input while user enters invalid values, if user clicks cancel or
-		            // finished correctly, abort loop
+					// finished correctly, abort loop
 					do {
 						String name = SwingTools.showInputDialog("configurable_dialog.rename", config.getName());
 						if (name == null) {
@@ -1165,7 +1164,7 @@ public class ConfigurableDialog extends ButtonDialog {
 							continue;
 						}
 						ConfigurableController controller = config.getSource() == null ? localController
-		                        : remoteControllers.get(config.getSource().getName());
+								: remoteControllers.get(config.getSource().getName());
 						boolean isUnique = controller.isNameUniqueForType(config.getTypeId(), name);
 						if (!isUnique) {
 							SwingTools.showVerySimpleErrorMessage("configurable_creation_dialog.invalid_duplicate_name");
@@ -1194,9 +1193,8 @@ public class ConfigurableDialog extends ButtonDialog {
 			}
 		}, keyStroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		renameButton.setBorderPainted(false);
-		renameButton.setBackground(NAME_PANEL_GRAY);
+		renameButton.setContentAreaFilled(false);
 		renameButton.setRolloverEnabled(false);
-		renameButton.setContentAreaFilled(true);
 		renameButton.setVisible(false);
 		renameButton.addMouseListener(new MouseAdapter() {
 
@@ -1232,8 +1230,8 @@ public class ConfigurableDialog extends ButtonDialog {
 					ConfigurableController remoteController = remoteControllers.get(selectedValue.getSource().getName());
 					if (remoteController.getModel().isEditingPossible()) {
 						if (remoteController.getModel().hasAdminRights()) {
-							remoteController.removeConfigurable(
-		                            remoteConfigLists.get(selectedValue.getSource().getName()).getSelectedValue());
+							remoteController.removeConfigurable(remoteConfigLists.get(selectedValue.getSource().getName())
+									.getSelectedValue());
 						}
 					}
 				}
@@ -1250,9 +1248,8 @@ public class ConfigurableDialog extends ButtonDialog {
 			}
 		}, keyStrokeRemove, JComponent.WHEN_IN_FOCUSED_WINDOW);
 		removeButton.setBorderPainted(false);
+		removeButton.setContentAreaFilled(false);
 		removeButton.setRolloverEnabled(false);
-		removeButton.setContentAreaFilled(true);
-		removeButton.setBackground(NAME_PANEL_GRAY);
 		removeButton.setVisible(false);
 		removeButton.addMouseListener(new MouseAdapter() {
 
@@ -1313,13 +1310,13 @@ public class ConfigurableDialog extends ButtonDialog {
 									previousConfigurable = getSelectedValue();
 									if (previousConfigurable.getSource() == null) {
 										localController.saveConfigurable(previousConfigurable,
-		                                        configParamPanel.getParameters());
+												configParamPanel.getParameters());
 										localController.executeConfigurableAction(action);
 									} else {
+										remoteControllers.get(previousConfigurable.getSource().getName()).saveConfigurable(
+												previousConfigurable, configParamPanel.getParameters());
 										remoteControllers.get(previousConfigurable.getSource().getName())
-		                                        .saveConfigurable(previousConfigurable, configParamPanel.getParameters());
-										remoteControllers.get(previousConfigurable.getSource().getName())
-		                                        .executeConfigurableAction(action);
+												.executeConfigurableAction(action);
 									}
 								}
 							});
@@ -1361,7 +1358,7 @@ public class ConfigurableDialog extends ButtonDialog {
 					localController.saveConfigurable(previousConfigurable, configParamPanel.getParameters());
 				} else {
 					remoteControllers.get(previousConfigurable.getSource().getName()).saveConfigurable(previousConfigurable,
-		                    configParamPanel.getParameters());
+							configParamPanel.getParameters());
 				}
 
 				Configurable configValue = previousConfigurable;
@@ -1371,8 +1368,8 @@ public class ConfigurableDialog extends ButtonDialog {
 						if (previousConfigurable.getSource() == null) {
 							localController.executeConfigurableAction(configurable.getTestAction());
 						} else {
-							remoteControllers.get(previousConfigurable.getSource().getName())
-		                            .executeConfigurableAction(configurable.getTestAction());
+							remoteControllers.get(previousConfigurable.getSource().getName()).executeConfigurableAction(
+									configurable.getTestAction());
 						}
 					}
 				} else {
@@ -1410,10 +1407,10 @@ public class ConfigurableDialog extends ButtonDialog {
 			public void actionPerformed(ActionEvent e) {
 				Configurable configurable = getSelectedValue();
 				ConfigurableUserAccessDialog accessDialog = new ConfigurableUserAccessDialog(ConfigurableDialog.this,
-		                configurable);
+						configurable);
 				accessDialog.setVisible(true);
 				ConfigurationManager.getInstance().setPermittedGroupsForConfigurable(configurable,
-		                accessDialog.getPermittedUserGroups());
+						accessDialog.getPermittedUserGroups());
 				updateSourceAccessLabel(true);
 			}
 		});
@@ -1456,7 +1453,7 @@ public class ConfigurableDialog extends ButtonDialog {
 				Configurable selected = getSelectedValue();
 				RemoteRepository source = selected == null ? null : selected.getSource();
 				ConfigurableCreationDialog dialog = new ConfigurableCreationDialog(ConfigurableDialog.this, localController,
-		                remoteControllers, source, preferredTypeId);
+						remoteControllers, source, preferredTypeId);
 				isAddingDialogOpened = true;
 				dialog.setVisible(true);
 			}
@@ -1497,7 +1494,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			public void actionPerformed(ActionEvent e) {
 
 				// now we need to save the changes the user made
-		        // in a separate thread
+				// in a separate thread
 
 				localController.getModel().removeEventListener(localListener);
 				for (String remote : remoteListener.keySet()) {
@@ -1524,14 +1521,14 @@ public class ConfigurableDialog extends ButtonDialog {
 								localController.saveConfigurable(config, configParamPanel.getParameters());
 							} else {
 								remoteControllers.get(config.getSource().getName()).saveConfigurable(config,
-		                                configParamPanel.getParameters());
+										configParamPanel.getParameters());
 							}
 						}
 
 						// check if current configurable is in valid state, i.e. all required
-		                // parameters
-		                // are
-		                // set. If not, switch to broken config and display problem to user
+						// parameters
+						// are
+						// set. If not, switch to broken config and display problem to user
 						for (final Configurable configurable : localController.getModel().getConfigurables()) {
 							final ActionResult result = localController.checkConfigurableValidState(configurable);
 							if (result.getResult().equals(Result.FAILURE)) {
@@ -1558,9 +1555,9 @@ public class ConfigurableDialog extends ButtonDialog {
 								if (remoteControllers.get(source).getModel().isEditingPossible()) {
 
 									for (final Configurable configurable : remoteControllers.get(source).getModel()
-		                                    .getConfigurables()) {
+											.getConfigurables()) {
 										final ActionResult result = remoteControllers.get(source)
-		                                        .checkConfigurableValidState(configurable);
+												.checkConfigurableValidState(configurable);
 										if (result.getResult().equals(Result.FAILURE)) {
 											SwingUtilities.invokeLater(new Runnable() {
 
@@ -1661,8 +1658,8 @@ public class ConfigurableDialog extends ButtonDialog {
 		cancelButton = new JButton(cancelAction);
 
 		// make ESC close dialog
-		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-		        .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
+		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
 		getRootPane().getActionMap().put("CANCEL", cancelAction);
 
 		return cancelButton;
@@ -1689,7 +1686,7 @@ public class ConfigurableDialog extends ButtonDialog {
 					}
 					// only interesting if we want to edit remote connections
 					editingPossible = remoteControllers.get(configurable.getSource().getName()).getModel()
-					        .isEditingPossible();
+							.isEditingPossible();
 				}
 			}
 		}
@@ -1702,8 +1699,8 @@ public class ConfigurableDialog extends ButtonDialog {
 		renameButton.setVisible(configurable != null && editingAllowed && editingPossible);
 		removeButton.setVisible(configurable != null && editingAllowed && editingPossible);
 		actionPanel.setVisible(configurable != null);
-		userAccessButton
-		        .setVisible(configurable != null && configurable.getSource() != null && editingAllowed && editingPossible);
+		userAccessButton.setVisible(configurable != null && configurable.getSource() != null && editingAllowed
+				&& editingPossible);
 		updateSourceAccessLabel(editingAllowed && editingPossible);
 
 		if (resetMessage) {
@@ -1711,7 +1708,7 @@ public class ConfigurableDialog extends ButtonDialog {
 		}
 		if (configurable != null) {
 			nameLabel.setIcon(SwingTools.createIcon("24/"
-			        + ConfigurationManager.getInstance().getAbstractConfigurator(configurable.getTypeId()).getIconName()));
+					+ ConfigurationManager.getInstance().getAbstractConfigurator(configurable.getTypeId()).getIconName()));
 
 			if (configurable != null && AbstractConfigurable.class.isAssignableFrom(configurable.getClass())) {
 				AbstractConfigurable abstractConfig = (AbstractConfigurable) configurable;
@@ -1776,11 +1773,11 @@ public class ConfigurableDialog extends ButtonDialog {
 			userAccessLabel.setVisible(true);
 
 			int noOfAccessingUsers = ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable)
-			        .size();
+					.size();
 
 			if (noOfAccessingUsers == 0) {
-				userAccessLabel.setText(
-				        "<html><font color=\"red\"><b>" + noOfAccessingUsers + "</b> " + userAccessText + "</font></html>");
+				userAccessLabel.setText("<html><font color=\"red\"><b>" + noOfAccessingUsers + "</b> " + userAccessText
+						+ "</font></html>");
 			} else if (noOfAccessingUsers == 1) {
 				userAccessLabel.setText("<html><b>" + noOfAccessingUsers + "</b> " + singleUserAccessText + "</html>");
 			} else {
@@ -1840,7 +1837,7 @@ public class ConfigurableDialog extends ButtonDialog {
 	 */
 	protected void displaySaveUploadErrorDialog(String typeId, String repositoryName, String repositoryURL) {
 		SwingTools.showVerySimpleErrorMessage("configurable_controller_upload_error_server", typeId, repositoryName,
-		        repositoryURL);
+				repositoryURL);
 	}
 
 	/**
@@ -1983,7 +1980,7 @@ public class ConfigurableDialog extends ButtonDialog {
 
 		if (remoteConfigListModels.get(source).isEmpty()) {
 			boolean notFetching = configurablesFetching.get(source) == null
-			        || !configurablesFetching.get(source).booleanValue();
+					|| !configurablesFetching.get(source).booleanValue();
 
 			if (notFetching) {
 
@@ -2000,8 +1997,8 @@ public class ConfigurableDialog extends ButtonDialog {
 							if (repository.getName().equals(source)) {
 								addingConfigurablesFirstTime.put(source, true);
 								remoteInfoLabelListModels.get(source).removeAllElements();
-								remoteInfoLabelListModels.get(source)
-				                        .addElement(ConfigurableInfoLabelType.LOADING.toString());
+								remoteInfoLabelListModels.get(source).addElement(
+										ConfigurableInfoLabelType.LOADING.toString());
 								remoteTaskPane.repaint();
 
 								// try to connect
@@ -2015,8 +2012,8 @@ public class ConfigurableDialog extends ButtonDialog {
 
 									// timeout or connection failed
 									remoteInfoLabelListModels.get(source).removeAllElements();
-									remoteInfoLabelListModels.get(source)
-				                            .addElement(ConfigurableInfoLabelType.FAILED.toString());
+									remoteInfoLabelListModels.get(source).addElement(
+											ConfigurableInfoLabelType.FAILED.toString());
 									addingConfigurablesFirstTime.remove(source);
 									configurablesFetching.remove(source);
 								}

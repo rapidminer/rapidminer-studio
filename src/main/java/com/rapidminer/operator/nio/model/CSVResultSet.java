@@ -1,24 +1,38 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.rapidminer.gui.tools.dialogs.wizards.dataimport.csv.LineReader;
 import com.rapidminer.operator.Operator;
@@ -32,29 +46,19 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.WebServiceTools;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 /**
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class CSVResultSet implements DataResultSet {
 
+	/**
+	 * specifies how many rows should be read to guess the column separator, 1 headline + 10 further
+	 * rows
+	 */
+	private static final int LINES_FOR_GUESSING = 11;
 	private static final int MAX_LOG_COUNT = 100;
 	private CSVResultSetConfiguration configuration;
 	private LineReader reader;
@@ -72,8 +76,11 @@ public class CSVResultSet implements DataResultSet {
 
 	public static enum ColumnSplitter {
 
-		SEMI_COLON(";", Pattern.compile(";")), COMMA(",", Pattern.compile(",")), TAB("\t", Pattern.compile("\t")), TILDE(
-				"~", Pattern.compile("~")), PIPE("|", Pattern.compile("\\|"));
+		SEMI_COLON(";", Pattern.compile(";")),
+		COMMA(",", Pattern.compile(",")),
+		TAB("\t", Pattern.compile("\t")),
+		TILDE("~", Pattern.compile("~")),
+		PIPE("|", Pattern.compile("\\|"));
 
 		private final Pattern pattern;
 		private final String seperator;
@@ -165,10 +172,19 @@ public class CSVResultSet implements DataResultSet {
 	}
 
 	public static String guessColumnSeperator(String csvFile) {
+		return guessColumnSplitter(csvFile).getString();
+	}
 
-		try {
-
-			LineReader tempReader = new LineReader(new File(csvFile));
+	/**
+	 * Guesses the column splitter of the csv file by counting which {@link ColumnSplitter} appears
+	 * the most in the first rows.
+	 *
+	 * @param csvFile
+	 *            the file to analyze
+	 * @return the most frequent {@link ColumnSplitter}
+	 */
+	public static ColumnSplitter guessColumnSplitter(String csvFile) {
+		try (LineReader tempReader = new LineReader(new File(csvFile), StandardCharsets.UTF_8)) {
 
 			/* could be default, apply heuristics to find the column splitter */
 			HashMap<ColumnSplitter, Integer> splitterValues = new HashMap<>();
@@ -178,46 +194,42 @@ public class CSVResultSet implements DataResultSet {
 
 			int lineCount = 0;
 
-			while (lineCount < 11) {
+			while (lineCount < LINES_FOR_GUESSING) {
 				String line = tempReader.readLine();
 				// SEMI_COLON,
 				splitterValues.put(ColumnSplitter.SEMI_COLON, splitterValues.get(ColumnSplitter.SEMI_COLON)
 						+ getSeperatorCount(ColumnSplitter.SEMI_COLON.getPattern(), line));
 				// COMMA,
-				splitterValues.put(ColumnSplitter.COMMA,
-						splitterValues.get(ColumnSplitter.COMMA)
-								+ getSeperatorCount(ColumnSplitter.COMMA.getPattern(), line));
+				splitterValues.put(ColumnSplitter.COMMA, splitterValues.get(ColumnSplitter.COMMA)
+						+ getSeperatorCount(ColumnSplitter.COMMA.getPattern(), line));
 				// TAB,
 				splitterValues.put(ColumnSplitter.TAB,
 						splitterValues.get(ColumnSplitter.TAB) + getSeperatorCount(ColumnSplitter.TAB.getPattern(), line));
 				// TILDE,
-				splitterValues.put(ColumnSplitter.TILDE,
-						splitterValues.get(ColumnSplitter.TILDE)
-								+ getSeperatorCount(ColumnSplitter.TILDE.getPattern(), line));
+				splitterValues.put(ColumnSplitter.TILDE, splitterValues.get(ColumnSplitter.TILDE)
+						+ getSeperatorCount(ColumnSplitter.TILDE.getPattern(), line));
 				// PIPE
 				splitterValues.put(ColumnSplitter.PIPE,
 						splitterValues.get(ColumnSplitter.PIPE) + getSeperatorCount(ColumnSplitter.PIPE.getPattern(), line));
+
 				lineCount++;
 			}
 
 			int maxValue = 0;
 			ColumnSplitter guessedSplitter = ColumnSplitter.SEMI_COLON;
 
-			for (ColumnSplitter splitter : splitterValues.keySet()) {
+			for (ColumnSplitter splitter : ColumnSplitter.values()) {
 				if (splitterValues.get(splitter) > maxValue) {
 					maxValue = splitterValues.get(splitter);
 					guessedSplitter = splitter;
 				}
 			}
 
-			String guessedSeperator = guessedSplitter.getString();
-			tempReader.close();
-			return guessedSeperator;
+			return guessedSplitter;
 
 		} catch (IOException e) {
-			return ColumnSplitter.SEMI_COLON.toString();
+			return ColumnSplitter.SEMI_COLON;
 		}
-
 	}
 
 	protected InputStream openStream() throws UserError {
@@ -270,8 +282,8 @@ public class CSVResultSet implements DataResultSet {
 						if (operator != null) {
 							operator.logWarning("Maximum number of warnings exceeded. Will display no further warnings.");
 						} else {
-							LogService.getRoot().warning(
-									"Maximum number of warnings exceeded. Will display no further warnings.");
+							LogService.getRoot()
+									.warning("Maximum number of warnings exceeded. Will display no further warnings.");
 						}
 					}
 				}
@@ -319,8 +331,8 @@ public class CSVResultSet implements DataResultSet {
 
 	@Override
 	public Number getNumber(int columnIndex) throws ParseException {
-		throw new ParseException(new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_REAL,
-				current[columnIndex]));
+		throw new ParseException(
+				new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_REAL, current[columnIndex]));
 	}
 
 	@Override
@@ -334,8 +346,8 @@ public class CSVResultSet implements DataResultSet {
 
 	@Override
 	public Date getDate(int columnIndex) throws ParseException {
-		throw new ParseException(new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_DATE,
-				current[columnIndex]));
+		throw new ParseException(
+				new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_DATE, current[columnIndex]));
 	}
 
 	@Override

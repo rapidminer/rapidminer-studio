@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dnd;
 
@@ -30,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.swing.SwingUtilities;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
@@ -41,6 +40,7 @@ import org.xml.sax.SAXParseException;
 
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLImporter;
@@ -48,7 +48,6 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.UnknownParameterInformation;
 import com.rapidminer.operator.internal.ProcessEmbeddingOperator;
-import com.rapidminer.operator.io.AbstractReader;
 import com.rapidminer.operator.io.RepositorySource;
 import com.rapidminer.operator.nio.file.LoadFileOperator;
 import com.rapidminer.repository.BlobEntry;
@@ -56,6 +55,7 @@ import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
@@ -87,7 +87,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 	/**
 	 * Drops the operator at the given location. The location may be null, indicating that this is a
 	 * paste.
-	 * */
+	 */
 	protected abstract boolean dropNow(List<Operator> newOperators, Point loc);
 
 	protected abstract boolean dropNow(WorkflowAnnotation anno, Point loc);
@@ -137,16 +137,19 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 		try {
 			transferData = ts.getTransferable().getTransferData(acceptedFlavor);
 		} catch (Exception e1) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_while_accepting_drop"), e1);
+			LogService.getRoot()
+					.log(Level.WARNING,
+							I18N.getMessage(LogService.getRoot().getResourceBundle(),
+									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_while_accepting_drop"),
+					e1);
 			dropEnds();
 			return false;
 		}
 		List<Operator> newOperators;
 		if (acceptedFlavor.equals(DataFlavor.javaFileListFlavor)) {
-			File file = (File) ((List) transferData).get(0);
+
+			@SuppressWarnings("unchecked")
+			final File file = ((List<File>) transferData).get(0);
 			if (file.getName().toLowerCase().endsWith("." + RapidMiner.PROCESS_FILE_EXTENSION)) {
 				// This is a process file
 				try {
@@ -159,26 +162,17 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 					return false;
 				}
 			} else {
-				// This is probably a data file
-				Operator newOperator = null;
-				try {
-					newOperator = AbstractReader.createReader(file.toURI());
-				} catch (OperatorCreationException e1) {
-					LogService.getRoot().log(
-							Level.SEVERE,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_while_accepting_drop"),
-									e1);
-					SwingTools.showSimpleErrorMessage("cannot_create_reader_for_file", e1, file.getName());
-					return false;
-				}
-				if (newOperator != null) {
-					newOperators = Collections.<Operator> singletonList(newOperator);
-				} else {
-					SwingTools.showVerySimpleErrorMessage("cannot_create_reader_for_file", file.getName());
-					dropEnds();
-					return false;
-				}
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						DataImportWizardBuilder importWizardBuilder = new DataImportWizardBuilder();
+						importWizardBuilder.forFile(file.toPath()).build(RapidMinerGUI.getMainFrame()).getDialog()
+								.setVisible(true);
+					}
+				});
+				dropEnds();
+				return true;
 			}
 		} else if (acceptedFlavor.equals(TransferableOperator.LOCAL_TRANSFERRED_OPERATORS_FLAVOR)) {
 			// This is an operator
@@ -213,9 +207,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 							}
 						}
 						if (newOp == null) {
-							LogService
-							.getRoot()
-							.log(Level.WARNING,
+							LogService.getRoot().log(Level.WARNING,
 									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.parsing_operator_from_clipboard_error",
 									transferData);
 							dropEnds();
@@ -228,13 +220,11 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 						dropEnds();
 						return false;
 					} catch (Exception e1) {
-						LogService
-						.getRoot()
-						.log(Level.WARNING,
-								I18N.getMessage(
-										LogService.getRoot().getResourceBundle(),
+						LogService.getRoot().log(Level.WARNING,
+								I18N.getMessage(LogService.getRoot().getResourceBundle(),
 										"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.parsing_operator_from_clipboard_error_exception",
-										e1, transferData), e1);
+										e1, transferData),
+								e1);
 						dropEnds();
 						return false;
 					}
@@ -306,10 +296,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				try {
 					result = dropNow(newOperators, ts.isDrop() ? loc : null);
 				} catch (RuntimeException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_drop", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_drop", e), e);
 					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
 					dropEnds();
 					return false;
@@ -325,10 +313,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				try {
 					result = dropNow(String.valueOf(transferData));
 				} catch (RuntimeException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
 					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
 					dropEnds();
 					return false;
@@ -341,10 +327,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				try {
 					result = dropNow((WorkflowAnnotation) transferData, null);
 				} catch (RuntimeException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
 					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
 					dropEnds();
 					return false;
@@ -357,10 +341,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				try {
 					result = dropNow(newOperators, null);
 				} catch (RuntimeException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
 					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
 					dropEnds();
 					return false;
@@ -407,11 +389,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 						String.valueOf(LoadFileOperator.SOURCE_TYPE_REPOSITORY));
 				return source;
 			} catch (OperatorCreationException e1) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error",
-								e1), e1);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error", e1), e1);
 				return null;
 			}
 		} else if (entry instanceof ProcessEntry) {
@@ -422,11 +401,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				embedder.rename("Execute " + repositoryLocation.getName());
 				return embedder;
 			} catch (OperatorCreationException e1) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error",
-								e1), e1);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error", e1), e1);
 				return null;
 			}
 		} else {
@@ -437,11 +413,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				source.rename("Retrieve " + repositoryLocation.getName());
 				return source;
 			} catch (OperatorCreationException e1) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error",
-								e1), e1);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error", e1), e1);
 				return null;
 			}
 		}

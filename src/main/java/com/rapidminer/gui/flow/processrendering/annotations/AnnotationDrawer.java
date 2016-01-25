@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow.processrendering.annotations;
 
@@ -47,7 +45,6 @@ import com.rapidminer.gui.flow.processrendering.annotations.model.ProcessAnnotat
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotations;
 import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationColor;
-import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.operator.Operator;
@@ -64,13 +61,13 @@ import com.rapidminer.operator.Operator;
 public final class AnnotationDrawer {
 
 	/** the color used to highlight valid drag targets */
-	private static final Color DRAG_LINK_COLOR = new Color(247, 148, 30, 100);
+	private static final Color DRAG_LINK_COLOR = ProcessDrawer.OPERATOR_BORDER_COLOR_SELECTED;
 
 	/** the color used to indicate invalid drag targets */
 	private static final Color GRAY_OUT = new Color(255, 255, 255, 100);
 
 	/** the stroke which is used to highlight drag targets */
-	private static final Stroke DRAG_BORDER_STROKE = new BasicStroke(3f);
+	private static final Stroke DRAG_BORDER_STROKE = new BasicStroke(2f);
 
 	/** the editor pane which displays all annotations */
 	private final JEditorPane pane;
@@ -169,11 +166,6 @@ public final class AnnotationDrawer {
 		}
 		cachedImage = null;
 
-		// annotation shadow
-		if (anno.equals(model.getSelected())) {
-			ProcessDrawUtils.drawShadow(loc, g2);
-		}
-
 		// border of the annotation
 		if (anno.equals(model.getSelected())) {
 			// actual border
@@ -182,7 +174,7 @@ public final class AnnotationDrawer {
 				g2.setColor(DRAG_LINK_COLOR);
 				g2.setStroke(DRAG_BORDER_STROKE);
 			} else {
-				g2.setColor(Color.BLACK);
+				g2.setColor(ProcessDrawer.OPERATOR_BORDER_COLOR_SELECTED);
 			}
 			g2.drawRect((int) loc.getX(), (int) loc.getY(), (int) loc.getWidth(), (int) loc.getHeight() - 1);
 			g2.setStroke(prevStroke);
@@ -371,7 +363,7 @@ public final class AnnotationDrawer {
 		}
 		Graphics2D g2 = (Graphics2D) g.create();
 
-		int padding = 5;
+		int padding = 15;
 		Rectangle2D opRect = rendererModel.getOperatorRect(dragged.getHoveredOperator());
 		opRect = new Rectangle2D.Double(opRect.getX(), opRect.getY(), opRect.getWidth(), opRect.getHeight());
 		Rectangle2D shadowRect = new Rectangle2D.Double(opRect.getX() - padding - 1, opRect.getY() - padding - 1,

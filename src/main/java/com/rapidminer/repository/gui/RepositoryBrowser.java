@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -19,30 +19,31 @@
 package com.rapidminer.repository.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JToolBar;
 
 import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.actions.ImportDataAction;
 import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
 import com.rapidminer.gui.dnd.DragListener;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.gui.tools.components.DropDownButton;
-import com.rapidminer.gui.tools.dialogs.wizards.dataimport.DataImportWizardFactory;
-import com.rapidminer.gui.tools.dialogs.wizards.dataimport.DataImportWizardRegistry;
+import com.rapidminer.gui.tools.components.DropDownPopupButton;
+import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.ProcessEntry;
@@ -100,38 +101,60 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		});
 
 		setLayout(new BorderLayout());
-		JToolBar toolBar = new ExtendedJToolBar();
-		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-		toolBar.add(ADD_REPOSITORY_ACTION);
-		DropDownButton dropButton = new DropDownButton(new ResourceActionAdapter(true, "import")) {
 
-			private static final long serialVersionUID = -5482452738124971463L;
+		final JPopupMenu furtherActionsMenu = new JPopupMenu();
+		furtherActionsMenu.add(ADD_REPOSITORY_ACTION);
+		furtherActionsMenu.add(tree.CREATE_FOLDER_ACTION);
+		furtherActionsMenu.add(tree.REFRESH_ACTION);
+		furtherActionsMenu.add(tree.SHOW_PROCESS_IN_REPOSITORY_ACTION);
 
-			@Override
-			protected JPopupMenu getPopupMenu() {
-				JPopupMenu menu = new JPopupMenu();
-				DataImportWizardRegistry registry = RapidMinerGUI.getMainFrame().getDataImportWizardRegistry();
-				for (DataImportWizardFactory factory : registry.getFactories()) {
-					menu.add(factory.createAction());
-				}
-				return menu;
-			}
-		};
-		dropButton.setUsePopupActionOnMainButton();
-		dropButton.addToToolBar(toolBar);
-		toolBar.add(tree.OPEN_ACTION);
-		toolBar.add(tree.REFRESH_ACTION);
-		toolBar.add(tree.CREATE_FOLDER_ACTION);
-		toolBar.add(tree.SHOW_PROCESS_IN_REPOSITORY_ACTION);
+		JPanel northPanel = new JPanel(new GridBagLayout());
+		northPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 1;
+		c.insets = new Insets(2, 2, 2, 2);
 
-		add(toolBar, BorderLayout.NORTH);
+		JButton addDataButton = new JButton(new ImportDataAction(true));
+		addDataButton.setPreferredSize(new Dimension(100, 30));
+		northPanel.add(addDataButton, c);
+
+		DropDownPopupButton furtherActionsButton = new DropDownPopupButton("gui.action.further_repository_actions",
+				new PopupMenuProvider() {
+
+					@Override
+					public JPopupMenu getPopupMenu() {
+						return furtherActionsMenu;
+					}
+
+				});
+		furtherActionsButton.setPreferredSize(new Dimension(50, 30));
+
+		c.gridx = 1;
+		c.gridy = 0;
+		c.weightx = 0;
+		northPanel.add(furtherActionsButton, c);
+
+		add(northPanel, BorderLayout.NORTH);
 		JScrollPane scrollPane = new ExtendedJScrollPane(tree);
-		scrollPane.setBorder(null);
+		scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TEXTFIELD_BORDER));
 		add(scrollPane, BorderLayout.CENTER);
 	}
 
 	private static void addRepository() {
 		NewRepositoryDialog.createNew();
+	}
+
+	/**
+	 * Returns the {@link RepositoryTree} managed by this browser.
+	 *
+	 * @return the repository tree
+	 * @since 7.0.0
+	 */
+	public RepositoryTree getRepositoryTree() {
+		return tree;
 	}
 
 	public static final String REPOSITORY_BROWSER_DOCK_KEY = "repository_browser";

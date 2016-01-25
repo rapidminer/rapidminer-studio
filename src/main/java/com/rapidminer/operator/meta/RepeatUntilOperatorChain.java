@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
+
+import org.jfree.util.Log;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOContainer;
@@ -38,14 +40,10 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 
-import java.util.List;
-
-import org.jfree.util.Log;
-
 
 /**
  * Performs its inner operators until all given criteria are met or a timeout occurs.
- * 
+ *
  * @author Stefan Rueping
  */
 public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
@@ -136,7 +134,7 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 			if (getParameterAsBoolean(PARAMETER_CONDITION_PERFORMANCE)) {
 				double maxCrit = getParameterAsDouble(PARAMETER_MAX_CRITERION);
 				double minCrit = getParameterAsDouble(PARAMETER_MIN_CRITERION);
-				if ((maxCrit < Double.POSITIVE_INFINITY) || (minCrit > Double.NEGATIVE_INFINITY)) {
+				if (maxCrit < Double.POSITIVE_INFINITY || minCrit > Double.NEGATIVE_INFINITY) {
 					if (maxCrit < minCrit) {
 						this.addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(),
 								"parameter_combination_forbidden_range", PARAMETER_MIN_CRITERION, PARAMETER_MAX_CRITERION));
@@ -147,7 +145,7 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 			if (getParameterAsBoolean(PARAMETER_CONDITION_EXAMPLES)) {
 				int maxAtts = getParameterAsInt(PARAMETER_MAX_ATTRIBUTES);
 				int minAtts = getParameterAsInt(PARAMETER_MIN_ATTRIBUTES);
-				if ((maxAtts < Double.POSITIVE_INFINITY) || (minAtts > Double.NEGATIVE_INFINITY)) {
+				if (maxAtts < Double.POSITIVE_INFINITY || minAtts > Double.NEGATIVE_INFINITY) {
 					if (maxAtts < minAtts) {
 						this.addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(),
 								"parameter_combination_forbidden_range", PARAMETER_MIN_ATTRIBUTES, PARAMETER_MAX_ATTRIBUTES));
@@ -156,7 +154,7 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 
 				int maxEx = getParameterAsInt(PARAMETER_MAX_EXAMPLES);
 				int minEx = getParameterAsInt(PARAMETER_MIN_EXAMPLES);
-				if ((maxEx < Double.POSITIVE_INFINITY) || (minEx > Double.NEGATIVE_INFINITY)) {
+				if (maxEx < Double.POSITIVE_INFINITY || minEx > Double.NEGATIVE_INFINITY) {
 					if (maxEx < minEx) {
 						this.addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(),
 								"parameter_combination_forbidden_range", PARAMETER_MIN_EXAMPLES, PARAMETER_MAX_EXAMPLES));
@@ -177,17 +175,17 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 		}
 
 		fitness = Double.NEGATIVE_INFINITY;
-
+		getProgress().setTotal(getParameterAsInt(PARAMETER_MAX_ITERATIONS));
 		super.doWork();
 	}
 
 	/**
 	 * Evaluates whether the stopping condition is met
-	 * 
+	 *
 	 * @throws OperatorException
 	 */
 	private boolean evaluateCondition(IOContainer input) throws OperatorException {
-		if ((getIteration() == 0) && (!getParameterAsBoolean(PARAMETER_CONDITION_BEFORE))) {
+		if (getIteration() == 0 && !getParameterAsBoolean(PARAMETER_CONDITION_BEFORE)) {
 			return false;
 		}
 
@@ -210,9 +208,9 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 			if (changeType != NONE) {
 				if (getIteration() > 0) {
 					double currentFitness = performanceVector.getMainCriterion().getFitness();
-					if ((changeType == DECREASING) && (currentFitness < fitness)) {
+					if (changeType == DECREASING && currentFitness < fitness) {
 						return true;
-					} else if ((changeType == NONINCREASING) && (currentFitness <= fitness)) {
+					} else if (changeType == NONINCREASING && currentFitness <= fitness) {
 						return true;
 					}
 					fitness = currentFitness;
@@ -222,9 +220,9 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 
 			double maxCrit = getParameterAsDouble(PARAMETER_MAX_CRITERION);
 			double minCrit = getParameterAsDouble(PARAMETER_MIN_CRITERION);
-			if ((maxCrit < Double.POSITIVE_INFINITY) || (minCrit > Double.NEGATIVE_INFINITY)) {
+			if (maxCrit < Double.POSITIVE_INFINITY || minCrit > Double.NEGATIVE_INFINITY) {
 				double crit = performanceVector.getMainCriterion().getAverage();
-				if ((crit > maxCrit) || (crit < minCrit)) {
+				if (crit > maxCrit || crit < minCrit) {
 					return false;
 				}
 			}
@@ -233,18 +231,18 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 			ExampleSet exampleSet = exampleSetConditionInput.getData(ExampleSet.class);
 			int maxAtts = getParameterAsInt(PARAMETER_MAX_ATTRIBUTES);
 			int minAtts = getParameterAsInt(PARAMETER_MIN_ATTRIBUTES);
-			if ((maxAtts < Integer.MAX_VALUE) || (minAtts > 0)) {
+			if (maxAtts < Integer.MAX_VALUE || minAtts > 0) {
 				int nrAtts = exampleSet.getAttributes().size();
-				if ((nrAtts > maxAtts) || (nrAtts < minAtts)) {
+				if (nrAtts > maxAtts || nrAtts < minAtts) {
 					return false;
 				}
 			}
 
 			int maxEx = getParameterAsInt(PARAMETER_MAX_EXAMPLES);
 			int minEx = getParameterAsInt(PARAMETER_MIN_EXAMPLES);
-			if ((maxEx < Integer.MAX_VALUE) || (minEx > 0)) {
+			if (maxEx < Integer.MAX_VALUE || minEx > 0) {
 				int nrEx = exampleSet.size();
-				if ((nrEx > maxEx) || (nrEx < minEx)) {
+				if (nrEx > maxEx || nrEx < minEx) {
 					return false;
 				}
 			}

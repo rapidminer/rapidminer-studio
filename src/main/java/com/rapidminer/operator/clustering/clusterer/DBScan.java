@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.clustering.clusterer;
 
@@ -100,6 +98,9 @@ public class DBScan extends RMAbstractClusterer implements CapabilityProvider {
 		double epsilon = getParameterAsDouble(PARAMETER_EPSILON);
 		int minPoints = getParameterAsInt(PARAMETER_MIN_POINTS);
 
+		// init operator progress
+		getProgress().setTotal(exampleSet.size());
+
 		// checking and creating ids if necessary
 		Tools.checkAndCreateIds(exampleSet);
 
@@ -120,7 +121,6 @@ public class DBScan extends RMAbstractClusterer implements CapabilityProvider {
 		int i = 0;
 		int clusterIndex = 1;
 		for (Example example : exampleSet) {
-			checkForStop();
 			if (!visited[i]) {
 				Queue<Integer> centerNeighbourhood = getNeighbourhood(example, exampleSet, measure, epsilon);
 				if (centerNeighbourhood.size() < minPoints) {
@@ -159,6 +159,7 @@ public class DBScan extends RMAbstractClusterer implements CapabilityProvider {
 				}
 			}
 			i++;
+			getProgress().step();
 		}
 
 		ClusterModel model = new ClusterModel(exampleSet, Math.max(clusterIndex, 1),
@@ -176,6 +177,8 @@ public class DBScan extends RMAbstractClusterer implements CapabilityProvider {
 				i++;
 			}
 		}
+		getProgress().complete();
+
 		return model;
 	}
 

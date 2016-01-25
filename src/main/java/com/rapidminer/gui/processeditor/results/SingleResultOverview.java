@@ -1,32 +1,31 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor.results;
 
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -34,11 +33,15 @@ import java.lang.ref.SoftReference;
 import java.util.List;
 
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.SwingWorker;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 
@@ -46,6 +49,8 @@ import com.rapidminer.Process;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.renderer.DefaultTextRenderer;
 import com.rapidminer.gui.renderer.Renderer;
 import com.rapidminer.gui.renderer.RendererService;
@@ -68,10 +73,12 @@ import com.rapidminer.repository.RepositoryLocation;
 /**
  * Displays an overview of a single IOObject. Does not remember the IOObject itself.
  *
- * @author Simon Fischer
+ * @author Simon Fischer, Marco Boeck
  *
  */
 public class SingleResultOverview extends JPanel {
+
+	private static final int MAX_RESULT_STRING_LENGTH = 2048;
 
 	private static final long serialVersionUID = 1L;
 
@@ -83,8 +90,6 @@ public class SingleResultOverview extends JPanel {
 
 	static final int MIN_HEIGHT = 300;
 	static final int MIN_WIDTH = 300;
-
-	private static final int MAX_RESULT_STRING_LENGTH = 2048;
 
 	private final Action RESTORE_FROM_REPOSITORY = new ResourceAction("resulthistory.restore_data") {
 
@@ -134,12 +139,20 @@ public class SingleResultOverview extends JPanel {
 		}
 	};
 
+	private BufferedImage img;
+
 	public SingleResultOverview(IOObject result, Process process, int resultIndex) {
-		setLayout(null);
-		setOpaque(false);
+		setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.insets = new Insets(0, 0, 10, 0);
+		gbc.anchor = GridBagConstraints.NORTHWEST;
+
 		MetaData metaData = MetaData.forIOObject(result, true);
-		setBorder(new RapidBorder(ProcessDrawUtils.getColorFor(metaData), 15, 35));
-		setBackground(Color.WHITE);
+		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5), new RapidBorder(
+				ProcessDrawUtils.getColorFor(metaData), RapidLookAndFeel.CORNER_DEFAULT_RADIUS, 35)));
+		setBackground(Colors.WHITE);
 
 		if (result instanceof ResultObject) {
 			this.ioObject = new SoftReference<ResultObject>((ResultObject) result);
@@ -173,29 +186,18 @@ public class SingleResultOverview extends JPanel {
 				for (Renderer renderer : renderers) {
 					if (!(renderer instanceof DefaultTextRenderer)) {
 						IOContainer dummy = new IOContainer();
-						int imgWidth = MIN_WIDTH - 10;
-						int imgHeight = MIN_HEIGHT - 65;
-						Reportable reportable = renderer.createReportable(result, dummy, imgWidth, imgHeight);
+						Reportable reportable = renderer.createReportable(result, dummy, 800, 500);
 						if (reportable instanceof Renderable) {
-							Renderable renderable = (Renderable) reportable;
-							renderable.prepareRendering();
-							int preferredWidth = renderable.getRenderWidth(800);
-							int preferredHeight = renderable.getRenderHeight(800);
-							final BufferedImage img = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB);
-							Graphics2D graphics = (Graphics2D) img.getGraphics();
-							graphics.setColor(Color.WHITE);
-							graphics.fillRect(0, 0, imgWidth, imgHeight);
-							double scale = Math.min((double) imgWidth / (double) preferredWidth, (double) imgHeight
-									/ (double) preferredHeight);
-							graphics.scale(scale, scale);
-							renderable.render(graphics, preferredWidth, preferredHeight);
+							updatePreviewImage();
 							component = new JPanel() {
 
 								private static final long serialVersionUID = 1L;
 
 								@Override
 								protected void paintComponent(java.awt.Graphics g) {
-									g.drawImage(img, 0, 0, null);
+									if (img != null) {
+										g.drawImage(img, 0, 0, null);
+									}
 								}
 							};
 							break;
@@ -226,11 +228,13 @@ public class SingleResultOverview extends JPanel {
 		}
 		b.append("</html>");
 		title = new JLabel(b.toString());
-		add(title);
-		title.setBounds(5, 0, MIN_WIDTH - 15, 40);
+		add(title, gbc);
 
-		add(main);
-		main.setBounds(5, 45, MIN_WIDTH - 10, MIN_HEIGHT - 65);
+		main.setPreferredSize(new Dimension(MIN_WIDTH - 10, MIN_HEIGHT - 65));
+		gbc.gridy += 1;
+		gbc.weightx = 1.0;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		add(main, gbc);
 
 		addMouseListener(new MouseAdapter() {
 
@@ -254,17 +258,51 @@ public class SingleResultOverview extends JPanel {
 					showContextMenu(e.getPoint());
 				}
 			}
-		});
 
-		addComponentListener(new ComponentAdapter() {
-
-			@Override
-			public void componentResized(ComponentEvent e) {
-				main.setBounds(5, 45, getWidth() - 10, getHeight() - 65);
+			private void showContextMenu(Point point) {
+				JPopupMenu menu = new JPopupMenu();
+				boolean empty = true;
+				if (repositoryLocation != null && !repositoryLocation.isEmpty()) {
+					menu.add(RESTORE_FROM_REPOSITORY);
+					empty = false;
+				}
+				if (ioObject != null && ioObject.get() != null) {
+					menu.add(OPEN_DATA);
+					empty = false;
+				}
+				if (!empty) {
+					menu.show(SingleResultOverview.this, (int) point.getX(), (int) point.getY());
+				}
 			}
 		});
+
+		addAncestorListener(new AncestorListener() {
+
+			@Override
+			public void ancestorRemoved(AncestorEvent event) {
+				// not needed
+			}
+
+			@Override
+			public void ancestorMoved(AncestorEvent event) {
+				// not needed
+			}
+
+			@Override
+			public void ancestorAdded(AncestorEvent event) {
+				// update image (correct size is now known)
+				updatePreviewImage();
+			}
+		});
+
 	}
 
+	/**
+	 * Create a text renderer for this result.
+	 *
+	 * @param result
+	 * @return
+	 */
 	private Component makeTextRenderer(IOObject result) {
 		if (result instanceof ResultObject) {
 			String resultString = ((ResultObject) result).toResultString();
@@ -277,6 +315,12 @@ public class SingleResultOverview extends JPanel {
 		}
 	}
 
+	/**
+	 * Creates the main text representation of this result.
+	 *
+	 * @param text
+	 * @return
+	 */
 	private Component makeMainLabel(String text) {
 		JEditorPane label = new ExtendedHTMLJEditorPane("text/html", text);
 		StyleSheet css = ((HTMLEditorKit) label.getEditorKit()).getStyleSheet();
@@ -292,31 +336,63 @@ public class SingleResultOverview extends JPanel {
 				+ getClass().getResource("/com/rapidminer/resources/icons/modern/help/line.png") + ")");
 		css.addRule("li ul li {padding-bottom:0}");
 
-		// label.setOpaque(false);
 		label.setEditable(false);
-		label.setBackground(Color.WHITE);
-		// label.setVerticalTextPosition(SwingConstants.TOP);
-		// label.setHorizontalTextPosition(SwingConstants.LEFT);
+		label.setBackground(Colors.WHITE);
 
 		JScrollPane pane = new JScrollPane(label);
-		pane.setBackground(Color.WHITE);
+		pane.setBackground(Colors.WHITE);
 		pane.setBorder(null);
 		return pane;
 	}
 
-	protected void showContextMenu(Point point) {
-		JPopupMenu menu = new JPopupMenu();
-		boolean empty = true;
-		if (repositoryLocation != null && !repositoryLocation.isEmpty()) {
-			menu.add(RESTORE_FROM_REPOSITORY);
-			empty = false;
-		}
-		if (ioObject != null && ioObject.get() != null) {
-			menu.add(OPEN_DATA);
-			empty = false;
-		}
-		if (!empty) {
-			menu.show(this, (int) point.getX(), (int) point.getY());
+	/**
+	 * Updates the preview renderable image in a {@link SwingWorker}.
+	 */
+	private void updatePreviewImage() {
+		final IOObject result = ioObject.get();
+		if (result != null) {
+			String name = RendererService.getName(result.getClass());
+			final List<Renderer> renderers = RendererService.getRenderers(name);
+			if (renderers.isEmpty()) {
+				return;
+			}
+
+			SwingWorker<Void, Void> sw = new SwingWorker<Void, Void>() {
+
+				@Override
+				protected Void doInBackground() throws Exception {
+					int width = Math.max(getSize().width, MIN_WIDTH);
+					int height = Math.max(getSize().height, MIN_HEIGHT);
+					for (Renderer renderer : renderers) {
+						Reportable reportable = renderer.createReportable(result, new IOContainer(), 800, 600);
+						if (reportable instanceof Renderable) {
+							Renderable renderable = (Renderable) reportable;
+							renderable.prepareRendering();
+							int preferredWidth = renderable.getRenderWidth(800);
+							int preferredHeight = renderable.getRenderHeight(600);
+
+							img = new BufferedImage(preferredWidth, preferredHeight, BufferedImage.TYPE_INT_RGB);
+							Graphics2D graphics = (Graphics2D) img.getGraphics();
+							graphics.setColor(Colors.WHITE);
+							graphics.fillRect(0, 0, 5000, 3000);
+							double scale = Math.min((double) width / (double) preferredWidth, (double) height
+									/ (double) preferredHeight);
+							graphics.scale(scale, scale);
+							renderable.render(graphics, preferredWidth, preferredHeight);
+
+							break;
+						}
+					}
+
+					return null;
+				}
+
+				@Override
+				public void done() {
+					main.repaint();
+				}
+			};
+			sw.execute();
 		}
 	}
 }

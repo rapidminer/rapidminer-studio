@@ -1,29 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
-
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.learner.associations.FrequentItemSets;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -34,18 +27,27 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
+
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
+import com.rapidminer.gui.look.ui.TableHeaderUI;
+import com.rapidminer.gui.properties.PropertyPanel;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.learner.associations.FrequentItemSets;
 
 
 /**
  * The viewer for frequent item sets.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class FrequentItemSetVisualization extends JPanel {
@@ -66,6 +68,9 @@ public class FrequentItemSetVisualization extends JPanel {
 			JPanel mainPanel = new JPanel();
 			GridBagLayout layout = new GridBagLayout();
 			mainPanel.setLayout(layout);
+			mainPanel.setOpaque(true);
+			mainPanel.setBackground(Colors.WHITE);
+			mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 5, 10, 10));
 			GridBagConstraints c = new GridBagConstraints();
 			c.fill = GridBagConstraints.BOTH;
 			c.weightx = 1;
@@ -81,8 +86,17 @@ public class FrequentItemSetVisualization extends JPanel {
 			} else {
 				frequentSets.sortSets();
 				this.model = new FrequentItemSetsTableModel(frequentSets);
-				JTable table = new ExtendedJTable(this.model, true, true, false);
+				ExtendedJTable table = new ExtendedJTable(this.model, true);
+				table.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
+				table.setRowHighlighting(true);
+
+				table.getTableHeader().putClientProperty(RapidLookTools.PROPERTY_TABLE_HEADER_BACKGROUND, Colors.WHITE);
+				((TableHeaderUI) table.getTableHeader().getUI()).installDefaults();
+
 				JScrollPane tablePane = new ExtendedJScrollPane(table);
+				tablePane.setBorder(null);
+				tablePane.setBackground(Colors.WHITE);
+				tablePane.getViewport().setBackground(Colors.WHITE);
 				layout.setConstraints(tablePane, c);
 				mainPanel.add(tablePane);
 			}
@@ -94,6 +108,9 @@ public class FrequentItemSetVisualization extends JPanel {
 		{
 			GridBagLayout layout = new GridBagLayout();
 			JPanel controlPanel = new JPanel(layout);
+			controlPanel.setBorder(BorderFactory.createEmptyBorder(15, 10, 5, 5));
+			controlPanel.setOpaque(true);
+			controlPanel.setBackground(Colors.WHITE);
 			GridBagConstraints c = new GridBagConstraints();
 			c.fill = GridBagConstraints.BOTH;
 			c.weightx = 0;
@@ -157,7 +174,7 @@ public class FrequentItemSetVisualization extends JPanel {
 				public void actionPerformed(ActionEvent e) {
 					int minNumber = 1;
 					String minText = minSizeField.getText();
-					if ((minText != null) && (minText.trim().length() >= 0)) {
+					if (minText != null && minText.trim().length() >= 0) {
 						try {
 							minNumber = Integer.parseInt(minText);
 						} catch (NumberFormatException ex) {
@@ -168,7 +185,7 @@ public class FrequentItemSetVisualization extends JPanel {
 
 					int maxNumber = frequentSets.getMaximumSetSize();
 					String maxText = maxSizeField.getText();
-					if ((maxText != null) && (maxText.trim().length() >= 0)) {
+					if (maxText != null && maxText.trim().length() >= 0) {
 						try {
 							maxNumber = Integer.parseInt(maxText);
 						} catch (NumberFormatException ex) {
@@ -193,11 +210,11 @@ public class FrequentItemSetVisualization extends JPanel {
 			});
 
 			// fill panel
-			JPanel fillPanel = new JPanel();
+			JLabel filler = new JLabel();
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			c.weighty = 1;
-			layout.setConstraints(fillPanel, c);
-			controlPanel.add(fillPanel);
+			layout.setConstraints(filler, c);
+			controlPanel.add(filler);
 
 			add(controlPanel, BorderLayout.WEST);
 		}

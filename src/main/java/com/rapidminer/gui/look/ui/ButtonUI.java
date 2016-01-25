@@ -1,28 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.ui;
-
-import com.rapidminer.gui.look.ButtonListener;
-import com.rapidminer.gui.look.RapidLookTools;
-import com.rapidminer.gui.look.painters.CashedPainter;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -37,10 +31,13 @@ import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicButtonListener;
 import javax.swing.plaf.basic.BasicButtonUI;
 
+import com.rapidminer.gui.look.ButtonListener;
+import com.rapidminer.gui.look.RapidLookTools;
+
 
 /**
  * The UI for the basic button.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ButtonUI extends BasicButtonUI {
@@ -89,21 +86,22 @@ public class ButtonUI extends BasicButtonUI {
 	public void paint(Graphics g, JComponent c) {
 		AbstractButton b = (AbstractButton) c;
 		if (RapidLookTools.isToolbarButton(b)) {
-			RapidLookTools.drawToolbarButton(g, c);
+			RapidLookTools.drawToolbarButton(g, b);
+			super.paint(g, c);
+			return;
 		}
+
+		int w = c.getWidth();
+		int h = c.getHeight();
+		if (w <= 0 || h <= 0) {
+			return;
+		}
+
 		if (b.isContentAreaFilled()) {
-			if (RapidLookTools.isToolbarButton(b)) {
-				RapidLookTools.drawToolbarButton(g, c);
-			} else {
-				CashedPainter.drawButton(c, g);
-			}
+			RapidLookTools.drawButton(b, g, RapidLookTools.createShapeForButton(b));
 		}
-		boolean paintBorder = true;
-		if (c instanceof AbstractButton) {
-			paintBorder = ((AbstractButton) c).isBorderPainted();
-		}
-		if (paintBorder) {
-			CashedPainter.drawButtonBorder(c, g, getPropertyPrefix());
+		if (b.isBorderPainted()) {
+			RapidLookTools.drawButtonBorder(b, g, RapidLookTools.createBorderShapeForButton(b));
 		}
 		super.paint(g, c);
 	}
@@ -122,7 +120,7 @@ public class ButtonUI extends BasicButtonUI {
 	@Override
 	protected void paintFocus(Graphics g, AbstractButton b, Rectangle viewRect, Rectangle textRect, Rectangle iconRect) {
 		if (b.isBorderPainted()) {
-			CashedPainter.drawButtonBorder(b, g, getPropertyPrefix());
+			RapidLookTools.drawButtonBorder(b, g, RapidLookTools.createBorderShapeForButton(b));
 		}
 	}
 
@@ -130,4 +128,5 @@ public class ButtonUI extends BasicButtonUI {
 	protected void paintButtonPressed(Graphics g, AbstractButton b) {
 		setTextShiftOffset();
 	}
+
 }

@@ -1,25 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Dimension;
@@ -51,6 +50,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.RepositoryEntryTextField;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
@@ -126,8 +126,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 				final boolean allowEntries, final boolean allowFolders, final boolean onlyWriteableRepositories) {
 			super(owner, "repository_chooser", ModalityType.APPLICATION_MODAL, new Object[] {});
 			okButton = makeOkButton();
-			chooser = new RepositoryLocationChooser(this, resolveRelativeTo, initialValue, allowEntries, allowFolders,
-					false, onlyWriteableRepositories);
+			chooser = new RepositoryLocationChooser(this, resolveRelativeTo, initialValue, allowEntries, allowFolders, false,
+					onlyWriteableRepositories, Colors.WHITE);
 			chooser.tree.addRepositorySelectionListener(new RepositorySelectionListener() {
 
 				@Override
@@ -180,6 +180,13 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 	public RepositoryLocationChooser(Dialog owner, RepositoryLocation resolveRelativeTo, String initialValue,
 			final boolean allowEntries, final boolean allowFolders, boolean enforceValidRepositoryEntryName,
 			final boolean onlyWriteableRepositories) {
+		this(owner, resolveRelativeTo, initialValue, allowEntries, allowFolders, enforceValidRepositoryEntryName,
+				onlyWriteableRepositories, null);
+	}
+
+	public RepositoryLocationChooser(Dialog owner, RepositoryLocation resolveRelativeTo, String initialValue,
+			final boolean allowEntries, final boolean allowFolders, boolean enforceValidRepositoryEntryName,
+			final boolean onlyWriteableRepositories, Color backgroundColor) {
 		if (initialValue != null) {
 			try {
 				RepositoryLocation repositoryLocation;
@@ -196,7 +203,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		}
 		this.resolveRelativeTo = resolveRelativeTo;
 		this.enforceValidRepositoryEntryName = enforceValidRepositoryEntryName;
-		tree = new RepositoryTree(owner, !allowEntries, onlyWriteableRepositories, false);
+		tree = new RepositoryTree(owner, !allowEntries, onlyWriteableRepositories, false, backgroundColor);
 
 		if (initialValue != null) {
 			if (tree.expandIfExists(resolveRelativeTo, initialValue)) {
@@ -273,8 +280,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		add(treePane, c);
 
 		standardIcon = null;
-		errorIcon = SwingTools.createIcon("16/"
-				+ I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.repository_location.location_invalid.icon"));
+		errorIcon = SwingTools.createIcon(
+				"16/" + I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.repository_location.location_invalid.icon"));
 		selectionErrorIconLabel = new JLabel();
 		selectionErrorIconLabel.setMinimumSize(new Dimension(16, 16));
 		selectionErrorIconLabel.setPreferredSize(new Dimension(16, 16));
@@ -290,7 +297,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		c.fill = GridBagConstraints.NONE;
 		add(selectionErrorPanel, c);
 
-		c.insets = new Insets(0, 0, 0, ButtonDialog.GAP);
+		c.insets = new Insets(ButtonDialog.GAP, 0, 0, 0);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 0;
 		c.weighty = 0;
@@ -301,12 +308,13 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		add(locationLabel, c);
 
 		c.weightx = 1;
-		c.insets = new Insets(ButtonDialog.GAP, 0, 0, 0);
+		c.insets = new Insets(0, 0, 0, 0);
 		c.weightx = 1;
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		add(locationField, c);
 		add(locationFieldRepositoryEntry, c);
 		if (enforceValidRepositoryEntryName) {
+			locationLabel.setVisible(false);
 			locationField.setVisible(false);
 		} else {
 			locationFieldRepositoryEntry.setVisible(false);
@@ -322,10 +330,10 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		add(resultLabel, c);
 
 		if (resolveRelativeTo != null) {
-			resolveBox = new JCheckBox(new ResourceActionAdapter("repository_chooser.resolve",
-					resolveRelativeTo.getAbsoluteLocation()));
-			resolveBox.setSelected(ParameterService.getParameterValue(
-					RapidMinerGUI.PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS).equals("true"));
+			resolveBox = new JCheckBox(
+					new ResourceActionAdapter("repository_chooser.resolve", resolveRelativeTo.getAbsoluteLocation()));
+			resolveBox.setSelected(ParameterService
+					.getParameterValue(RapidMinerGUI.PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS).equals("true"));
 			add(resolveBox, c);
 			resolveBox.addActionListener(new ActionListener() {
 
@@ -334,6 +342,10 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 					updateResult();
 				}
 			});
+		}
+		if (initialValue != null && enforceValidRepositoryEntryName) {
+			// check if initial value is valid
+			locationFieldRepositoryEntry.triggerCheck();
 		}
 	}
 
@@ -381,9 +393,9 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 				&& (enforceValidRepositoryEntryName && locationFieldRepositoryEntry.getText().isEmpty()
 						|| !enforceValidRepositoryEntryName && locationField.getText().isEmpty()
 						|| enforceValidRepositoryEntryName
-						&& !RepositoryLocation.isNameValid(locationFieldRepositoryEntry.getText())
-						|| enforceValidRepositoryEntryName && tree.getSelectedEntry() == null || !enforceValidRepositoryEntryName
-						&& tree.getSelectedEntry() == null)) {
+								&& !RepositoryLocation.isNameValid(locationFieldRepositoryEntry.getText())
+				|| enforceValidRepositoryEntryName && tree.getSelectedEntry() == null
+				|| !enforceValidRepositoryEntryName && tree.getSelectedEntry() == null)) {
 			return false;
 		} else {
 			try {
@@ -391,8 +403,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 				return true;
 			} catch (MalformedRepositoryLocationException e) {
 				// LogService.getRoot().warning("Malformed repository location: " + e);
-				LogService.getRoot().log(
-						Level.WARNING,
+				LogService.getRoot().log(Level.WARNING,
 						I18N.getMessage(LogService.getRoot().getResourceBundle(),
 								"com.rapidminer.repository.gui.RepositoryLocationChooser.malformed_repository_location", e),
 						e);
@@ -475,7 +486,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			final boolean enforceValidRepositoryEntryName, final boolean onlyWriteableRepositories) {
 		final RepositoryLocationChooserDialog dialog = new RepositoryLocationChooserDialog(
 				c != null ? SwingUtilities.getWindowAncestor(c) : null, resolveRelativeTo, initialValue, selectEntries,
-						selectFolder, onlyWriteableRepositories);
+				selectFolder, onlyWriteableRepositories);
 		if (forceDisableRelativeResolve) {
 			dialog.chooser.setResolveRelative(false);
 			if (dialog.chooser.resolveBox != null) {
@@ -529,10 +540,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			}
 		} catch (MalformedRepositoryLocationException e) {
 			// LogService.getRoot().log(Level.WARNING, "Malformed location: " + e, e);
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.repository.gui.RepositoryLocationChooser.malformed_location", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.repository.gui.RepositoryLocationChooser.malformed_location", e), e);
 		}
 		if (currentEntry instanceof Folder && !enforceValidRepositoryEntryName && locationField.getText().isEmpty()) {
 			this.folderSelected = true;
@@ -586,7 +595,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		if (locationFieldRepositoryEntry.isVisible()) {
 			return locationFieldRepositoryEntry.requestFocusInWindow();
 		} else {
-			return super.requestFocusInWindow();
+			return tree.requestFocusInWindow();
 		}
 	}
 }

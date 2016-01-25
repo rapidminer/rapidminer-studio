@@ -1,32 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.Shape;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -39,10 +32,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.Icon;
-import javax.swing.JLabel;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
@@ -81,7 +70,7 @@ import javax.swing.table.TableModel;
  * ASCENDING}.
  * <li>
  * CONTROL-mouse-click and CONTROL-SHIFT-mouse-click: as above except that the changes to the column
- * do not cancel the statuses of columns that are already sorting - giving a way to initiate a
+ * do not cancel the statuses of columns that are already sortoing - giving a way to initiate a
  * compound sort.
  * </ul>
  * <p/>
@@ -194,14 +183,10 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 		if (this.tableHeader != null) {
 			this.tableHeader.removeMouseListener(mouseListener);
 			TableCellRenderer defaultRenderer = this.tableHeader.getDefaultRenderer();
-			if (defaultRenderer instanceof SortableHeaderRenderer) {
-				this.tableHeader.setDefaultRenderer(((SortableHeaderRenderer) defaultRenderer).tableCellRenderer);
-			}
 		}
 		this.tableHeader = tableHeader;
 		if (this.tableHeader != null) {
 			this.tableHeader.addMouseListener(mouseListener);
-			this.tableHeader.setDefaultRenderer(new SortableHeaderRenderer(this.tableHeader.getDefaultRenderer()));
 		}
 	}
 
@@ -240,14 +225,6 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 			sortingColumns.add(new Directive(column, status));
 		}
 		sortingStatusChanged();
-	}
-
-	protected Icon getHeaderRendererIcon(int column, int size) {
-		Directive directive = getDirective(column);
-		if (directive == EMPTY_DIRECTIVE) {
-			return null;
-		}
-		return new Arrow(directive.direction == DESCENDING, size, sortingColumns.indexOf(directive));
 	}
 
 	public void cancelSorting() {
@@ -462,26 +439,24 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			if (e.getClickCount() == 1) {
-				JTableHeader h = (JTableHeader) e.getSource();
-				TableColumnModel columnModel = h.getColumnModel();
-				int viewColumn = getSortingColumnIndex(h, e.getPoint());
-				if (viewColumn != -1) {
-					int column = columnModel.getColumn(viewColumn).getModelIndex();
-					if (column != -1) {
-						int status = getSortingStatus(column);
-						if (!SwingTools.isControlOrMetaDown(e)) {
-							cancelSorting();
-						}
-						// Cycle the sorting states through {NOT_SORTED, ASCENDING, DESCENDING} or
-						// {NOT_SORTED, DESCENDING, ASCENDING} depending on whether shift is
-						// pressed.
-						status = status + (e.isShiftDown() ? -1 : 1);
-						status = (status + 4) % 3 - 1; // signed mod, returning {-1, 0, 1}
-						setSortingStatus(column, status);
+			JTableHeader h = (JTableHeader) e.getSource();
+			TableColumnModel columnModel = h.getColumnModel();
+			int viewColumn = getSortingColumnIndex(h, e.getPoint());
+			if (viewColumn != -1) {
+				int column = columnModel.getColumn(viewColumn).getModelIndex();
+				if (column != -1) {
+					int status = getSortingStatus(column);
+					if (!SwingTools.isControlOrMetaDown(e)) {
+						cancelSorting();
 					}
-					e.consume();
+					// Cycle the sorting states through {NOT_SORTED, ASCENDING, DESCENDING} or
+					// {NOT_SORTED, DESCENDING, ASCENDING} depending on whether shift is
+					// pressed.
+					status = status + (e.isShiftDown() ? -1 : 1);
+					status = (status + 4) % 3 - 1; // signed mod, returning {-1, 0, 1}
+					setSortingStatus(column, status);
 				}
+				e.consume();
 			}
 		}
 
@@ -504,74 +479,6 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 			} else {
 				return column;
 			}
-		}
-	}
-
-	private static class Arrow implements Icon {
-
-		private boolean descending;
-		private int size;
-		private int priority;
-
-		public Arrow(boolean descending, int size, int priority) {
-			this.descending = descending;
-			this.size = size;
-			this.priority = priority;
-		}
-
-		@Override
-		public void paintIcon(Component c, Graphics g, int x, int y) {
-			// In a compound sort, make each succesive triangle 20%
-			// smaller than the previous one.
-			int dx = (int) (size / 2.0d * Math.pow(0.8d, priority));
-			int dy = descending ? dx : -dx;
-			// Align icon (roughly) with font baseline.
-			y = y + 5 * size / 6 + (descending ? -dy : 0);
-			g.translate(x, y);
-
-			int[] xPoints = { dx, 0, dx / 2, dx };
-			int[] yPoints = { 0, 0, dy, 0 };
-
-			Shape arrowShape = new Polygon(xPoints, yPoints, xPoints.length);
-			Graphics2D graphics = (Graphics2D) g;
-			graphics.setColor(SwingTools.LIGHT_BLUE);
-			graphics.fill(arrowShape);
-			graphics.setColor(SwingTools.DARK_BLUE);
-			graphics.draw(arrowShape);
-
-			g.translate(-x, -y);
-		}
-
-		@Override
-		public int getIconWidth() {
-			return size;
-		}
-
-		@Override
-		public int getIconHeight() {
-			return size;
-		}
-	}
-
-	private class SortableHeaderRenderer implements TableCellRenderer {
-
-		private TableCellRenderer tableCellRenderer;
-
-		public SortableHeaderRenderer(TableCellRenderer tableCellRenderer) {
-			this.tableCellRenderer = tableCellRenderer;
-		}
-
-		@Override
-		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-				int row, int column) {
-			Component c = tableCellRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-			if (c instanceof JLabel) {
-				JLabel l = (JLabel) c;
-				l.setHorizontalTextPosition(SwingConstants.LEFT);
-				int modelColumn = table.convertColumnIndexToModel(column);
-				l.setIcon(getHeaderRendererIcon(modelColumn, l.getFont().getSize() + 2));
-			}
-			return c;
 		}
 	}
 

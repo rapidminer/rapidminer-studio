@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,12 +18,15 @@
  */
 package com.rapidminer.operator;
 
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.operator.ProcessSetupError.Severity;
@@ -31,6 +34,8 @@ import com.rapidminer.operator.ports.InputPortExtender;
 import com.rapidminer.operator.ports.OutputPortExtender;
 import com.rapidminer.operator.ports.quickfix.AbstractQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeLinkButton;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.update.internal.UpdateManagerRegistry;
@@ -44,6 +49,8 @@ import com.rapidminer.tools.update.internal.UpdateManagerRegistry;
  *
  */
 public class DummyOperator extends Operator {
+
+	public static final String PARAMETER_INSTALL_EXTENSION = "install_extension";
 
 	private InputPortExtender inExtender = new InputPortExtender("in", getInputPorts());
 	private OutputPortExtender outExtender = new OutputPortExtender("out", getOutputPorts());
@@ -87,6 +94,29 @@ public class DummyOperator extends Operator {
 		throw new UserError(this, 151, getName(), getReplaces());
 	}
 
+	@Override
+	public List<ParameterType> getParameterTypes() {
+		List<ParameterType> types = super.getParameterTypes();
+		ParameterType type = new ParameterTypeLinkButton(PARAMETER_INSTALL_EXTENSION,
+				I18N.getGUILabel("dummy.parameter.install_extension"), new ResourceAction("install_extension_dummy") {
+
+					private static final long serialVersionUID = 1423879776955743834L;
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						try {
+							UpdateManagerRegistry.INSTANCE.get().showUpdateDialog(false, getExtensionId());
+						} catch (URISyntaxException | IOException e1) {
+							SwingTools.showSimpleErrorMessage("dummy.marketplace_connection_error", e1);
+						}
+					}
+
+				});
+		type.setExpert(false);
+		types.add(type);
+		return types;
+	}
+
 	public void setReplaces(String replaces) {
 		this.replaces = replaces;
 		if (replaces != null) {
@@ -112,18 +142,16 @@ public class DummyOperator extends Operator {
 
 	private String getExtensionId() {
 		try {
-			String extensionId = UpdateManagerRegistry.INSTANCE.get().getExtensionIdForOperatorPrefix(
-					getRequiredPluginPrefix());
+			String extensionId = UpdateManagerRegistry.INSTANCE.get()
+					.getExtensionIdForOperatorPrefix(getRequiredPluginPrefix());
 			if (extensionId == null) {
 				return getRequiredPluginPrefix();
 			} else {
 				return extensionId;
 			}
 		} catch (Exception e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.operator.DummyOperator.connecting_to_update_service_error", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.operator.DummyOperator.connecting_to_update_service_error", e), e);
 
 			return getRequiredPluginPrefix();
 		}
@@ -134,8 +162,8 @@ public class DummyOperator extends Operator {
 			return getRequiredPluginPrefix();
 		}
 		try {
-			String extensionId = UpdateManagerRegistry.INSTANCE.get().getExtensionIdForOperatorPrefix(
-					getRequiredPluginPrefix());
+			String extensionId = UpdateManagerRegistry.INSTANCE.get()
+					.getExtensionIdForOperatorPrefix(getRequiredPluginPrefix());
 			if (extensionId == null) {
 				return getRequiredPluginPrefix();
 			} else {
@@ -148,10 +176,8 @@ public class DummyOperator extends Operator {
 				return packageName;
 			}
 		} catch (Exception e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.operator.DummyOperator.connecting_to_update_service_error", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.operator.DummyOperator.connecting_to_update_service_error", e), e);
 			return getRequiredPluginPrefix();
 		}
 	}

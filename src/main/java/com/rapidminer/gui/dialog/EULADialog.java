@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -51,6 +51,7 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExitMode;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.license.LicenseTools;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
@@ -184,8 +185,10 @@ public class EULADialog extends ButtonDialog implements AdjustmentListener, Chan
 		this.eulaText.setWrapStyleWord(true);
 		this.eulaText.setEditable(false);
 		this.eulaText.setText(this.loadEULA());
+		eulaText.setBorder(null);
 
 		this.scrollPane = new ExtendedJScrollPane(this.eulaText);
+		scrollPane.setBorder(BorderFactory.createLineBorder(Colors.TEXTFIELD_BORDER));
 
 		this.layoutDefault(this.makeContentPanel(), this.acceptButton, this.makeDeclineButton());
 		this.setResizable(false);

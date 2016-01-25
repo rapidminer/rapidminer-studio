@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.io.process;
 
@@ -54,7 +52,6 @@ import com.rapidminer.io.process.rules.OperatorEnablerRepairRule;
 import com.rapidminer.io.process.rules.ParseRule;
 import com.rapidminer.io.process.rules.PassthroughShortcutRule;
 import com.rapidminer.io.process.rules.RenamePlotterParametersRule;
-import com.rapidminer.io.process.rules.ReplaceIOContainerWriter;
 import com.rapidminer.io.process.rules.ReplaceIOMultiplierRule;
 import com.rapidminer.io.process.rules.ReplaceOperatorRule;
 import com.rapidminer.io.process.rules.ReplaceParameterRule;
@@ -104,6 +101,7 @@ public class XMLImporter {
 	public static final VersionNumber CURRENT_VERSION = VERSION_RM_6;
 
 	private static final Set<String> IRRELEVANT_PARAMETERS = new HashSet<String>();
+
 	static {
 		IRRELEVANT_PARAMETERS.add("read_database.data_set_meta_data_information");
 	}
@@ -170,10 +168,11 @@ public class XMLImporter {
 							PARSE_RULES.size());
 				}
 			} catch (Exception e) {
-				LogService.getRoot().log(
-						Level.SEVERE,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.io.process.XMLImporter.error_reading_parse_rules", rulesResource, e), e);
+				LogService.getRoot()
+						.log(Level.SEVERE,
+								I18N.getMessage(LogService.getRoot().getResourceBundle(),
+										"com.rapidminer.io.process.XMLImporter.error_reading_parse_rules", rulesResource, e),
+						e);
 			}
 		}
 	}
@@ -209,9 +208,6 @@ public class XMLImporter {
 			 */
 		} else if (element.getTagName().equals("deleteUnnecessaryOperatorChain")) {
 			genericRule = new DeleteUnnecessaryOperatorChainRule();
-		} else if (element.getTagName().equals("replaceIOContainerWriter")) {
-			rule = new ReplaceIOContainerWriter(element);
-			operatorTypeName = "iocontainerwriter";
 		} else if (element.getTagName().equals("passthroughShortcut")) {
 			genericRule = new PassthroughShortcutRule();
 		} else if (element.getTagName().equals("replaceIOMultiplier")) {
@@ -306,7 +302,8 @@ public class XMLImporter {
 			rootOperatorElement = XMLTools.getChildTag(processElement, "operator", false);
 		}
 
-		ProcessRootOperator rootOperator = parseRootOperator(rootOperatorElement, processVersion, process, unknownParameters);
+		ProcessRootOperator rootOperator = parseRootOperator(rootOperatorElement, processVersion, process,
+				unknownParameters);
 		process.setRootOperator(rootOperator);
 
 		// Process context
@@ -352,15 +349,15 @@ public class XMLImporter {
 			if (rootOp instanceof OperatorChain) {
 				try {
 					((OperatorChain) rootOp).getSubprocess(0).autoWire(CompatibilityLevel.PRE_VERSION_5, true, true);
-					addMessage("As of version 5.0, RapidMiner processes define an explicit data flow. This data flow has been constructed automatically.");
+					addMessage(
+							"As of version 5.0, RapidMiner processes define an explicit data flow. This data flow has been constructed automatically.");
 				} catch (Exception e) {
-					addMessage("As of version 5.0, RapidMiner processes define an explicit data flow. This data flow could not be constructed automatically: "
-							+ e);
+					addMessage(
+							"As of version 5.0, RapidMiner processes define an explicit data flow. This data flow could not be constructed automatically: "
+									+ e);
 					// LogService.getRoot().log(Level.WARNING, "Cannot autowire: " + e, e);
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.io.process.XMLImporter.autowire_error", e), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.io.process.XMLImporter.autowire_error", e), e);
 				}
 			}
 		}
@@ -402,9 +399,12 @@ public class XMLImporter {
 					// ignore, parsed by ProcessRenderer
 				} else if ("description".equals(opElement.getTagName())) {
 					// ignore, parsed by GUIProcessXMLFilter
+				} else if ("background".equals(opElement.getTagName())) {
+					// ignore, parsed by GUIProcessXMLFilter
 				} else {
-					addMessage("<em class=\"error\">ExecutionUnit must only contain <operator> tags as children. Ignoring unknown tag <code>&lt;"
-							+ opElement.getTagName() + "&gt;</code>.</em>");
+					addMessage(
+							"<em class=\"error\">ExecutionUnit must only contain <operator> tags as children. Ignoring unknown tag <code>&lt;"
+									+ opElement.getTagName() + "&gt;</code>.</em>");
 				}
 			}
 		}
@@ -542,7 +542,8 @@ public class XMLImporter {
 					opVersion = nextIncompatibility;
 				}
 			} catch (IllegalArgumentException e) {
-				addMessage("Failed to parse version string '" + versionString + "' for operator " + operator.getName() + ".");
+				addMessage(
+						"Failed to parse version string '" + versionString + "' for operator " + operator.getName() + ".");
 				opVersion = new OperatorVersion(5, 0, 0);
 			}
 		} else {
@@ -618,11 +619,9 @@ public class XMLImporter {
 					boolean knownType = operator.getParameters().setParameter(parameter[0], parameter[1]);
 					if (!knownType) {
 						if (relevantParameter(className, parameter[0])) {
-							LogService.getRoot().log(
-									Level.INFO,
-									"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown",
-									new Object[] { parameter[0], operator.getName(),
-											operator.getOperatorDescription().getName() });
+							LogService.getRoot().log(Level.INFO,
+									"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown", new Object[] {
+											parameter[0], operator.getName(), operator.getOperatorDescription().getName() });
 						}
 					}
 				} else if (inner.getTagName().toLowerCase().equals("list")) {
@@ -645,8 +644,7 @@ public class XMLImporter {
 						boolean knownType = operator.getParameters().setParameter(listDescription.getKey(), listString);
 						if (!knownType) {
 							if (relevantParameter(className, listDescription.getKey())) {
-								LogService.getRoot().log(
-										Level.INFO,
+								LogService.getRoot().log(Level.INFO,
 										"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown",
 										new Object[] { listDescription.getKey(), operator.getName(),
 												operator.getOperatorDescription().getName() });
@@ -673,11 +671,9 @@ public class XMLImporter {
 								ParameterTypeEnumeration.transformEnumeration2String(parsed));
 						if (!knownType) {
 							if (relevantParameter(className, key)) {
-								LogService.getRoot()
-										.log(Level.INFO,
-												"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown",
-												new Object[] { key, operator.getName(),
-														operator.getOperatorDescription().getName() });
+								LogService.getRoot().log(Level.INFO,
+										"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown", new Object[] {
+												key, operator.getName(), operator.getOperatorDescription().getName() });
 							}
 						}
 					}
@@ -723,10 +719,12 @@ public class XMLImporter {
 										unknownParameterInformation);
 							} else if ("operator".equals(childProcessElement.getTagName())) {
 								if (processFileVersion.compareTo(VERSION_RM_5) >= 0) {
-									addMessage("<em class=\"error\"><code>&lt;operator&gt;</code> as children of <code>&lt;operator&gt</code> is deprecated syntax. From version 5.0 on, use <code>&lt;process&gt;</code> as children.</em>");
+									addMessage(
+											"<em class=\"error\"><code>&lt;operator&gt;</code> as children of <code>&lt;operator&gt</code> is deprecated syntax. From version 5.0 on, use <code>&lt;process&gt;</code> as children.</em>");
 								} else {
 									if (!operatorAsDirectChildrenDeprecatedReported) {
-										addMessage("<code>&lt;operator&gt;</code> as children of <code>&lt;operator&gt</code> is deprecated syntax. From version 5.0 on, use <code>&lt;process&gt;</code> as children.");
+										addMessage(
+												"<code>&lt;operator&gt;</code> as children of <code>&lt;operator&gt</code> is deprecated syntax. From version 5.0 on, use <code>&lt;process&gt;</code> as children.");
 										operatorAsDirectChildrenDeprecatedReported = true;
 									}
 									final ExecutionUnit subprocess = nop.getSubprocess(subprocessIndex);
@@ -799,8 +797,8 @@ public class XMLImporter {
 				NodeList locationNodes = ((Element) childNodes.item(0)).getElementsByTagName("macro");
 				for (int i = 0; i < locationNodes.getLength(); i++) {
 					Element macroElem = (Element) locationNodes.item(i);
-					context.addMacro(new Pair<String, String>(XMLTools.getTagContents(macroElem, "key"), XMLTools
-							.getTagContents(macroElem, "value")));
+					context.addMacro(new Pair<String, String>(XMLTools.getTagContents(macroElem, "key"),
+							XMLTools.getTagContents(macroElem, "value")));
 				}
 				break;
 			default:

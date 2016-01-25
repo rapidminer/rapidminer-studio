@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties;
 
@@ -41,6 +39,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.ScrollPaneConstants;
 
 import com.rapidminer.RapidMiner;
@@ -112,6 +111,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	public SettingsTabs(SettingsDialog settingsDialog) {
 		this.settingsDialog = settingsDialog;
 
+		setTabPlacement(JTabbedPane.LEFT);
 		// Get defined-parameters
 		// These are all parameters, which will appear in dialog
 		Collection<String> definedParameterKeys = ParameterService.getDefinedParameterKeys();
@@ -135,8 +135,8 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 		}
 
 		// Generate structure for remaining defined-parameters
-		boolean isDebugMode = Boolean.parseBoolean(ParameterService
-				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE));
+		boolean isDebugMode = Boolean
+				.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE));
 		iterator = definedParameterKeys.iterator();
 		while (iterator.hasNext()) {
 			String key = iterator.next();
@@ -186,6 +186,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 
 		JPanel containerPanel = new JPanel();
 		containerPanel.setLayout(new BoxLayout(containerPanel, BoxLayout.PAGE_AXIS));
+		containerPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
 
 		// Add group description
 		JPanel descriptionPanel = new JPanel();
@@ -251,6 +252,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setPreferredSize(new Dimension(600, 300));
+		scrollPane.setBorder(null);
 
 		addTab(groupTitle, scrollPane);
 		groupKeysToTabIndexMap.put(groupKey, getTabCount() - 1);

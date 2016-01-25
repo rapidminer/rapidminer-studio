@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -125,8 +123,8 @@ public class DockingTools {
 					// The container might be null, if the dockable is not in a tab
 					// environment (single dockable displayed)
 					if (container instanceof TabbedDockView) {
-						tabbedContainer = (TabbedDockableContainer) SwingUtilities.getAncestorOfClass(
-								TabbedDockableContainer.class, dockableContainer.getComponent());
+						tabbedContainer = (TabbedDockableContainer) SwingUtilities
+								.getAncestorOfClass(TabbedDockableContainer.class, dockableContainer.getComponent());
 					} else if (container instanceof AutoHideExpandPanel) {
 						// This kind of instantiation does not support the following
 						// operations. Cancel at this point and just add the dockable to the
@@ -154,11 +152,11 @@ public class DockingTools {
 			}
 			// DockableContainer could not be resolved. Add dockable to a magic position.
 			if (dockablePosition == null) {
-				mainFrame.getDockableMenu().getDockingContext().getDesktopList().get(0)
-						.addDockable(dockable, RelativeDockablePosition.BOTTOM_CENTER);
+				mainFrame.getDockableMenu().getDockingContext().getDesktopList().get(0).addDockable(dockable,
+						RelativeDockablePosition.BOTTOM_CENTER);
 			} else {
-				mainFrame.getDockableMenu().getDockingContext().getDesktopList().get(0)
-				.addDockable(dockable, dockablePosition);
+				mainFrame.getDockableMenu().getDockingContext().getDesktopList().get(0).addDockable(dockable,
+						dockablePosition);
 			}
 		} else {
 			// Dockable is not closed: show it in the active tab

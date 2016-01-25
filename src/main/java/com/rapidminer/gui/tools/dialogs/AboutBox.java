@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.dialogs;
 
@@ -24,25 +22,31 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -51,9 +55,11 @@ import javax.swing.KeyStroke;
 import com.rapidminer.gui.license.LicenseTools;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.components.LinkButton;
+import com.rapidminer.gui.tools.VersionNumber;
+import com.rapidminer.gui.tools.VersionNumber.VersionNumberExcpetion;
+import com.rapidminer.gui.tools.components.LinkRemoteButton;
 import com.rapidminer.license.License;
-import com.rapidminer.license.LicenseConstants;
+import com.rapidminer.license.StudioLicenseConstants;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PlatformUtilities;
@@ -76,27 +82,30 @@ public class AboutBox extends JDialog {
 
 	private static final String PROPERTY_FILE = "about_infos.properties";
 
-	private static final String RAPID_MINER_LOGO_NAME = "rapidminer_logo.png";
-	public static final Image RAPID_MINER_LOGO;
+	private static final String DEFAULT_VENDOR = "RapidMiner";
+	private static final String DEFAULT_VENDOR_OLD = "Rapid-I";
+
 	public static Image backgroundImage = null;
+
+	public static Image backgroundImageWithoutLogo = null;
+
 	static {
-		URL url = Tools.getResource(RAPID_MINER_LOGO_NAME);
-		Image rmLogo = null;
-		if (url != null) {
-			try {
-				rmLogo = ImageIO.read(url);
-			} catch (IOException e) {
-				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.tools.dialogs.AboutBox.loading_logo_error");
-			}
-		}
-		RAPID_MINER_LOGO = rmLogo;
-		url = Tools.getResource("about_background.png");
+		URL url = Tools.getResource("about_background.png");
 		if (url != null) {
 			try {
 				backgroundImage = ImageIO.read(url);
 			} catch (IOException e) {
-				LogService.getRoot()
-				.log(Level.WARNING, "com.rapidminer.gui.tools.dialogs.AboutBox.loading_background_error");
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.gui.tools.dialogs.AboutBox.loading_background_error");
+			}
+		}
+		url = Tools.getResource("about_background_wo_logo.png");
+		if (url != null) {
+			try {
+				backgroundImageWithoutLogo = ImageIO.read(url);
+			} catch (IOException e) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.gui.tools.dialogs.AboutBox.loading_background_error");
 			}
 		}
 	}
@@ -105,14 +114,31 @@ public class AboutBox extends JDialog {
 
 	private static class ContentPanel extends JPanel {
 
+		private static final String[] DISPLAYED_KEYS = new String[] { "copyright", "licensor", "license" };
+
+		private static final Font FONT_SANS_SERIF_11 = new Font("SansSerif", Font.PLAIN, 11);
+		private static final Font FONT_SANS_SERIF_BOLD_11 = new Font("SansSerif", Font.BOLD, 11);
+		private static final Font FONT_SANS_SERIF_BOLD_26 = new Font("SansSerif", Font.BOLD, 26);
+		private static final Font FONT_OPEN_SANS_15 = new Font("Open Sans", Font.PLAIN, 15);
+
+		private static final List<Font> FONTS_PRODUCT_NAME = new ArrayList<>(15);
+
+		static {
+			for (int size = 60; size >= 8; size -= 4) {
+				FONTS_PRODUCT_NAME.add(new Font("Open Sans Light", Font.PLAIN, size));
+			}
+		}
+
 		private static final long serialVersionUID = -1763842074674706654L;
 
-		private static final int LOGO_INSET_Y = 20;
-		private static final int LOGO_INSET_X = 25;
+		private static final int LOGO_INSET_Y = 342;
+		private static final int LOGO_INSET_X = 10;
 
-		private static final Paint MAIN_PAINT = Color.LIGHT_GRAY;
+		private static final int ADDITIONAL_LINE_HEIGHT = 15;
 
-		private static final int MARGIN = 10;
+		private static final Paint MAIN_PAINT = new Color(96, 96, 96);
+
+		private static final int MARGIN = 20;
 
 		private final Properties properties;
 
@@ -121,12 +147,22 @@ public class AboutBox extends JDialog {
 		public ContentPanel(Properties properties, Image productLogo) {
 			this.properties = properties;
 			this.productLogo = productLogo;
-
-			int width = 450;
-			int height = 350;
+			int width = 550;
+			int height = 400;
 			if (backgroundImage != null) {
 				width = backgroundImage.getWidth(this);
 				height = backgroundImage.getHeight(this);
+			}
+
+			// Add additional space, if we display more than two keys
+			int foundKeys = 0;
+			for (String key : DISPLAYED_KEYS) {
+				if (properties.containsKey(key)) {
+					foundKeys++;
+					if (foundKeys > 2) {
+						height += ADDITIONAL_LINE_HEIGHT;
+					}
+				}
 			}
 			setPreferredSize(new Dimension(width, height));
 			setMinimumSize(new Dimension(width, height));
@@ -136,36 +172,72 @@ public class AboutBox extends JDialog {
 		@Override
 		public void paint(Graphics g) {
 			super.paint(g);
-			((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-			drawMain((Graphics2D) g);
-			g.setColor(Color.black);
-			g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+			Graphics2D g2d = (Graphics2D) g.create();
+			g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			drawMain(g2d);
+			g2d.dispose();
 		}
 
 		public void drawMain(Graphics2D g) {
-			g.setPaint(MAIN_PAINT);
+			g.setPaint(Color.WHITE);
 			g.fillRect(0, 0, getWidth(), getHeight());
 
-			if (backgroundImage != null) {
+			// draw the background image without RapidMiner branding if the vendor is not RM
+			if (properties.get("licensor") != null && !String.valueOf(properties.get("licensor")).contains(DEFAULT_VENDOR)
+					&& !String.valueOf(properties.get("licensor")).contains(DEFAULT_VENDOR_OLD)
+					&& backgroundImageWithoutLogo != null) {
+				g.drawImage(backgroundImageWithoutLogo, 0, 0, this);
+			} else if (backgroundImage != null) {
 				g.drawImage(backgroundImage, 0, 0, this);
 			}
 
-			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 26));
-			g.setColor(SwingTools.RAPIDMINER_GRAY);
+			g.setFont(FONT_SANS_SERIF_BOLD_26);
 			if (productLogo != null) {
-				if ("true".equals(properties.getProperty("textNextToLogo"))) {
-					g.drawImage(productLogo, LOGO_INSET_X, LOGO_INSET_Y, this);
-					g.drawString(properties.getProperty("name"), LOGO_INSET_X + productLogo.getWidth(null) + 10,
-							LOGO_INSET_Y + 34);
-				} else {
-					g.drawImage(productLogo, LOGO_INSET_X, LOGO_INSET_Y, this);
-				}
+				g.drawImage(productLogo, LOGO_INSET_X, LOGO_INSET_Y, this);
 			}
 
-			int y = 255;
-			g.setColor(SwingTools.BROWN_FONT_COLOR);
-			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 11));
+			String productName = removeLeadingRapidMinerString(properties.getProperty("name"));
+			g.setFont(FONTS_PRODUCT_NAME.get(FONTS_PRODUCT_NAME.size() - 1));
+			g.setPaint(Color.WHITE);
+			for (Font f : FONTS_PRODUCT_NAME) {
+				if (getFontMetrics(f).stringWidth(productName) <= getSize().width - 2 * MARGIN) {
+					g.setFont(f);
+					break;
+				}
+			}
+			FontMetrics fm = getFontMetrics(g.getFont());
+			int x_product = (getSize().width - fm.stringWidth(productName)) / 2;
+			int y_product = ((backgroundImage != null ? backgroundImage.getHeight(null) : getSize().height) - 70
+					- fm.getHeight()) / 2 + fm.getAscent();
+			g.drawString(productName, x_product, y_product);
+
 			StringBuilder builder = new StringBuilder();
+			builder.append(I18N.getGUILabel("version"));
+			builder.append(" ");
+			VersionNumber versionNumber = null;
+			if (properties.getProperty("version") != null) {
+				try {
+					versionNumber = new VersionNumber(properties.getProperty("version"));
+				} catch (VersionNumberExcpetion e) {
+					// nothing to do
+				}
+			}
+			builder.append(versionNumber != null ? versionNumber.getShortVersion() : I18N.getGUILabel("unknown_version"));
+			String version = builder.toString();
+			int x_version = x_product + fm.stringWidth(productName);
+			Rectangle2D bounds = getStringBounds(g, productName, x_product, y_product);
+			int y_version = (int) (bounds.getY() + bounds.getHeight());
+			g.setFont(FONT_OPEN_SANS_15);
+			fm = getFontMetrics(g.getFont());
+
+			x_version -= fm.stringWidth(version);
+			y_version += fm.getHeight();
+			g.drawString(version, x_version, y_version);
+			g.setPaint(MAIN_PAINT);
+
+			int y = 355;
+			g.setFont(FONT_SANS_SERIF_BOLD_11);
+			builder = new StringBuilder();
 			builder.append(properties.getProperty("name"));
 			builder.append(" ");
 			builder.append(properties.getProperty("version"));
@@ -182,18 +254,32 @@ public class AboutBox extends JDialog {
 			}
 
 			drawString(g, builder.toString(), y);
-			y += 20;
+			y += 15;
 
-			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
-			y = drawStringAndAdvance(g, properties.getProperty("edition"), y);
-			if (properties.getProperty("registered_to") != null) {
-				y = drawStringAndAdvance(g, I18N.getGUILabel("registered_to", properties.getProperty("registered_to")), y);
+			g.setFont(FONT_SANS_SERIF_11);
+			builder = new StringBuilder();
+			if (properties.getProperty("edition") != null) {
+				builder.append(properties.getProperty("edition"));
 			}
-			y = drawStringAndAdvance(g, properties.getProperty("copyright"), y);
-			y = drawStringAndAdvance(g, properties.getProperty("licensor"), y);
-			y = drawStringAndAdvance(g, properties.getProperty("license"), y);
-			y = drawStringAndAdvance(g, properties.getProperty("warranty"), y);
-			y = drawStringAndAdvance(g, properties.getProperty("more"), y);
+			if (properties.getProperty("registered_to") != null) {
+				builder.append(" ");
+				builder.append(I18N.getGUILabel("registered_to", properties.getProperty("registered_to")));
+			}
+			String edition = builder.toString();
+			if (!edition.trim().isEmpty()) {
+				drawString(g, builder.toString(), y);
+				y += 15;
+			}
+
+			for (String key : DISPLAYED_KEYS) {
+				y = drawStringAndAdvance(g, properties.getProperty(key), y);
+			}
+		}
+
+		private Rectangle getStringBounds(Graphics2D g2, String str, float x, float y) {
+			FontRenderContext frc = g2.getFontRenderContext();
+			GlyphVector gv = g2.getFont().createGlyphVector(frc, str);
+			return gv.getPixelBounds(null, x, y);
 		}
 
 		private int drawStringAndAdvance(Graphics2D g, String string, int y) {
@@ -223,10 +309,14 @@ public class AboutBox extends JDialog {
 		}
 
 		private void drawString(Graphics2D g, String text, int y) {
+			drawString(g, text, y, MARGIN + (productLogo != null ? productLogo.getWidth(null) : 0));
+		}
+
+		private void drawString(Graphics2D g, String text, int y, int x) {
 			if (text == null) {
 				return;
 			}
-			float xPos = MARGIN;
+			float xPos = x;
 			float yPos = y;
 			g.drawString(text, xPos, yPos);
 		}
@@ -239,6 +329,10 @@ public class AboutBox extends JDialog {
 
 	public AboutBox(Frame owner, String productVersion, License license, Image productLogo) {
 		this(owner, createProperties(productVersion, license), productLogo);
+	}
+
+	public AboutBox(Frame owner, String productVersion, License license) {
+		this(owner, createProperties(productVersion, license), null);
 	}
 
 	public AboutBox(Frame owner, Properties properties, Image productLogo) {
@@ -261,7 +355,7 @@ public class AboutBox extends JDialog {
 			if (shownURL.length() > MAX_SHOWN_LINK_LENGTH) {
 				shownURL = shownURL.substring(0, MAX_SHOWN_LINK_LENGTH) + "...";
 			}
-			buttonPanel.add(new LinkButton(new ResourceAction("link_action", url, shownURL) {
+			buttonPanel.add(new LinkRemoteButton(new ResourceAction("link_action", url, shownURL) {
 
 				private static final long serialVersionUID = 1L;
 
@@ -284,15 +378,10 @@ public class AboutBox extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				dispose();
 			}
+
 		};
-		JButton closeButton = new JButton(closeAction);
-		buttonPanel.add(closeButton);
-
-		add(buttonPanel, BorderLayout.SOUTH);
-
-		getRootPane().setDefaultButton(closeButton);
-		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
+		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
 		getRootPane().getActionMap().put("CANCEL", closeAction);
 
 		pack();
@@ -329,13 +418,13 @@ public class AboutBox extends JDialog {
 		}
 		properties.setProperty("name", LicenseTools.translateProductName(license));
 		properties.setProperty("version", productVersion);
-		if (LicenseConstants.DEFAULT_PRODUCT_ID.equals(license.getProductId())
+		if (StudioLicenseConstants.PRODUCT_ID.equals(license.getProductId())
 				&& PlatformUtilities.getReleaseRevision() != null) {
 			properties.setProperty("revision", PlatformUtilities.getReleaseRevision());
 			properties.setProperty("platform", PlatformUtilities.getReleasePlatform().toString());
 		}
-		properties
-		.setProperty("edition", I18N.getGUILabel("license_edition", LicenseTools.translateProductEdition(license)));
+		properties.setProperty("edition",
+				I18N.getGUILabel("license_edition", LicenseTools.translateProductEdition(license)));
 		if (license.getLicenseUser().getName() != null) {
 			properties.setProperty("registered_to", license.getLicenseUser().getName());
 		}
@@ -349,11 +438,18 @@ public class AboutBox extends JDialog {
 		properties.setProperty("name", productName);
 		properties.setProperty("version", productVersion);
 		properties.setProperty("licensor", licensor);
-		properties.setProperty("license", "URL: " + url);
+		properties.setProperty("license", "Website: " + url);
 		properties.setProperty("more", text);
 		properties.setProperty("textNextToLogo", "" + renderTextNextToLogo);
 		properties.setProperty("url", url);
 		return properties;
+	}
+
+	/**
+	 * This method removes a leading "RapidMiner " String from e.g. product names.
+	 */
+	private static String removeLeadingRapidMinerString(String productString) {
+		return productString.startsWith("RapidMiner ") ? productString.substring(11) : productString;
 	}
 
 }

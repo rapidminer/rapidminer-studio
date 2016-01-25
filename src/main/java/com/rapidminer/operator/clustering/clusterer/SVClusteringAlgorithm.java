@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.clustering.clusterer;
 
@@ -36,7 +34,7 @@ import com.rapidminer.tools.LogService;
 
 /**
  * SVClustering.
- * 
+ *
  * @author Stefan Rueping, Ingo Mierswa
  */
 public class SVClusteringAlgorithm implements SVMInterface {
@@ -175,24 +173,22 @@ public class SVClusteringAlgorithm implements SVMInterface {
 				for (int i = 0; i < examples_total; i++) {
 					at_bound[i] = 0;
 				}
-				;
 			}
-			;
+
 			shrink();
 			calculate_working_set();
 			update_working_set();
 		}
-		;
+
 		int i;
-		if ((iteration >= max_iterations) && (!converged)) {
+		if (iteration >= max_iterations && !converged) {
 			logln(1, "*** No convergence: Time up.");
 			if (shrinked) {
 				// set sums for all variables for statistics
 				reset_shrinked();
 			}
-			;
 		}
-		;
+
 		// calculate R and b
 		double new_b = 0;
 		double new_R = 0;
@@ -200,16 +196,15 @@ public class SVClusteringAlgorithm implements SVMInterface {
 		// check();
 		for (i = 0; i < examples_total; i++) {
 			new_b += alphas[i] * sum[i];
-			if ((alphas[i] - C < -is_zero) && (alphas[i] > is_zero)) {
+			if (alphas[i] - C < -is_zero && alphas[i] > is_zero) {
 				new_R += K[i] - 2 * sum[i];
 				new_R_count++;
 			}
-			;
 		}
-		;
+
 		examples.set_b(new_b);
 		if (new_R_count > 0) {
-			new_R = new_b + new_R / (new_R_count);
+			new_R = new_b + new_R / new_R_count;
 			if (new_R < 0.0) {
 				new_R = 0;
 			}
@@ -221,16 +216,14 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			double maxR = Double.MAX_VALUE;
 			for (i = 0; i < examples_total; i++) {
 				new_R = K[i] - 2 * sum[i] + new_b;
-				if ((alphas[i] <= is_zero) && (new_R > minR)) {
+				if (alphas[i] <= is_zero && new_R > minR) {
 					minR = new_R;
 				}
-				;
-				if ((alphas[i] - C >= -is_zero) && (new_R < maxR)) {
+
+				if (alphas[i] - C >= -is_zero && new_R < maxR) {
 					maxR = new_R;
 				}
-				;
 			}
-			;
 			if (minR > Double.MIN_VALUE) {
 				if (maxR < Double.MAX_VALUE) {
 					new_R = (minR + maxR) / 2.0;
@@ -240,15 +233,13 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			} else {
 				new_R = maxR;
 			}
-			;
 			examples.set_R(Math.sqrt(new_R));
 		}
-		;
 		// if(verbosity>= 2){
 		logln(2, "Done training: " + iteration + " iterations.");
 		print_statistics();
 		exit_optimizer();
-	};
+	}
 
 	/**
 	 * print statistics about result
@@ -278,7 +269,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			;
 		}
 		;
-		logln(1, "Error on KKT is " + (-min_lambda));
+		logln(1, "Error on KKT is " + -min_lambda);
 		logln(1, svs + " SVs");
 		logln(1, bsv + " BSVs");
 		logln(1, "R = " + R);
@@ -339,7 +330,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 		;
 		double s = 1.0d;
 		i = 0;
-		while ((i < examples_total) && (s > 0)) {
+		while (i < examples_total && s > 0) {
 			if (s < C) {
 				alphas[i] = s;
 				break;
@@ -451,7 +442,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 		for (i = 0; i < examples_total; i++) {
 			alpha = alphas[i];
 			alpha_sum += alpha;
-			if ((alpha > 0) && (alpha < C)) {
+			if (alpha > 0 && alpha < C) {
 				SVcount++;
 			}
 			;
@@ -466,7 +457,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 				alpha_sum = sum_alpha - 1;
 				for (i = 0; i < examples_total; i++) {
 					alpha = alphas[i];
-					if ((alpha > 0) && (alpha < C)) {
+					if (alpha > 0 && alpha < C) {
 						alphas[i] -= alpha_delta;
 						kernel_row = kernel.get_row(i);
 						for (int j = 0; j < examples_total; j++) {
@@ -483,7 +474,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			if (Math.abs(alpha_sum) > is_zero) {
 				// project more aggressive
 				i = 0;
-				while ((i < examples_total) && (alpha_sum != 0.0)) {
+				while (i < examples_total && alpha_sum != 0.0) {
 					alpha = alphas[i];
 					if (alpha_sum > 0) {
 						if (alpha > 0) {
@@ -520,7 +511,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 
 	/**
 	 * Calculates the working set
-	 * 
+	 *
 	 * @exception Exception
 	 *                on any error
 	 */
@@ -584,7 +575,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			working_set_size++;
 		}
 		;
-		if ((!heap_min.empty()) && (!heap_max.empty())) {
+		if (!heap_min.empty() && !heap_max.empty()) {
 			if (heap_min.top_value() >= heap_max.top_value()) {
 				// there could be the same values in the min- and maxheap,
 				// sort them out (this is very unlikely)
@@ -593,7 +584,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 				while (i < pos) {
 					// working_set[i] also in max-heap?
 					j = pos;
-					while ((j < working_set_size) && (working_set[j] != working_set[i])) {
+					while (j < working_set_size && working_set[j] != working_set[i]) {
 						j++;
 					}
 					;
@@ -622,7 +613,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			boolean bounded_neg = true;
 			pos = 0;
 			double alpha;
-			while ((pos < working_set_size) && (bounded_pos || bounded_neg)) {
+			while (pos < working_set_size && (bounded_pos || bounded_neg)) {
 				pos_abs = working_set[pos];
 				alpha = alphas[pos_abs];
 				if (alpha - C < -is_zero) {
@@ -692,11 +683,11 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			;
 		}
 		;
-		if ((working_set_size < parameters_working_set_size) && (working_set_size < examples_total)) {
+		if (working_set_size < parameters_working_set_size && working_set_size < examples_total) {
 			// use full working set
 			pos = (int) (Math.random() * examples_total);
 			int ok;
-			while ((working_set_size < parameters_working_set_size) && (working_set_size < examples_total)) {
+			while (working_set_size < parameters_working_set_size && working_set_size < examples_total) {
 				// add pos into WS if it isn't already
 				ok = 1;
 				for (i = 0; i < working_set_size; i++) {
@@ -736,8 +727,8 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			for (pos_j = 0; pos_j < pos_i; pos_j++) {
 				j = working_set[pos_j];
 				// put all elements K(i,j) in hessian, where j in WS
-				(qp.H)[pos_i * working_set_size + pos_j] = 2 * kernel_row[j];
-				(qp.H)[pos_j * working_set_size + pos_i] = 2 * kernel_row[j];
+				qp.H[pos_i * working_set_size + pos_j] = 2 * kernel_row[j];
+				qp.H[pos_j * working_set_size + pos_i] = 2 * kernel_row[j];
 			}
 			;
 			for (pos_j = 0; pos_j < working_set_size; pos_j++) {
@@ -746,19 +737,19 @@ public class SVClusteringAlgorithm implements SVMInterface {
 			}
 			;
 			// set main diagonal
-			(qp.H)[pos_i * working_set_size + pos_i] = 2 * kernel_row[i];
+			qp.H[pos_i * working_set_size + pos_i] = 2 * kernel_row[i];
 			// linear and box constraints
-			(qp.A)[pos_i] = 1;
-			(qp.c)[pos_i] = 2 * (sum[i] - sum_WS) - K[i];
+			qp.A[pos_i] = 1;
+			qp.c[pos_i] = 2 * (sum[i] - sum_WS) - K[i];
 			primal[pos_i] = alphas[i];
-			(qp.u)[pos_i] = C;
+			qp.u[pos_i] = C;
 		}
 		;
 	};
 
 	/**
 	 * Initialises the working set
-	 * 
+	 *
 	 * @exception Exception
 	 *                on any error
 	 */
@@ -788,7 +779,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 		// first working set is random
 		j = 0;
 		i = 0;
-		while ((i < working_set_size) && (j < examples_total)) {
+		while (i < working_set_size && j < examples_total) {
 			working_set[i] = j;
 			i++;
 			j++;
@@ -864,7 +855,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 				new_constraint_sum /= sv_count;
 				logln(5, "adjusting " + sv_count + " alphas by " + new_constraint_sum);
 				for (i = 0; i < working_set_size; i++) {
-					if ((my_primal[i] > qp.l[i]) && (my_primal[i] < qp.u[i])) {
+					if (my_primal[i] > qp.l[i] && my_primal[i] < qp.u[i]) {
 						// real sv
 						my_primal[i] += qp.A[i] * new_constraint_sum;
 					}
@@ -907,7 +898,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 				// set my_is_zero to min_i(primal[i]-qp.l[i], qp.u[i]-primal[i])
 				my_is_zero = Double.MAX_VALUE;
 				for (i = 0; i < working_set_size; i++) {
-					if ((my_primal[i] > qp.l[i]) && (my_primal[i] < qp.u[i])) {
+					if (my_primal[i] > qp.l[i] && my_primal[i] < qp.u[i]) {
 						if (my_primal[i] - qp.l[i] < my_is_zero) {
 							my_is_zero = my_primal[i] - qp.l[i];
 						}
@@ -996,7 +987,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 
 	/**
 	 * Checks if the optimization converged
-	 * 
+	 *
 	 * @return boolean true optimzation if converged
 	 */
 	protected boolean convergence() {
@@ -1012,14 +1003,14 @@ public class SVClusteringAlgorithm implements SVMInterface {
 		for (i = 0; i < examples_total; i++) {
 			alpha = alphas[i];
 			alpha_sum += alpha;
-			if ((alpha > 0) && (alpha < C)) {
+			if (alpha > 0 && alpha < C) {
 				the_lambda_eq += -nabla(i);
 				total++;
 			}
 			;
 		}
 		;
-		logln(4, "lambda_eq = " + (the_lambda_eq / total));
+		logln(4, "lambda_eq = " + the_lambda_eq / total);
 		if (total > 0) {
 			lambda_eq = the_lambda_eq / total;
 		} else {
@@ -1076,7 +1067,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 		}
 		;
 		i = 0;
-		while ((i < examples_total) && (result != false)) {
+		while (i < examples_total && result != false) {
 			if (lambda(i) >= -convergence_epsilon) {
 				i++;
 			} else {
@@ -1089,12 +1080,12 @@ public class SVClusteringAlgorithm implements SVMInterface {
 	};
 
 	protected final double nabla(int i) {
-		return (-K[i] + 2 * sum[i]);
+		return -K[i] + 2 * sum[i];
 	};
 
 	/**
 	 * lagrangian multiplier of variable i
-	 * 
+	 *
 	 * @param i
 	 *            variable index
 	 * @return lambda
@@ -1159,7 +1150,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 
 	/**
 	 * log the output plus newline
-	 * 
+	 *
 	 * @param level
 	 *            warning level
 	 * @param message
@@ -1253,7 +1244,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 	};
 
 	/**
-	 * 
+	 *
 	 */
 	@Override
 	public double[] getWeights() {
@@ -1261,7 +1252,7 @@ public class SVClusteringAlgorithm implements SVMInterface {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	@Override
 	public void init(Kernel kernel_, SVMExamples examples_) {

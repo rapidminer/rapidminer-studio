@@ -1,39 +1,47 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.ui;
 
-import com.rapidminer.gui.look.RapidLookTools;
-
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Paint;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
+import java.awt.geom.QuadCurve2D;
 
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.RowSorter;
+import javax.swing.RowSorter.SortKey;
+import javax.swing.SortOrder;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
 import javax.swing.event.MouseInputListener;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.UIResource;
@@ -43,14 +51,24 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookAndFeel;
+import com.rapidminer.gui.look.RapidLookTools;
+import com.rapidminer.gui.tools.ExtendedJTableSorterModel;
 
 
 /**
  * The UI for table headers.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class TableHeaderUI extends BasicTableHeaderUI {
+
+	private static final Border HEADER_BORDER = BorderFactory.createEmptyBorder(0, 10, 0, 10);
+
+	private static final int HEADER_HEIGHT = 31;
 
 	private TableCellRenderer originalRenderer;
 
@@ -87,10 +105,16 @@ public class TableHeaderUI extends BasicTableHeaderUI {
 	@Override
 	public void installDefaults() {
 		super.installDefaults();
+
+		// some tables need a special header background so check if it was set
+		Object bgObject = header.getClientProperty(RapidLookTools.PROPERTY_TABLE_HEADER_BACKGROUND);
+		if (bgObject != null && bgObject instanceof Color) {
+			header.setBackground((Color) bgObject);
+		}
 	}
 
 	private void updateRolloverColumn(Point p) {
-		if ((this.header.getDraggedColumn() == null) && this.header.contains(p)) {
+		if (this.header.getDraggedColumn() == null && this.header.contains(p)) {
 			int col = this.header.columnAtPoint(p);
 			if (col != this.highlightedColumn) {
 				this.highlightedColumn = col;
@@ -165,7 +189,7 @@ public class TableHeaderUI extends BasicTableHeaderUI {
 	@Override
 	public Dimension getPreferredSize(JComponent c) {
 		return new Dimension((int) super.getPreferredSize(c).getWidth(), Math.max((int) super.getPreferredSize(c)
-				.getHeight(), 20));
+				.getHeight(), HEADER_HEIGHT));
 	}
 
 	private class TableHeaderRenderer extends DefaultTableCellRenderer implements UIResource {
@@ -175,6 +199,12 @@ public class TableHeaderUI extends BasicTableHeaderUI {
 		private boolean rollOver;
 
 		private boolean isPressed;
+
+		private boolean isLeftmost;
+
+		private boolean isRightmost;
+
+		private int curCol = 0;
 
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
@@ -186,24 +216,92 @@ public class TableHeaderUI extends BasicTableHeaderUI {
 				}
 			}
 
-			this.rollOver = (column == TableHeaderUI.this.highlightedColumn);
+			this.rollOver = column == TableHeaderUI.this.highlightedColumn;
+			if (header != null) {
+				curCol = column;
+				this.isLeftmost = column == 0;
+				this.isRightmost = column == header.getColumnModel().getColumnCount() - 1;
+			}
 
-			if (TableHeaderUI.this.header != null && TableHeaderUI.this.header.getDraggedColumn() != null) {
-				this.isPressed = (viewIndexForColumn(TableHeaderUI.this.header.getDraggedColumn()) == column)
-						|| (column == TableHeaderUI.this.pressedColumn);
+			if (header != null && header.getDraggedColumn() != null) {
+				this.isPressed = viewIndexForColumn(header.getDraggedColumn()) == column
+						|| column == TableHeaderUI.this.pressedColumn;
 			} else {
 				this.isPressed = false;
 			}
-			setText((value == null) ? "" : value.toString());
-			setBorder(null);
+			setText(value == null ? "" : value.toString());
+			setHorizontalAlignment(SwingConstants.LEFT);
+			setHorizontalTextPosition(SwingConstants.LEADING);
+			setBorder(HEADER_BORDER);
 			return this;
 		}
 
 		@Override
-		public Insets getInsets() {
-			return new Insets(2, 4, 2, 4);
+		public Icon getIcon() {
+			int modelCol = header.getTable().convertColumnIndexToModel(curCol);
+			TableModel model = header.getTable().getModel();
+			if (model instanceof ExtendedJTableSorterModel) {
+				ExtendedJTableSorterModel sortModel = (ExtendedJTableSorterModel) model;
+				switch (sortModel.getSortingStatus(modelCol)) {
+					case ExtendedJTableSorterModel.ASCENDING:
+						return UIManager.getIcon("Table.ascendingSortIcon");
+					case ExtendedJTableSorterModel.DESCENDING:
+						return UIManager.getIcon("Table.descendingSortIcon");
+					case ExtendedJTableSorterModel.NOT_SORTED:
+					default:
+						return null;
+				}
+			} else {
+				SortKey sortKey = getSortKey(header.getTable().getRowSorter(), modelCol);
+				SortOrder sortOrder = sortKey != null ? sortKey.getSortOrder() : SortOrder.UNSORTED;
+				switch (sortOrder) {
+					case ASCENDING:
+						return UIManager.getIcon("Table.ascendingSortIcon");
+					case DESCENDING:
+						return UIManager.getIcon("Table.descendingSortIcon");
+					case UNSORTED:
+					default:
+						return null;
+				}
+			}
 		}
 
+		@Override
+		public Insets getInsets() {
+			return new Insets(2, 4, 2, 3);
+		}
+
+		@Override
+		public void paint(Graphics g) {
+			int h = this.getHeight();
+			int w = this.getWidth();
+
+			Graphics2D g2 = (Graphics2D) g;
+			if (this.isPressed) {
+				g2.setColor(Colors.TABLE_HEADER_BACKGROUND_PRESSED);
+			} else {
+				if (this.rollOver) {
+					g2.setColor(Colors.TABLE_HEADER_BACKGROUND_FOCUS);
+				} else {
+					Paint gp = new GradientPaint(0, 0, Colors.TABLE_HEADER_BACKGROUND_GRADIENT_START, 0, h,
+							Colors.TABLE_HEADER_BACKGROUND_GRADIENT_END);
+					g2.setPaint(gp);
+				}
+			}
+
+			g2.fill(createHeaderShape(0, 0, w, h, isLeftmost, isRightmost));
+			g2.setColor(Colors.TABLE_HEADER_BORDER);
+			g2.draw(createHeaderShape(0, 0, w, h, isLeftmost, isRightmost));
+
+			super.paint(g);
+		}
+
+		/**
+		 * Get the view column index of the given table column
+		 *
+		 * @param aColumn
+		 * @return
+		 */
 		private int viewIndexForColumn(TableColumn aColumn) {
 			TableColumnModel cm = TableHeaderUI.this.header.getColumnModel();
 			for (int column = 0; column < cm.getColumnCount(); column++) {
@@ -214,51 +312,85 @@ public class TableHeaderUI extends BasicTableHeaderUI {
 			return -1;
 		}
 
-		@Override
-		public void paint(Graphics g) {
-			int h = this.getHeight();
-			int w = this.getWidth();
-
-			if (this.isPressed) {
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[0]);
-				g.drawLine(0, 0, w - 1, 0);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[1]);
-				g.drawLine(0, 1, w - 1, 1);
-				Graphics2D g2 = (Graphics2D) g;
-				g2.setPaint(new GradientPaint(0, 2, RapidLookTools.getColors().getTableHeaderColors()[2], 0, h - 1,
-						RapidLookTools.getColors().getTableHeaderColors()[3]));
-				g2.fillRect(0, 2, w, h - 1);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[0]);
-				g.drawLine(0, h - 1, w - 1, h - 1);
-			} else {
-				if (this.rollOver) {
-					g.setColor(RapidLookTools.getColors().getTableHeaderColors()[4]);
-					g.drawLine(0, 0, w - 1, 0);
-
-					g.setColor(RapidLookTools.getColors().getTableHeaderColors()[5]);
-					g.drawLine(0, h - 2, w - 1, h - 2);
-				} else {
-					g.setColor(RapidLookTools.getColors().getTableHeaderColors()[6]);
-					g.drawLine(0, 0, w - 1, 0);
-					g.setColor(RapidLookTools.getColors().getTableHeaderColors()[7]);
-					g.drawLine(0, h - 2, w - 1, h - 2);
-				}
-
-				Graphics2D g2 = (Graphics2D) g;
-				g2.setPaint(new GradientPaint(0, 1, RapidLookTools.getColors().getTableHeaderColors()[8], 0, h - 5,
-						RapidLookTools.getColors().getTableHeaderColors()[9]));
-				g2.fillRect(0, 1, w, h - 5);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[10]);
-				g.drawLine(0, h - 5, w - 1, h - 5);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[11]);
-				g.drawLine(0, h - 4, w - 1, h - 4);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[12]);
-				g.drawLine(0, h - 3, w - 1, h - 3);
-				g.setColor(RapidLookTools.getColors().getTableHeaderColors()[13]);
-				g.drawLine(0, h - 1, w - 1, h - 1);
+		/**
+		 * Tries to return the sort key for the given column.
+		 *
+		 * @param sorter
+		 * @param column
+		 * @return the sort key or {@code null}
+		 */
+		private SortKey getSortKey(RowSorter<? extends TableModel> sorter, int column) {
+			if (sorter == null) {
+				return null;
 			}
 
-			super.paint(g);
+			for (Object sortObj : sorter.getSortKeys()) {
+				SortKey key = (SortKey) sortObj;
+				if (key.getColumn() == column) {
+					return key;
+				}
+			}
+			return null;
 		}
+
+	}
+
+	/**
+	 * Creates the shape for a table header.
+	 *
+	 * @param x
+	 * @param y
+	 * @param w
+	 * @param h
+	 * @param isLeftmost
+	 * @param isRightmost
+	 * @return
+	 */
+	public static Path2D createHeaderShape(int x, int y, int w, int h, boolean isLeftmost, boolean isRightmost) {
+		double rTop = RapidLookAndFeel.CORNER_DEFAULT_RADIUS * 0.33;
+		Path2D path = new Path2D.Double();
+		h -= 1;
+
+		// middle columns are easy, just a rectangle without left border
+		if (!isLeftmost && !isRightmost) {
+			w -= 1;
+			path.append(new Line2D.Double(x, y, x + w, y), true);
+			path.append(new Line2D.Double(x + w, y, x + w, y + h), true);
+			path.append(new Line2D.Double(x + w, y + h, x, y + h), true);
+			return path;
+		}
+
+		// special case of single column
+		if (isLeftmost && isRightmost) {
+			w -= 1;
+			path.append(new Line2D.Double(x, y + h - 1, x, y + rTop), true);
+			QuadCurve2D curve = new QuadCurve2D.Double(x, y + rTop, x, y, x + rTop, y);
+			path.append(curve, true);
+			path.append(new Line2D.Double(x + rTop, y, x + w - rTop, y), true);
+			curve = new QuadCurve2D.Double(x + w - rTop, y, x + w, y, x + w, y + rTop);
+			path.append(curve, true);
+			path.append(new Line2D.Double(x + w, y + rTop, x + w, y + h), true);
+			path.append(new Line2D.Double(x + w, y + h, x, y + h), true);
+			return path;
+		}
+
+		if (isLeftmost) {
+			w -= 1;
+			path.append(new Line2D.Double(x, y + h - 1, x, y + rTop), true);
+			QuadCurve2D curve = new QuadCurve2D.Double(x, y + rTop, x, y, x + rTop, y);
+			path.append(curve, true);
+			path.append(new Line2D.Double(x + rTop, y, x + w, y), true);
+			path.append(new Line2D.Double(x + w, y, x + w, y + h), true);
+			path.append(new Line2D.Double(x + w, y + h, x, y + h), true);
+		} else {
+			w -= 1;
+			path.append(new Line2D.Double(x, y, x + w - rTop, y), true);
+			QuadCurve2D curve = new QuadCurve2D.Double(x + w - rTop, y, x + w, y, x + w, y + rTop);
+			path.append(curve, true);
+			path.append(new Line2D.Double(x + w, y + rTop, x + w, y + h), true);
+			path.append(new Line2D.Double(x + w, y + h, x, y + h), true);
+		}
+
+		return path;
 	}
 }

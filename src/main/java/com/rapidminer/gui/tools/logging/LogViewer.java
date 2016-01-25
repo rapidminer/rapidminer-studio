@@ -1,28 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.logging;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -46,7 +44,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -56,7 +54,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 
@@ -67,6 +64,7 @@ import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.ToggleAction;
 import com.rapidminer.gui.dialog.SearchDialog;
 import com.rapidminer.gui.dialog.SearchableJTextComponent;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.ExtendedStyledDocument;
@@ -77,7 +75,8 @@ import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.ResourceMenu;
 import com.rapidminer.gui.tools.ScrollableJPopupMenu;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.components.DropDownButton;
+import com.rapidminer.gui.tools.components.DropDownPopupButton;
+import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider;
 import com.rapidminer.gui.tools.logging.LogModel.LogMode;
 import com.rapidminer.gui.tools.logging.actions.ClearMessageAction;
 import com.rapidminer.gui.tools.logging.actions.LogCloseAction;
@@ -150,7 +149,7 @@ public class LogViewer extends JPanel implements Dockable {
 	private static final long serialVersionUID = 1L;
 
 	private static final Level[] SELECTABLE_LEVELS = { Level.ALL, Level.FINEST, Level.FINER, Level.FINE, Level.CONFIG,
-		Level.INFO, Level.WARNING, Level.SEVERE, Level.OFF };
+			Level.INFO, Level.WARNING, Level.SEVERE, Level.OFF };
 
 	/** index of the default log level (INFO) */
 	public static final int DEFAULT_LEVEL_INDEX = 5;
@@ -172,13 +171,10 @@ public class LogViewer extends JPanel implements Dockable {
 	/** the interval in which the batch append timer triggers */
 	private static final int BATCH_APPEND_TIMER_INTERVAL = 500;
 
-	private static final int INDEX_PROCESS_LOG_ROLLOVER = 3;
-	private static final int INDEX_REFRESH = 4;
-	private static final int INDEX_CLOSE = 6;
-
 	public static final String LOG_VIEWER_DOCK_KEY = "log_viewer";
 
 	private final DockKey DOCK_KEY = new ResourceDockKey(LOG_VIEWER_DOCK_KEY);
+
 	{
 		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
 	}
@@ -218,6 +214,8 @@ public class LogViewer extends JPanel implements Dockable {
 
 	private final JToolBar toolBar;
 
+	private final JButton closeButton;
+
 	/** maximum number of rows to display in the log (oldest ones will be discarded for new ones) */
 	private int maxRows;
 
@@ -246,8 +244,8 @@ public class LogViewer extends JPanel implements Dockable {
 				maxRows = Integer.parseInt(maxRowsString);
 			}
 		} catch (NumberFormatException e) {
-			LogService.getRoot()
-					.log(Level.WARNING, "com.rapidminer.gui.tools.LoggingViewer.bad_integer_format_for_property");
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.gui.tools.LoggingViewer.bad_integer_format_for_property");
 		}
 
 		// listen for changes to the maxRows limit at runtime
@@ -278,25 +276,20 @@ public class LogViewer extends JPanel implements Dockable {
 
 		logStyledDocument = new ExtendedStyledDocument(maxRows);
 		textPane = new JTextPane(logStyledDocument);
+		textPane.setBackground(Colors.PANEL_BACKGROUND);
 		textPane.setEditable(false);
 
-		JPanel barPanel = new JPanel();
-		barPanel.setLayout(new BoxLayout(barPanel, BoxLayout.X_AXIS));
-
 		toolBar = new ExtendedJToolBar(true);
-		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+		toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Colors.TAB_BORDER));
 		JToggleButton clearOnStartToggleButton = TOGGLE_CLEAR_ON_START_ACTION.createToggleButton();
 		clearOnStartToggleButton.setText("");
-		toolBar.add(SAVE_LOGFILE_ACTION);
 		toolBar.add(CLEAR_MESSAGE_VIEWER_ACTION);
 		toolBar.add(SEARCH_ACTION);
 		toolBar.add(clearOnStartToggleButton);
-		toolBar.add(REFRESH_ACTION);
 		toolBar.add(Box.createHorizontalGlue());
-		toolBar.add(CLOSE_ACTION);
-		DropDownButton button = makeDropDownButton();
-		button.setUsePopupActionOnMainButton();
-		button.addToToolBar(toolBar);
+		closeButton = toolBar.add(CLOSE_ACTION);
+		JButton button = makeDropDownButton();
+		toolBar.add(button);
 
 		add(toolBar, BorderLayout.NORTH);
 
@@ -306,15 +299,10 @@ public class LogViewer extends JPanel implements Dockable {
 		// prepare toolbar for currently selected log
 		if (getLogSelectionModel().getCurrentLogModel() == null) {
 			// this is done via index because we only have actions, not components
-			toolBar.getComponent(INDEX_PROCESS_LOG_ROLLOVER).setVisible(false);
-			toolBar.getComponent(INDEX_REFRESH).setVisible(false);
-			toolBar.getComponent(INDEX_CLOSE).setVisible(false);
+			closeButton.setVisible(false);
 		} else {
-			toolBar.getComponent(INDEX_REFRESH).setVisible(
-					getLogSelectionModel().getCurrentLogModel().getLogMode() == LogMode.PULL);
-
 			// only show close button if log is closable
-			toolBar.getComponent(INDEX_CLOSE).setVisible(getLogSelectionModel().getCurrentLogModel().isClosable());
+			closeButton.setVisible(getLogSelectionModel().getCurrentLogModel().isClosable());
 		}
 		JScrollPane scrollPane = new ExtendedJScrollPane(textPane);
 		scrollPane.setBorder(null);
@@ -423,15 +411,8 @@ public class LogViewer extends JPanel implements Dockable {
 				// they will be displayed anyway when we switch back to their log
 				logStyledDocument.clearBatch();
 
-				// special handling for our own log model
-				toolBar.getComponent(INDEX_PROCESS_LOG_ROLLOVER).setVisible(
-						currentModel.equals(RapidMinerGUI.getDefaultLogModel()));
-
-				// different handling for PULL and PUSH logs
-				toolBar.getComponent(INDEX_REFRESH).setVisible(currentModel.getLogMode() == LogMode.PULL);
-
 				// show close button only for closable logs
-				toolBar.getComponent(INDEX_CLOSE).setVisible(currentModel.isClosable());
+				closeButton.setVisible(currentModel.isClosable());
 
 				// replace with new log
 				batchFill(currentModel.getLogEntries());
@@ -552,8 +533,8 @@ public class LogViewer extends JPanel implements Dockable {
 					} catch (final LogUpdateException e) {
 						// update failed, add error to current log view
 						if (getLogSelectionModel().getCurrentLogModel().equals(currentModel)) {
-							LogRecordEntry errorEntry = new LogRecordEntry(new LogRecord(Level.WARNING,
-									I18N.getGUIMessage("gui.logging.error.update.label")));
+							LogRecordEntry errorEntry = new LogRecordEntry(
+									new LogRecord(Level.WARNING, I18N.getGUIMessage("gui.logging.error.update.label")));
 							logStyledDocument.appendLineForBatch(errorEntry.getFormattedString(),
 									errorEntry.getSimpleAttributeSet());
 						}
@@ -615,20 +596,19 @@ public class LogViewer extends JPanel implements Dockable {
 	}
 
 	/**
-	 * Creates a {@link DropDownButton} button which will show the available log entries to allow
-	 * the user to select the currently displayed one.
+	 * Creates a {@link DropDownPopupButton} button which will show the available log entries to
+	 * allow the user to select the currently displayed one.
 	 *
 	 * @return
 	 */
-	private DropDownButton makeDropDownButton() {
-		// init dialog so listener is registered, otherwise starting a comic via the popup will not
+	private DropDownPopupButton makeDropDownButton() {
+		// init dialog so listener is registered, otherwise starting a comic via
+		// the popup will not
 		// be registered by the GUI
-		final DropDownButton dropDownToReturn = new DropDownButton(new ResourceActionAdapter(true, "logging.selection")) {
-
-			private static final long serialVersionUID = 3551453930121891910L;
+		PopupMenuProvider menuProvider = new PopupMenuProvider() {
 
 			@Override
-			protected JPopupMenu getPopupMenu() {
+			public JPopupMenu getPopupMenu() {
 				JPopupMenu menu = new ScrollableJPopupMenu(ScrollableJPopupMenu.SIZE_NORMAL);
 				for (JMenuItem item : createItems()) {
 					menu.add(item);
@@ -668,8 +648,9 @@ public class LogViewer extends JPanel implements Dockable {
 			}
 
 		};
-		dropDownToReturn.setHorizontalTextPosition(SwingConstants.CENTER);
-		dropDownToReturn.setRightAlign(true);
+		final DropDownPopupButton dropDownToReturn = new DropDownPopupButton(
+				new ResourceActionAdapter(true, "logging.selection"), menuProvider);
+		dropDownToReturn.setMaximumSize(new Dimension(50, 30));
 		return dropDownToReturn;
 	}
 
@@ -689,10 +670,31 @@ public class LogViewer extends JPanel implements Dockable {
 	 */
 	private JPopupMenu createPopupMenu() {
 		JPopupMenu menu = new JPopupMenu();
-		menu.add(CLEAR_MESSAGE_VIEWER_ACTION);
+		LogModel currentModel = getLogSelectionModel().getCurrentLogModel();
+
+		// Studio log can be reset on each process start
+		if (currentModel != null && currentModel.equals(RapidMinerGUI.getDefaultLogModel())) {
+			menu.add(TOGGLE_CLEAR_ON_START_ACTION.createMenuItem());
+		}
+
+		// pull logs cannot be cleared
+		if (currentModel != null && currentModel.getLogMode() != LogMode.PULL) {
+			menu.add(CLEAR_MESSAGE_VIEWER_ACTION);
+		} else {
+			menu.add(CLOSE_ACTION);
+		}
+
 		menu.add(SAVE_LOGFILE_ACTION);
 		menu.add(SEARCH_ACTION);
+
+		// pull logs can be manually refreshed
+		if (currentModel != null && currentModel.getLogMode() == LogMode.PULL) {
+			menu.add(REFRESH_ACTION);
+		}
+		menu.addSeparator();
+
 		menu.add(makeLogLevelMenu());
+
 		return menu;
 	}
 

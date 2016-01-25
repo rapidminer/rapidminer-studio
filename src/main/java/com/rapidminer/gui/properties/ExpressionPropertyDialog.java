@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -65,6 +65,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTaskPane;
 
 import com.rapidminer.Process;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.FilterListener;
 import com.rapidminer.gui.tools.FilterTextField;
@@ -145,16 +146,23 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 								}
 							}
 							predefined = true;
+							break;
 						}
 					}
 					// if the macro is a custom macro, give the user the choice between adding the
-					// value or an evaluated expression
+					// value or an evaluated expression (only if "macro" and/or "eval" functions
+					// available in the dialog context)
 					if (!predefined) {
-						MacroSelectionDialog macroSelectionDialog = new MacroSelectionDialog(arg, parser
-								.getExpressionContext().getFunction("macro") != null);
-						macroSelectionDialog.setLocation(arg.getLocationOnScreen().x, arg.getLocationOnScreen().y + 40);
-						macroSelectionDialog.setVisible(true);
-						addToExpression(macroSelectionDialog.getExpression());
+						if (parser.getExpressionContext().getFunction("macro") != null
+								|| parser.getExpressionContext().getFunction("eval") != null) {
+							MacroSelectionDialog macroSelectionDialog = new MacroSelectionDialog(arg, parser
+									.getExpressionContext().getFunction("macro") != null);
+							macroSelectionDialog.setLocation(arg.getLocationOnScreen().x, arg.getLocationOnScreen().y + 40);
+							macroSelectionDialog.setVisible(true);
+							addToExpression(macroSelectionDialog.getExpression());
+						} else {
+							addToExpression("%{" + arg.getInputName() + "}");
+						}
 					}
 				} else if (arg.getCategory() == Category.DYNAMIC) {
 					if (parser.getExpressionContext().getConstant(arg.getInputName()) != null) {
@@ -366,10 +374,10 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 	private static final Color DARK_GREEN = new Color(45, 136, 45);
 
 	/** the background color of the lists with functions */
-	private static final Color LIGHTER_GRAY = new Color(250, 250, 250);
+	private static final Color LIGHTER_GRAY = Colors.WINDOW_BACKGROUND;
 
 	/** Color of the expression border */
-	private static final Color COLOR_BORDER_EXPRESSION = new Color(220, 220, 220);
+	private static final Color COLOR_BORDER_EXPRESSION = Colors.TEXTFIELD_BORDER;
 
 	/** Color of the category title {@link JXTaskPane}s */
 	private static final Color COLOR_TITLE_TASKPANE_BACKGROUND = new Color(230, 230, 230);
@@ -380,7 +388,9 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 	/** maximal number of {@link FunctionInput}s that is shown in open {@link JXTaskPane}(s) */
 	private static final int MAX_NMBR_INPUTS_SHOWN = 7;
 
-	/** maximal number of {@link FunctionDescription}s that is shown in open {@link JXTaskPane}(s) */
+	/**
+	 * maximal number of {@link FunctionDescription}s that is shown in open {@link JXTaskPane}(s)
+	 */
 	private static final int MAX_NMBR_FUNCTIONS_SHOWN = 15;
 
 	/** size of the expression */
@@ -439,6 +449,41 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 	}
 
 	/**
+	 * Creates an {@link ExpressionPropertyDialog} with the given initial value, controlling
+	 * process, expression parser, input model and function model
+	 *
+	 * @param type
+	 * @param process
+	 * @param inputs
+	 * @param functions
+	 * @param parser
+	 * @param initialValue
+	 */
+	public ExpressionPropertyDialog(ParameterTypeExpression type, Process process, List<FunctionInput> inputs,
+			List<FunctionDescription> functions, ExpressionParser parser, String initialValue) {
+		super(type, "expression");
+
+		this.inputsModel.addObserver(inputObserver, false);
+		this.functionModel.addObserver(functionObserver, false);
+
+		this.controllingProcess = getControllingProcessOrNull(type, process);
+
+		this.inputsModel.addContent(inputs);
+		this.functionModel.addContent(functions);
+
+		this.parser = parser;
+
+		ExpressionTokenMaker.removeFunctionInputs();
+		ExpressionTokenMaker.addFunctionInputs(inputs);
+		ExpressionTokenMaker.addFunctions(functions);
+
+		initGui(initialValue);
+
+		FunctionDescriptionPanel.updateMaximalWidth(functionsPanel.getSize().width);
+		updateFunctions();
+	}
+
+	/**
 	 * Creates an {@link ExpressionPropertyDialog} with the given initial value and a controlling
 	 * process
 	 *
@@ -454,13 +499,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		functionModel.addObserver(functionObserver, false);
 
 		// create ExpressionParser with Process to enable Process functions
-		if (process != null) {
-			this.controllingProcess = process;
-		} else if (type.getInputPort() != null) {
-			controllingProcess = type.getInputPort().getPorts().getOwner().getOperator().getProcess();
-		} else {
-			controllingProcess = null;
-		}
+		controllingProcess = getControllingProcessOrNull(type, process);
 
 		// use the ExpressionParserBuilder to create the parser
 		ExpressionParserBuilder builder = new ExpressionParserBuilder();
@@ -519,6 +558,16 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 
 		FunctionDescriptionPanel.updateMaximalWidth(functionsPanel.getSize().width);
 		updateFunctions();
+	}
+
+	private Process getControllingProcessOrNull(ParameterTypeExpression type, Process process) {
+		if (process != null) {
+			return process;
+		} else if (type.getInputPort() != null) {
+			return type.getInputPort().getPorts().getOwner().getOperator().getProcess();
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -620,11 +669,14 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		currentExpression.setRows(NUMBER_OF_EXPRESSION_ROWS);
 		// set custom colors for syntax highlighting
 		currentExpression.setSyntaxScheme(getExpressionColorScheme(currentExpression.getSyntaxScheme()));
+		currentExpression.setBorder(BorderFactory.createEmptyBorder());
 		scrollPaneExpression = new RTextScrollPane(currentExpression, true);
 		scrollPaneExpression.setMinimumSize(new Dimension(getMinimumSize().width, HEIGHT_EXPRESSION_SCROLL_PANE));
 		scrollPaneExpression.setPreferredSize(new Dimension(getPreferredSize().width, HEIGHT_EXPRESSION_SCROLL_PANE));
 		scrollPaneExpression.setMaximumSize(new Dimension(getMaximumSize().width, HEIGHT_EXPRESSION_SCROLL_PANE));
 		scrollPaneExpression.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 0, COLOR_BORDER_EXPRESSION));
+		scrollPaneExpression.getVerticalScrollBar().setBorder(
+				BorderFactory.createMatteBorder(0, 0, 0, 1, Colors.TEXTFIELD_BORDER));
 
 		// use the gutter to display an error icon in the line with an error
 		Gutter gutter = scrollPaneExpression.getGutter();
@@ -655,6 +707,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		validationTextArea.setEditable(false);
 		validationTextArea.setRows(2);
 		validationTextArea.setOpaque(false);
+		validationTextArea.setBorder(BorderFactory.createEmptyBorder());
 		validationPanel.add(validationTextArea, gbc);
 
 		expressionC.fill = GridBagConstraints.BOTH;
@@ -681,7 +734,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		functionsC.gridx = 0;
 		functionsC.anchor = GridBagConstraints.NORTHWEST;
 		functionPanel
-				.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Functions</font></b></html>"), functionsC);
+		.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Functions</font></b></html>"), functionsC);
 
 		functionsC.insets = new Insets(0, 0, STD_INSET_GBC, STD_INSET_GBC);
 		functionsC.gridx += 1;
@@ -718,7 +771,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 
 		// add the functions panel to the scroll bar
 		functionButtonScrollPane = new ExtendedJScrollPane(outerFunctionPanel);
-		functionButtonScrollPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 0, Color.LIGHT_GRAY));
+		functionButtonScrollPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Colors.TEXTFIELD_BORDER));
 		// the scroll bar should always be visible
 		functionButtonScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
@@ -763,157 +816,161 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		outerInputPanel.add(gapPanel, outerInputC);
 
 		// and update the view of the inputs
-		updateInputs();
+		if (inputsModel.getFilteredModel().size() > 0) {
+			updateInputs();
 
-		// add inputs title
-		JPanel outerInputsPanel = new JPanel();
-		outerInputsPanel.setLayout(new GridBagLayout());
-		outerInputsPanel.setMinimumSize(new Dimension(WIDTH_ATTRIBUTE_PANEL, getMinimumSize().height));
-		outerInputsPanel.setPreferredSize(new Dimension(WIDTH_ATTRIBUTE_PANEL, getPreferredSize().height));
-		outerInputsPanel.setMaximumSize(new Dimension(WIDTH_ATTRIBUTE_PANEL, getMaximumSize().height));
-		GridBagConstraints outerGBC = new GridBagConstraints();
+			// add inputs title
+			JPanel outerInputsPanel = new JPanel();
+			outerInputsPanel.setLayout(new GridBagLayout());
+			outerInputsPanel.setMinimumSize(new Dimension(WIDTH_ATTRIBUTE_PANEL, getMinimumSize().height));
+			outerInputsPanel.setPreferredSize(new Dimension(WIDTH_ATTRIBUTE_PANEL, getPreferredSize().height));
+			outerInputsPanel.setMaximumSize(new Dimension(WIDTH_ATTRIBUTE_PANEL, getMaximumSize().height));
+			GridBagConstraints outerGBC = new GridBagConstraints();
 
-		outerGBC.gridx = 0;
-		outerGBC.gridy = 0;
-		outerGBC.insets = new Insets(0, STD_INSET_GBC, STD_INSET_GBC, STD_INSET_GBC);
-		outerGBC.anchor = GridBagConstraints.NORTHWEST;
-		outerInputsPanel.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Inputs</font></b></html>"), outerGBC);
+			outerGBC.gridx = 0;
+			outerGBC.gridy = 0;
+			outerGBC.insets = new Insets(0, STD_INSET_GBC, STD_INSET_GBC, STD_INSET_GBC);
+			outerGBC.anchor = GridBagConstraints.NORTHWEST;
+			outerInputsPanel.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Inputs</font></b></html>"),
+					outerGBC);
 
-		outerGBC.gridx += 1;
-		outerGBC.weightx = 1;
-		outerInputsPanel.add(new JLabel(" "), outerGBC);
+			outerGBC.gridx += 1;
+			outerGBC.weightx = 1;
+			outerInputsPanel.add(new JLabel(" "), outerGBC);
 
-		// add search text field for FunctionInputs
-		outerGBC.gridx += 1;
-		outerGBC.weightx = 0.1;
-		outerGBC.anchor = GridBagConstraints.SOUTHEAST;
-		outerGBC.insets = new Insets(0, 0, STD_INSET_GBC, 0);
+			// add search text field for FunctionInputs
+			outerGBC.gridx += 1;
+			outerGBC.weightx = 0.1;
+			outerGBC.anchor = GridBagConstraints.SOUTHEAST;
+			outerGBC.insets = new Insets(0, 0, STD_INSET_GBC, 0);
 
-		inputsFilterField.addFilterListener(filterInputsListener);
-		TextFieldWithAction inputTextField = new TextFieldWithAction(inputsFilterField, clearInputsFilterAction,
-				CLEAR_FILTER_HOVERED_ICON);
-		inputTextField.setMaximumSize(new Dimension(WIDTH_INPUTS_SEARCH_FIELD, HEIGHT_SEARCH_FIELD));
-		inputTextField.setPreferredSize(new Dimension(WIDTH_INPUTS_SEARCH_FIELD, HEIGHT_SEARCH_FIELD));
-		inputTextField.setMinimumSize(new Dimension(WIDTH_INPUTS_SEARCH_FIELD, HEIGHT_SEARCH_FIELD));
-		outerInputsPanel.add(inputTextField, outerGBC);
+			inputsFilterField.addFilterListener(filterInputsListener);
+			TextFieldWithAction inputTextField = new TextFieldWithAction(inputsFilterField, clearInputsFilterAction,
+					CLEAR_FILTER_HOVERED_ICON);
+			inputTextField.setMaximumSize(new Dimension(WIDTH_INPUTS_SEARCH_FIELD, HEIGHT_SEARCH_FIELD));
+			inputTextField.setPreferredSize(new Dimension(WIDTH_INPUTS_SEARCH_FIELD, HEIGHT_SEARCH_FIELD));
+			inputTextField.setMinimumSize(new Dimension(WIDTH_INPUTS_SEARCH_FIELD, HEIGHT_SEARCH_FIELD));
+			outerInputsPanel.add(inputTextField, outerGBC);
 
-		// Add type filter for nominal input values
-		chbNominal = new JCheckBox(new ResourceAction(true, "expression_property_dialog.quick_filter.nominal") {
+			// Add type filter for nominal input values
+			chbNominal = new JCheckBox(new ResourceAction(true, "expression_property_dialog.quick_filter.nominal") {
 
-			private static final long serialVersionUID = 1L;
+				private static final long serialVersionUID = 1L;
 
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				inputsModel.setNominalFilter(chbNominal.isSelected());
-			}
-		});
-		chbNominal.setSelected(inputsModel.isNominalFilterToggled());
-
-		// Add type filter for numerical input values
-		chbNumeric = new JCheckBox(new ResourceAction(true, "expression_property_dialog.quick_filter.numerical") {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				inputsModel.setNumericFilter(chbNumeric.isSelected());
-			}
-		});
-		chbNumeric.setSelected(inputsModel.isNumericFilterToggled());
-
-		// Add type filter for date time input values
-		chbDateTime = new JCheckBox(new ResourceAction(true, "expression_property_dialog.quick_filter.date_time") {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				inputsModel.setDateTimeFilter(chbDateTime.isSelected());
-			}
-		});
-		chbDateTime.setSelected(inputsModel.isDateTimeFilterToggled());
-
-		// create the menu with the type filters
-		final ScrollableJPopupMenu filterMenu = new ScrollableJPopupMenu();
-		// small hack to prevent the popup from opening itself when you click the button to actually
-		// close it
-		filterMenu.addPopupMenuListener(new PopupMenuListener() {
-
-			@Override
-			public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {}
-
-			@Override
-			public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
-				lastPopupCloseTime = System.currentTimeMillis();
-			}
-
-			@Override
-			public void popupMenuCanceled(final PopupMenuEvent e) {}
-		});
-
-		filterMenu.add(chbNominal);
-		filterMenu.add(chbNumeric);
-		filterMenu.add(chbDateTime);
-
-		// create button to open the type filter menu
-		final JButton filterDropdownButton = new JButton(ICON_FILTER);
-
-		filterDropdownButton.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-		filterDropdownButton.setContentAreaFilled(false);
-		filterDropdownButton.addMouseListener(new HoverBorderMouseListener(filterDropdownButton));
-		filterDropdownButton.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.label.expression_property_dialog.quick_filter.filter_select.tip"));
-
-		// show the menu when the button is clicked
-		filterDropdownButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				if (!filterMenu.isVisible()) {
-					// hack to prevent filter popup from opening itself again when you click the
-					// button to actually close it while it is open
-					if (System.currentTimeMillis() - lastPopupCloseTime < 250) {
-						return;
-					}
-
-					int menuWidth = filterMenu.getSize().width;
-					if (menuWidth == 0) {
-						// guess the correct width for the first opening
-						menuWidth = 108;
-					}
-
-					filterMenu.show(filterDropdownButton, -menuWidth + filterDropdownButton.getSize().width,
-							filterDropdownButton.getHeight());
-
-					filterMenu.requestFocusInWindow();
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					inputsModel.setNominalFilter(chbNominal.isSelected());
 				}
-			}
-		});
+			});
+			chbNominal.setSelected(inputsModel.isNominalFilterToggled());
 
-		outerGBC.gridx += 1;
-		outerGBC.insets = new Insets(0, 0, STD_INSET_GBC, STD_INSET_GBC);
-		outerInputsPanel.add(filterDropdownButton, outerGBC);
+			// Add type filter for numerical input values
+			chbNumeric = new JCheckBox(new ResourceAction(true, "expression_property_dialog.quick_filter.numerical") {
 
-		// create scroll bar for inputs
-		outerInputPanel.setBackground(LIGHTER_GRAY);
-		ExtendedJScrollPane inputsScrollPane = new ExtendedJScrollPane(outerInputPanel);
-		inputsScrollPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 0, Color.LIGHT_GRAY));
-		inputsScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+				private static final long serialVersionUID = 1L;
 
-		outerGBC.gridx = 0;
-		outerGBC.insets = new Insets(0, STD_INSET_GBC, STD_INSET_GBC, STD_INSET_GBC);
-		outerGBC.gridwidth = 4;
-		outerGBC.gridy += 1;
-		outerGBC.fill = GridBagConstraints.BOTH;
-		outerGBC.anchor = GridBagConstraints.NORTH;
-		outerGBC.weightx = 1;
-		outerGBC.weighty = 1;
-		outerInputsPanel.add(inputsScrollPane, outerGBC);
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					inputsModel.setNumericFilter(chbNumeric.isSelected());
+				}
+			});
+			chbNumeric.setSelected(inputsModel.isNumericFilterToggled());
 
-		// add inputs part to the main panel
-		mainC.weightx = 0.1;
-		mainC.gridx += 1;
-		mainPanel.add(outerInputsPanel, mainC);
+			// Add type filter for date time input values
+			chbDateTime = new JCheckBox(new ResourceAction(true, "expression_property_dialog.quick_filter.date_time") {
+
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					inputsModel.setDateTimeFilter(chbDateTime.isSelected());
+				}
+			});
+			chbDateTime.setSelected(inputsModel.isDateTimeFilterToggled());
+
+			// create the menu with the type filters
+			final ScrollableJPopupMenu filterMenu = new ScrollableJPopupMenu();
+			// small hack to prevent the popup from opening itself when you click the button to
+			// actually
+			// close it
+			filterMenu.addPopupMenuListener(new PopupMenuListener() {
+
+				@Override
+				public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {}
+
+				@Override
+				public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
+					lastPopupCloseTime = System.currentTimeMillis();
+				}
+
+				@Override
+				public void popupMenuCanceled(final PopupMenuEvent e) {}
+			});
+
+			filterMenu.add(chbNominal);
+			filterMenu.add(chbNumeric);
+			filterMenu.add(chbDateTime);
+
+			// create button to open the type filter menu
+			final JButton filterDropdownButton = new JButton(ICON_FILTER);
+
+			filterDropdownButton.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+			filterDropdownButton.setContentAreaFilled(false);
+			filterDropdownButton.addMouseListener(new HoverBorderMouseListener(filterDropdownButton));
+			filterDropdownButton.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
+					"gui.label.expression_property_dialog.quick_filter.filter_select.tip"));
+
+			// show the menu when the button is clicked
+			filterDropdownButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(final ActionEvent e) {
+					if (!filterMenu.isVisible()) {
+						// hack to prevent filter popup from opening itself again when you click the
+						// button to actually close it while it is open
+						if (System.currentTimeMillis() - lastPopupCloseTime < 250) {
+							return;
+						}
+
+						int menuWidth = filterMenu.getSize().width;
+						if (menuWidth == 0) {
+							// guess the correct width for the first opening
+							menuWidth = 108;
+						}
+
+						filterMenu.show(filterDropdownButton, -menuWidth + filterDropdownButton.getSize().width,
+								filterDropdownButton.getHeight());
+
+						filterMenu.requestFocusInWindow();
+					}
+				}
+			});
+
+			outerGBC.gridx += 1;
+			outerGBC.insets = new Insets(0, 0, STD_INSET_GBC, STD_INSET_GBC);
+			outerInputsPanel.add(filterDropdownButton, outerGBC);
+
+			// create scroll bar for inputs
+			outerInputPanel.setBackground(LIGHTER_GRAY);
+			ExtendedJScrollPane inputsScrollPane = new ExtendedJScrollPane(outerInputPanel);
+			inputsScrollPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Colors.TEXTFIELD_BORDER));
+			inputsScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
+			outerGBC.gridx = 0;
+			outerGBC.insets = new Insets(0, STD_INSET_GBC, STD_INSET_GBC, STD_INSET_GBC);
+			outerGBC.gridwidth = 4;
+			outerGBC.gridy += 1;
+			outerGBC.fill = GridBagConstraints.BOTH;
+			outerGBC.anchor = GridBagConstraints.NORTH;
+			outerGBC.weightx = 1;
+			outerGBC.weighty = 1;
+			outerInputsPanel.add(inputsScrollPane, outerGBC);
+
+			// add inputs part to the main panel
+			mainC.weightx = 0.1;
+			mainC.gridx += 1;
+			mainPanel.add(outerInputsPanel, mainC);
+		}
 
 		setIconImage(SwingTools.createIcon("16/rapidminer_studio.png").getImage());
 		layoutDefault(mainPanel, HUGE, buttons.toArray(new AbstractButton[buttons.size()]));
@@ -1229,7 +1286,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 				if (filteredModel.get(ExampleResolver.KEY_ATTRIBUTES) != null
 						&& filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES) != null
 						&& filteredModel.get(ExampleResolver.KEY_ATTRIBUTES).size()
-								+ filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).size() <= MAX_NMBR_INPUTS_SHOWN) {
+						+ filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).size() <= MAX_NMBR_INPUTS_SHOWN) {
 
 					inputCategoryTaskPanes.get(ExampleResolver.KEY_ATTRIBUTES).setCollapsed(false);
 					inputCategoryTaskPanes.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).setCollapsed(false);

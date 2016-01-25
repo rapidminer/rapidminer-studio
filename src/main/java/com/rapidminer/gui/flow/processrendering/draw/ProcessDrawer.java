@@ -1,29 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.flow.processrendering.draw;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Point;
@@ -31,11 +28,9 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Arc2D;
-import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
 import java.awt.geom.RoundRectangle2D;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,15 +44,18 @@ import javax.swing.ImageIcon;
 
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.RapidMinerGUI.DragHighlightMode;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.flow.processrendering.view.RenderPhase;
-import com.rapidminer.gui.flow.processrendering.view.components.InterpolationMap;
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.GUIProcessXMLFilter;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.InputPorts;
 import com.rapidminer.operator.ports.OutputPort;
@@ -66,6 +64,7 @@ import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.CollectionMetaData;
 import com.rapidminer.operator.ports.metadata.Precondition;
+import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 
 
@@ -78,10 +77,11 @@ import com.rapidminer.tools.LogService;
  */
 public final class ProcessDrawer {
 
-	public static final Font OPERATOR_FONT = new Font(Font.DIALOG, Font.BOLD, 11);
+	public static final Font OPERATOR_FONT = ProcessRendererModel.OPERATOR_FONT;
 
 	public static final int OPERATOR_WIDTH = ProcessRendererModel.OPERATOR_WIDTH;
 	public static final int OPERATOR_MIN_HEIGHT = ProcessRendererModel.MIN_OPERATOR_HEIGHT;
+	public static final int HEADER_HEIGHT = ProcessRendererModel.HEADER_HEIGHT;
 	public static final int PORT_SIZE = ProcessRendererModel.PORT_SIZE;
 	public static final int PORT_SIZE_HIGHLIGHT = (int) (PORT_SIZE * 1.4f);
 	public static final int PORT_OFFSET = OPERATOR_FONT.getSize() + 6 + PORT_SIZE;
@@ -109,42 +109,62 @@ public final class ProcessDrawer {
 		LOW_QUALITY_HINTS.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 	}
 
-	public static final Color INNER_DRAG_COLOR = RapidMinerGUI.getBodyHighlightColor();
-	public static final Color LINE_DRAG_COLOR = RapidMinerGUI.getBorderHighlightColor();
-
-	public static final int HEADER_HEIGHT = OPERATOR_FONT.getSize() + 7;
+	public static final Color INNER_DRAG_COLOR = new Color(230, 242, 255, 150);
+	public static final Color BORDER_DRAG_COLOR = new Color(200, 200, 200, 200);
+	public static final Color OPERATOR_BORDER_COLOR_SELECTED = new Color(255, 102, 0);
 
 	private static final Color INNER_COLOR = Color.WHITE;
 	private static final Color SHADOW_COLOR = Color.LIGHT_GRAY;
 
+	private static final int OPERATOR_CORNER = (int) (RapidLookAndFeel.CORNER_DEFAULT_RADIUS * 0.67);
+	private static final int OPERATOR_BG_CORNER = RapidLookAndFeel.CORNER_DEFAULT_RADIUS;
+
+	private static final Color BORDER_COLOR = Colors.TAB_BORDER;
+	private static final Color HINT_COLOR = new Color(230, 230, 230);
+
+	private static final Stroke BORDER_STROKE = new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 	private static final Color LINE_COLOR = Color.DARK_GRAY;
 	private static final Stroke LINE_STROKE = new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-	private static final Stroke HIGHLIGHT_STROKE = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+	private static final Stroke PORT_STROKE = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+	private static final Stroke PORT_HIGHLIGHT_STROKE = new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 	private static final Stroke SELECTION_RECT_STROKE = new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
 			5f, new float[] { 2f, 2f }, 0f);
 	private static final Paint SELECTION_RECT_PAINT = Color.GRAY;
 	private static final Color PROCESS_TITLE_COLOR = SHADOW_COLOR;
-	private static final Paint SHADOW_TOP_GRADIENT = new GradientPaint(0, 0, SHADOW_COLOR, PADDING, 0, Color.WHITE);
-	private static final Paint SHADOW_LEFT_GRADIENT = new GradientPaint(0, 0, SHADOW_COLOR, 0, PADDING, Color.WHITE);
-	private static final Stroke LINE_DRAG_STROKE = new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+	private static final Stroke BORDER_DRAG_STROKE = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER,
+			10.0f, new float[] { 10.0f }, 0.0f);
+	private static final int DRAG_BORDER_PADDING = 30;
+	private static final int DRAG_BORDER_CORNER = 15;
 
 	private static final Font PROCESS_FONT = new Font("Dialog", Font.BOLD, 12);
+	private static final Font DRAG_FONT_LARGE = new Font("Dialog", Font.BOLD, 30);
+	private static final Font DRAG_FONT_MEDIUM = new Font("Dialog", Font.BOLD, 22);
+	private static final Font DRAG_FONT_SMALL = new Font("Dialog", Font.BOLD, 14);
+	private static final Font HINT_FONT_LARGE = new Font("Dialog", Font.BOLD, 30);
+	private static final Font HINT_FONT_MEDIUM = new Font("Dialog", Font.BOLD, 24);
+	private static final Font HINT_FONT_SMALL = new Font("Dialog", Font.BOLD, 18);
+
 	private static final Font PORT_FONT = new Font("Dialog", Font.PLAIN, 9);
 	private static final Color PORT_NAME_COLOR = Color.DARK_GRAY;
 	private static final Color PORT_NAME_SELECTION_COLOR = Color.GRAY;
-	private static final Color ACTIVE_EDGE_COLOR = SwingTools.RAPIDMINER_ORANGE;
+	private static final Color ACTIVE_EDGE_COLOR = new Color(255, 102, 0);
 
-	private static final Stroke FRAME_STROKE_SELECTED = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-	private static final Stroke FRAME_STROKE_NORMAL = new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+	private static final Stroke OPERATOR_STROKE_SELECTED = new BasicStroke(1.5f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND);
+	private static final Stroke OPERATOR_STROKE_HIGHLIGHT = new BasicStroke(1.25f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND);
+	private static final Stroke OPERATOR_STROKE_NORMAL = new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
-	private static final Color FRAME_COLOR_SELECTED = SwingTools.RAPIDMINER_ORANGE;
-	private static final Color FRAME_COLOR_NORMAL = LINE_COLOR;
+	private static final Color OPERATOR_BORDER_COLOR = new Color(129, 129, 129);
+	private static final Color OPERATOR_BORDER_COLOR_HIGHLIGHT = new Color(100, 100, 100);
 
-	private static final Paint SHADOW_TOP_DRAG_GRADIENT = new GradientPaint(0, 0, SHADOW_COLOR, PADDING, 0, INNER_DRAG_COLOR);
-	private static final Paint SHADOW_LEFT_DRAG_GRADIENT = new GradientPaint(0, 0, SHADOW_COLOR, PADDING, 0,
-			INNER_DRAG_COLOR);
+	private static final Color OPERATOR_NAME_COLOR = new Color(51, 51, 51);
+	private static final Color OPERATOR_NAME_COLOR_HIGHLIGHT = new Color(85, 85, 85);
+	private static final Color OPERATOR_NAME_COLOR_SELECTED = OPERATOR_BORDER_COLOR_SELECTED;
+	private static final Color OPERATOR_NAME_COLOR_DISABLED = new Color(150, 150, 150);
 
-	private static final Stroke CONNECTION_LINE_STROKE = new BasicStroke(1.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+	private static final Stroke CONNECTION_LINE_STROKE = new BasicStroke(1.3f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND);
 	private static final Stroke CONNECTION_HIGHLIGHT_STROKE = new BasicStroke(2.2f, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND);
 	private static final Stroke CONNECTION_LINE_BACKGROUND_STROKE = new BasicStroke(7f, BasicStroke.CAP_ROUND,
@@ -156,23 +176,30 @@ public final class ProcessDrawer {
 	private static final Stroke CONNECTION_COLLECTION_LINE_BACKGROUND_STROKE = new BasicStroke(12f, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND);
 
-	private static final double PORT_SIZE_BACKGROUND = PORT_SIZE * 2f;
+	private static final String HINT_EMPTY_PROCESS_1 = I18N.getGUIMessage("gui.label.processRenderer.empty_hint_1.label");
+	private static final String HINT_EMPTY_PROCESS_2 = I18N.getGUIMessage("gui.label.processRenderer.empty_hint_2.label");
+	private static final String HINT_EMPTY_PROCESS_3 = I18N.getGUIMessage("gui.label.processRenderer.empty_hint_3.label");
+	private static final String DRAG_HERE = I18N.getGUIMessage("gui.label.processRenderer.drag_here.label");
+	private static final String DROP_HERE = I18N.getGUIMessage("gui.label.processRenderer.drop_here.label");
+	private static final Color DRAG_BG_COLOR = BORDER_DRAG_COLOR;
+	private static final Color DRAG_FG_COLOR = new Color(254, 254, 254);
 
-	private static final ImageIcon IMAGE_WARNING = SwingTools.createIcon("16/sign_warning.png");
+	private static final double PORT_SIZE_BACKGROUND = PORT_SIZE * 2f;
+	private static final double MAX_HEADER_RATIO = 1.35;
+
+	private static final ImageIcon IMAGE_WARNING = SwingTools.createIcon("16/sign_warning2.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_WITHIN = SwingTools.createIcon("16/breakpoint.png");
 	private static final ImageIcon IMAGE_BREAKPOINTS = SwingTools.createIcon("16/breakpoints.png");
-	private static final ImageIcon IMAGE_BREAKPOINT_BEFORE = SwingTools.createIcon("16/breakpoint_up.png");
-	private static final ImageIcon IMAGE_BREAKPOINT_AFTER = SwingTools.createIcon("16/breakpoint_down.png");
+	private static final ImageIcon IMAGE_BREAKPOINT_BEFORE = SwingTools.createIcon("16/breakpoint_left.png");
+	private static final ImageIcon IMAGE_BREAKPOINT_AFTER = SwingTools.createIcon("16/breakpoint_right.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_WITHIN_LARGE = SwingTools.createIcon("24/breakpoint.png");
 	private static final ImageIcon IMAGE_BREAKPOINTS_LARGE = SwingTools.createIcon("24/breakpoints.png");
-	private static final ImageIcon IMAGE_BREAKPOINT_BEFORE_LARGE = SwingTools.createIcon("24/breakpoint_up.png");
-	private static final ImageIcon IMAGE_BREAKPOINT_AFTER_LARGE = SwingTools.createIcon("24/breakpoint_down.png");
-	private static final ImageIcon IMAGE_BRANCH = SwingTools.createIcon("16/elements_selection.png");
+	private static final ImageIcon IMAGE_BREAKPOINT_BEFORE_LARGE = SwingTools.createIcon("24/breakpoint_left.png");
+	private static final ImageIcon IMAGE_BREAKPOINT_AFTER_LARGE = SwingTools.createIcon("24/breakpoint_right.png");
+	private static final ImageIcon IMAGE_BRANCH = SwingTools.createIcon("16/elements_tree.png");
 
-	private static final ImageIcon OPERATOR_RUNNING = SwingTools.createIcon("16/bullet_triangle_glass_green.png");
-	private static final ImageIcon OPERATOR_READY = SwingTools.createIcon("16/bullet_ball_glass_green.png");
-	private static final ImageIcon OPERATOR_DIRTY = SwingTools.createIcon("16/bullet_ball_glass_yellow.png");
-	private static final ImageIcon OPERATOR_ERROR_ICON = SwingTools.createIcon("16/bullet_ball_glass_red.png");
+	private static final ImageIcon OPERATOR_RUNNING = SwingTools.createIcon("16/media_play2.png");
+	private static final ImageIcon OPERATOR_READY = SwingTools.createIcon("16/check.png");
 
 	/** the model backing the process renderer view */
 	private ProcessRendererModel model;
@@ -323,7 +350,7 @@ public final class ProcessDrawer {
 	 */
 	public void drawBackground(final ExecutionUnit process, final Graphics2D g2, final boolean printing) {
 		Graphics2D gBG = (Graphics2D) g2.create();
-		renderBackground(process, gBG);
+		renderBackground(process, gBG, printing);
 		gBG.dispose();
 
 		// let decorators draw
@@ -514,6 +541,10 @@ public final class ProcessDrawer {
 	 *            if {@code true} we are printing instead of drawing to the screen
 	 */
 	public void drawForeground(final ExecutionUnit process, final Graphics2D g2, final boolean printing) {
+		Graphics2D gBG = (Graphics2D) g2.create();
+		renderForeground(process, gBG, printing);
+		gBG.dispose();
+
 		// let decorators draw
 		drawPhaseDecorators(process, g2, RenderPhase.FOREGROUND, printing);
 	}
@@ -641,99 +672,72 @@ public final class ProcessDrawer {
 			return;
 		}
 
-		final double headerHeight = HEADER_HEIGHT;
+		boolean isSelected = model.getSelectedOperators().contains(operator);
+		boolean isHovered = operator == model.getHoveringOperator();
 		double headerWidth;
-		Shape bodyShape;
-		InterpolationMap map = model.getNameRolloutInterpolationMap();
-		double nameRollout = map != null ? map.getValue(operator) : 0;
-		if (nameRollout > 0) {
-			Rectangle2D nameBounds = OPERATOR_FONT.getStringBounds(operator.getName(), g2.getFontRenderContext());
+		Rectangle2D nameBounds = OPERATOR_FONT.getStringBounds(operator.getName(), g2.getFontRenderContext());
+		if (isSelected) {
 			headerWidth = nameBounds.getWidth() + 6;
-			if (headerWidth > frame.getWidth()) {
-				double dif = headerWidth - frame.getWidth();
-				headerWidth = frame.getWidth() + nameRollout * dif;
-				GeneralPath path = new GeneralPath();
-				path.moveTo(frame.getMinX(), frame.getMinY());
-				path.lineTo(frame.getMinX() + headerWidth, frame.getMinY());
-				path.lineTo(frame.getMinX() + headerWidth, frame.getMinY() + headerHeight);
-				path.lineTo(frame.getMaxX(), frame.getMinY() + headerHeight);
-				path.lineTo(frame.getMaxX(), frame.getMaxY());
-				path.lineTo(frame.getMinX(), frame.getMaxY());
-				path.closePath();
-				bodyShape = path;
-			} else {
-				headerWidth = frame.getWidth();
-				bodyShape = frame;
-			}
 		} else {
-			headerWidth = frame.getWidth();
-			bodyShape = frame;
+			headerWidth = frame.getWidth() * MAX_HEADER_RATIO;
 		}
 
-		// Shadow
-		if (!model.getSelectedOperators().isEmpty() && operator == model.getSelectedOperators().get(0)) {
-			ProcessDrawUtils.drawShadow(frame, g2);
-		}
+		Shape bodyShape = new RoundRectangle2D.Double(frame.getMinX(), frame.getMinY() + ProcessRendererModel.HEADER_HEIGHT,
+				frame.getWidth(), frame.getHeight() - ProcessRendererModel.HEADER_HEIGHT, OPERATOR_CORNER, OPERATOR_CORNER);
 
-		// Frame head
+		// Frame Body
 		Color baseColor = SwingTools.getOperatorColor(operator);
 		if (!operator.isEnabled()) {
 			baseColor = Color.LIGHT_GRAY;
 		}
 
 		g2.setPaint(baseColor);
-		g2.fill(frame);
+		g2.fill(bodyShape);
 
-		// head gradient
-		Rectangle2D bar = new Rectangle2D.Double(frame.getX(), frame.getY(), headerWidth, headerHeight);
-		Color c0 = new Color(Math.max(baseColor.getRed() - 25, 0), Math.max(baseColor.getGreen() - 25, 0), Math.max(
-				baseColor.getBlue() - 25, 0));
-		Color c1 = baseColor;
-		Rectangle2D[] regions = createSplitHorizontalBar(bar, 0.0, 0.2, 0.6);
-
-		GradientPaint gp = new GradientPaint(0.0f, (float) regions[0].getMinY(), c0, 0.0f, (float) regions[0].getMaxX(), c1);
-		g2.setPaint(gp);
-		g2.fill(regions[0]);
-
-		gp = new GradientPaint(0.0f, (float) regions[1].getMinY(), c1, 0.0f, (float) regions[1].getMaxY(), Color.WHITE);
-		g2.setPaint(gp);
-		g2.fill(regions[1]);
-
-		gp = new GradientPaint(0.0f, (float) regions[2].getMinY(), Color.WHITE, 0.0f, (float) regions[2].getMaxY(), c1);
-		g2.setPaint(gp);
-		g2.fill(regions[2]);
-
-		gp = new GradientPaint(0.0f, (float) regions[3].getMinY(), c1, 0.0f, (float) regions[3].getMaxY(), c0.darker());
-		g2.setPaint(gp);
-		g2.fill(regions[3]);
-
-		// Frame Body
 		g2.setPaint(LINE_COLOR);
 		g2.setStroke(LINE_STROKE);
-		if (model.getSelectedOperators().contains(operator)) {
-			g2.setPaint(FRAME_COLOR_SELECTED);
-			g2.setStroke(FRAME_STROKE_SELECTED);
+		if (isSelected) {
+			g2.setPaint(OPERATOR_BORDER_COLOR_SELECTED);
+			g2.setStroke(OPERATOR_STROKE_SELECTED);
+		} else if (isHovered) {
+			g2.setPaint(OPERATOR_BORDER_COLOR_HIGHLIGHT);
+			g2.setStroke(OPERATOR_STROKE_HIGHLIGHT);
 		} else {
-			g2.setPaint(FRAME_COLOR_NORMAL);
-			g2.setStroke(FRAME_STROKE_NORMAL);
+			g2.setPaint(OPERATOR_BORDER_COLOR);
+			g2.setStroke(OPERATOR_STROKE_NORMAL);
 		}
 		g2.draw(bodyShape);
 
 		// Label: Name
 		g2.setFont(OPERATOR_FONT);
+		String name = ProcessDrawUtils.fitString(operator.getName(), g2, (int) headerWidth);
+
+		// take smallest width and center name
+		double relevantWidth = nameBounds.getWidth() < headerWidth ? nameBounds.getWidth() : headerWidth;
+		double offset = (frame.getWidth() - relevantWidth) / 2;
+		int x = (int) (frame.getX() + offset);
+
+		// draw white badge behind operator name
+		if ((isHovered || isSelected) && nameBounds.getWidth() > frame.getWidth()) {
+			g2.setColor(Color.WHITE);
+			int padding = 5;
+			g2.fillRoundRect((int) Math.min(frame.getX() - padding, x - padding), (int) frame.getY() - 3,
+					(int) Math.max(frame.getWidth() + 2 * padding, relevantWidth + 2 * padding),
+					ProcessRendererModel.HEADER_HEIGHT + 3, OPERATOR_BG_CORNER, OPERATOR_BG_CORNER);
+		}
+
 		if (operator.isEnabled()) {
-			if (operator == model.getHoveringOperator()) {
-				g2.setPaint(baseColor.darker());
-			} else if (model.getSelectedOperators().contains(operator)) {
-				g2.setPaint(baseColor.darker());
+			if (isSelected) {
+				g2.setColor(OPERATOR_NAME_COLOR_SELECTED);
+			} else if (isHovered) {
+				g2.setColor(OPERATOR_NAME_COLOR_HIGHLIGHT);
 			} else {
-				g2.setPaint(baseColor.darker().darker());
+				g2.setColor(OPERATOR_NAME_COLOR);
 			}
 		} else {
-			g2.setPaint(baseColor.darker().darker());
+			g2.setColor(OPERATOR_NAME_COLOR_DISABLED);
 		}
-		g2.drawString(ProcessDrawUtils.fitString(operator.getName(), g2, (int) headerWidth - 3), (int) frame.getX() + 4,
-				(int) (frame.getY() + OPERATOR_FONT.getSize() + 1));
+		g2.drawString(name, x, (int) (frame.getY() + OPERATOR_FONT.getSize() + 1));
 
 		// Icon
 		ImageIcon icon = operator.getOperatorDescription().getIcon();
@@ -741,11 +745,8 @@ public final class ProcessDrawer {
 			if (!operator.isEnabled()) {
 				icon = ProcessDrawUtils.getIcon(operator, icon);
 			}
-			icon.paintIcon(
-					null,
-					g2,
-					(int) (frame.getX() + frame.getWidth() / 2 - icon.getIconWidth() / 2),
-					(int) (frame.getY() + headerHeight + (frame.getHeight() - headerHeight - 10) / 2 - icon.getIconHeight() / 2));
+			icon.paintIcon(null, g2, (int) (frame.getX() + frame.getWidth() / 2 - icon.getIconWidth() / 2),
+					(int) (frame.getY() + ProcessRendererModel.HEADER_HEIGHT + 7));
 		}
 
 		// Small icons
@@ -756,19 +757,20 @@ public final class ProcessDrawer {
 			opIcon = OPERATOR_RUNNING;
 		} else if (!operator.isDirty()) {
 			opIcon = OPERATOR_READY;
-		} else if (!operator.getErrorList().isEmpty()) {
-			opIcon = OPERATOR_ERROR_ICON;
 		} else {
-			opIcon = OPERATOR_DIRTY;
+			opIcon = null;
 		}
-		ProcessDrawUtils.getIcon(operator, opIcon).paintIcon(null, g2, iconX,
-				(int) (frame.getY() + frame.getHeight() - opIcon.getIconHeight() - 1));
-		iconX += opIcon.getIconWidth() + 1;
+
+		if (opIcon != null) {
+			ProcessDrawUtils.getIcon(operator, opIcon).paintIcon(null, g2, iconX,
+					(int) (frame.getY() + frame.getHeight() - opIcon.getIconHeight() - 1));
+		}
+		iconX += 16;
 
 		// Errors
 		if (!operator.getErrorList().isEmpty()) {
-			ProcessDrawUtils.getIcon(operator, IMAGE_WARNING).paintIcon(null, g2, iconX,
-					(int) (frame.getY() + frame.getHeight() - IMAGE_WARNING.getIconHeight() - 1));
+			int iconY = (int) (frame.getY() + frame.getHeight() - IMAGE_WARNING.getIconHeight() - 2);
+			ProcessDrawUtils.getIcon(operator, IMAGE_WARNING).paintIcon(null, g2, iconX, iconY);
 		}
 		iconX += IMAGE_WARNING.getIconWidth() + 1;
 
@@ -849,10 +851,11 @@ public final class ProcessDrawer {
 			boolean isDragTarget = isConHovered && model.getDraggedOperators().size() == 1
 					&& ProcessDrawUtils.canOperatorBeInsertedIntoConnection(model, draggedOp);
 			boolean isConnectingSource = port.equals(connectingPort);
+			boolean isProcessPort = port.getPorts().getOwner().getOperator() == model.getDisplayedChain();
 
 			double x = location.getX();
 			double y = location.getY();
-			Color line = Color.DARK_GRAY;
+			Color line = isProcessPort ? BORDER_COLOR : OPERATOR_BORDER_COLOR;
 			Color fill = Color.WHITE;
 
 			Shape ellipseTop, ellipseBottom, ellipseBoth;
@@ -920,9 +923,9 @@ public final class ProcessDrawer {
 
 				g.setColor(line);
 				if (model.getHoveringPort() == port) {
-					g.setStroke(HIGHLIGHT_STROKE);
+					g.setStroke(PORT_HIGHLIGHT_STROKE);
 				} else {
-					g.setStroke(LINE_STROKE);
+					g.setStroke(PORT_STROKE);
 				}
 				g.draw(ellipseBoth);
 			} else {
@@ -931,20 +934,34 @@ public final class ProcessDrawer {
 
 				g.setColor(line);
 				if (model.getHoveringPort() == port) {
-					g.setStroke(HIGHLIGHT_STROKE);
+					g.setStroke(PORT_HIGHLIGHT_STROKE);
 				} else {
-					g.setStroke(LINE_STROKE);
+					g.setStroke(PORT_STROKE);
 				}
 				g.draw(ellipseBoth);
 			}
 
 			g.setFont(PORT_FONT);
 			int xt;
+			int yt = 0;
 			Rectangle2D strBounds = PORT_FONT.getStringBounds(port.getShortName(), g.getFontRenderContext());
-			if (input) {
-				xt = PORT_SIZE / 2;
+			if (isProcessPort) {
+				if (input) {
+					xt = -(int) (portSize / 2 + strBounds.getWidth() + 3);
+				} else {
+					xt = portSize - 3;
+				}
+
+				// connected process ports have their label above the connection
+				if (port.isConnected() || isConnectingSource) {
+					yt = 5;
+				}
 			} else {
-				xt = -(int) strBounds.getWidth() - 3;
+				if (input) {
+					xt = PORT_SIZE / 2;
+				} else {
+					xt = -(int) strBounds.getWidth() - 3;
+				}
 			}
 
 			if (hasError) {
@@ -958,7 +975,7 @@ public final class ProcessDrawer {
 				}
 			}
 
-			g.drawString(port.getShortName(), (int) x + xt, (int) (y + strBounds.getHeight() / 2 - 2));
+			g.drawString(port.getShortName(), (int) x + xt, (int) (y - yt + strBounds.getHeight() / 2 - 2));
 		}
 	}
 
@@ -1048,10 +1065,24 @@ public final class ProcessDrawer {
 			return;
 		}
 
-		RoundRectangle2D background = new RoundRectangle2D.Double(frame.getX() - 7, frame.getY() - 7, frame.getWidth() + 14,
-				frame.getHeight() + 14, 10, 10);
+		RoundRectangle2D background = new RoundRectangle2D.Double(frame.getX() - 7, frame.getY() - 3, frame.getWidth() + 14,
+				frame.getHeight() + 11, OPERATOR_BG_CORNER, OPERATOR_BG_CORNER);
 		g2.setColor(Color.WHITE);
 		g2.fill(background);
+
+		// if name is wider than operator, extend white background for header
+		Rectangle2D nameBounds = OPERATOR_FONT.getStringBounds(operator.getName(), g2.getFontRenderContext());
+		if (nameBounds.getWidth() > frame.getWidth()) {
+			double relevantWidth = Math.min(nameBounds.getWidth(), frame.getWidth() * MAX_HEADER_RATIO);
+			double offset = (frame.getWidth() - relevantWidth) / 2;
+			int x = (int) (frame.getX() + offset);
+
+			int padding = 5;
+			RoundRectangle2D nameBackground = new RoundRectangle2D.Double(
+					(int) Math.min(frame.getX() - padding, x - padding), frame.getY() - 3, relevantWidth + 2 * padding,
+					ProcessRendererModel.HEADER_HEIGHT + 3, OPERATOR_BG_CORNER, OPERATOR_BG_CORNER);
+			g2.fill(nameBackground);
+		}
 
 		// render ports
 		renderPortsBackground(operator.getInputPorts(), g2);
@@ -1142,43 +1173,29 @@ public final class ProcessDrawer {
 	 * @param g2
 	 *            the graphics context to draw upon
 	 */
-	private void renderBackground(final ExecutionUnit process, final Graphics2D g2) {
+	private void renderBackground(final ExecutionUnit process, final Graphics2D g2, boolean printing) {
 		double width = model.getProcessWidth(process);
 		double height = model.getProcessHeight(process);
 		Shape frame = new Rectangle2D.Double(0, 0, width, height);
 
-		Paint currentInnerColor = INNER_COLOR;
-		Paint currentTopGradient = SHADOW_TOP_GRADIENT;
-		Paint currentLeftGradient = SHADOW_LEFT_GRADIENT;
-		Stroke currentLineStroke = LINE_STROKE;
-		Paint currentLineColor = LINE_COLOR;
-
-		if (drawHighlight && (model.isDragStarted() || model.isDropTargetSet() && model.isImportDragged())) {
-			switch (RapidMinerGUI.getDragHighlighteMode()) {
-				case FULL:
-					currentInnerColor = INNER_DRAG_COLOR;
-					currentTopGradient = SHADOW_TOP_DRAG_GRADIENT;
-					currentLeftGradient = SHADOW_LEFT_DRAG_GRADIENT;
-					//$FALL-THROUGH$
-				case BORDER:
-					currentLineStroke = LINE_DRAG_STROKE;
-					currentLineColor = LINE_DRAG_COLOR;
-					break;
-				case NONE:
-				default:
-					break;
-			}
-		}
+		Color currentInnerColor = INNER_COLOR;
+		Stroke currentBorderStroke = BORDER_STROKE;
+		Color currentBorderColor = BORDER_COLOR;
 
 		// background color
-		g2.setPaint(currentInnerColor);
+		g2.setColor(currentInnerColor);
 		g2.fill(frame);
 
 		// process title
 		g2.setColor(PROCESS_TITLE_COLOR);
 		g2.setFont(PROCESS_FONT);
 		Operator displayedChain = process.getEnclosingOperator();
-		g2.drawString(process.getName(), PADDING + 2, PROCESS_FONT.getSize() + PADDING);
+		if (model.getProcesses().size() == 1) {
+			g2.drawString(displayedChain.getName(), PADDING + 2, PROCESS_FONT.getSize() + PADDING);
+		} else {
+			// multiple subprocesses have special names so show them instead of operator name
+			g2.drawString(process.getName(), PADDING + 2, PROCESS_FONT.getSize() + PADDING);
+		}
 
 		// breakpoint
 		if (displayedChain.hasBreakpoint()) {
@@ -1198,45 +1215,130 @@ public final class ProcessDrawer {
 					(int) width - PADDING - IMAGE_BREAKPOINTS_LARGE.getIconWidth(), PADDING);
 		}
 
-		// padding gradients
-		g2.setPaint(currentTopGradient);
-		g2.fill(new Rectangle2D.Double(0, 0, PADDING, height));
-		GeneralPath top = new GeneralPath();
-		int shadowWidth = PADDING;
-		top.moveTo(0, 0);
-		top.lineTo(width, 0);
-		top.lineTo(width, shadowWidth);
-		top.lineTo(shadowWidth, shadowWidth);
-		top.closePath();
-		g2.setPaint(currentLeftGradient);
-		g2.fill(top);
-
 		// frame color
-		g2.setPaint(currentLineColor);
-		g2.setStroke(currentLineStroke);
+		g2.setColor(currentBorderColor);
+		g2.setStroke(currentBorderStroke);
 		g2.draw(frame);
+
+		boolean dragIndicate = false;
+		if (drawHighlight && (model.isDragStarted() || model.isDropTargetSet() && model.isImportDragged())
+				|| model.isOperatorSourceHovered()) {
+			switch (RapidMinerGUI.getDragHighlighteMode()) {
+				case FULL:
+				case BORDER:
+					dragIndicate = true;
+					break;
+				case NONE:
+				default:
+					break;
+			}
+		}
+
+		// drag border
+		if (dragIndicate && !printing) {
+
+			if (RapidMinerGUI.getDragHighlighteMode() == DragHighlightMode.FULL) {
+				Font dragFont;
+				if (width >= 600) {
+					dragFont = DRAG_FONT_LARGE;
+				} else if (width >= 400) {
+					dragFont = DRAG_FONT_MEDIUM;
+				} else {
+					dragFont = DRAG_FONT_SMALL;
+				}
+				int padding = dragFont.getSize() / 3;
+				if (drawHighlight && (model.isDragStarted() || model.isDropTargetSet() && model.isImportDragged())) {
+					// drag here text
+					g2.setFont(dragFont);
+					Rectangle2D bounds = g2.getFontMetrics().getStringBounds(DROP_HERE, g2);
+
+					int x = (int) (width / 2 - bounds.getWidth() / 2);
+					int y = (int) (height / 2 + bounds.getHeight() / 2);
+					g2.setColor(DRAG_BG_COLOR);
+
+					int rX = x - padding;
+					int rY = (int) (y - bounds.getHeight() / 2 - padding);
+					g2.fillRoundRect(rX, rY, (int) (bounds.getWidth() + padding * 2), (int) bounds.getHeight(),
+							RapidLookAndFeel.CORNER_DEFAULT_RADIUS, RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+
+					drawCenteredText(process, g2, dragFont, DROP_HERE, DRAG_FG_COLOR, 0);
+				} else if (model.isOperatorSourceHovered()) {
+					// drop here text
+					g2.setFont(dragFont);
+					Rectangle2D bounds = g2.getFontMetrics().getStringBounds(DRAG_HERE, g2);
+
+					int x = (int) (width / 2 - bounds.getWidth() / 2);
+					int y = (int) (height / 2 + bounds.getHeight() / 2);
+					g2.setColor(DRAG_BG_COLOR);
+
+					int rX = x - padding;
+					int rY = (int) (y - bounds.getHeight() / 2 - padding);
+					g2.fillRoundRect(rX, rY, (int) (bounds.getWidth() + padding * 2), (int) bounds.getHeight(),
+							RapidLookAndFeel.CORNER_DEFAULT_RADIUS, RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+
+					drawCenteredText(process, g2, dragFont, DRAG_HERE, DRAG_FG_COLOR, 0);
+				}
+			}
+		} else if (process.getEnclosingOperator() instanceof ProcessRootOperator && process.getAllInnerOperators().isEmpty()) {
+			// empty process hint text
+
+			g2.setColor(HINT_COLOR);
+			Font hintFont;
+			if (width >= 700) {
+				hintFont = HINT_FONT_LARGE;
+			} else if (width >= 500) {
+				hintFont = HINT_FONT_MEDIUM;
+			} else {
+				hintFont = HINT_FONT_SMALL;
+			}
+
+			double offset = hintFont.getSize() * 1.5;
+			drawCenteredText(process, g2, hintFont, HINT_EMPTY_PROCESS_1, HINT_COLOR, -offset);
+			drawCenteredText(process, g2, hintFont, HINT_EMPTY_PROCESS_2, HINT_COLOR, 0);
+			drawCenteredText(process, g2, hintFont, HINT_EMPTY_PROCESS_3, HINT_COLOR, offset);
+		}
 	}
 
 	/**
-	 * Creates a split horizontal bar for dividing operator header and body.
+	 * Renders the drag border if needed.
 	 *
-	 * @param bar
-	 * @param a
-	 * @param b
-	 * @param c
-	 * @return
+	 * @param process
+	 *            the process for which to render the background
+	 * @param g2
+	 *            the graphics context to draw upon
 	 */
-	private Rectangle2D[] createSplitHorizontalBar(final RectangularShape bar, final double a, final double b, final double c) {
-		Rectangle2D[] result = new Rectangle2D[4];
-		double y0 = bar.getMinY();
-		double y1 = Math.rint(y0 + bar.getHeight() * a);
-		double y2 = Math.rint(y0 + bar.getHeight() * b);
-		double y3 = Math.rint(y0 + bar.getHeight() * c);
-		result[0] = new Rectangle2D.Double(bar.getMinX(), bar.getMinY(), bar.getWidth(), y1 - y0);
-		result[1] = new Rectangle2D.Double(bar.getMinX(), y1, bar.getWidth(), y2 - y1);
-		result[2] = new Rectangle2D.Double(bar.getMinX(), y2, bar.getWidth(), y3 - y2);
-		result[3] = new Rectangle2D.Double(bar.getMinX(), y3, bar.getWidth(), bar.getMaxY() - y3);
-		return result;
+	private void renderForeground(final ExecutionUnit process, final Graphics2D g2, boolean printing) {
+		if (drawHighlight && !printing && (model.isDragStarted() || model.isDropTargetSet() && model.isImportDragged())
+				|| model.isOperatorSourceHovered()) {
+			switch (RapidMinerGUI.getDragHighlighteMode()) {
+				case FULL:
+				case BORDER:
+					drawDragBorder(process, g2);
+					break;
+				case NONE:
+				default:
+					break;
+			}
+		}
+
+	}
+
+	/**
+	 * Draws the drag border.
+	 *
+	 * @param process
+	 *            the process for which to render the background
+	 * @param g2
+	 *            the graphics context to draw upon
+	 */
+	private void drawDragBorder(final ExecutionUnit process, final Graphics2D g2) {
+		double width = model.getProcessWidth(process);
+		double height = model.getProcessHeight(process);
+		Shape dragFrame = new RoundRectangle2D.Double(DRAG_BORDER_PADDING, DRAG_BORDER_PADDING, width - 2
+				* DRAG_BORDER_PADDING, height - 2 * DRAG_BORDER_PADDING, DRAG_BORDER_CORNER, DRAG_BORDER_CORNER);
+		g2.setColor(BORDER_DRAG_COLOR);
+		g2.setStroke(BORDER_DRAG_STROKE);
+		g2.draw(dragFrame);
 	}
 
 	/**
@@ -1254,10 +1356,17 @@ public final class ProcessDrawer {
 	 */
 	private void drawPhaseDecorators(final ExecutionUnit process, final Graphics2D g2, final RenderPhase phase,
 			final boolean printing) {
+		double width = model.getProcessWidth(process);
+		double height = model.getProcessHeight(process);
+		int borderWidth = 2;
+		Shape frame = new Rectangle2D.Double(0 + borderWidth, 0 + borderWidth, width - 2 * borderWidth, height - 2
+				* borderWidth);
+
 		for (ProcessDrawDecorator decorater : decorators.get(phase)) {
 			Graphics2D g2Deco = null;
 			try {
 				g2Deco = (Graphics2D) g2.create();
+				g2Deco.clip(frame);
 				if (printing) {
 					decorater.print(process, g2Deco, model);
 				} else {
@@ -1304,4 +1413,33 @@ public final class ProcessDrawer {
 			}
 		}
 	}
+
+	/**
+	 * Draws text centered in the process.
+	 *
+	 * @param process
+	 *            the process in question
+	 * @param g2
+	 *            the graphics context
+	 * @param font
+	 * @param text
+	 * @param color
+	 * @param yOffset
+	 */
+	private void drawCenteredText(ExecutionUnit process, Graphics2D g2, Font font, String text, Color color, double yOffset) {
+		double width = model.getProcessWidth(process);
+		double height = model.getProcessHeight(process);
+
+		Graphics2D g2d = (Graphics2D) g2.create();
+		g2d.setFont(font);
+		Rectangle2D bounds = g2d.getFontMetrics().getStringBounds(text, g2d);
+
+		int x = (int) (width / 2 - bounds.getWidth() / 2);
+		int y = (int) (height / 2 + bounds.getHeight() / 2 + yOffset);
+		g2d.setColor(color);
+		g2d.drawString(text, x, y);
+
+		g2d.dispose();
+	}
+
 }

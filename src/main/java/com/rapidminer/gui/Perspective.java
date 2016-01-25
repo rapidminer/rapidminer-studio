@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -37,9 +35,9 @@ import com.vlsolutions.swing.docking.ws.WorkspaceException;
 
 
 /**
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class Perspective {
 
@@ -47,11 +45,19 @@ public class Perspective {
 	private final Workspace workspace = new Workspace();
 	private boolean userDefined = false;;
 	private final ApplicationPerspectives owner;
+	private final PerspectiveModel model;
 	private final PerspectiveProperties properties = new PerspectiveProperties();
 
 	public Perspective(ApplicationPerspectives owner, String name) {
 		this.name = name;
 		this.owner = owner;
+		this.model = null;
+	}
+
+	public Perspective(PerspectiveModel model, String name) {
+		this.name = name;
+		this.model = model;
+		this.owner = null;
 	}
 
 	public String getName() {
@@ -67,10 +73,8 @@ public class Perspective {
 		try {
 			workspace.loadFrom(dockingContext);
 		} catch (WorkspaceException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.Perspective.saving_workspace_error", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.gui.Perspective.saving_workspace_error", e), e);
 
 		}
 
@@ -79,18 +83,17 @@ public class Perspective {
 	protected void apply(DockingContext dockingContext) {
 		try {
 			workspace.apply(dockingContext);
+			model.notifyChangeListener();
 		} catch (WorkspaceException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.Perspective.applying_workspace_error", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.gui.Perspective.applying_workspace_error", e), e);
 		}
 		properties.apply();
 	}
 
 	File getFile() {
-		return FileSystemService.getUserConfigFile("vlperspective-" + (isUserDefined() ? "user-" : "predefined-") + name
-				+ ".xml");
+		return FileSystemService
+				.getUserConfigFile("vlperspective-" + (isUserDefined() ? "user-" : "predefined-") + name + ".xml");
 	}
 
 	public void save() {
@@ -100,10 +103,8 @@ public class Perspective {
 			out = new FileOutputStream(file);
 			workspace.writeXML(out);
 		} catch (Exception e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.Perspective.saving_perspective_error", file, e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.gui.Perspective.saving_perspective_error", file, e), e);
 		} finally {
 			try {
 				if (out != null) {
@@ -127,17 +128,18 @@ public class Perspective {
 		} catch (Exception e) {
 
 			if (!userDefined) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.Perspective.reading_perspective_error_restoring", file, e), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.Perspective.reading_perspective_error_restoring", file, e), e);
 
-				owner.restoreDefault(getName());
+				if (owner != null) {
+					owner.restoreDefault(getName());
+				}
+				if (model != null) {
+					model.restoreDefault(getName());
+				}
 			} else {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.Perspective.reading_perspective_error_clearing", file, e), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.Perspective.reading_perspective_error_clearing", file, e), e);
 				workspace.clear();
 			}
 		} finally {

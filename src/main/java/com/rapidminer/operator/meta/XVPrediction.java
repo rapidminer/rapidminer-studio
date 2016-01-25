@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.Collection;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -53,16 +54,13 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.Collection;
-import java.util.List;
-
 
 /**
  * Operator chain that splits an {@link ExampleSet} into a training and test sets similar to
  * XValidation, but returns the test set predictions instead of a performance vector. The inner two
  * operators must be a learner returning a {@link Model} and an operator or operator chain that can
  * apply this model (usually a model applier)
- * 
+ *
  * @author Stefan Rueping, Ingo Mierswa, Sebastian Land
  */
 public class XVPrediction extends OperatorChain implements CapabilityProvider {
@@ -161,6 +159,12 @@ public class XVPrediction extends OperatorChain implements CapabilityProvider {
 		}
 		log("Starting " + number + "-fold cross validation prediction");
 
+		// init Operator progress
+		getProgress().setTotal(number + 1);
+
+		// disable checkForStop, will be called in #inApplyLoop() anyway
+		getProgress().setCheckForStop(false);
+
 		// creating predicted label
 		ExampleSet resultSet = (ExampleSet) inputSet.clone();
 		Attribute predictedLabel = PredictionModel.createPredictedLabel(resultSet, inputSet.getAttributes().getLabel());
@@ -175,6 +179,8 @@ public class XVPrediction extends OperatorChain implements CapabilityProvider {
 				getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
 				getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED), getCompatibilityLevel().isAtMost(
 						SplittedExampleSet.VERSION_SAMPLING_CHANGED));
+
+		getProgress().setCompleted(1);
 
 		for (iteration = 0; iteration < number; iteration++) {
 			splittedSet.selectAllSubsetsBut(iteration);
@@ -203,9 +209,11 @@ public class XVPrediction extends OperatorChain implements CapabilityProvider {
 			}
 			// PredictionModel.removePredictedLabel(predictedSet);
 			inApplyLoop();
+			getProgress().step();
 		}
 
 		exampleSetOutput.deliver(resultSet);
+		getProgress().complete();
 	}
 
 	protected MDInteger getTestSetSize(MDInteger originalSize) throws UndefinedParameterError {

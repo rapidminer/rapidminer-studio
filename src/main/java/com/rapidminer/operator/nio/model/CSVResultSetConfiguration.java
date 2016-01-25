@@ -1,24 +1,30 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.nio.model;
+
+import java.io.File;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.table.TableModel;
 
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
@@ -27,16 +33,10 @@ import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.io.Encoding;
 
-import java.io.File;
-import java.nio.charset.Charset;
-import java.util.List;
-
-import javax.swing.table.TableModel;
-
 
 /**
  * A class holding information about syntactical configuration for parsing CSV files
- * 
+ *
  * @author Simon Fischer
  */
 public class CSVResultSetConfiguration implements DataResultSetFactory {
@@ -47,11 +47,16 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 	private boolean useQuotes = true;
 	private boolean skipUTF8BOM = false;
 	private boolean trimLines = false;
+	private boolean hasHeaderRow = true;
+
 	private String columnSeparators = ";";
 
 	private char quoteCharacter = '"';
 	private char escapeCharacter = '\\';
+	private char decimalCharacter = '.';
 	private String commentCharacters = "#";
+	private int startingRow = 0;
+	private int headerRow = 0;
 
 	private Charset encoding = Charset.defaultCharset();
 
@@ -145,6 +150,14 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 		return useQuotes;
 	}
 
+	public boolean hasHeaderRow() {
+		return hasHeaderRow;
+	}
+
+	public void setHasHeaderRow(boolean hasHeaderRow) {
+		this.hasHeaderRow = hasHeaderRow;
+	}
+
 	public void setSkipComments(boolean skipComments) {
 		this.skipComments = skipComments;
 	}
@@ -185,6 +198,14 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 		return quoteCharacter;
 	}
 
+	public void setDecimalCharacter(char decimalCharacter) {
+		this.decimalCharacter = decimalCharacter;
+	}
+
+	public char getDecimalCharacter() {
+		return decimalCharacter;
+	}
+
 	public void setTrimLines(boolean trimLines) {
 		this.trimLines = trimLines;
 	}
@@ -209,6 +230,22 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 		this.skipUTF8BOM = skipUTF8BOM;
 	}
 
+	public int getStartingRow() {
+		return startingRow;
+	}
+
+	public void setStartingRow(int startingRow) {
+		this.startingRow = startingRow;
+	}
+
+	public int getHeaderRow() {
+		return headerRow;
+	}
+
+	public void setHeaderRow(int headerRow) {
+		this.headerRow = headerRow;
+	}
+
 	@Override
 	public String getResourceName() {
 		return getCsvFile();
@@ -225,4 +262,26 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 
 	@Override
 	public void close() {}
+
+	/**
+	 * @return a map containing all fieldNames and their values
+	 */
+	public Map<String, String> getParameterMap() {
+		Map<String, String> parameterMap = new HashMap<>();
+		parameterMap.put("csvFile", getCsvFile());
+		parameterMap.put("useQuotes", String.valueOf(isUseQuotes()));
+		parameterMap.put("hasHeaderRow", String.valueOf(hasHeaderRow()));
+		parameterMap.put("headerRow", String.valueOf(getHeaderRow()));
+		parameterMap.put("decimalCharacter", String.valueOf(getDecimalCharacter()));
+		parameterMap.put("startingRow", String.valueOf(getStartingRow()));
+		parameterMap.put("skipComments", String.valueOf(isSkipComments()));
+		parameterMap.put("columnSeparators", getColumnSeparators());
+		parameterMap.put("commentCharacters", getCommentCharacters());
+		parameterMap.put("escapeCharacter", String.valueOf(getEscapeCharacter()));
+		parameterMap.put("quoteCharacter", String.valueOf(getQuoteCharacter()));
+		parameterMap.put("trimLines", String.valueOf(isTrimLines()));
+		parameterMap.put("encoding", String.valueOf(getEncoding()));
+		parameterMap.put("skipUTF8BOM", String.valueOf(isSkippingUTF8BOM()));
+		return parameterMap;
+	}
 }

@@ -1,24 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
+
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -44,12 +44,10 @@ import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.optimization.Optimization;
 import com.rapidminer.tools.math.optimization.ec.pso.PSOOptimization;
 
-import java.util.List;
-
 
 /**
  * This operator performs the weighting of features with a particle swarm approach.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class PSOWeighting extends OperatorChain {
@@ -112,11 +110,11 @@ public class PSOWeighting extends OperatorChain {
 			super(op.getParameterAsInt(PARAMETER_POPULATION_SIZE), individualSize, op
 					.getParameterAsInt(PARAMETER_MAXIMUM_NUMBER_OF_GENERATIONS), op
 					.getParameterAsBoolean(PARAMETER_USE_EARLY_STOPPING) ? op
-					.getParameterAsInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL) : -1, op
-					.getParameterAsDouble(PARAMETER_INERTIA_WEIGHT), op.getParameterAsDouble(PARAMETER_LOCAL_BEST_WEIGHT),
-					op.getParameterAsDouble(PARAMETER_GLOBAL_BEST_WEIGHT), op.getParameterAsDouble(PARAMETER_MIN_WEIGHT), op
+							.getParameterAsInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL) : -1, op
+							.getParameterAsDouble(PARAMETER_INERTIA_WEIGHT), op.getParameterAsDouble(PARAMETER_LOCAL_BEST_WEIGHT),
+							op.getParameterAsDouble(PARAMETER_GLOBAL_BEST_WEIGHT), op.getParameterAsDouble(PARAMETER_MIN_WEIGHT), op
 							.getParameterAsDouble(PARAMETER_MAX_WEIGHT), op
-							.getParameterAsBoolean(PARAMETER_DYNAMIC_INERTIA_WEIGHT), random);
+							.getParameterAsBoolean(PARAMETER_DYNAMIC_INERTIA_WEIGHT), random, op);
 			this.op = op;
 		}
 
@@ -247,8 +245,8 @@ public class PSOWeighting extends OperatorChain {
 
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_EARLY_STOPPING,
 				"Enables early stopping. If unchecked, always the maximum number of generations is performed.", false));
-		type = (new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
-				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2));
+		type = new ParameterTypeInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL,
+				"Stop criterion: Stop after n generations without improval of the performance.", 1, Integer.MAX_VALUE, 2);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_EARLY_STOPPING, true, true));
 		type.setExpert(false);
 		types.add(type);

@@ -1,24 +1,30 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.example.Attribute;
@@ -50,17 +56,10 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 
 /**
@@ -70,7 +69,7 @@ import java.util.List;
  * <tt>getPreEvalutaionPopulationOperators()</tt> and
  * <tt>getPostEvalutaionPopulationOperators()</tt> during a loop which will terminate if
  * <tt>solutionGoodEnough()</tt> returns true.
- * 
+ *
  * @author Simon Fischer, Ingo Mierswa <br>
  */
 public abstract class FeatureOperator extends OperatorChain {
@@ -323,8 +322,8 @@ public abstract class FeatureOperator extends OperatorChain {
 
 		this.exampleSet = es;
 
-		List preOps = getPreEvaluationPopulationOperators(es);
-		List postOps = getPostEvaluationPopulationOperators(es);
+		List<PopulationOperator> preOps = getPreEvaluationPopulationOperators(es);
+		List<PopulationOperator> postOps = getPostEvaluationPopulationOperators(es);
 
 		// stop dialog
 		boolean userDialogOk = true;
@@ -339,6 +338,15 @@ public abstract class FeatureOperator extends OperatorChain {
 		// create initial population
 		population = createInitialPopulation(es);
 		log("Initial population has " + population.getNumberOfIndividuals() + " individuals.");
+
+		// initial evaluation
+		int maxGenerations = getMaximumGenerations();
+		if (maxGenerations >= 0) {
+			getProgress().setTotal(
+					population.getNumberOfIndividuals() + getMaximumGenerations() * population.getNumberOfIndividuals());
+		} else {
+			getProgress().setTotal(-1);
+		}
 		evaluate(population, exampleSet);
 
 		// population plotter
@@ -366,13 +374,14 @@ public abstract class FeatureOperator extends OperatorChain {
 			log("Evaluating " + Tools.ordinalNumber(population.getGeneration()) + " population.");
 
 			evaluate(population, exampleSet);
-			checkForStop();
 			population.updateEvaluation();
 			applyOpList(postOps, population);
 			if (popPlotter != null) {
 				popPlotter.operate(population);
 			}
+
 			userDialogOk = stopDialog == null ? true : stopDialog.isStillRunning();
+
 			inApplyLoop();
 		}
 
@@ -437,6 +446,8 @@ public abstract class FeatureOperator extends OperatorChain {
 			attributeWeights.normalize();
 		}
 
+		getProgress().complete();
+
 		// clean up
 		exampleSetOutput.deliver(createCleanClone(exampleSet, weights));
 		attributeWeightsOutput.deliver(attributeWeights);
@@ -457,10 +468,10 @@ public abstract class FeatureOperator extends OperatorChain {
 	}
 
 	/** Applies all PopulationOperators in opList to the population. */
-	void applyOpList(List opList, Population population) throws OperatorException {
-		Iterator i = opList.listIterator();
+	void applyOpList(List<PopulationOperator> opList, Population population) throws OperatorException {
+		Iterator<PopulationOperator> i = opList.listIterator();
 		while (i.hasNext()) {
-			PopulationOperator op = (PopulationOperator) i.next();
+			PopulationOperator op = i.next();
 			if (op.performOperation(population.getGeneration())) {
 				try {
 					op.operate(population);
@@ -485,7 +496,7 @@ public abstract class FeatureOperator extends OperatorChain {
 
 	/**
 	 * This method gives access to the subprocess for evaluating an example set
-	 * 
+	 *
 	 * @param exampleSet
 	 *            a weighted exampleSet
 	 * @return
@@ -588,5 +599,15 @@ public abstract class FeatureOperator extends OperatorChain {
 
 	protected PopulationEvaluator getPopulationEvaluator(ExampleSet exampleSet) throws OperatorException {
 		return new SimplePopulationEvaluator(this, exampleSet);
+	}
+
+	/**
+	 * Returns the maximum number of generations which can be used as the total operator progress.
+	 * Returns -1, if the operator is not able to determine a total operator progress.
+	 *
+	 * @throws UndefinedParameterError
+	 */
+	protected int getMaximumGenerations() throws UndefinedParameterError {
+		return -1;
 	}
 }

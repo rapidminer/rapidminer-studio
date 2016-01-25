@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -27,7 +25,6 @@ import java.util.Iterator;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
@@ -35,6 +32,7 @@ import com.rapidminer.ObjectVisualizer;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
@@ -126,12 +124,14 @@ public class ExampleVisualizer implements ObjectVisualizer {
 			data[counter][1] = getFormattedValue(example, attribute);
 			counter++;
 		}
-		JTable table = new ExtendedJTable();
+		ExtendedJTable table = new ExtendedJTable();
 		table.setDefaultEditor(Object.class, null);
 		TableModel tableModel = new DefaultTableModel(data, columnNames);
+		table.setRowHighlighting(true);
+		table.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
 		table.setModel(tableModel);
 		main = new ExtendedJScrollPane(table);
-		main.setBorder(ButtonDialog.createBorder());
+		main.setBorder(null);
 		int tableHeight = (int) (table.getPreferredSize().getHeight()
 				+ table.getTableHeader().getPreferredSize().getHeight() + 5); // 5 for border
 		if (tableHeight < main.getPreferredSize().getHeight()) {

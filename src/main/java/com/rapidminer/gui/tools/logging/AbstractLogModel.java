@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.logging;
 
@@ -30,6 +28,7 @@ import java.util.logging.Level;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import com.rapidminer.gui.tools.ScaledImageIcon;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.I18N;
@@ -142,12 +141,14 @@ public abstract class AbstractLogModel extends AbstractObservable<List<LogEntry>
 	/** the min and max size of an icon (if set) */
 	private static final int ICON_SIZE = 16;
 
-	/** the max size of log entries, if this size is exceeded the first elements will be dismissed */
+	/**
+	 * the max size of log entries, if this size is exceeded the first elements will be dismissed
+	 */
 	public static final int DEFAULT_MAX_LOG_ENTRIES = 100_000;
 
 	/** icon which is used if a log specifies no own icon */
-	private static final ImageIcon FALLBACK_ICON = SwingTools.createIcon("16/"
-			+ I18N.getGUIMessage("gui.logging.fallback.icon"));
+	private static final ImageIcon FALLBACK_ICON = SwingTools
+			.createIcon("16/" + I18N.getGUIMessage("gui.logging.fallback.icon"));
 
 	/** log list */
 	private List<LogEntry> logs;
@@ -214,7 +215,8 @@ public abstract class AbstractLogModel extends AbstractObservable<List<LogEntry>
 		}
 		// enforce correct icon size (if icon is set)
 		if (modelIcon != null) {
-			if (modelIcon.getIconHeight() != ICON_SIZE || modelIcon.getIconWidth() != ICON_SIZE) {
+			if (!(modelIcon instanceof ScaledImageIcon) && modelIcon.getIconHeight() != ICON_SIZE
+					|| modelIcon.getIconWidth() != ICON_SIZE) {
 				throw new IllegalArgumentException("if modelIcon is not null it must be 16x16 pixel!");
 			}
 			this.modelIcon = modelIcon;
@@ -307,8 +309,8 @@ public abstract class AbstractLogModel extends AbstractObservable<List<LogEntry>
 			if (getLogMode() != anotherModel.getLogMode()) {
 				return false;
 			}
-			if (getLogLevel() == null && anotherModel.getLogLevel() != null || getLogLevel() != null
-					&& anotherModel.getLogLevel() == null) {
+			if (getLogLevel() == null && anotherModel.getLogLevel() != null
+					|| getLogLevel() != null && anotherModel.getLogLevel() == null) {
 				return false;
 			}
 			if (!getLogLevel().equals(anotherModel.getLogLevel())) {

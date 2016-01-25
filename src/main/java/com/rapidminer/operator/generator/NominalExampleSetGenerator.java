@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.generator;
 
@@ -44,7 +42,7 @@ import com.rapidminer.tools.RandomGenerator;
 /**
  * Generates a random example set for testing purposes. All attributes have only (random) nominal
  * values and a classification label.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class NominalExampleSetGenerator extends AbstractExampleSource {
@@ -68,6 +66,7 @@ public class NominalExampleSetGenerator extends AbstractExampleSource {
 		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
 		int numberOfAttributes = getParameterAsInt(PARAMETER_NUMBER_OF_ATTRIBUTES);
 		int numberOfValues = getParameterAsInt(PARAMETER_NUMBER_OF_VALUES);
+		getProgress().setTotal(numberOfAttributes + numberOfExamples);
 
 		if (numberOfValues < 2) {
 			logWarning("Less than 2 different values used, change to '2'.");
@@ -82,6 +81,8 @@ public class NominalExampleSetGenerator extends AbstractExampleSource {
 				current.getMapping().mapString("value" + v);
 			}
 			attributes.add(current);
+
+			getProgress().step();
 		}
 		Attribute label = AttributeFactory.createAttribute("label", Ontology.NOMINAL);
 		label.getMapping().mapString("negative");
@@ -93,7 +94,6 @@ public class NominalExampleSetGenerator extends AbstractExampleSource {
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
 		for (int n = 0; n < numberOfExamples; n++) {
-			this.checkForStop();
 			double[] features = new double[numberOfAttributes];
 			for (int a = 0; a < features.length; a++) {
 				features[a] = random.nextIntInRange(0, numberOfValues);
@@ -113,7 +113,11 @@ public class NominalExampleSetGenerator extends AbstractExampleSource {
 				}
 			}
 			table.addDataRow(new DoubleArrayDataRow(example));
+
+			getProgress().step();
 		}
+
+		getProgress().complete();
 
 		// create example set and return it
 		return table.createExampleSet(label);

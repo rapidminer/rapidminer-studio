@@ -1,28 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.look.borders;
-
-import com.rapidminer.gui.look.RapidLookAndFeel;
-import com.rapidminer.gui.look.RapidLookTools;
-import com.rapidminer.gui.look.ToolbarHandlerIcon;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -31,13 +25,16 @@ import java.awt.Insets;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.border.AbstractBorder;
-import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.UIResource;
+
+import com.rapidminer.gui.look.RapidLookAndFeel;
+import com.rapidminer.gui.look.RapidLookTools;
+import com.rapidminer.gui.look.ToolbarHandlerIcon;
 
 
 /**
  * The UIResource for tool bar borders.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ToolBarBorder extends AbstractBorder implements UIResource, SwingConstants {
@@ -64,37 +61,6 @@ public class ToolBarBorder extends AbstractBorder implements UIResource, SwingCo
 			}
 		}
 
-		if (((JToolBar) c).getOrientation() == HORIZONTAL) {
-			g.setColor(new ColorUIResource(152, 152, 152));
-			g.drawLine(0, 0, w - 1, 0);
-			g.setColor(new ColorUIResource(252, 252, 252));
-			g.drawLine(0, 1, w - 1, 1);
-			g.setColor(new ColorUIResource(249, 249, 249));
-			g.drawLine(0, 2, w - 1, 2);
-			g.setColor(new ColorUIResource(245, 245, 245));
-			g.drawLine(0, 3, w - 1, 3);
-
-			g.setColor(new ColorUIResource(205, 205, 205));
-			g.drawLine(0, h - 2, w - 1, h - 2);
-			g.setColor(new ColorUIResource(180, 180, 180));
-			g.drawLine(0, h - 1, w - 1, h - 1);
-		} else {
-			g.setColor(new ColorUIResource(152, 152, 152));
-			g.drawLine(0, 0, 0, h - 1);
-			g.setColor(new ColorUIResource(252, 252, 252));
-			g.drawLine(1, 0, 1, h - 1);
-			g.setColor(new ColorUIResource(249, 249, 249));
-			g.drawLine(2, 0, 2, h - 1);
-			g.setColor(new ColorUIResource(245, 245, 245));
-			g.drawLine(3, 0, 3, h - 1);
-
-			g.setColor(new ColorUIResource(205, 205, 205));
-			g.drawLine(w - 3, 0, w - 3, h - 1);
-			g.setColor(new ColorUIResource(180, 180, 180));
-			g.drawLine(w - 2, 0, w - 2, h - 1);
-			g.setColor(new ColorUIResource(145, 145, 145));
-			g.drawLine(w - 1, 0, w - 1, h - 1);
-		}
 		g.translate(-x, -y);
 	}
 

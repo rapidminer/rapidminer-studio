@@ -1,25 +1,24 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -110,7 +109,8 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	private final Object userDataLock = new Object();
 
 	private final Observer<Port> delegatingPortObserver = new DelegatingObserver<Port, ExecutionUnit>(this, this);
-	private final Observer<Operator> delegatingOperatorObserver = new DelegatingObserver<Operator, ExecutionUnit>(this, this);
+	private final Observer<Operator> delegatingOperatorObserver = new DelegatingObserver<Operator, ExecutionUnit>(this,
+			this);
 
 	public ExecutionUnit(OperatorChain enclosingOperator, String name) {
 		this.name = name;
@@ -121,7 +121,8 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 		do {
 			char c = name.charAt(index);
 			if (!(Character.isUpperCase(c) || Character.isDigit(c))) {
-				// LogService.getRoot().warning("Process name does not follow naming conventions: "+name+" (in "+enclosingOperator.getOperatorDescription().getName()+")");
+				// LogService.getRoot().warning("Process name does not follow naming conventions:
+				// "+name+" (in "+enclosingOperator.getOperatorDescription().getName()+")");
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.operator.ExecutionUnit.process_name_does_not_follow_name_conventions",
 						new Object[] { name, enclosingOperator.getOperatorDescription().getName() });
@@ -333,11 +334,11 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 		PriorityQueue<Operator> independentOperators = new PriorityQueue<Operator>(Math.max(1, operators.size()),
 				new Comparator<Operator>() {
 
-			@Override
-			public int compare(Operator o1, Operator o2) {
-				return originalIndices.get(o1) - originalIndices.get(o2);
-			}
-		});
+					@Override
+					public int compare(Operator o1, Operator o2) {
+						return originalIndices.get(o1) - originalIndices.get(o2);
+					}
+				});
 		independentOperators.addAll(counter.getIndependentOperators());
 		while (!independentOperators.isEmpty()) {
 			Operator first = independentOperators.poll();
@@ -399,7 +400,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	/** Returns an unmodifiable view of the operators contained in this process. */
 	public List<Operator> getOperators() {
-		return Collections.unmodifiableList(operators);
+		return Collections.unmodifiableList(new ArrayList<>(operators));
 	}
 
 	/**
@@ -516,7 +517,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 *
 	 * @param keepConnections
 	 *            if true, don't unwire old connections before rewiring.
-	 * */
+	 */
 	public void autoWire(CompatibilityLevel level, boolean keepConnections, boolean recursive) throws PortException {
 		if (!keepConnections) {
 			unwire(recursive);
@@ -594,11 +595,11 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 				}
 			}
 			if (!found) {
-				throw new IllegalArgumentException("Operator " + operator.getName() + " does not belong to this subprocess "
-						+ getName() + ".");
+				throw new IllegalArgumentException(
+						"Operator " + operator.getName() + " does not belong to this subprocess " + getName() + ".");
 			}
-			getEnclosingOperator().getLogger().fine(
-					"Wiring: " + operator + "." + operator.getInputPorts().getAllPorts() + " to " + readyOutputs);
+			getEnclosingOperator().getLogger()
+					.fine("Wiring: " + operator + "." + operator.getInputPorts().getAllPorts() + " to " + readyOutputs);
 			autoWire(level, operator.getInputPorts(), readyOutputs);
 		}
 
@@ -717,8 +718,8 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 					}
 				} else {
 					// this is an output port
-					Operator myOperator = clonedOperatorsByName.get(originalSource.getPorts().getOwner().getOperator()
-							.getName());
+					Operator myOperator = clonedOperatorsByName
+							.get(originalSource.getPorts().getOwner().getOperator().getName());
 					if (myOperator == null) {
 						throw new RuntimeException("Error during clone: Corresponding source for " + originalSource
 								+ " not found (no such operator).");
@@ -732,25 +733,26 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 				InputPort originalDestination = originalSource.getDestination();
 				InputPort myDestination;
-				if (originalDestination.getPorts().getOwner().getOperator() == originalExecutionUnit.getEnclosingOperator()) {
+				if (originalDestination.getPorts().getOwner().getOperator() == originalExecutionUnit
+						.getEnclosingOperator()) {
 					// this is an inner sink
 					myDestination = getInnerSinks().getPortByName(originalDestination.getName());
 					if (myDestination == null) {
-						throw new RuntimeException("Error during clone: Corresponding destination for "
-								+ originalDestination + " not found (no such inner sink).");
+						throw new RuntimeException("Error during clone: Corresponding destination for " + originalDestination
+								+ " not found (no such inner sink).");
 					}
 				} else {
 					// this is an input port
-					Operator myOperator = clonedOperatorsByName.get(originalDestination.getPorts().getOwner().getOperator()
-							.getName());
+					Operator myOperator = clonedOperatorsByName
+							.get(originalDestination.getPorts().getOwner().getOperator().getName());
 					if (myOperator == null) {
-						throw new RuntimeException("Error during clone: Corresponding destination for "
-								+ originalDestination + " not found (no such operator).");
+						throw new RuntimeException("Error during clone: Corresponding destination for " + originalDestination
+								+ " not found (no such operator).");
 					}
 					myDestination = myOperator.getInputPorts().getPortByName(originalDestination.getName());
 					if (myDestination == null) {
-						throw new RuntimeException("Error during clone: Corresponding destination for "
-								+ originalDestination + " not found (no such input port).");
+						throw new RuntimeException("Error during clone: Corresponding destination for " + originalDestination
+								+ " not found (no such input port).");
 					}
 				}
 				mySource.connectTo(myDestination);

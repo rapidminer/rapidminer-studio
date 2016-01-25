@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -74,10 +74,8 @@ public class RMUrlHandler {
 					op = OperatorService.createOperator(opName);
 					RapidMinerGUI.getMainFrame().getOperatorDocViewer().setDisplayedOperator(op);
 				} catch (OperatorCreationException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.tools.RMUrlHandler.creating_operator_error", opName), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.tools.RMUrlHandler.creating_operator_error", opName), e);
 				}
 				return true;
 			}
@@ -125,14 +123,16 @@ public class RMUrlHandler {
 				tempFile.deleteOnExit();
 				FileWriter out = new FileWriter(tempFile);
 				try {
-					out.write(String
-							.format("<!DOCTYPE html>\n"
+					out.write(String.format(
+							"<!DOCTYPE html>\n"
 									+ "<html><meta http-equiv=\"refresh\" content=\"0; URL=%s\"><body>You are redirected to %s</body></html>",
-									uri.toString(), uri.toString()));
+							uri.toString(), uri.toString()));
 				} finally {
 					out.close();
 				}
 				Desktop.getDesktop().browse(tempFile.toURI());
+			} catch (UnsupportedOperationException e1) {
+				throw new IOException(e1);
 			}
 		} else {
 			LOGGER.log(Level.SEVERE, "Failed to open web page in browser, browsing is not supported on this platform.");

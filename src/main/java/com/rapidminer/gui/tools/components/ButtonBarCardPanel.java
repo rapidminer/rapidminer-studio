@@ -1,26 +1,22 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.components;
-
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -31,7 +27,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,18 +43,22 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ListHoverHelper;
+
 
 /**
  * Container in which the user can switch the displayed children by clicking on an icon in a bar on
  * the left hand side.
- * 
+ *
  * Titles and icons for the elements representing the individual cards are taken from the GUI
  * properties gui.cards.PANEL_KEY.CARD_KEY.title and gui.cards.PANEL_KEY.CARD_KEY.icon where
  * PANEL_KEY is the key passed to {@link #ButtonBarCardPanel(String)} and CARD_KEY is the one passed
  * to {@link #addCard(String, JComponent)}.
- * 
+ *
  * @author Florian Ziegler, David Arnu, Nils Woehler
- * 
+ *
  */
 public class ButtonBarCardPanel extends JPanel {
 
@@ -90,7 +89,7 @@ public class ButtonBarCardPanel extends JPanel {
 
 	/**
 	 * Constructor that creates a {@link ButtonBarCardPanel} with cards shown.
-	 * 
+	 *
 	 * @param showCards
 	 *            if set to <code>false</code> the cards are not shown and the user cannot select
 	 *            the shown card manually
@@ -113,7 +112,7 @@ public class ButtonBarCardPanel extends JPanel {
 			}
 		};
 
-		navigation.setOpaque(false);
+		navigation.setOpaque(true);
 		DefaultListSelectionModel listSelectionModel = new DefaultListSelectionModel() {
 
 			private static final long serialVersionUID = 1L;
@@ -124,11 +123,12 @@ public class ButtonBarCardPanel extends JPanel {
 				return;
 			}
 		};
+		ListHoverHelper.install(navigation);
 		navigation.setSelectionModel(listSelectionModel);
 		navigation.setBounds(5, 5, navigation.getWidth(), navigation.getHeight());
-		// increase gap between upper border and the first card
-		navigation.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-		navigation.setSelectionForeground(Color.WHITE);
+		navigation.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Color.LIGHT_GRAY));
+		navigation.setFixedCellHeight(100);
+		navigation.setBackground(Colors.PANEL_BACKGROUND);
 		navigation.setSelectionForeground(Color.BLACK);
 		navigation.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		navigation.addListSelectionListener(new ListSelectionListener() {
@@ -169,7 +169,7 @@ public class ButtonBarCardPanel extends JPanel {
 
 	/**
 	 * Adds a card to the {@link ButtonBarCardPanel}
-	 * 
+	 *
 	 * @param card
 	 *            the card referring to the component
 	 * @param componentToAdd
@@ -178,7 +178,6 @@ public class ButtonBarCardPanel extends JPanel {
 	public void addCard(Card card, Component componentToAdd) {
 		JPanel borderPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.insets = new Insets(0, 10, 0, 0);
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.weightx = 1.0;
 		gbc.weighty = 1.0;
@@ -199,7 +198,7 @@ public class ButtonBarCardPanel extends JPanel {
 	}
 
 	/**
-	 * 
+	 *
 	 * @return the component of this ButtonBarCardPanel that is currently shown
 	 */
 	public Component getShownComponent() {

@@ -1,37 +1,35 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.table;
+
+import java.util.logging.Level;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
-
-import java.util.logging.Level;
 
 
 /**
  * Factory class for DataRow objects. One factory should be used for one ExampleTable only. This
  * class is necessary to customize implementations of DataRowReader to create DataRows of arbitrary
  * type.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer
  */
 public class DataRowFactory {
@@ -76,6 +74,8 @@ public class DataRowFactory {
 
 	public static final int TYPE_SPECIAL = -1;
 
+	public static final char POINT_AS_DECIMAL_CHARACTER = '.';
+
 	/**
 	 * The type can be one out of TYPE_DOUBLE_ARRAY, TYPE_FLOAT_ARRAY, TYPE_LONG_ARRAY,
 	 * TYPE_INT_ARRAY, TYPE_SHORT_ARRAY, TYPE_BYTE_ARRAY, TYPE_BOOLEAN_ARRAY,
@@ -86,7 +86,7 @@ public class DataRowFactory {
 	private int type;
 
 	/** The decimal point character. */
-	private char decimalPointCharacter = '.';
+	private char decimalPointCharacter = POINT_AS_DECIMAL_CHARACTER;
 
 	/**
 	 * @param type
@@ -99,7 +99,7 @@ public class DataRowFactory {
 	 */
 	@Deprecated
 	public DataRowFactory(int type) {
-		this(type, '.');
+		this(type, POINT_AS_DECIMAL_CHARACTER);
 	}
 
 	/**
@@ -113,7 +113,7 @@ public class DataRowFactory {
 	 *            the letter for decimal points, usually '.'
 	 */
 	public DataRowFactory(int type, char decimalPointCharacter) {
-		if ((type < FIRST_TYPE_INDEX) || (type > LAST_TYPE_INDEX)) {
+		if (type < FIRST_TYPE_INDEX || type > LAST_TYPE_INDEX) {
 			throw new IllegalArgumentException("Illegal data row type: " + type);
 		}
 		this.type = type;
@@ -178,7 +178,7 @@ public class DataRowFactory {
 	 * Creates a data row from an array of Strings. If the corresponding attribute is nominal, the
 	 * string is mapped to its index, otherwise it is parsed using
 	 * <code>Double.parseDouble(String)</code> .
-	 * 
+	 *
 	 * @see FileDataRowReader
 	 */
 	public DataRow create(String[] strings, Attribute[] attributes) {
@@ -187,7 +187,7 @@ public class DataRowFactory {
 			if (strings[i] != null) {
 				strings[i] = strings[i].trim();
 			}
-			if ((strings[i] != null) && (strings[i].length() > 0) && (!strings[i].equals("?"))) {
+			if (strings[i] != null && strings[i].length() > 0 && !strings[i].equals("?")) {
 				if (attributes[i].isNominal()) {
 					String unescaped = Tools.unescape(strings[i]);
 					dataRow.set(attributes[i], attributes[i].getMapping().mapString(unescaped));
@@ -206,7 +206,7 @@ public class DataRowFactory {
 	 * Creates a data row from an Object array. The classes of the object must match the value type
 	 * of the corresponding {@link Attribute}. If the corresponding attribute is nominal,
 	 * <code>data[i]</code> will be cast to String. If it is numerical, it will be cast to Number.
-	 * 
+	 *
 	 * @throws ClassCastException
 	 *             if data class does not match attribute type
 	 * @see DatabaseDataRowReader
@@ -232,7 +232,7 @@ public class DataRowFactory {
 	 * Creates a data row from an Object array. The classes of the object must match the value type
 	 * of the corresponding {@link Attribute}. If the corresponding attribute is nominal,
 	 * <code>data[i]</code> will be cast to String. If it is numerical, it will be cast to Number.
-	 * 
+	 *
 	 * @throws ClassCastException
 	 *             if data class does not match attribute type
 	 * @see DatabaseDataRowReader
@@ -242,7 +242,7 @@ public class DataRowFactory {
 		for (int i = 0; i < data.length; i++) {
 			if (data[i] != null) {
 				if (attributes[i].isNominal()) {
-					dataRow.set(attributes[i], attributes[i].getMapping().mapString((String.valueOf(data[i])).trim()));
+					dataRow.set(attributes[i], attributes[i].getMapping().mapString(String.valueOf(data[i]).trim()));
 				} else {
 					dataRow.set(attributes[i], ((Number) data[i]).doubleValue());
 				}
@@ -266,7 +266,7 @@ public class DataRowFactory {
 			return Double.NaN;
 		}
 		try {
-			str = str.replace(decimalPointCharacter, '.');
+			str = str.replace(decimalPointCharacter, POINT_AS_DECIMAL_CHARACTER);
 			return Double.parseDouble(str);
 		} catch (NumberFormatException e) {
 			// LogService.getGlobal().log("DataRowFactory.string2Double(String): '" + str +

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,8 +38,12 @@ import com.rapidminer.tools.Tools;
  * interpreted.
  *
  * @author Simon Fischer
+ * @deprecated replaced by either {@link LinkLocalButton} for actions that only trigger
+ *             in-application actions or by {@link LinkRemoteButton} for actions that open a website
+ *             in the browser.
  *
  */
+@Deprecated
 public class LinkButton extends ExtendedHTMLJEditorPane {
 
 	private static final long serialVersionUID = 1L;
@@ -76,7 +80,8 @@ public class LinkButton extends ExtendedHTMLJEditorPane {
 			@Override
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if (e.getEventType() == EventType.ACTIVATED) {
-					action.actionPerformed(new ActionEvent(LinkButton.this, ActionEvent.ACTION_PERFORMED, e.getDescription()));
+					action.actionPerformed(
+							new ActionEvent(LinkButton.this, ActionEvent.ACTION_PERFORMED, e.getDescription()));
 				}
 			}
 		};
@@ -120,7 +125,7 @@ public class LinkButton extends ExtendedHTMLJEditorPane {
 					}
 				}
 			}
-			html = "<a href=\"#\"" + (normalFont ? " style=\"text-decoration:none;color:#222244k;\"" : "") + ">" + html
+			html = "<a href=\"#\"" + (normalFont ? " style=\"text-decoration:none;color:#222244;\"" : "") + ">" + html
 					+ "</a>";
 		}
 		return html;

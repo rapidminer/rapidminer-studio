@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -26,9 +24,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -41,19 +36,16 @@ import com.rapidminer.tools.I18N;
 
 /**
  * UI component which displays the name, dependencies, progress and a cancel button.
- * 
+ *
  * @author Marco Boeck
- * 
+ *
  */
 class ProgressThreadDisplay extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
 	/** dimension of the cancel button */
-	private static final Dimension CANCEL_DIMENSION = new Dimension(30, 30);
-
-	/** bg color when hovering over this component */
-	private static final Color HOVER_BACKGROUND = new Color(220, 220, 220);
+	private static final Dimension CANCEL_DIMENSION = new Dimension(60, 30);
 
 	/** the {@link ProgressThread} behind this view */
 	private ProgressThread pg;
@@ -61,39 +53,16 @@ class ProgressThreadDisplay extends JPanel {
 	/** the progress bar */
 	private JProgressBar progressBar;
 
-	/** listener for hover effect */
-	private MouseListener hoverMouseAdapter;
-
 	private boolean isQueued;
 
 	/**
 	 * Creates a new {@link ProgressThreadDisplay} instance for the {@link ProgressThread} .
-	 * 
+	 *
 	 * @param pg
 	 */
 	public ProgressThreadDisplay(ProgressThread pg, boolean isQueued) {
 		this.pg = pg;
 		this.isQueued = isQueued;
-
-		// highlight currently hovered panel
-		hoverMouseAdapter = new MouseAdapter() {
-
-			@Override
-			public void mouseExited(final MouseEvent e) {
-				if (SwingTools.isMouseEventExitedToChildComponents(ProgressThreadDisplay.this, e)) {
-					// we are still hovering over the panel, just a child component
-					return;
-				}
-				ProgressThreadDisplay.this.setBackground(Color.WHITE);
-				repaint();
-			}
-
-			@Override
-			public void mouseEntered(final MouseEvent e) {
-				ProgressThreadDisplay.this.setBackground(HOVER_BACKGROUND);
-				repaint();
-			}
-		};
 
 		initGUI();
 	}
@@ -119,23 +88,22 @@ class ProgressThreadDisplay extends JPanel {
 		gbc.gridy += 1;
 		gbc.gridwidth = 1;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.insets = new Insets(5, 15, 0, 5);
+		gbc.insets = new Insets(0, 15, 0, 5);
 		if (pg.isIndeterminate()) {
 			progressBar = new JProgressBar();
-			progressBar.setStringPainted(true);
 			progressBar.setIndeterminate(true);
 		} else {
 			progressBar = new JProgressBar(0, pg.getDisplay().getTotal());
 			progressBar.setValue(pg.getDisplay().getCompleted());
 		}
-
+		progressBar.setOpaque(false);
 		add(progressBar, gbc);
 
 		gbc.gridx += 1;
 		gbc.weightx = 0.0;
 		gbc.weighty = 0.0;
 		gbc.fill = GridBagConstraints.NONE;
-		gbc.insets = new Insets(5, 5, 0, 15);
+		gbc.insets = new Insets(0, 5, 0, 15);
 
 		JButton cancelButton = new JButton(new ResourceAction(true, "stop_progress") {
 
@@ -154,13 +122,12 @@ class ProgressThreadDisplay extends JPanel {
 
 		setBackground(Color.WHITE);
 		setOpaque(true);
-		addMouseListener(hoverMouseAdapter);
 	}
 
 	/**
 	 * Creates a HTML formatted label which contains the name, ID and any dependencies of a
 	 * {@link ProgressThread}.
-	 * 
+	 *
 	 * @return
 	 */
 	private String createDisplayLabel() {
@@ -207,7 +174,7 @@ class ProgressThreadDisplay extends JPanel {
 
 	/**
 	 * Sets the progress message.
-	 * 
+	 *
 	 * @param message
 	 */
 	public void setMessage(String message) {

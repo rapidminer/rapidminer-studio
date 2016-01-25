@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -20,13 +20,17 @@ package com.rapidminer.gui.tools.dialogs.wizards.dataimport;
 
 import java.util.List;
 
+import com.rapidminer.core.io.data.source.DataSourceFactoryRegistry;
+
 
 /**
  * Registry for {@link DataImportWizardFactory}s. Factories cannot be removed once they are added.
  *
  * @author Michael Knopf
  * @since 6.5
+ * @deprecated use {@link DataSourceFactoryRegistry} instead
  */
+@Deprecated
 public interface DataImportWizardRegistry {
 
 	/**

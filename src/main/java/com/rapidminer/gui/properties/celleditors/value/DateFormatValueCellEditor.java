@@ -1,36 +1,27 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties.celleditors.value;
-
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.parameter.ParameterTypeAttribute;
-import com.rapidminer.parameter.ParameterTypeDateFormat;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -45,12 +36,20 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.parameter.ParameterTypeAttribute;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
+
 
 /**
  * Value cell editor for date formats. The user can select among a predefined set of values and copy
  * nominal values retrieved from an example set at an input port to the combo box as an editing
  * help.
- * 
+ *
  * @author Simon Fischer
  */
 public class DateFormatValueCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
@@ -68,6 +67,7 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		c.weightx = 1;
+		c.weighty = 1;
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		formatCombo = new JComboBox(type.getValues());
 		formatCombo.setEditable(true);
@@ -88,8 +88,8 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 							String selectedAttributeName = type.getInputPort().getPorts().getOwner().getOperator()
 									.getParameters().getParameterOrNull(attributeParameterType.getKey());
 							AttributeMetaData selectedAttribute = emd.getAttributeByName(selectedAttributeName);
-							if (selectedAttribute != null && (selectedAttribute.isNominal())
-									&& (selectedAttribute.getValueSet() != null)) {
+							if (selectedAttribute != null && selectedAttribute.isNominal()
+									&& selectedAttribute.getValueSet() != null) {
 								boolean isNotMenuEmpty = false;
 								for (final String value : selectedAttribute.getValueSet()) {
 									menu.add(new JMenuItem(new AbstractAction(value) {
@@ -117,7 +117,7 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 								int j = 0;
 								boolean isNotMenuEmpty = false;
 								for (final AttributeMetaData amd : emd.getAllAttributes()) {
-									if (amd.isNominal() && (amd.getValueSet() != null)) {
+									if (amd.isNominal() && amd.getValueSet() != null) {
 										JMenu subMenu = new JMenu(amd.getName());
 										menu.add(subMenu);
 										int i = 0;
@@ -169,6 +169,7 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 		});
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.weightx = 0;
+		c.insets = new Insets(0, 5, 0, 0);
 		selectButton.setText(null);
 		panel.add(selectButton, c);
 

@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.rapidminer.MacroHandler;
 import com.rapidminer.operator.OperatorChain;
@@ -38,14 +40,10 @@ import com.rapidminer.parameter.ParameterTypeRegexp;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 /**
  * This operator is the base class for operators which loop over a file structure.
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa, Marius Helf
  */
 public abstract class AbstractFileIterator extends OperatorChain {
@@ -165,7 +163,7 @@ public abstract class AbstractFileIterator extends OperatorChain {
 					matchedName = parentPath;
 					break;
 				default:
-					assert (false);	// illegal parameter value for filtered string
+					assert false;	// illegal parameter value for filtered string
 			}
 			Matcher matcher = filter.matcher(matchedName);
 			return matcher.matches();
@@ -214,5 +212,20 @@ public abstract class AbstractFileIterator extends OperatorChain {
 				"If checked, the operator will iterate over subdirectories in the given directory and set their path and name macros.",
 				false, false));
 		return types;
+	}
+
+	protected class EntryContainer {
+
+		public String fileName;
+		public String fullPath;
+		public String parentPath;
+		public FileObject fileObject;
+
+		public EntryContainer(String file, String full, String parent, FileObject object) {
+			this.fileName = file;
+			this.fullPath = full;
+			this.parentPath = parent;
+			this.fileObject = object;
+		}
 	}
 }

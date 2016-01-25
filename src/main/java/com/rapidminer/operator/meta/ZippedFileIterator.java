@@ -1,22 +1,20 @@
 /**
- * Copyright (C) 2001-2015 by RapidMiner and the contributors
+ * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
- *      http://rapidminer.com
+ * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.meta;
 
@@ -48,9 +46,9 @@ import com.rapidminer.parameter.conditions.PortConnectedCondition;
 
 /**
  * This operator loops over the entries of a zip file.
- * 
+ *
  * @author Marius Helf
- * 
+ *
  */
 public class ZippedFileIterator extends AbstractFileIterator {
 
@@ -102,7 +100,9 @@ public class ZippedFileIterator extends AbstractFileIterator {
 
 		String rootDirectory = getParameterAsString(PARAMETER_INTERNAL_DIRECTORY);
 
+		// init Operator progress and store the entries which meet all criteria
 		Enumeration<? extends ZipEntry> entries = zipFile.entries();
+		LinkedList<EntryContainer> entriesOfIntrest = new LinkedList<>();
 		while (entries.hasMoreElements()) {
 			ZipEntry currentEntry = entries.nextElement();
 			String fullPath = currentEntry.getName();
@@ -125,10 +125,17 @@ public class ZippedFileIterator extends AbstractFileIterator {
 								&& parentPath.equals(rootDirectory))) {
 					if (matchesFilter(filter, fileName, fullPath, parentPath)) {
 						FileObject fileObject = new ZipEntryObject(currentEntry, zipFile);
-						doWorkForSingleIterationStep(fileName, fullPath, parentPath, fileObject);
+						entriesOfIntrest.add(new EntryContainer(fileName, fullPath, parentPath, fileObject));
 					}
 				}
 			}
+		}
+		getProgress().setTotal(entriesOfIntrest.size());
+
+		// do actual work
+		for (EntryContainer entry : entriesOfIntrest) {
+			doWorkForSingleIterationStep(entry.fileName, entry.fullPath, entry.parentPath, entry.fileObject);
+			getProgress().step();
 		}
 	}
 
@@ -159,4 +166,5 @@ public class ZippedFileIterator extends AbstractFileIterator {
 		types.addAll(super.getParameterTypes());
 		return types;
 	}
+
 }
