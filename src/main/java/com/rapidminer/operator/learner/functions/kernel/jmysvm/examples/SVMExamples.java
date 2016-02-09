@@ -102,7 +102,7 @@ public class SVMExamples implements Serializable {
 	/**
 	 * This example will be once constructed for every thread and delivered with the asked values.
 	 */
-	private final ThreadLocal<SVMExample> x = new ThreadLocal<SVMExample>() {
+	private transient ThreadLocal<SVMExample> x = new ThreadLocal<SVMExample>() {
 
 		@Override
 		protected SVMExample initialValue() {
@@ -513,4 +513,20 @@ public class SVMExamples implements Serializable {
 		}
 		return result.toString();
 	}
-};
+
+	/**
+	 * Do default deserialization and initialize transient field x.
+	 */
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+		in.defaultReadObject();
+		x = new ThreadLocal<SVMExample>() {
+
+			@Override
+			protected SVMExample initialValue() {
+				return new SVMExample();
+			}
+
+		};
+	}
+
+}

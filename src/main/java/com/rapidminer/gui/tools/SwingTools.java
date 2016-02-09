@@ -30,6 +30,7 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
@@ -337,22 +338,31 @@ public class SwingTools {
 		}
 	}
 
+	/**
+	 * Tries to determine whether we are on an Apple Retina display.
+	 *
+	 * @return {@code true} iff we are on OS X and a scaling factor is set
+	 */
 	private static boolean isRetina() {
 		if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX) {
-			GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			final GraphicsDevice device = env.getDefaultScreenDevice();
-
 			try {
+				// The lines below might throw a HeadlessException. Do not move outside of try
+				// block!
+				GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+				final GraphicsDevice device = env.getDefaultScreenDevice();
 				Field field = device.getClass().getDeclaredField("scale");
 
 				if (field != null) {
 					field.setAccessible(true);
 					Object scale = field.get(device);
-
+					// On OS X the scale field contains the scaling factor of the device (e.g., 2
+					// for '@2x' Retina devices).
 					if (scale instanceof Integer && ((Integer) scale).intValue() >= 2) {
 						return true;
 					}
 				}
+			} catch (HeadlessException headless) {
+				// we do not care about scaling factors on headless systems
 			} catch (Exception e) {
 				LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.tools.SwingTools.retina_detection_error", e);
 			}
@@ -1729,7 +1739,7 @@ public class SwingTools {
 
 	/**
 	 * Returns the hex value of this color to use in html with starting #
-	 * 
+	 *
 	 * @param color
 	 *            the color that should be converted to a hex string representation
 	 * @return the hex value of this color to use in html

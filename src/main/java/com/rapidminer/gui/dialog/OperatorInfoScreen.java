@@ -50,7 +50,6 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.learner.CapabilityProvider;
-import com.rapidminer.operator.learner.Learner;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 
@@ -103,7 +102,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 			overviewPanel.add(deprecatedPanel, c);
 		}
 
-		if (operator instanceof Learner) {
+		if (operator instanceof CapabilityProvider) {
 			JPanel learnerPanel = new JPanel(new BorderLayout());
 			JLabel label = new JLabel(SwingTools.createIcon("24/briefcase2.png"));
 			label.setHorizontalTextPosition(SwingConstants.CENTER);

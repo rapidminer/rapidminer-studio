@@ -11,5 +11,7 @@ ENTRY Purchases.ioo
 ENTRY Ripley-Set.ioo
 ENTRY Sonar.ioo
 ENTRY Titanic.ioo
+ENTRY Titanic Training.ioo
+ENTRY Titanic Unlabeled.ioo
 ENTRY Transactions.ioo
 ENTRY Weighting.ioo

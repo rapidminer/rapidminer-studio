@@ -52,7 +52,7 @@ public class AbstractLinkButton extends ExtendedHTMLJEditorPane {
 
 	private final static String TEMPLATE_HTML_BOLD = "<a style=\"font-weight:bold;\" href=\"#\">%s</a>";
 
-	private final static String TEMPLATE_ICON_HTML = "<table cellpadding=\"1px\"><tr><td><img src=\"%s\"></td><td><a href=\"#\">%s</a></td></tr></table>";
+	private final static String TEMPLATE_ICON_HTML = "<table cellpadding=\"1px\"><tr><td><img width=\"16\" height=\"16\" src=\"%s\"></td><td><a href=\"#\">%s</a></td></tr></table>";
 
 	/**
 	 * if the {@link Action} contains this property and it is set to {@code true}, the link will be
