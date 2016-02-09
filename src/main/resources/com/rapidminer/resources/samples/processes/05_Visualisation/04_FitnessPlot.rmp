@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="random_seed" value="1977"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum"/>
+        <parameter key="number_examples" value="150"/>
+        <parameter key="number_of_attributes" value="4"/>
+        <parameter key="attributes_lower_bound" value="0.0"/>
+      </operator>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+        <parameter key="random_attributes" value="8"/>
+        <parameter key="label_noise" value="0.0"/>
+        <list key="noise"/>
+        <parameter key="linear_factor" value="10.0"/>
+      </operator>
+      <operator activated="true" class="optimize_selection_evolutionary" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="GeneticAlgorithm" width="90" x="313" y="30">
+        <parameter key="population_size" value="2"/>
+        <parameter key="maximum_number_of_generations" value="10"/>
+        <parameter key="selection_scheme" value="Boltzmann"/>
+        <parameter key="p_crossover" value="0.9"/>
+        <process expanded="true">
+          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
+            <parameter key="number_of_validations" value="3"/>
+            <parameter key="sampling_type" value="shuffled sampling"/>
+            <process expanded="true">
+              <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="45" y="30"/>
+              <connect from_port="training" to_op="NearestNeighbors" to_port="training set"/>
+              <connect from_op="NearestNeighbors" from_port="model" to_port="model"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RegressionPerformance" width="90" x="180" y="30">
+                <parameter key="main_criterion" value="root_relative_squared_error"/>
+                <parameter key="root_relative_squared_error" value="true"/>
+              </operator>
+              <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+              <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="RegressionPerformance" to_port="labelled data"/>
+              <connect from_op="RegressionPerformance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="179" y="30">
+            <list key="log">
+              <parameter key="generation" value="operator.GeneticAlgorithm.value.generation"/>
+              <parameter key="current_best_performance" value="operator.GeneticAlgorithm.value.performance"/>
+              <parameter key="global_best_performance" value="operator.GeneticAlgorithm.value.best"/>
+            </list>
+          </operator>
+          <connect from_port="example set" to_op="XValidation" to_port="training"/>
+          <connect from_op="XValidation" from_port="averagable 1" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="ProcessLog" from_port="through 1" to_port="performance"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_op="GeneticAlgorithm" to_port="example set in"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="235" resized="true" width="447" x="34" y="138">This process is basically the same as one of the feature selection processes discussed before. This time, we want to discuss the ProcessLog operator. This operator collects some values each time is applied. In this process, the operator is invoked once for each generation of the evolutionary algorithm. Please have a look at the parameter list of the ProcessLog operator. You can see which values are collected, in this case the current generation and the current performance values. &lt;br/&gt;&lt;br/&gt;Start the process and change to the result tab. Even while the process is running the results are plotted online. Just select the number of generations for the x axis and one (or more) values from the selection list. The result can also be written into a data or graphics file.</description>
+    </process>
+  </operator>
+</process>

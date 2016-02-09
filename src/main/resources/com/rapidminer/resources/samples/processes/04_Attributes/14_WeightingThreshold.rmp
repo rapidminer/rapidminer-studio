@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Weighting"/>
+      </operator>
+      <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="InitialWeights" width="90" x="179" y="30">
+        <parameter key="convergence_epsilon" value="0.0010"/>
+        <parameter key="scale" value="false"/>
+      </operator>
+      <operator activated="true" class="optimize_parameters_grid" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="GridParameterOptimization" width="90" x="380" y="30">
+        <list key="parameters">
+          <parameter key="Selection.weight" value="0.5,0.25,0.2,0.0"/>
+        </list>
+        <process expanded="true">
+          <operator activated="true" class="select_by_weights" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Selection" width="90" x="45" y="30">
+            <parameter key="weight" value="0.0"/>
+          </operator>
+          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="130" name="XValidation" width="90" x="179" y="30">
+            <process expanded="true">
+              <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="JMySVMLearner" width="90" x="179" y="30">
+                <parameter key="convergence_epsilon" value="0.0010"/>
+              </operator>
+              <connect from_port="training" to_op="JMySVMLearner" to_port="training set"/>
+              <connect from_op="JMySVMLearner" from_port="model" to_port="model"/>
+              <connect from_op="JMySVMLearner" from_port="weights" to_port="through 1"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+              <portSpacing port="sink_through 2" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ClassificationPerformance" width="90" x="211" y="30">
+                <parameter key="accuracy" value="false"/>
+                <parameter key="classification_error" value="true"/>
+                <list key="class_weights"/>
+              </operator>
+              <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+              <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_port="through 1" to_port="averagable 2"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
+              <connect from_op="ClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="source_through 2" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+              <portSpacing port="sink_averagable 3" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="input 1" to_op="Selection" to_port="example set input"/>
+          <connect from_port="input 2" to_op="Selection" to_port="weights"/>
+          <connect from_op="Selection" from_port="example set output" to_op="XValidation" to_port="training"/>
+          <connect from_op="XValidation" from_port="averagable 1" to_port="performance"/>
+          <portSpacing port="source_input 1" spacing="0"/>
+          <portSpacing port="source_input 2" spacing="0"/>
+          <portSpacing port="source_input 3" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+          <portSpacing port="sink_result 1" spacing="0"/>
+          <portSpacing port="sink_result 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="InitialWeights" to_port="training set"/>
+      <connect from_op="InitialWeights" from_port="weights" to_op="GridParameterOptimization" to_port="input 2"/>
+      <connect from_op="InitialWeights" from_port="exampleSet" to_op="GridParameterOptimization" to_port="input 1"/>
+      <connect from_op="GridParameterOptimization" from_port="performance" to_port="result 1"/>
+      <connect from_op="GridParameterOptimization" from_port="parameter" to_port="result 2"/>
+      <connect from_op="GridParameterOptimization" from_port="result 1" to_port="result 3"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="156" resized="false" width="400" x="40" y="170">This process tries to find the best selection threshold for the weights provided by a SVM learner. The weights and the example set are given to a parameter optimization. The parameter &amp;quot;weight&amp;quot; of the Selection operator is optimized with a grid search. The performance of this threshold is evaluated with the cross validation building block. Please refer to the meta sample processes for further details regarding the parameter optimization operators.</description>
+    </process>
+  </operator>
+</process>

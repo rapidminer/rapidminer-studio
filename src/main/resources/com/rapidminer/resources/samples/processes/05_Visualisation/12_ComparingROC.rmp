@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Ripley-Set"/>
+      </operator>
+      <operator activated="true" class="compare_rocs" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ROCComparator" width="90" x="179" y="30">
+        <process expanded="true">
+          <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NaiveBayes" width="90" x="112" y="30"/>
+          <operator activated="true" class="rule_induction" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RuleLearner" width="90" x="112" y="120"/>
+          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="112" y="210">
+            <parameter key="confidence" value="0.1"/>
+          </operator>
+          <connect from_port="train 1" to_op="NaiveBayes" to_port="training set"/>
+          <connect from_port="train 2" to_op="RuleLearner" to_port="training set"/>
+          <connect from_port="train 3" to_op="DecisionTree" to_port="training set"/>
+          <connect from_op="NaiveBayes" from_port="model" to_port="model 1"/>
+          <connect from_op="RuleLearner" from_port="model" to_port="model 2"/>
+          <connect from_op="DecisionTree" from_port="model" to_port="model 3"/>
+          <portSpacing port="source_train 1" spacing="0"/>
+          <portSpacing port="source_train 2" spacing="0"/>
+          <portSpacing port="source_train 3" spacing="0"/>
+          <portSpacing port="source_train 4" spacing="0"/>
+          <portSpacing port="sink_model 1" spacing="0"/>
+          <portSpacing port="sink_model 2" spacing="0"/>
+          <portSpacing port="sink_model 3" spacing="0"/>
+          <portSpacing port="sink_model 4" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="ROCComparator" to_port="example set"/>
+      <connect from_op="ROCComparator" from_port="rocComparison" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="48" resized="false" width="400" x="40" y="140">This process shows how several different classifiers could be graphically compared by means of multiple ROC curves.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/chart_bubble.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">ANOVA Matrix</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-ANOVA_Matrix skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Performs an ANOVA significance test for a all numerical attribute based on the groups defined by all other nominal attributes.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator calculates the significance of difference for the values for all numerical attributes depending on the groups defined by all nominal attributes. Please refer to the operator <i>GroupedANOVAOperator</i> for details of the calculation.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, <i>expects:</i> ExampleSet
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>anova</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>significance level</b>:  The significance level for the ANOVA calculation.
+</li>
+<li> <b>only distinct</b>:  Indicates if only rows with distinct values for the aggregation attribute should be used for the calculation of the aggregation function.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

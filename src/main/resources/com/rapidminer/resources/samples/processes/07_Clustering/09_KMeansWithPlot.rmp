@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="loop_parameters" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ParameterIteration" width="90" x="180" y="30">
+        <list key="parameters">
+          <parameter key="KMeans.k" value="2,3,4,5,6,7,8,9,10,11,13"/>
+        </list>
+        <process expanded="true">
+          <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="45" y="30">
+            <parameter key="k" value="13"/>
+          </operator>
+          <operator activated="true" class="cluster_distance_performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Evaluation" width="90" x="179" y="30"/>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ProcessLog" width="90" x="380" y="30">
+            <list key="log">
+              <parameter key="k" value="operator.KMeans.parameter.k"/>
+              <parameter key="DB" value="operator.Evaluation.value.DaviesBouldin"/>
+              <parameter key="W" value="operator.Evaluation.value.avg_within_distance"/>
+            </list>
+          </operator>
+          <connect from_port="input 1" to_op="KMeans" to_port="example set"/>
+          <connect from_op="KMeans" from_port="cluster model" to_op="Evaluation" to_port="cluster model"/>
+          <connect from_op="KMeans" from_port="clustered set" to_op="Evaluation" to_port="example set"/>
+          <connect from_op="Evaluation" from_port="performance" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="Evaluation" from_port="example set" to_op="ProcessLog" to_port="through 2"/>
+          <portSpacing port="source_input 1" spacing="0"/>
+          <portSpacing port="source_input 2" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+          <portSpacing port="sink_result 1" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="ParameterIteration" to_port="input 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+    </process>
+  </operator>
+</process>

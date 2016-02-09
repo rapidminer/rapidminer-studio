@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/table_new.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Fill Data Gaps</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Fill_Data_Gaps skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator fills gaps in the data based on the ID attribute of the data set.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator fills gaps in the data based on the ID attribute of the data set. The ID attribute must either have the value type "integer" or one of the data value types.
+</p>
+<p>
+The operator performs the following steps:
+</p>
+<ol> * The data is sorted according to the ID attribute
+<ul class="ports">
+<li> All occurring distances between consecutive ID values are calculated
+</li>
+<li> The greatest common divisor (GCD) of all distances is calculated
+</li>
+<li> All rows which would have an ID value which is a multiple of the GCD but are missing are added to the data set
+</li>
+</ul>
+</ol> 
+<p>
+Please note that all values of attributes beside the ID attribute will have a missing value which often must be replaced as a next step.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul>
+<p>, <i>expects:</i> ExampleSet
+
+</p><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>use gcd for step size</b>:  Indicates if the greatest common divisor should be calculated and used as the underlying distance between all data points.
+</li>
+<li> <b>step size</b>:  The used step size for filling the gaps (only used if GCD calculation is not checked).
+</li>
+<li> <b>start</b>:  If this parameter is defined gaps at the beginning (if they occur) before the first data point will also be filled.
+</li>
+<li> <b>end</b>:  If this parameter is defined gaps at the end (if they occur) after the last data point will also be filled.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

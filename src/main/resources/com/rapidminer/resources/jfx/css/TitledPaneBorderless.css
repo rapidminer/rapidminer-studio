@@ -1,0 +1,7 @@
+.titled-pane > *.content {
+	-fx-border-width: 0 0 0 0;
+}
+
+.titled-pane .title {
+	-fx-background-insets: -1 0 -1 0, 0;
+}

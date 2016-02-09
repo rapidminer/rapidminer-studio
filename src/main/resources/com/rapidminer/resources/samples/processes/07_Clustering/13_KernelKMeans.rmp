@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Generate Data" width="90" x="45" y="30">
+        <parameter key="target_function" value="three ring clusters"/>
+        <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="k_means_kernel" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KernelKMeans" width="90" x="179" y="30">
+        <parameter key="k" value="4"/>
+        <parameter key="kernel_gamma" value="0.4"/>
+      </operator>
+      <connect from_op="Generate Data" from_port="output" to_op="KernelKMeans" to_port="example set"/>
+      <connect from_op="KernelKMeans" from_port="cluster model" to_port="result 2"/>
+      <connect from_op="KernelKMeans" from_port="clustered set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+    </process>
+  </operator>
+</process>

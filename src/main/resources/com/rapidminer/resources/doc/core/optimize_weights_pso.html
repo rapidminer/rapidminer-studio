@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/sort_descending.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Optimize Weights (PSO)</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Optimize_Weights_PSO skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Weight the features with a particle swarm optimization approach.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>This operator performs the weighting of features with a particle swarm approach.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet
+</li>
+<li> <b>input 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>weights</b>:
+</li>
+<li> <b>example set</b>:
+</li>
+<li> <b>performance</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>normalize weights</b>:  Activates the normalization of all weights.
+</li>
+<li> <b>population size</b>:  Number of individuals per generation.
+</li>
+<li> <b>maximum number of generations</b>:  Number of generations after which to terminate the algorithm.
+</li>
+<li> <b>use early stopping</b>:  Enables early stopping. If unchecked, always the maximum number of generations is performed.
+</li>
+<li> <b>generations without improval</b>:  Stop criterion: Stop after n generations without improval of the performance.
+</li>
+<li> <b>inertia weight</b>:  The (initial) weight for the old weighting.
+</li>
+<li> <b>local best weight</b>:  The weight for the individual's best position during run.
+</li>
+<li> <b>global best weight</b>:  The weight for the population's best position during run.
+</li>
+<li> <b>dynamic inertia weight</b>:  If set to true the inertia weight is improved during run.
+</li>
+<li> <b>min weight</b>:  The lower bound for the weights.
+</li>
+<li> <b>max weight</b>:  The upper bound for the weights.
+</li>
+<li> <b>use local random seed</b>:  Indicates if a local random seed should be used.
+</li>
+<li> <b>local random seed</b>:  Specifies the local random seed
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>
