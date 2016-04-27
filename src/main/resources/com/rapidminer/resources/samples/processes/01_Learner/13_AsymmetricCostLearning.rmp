@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="status"/>
+    <parameter key="random_seed" value="1903"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="TrainingSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="polynomial classification"/>
+        <parameter key="number_of_attributes" value="20"/>
+      </operator>
+      <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="180" y="30">
+        <parameter key="k" value="10"/>
+      </operator>
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="TestSetGenerator" width="90" x="179" y="120">
+        <parameter key="target_function" value="polynomial classification"/>
+        <parameter key="number_of_attributes" value="20"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="TestApplyModel" width="90" x="313" y="30">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="find_threshold" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ThresholdFinder" width="90" x="447" y="30">
+        <parameter key="misclassification_costs_second" value="2.0"/>
+      </operator>
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ApplySetGenerator" width="90" x="179" y="210">
+        <parameter key="target_function" value="polynomial classification"/>
+        <parameter key="number_examples" value="200"/>
+        <parameter key="number_of_attributes" value="20"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Apply Model" width="90" x="447" y="165">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="apply_threshold" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Apply Threshold" width="90" x="581" y="165"/>
+      <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="715" y="165"/>
+      <connect from_op="TrainingSetGenerator" from_port="output" to_op="NearestNeighbors" to_port="training set"/>
+      <connect from_op="NearestNeighbors" from_port="model" to_op="TestApplyModel" to_port="model"/>
+      <connect from_op="TestSetGenerator" from_port="output" to_op="TestApplyModel" to_port="unlabelled data"/>
+      <connect from_op="TestApplyModel" from_port="labelled data" to_op="ThresholdFinder" to_port="example set"/>
+      <connect from_op="TestApplyModel" from_port="model" to_op="Apply Model" to_port="model"/>
+      <connect from_op="ThresholdFinder" from_port="threshold" to_op="Apply Threshold" to_port="threshold"/>
+      <connect from_op="ApplySetGenerator" from_port="output" to_op="Apply Model" to_port="unlabelled data"/>
+      <connect from_op="Apply Model" from_port="labelled data" to_op="Apply Threshold" to_port="example set"/>
+      <connect from_op="Apply Threshold" from_port="example set" to_op="Performance" to_port="labelled data"/>
+      <connect from_op="Performance" from_port="performance" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="144"/>
+      <portSpacing port="sink_result 2" spacing="36"/>
+      <description align="left" color="yellow" colored="false" height="200" resized="true" width="779" x="38" y="310">This process demonstrates how a threshold can be obtained from a soft classifier and applied to an independent test set. &lt;ol&gt; &lt;li&gt; The learner used in this process makes soft predictions instead of crisp classifications. The prediction confidences delivered by all learners in RapidMiner which are able to handle nominal labels (classification) will be used as soft predictions. &lt;/li&gt; &lt;li&gt; The ThresholdFinder is used to determine the best threshold with respect to class weights. In this case, a wrong classification of the first class (negative) will cause costs five times bigger than the other error. &lt;/li&gt; &lt;li&gt; Please note that a ModelApplier must be performed on the test set before a threshold can be found. Since this model must be applied again later, the model applier keeps the input model &lt;/li&gt; &lt;li&gt; The last steps apply the model and the threshold on the data set at hand. &lt;/li&gt; &lt;/ol&gt;</description>
+    </process>
+  </operator>
+</process>

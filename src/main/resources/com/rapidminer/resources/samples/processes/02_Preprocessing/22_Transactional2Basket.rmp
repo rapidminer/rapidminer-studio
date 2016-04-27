@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Market-Data"/>
+      </operator>
+      <operator activated="true" class="generate_id" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="IdTagging" width="90" x="179" y="30"/>
+      <operator activated="true" class="set_role" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="IdToRegular" width="90" x="313" y="30">
+        <parameter key="attribute_name" value="id"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" breakpoints="after" class="pivot" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Example2AttributePivoting" width="90" x="450" y="30">
+        <parameter key="group_attribute" value="TID"/>
+        <parameter key="index_attribute" value="ITEM"/>
+      </operator>
+      <operator activated="true" class="numerical_to_polynominal" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Numerical2Polynominal" width="90" x="179" y="210"/>
+      <operator activated="true" class="work_on_subset" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeSubsetPreprocessing" width="90" x="313" y="210">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="regular_expression" value="TID"/>
+        <parameter key="invert_selection" value="true"/>
+        <parameter key="remove_roles" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="map" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Mapping" width="90" x="45" y="30">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="regular_expression" value=".*"/>
+            <list key="value_mappings"/>
+            <parameter key="replace_what" value="?"/>
+            <parameter key="replace_by" value="false"/>
+            <parameter key="add_default_mapping" value="true"/>
+            <parameter key="default_value" value="true"/>
+          </operator>
+          <connect from_port="exampleSet" to_op="Mapping" to_port="example set input"/>
+          <connect from_op="Mapping" from_port="example set output" to_port="example set"/>
+          <portSpacing port="source_exampleSet" spacing="0"/>
+          <portSpacing port="sink_example set" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="fp_growth" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FPGrowth" width="90" x="447" y="210">
+        <parameter key="positive_value" value="true"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="IdTagging" to_port="example set input"/>
+      <connect from_op="IdTagging" from_port="example set output" to_op="IdToRegular" to_port="example set input"/>
+      <connect from_op="IdToRegular" from_port="example set output" to_op="Example2AttributePivoting" to_port="example set input"/>
+      <connect from_op="Example2AttributePivoting" from_port="example set output" to_op="Numerical2Polynominal" to_port="example set input"/>
+      <connect from_op="Numerical2Polynominal" from_port="example set output" to_op="AttributeSubsetPreprocessing" to_port="example set"/>
+      <connect from_op="AttributeSubsetPreprocessing" from_port="example set" to_op="FPGrowth" to_port="example set"/>
+      <connect from_op="FPGrowth" from_port="example set" to_port="result 1"/>
+      <connect from_op="FPGrowth" from_port="frequent sets" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="180"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+    </process>
+  </operator>
+</process>

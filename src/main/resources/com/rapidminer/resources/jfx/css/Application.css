@@ -1,0 +1,17 @@
+/*==============GLOBAL STYLES==============*/
+
+/*color the main background*/
+.root {
+	-fx-background: rgb(240, 240, 245);
+}
+
+/*==============TOOLTIP==============*/
+
+/*rectangular shape, color and padding adjustments */
+.tooltip {
+    -fx-background-radius: 0 0 0 0;
+    -fx-background-color: rgb(250,240,225);
+    -fx-text-fill: black;
+    -fx-border-color: rgb(113, 103, 74);
+    -fx-padding: 0 2 0 2;
+}

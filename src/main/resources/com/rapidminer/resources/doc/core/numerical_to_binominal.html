@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/objects_transform.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Numerical to Binominal</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Numerical_to_Binominal skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+Maps all numeric values to 'false' if they are in the specified range (typical: equal 0.0) and to 'true' otherwise.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>Converts all numerical attributes to binary ones. If the value of an attribute is between the specified minimal and maximal value, it becomes <i>false</i>, otherwise <i>true</i>. If the value is missing, the new value will be missing. The default boundaries are both set to 0, thus only 0.0 is mapped to false and all other values are mapped to true.
+
+
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>attribute filter type</b>:  The condition specifies which attributes are selected or affected by this operator.
+</li>
+<li> <b>attribute</b>:  The attribute which should be chosen.
+</li>
+<li> <b>attributes</b>:  The attribute which should be chosen.
+</li>
+<li> <b>regular expression</b>:  A regular expression for the names of the attributes which should be kept.
+</li>
+<li> <b>use except expression</b>:  If enabled, an exception to the specified regular expression might be specified. Attributes of matching this will be filtered out, although matching the first expression.
+</li>
+<li> <b>except regular expression</b>:  A regular expression for the names of the attributes which should be filtered out although matching the above regular expression.
+</li>
+<li> <b>value type</b>:  The value type of the attributes.
+</li>
+<li> <b>use value type exception</b>:  If enabled, an exception to the specified value type might be specified. Attributes of this type will be filtered out, although matching the first specified type.
+</li>
+<li> <b>except value type</b>:  Except this value type.
+</li>
+<li> <b>block type</b>:  The block type of the attributes.
+</li>
+<li> <b>use block type exception</b>:  If enabled, an exception to the specified block type might be specified.
+</li>
+<li> <b>except block type</b>:  Except this block type.
+</li>
+<li> <b>numeric condition</b>:  Parameter string for the condition, e.g. '&gt;= 5'
+</li>
+<li> <b>invert selection</b>:  Indicates if only attributes should be accepted which would normally filtered.
+</li>
+<li> <b>include special attributes</b>:  Indicate if this operator should also be applied on the special attributes. Otherwise they are always kept.
+</li>
+<li> <b>min</b>:  The minimal value which is mapped to false (included).
+</li>
+<li> <b>max</b>:  The maximal value which is mapped to false (included).
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

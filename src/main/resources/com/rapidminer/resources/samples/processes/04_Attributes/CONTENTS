@@ -1,0 +1,16 @@
+ENTRY 01_RemoveCorrelatedFeatures.rmp
+ENTRY 02_RemoveUselessAttributes.rmp
+ENTRY 03_PrincipalComponents.rmp
+ENTRY 04_PrincipalComponentsModel.rmp
+ENTRY 05_GHA_Weights.rmp
+ENTRY 06_FastICA.rmp
+ENTRY 07_PrincipalComponentsWeighting.rmp
+ENTRY 08_AttributeWeightSelection.rmp
+ENTRY 09_ForwardSelection.rmp
+ENTRY 10_EvolutionaryFeatureSelection.rmp
+ENTRY 11_WeightGuidedFeatureSelection.rmp
+ENTRY 12_EvolutionaryWeighting.rmp
+ENTRY 13_SimpleAttributeWeighting.rmp
+ENTRY 14_WeightingThreshold.rmp
+ENTRY 15_YAGGA.rmp
+ENTRY 16_YAGGAResultAttributeSetting.rmp

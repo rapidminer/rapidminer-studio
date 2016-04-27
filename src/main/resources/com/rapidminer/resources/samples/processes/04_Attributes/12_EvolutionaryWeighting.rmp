@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Weighting"/>
+      </operator>
+      <operator activated="true" class="optimize_weights_evolutionary" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="EvolutionaryWeighting" width="90" x="179" y="30">
+        <parameter key="population_size" value="1"/>
+        <parameter key="maximum_number_of_generations" value="10"/>
+        <parameter key="selection_scheme" value="roulette wheel"/>
+        <parameter key="tournament_size" value="0.1"/>
+        <parameter key="dynamic_selection_pressure" value="false"/>
+        <parameter key="keep_best_individual" value="true"/>
+        <parameter key="p_crossover" value="0.5"/>
+        <parameter key="crossover_type" value="shuffle"/>
+        <process expanded="true">
+          <operator activated="true" class="split_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="SimpleValidation" width="90" x="45" y="30">
+            <process expanded="true">
+              <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" name="NearestNeighbors"/>
+              <connect from_port="training" to_op="NearestNeighbors" to_port="training set"/>
+              <connect from_op="NearestNeighbors" from_port="model" to_port="model"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Performance"/>
+              <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+              <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+              <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="246" y="30">
+            <list key="log">
+              <parameter key="Generation" value="operator.EvolutionaryWeighting.value.generation"/>
+              <parameter key="BestPerf" value="operator.EvolutionaryWeighting.value.best"/>
+              <parameter key="Perf" value="operator.EvolutionaryWeighting.value.performance"/>
+            </list>
+          </operator>
+          <connect from_port="example set" to_op="SimpleValidation" to_port="training"/>
+          <connect from_op="SimpleValidation" from_port="averagable 1" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="ProcessLog" from_port="through 1" to_port="performance"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="EvolutionaryWeighting" to_port="example set in"/>
+      <connect from_op="EvolutionaryWeighting" from_port="example set out" to_port="result 1"/>
+      <connect from_op="EvolutionaryWeighting" from_port="weights" to_port="result 2"/>
+      <connect from_op="EvolutionaryWeighting" from_port="performance" to_port="result 3"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="234" resized="true" width="417" x="34" y="139">This is another more complex sample process. It uses an inner validation chain (in this case a simple validation instead of a cross validation) to estimate the performance of a learner with respect to the weights of the attributes. These are adapted with an evolutionary weighting approach. &lt;br/&gt;&lt;br/&gt;As you can see, the overall structure of the process is very similar to the feature selection and generation processes. In all cases an inner validation chain is used as building block for performance estimation. The parent operator (&amp;quot;EvolutionaryWeighting&amp;quot; in this case) performs some operations on the feature set which are evaluated by the child operator (simple validation).</description>
+    </process>
+  </operator>
+</process>

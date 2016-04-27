@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="random_seed" value="1976"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum"/>
+        <parameter key="number_examples" value="200"/>
+        <parameter key="number_of_attributes" value="4"/>
+        <parameter key="attributes_lower_bound" value="0.0"/>
+      </operator>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+        <parameter key="random_attributes" value="8"/>
+        <parameter key="label_noise" value="0.0010"/>
+        <list key="noise"/>
+      </operator>
+      <operator activated="true" class="optimize_selection_evolutionary" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="GeneticAlgorithm" width="90" x="313" y="30">
+        <parameter key="population_size" value="6"/>
+        <parameter key="maximum_number_of_generations" value="12"/>
+        <parameter key="show_stop_dialog" value="true"/>
+        <parameter key="selection_scheme" value="Boltzmann"/>
+        <process expanded="true">
+          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
+            <parameter key="sampling_type" value="shuffled sampling"/>
+            <process expanded="true">
+              <operator activated="true" class="linear_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LinearRegression">
+                <parameter key="feature_selection" value="none"/>
+              </operator>
+              <connect from_port="training" to_op="LinearRegression" to_port="training set"/>
+              <connect from_op="LinearRegression" from_port="model" to_port="model"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="RegressionPerformance">
+                <parameter key="main_criterion" value="root_relative_squared_error"/>
+                <parameter key="root_relative_squared_error" value="true"/>
+              </operator>
+              <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+              <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="RegressionPerformance" to_port="labelled data"/>
+              <connect from_op="RegressionPerformance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="425" y="48">
+            <list key="log">
+              <parameter key="gen" value="operator.GeneticAlgorithm.value.generation"/>
+              <parameter key="perf" value="operator.GeneticAlgorithm.value.performance"/>
+              <parameter key="best" value="operator.GeneticAlgorithm.value.best"/>
+            </list>
+          </operator>
+          <connect from_port="example set" to_op="XValidation" to_port="training"/>
+          <connect from_op="XValidation" from_port="averagable 1" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="ProcessLog" from_port="through 1" to_port="performance"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_performance" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_op="GeneticAlgorithm" to_port="example set in"/>
+      <connect from_op="GeneticAlgorithm" from_port="example set out" to_port="result 1"/>
+      <connect from_op="GeneticAlgorithm" from_port="weights" to_port="result 2"/>
+      <connect from_op="GeneticAlgorithm" from_port="performance" to_port="result 3"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="174" resized="false" width="400" x="40" y="140">This process is very similar to the previous process. Again, a cross validation building block is used as fitness evaluation. In this case, a genetic algortihm for feature selection is used. This process demonstrates two other features of the feature operators of RapidMiner: the stop button which allows the abort of the process if the user was already satisfied and the ProcessLog operator which allows online plotting of current fitness values. Please refer to the visualisation sample processes and the RapidMiner operator manual for further details.</description>
+    </process>
+  </operator>
+</process>

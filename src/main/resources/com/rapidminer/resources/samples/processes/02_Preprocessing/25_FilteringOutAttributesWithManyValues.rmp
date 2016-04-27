@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="OperatorChain" width="90" x="45" y="30">
+        <process expanded="true">
+          <operator activated="true" class="generate_nominal_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="NominalExampleSetGenerator" width="90" x="45" y="30">
+            <parameter key="number_of_attributes" value="10"/>
+            <parameter key="number_of_values" value="20"/>
+            <parameter key="local_random_seed" value="-1"/>
+          </operator>
+          <operator activated="true" class="sample" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Sample" width="90" x="180" y="30">
+            <parameter key="sample_size" value="20"/>
+            <list key="sample_size_per_class"/>
+            <list key="sample_ratio_per_class"/>
+            <list key="sample_probability_per_class"/>
+            <parameter key="local_random_seed" value="-1"/>
+          </operator>
+          <operator activated="true" class="guess_types" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="GuessValueTypes" width="90" x="313" y="30"/>
+          <connect from_op="NominalExampleSetGenerator" from_port="output" to_op="Sample" to_port="example set input"/>
+          <connect from_op="Sample" from_port="example set output" to_op="GuessValueTypes" to_port="example set input"/>
+          <connect from_op="GuessValueTypes" from_port="example set output" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="loop_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FeatureIterator" width="90" x="180" y="30">
+        <parameter key="iteration_macro" value="loop_feature"/>
+        <process expanded="true">
+          <operator activated="true" class="set_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="SingleMacroDefinition" width="90" x="45" y="30">
+            <parameter key="macro" value="value_counter"/>
+            <parameter key="value" value="0"/>
+          </operator>
+          <operator activated="true" class="loop_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ValueIterator" width="90" x="179" y="30">
+            <parameter key="attribute" value="%{loop_feature}"/>
+            <process expanded="true">
+              <operator activated="true" class="generate_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="MacroConstruction" width="90" x="445" y="30">
+                <list key="function_descriptions">
+                  <parameter key="value_counter" value="%{value_counter} + 1"/>
+                </list>
+              </operator>
+              <connect from_port="example set" to_op="MacroConstruction" to_port="through 1"/>
+              <connect from_op="MacroConstruction" from_port="through 1" to_port="out 1"/>
+              <portSpacing port="source_example set" spacing="0"/>
+              <portSpacing port="sink_out 1" spacing="0"/>
+              <portSpacing port="sink_out 2" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="provide_macro_as_log_value" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Macro2Log" width="90" x="313" y="30">
+            <parameter key="macro_name" value="value_counter"/>
+          </operator>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="447" y="30">
+            <list key="log">
+              <parameter key="Feature" value="operator.FeatureIterator.value.feature_name"/>
+              <parameter key="Count" value="operator.Macro2Log.value.macro_value"/>
+            </list>
+          </operator>
+          <connect from_port="example set" to_op="SingleMacroDefinition" to_port="through 1"/>
+          <connect from_op="SingleMacroDefinition" from_port="through 1" to_op="ValueIterator" to_port="example set"/>
+          <connect from_op="ValueIterator" from_port="out 1" to_op="Macro2Log" to_port="through 1"/>
+          <connect from_op="Macro2Log" from_port="through 1" to_op="ProcessLog" to_port="through 1"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="sink_example set" spacing="0"/>
+          <portSpacing port="sink_result 1" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="log_to_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ProcessLog2ExampleSet" width="90" x="45" y="165">
+        <parameter key="log_name" value="ProcessLog"/>
+      </operator>
+      <operator activated="true" class="clear_log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ClearProcessLog" width="90" x="179" y="165">
+        <parameter key="log_name" value="ProcessLog"/>
+        <parameter key="delete_table" value="true"/>
+      </operator>
+      <operator activated="true" class="guess_types" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="GuessValueTypes (2)" width="90" x="313" y="165"/>
+      <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ExampleFilter" width="90" x="447" y="165">
+        <parameter key="parameter_string" value="Count &gt; 12"/>
+        <parameter key="condition_class" value="attribute_value_filter"/>
+        <list key="filters_list"/>
+      </operator>
+      <operator activated="true" class="remember" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="IOStorer" width="90" x="313" y="255">
+        <parameter key="name" value="original_data"/>
+        <parameter key="store_which" value="2"/>
+      </operator>
+      <operator activated="true" class="loop_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ValueIterator (2)" width="90" x="581" y="165">
+        <parameter key="attribute" value="Feature"/>
+        <process expanded="true">
+          <operator activated="true" class="recall" compatibility="6.4.000-SNAPSHOT" expanded="true" name="IORetriever">
+            <parameter key="name" value="original_data"/>
+          </operator>
+          <operator activated="true" class="select_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Select Attributes">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="regular_expression" value="%{loop_value}"/>
+            <parameter key="invert_selection" value="true"/>
+          </operator>
+          <operator activated="true" class="remember" compatibility="6.4.000-SNAPSHOT" expanded="true" name="IOStorer (2)">
+            <parameter key="name" value="original_data"/>
+          </operator>
+          <connect from_port="example set" to_port="out 1"/>
+          <connect from_op="IORetriever" from_port="result" to_op="Select Attributes" to_port="example set input"/>
+          <connect from_op="Select Attributes" from_port="example set output" to_op="IOStorer (2)" to_port="store"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="recall" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="IORetriever (2)" width="90" x="782" y="30">
+        <parameter key="name" value="original_data"/>
+      </operator>
+      <connect from_op="OperatorChain" from_port="out 1" to_op="FeatureIterator" to_port="example set"/>
+      <connect from_op="FeatureIterator" from_port="example set" to_op="ProcessLog2ExampleSet" to_port="through 1"/>
+      <connect from_op="ProcessLog2ExampleSet" from_port="exampleSet" to_op="ClearProcessLog" to_port="through 1"/>
+      <connect from_op="ProcessLog2ExampleSet" from_port="through 1" to_op="ClearProcessLog" to_port="through 2"/>
+      <connect from_op="ClearProcessLog" from_port="through 1" to_op="GuessValueTypes (2)" to_port="example set input"/>
+      <connect from_op="ClearProcessLog" from_port="through 2" to_op="IOStorer" to_port="store"/>
+      <connect from_op="GuessValueTypes (2)" from_port="example set output" to_op="ExampleFilter" to_port="example set input"/>
+      <connect from_op="ExampleFilter" from_port="example set output" to_op="ValueIterator (2)" to_port="example set"/>
+      <connect from_op="IORetriever (2)" from_port="result" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

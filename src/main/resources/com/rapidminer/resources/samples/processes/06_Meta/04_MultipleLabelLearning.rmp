@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_multi_label_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="MultipleLabelGenerator" width="90" x="45" y="30"/>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+        <list key="noise"/>
+      </operator>
+      <operator activated="true" class="loop_labels" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="MultipleLabelIterator" width="90" x="315" y="30">
+        <process expanded="true">
+          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
+            <parameter key="sampling_type" value="shuffled sampling"/>
+            <process expanded="true">
+              <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" name="DecisionTree">
+                <parameter key="minimal_leaf_size" value="5"/>
+                <parameter key="minimal_size_for_split" value="10"/>
+              </operator>
+              <connect from_port="training" to_op="DecisionTree" to_port="training set"/>
+              <connect from_op="DecisionTree" from_port="model" to_port="model"/>
+              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="sink_model" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+            <process expanded="true">
+              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+                <list key="application_parameters"/>
+              </operator>
+              <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Performance"/>
+              <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+              <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+              <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+              <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+              <portSpacing port="source_model" spacing="0"/>
+              <portSpacing port="source_test set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_averagable 1" spacing="0"/>
+              <portSpacing port="sink_averagable 2" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="example set" to_op="XValidation" to_port="training"/>
+          <connect from_op="XValidation" from_port="averagable 1" to_port="out 1"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="average" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AverageBuilder" width="90" x="447" y="30"/>
+      <connect from_op="MultipleLabelGenerator" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_op="MultipleLabelIterator" to_port="example set"/>
+      <connect from_op="MultipleLabelIterator" from_port="out 1" to_op="AverageBuilder" to_port="averagable 1"/>
+      <connect from_op="AverageBuilder" from_port="average" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

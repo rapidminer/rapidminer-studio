@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="number_examples" value="10"/>
+        <parameter key="number_of_attributes" value="2"/>
+        <parameter key="local_random_seed" value="-1"/>
+      </operator>
+      <operator activated="true" class="select_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeFilter" width="90" x="180" y="30">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="regular_expression" value="label"/>
+        <parameter key="invert_selection" value="true"/>
+        <parameter key="include_special_attributes" value="true"/>
+      </operator>
+      <operator activated="true" class="work_on_subset" compatibility="6.4.000-SNAPSHOT" expanded="false" height="76" name="AttributeSubsetPreprocessing" width="90" x="315" y="30">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="regular_expression" value="att2"/>
+        <parameter key="remove_roles" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="discretize_by_frequency" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FrequencyDiscretization">
+            <parameter key="range_name_type" value="short"/>
+          </operator>
+          <connect from_port="exampleSet" to_op="FrequencyDiscretization" to_port="example set input"/>
+          <connect from_op="FrequencyDiscretization" from_port="example set output" to_port="example set"/>
+          <portSpacing port="source_exampleSet" spacing="0"/>
+          <portSpacing port="sink_example set" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="rename" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ChangeAttributeName" width="90" x="450" y="30">
+        <parameter key="old_name" value="att1"/>
+        <parameter key="new_name" value="Value"/>
+        <list key="rename_additional_attributes"/>
+      </operator>
+      <operator activated="true" class="rename" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ChangeAttributeName (2)" width="90" x="581" y="30">
+        <parameter key="old_name" value="att2"/>
+        <parameter key="new_name" value="Group"/>
+        <list key="rename_additional_attributes"/>
+      </operator>
+      <operator activated="true" class="generate_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeConstruction" width="90" x="45" y="165">
+        <list key="function_descriptions">
+          <parameter key="Index" value="1"/>
+        </list>
+      </operator>
+      <operator activated="true" class="loop_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ValueIterator" width="90" x="180" y="165">
+        <parameter key="attribute" value="Group"/>
+        <process expanded="true">
+          <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ExampleFilter" width="90" x="45" y="30">
+            <parameter key="parameter_string" value="Group = %{loop_value}"/>
+            <parameter key="condition_class" value="attribute_value_filter"/>
+            <list key="filters_list"/>
+          </operator>
+          <operator activated="true" class="extract_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="DataMacroDefinition" width="90" x="179" y="30">
+            <parameter key="macro" value="number_of_examples"/>
+            <list key="additional_macros"/>
+          </operator>
+          <operator activated="true" class="set_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="SingleMacroDefinition" width="90" x="313" y="30">
+            <parameter key="macro" value="current_index"/>
+            <parameter key="value" value="1"/>
+          </operator>
+          <operator activated="true" class="loop" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="IteratingOperatorChain" width="90" x="646" y="30">
+            <parameter key="iterations" value="%{number_of_examples}"/>
+            <parameter key="timeout" value="-1"/>
+            <process expanded="true">
+              <operator activated="true" class="set_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="SetData" width="90" x="45" y="30">
+                <parameter key="example_index" value="%{current_index}"/>
+                <parameter key="attribute_name" value="Index"/>
+                <parameter key="value" value="%{current_index}"/>
+                <list key="additional_values"/>
+              </operator>
+              <operator activated="true" class="generate_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="MacroConstruction" width="90" x="512" y="30">
+                <list key="function_descriptions">
+                  <parameter key="current_index" value="cut(str(%{current_index} + 1), 0, 1)"/>
+                </list>
+              </operator>
+              <connect from_port="input 1" to_op="SetData" to_port="example set input"/>
+              <connect from_op="SetData" from_port="example set output" to_op="MacroConstruction" to_port="through 1"/>
+              <connect from_op="MacroConstruction" from_port="through 1" to_port="output 1"/>
+              <portSpacing port="source_input 1" spacing="0"/>
+              <portSpacing port="source_input 2" spacing="0"/>
+              <portSpacing port="sink_output 1" spacing="0"/>
+              <portSpacing port="sink_output 2" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="example set" to_op="ExampleFilter" to_port="example set input"/>
+          <connect from_op="ExampleFilter" from_port="example set output" to_op="DataMacroDefinition" to_port="example set"/>
+          <connect from_op="DataMacroDefinition" from_port="example set" to_op="SingleMacroDefinition" to_port="through 1"/>
+          <connect from_op="SingleMacroDefinition" from_port="through 1" to_op="IteratingOperatorChain" to_port="input 1"/>
+          <connect from_op="IteratingOperatorChain" from_port="output 1" to_port="out 1"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="append" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ExampleSetMerge" width="90" x="315" y="165"/>
+      <operator activated="true" class="pivot" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Example2AttributePivoting" width="90" x="447" y="165">
+        <parameter key="group_attribute" value="Group"/>
+        <parameter key="index_attribute" value="Index"/>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="AttributeFilter" to_port="example set input"/>
+      <connect from_op="AttributeFilter" from_port="example set output" to_op="AttributeSubsetPreprocessing" to_port="example set"/>
+      <connect from_op="AttributeSubsetPreprocessing" from_port="example set" to_op="ChangeAttributeName" to_port="example set input"/>
+      <connect from_op="ChangeAttributeName" from_port="example set output" to_op="ChangeAttributeName (2)" to_port="example set input"/>
+      <connect from_op="ChangeAttributeName (2)" from_port="example set output" to_op="AttributeConstruction" to_port="example set input"/>
+      <connect from_op="AttributeConstruction" from_port="example set output" to_op="ValueIterator" to_port="example set"/>
+      <connect from_op="ValueIterator" from_port="out 1" to_op="ExampleSetMerge" to_port="example set 1"/>
+      <connect from_op="ExampleSetMerge" from_port="merged set" to_op="Example2AttributePivoting" to_port="example set input"/>
+      <connect from_op="Example2AttributePivoting" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="126"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

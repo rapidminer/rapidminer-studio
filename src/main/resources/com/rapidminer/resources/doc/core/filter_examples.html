@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/funnel.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Filter Examples</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Filter_Examples skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator only allows examples which fulfill a specified condition.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator takes an <i>ExampleSet</i> as input and returns a new <i>ExampleSet</i> including only the <i>Example</i>s that fulfill a condition.
+</p>
+<p>
+By specifying an implementation of <i>Condition</i> and a parameter string, arbitrary filters can be applied. Users can implement their own conditions by writing a subclass of the above class and implementing a two argument constructor taking an <i>ExampleSet</i> and a parameter string. This parameter string is specified by the parameter <code>parameter_string</code>. Instead of using one of the predefined conditions users can define their own implementation with the fully qualified class name.
+</p>
+<p>
+For "attribute_value_condition" the parameter string must have the form <code>attribute op value</code>, where attribute is a name of an attribute, value is a value the attribute can take and op is one of the binary logical operators similar to the ones known from Java, e.g. greater than or equals. Please note your can define a logical OR of several conditions with || and a logical AND of two conditions with two ampers and - or simply by applying several ExampleFilter operators in a row. Please note also that for nominal attributes you can define a regular expression for value of the possible equal and not equal checks.
+</p>
+<p>
+For "unknown_attributes" the parameter string must be empty. This filter removes all examples containing attributes that have missing or illegal values. For "unknown_label" the parameter string must also be empty. This filter removes all examples with an unknown label value.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set input</b>: <i>expects:</i> ExampleSetMetaData: #examples: = 0; #attributes: 0
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set output</b>:
+</li>
+<li> <b>original</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>condition class</b>:  Implementation of the condition.
+</li>
+<li> <b>parameter string</b>:  Parameter string for the condition, e.g. 'attribute=value' for the AttributeValueFilter.
+</li>
+<li> <b>invert filter</b>:  Indicates if only examples should be accepted which would normally filtered.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>
