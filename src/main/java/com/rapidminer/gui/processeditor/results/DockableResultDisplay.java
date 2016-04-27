@@ -147,6 +147,7 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 						ResultTab rt = (ResultTab) e.getNewState().getDockable();
 						rt.freeResources();
 						RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(rt);
+						getDockKey().resetPropertyChangeListener();
 					} else if (e.getNewState().getDockable() instanceof ProcessLogTab) {
 						ProcessLogTab pt = (ProcessLogTab) e.getNewState().getDockable();
 						if (pt != null) {
@@ -397,6 +398,7 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 					// RapidMinerGUI.getMainFrame().getDockingDesktop().close(dockable);
 					RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(dockable);
 				}
+				getDockKey().resetPropertyChangeListener();
 			}
 		}
 	}

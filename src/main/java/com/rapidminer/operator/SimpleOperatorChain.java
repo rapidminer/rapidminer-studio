@@ -56,7 +56,7 @@ public class SimpleOperatorChain extends OperatorChain {
 
 	@Override
 	public void doWork() throws OperatorException {
-		final int numOperators = this.getSubprocess(0).getNumberOfOperators();
+		final int numOperators = this.getSubprocess(0).getEnabledOperators().size();
 		getProgress().setTotal(numOperators);
 		getProcess().getRootOperator().addProcessListener(new ProcessListener() {
 
@@ -77,7 +77,9 @@ public class SimpleOperatorChain extends OperatorChain {
 			@Override
 			public void processFinishedOperator(Process process, Operator op) {
 				try {
-					SimpleOperatorChain.this.getProgress().setCompleted(++counter);
+					if (op.getParent() != null && op.getParent().equals(SimpleOperatorChain.this)) {
+						SimpleOperatorChain.this.getProgress().setCompleted(++counter);
+					}
 				} catch (ProcessStoppedException e) {
 					SimpleOperatorChain.this.getProcess().getRootOperator().removeProcessListener(this);
 				}

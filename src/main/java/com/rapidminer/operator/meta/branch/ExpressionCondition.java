@@ -53,7 +53,7 @@ public class ExpressionCondition implements ProcessBranchCondition {
 
 		if (operator.getProcess() != null) {
 			builder.withProcess(operator.getProcess());
-			builder.withScope(new MacroResolver(operator.getProcess().getMacroHandler()));
+			builder.withScope(new MacroResolver(operator.getProcess().getMacroHandler(), operator));
 		}
 
 		// check for errors

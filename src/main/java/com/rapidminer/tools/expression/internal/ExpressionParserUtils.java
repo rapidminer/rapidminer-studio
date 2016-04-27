@@ -237,8 +237,8 @@ public final class ExpressionParserUtils {
 		}
 
 		// update example resolver after meta data change
-		resolver.addAttributeMetaData(new AttributeMetaData(exampleSet.getAttributes().getRole(newAttribute), exampleSet,
-				true));
+		resolver.addAttributeMetaData(
+				new AttributeMetaData(exampleSet.getAttributes().getRole(newAttribute), exampleSet, true));
 
 		return newAttribute;
 	}
@@ -254,8 +254,8 @@ public final class ExpressionParserUtils {
 	 *         {@link ExpressionParserBuilder#OLD_EXPRESSION_PARSER_FUNCTIONS} as last element
 	 */
 	public static OperatorVersion[] addIncompatibleExpressionParserChange(OperatorVersion... incompatibleVersions) {
-		OperatorVersion[] extendedIncompatibleVersions = Arrays
-				.copyOf(incompatibleVersions, incompatibleVersions.length + 1);
+		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
+				incompatibleVersions.length + 1);
 		extendedIncompatibleVersions[incompatibleVersions.length] = ExpressionParserBuilder.OLD_EXPRESSION_PARSER_FUNCTIONS;
 		return extendedIncompatibleVersions;
 	}
@@ -279,7 +279,7 @@ public final class ExpressionParserUtils {
 
 		if (op.getProcess() != null) {
 			builder.withProcess(op.getProcess());
-			builder.withScope(new MacroResolver(op.getProcess().getMacroHandler()));
+			builder.withScope(new MacroResolver(op.getProcess().getMacroHandler(), op));
 		}
 		if (exampleResolver != null) {
 			builder.withDynamics(exampleResolver);

@@ -81,47 +81,31 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
 
-	private static final String[] KNOWN_FUNCTION_NAMES = new String[] {
-			"random", // regression
+	private static final String[] KNOWN_FUNCTION_NAMES = new String[] { "random", // regression
 			"sum", "polynomial", "non linear", "one variable non linear", "complicated function", "complicated function2",
-			"simple sinus", "sinus", "simple superposition",
-			"sinus frequency",
-			"sinus with trend",
-			"sinc",
-			"triangular function",
-			"square pulse function",
-			"random classification", // classification
-			"one third classification", "sum classification", "quadratic classification",
-			"simple non linear classification", "interaction classification", "simple polynomial classification",
-			"polynomial classification", "checkerboard classification", "random dots classification",
-			"global and local models classification", "sinus classification", "multi classification",
-			"two gaussians classification",
-			"transactions dataset", // transactions
+			"simple sinus", "sinus", "simple superposition", "sinus frequency", "sinus with trend", "sinc",
+			"triangular function", "square pulse function", "random classification", // classification
+			"one third classification", "sum classification", "quadratic classification", "simple non linear classification",
+			"interaction classification", "simple polynomial classification", "polynomial classification",
+			"checkerboard classification", "random dots classification", "global and local models classification",
+			"sinus classification", "multi classification", "two gaussians classification", "transactions dataset", // transactions
 			"grid function", // clusters
 			"three ring clusters", "spiral cluster", "single gaussian cluster", "gaussian mixture clusters",
 			"driller oscillation timeseries" // timeseries
 
 	};
 
-	private static final Class[] KNOWN_FUNCTION_IMPLEMENTATIONS = new Class[] {
-			RandomFunction.class, // regression
+	private static final Class[] KNOWN_FUNCTION_IMPLEMENTATIONS = new Class[] { RandomFunction.class, // regression
 			SumFunction.class, PolynomialFunction.class, NonLinearFunction.class, OneVariableNonLinearFunction.class,
-			ComplicatedFunction.class, ComplicatedFunction2.class, SimpleSinusFunction.class,
-			SinusFunction.class,
-			SimpleSuperpositionFunction.class,
-			SinusFrequencyFunction.class,
-			SinusWithTrendFunction.class,
-			SincFunction.class,
-			TriangularFunction.class,
-			SquarePulseFunction.class,
-			RandomClassificationFunction.class, // classification
+			ComplicatedFunction.class, ComplicatedFunction2.class, SimpleSinusFunction.class, SinusFunction.class,
+			SimpleSuperpositionFunction.class, SinusFrequencyFunction.class, SinusWithTrendFunction.class,
+			SincFunction.class, TriangularFunction.class, SquarePulseFunction.class, RandomClassificationFunction.class, // classification
 			OneThirdClassification.class, SumClassificationFunction.class, QuadraticClassificationFunction.class,
 			SimpleNonLinearClassificationFunction.class, InteractionClassificationFunction.class,
 			SimplePolynomialClassificationFunction.class, PolynomialClassificationFunction.class,
 			CheckerboardClassificationFunction.class, RandomDotsClassificationFunction.class,
 			GlobalAndLocalPatternsFunction.class, SinusClassificationFunction.class, MultiClassificationFunction.class,
-			TwoGaussiansClassificationFunction.class,
-			TransactionDatasetFunction.class, // transactions
+			TwoGaussiansClassificationFunction.class, TransactionDatasetFunction.class, // transactions
 			GridFunction.class, // clusters
 			RingClusteringFunction.class, SpiralClusteringFunction.class, GaussianFunction.class,
 			GaussianMixtureFunction.class, DrillerOscillationFunction.class // timeseries
@@ -164,6 +148,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 		try {
 			function.init(random);
 			getProgress().setTotal(numberOfExamples);
+			int progressCounter = 0;
 			for (int n = 0; n < numberOfExamples; n++) {
 
 				double[] features = function.createArguments(numberOfAttributes, random);
@@ -180,7 +165,13 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 				row.trim();
 				data.add(row);
 
-				getProgress().step();
+				// trigger operator progress every 100 examples
+				++progressCounter;
+				if (progressCounter % 100 == 0) {
+					getProgress().step(100);
+					progressCounter = 0;
+				}
+
 			}
 		} catch (TargetFunction.FunctionException e) {
 			throw new UserError(this, 918, e.getFunctionName(), e.getMessage());
@@ -227,8 +218,8 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 
 	// ================================================================================
 
-	public static TargetFunction getFunctionForName(String functionName) throws IllegalAccessException,
-			InstantiationException, ClassNotFoundException {
+	public static TargetFunction getFunctionForName(String functionName)
+			throws IllegalAccessException, InstantiationException, ClassNotFoundException {
 		for (int i = 0; i < KNOWN_FUNCTION_NAMES.length; i++) {
 			if (KNOWN_FUNCTION_NAMES[i].equals(functionName)) {
 				return (TargetFunction) KNOWN_FUNCTION_IMPLEMENTATIONS[i].newInstance();
@@ -280,18 +271,18 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 			int setAttr = getParameterAsInt(PARAMETER_NUMBER_OF_ATTRIBUTES);
 			List<QuickFix> quickFixes = new LinkedList<>();
 			if (functionMinAttr == functionMaxAttr && setAttr != functionMinAttr) {
-				quickFixes.add(new ParameterSettingQuickFix(this, PARAMETER_NUMBER_OF_ATTRIBUTES, String
-						.valueOf(functionMaxAttr)));
+				quickFixes.add(
+						new ParameterSettingQuickFix(this, PARAMETER_NUMBER_OF_ATTRIBUTES, String.valueOf(functionMaxAttr)));
 				addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), quickFixes,
 						"example_set_generator.wrong_number_of_attributes", functionName, functionMaxAttr));
 			} else if (setAttr > functionMaxAttr) {
-				quickFixes.add(new ParameterSettingQuickFix(this, PARAMETER_NUMBER_OF_ATTRIBUTES, String
-						.valueOf(functionMaxAttr)));
+				quickFixes.add(
+						new ParameterSettingQuickFix(this, PARAMETER_NUMBER_OF_ATTRIBUTES, String.valueOf(functionMaxAttr)));
 				addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), quickFixes,
 						"example_set_generator.too_many_attributes", functionName, functionMaxAttr));
 			} else if (setAttr < functionMinAttr) {
-				quickFixes.add(new ParameterSettingQuickFix(this, PARAMETER_NUMBER_OF_ATTRIBUTES, String
-						.valueOf(functionMinAttr)));
+				quickFixes.add(
+						new ParameterSettingQuickFix(this, PARAMETER_NUMBER_OF_ATTRIBUTES, String.valueOf(functionMinAttr)));
 				addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), quickFixes,
 						"example_set_generator.too_few_attributes", functionName, functionMinAttr));
 			}

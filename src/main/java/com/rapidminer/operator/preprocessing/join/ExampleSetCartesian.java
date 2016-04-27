@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator.preprocessing.join;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -29,9 +32,6 @@ import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * <p>
@@ -41,13 +41,13 @@ import java.util.List;
  * or renamed) of both feature sets. In case of removing double attribute the attribute values must
  * be the same for the examples of both example set, otherwise an exception will be thrown.
  * </p>
- * 
+ *
  * <p>
  * Please note that this check for double attributes will only be applied for regular attributes.
  * Special attributes of the second input example set which do not exist in the first example set
  * will simply be added. If they already exist they are simply skipped.
  * </p>
- * 
+ *
  * @author Peter B. Volk
  */
 public class ExampleSetCartesian extends AbstractExampleSetJoin {
@@ -60,7 +60,7 @@ public class ExampleSetCartesian extends AbstractExampleSetJoin {
 
 	/**
 	 * Joins the data WITHOUT a WHERE criteria.
-	 * 
+	 *
 	 * @param es1
 	 * @param es2
 	 * @param originalAttributeSources
@@ -73,11 +73,14 @@ public class ExampleSetCartesian extends AbstractExampleSetJoin {
 			List<Attribute> unionAttributeList) throws OperatorException {
 		MemoryExampleTable unionTable = new MemoryExampleTable(unionAttributeList);
 		Iterator<Example> reader = es1.iterator();
+		long total = (long) es1.size() * es2.size();
+		long progressCounter = 0;
+		getProgress().setTotal(100);
 		while (reader.hasNext()) {
 			Example example1 = reader.next();
-			Iterator reader2 = es2.iterator();
+			Iterator<Example> reader2 = es2.iterator();
 			while (reader2.hasNext()) {
-				Example example2 = (Example) reader2.next();
+				Example example2 = reader2.next();
 				double[] unionDataRow = new double[unionAttributeList.size()];
 				Iterator<AttributeSource> a = originalAttributeSources.iterator();
 				int index = 0;
@@ -92,7 +95,9 @@ public class ExampleSetCartesian extends AbstractExampleSetJoin {
 				}
 
 				unionTable.addDataRow(new DoubleArrayDataRow(unionDataRow));
-				checkForStop();
+				if (++progressCounter % 1000 == 0) {
+					getProgress().setCompleted((int) (100 * progressCounter / total));
+				}
 			}
 		}
 

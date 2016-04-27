@@ -26,6 +26,8 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.VectorMath;
 import com.rapidminer.tools.math.distribution.DiscreteDistribution;
@@ -206,6 +208,40 @@ public class SimpleDistributionModel extends DistributionModel {
 	public SimpleDistributionModel(ExampleSet trainExampleSet, boolean laplaceCorrectionEnabled) {
 		super(trainExampleSet, ExampleSetUtilities.SetsCompareOption.ALLOW_SUPERSET,
 				ExampleSetUtilities.TypesCompareOption.ALLOW_SAME_PARENTS);
+		createSimpleDistributionModel(trainExampleSet, laplaceCorrectionEnabled);
+
+		// update the model
+		update(trainExampleSet);
+
+		// calculate the probabilities
+		updateDistributionProperties();
+	}
+
+	/**
+	 * This constructor will derive a complete distribution model on basis of the given trainings
+	 * data with Laplace correcture depending on the parameter.
+	 *
+	 * The OperatorProgress is used to update it.
+	 *
+	 * @throws ProcessStoppedException
+	 */
+	public SimpleDistributionModel(ExampleSet trainExampleSet, boolean laplaceCorrectionEnabled, OperatorProgress opProg)
+			throws ProcessStoppedException {
+		super(trainExampleSet, ExampleSetUtilities.SetsCompareOption.ALLOW_SUPERSET,
+				ExampleSetUtilities.TypesCompareOption.ALLOW_SAME_PARENTS);
+		createSimpleDistributionModel(trainExampleSet, laplaceCorrectionEnabled);
+
+		// update the model
+		update(trainExampleSet, opProg);
+
+		// calculate the probabilities
+		updateDistributionProperties();
+	}
+
+	/**
+	 * Helper method for the constructor
+	 */
+	private void createSimpleDistributionModel(ExampleSet trainExampleSet, boolean laplaceCorrectionEnabled) {
 		this.laplaceCorrectionEnabled = laplaceCorrectionEnabled;
 		Attribute labelAttribute = trainExampleSet.getAttributes().getLabel();
 		numberOfClasses = labelAttribute.getMapping().size();
@@ -249,12 +285,6 @@ public class SimpleDistributionModel extends DistributionModel {
 		totalWeight = 0.0d;
 		classWeights = new double[numberOfClasses];
 		priors = new double[numberOfClasses];
-
-		// update the model
-		update(trainExampleSet);
-
-		// calculate the probabilities
-		updateDistributionProperties();
 	}
 
 	@Override
@@ -272,11 +302,18 @@ public class SimpleDistributionModel extends DistributionModel {
 	 * with the class values.
 	 *
 	 * ATTENTION: only updates the weight counters, distribution properties are not updated, call
-	 * updateDistributionProperties() to accomplish this task
+	 * updateDistributionProperties() to accomplish this task.
+	 *
+	 * The OperatorProgress is used to update it.
+	 *
+	 * @throws ProcessStoppedException
 	 */
-	@Override
-	public void update(ExampleSet exampleSet) {
+	public void update(ExampleSet exampleSet, OperatorProgress opProg) throws ProcessStoppedException {
 		Attribute weightAttribute = exampleSet.getAttributes().getWeight();
+		if (opProg != null) {
+			opProg.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			double weight = weightAttribute == null ? 1.0d : example.getWeight();
 			totalWeight += weight;
@@ -297,7 +334,8 @@ public class SimpleDistributionModel extends DistributionModel {
 								// extend weight array if attribute value is not in mapping
 								for (int i = 0; i < numberOfClasses; i++) {
 									double[] newWeightSums = new double[(int) attributeValue + 2];
-									newWeightSums[newWeightSums.length - 1] = weightSums[attributeIndex][i][weightSums[attributeIndex][i].length - 1];
+									newWeightSums[newWeightSums.length
+											- 1] = weightSums[attributeIndex][i][weightSums[attributeIndex][i].length - 1];
 									for (int j = 0; j < weightSums[attributeIndex][i].length - 1; j++) {
 										newWeightSums[j] = weightSums[attributeIndex][i][j];
 									}
@@ -310,10 +348,12 @@ public class SimpleDistributionModel extends DistributionModel {
 								for (int i = 0; i < attributeValues[attributeIndex].length - 1; i++) {
 									attributeValues[attributeIndex][i] = attribute.getMapping().mapIndex(i);
 								}
-								attributeValues[attributeIndex][attributeValues[attributeIndex].length - 1] = UNKNOWN_VALUE_NAME;
+								attributeValues[attributeIndex][attributeValues[attributeIndex].length
+										- 1] = UNKNOWN_VALUE_NAME;
 							}
 						} else {
-							weightSums[attributeIndex][classIndex][weightSums[attributeIndex][classIndex].length - 1] += weight;
+							weightSums[attributeIndex][classIndex][weightSums[attributeIndex][classIndex].length
+									- 1] += weight;
 						}
 					} else if (attribute.isNumerical() || attribute.isDateTime()) {
 						// numerical or date attribute
@@ -330,8 +370,27 @@ public class SimpleDistributionModel extends DistributionModel {
 					attributeIndex++;
 				}
 			}
+			if (opProg != null && ++progressCounter % 100 == 0) {
+				opProg.setCompleted(progressCounter);
+			}
 		}
 		modelRecentlyUpdated = true;
+	}
+
+	/**
+	 * Updates the model by counting the occurrences of classes and attribute values in combination
+	 * with the class values.
+	 *
+	 * ATTENTION: only updates the weight counters, distribution properties are not updated, call
+	 * updateDistributionProperties() to accomplish this task.
+	 */
+	@Override
+	public void update(ExampleSet exampleSet) {
+		try {
+			this.update(exampleSet, null);
+		} catch (ProcessStoppedException e) {
+			// Cannot happen, because operator is null
+		}
 	}
 
 	/**
@@ -348,16 +407,16 @@ public class SimpleDistributionModel extends DistributionModel {
 			if (nominal[i]) {
 				for (int j = 0; j < numberOfClasses; j++) {
 					for (int k = 0; k < weightSums[i][j].length; k++) {
-						distributionProperties[i][j][k] = Math.log((weightSums[i][j][k] + f)
-								/ (classWeights[j] + f * weightSums[i][j].length));
+						distributionProperties[i][j][k] = Math
+								.log((weightSums[i][j][k] + f) / (classWeights[j] + f * weightSums[i][j].length));
 					}
 				}
 			} else {
 				for (int j = 0; j < numberOfClasses; j++) {
 					double classWeight = classWeights[j] - weightSums[i][j][INDEX_MISSING_WEIGHTS];
 					distributionProperties[i][j][INDEX_MEAN] = weightSums[i][j][INDEX_VALUE_SUM] / classWeight;
-					double standardDeviationSquared = (weightSums[i][j][INDEX_SQUARED_VALUE_SUM] - weightSums[i][j][INDEX_VALUE_SUM]
-							* weightSums[i][j][INDEX_VALUE_SUM] / classWeight)
+					double standardDeviationSquared = (weightSums[i][j][INDEX_SQUARED_VALUE_SUM]
+							- weightSums[i][j][INDEX_VALUE_SUM] * weightSums[i][j][INDEX_VALUE_SUM] / classWeight)
 							/ (classWeight - 1);
 					double standardDeviation = 1e-3;
 					if (standardDeviationSquared > 0) {

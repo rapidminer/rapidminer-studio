@@ -22,7 +22,6 @@ import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -91,186 +90,155 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 		}
 		view.requestFocusInWindow();
 
-		List<Operator> selection = model.getSelectedOperators();
 		// if we don't have a loc, we can use the mouse cursor
 		if (loc == null) {
-			loc = model.getCurrentMousePosition();
+			loc = new Point(model.getCurrentMousePosition());
 		}
 
 		// determine process to drop to
-		int processIndex;
-		if (loc != null) {
-			processIndex = view.getProcessIndexUnder(loc.getLocation());
-		} else {
-			if (selection != null && !selection.isEmpty()) {
-				processIndex = Arrays.asList(model.getProcesses()).indexOf(selection.get(0).getExecutionUnit());
-				if (processIndex == -1) {
-					processIndex = 0;
-				}
-			} else {
-				processIndex = 0;
-			}
-		}
-
+		int processIndex = view.getProcessIndexUnder(loc.getLocation());
 		try {
 			if (processIndex != -1) {
-				if (loc != null) {
-					// we have a location for the drop/paste
-					Operator firstOperator = newOperators.get(0);
-					Point dest = view.toProcessSpace(loc, processIndex);
+				// we have a location for the drop/paste
+				Operator firstOperator = newOperators.get(0);
+				Point dest = view.toProcessSpace(loc, processIndex);
 
-					// if we drop a single Retrieve operator on an inner source of the root
-					// op, we immediately attach the repository location to the port.
-					boolean isRoot = model.getDisplayedChain() instanceof ProcessRootOperator;
-					boolean dropsSource = firstOperator instanceof RepositorySource;
-					if (isRoot && dropsSource && newOperators.size() == 1) {
-						if (controller.checkPortUnder(model.getProcess(processIndex).getInnerSources(), (int) dest.getX(),
-								(int) dest.getY())) {
-							String location = firstOperator.getParameters().getParameterOrNull(
-									RepositorySource.PARAMETER_REPOSITORY_ENTRY);
-							int index = model.getHoveringPort().getPorts().getAllPorts().indexOf(model.getHoveringPort());
-							model.getDisplayedChain().getProcess().getContext().setInputRepositoryLocation(index, location);
-							return true;
-						}
-					}
-
-					// calculate operator position
-					Point anchor;
-					// snap to grid
-					if (model.isSnapToGrid()) {
-						anchor = ProcessDrawUtils.snap(new Point2D.Double(dest.getX() - ProcessDrawer.OPERATOR_WIDTH / 2,
-								dest.getY() - ProcessDrawer.OPERATOR_MIN_HEIGHT / 2));
-					} else {
-						anchor = new Point((int) dest.getX() - ProcessDrawer.OPERATOR_WIDTH / 2, (int) dest.getY()
-								- ProcessDrawer.OPERATOR_MIN_HEIGHT / 2);
-					}
-
-					int index = view.getProcessIndexUnder(dest);
-					if (index == -1) {
-						index = 0;
-					}
-					// check if operator overlaps bottom process corner
-					int lowestPosition = (int) model.getProcessHeight(model.getProcess(index))
-							- ProcessDrawer.GRID_AUTOARRANGE_HEIGHT;
-					if (anchor.getY() > lowestPosition) {
-						anchor.setLocation(anchor.getX(), lowestPosition);
-					}
-
-					// check if operator overlaps right process corner
-					int rightestPositon = (int) model.getProcessWidth(model.getProcess(index))
-							- ProcessDrawer.GRID_AUTOARRANGE_WIDTH - ProcessDrawer.PADDING;
-					if (anchor.getX() > rightestPositon) {
-						anchor.setLocation(rightestPositon, anchor.getY());
-					}
-
-					// check whether all operators have position data and compute upper
-					// left anchor of the bounding box
-					boolean completePositionData = true;
-					double boundingBoxX = Double.MAX_VALUE;
-					double boundingBoxY = Double.MAX_VALUE;
-					double boundingBoxMaxX = 0;
-					double boundingBoxMaxY = 0;
-					for (Operator op : newOperators) {
-						// check position data
-						Rectangle2D rect = model.getOperatorRect(op);
-						if (rect == null) {
-							completePositionData = false;
-							break;
-						}
-						// compare positions
-						if (rect.getX() < boundingBoxX) {
-							boundingBoxX = rect.getX();
-						}
-						if (rect.getY() < boundingBoxY) {
-							boundingBoxY = rect.getY();
-						}
-						if (rect.getMaxX() > boundingBoxMaxX) {
-							boundingBoxMaxX = rect.getMaxX();
-						}
-						if (rect.getMaxY() > boundingBoxMaxY) {
-							boundingBoxMaxY = rect.getMaxY();
-						}
-					}
-
-					if (completePositionData) {
-						// adjust position relative to the computed anchor
-						int dx = (int) (anchor.getX() - boundingBoxX);
-						int dy = (int) (anchor.getY() - boundingBoxY);
-						for (Operator op : newOperators) {
-							Rectangle2D rect = model.getOperatorRect(op);
-							Rectangle2D newRect = new java.awt.geom.Rectangle2D.Double(rect.getX() + dx, rect.getY() + dy,
-									rect.getWidth(), rect.getHeight());
-							model.setOperatorRect(op, newRect);
-							model.fireOperatorMoved(op);
-						}
-						// update process size (if necessary)
-						controller.ensureWidth(model.getProcess(processIndex), (int) boundingBoxMaxX + dx
-								+ ProcessDrawer.PADDING);
-						controller.ensureHeight(model.getProcess(processIndex), (int) boundingBoxMaxY + dy
-								+ ProcessDrawer.PADDING);
-					} else {
-						// position first operator at the anchor and remove position data of
-						// remaining operator (if any) to trigger auto positioning
-						Rectangle2D anchorRect = new Rectangle2D.Double(anchor.getX(), anchor.getY(),
-								ProcessDrawer.OPERATOR_WIDTH, ProcessDrawer.OPERATOR_MIN_HEIGHT);
-						int opIndex = 1;
-						for (Operator op : newOperators) {
-							if (op == firstOperator) {
-								model.setOperatorRect(op, anchorRect);
-							} else {
-								Rectangle2D newAnchor = new Rectangle2D.Double(anchorRect.getMinX(), anchorRect.getMinY()
-										+ opIndex * (ProcessDrawer.GRID_Y_OFFSET + ProcessDrawer.OPERATOR_MIN_HEIGHT),
-										anchorRect.getWidth(), anchorRect.getHeight());
-								model.setOperatorRect(op, newAnchor);
-								opIndex++;
-							}
-							model.fireOperatorMoved(op);
-						}
-					}
-
-					// index at which the first operator is inserted
-					int firstInsertionIndex;
-					final boolean firstMustBeWired;
-					// insert first operator. Possibly insert into connection
-					if (model.getHoveringConnectionSource() != null
-							&& ProcessDrawUtils.canOperatorBeInsertedIntoConnection(model, firstOperator)) {
-						int predecessorIndex = model.getProcess(processIndex).getOperators()
-								.indexOf(model.getHoveringConnectionSource().getPorts().getOwner().getOperator());
-						if (predecessorIndex != -1) {
-							firstInsertionIndex = predecessorIndex + 1;
-						} else {
-							// can happen if dropIntersectsOutputPort is an inner source
-							firstInsertionIndex = getDropInsertionIndex(processIndex);
-						}
-						model.getProcess(processIndex).addOperator(firstOperator, firstInsertionIndex);
-						controller.insertIntoHoveringConnection(firstOperator);
-						firstMustBeWired = false;
-					} else {
-						firstInsertionIndex = getDropInsertionIndex(processIndex);
-						model.getProcess(processIndex).addOperator(firstOperator, firstInsertionIndex);
-						firstMustBeWired = true;
-					}
-					// insert the rest (1..n). First, insert, then wire
-					for (int i = 1; i < newOperators.size(); i++) {
-						Operator newOp = newOperators.get(i);
-						model.getProcess(processIndex).addOperator(newOp, firstInsertionIndex + i);
-					}
-					AutoWireThread.autoWireInBackground(newOperators, firstMustBeWired);
-				} else {
-					// this should not happen, since we should always have a location.
-					// Nevertheless, we have a fallback here in case no position for the
-					// drop is set.
-					for (Operator newOp : newOperators) {
-						model.getProcess(processIndex).addOperator(newOp);
-					}
-					AutoWireThread.autoWireInBackground(newOperators, true);
-					for (Operator newOp : newOperators) {
-						// position new operator
-						Rectangle2D rect = controller.createOperatorPosition(newOp);
-						model.setOperatorRect(newOp, rect);
-						model.fireOperatorMoved(newOp);
+				// if we drop a single Retrieve operator on an inner source of the root
+				// op, we immediately attach the repository location to the port.
+				boolean isRoot = model.getDisplayedChain() instanceof ProcessRootOperator;
+				boolean dropsSource = firstOperator instanceof RepositorySource;
+				if (isRoot && dropsSource && newOperators.size() == 1) {
+					if (controller.checkPortUnder(model.getProcess(processIndex).getInnerSources(), (int) dest.getX(),
+							(int) dest.getY())) {
+						String location = firstOperator.getParameters()
+								.getParameterOrNull(RepositorySource.PARAMETER_REPOSITORY_ENTRY);
+						int index = model.getHoveringPort().getPorts().getAllPorts().indexOf(model.getHoveringPort());
+						model.getDisplayedChain().getProcess().getContext().setInputRepositoryLocation(index, location);
+						return true;
 					}
 				}
+
+				// calculate operator position
+				Point anchor;
+				// snap to grid
+				if (model.isSnapToGrid()) {
+					anchor = ProcessDrawUtils.snap(new Point2D.Double(dest.getX() - ProcessDrawer.OPERATOR_WIDTH / 2,
+							dest.getY() - ProcessDrawer.OPERATOR_MIN_HEIGHT / 2));
+				} else {
+					anchor = new Point((int) dest.getX() - ProcessDrawer.OPERATOR_WIDTH / 2,
+							(int) dest.getY() - ProcessDrawer.OPERATOR_MIN_HEIGHT / 2);
+				}
+
+				int index = view.getProcessIndexUnder(dest);
+				if (index == -1) {
+					index = 0;
+				}
+				// check if operator overlaps bottom process corner
+				double lowestPosition = model.getProcessHeight(model.getProcess(index))
+						- ProcessDrawer.GRID_AUTOARRANGE_HEIGHT * model.getZoomFactor();
+				if (anchor.getY() > lowestPosition * 1 / model.getZoomFactor()) {
+					anchor.setLocation(anchor.getX(), lowestPosition * 1 / model.getZoomFactor());
+				}
+
+				// check if operator overlaps right process corner
+				double rightestPositon = model.getProcessWidth(model.getProcess(index))
+						- ProcessDrawer.GRID_AUTOARRANGE_WIDTH * model.getZoomFactor();
+				if (anchor.getX() > rightestPositon * 1 / model.getZoomFactor()) {
+					anchor.setLocation(rightestPositon * 1 / model.getZoomFactor(), anchor.getY());
+				}
+
+				// check whether all operators have position data and compute upper
+				// left anchor of the bounding box
+				boolean completePositionData = true;
+				double boundingBoxX = Double.MAX_VALUE;
+				double boundingBoxY = Double.MAX_VALUE;
+				double boundingBoxMaxX = 0;
+				double boundingBoxMaxY = 0;
+				for (Operator op : newOperators) {
+					// check position data
+					Rectangle2D rect = model.getOperatorRect(op);
+					if (rect == null) {
+						completePositionData = false;
+						break;
+					}
+					// compare positions
+					if (rect.getX() < boundingBoxX) {
+						boundingBoxX = rect.getX();
+					}
+					if (rect.getY() < boundingBoxY) {
+						boundingBoxY = rect.getY();
+					}
+					if (rect.getMaxX() > boundingBoxMaxX) {
+						boundingBoxMaxX = rect.getMaxX();
+					}
+					if (rect.getMaxY() > boundingBoxMaxY) {
+						boundingBoxMaxY = rect.getMaxY();
+					}
+				}
+
+				if (completePositionData) {
+					// adjust position relative to the computed anchor
+					int dx = (int) (anchor.getX() - boundingBoxX);
+					int dy = (int) (anchor.getY() - boundingBoxY);
+					for (Operator op : newOperators) {
+						Rectangle2D rect = model.getOperatorRect(op);
+						Rectangle2D newRect = new java.awt.geom.Rectangle2D.Double(rect.getX() + dx, rect.getY() + dy,
+								rect.getWidth(), rect.getHeight());
+						model.setOperatorRect(op, newRect);
+						model.fireOperatorMoved(op);
+					}
+					// update process size (if necessary)
+					controller.ensureWidth(model.getProcess(processIndex), (int) boundingBoxMaxX + dx);
+					controller.ensureHeight(model.getProcess(processIndex), (int) boundingBoxMaxY + dy);
+				} else {
+					// position first operator at the anchor and remove position data of
+					// remaining operator (if any) to trigger auto positioning
+					Rectangle2D anchorRect = new Rectangle2D.Double(anchor.getX(), anchor.getY(),
+							ProcessDrawer.OPERATOR_WIDTH, ProcessDrawer.OPERATOR_MIN_HEIGHT);
+					int opIndex = 1;
+					for (Operator op : newOperators) {
+						if (op == firstOperator) {
+							model.setOperatorRect(op, anchorRect);
+						} else {
+							Rectangle2D newAnchor = new Rectangle2D.Double(anchorRect.getMinX(),
+									anchorRect.getMinY()
+											+ opIndex * (ProcessDrawer.GRID_Y_OFFSET + ProcessDrawer.OPERATOR_MIN_HEIGHT),
+									anchorRect.getWidth(), anchorRect.getHeight());
+							model.setOperatorRect(op, newAnchor);
+							opIndex++;
+						}
+						model.fireOperatorMoved(op);
+					}
+				}
+
+				// index at which the first operator is inserted
+				int firstInsertionIndex;
+				final boolean firstMustBeWired;
+				// insert first operator. Possibly insert into connection
+				if (model.getHoveringConnectionSource() != null
+						&& ProcessDrawUtils.canOperatorBeInsertedIntoConnection(model, firstOperator)) {
+					int predecessorIndex = model.getProcess(processIndex).getOperators()
+							.indexOf(model.getHoveringConnectionSource().getPorts().getOwner().getOperator());
+					if (predecessorIndex != -1) {
+						firstInsertionIndex = predecessorIndex + 1;
+					} else {
+						// can happen if dropIntersectsOutputPort is an inner source
+						firstInsertionIndex = getDropInsertionIndex(processIndex);
+					}
+					model.getProcess(processIndex).addOperator(firstOperator, firstInsertionIndex);
+					controller.insertIntoHoveringConnection(firstOperator);
+					firstMustBeWired = false;
+				} else {
+					firstInsertionIndex = getDropInsertionIndex(processIndex);
+					model.getProcess(processIndex).addOperator(firstOperator, firstInsertionIndex);
+					firstMustBeWired = true;
+				}
+				// insert the rest (1..n). First, insert, then wire
+				for (int i = 1; i < newOperators.size(); i++) {
+					Operator newOp = newOperators.get(i);
+					model.getProcess(processIndex).addOperator(newOp, firstInsertionIndex + i);
+				}
+				AutoWireThread.autoWireInBackground(newOperators, firstMustBeWired);
 				boolean first = true;
 				for (Operator op : newOperators) {
 					controller.selectOperator(op, first);
@@ -283,10 +251,8 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 				return false;
 			}
 		} catch (RuntimeException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.flow.ProcessRenderer.error_during_drop", e), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.gui.flow.ProcessRenderer.error_during_drop", e), e);
 			throw e;
 		}
 	}

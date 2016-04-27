@@ -203,6 +203,7 @@ public class ResultTab extends JPanel implements Dockable {
 		if (component != null) {
 			remove(component);
 			component = null;
+			resultObject = null;
 		}
 	}
 

@@ -30,8 +30,6 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.Attributes;
@@ -62,6 +60,8 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.MathFunctions;
+
+import Jama.Matrix;
 
 
 /**
@@ -120,6 +120,12 @@ public class LinearRegression extends AbstractLearner {
 	/** Attribute selection method: Greedy method */
 	public static final int GREEDY = 2;
 
+	/** Attribute selection method: T-Test method */
+	public static final int T_TEST = 3;
+
+	/** Attribute selection method: Iterative T-Test method */
+	public static final int ITERATIVE_T_TEST = 4;
+
 	private OutputPort weightOutput = getOutputPorts().createPort("weights");
 
 	public LinearRegression(OperatorDescription description) {
@@ -136,7 +142,12 @@ public class LinearRegression extends AbstractLearner {
 		boolean cleanUpLabel = false;
 		String firstClassName = null;
 		String secondClassName = null;
-		getProgress().setTotal(9);
+		int feature = getParameterAsInt(PARAMETER_FEATURE_SELECTION);
+		if (feature == 0 || feature == 1) {
+			getProgress().setTotal(49);
+		} else {
+			getProgress().setIndeterminate(true);
+		}
 
 		com.rapidminer.example.Tools.onlyNonMissingValues(exampleSet, getOperatorClassName(), this, Attributes.LABEL_NAME);
 
@@ -221,7 +232,7 @@ public class LinearRegression extends AbstractLearner {
 
 		getProgress().step();
 
-		// remove colinear attributes
+		// remove collinear attributes
 		double[] coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
 		if (removeColinearAttributes) {
 			boolean eliminateMore = true;
@@ -240,11 +251,22 @@ public class LinearRegression extends AbstractLearner {
 							}
 						}
 					}
+					if (i % 5 == 0) {
+						getProgress().setCompleted((int) (4 + (float) i / isUsedAttribute.length * 20));
+					}
 				}
 				if (found) {
 					isUsedAttribute[maxIndex] = false;
+					// in case of an unpredictable number of loops, show for all loops > 1
+					// indeterminate progress
+					getProgress().setIndeterminate(true);
 				} else {
 					eliminateMore = false;
+					// before leaving the the last loop set to determinate again, to show progress
+					// for further steps
+					if (getProgress().isIndeterminate()) {
+						getProgress().setIndeterminate(false);
+					}
 				}
 				coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
 			}
@@ -252,7 +274,7 @@ public class LinearRegression extends AbstractLearner {
 			coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
 		}
 
-		getProgress().step();
+		getProgress().setCompleted(14);
 
 		// calculate error on full data
 		double errorOnFullData = getSquaredError(exampleSet, isUsedAttribute, coefficientsOnFullData, useBias);
@@ -384,6 +406,9 @@ public class LinearRegression extends AbstractLearner {
 					}
 					index++;
 				}
+				if (i % 5 == 0) {
+					getProgress().setCompleted((int) (28 + (float) i / result.isUsedAttribute.length * 20));
+				}
 			}
 		} catch (Throwable e) {
 
@@ -396,8 +421,9 @@ public class LinearRegression extends AbstractLearner {
 				if (result.isUsedAttribute[i]) {
 					// calculating standard error and tolerance
 					double tolerance = getTolerance(exampleSet, result.isUsedAttribute, i, ridge, useBias);
-					standardErrors[index] = Math.sqrt((1.0d - generalCorrelation)
-							/ (tolerance * (exampleSet.size() - exampleSet.getAttributes().size() - 1.0d)))
+					standardErrors[index] = Math
+							.sqrt((1.0d - generalCorrelation)
+									/ (tolerance * (exampleSet.size() - exampleSet.getAttributes().size() - 1.0d)))
 							* labelStandardDeviation / standardDeviations[i];
 					tolerances[index] = tolerance;
 
@@ -425,8 +451,12 @@ public class LinearRegression extends AbstractLearner {
 					}
 					index++;
 				}
+				if (i % 5 == 0) {
+					getProgress().setCompleted((int) (28 + (float) i / result.isUsedAttribute.length * 20));
+				}
 			}
 		}
+		getProgress().setCompleted(47);
 
 		// Set all values for intercept
 		if (invertedMatrix == null) {
@@ -439,8 +469,8 @@ public class LinearRegression extends AbstractLearner {
 		if (!Tools.isZero(standardErrors[standardErrors.length - 1]) && fdistribution != null) {
 			tStatistics[tStatistics.length - 1] = result.coefficients[result.coefficients.length - 1]
 					/ standardErrors[standardErrors.length - 1];
-			double probability = fdistribution.cumulativeProbability(tStatistics[tStatistics.length - 1]
-					* tStatistics[tStatistics.length - 1]);
+			double probability = fdistribution
+					.cumulativeProbability(tStatistics[tStatistics.length - 1] * tStatistics[tStatistics.length - 1]);
 			pValues[pValues.length - 1] = 1.0d - probability;
 		} else {
 			if (Tools.isZero(result.coefficients[result.coefficients.length - 1])) {
@@ -617,8 +647,8 @@ public class LinearRegression extends AbstractLearner {
 
 		double[] coefficients = new double[currentlySelectedAttributes + 1];
 		if (currentlySelectedAttributes > 0) {
-			double[] coefficientsWithoutIntercept = com.rapidminer.tools.math.LinearRegression.performRegression(
-					independent, dependent, weights, ridge);
+			double[] coefficientsWithoutIntercept = com.rapidminer.tools.math.LinearRegression.performRegression(independent,
+					dependent, weights, ridge);
 			System.arraycopy(coefficientsWithoutIntercept, 0, coefficients, 0, currentlySelectedAttributes);
 		}
 		coefficients[currentlySelectedAttributes] = labelMean;
@@ -673,8 +703,8 @@ public class LinearRegression extends AbstractLearner {
 
 		double[] coefficients = new double[usedAttributes.length + 1];
 		if (usedAttributes.length > 0) {
-			double[] coefficientsWithoutIntercept = com.rapidminer.tools.math.LinearRegression.performRegression(
-					independent, dependent, weights, ridge);
+			double[] coefficientsWithoutIntercept = com.rapidminer.tools.math.LinearRegression.performRegression(independent,
+					dependent, weights, ridge);
 			System.arraycopy(coefficientsWithoutIntercept, 0, coefficients, 0, usedAttributes.length);
 		}
 		coefficients[usedAttributes.length] = exampleSet.getStatistics(label, Statistics.AVERAGE);
@@ -723,8 +753,8 @@ public class LinearRegression extends AbstractLearner {
 				LinearRegressionMethod method = entry.getValue().newInstance();
 				for (ParameterType methodType : method.getParameterTypes()) {
 					types.add(methodType);
-					methodType.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_FEATURE_SELECTION,
-							availableSelectionMethods, true, i));
+					methodType.registerDependencyCondition(
+							new EqualTypeCondition(this, PARAMETER_FEATURE_SELECTION, availableSelectionMethods, true, i));
 				}
 			} catch (InstantiationException e) { // can't do anything about this
 			} catch (IllegalAccessException e) {
@@ -736,13 +766,13 @@ public class LinearRegression extends AbstractLearner {
 				"Indicates if the algorithm should try to delete colinear features during the regression.", true));
 		ParameterType type = new ParameterTypeDouble(PARAMETER_MIN_TOLERANCE,
 				"The minimum tolerance for the removal of colinear features.", 0.0d, 1.0d, 0.05d);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_ELIMINATE_COLINEAR_FEATURES, true,
-				true));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_ELIMINATE_COLINEAR_FEATURES, true, true));
 		types.add(type);
 
-		types.add(new ParameterTypeBoolean(PARAMETER_USE_BIAS, "Indicates if an intercept value should be calculated.", true));
-		types.add(new ParameterTypeDouble(
-				PARAMETER_RIDGE,
+		types.add(
+				new ParameterTypeBoolean(PARAMETER_USE_BIAS, "Indicates if an intercept value should be calculated.", true));
+		types.add(new ParameterTypeDouble(PARAMETER_RIDGE,
 				"The ridge parameter used for ridge regression. A value of zero switches to ordinary least squares estimate.",
 				0.0d, Double.POSITIVE_INFINITY, 1.0E-8));
 		return types;

@@ -20,14 +20,17 @@ package com.rapidminer.gui.flow;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.util.Collection;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
+import javax.swing.SwingConstants;
 
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
@@ -35,15 +38,19 @@ import com.rapidminer.gui.actions.AutoWireAction;
 import com.rapidminer.gui.flow.processrendering.annotations.AnnotationsVisualizer;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.flow.processrendering.background.ProcessBackgroundImageVisualizer;
+import com.rapidminer.gui.flow.processrendering.connections.RemoveHoveredConnectionDecorator;
+import com.rapidminer.gui.flow.processrendering.connections.RemoveSelectedConnectionDecorator;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererAnnotationEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererEventListener;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererModelEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
+import com.rapidminer.gui.flow.processrendering.view.RenderPhase;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.ViewToolBar;
 import com.rapidminer.operator.Operator;
@@ -76,6 +83,10 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 	private final ProcessButtonBar processButtonBar;
 
+	private final JButton resetZoom;
+	private final JButton zoomIn;
+	private final JButton zoomOut;
+
 	private OperatorChain operatorChain;
 
 	private final JScrollPane scrollPane;
@@ -85,7 +96,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 		setBackground(Colors.PANEL_BACKGROUND);
 		processButtonBar = new ProcessButtonBar(mainFrame);
 
-		ProcessRendererModel model = new ProcessRendererModel();
+		final ProcessRendererModel model = new ProcessRendererModel();
 		// listen for display chain changes and update breadcrumbs accordingly
 		model.registerEventListener(new ProcessRendererEventListener() {
 
@@ -100,6 +111,11 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 					case DISPLAYED_CHAIN_CHANGED:
 					case DISPLAYED_PROCESSES_CHANGED:
 						processButtonBar.setSelectedNode(renderer.getModel().getDisplayedChain());
+						break;
+					case PROCESS_ZOOM_CHANGED:
+						zoomIn.setEnabled(model.canZoomIn());
+						zoomOut.setEnabled(model.canZoomOut());
+						resetZoom.setText((int) (model.getZoomFactor() * 100) + "%");
 						break;
 					case PROCESS_SIZE_CHANGED:
 					case MISC_CHANGED:
@@ -119,7 +135,55 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 		annotationsHandler = new AnnotationsVisualizer(renderer, flowVisualizer);
 		backgroundImageHandler = new ProcessBackgroundImageVisualizer(renderer);
 
+		RemoveSelectedConnectionDecorator removeSelectedConnectionDecorator = new RemoveSelectedConnectionDecorator(
+				renderer.getModel());
+		renderer.addDrawDecorator(removeSelectedConnectionDecorator, RenderPhase.CONNECTIONS);
+		renderer.addEventDecorator(removeSelectedConnectionDecorator, RenderPhase.CONNECTIONS);
+
+		RemoveHoveredConnectionDecorator removeHoveredConnectionDecorator = new RemoveHoveredConnectionDecorator(
+				renderer.getModel());
+		renderer.addDrawDecorator(removeHoveredConnectionDecorator, RenderPhase.CONNECTIONS);
+		// event decorator must be in phase OVERLAY such that it comes before selecting of
+		// connections which is done in between phases OPERATOR_ADDITIONS and OPERATORS
+		renderer.addEventDecorator(removeHoveredConnectionDecorator, RenderPhase.OVERLAY);
+
 		ViewToolBar toolBar = new ViewToolBar(ViewToolBar.LEFT);
+
+		zoomIn = new JButton(new ResourceActionAdapter(true, "processpanel.zoom_in") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				model.zoomIn();
+				model.fireProcessZoomChanged();
+			}
+		});
+		zoomOut = new JButton(new ResourceActionAdapter(true, "processpanel.zoom_out") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				model.zoomOut();
+				model.fireProcessZoomChanged();
+			}
+		});
+		resetZoom = new JButton(new ResourceActionAdapter(true, "processpanel.reset_zoom") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				model.resetZoom();
+				model.fireProcessZoomChanged();
+			}
+		});
+		resetZoom.setHorizontalTextPosition(SwingConstants.LEADING);
+
+		toolBar.add(resetZoom);
+		toolBar.add(zoomIn);
+		toolBar.add(zoomOut);
 
 		toolBar.add(annotationsHandler.makeAddAnnotationAction(null), ViewToolBar.RIGHT);
 		toolBar.add(new AutoWireAction(mainFrame), ViewToolBar.RIGHT);
@@ -133,15 +197,16 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 		processLayeredPane.setLayout(new BorderLayout());
 		processLayeredPane.add(processButtonBar, BorderLayout.WEST, 1);
 		processLayeredPane.add(toolBar, BorderLayout.EAST, 0);
-		processLayeredPane.setBorder(BorderFactory.createEmptyBorder(7, 0, 0, 0));
+		processLayeredPane.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
 		add(processLayeredPane, BorderLayout.NORTH);
 
 		scrollPane = new ExtendedJScrollPane(renderer);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-		scrollPane.setBorder(null);
+		scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TEXTFIELD_BORDER));
 
 		add(scrollPane, BorderLayout.CENTER);
 
+		new ProcessPanelScroller(renderer, scrollPane);
 	}
 
 	/**
@@ -242,4 +307,5 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 	public JViewport getViewPort() {
 		return scrollPane.getViewport();
 	}
+
 }

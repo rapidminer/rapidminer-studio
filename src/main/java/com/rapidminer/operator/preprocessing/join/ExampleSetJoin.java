@@ -72,7 +72,7 @@ import com.rapidminer.tools.container.Pair;
  * Special attributes of the second input example set which do not exist in the first example set
  * will simply be added. If they already exist they are simply skipped.
  * </p>
- * 
+ *
  * @author Ingo Mierswa, Tobias Malbrecht, Marius Helf
  */
 public class ExampleSetJoin extends AbstractExampleSetJoin {
@@ -211,15 +211,19 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 		switch (joinType) {
 			case JOIN_TYPE_INNER:
+				getProgress().setTotal(leftExampleSet.size());
 				return performInnerJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
 						keyAttributes);
 			case JOIN_TYPE_LEFT:
+				getProgress().setTotal(leftExampleSet.size());
 				return performLeftJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
 						keyAttributes, null);
 			case JOIN_TYPE_RIGHT:
+				getProgress().setTotal(rightExampleSet.size());
 				return performRightJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
 						keyAttributes);
 			case JOIN_TYPE_OUTER:
+				getProgress().setTotal(leftExampleSet.size() + rightExampleSet.size());
 				return performOuterJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
 						keyAttributes);
 			default:
@@ -302,7 +306,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	/**
 	 * Performs an inner join, i.e. the result table contains all examples from the source example
 	 * sets whose key attributes match.
-	 * 
+	 *
 	 */
 	private MemoryExampleTable performInnerJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
@@ -321,6 +325,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			rightKeyMapping = createKeyMapping(rightExampleSet, rightKeyAttributes, leftKeyAttributes);
 		}
 
+		int progressCounter = 0;
 		// iterate over all example from left table and search for matching examples in right table:
 		for (Example leftExample : leftExampleSet) {
 
@@ -329,8 +334,16 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 			if (matchingRightExamples != null) {
 				for (Example rightExample : matchingRightExamples) {
-					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample, rightExample);
+					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample,
+							rightExample);
 				}
+			}
+
+			// trigger operator progress every 100 examples
+			++progressCounter;
+			if (progressCounter % 100 == 0) {
+				getProgress().step(100);
+				progressCounter = 0;
 			}
 		}
 		return unionTable;
@@ -338,7 +351,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 	/**
 	 * Performs a left join.
-	 * 
+	 *
 	 */
 	private MemoryExampleTable performLeftJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
@@ -357,6 +370,8 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			// create key mapping for right example set
 			rightKeyMapping = createKeyMapping(rightExampleSet, rightKeyAttributes, leftKeyAttributes);
 		}
+
+		int progressCounter = 0;
 		// iterate over all example from left table and search for matching examples in right table:
 		for (Example leftExample : leftExampleSet) {
 			List<Example> matchingRightExamples = getMatchingExamples(leftExampleSet, rightExampleSet, leftKeyAttributes,
@@ -365,24 +380,30 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			if (matchingRightExamples != null) {
 				// add combination of left example and all matching right examples
 				for (Example rightExample : matchingRightExamples) {
-					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample, rightExample);
+					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample,
+							rightExample);
 					if (matchedExamplesInRightTable != null) {
-						matchedExamplesInRightTable.add(new DoubleArrayWrapper(
-								getKeyValues(rightExample, rightKeyAttributes)));
+						matchedExamplesInRightTable
+								.add(new DoubleArrayWrapper(getKeyValues(rightExample, rightKeyAttributes)));
 					}
 				}
 			} else { // no rows with this key in right table
 				// insert this row with null values for the right table
 				addLeftOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample);
 			}
-			checkForStop();
+			// trigger operator progress every 100 examples
+			++progressCounter;
+			if (progressCounter % 100 == 0) {
+				getProgress().step(100);
+				progressCounter = 0;
+			}
 		}
 		return unionTable;
 	}
 
 	/**
 	 * Performs a right join.
-	 * 
+	 *
 	 */
 	private MemoryExampleTable performRightJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
@@ -409,6 +430,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			leftKeyMapping = createKeyMapping(leftExampleSet, leftKeyAttributes, rightKeyAttributes);
 		}
 
+		int progressCounter = 0;
 		// iterate over all example from left table and search for matching examples in right table:
 		for (Example rightExample : rightExampleSet) {
 			List<Example> matchingLeftExamples = getMatchingExamples(rightExampleSet, leftExampleSet, rightKeyAttributes,
@@ -417,20 +439,26 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			if (matchingLeftExamples != null) {
 				// add combination of left example and all matching right examples
 				for (Example leftExample : matchingLeftExamples) {
-					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample, rightExample);
+					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample,
+							rightExample);
 				}
 			} else {
 				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, rightExample,
 						leftKeyAttributes, rightKeyAttributes);
 			}
-			checkForStop();
+			// trigger operator progress every 100 examples
+			++progressCounter;
+			if (progressCounter % 100 == 0) {
+				getProgress().step(100);
+				progressCounter = 0;
+			}
 		}
 		return unionTable;
 	}
 
 	/**
 	 * Performs an outer join (not to be confused with a full outer join).
-	 * 
+	 *
 	 */
 	private MemoryExampleTable performOuterJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
@@ -446,6 +474,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 		unionTable = performLeftJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
 				keyAttributes, mappedRightExamples);
 
+		int progressCounter = 0;
 		for (Example rightExample : rightExampleSet) {
 			// perform right join, but add example only if it has not been matched during left join
 			// above
@@ -453,7 +482,12 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, rightExample,
 						leftKeyAttributes, rightKeyAttributes);
 			}
-			checkForStop();
+			// trigger operator progress every 100 examples
+			++progressCounter;
+			if (progressCounter % 100 == 0) {
+				getProgress().step(100);
+				progressCounter = 0;
+			}
 		}
 		return unionTable;
 	}
@@ -559,7 +593,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	/**
 	 * Maps all values of the keyAttributes which occur in exampleSet to a list of matching
 	 * examples.
-	 * 
+	 *
 	 * @param exampleSet
 	 *            The example set for whose key attributes the mapping is created
 	 * @param keyAttributes
@@ -637,7 +671,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	 * Gets examples from secondExampleSet which match the values of the keyAttributes from
 	 * firstExample. If PARAMETER_USE_ID_FOR_JOIN is true, the standard id-mapping of example sets
 	 * is used. If not, secondKeyMapping is used (@see createKeyMapping())
-	 * 
+	 *
 	 */
 	private List<Example> getMatchingExamples(ExampleSet firstExampleSet, ExampleSet secondExampleSet,
 			Attribute[] firstKeyAttributes, Map<DoubleArrayWrapper, List<Example>> secondKeyMapping, boolean useId,
@@ -689,7 +723,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 	/**
 	 * Returns all attributes from the right example which are key attributes.
-	 * 
+	 *
 	 * As the values of the key attributes of left and right example set are always the same, only
 	 * one set of key attributes is necessary. This is taken from the left example set. Thus, the
 	 * right key attributes are excluded.
@@ -711,7 +745,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 	/**
 	 * Returns the metadata from all attributes from the right example which are key attributes.
-	 * 
+	 *
 	 * As the values of the key attributes of left and right example set are always the same, only
 	 * one set of key attributes is necessary. This is taken from the left example set metadata.
 	 * Thus, the right key attributes are excluded.

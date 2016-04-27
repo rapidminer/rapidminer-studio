@@ -18,6 +18,8 @@
  */
 package com.rapidminer.operator.visualization.dependencies;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
@@ -31,8 +33,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.tools.math.MathFunctions;
 
-import java.util.List;
-
 
 /**
  * <p>
@@ -43,12 +43,12 @@ import java.util.List;
  * weights should be created, this operator produces simply a correlation matrix which up to now
  * cannot be used by other operators but can be displayed to the user in the result tab.
  * </p>
- * 
+ *
  * <p>
  * Please note that this simple implementation performs a data scan for each attribute combination
  * and might therefore take some time for non-memory example tables.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class CorrelationMatrixOperator extends Operator {
@@ -80,13 +80,19 @@ public class CorrelationMatrixOperator extends Operator {
 		boolean createWeights = getParameterAsBoolean(PARAMETER_CREATE_WEIGHTS);
 		boolean normalizeWeights = getParameterAsBoolean(PARAMETER_NORMALIZE_WEIGHTS);
 		int k = 0;
+		long progressCounter = 0;
+		getProgress().setTotal(100);
+		long batch = Math.max(1L, exampleSet.getAttributes().size() * (long) exampleSet.getAttributes().size() / 100);
 		for (Attribute firstAttribute : exampleSet.getAttributes()) {
 			int l = 0;
 			for (Attribute secondAttribute : exampleSet.getAttributes()) {
 				matrix.setValue(k, l,
 						MathFunctions.correlation(exampleSet, firstAttribute, secondAttribute, squared || createWeights));
-				checkForStop();
 				l++;
+				if (++progressCounter % batch == 0 || progressCounter % 1000 == 0) {
+					getProgress().setCompleted((int) (progressCounter * 100
+							/ (exampleSet.getAttributes().size() * (long) exampleSet.getAttributes().size())));
+				}
 			}
 			k++;
 		}
@@ -99,7 +105,7 @@ public class CorrelationMatrixOperator extends Operator {
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			double sum = 0.0d;
 			for (int j = 0; j < numberOfAttributes; j++) {
-				sum += (1.0d - matrix.getValue(i, j)); // actually the
+				sum += 1.0d - matrix.getValue(i, j); // actually the
 				// squared value
 			}
 			weights.setWeight(attribute.getName(), sum / numberOfAttributes);
@@ -116,8 +122,7 @@ public class CorrelationMatrixOperator extends Operator {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeBoolean(
-				PARAMETER_CREATE_WEIGHTS,
+		ParameterType type = new ParameterTypeBoolean(PARAMETER_CREATE_WEIGHTS,
 				"Indicates if attribute weights based on correlation should be calculated or if the complete matrix should be returned.",
 				false);
 		type.setExpert(false);

@@ -107,7 +107,7 @@ public class ScaledImageIcon extends ImageIcon {
 		}
 
 		Graphics2D g = (Graphics2D) graphics.create();
-		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g.drawImage(image, x, y, getIconWidth(), getIconHeight(), observer);
 		g.dispose();
 	}

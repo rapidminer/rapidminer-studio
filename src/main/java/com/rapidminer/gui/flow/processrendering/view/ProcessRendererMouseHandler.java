@@ -159,14 +159,16 @@ public class ProcessRendererMouseHandler {
 						int pid = controller.getIndex(draggingInSubprocess);
 						Point processSpace = view.toProcessSpace(e.getPoint(), pid);
 						if (processSpace != null) {
-							model.setHoveringConnectionSource(controller.getPortForConnectorNear(processSpace,
-									draggingInSubprocess));
+							model.setHoveringConnectionSource(
+									controller.getPortForConnectorNear(processSpace, draggingInSubprocess));
 						}
 					}
 				}
 
 				double difX = e.getX() - mousePositionAtDragStart.getX();
 				double difY = e.getY() - mousePositionAtDragStart.getY();
+				difX *= 1 / model.getZoomFactor();
+				difY *= 1 / model.getZoomFactor();
 
 				// hoveringOperator is always included in draggedOperators
 				if (!draggedOperatorsOrigins.containsKey(hoveringOperator)) {
@@ -219,8 +221,8 @@ public class ProcessRendererMouseHandler {
 					if (origin.getMinX() + difX < 0) {
 						difX = -origin.getMinX() + ProcessDrawer.GRID_X_OFFSET;
 					}
-					Rectangle2D opPos = new Rectangle2D.Double(Math.floor(origin.getX() + difX), Math.floor(origin.getY()
-							+ difY), origin.getWidth(), origin.getHeight());
+					Rectangle2D opPos = new Rectangle2D.Double(Math.floor(origin.getX() + difX),
+							Math.floor(origin.getY() + difY), origin.getWidth(), origin.getHeight());
 					model.setOperatorRect(op, opPos);
 				}
 				model.fireOperatorsMoved(draggedOperatorsOrigins.keySet());
@@ -230,7 +232,8 @@ public class ProcessRendererMouseHandler {
 			// ports are draggeable only if they belong to the displayed chain <->
 			// they are innersinks of our sources
 			if (isDisplayChainPortDragged() &&
-					// furthermore they can only be dragged with left mouse button + shift key pressed
+					// furthermore they can only be dragged with left mouse button + shift key
+					// pressed
 					pressedMouseButton == MouseEvent.BUTTON1 && e.isShiftDown()) {
 
 				double diff = e.getY() - mousePositionAtLastEvaluation.getY();
@@ -514,23 +517,27 @@ public class ProcessRendererMouseHandler {
 						processIndex = view.getProcessIndexUnder(e.getPoint());
 					}
 					if (processIndex == -1) {
-						processIndex = view.getProcessIndexUnder(new Point((int) selectionRectangle.getCenterX(),
-								(int) selectionRectangle.getCenterY()));
+						processIndex = view.getProcessIndexUnder(
+								new Point((int) selectionRectangle.getCenterX(), (int) selectionRectangle.getCenterY()));
 					}
+
 					Point offset = view.toProcessSpace(new Point(0, 0), processIndex);
 					if (offset != null) {
-						model.getSelectionRectangle().setFrame(selectionRectangle.getX() + offset.getX(),
-								selectionRectangle.getY() + offset.getY(), selectionRectangle.getWidth(),
-								selectionRectangle.getHeight());
 						if (!e.isShiftDown() && !SwingTools.isControlOrMetaDown(e)
 								|| model.getSelectedOperators().size() == 1
-								&& model.getSelectedOperators().get(0) == model.getDisplayedChain()) { // if
+										&& model.getSelectedOperators().get(0) == model.getDisplayedChain()) { // if
 							// we have only selected the parent, we ignore SHIFT and CTRL
 							model.clearOperatorSelection();
 						}
 						for (Operator op : model.getProcess(processIndex).getOperators()) {
 							Rectangle2D opRect = model.getOperatorRect(op);
-							if (model.getSelectionRectangle().contains(opRect)) {
+							double zoomFactor = model.getZoomFactor();
+							Rectangle2D selRect = new Rectangle2D.Double(
+									model.getSelectionRectangle().getX() * (1 / zoomFactor) + offset.getX(),
+									model.getSelectionRectangle().getY() * (1 / zoomFactor) + offset.getY(),
+									model.getSelectionRectangle().getWidth() * (1 / zoomFactor),
+									model.getSelectionRectangle().getHeight() * (1 / zoomFactor));
+							if (selRect.contains(opRect)) {
 								controller.selectOperator(op, false);
 							}
 						}
@@ -542,13 +549,11 @@ public class ProcessRendererMouseHandler {
 				if (hasDragged && draggedOperatorsOrigins != null && draggedOperatorsOrigins.size() == 1) {
 					controller.insertIntoHoveringConnection(model.getHoveringOperator());
 					e.consume();
-				} else if (!hasDragged
-						&& model.getHoveringOperator() != null
-						&& !e.isPopupTrigger()
+				} else if (!hasDragged && model.getHoveringOperator() != null && !e.isPopupTrigger()
 						&& SwingUtilities.isLeftMouseButton(e)
-						&& (SwingTools.isControlOrMetaDown(e) || model.getSelectedOperators().contains(
-								model.getHoveringOperator())
-								&& !pressHasSelected)) {
+						&& (SwingTools.isControlOrMetaDown(e)
+								|| model.getSelectedOperators().contains(model.getHoveringOperator())
+										&& !pressHasSelected)) {
 					// control and deselection was delayed to mouseReleased
 					controller.selectOperator(model.getHoveringOperator(), !SwingTools.isControlOrMetaDown(e),
 							e.isShiftDown());
@@ -735,7 +740,6 @@ public class ProcessRendererMouseHandler {
 		}
 		if (model.getHoveringConnectionSource() != null) {
 			controller.showStatus(I18N.getGUILabel("processRenderer.connection.hover"));
-			e.consume();
 		} else {
 			controller.clearStatus();
 		}
@@ -788,8 +792,7 @@ public class ProcessRendererMouseHandler {
 							break;
 						} else {
 							counter++;
-							popupPosition = new Point(
-									(int) (popupPosition.x + model.getProcessWidth(unit) + ProcessDrawer.WALL_WIDTH),
+							popupPosition = new Point((int) (popupPosition.x + model.getProcessWidth(unit)),
 									popupPosition.y);
 						}
 					}

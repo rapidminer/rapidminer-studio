@@ -349,7 +349,9 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 
 				// the goal is to draw a round border all around the content except for where the
 				// selected tab (if visible) is
-				getTabBounds(selectedIndex, selTabBounds);
+				if (selectedIndex >= 0) {
+					getTabBounds(selectedIndex, selTabBounds);
+				}
 
 				// first we draw a round rect around everything
 				g2.drawRoundRect(x, y, w - 1, h - 1, r, r);

@@ -284,6 +284,7 @@ public class PortInfoBubble extends BubbleWindow {
 							killBubble(true);
 						}
 						break;
+					case PROCESS_ZOOM_CHANGED:
 					case PROCESS_SIZE_CHANGED:
 						PortInfoBubble.this.paint(false);
 						break;
@@ -417,6 +418,8 @@ public class PortInfoBubble extends BubbleWindow {
 		if (portLoc == null) {
 			return null;
 		}
+		portLoc.x = (int) (portLoc.x * renderer.getModel().getZoomFactor());
+		portLoc.y = (int) (portLoc.y * renderer.getModel().getZoomFactor());
 		portLoc = ProcessDrawUtils.convertToAbsoluteProcessPoint(portLoc,
 				renderer.getModel().getProcessIndex(port.getPorts().getOwner().getConnectionContext()), renderer.getModel());
 		if (portLoc == null) {
@@ -437,12 +440,12 @@ public class PortInfoBubble extends BubbleWindow {
 	@Override
 	protected int getObjectWidth() {
 		// double x width because we want a bit of distance from a port
-		return ProcessDrawer.PORT_SIZE * 2;
+		return (int) (ProcessDrawer.PORT_SIZE * 2 * renderer.getModel().getZoomFactor());
 	}
 
 	@Override
 	protected int getObjectHeight() {
-		return ProcessDrawer.PORT_SIZE;
+		return (int) (ProcessDrawer.PORT_SIZE * renderer.getModel().getZoomFactor());
 	}
 
 	@Override

@@ -43,6 +43,7 @@ import org.xml.sax.SAXException;
 
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.nio.model.ColumnMetaData;
 import com.rapidminer.operator.nio.model.DataResultSet;
@@ -138,6 +139,12 @@ public class XlsxResultSet implements DataResultSet {
 
 	/** The content of the parsed workbook file */
 	private final XlsxWorkbook xlsxWorkbook;
+
+	private Operator operator = null;
+
+	private long multiplier;
+
+	private int progressCounter = 0;
 
 	/**
 	 * Configures the Excel result set with the provided configuration object. Also parses multiple
@@ -238,11 +245,11 @@ public class XlsxResultSet implements DataResultSet {
 				this.dateFormatProvider = provider;
 			}
 		} else {
-					String datePattern = configuration.getDatePattern();
+			String datePattern = configuration.getDatePattern();
 			final DateFormat dateFormat = new SimpleDateFormat(datePattern == null ? "" : datePattern);
-					if (timezone != null) {
-						dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
-					}
+			if (timezone != null) {
+				dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+			}
 			this.dateFormatProvider = new DateFormatProvider() {
 
 				@Override
@@ -252,6 +259,13 @@ public class XlsxResultSet implements DataResultSet {
 			};
 		}
 
+		if (callingOperator != null) {
+			callingOperator.getProgress().setCheckForStop(false);
+			callingOperator.getProgress().setTotal(100);
+			progressCounter = 0;
+			multiplier = worksheetParser.getTotalSize() / 100L;
+			operator = callingOperator;
+		}
 	}
 
 	/**
@@ -482,6 +496,14 @@ public class XlsxResultSet implements DataResultSet {
 		if (listener != null) {
 			listener.setCompleted(getCurrentRow());
 		}
+
+		if (operator != null && ++progressCounter % 100 == 0) {
+			try {
+				operator.getProgress().setCompleted((int) (worksheetParser.getCurrentPosition() / multiplier));
+			} catch (ProcessStoppedException e) {
+				// Will not happen, because check for stop is deactivated
+			}
+		}
 	}
 
 	@Override
@@ -497,6 +519,13 @@ public class XlsxResultSet implements DataResultSet {
 			int numberOfRows = getNumberOfRows();
 			listener.setTotal(numberOfRows == -1 ? XlsxSheetMetaDataParser.MAXIMUM_XLSX_ROW_INDEX + 1 : numberOfRows);
 			listener.setCompleted(0);
+		}
+
+		// Update progress
+		if (operator != null) {
+			operator.getProgress().setTotal(100);
+			progressCounter = 0;
+			multiplier = worksheetParser.getTotalSize() / 100L;
 		}
 	}
 

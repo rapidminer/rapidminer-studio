@@ -84,9 +84,9 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 	public Example2AttributePivoting(OperatorDescription description) {
 		super(description);
 
-		getExampleSetInputPort().addPrecondition(
-				new AttributeSetPrecondition(getExampleSetInputPort(), AttributeSetPrecondition.getAttributesByParameter(
-						this, PARAMETER_GROUP_ATTRIBUTE, PARAMETER_INDEX_ATTRIBUTE)));
+		getExampleSetInputPort()
+				.addPrecondition(new AttributeSetPrecondition(getExampleSetInputPort(), AttributeSetPrecondition
+						.getAttributesByParameter(this, PARAMETER_GROUP_ATTRIBUTE, PARAMETER_INDEX_ATTRIBUTE)));
 	}
 
 	@Override
@@ -136,14 +136,14 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 				for (AttributeMetaData originalAMD : metaData.getAllAttributes()) {
 					if (!originalAMD.isSpecial() && originalAMD != indexAttribute && originalAMD != groupAttribute) {
 						AttributeMetaData newIndexedAttribute = originalAMD.clone();
-						newIndexedAttribute.setName(originalAMD.getName() + "_"
-								+ newIndexedAttribute.getValueRange().getLower());
+						newIndexedAttribute
+								.setName(originalAMD.getName() + "_" + newIndexedAttribute.getValueRange().getLower());
 						newIndexedAttribute.getNumberOfMissingValues().increaseByUnknownAmount();
 						newIndexedAttribute.setValueSetRelation(SetRelation.SUBSET);
 						emd.addAttribute(newIndexedAttribute);
 						newIndexedAttribute = originalAMD.clone();
-						newIndexedAttribute.setName(originalAMD.getName() + "_"
-								+ newIndexedAttribute.getValueRange().getUpper());
+						newIndexedAttribute
+								.setName(originalAMD.getName() + "_" + newIndexedAttribute.getValueRange().getUpper());
 						newIndexedAttribute.getNumberOfMissingValues().increaseByUnknownAmount();
 						newIndexedAttribute.setValueSetRelation(SetRelation.SUBSET);
 						emd.addAttribute(newIndexedAttribute);
@@ -181,8 +181,9 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 
 		Attribute weightAttribute = sourceExampleSet.getAttributes().getWeight();
 
-		SortedExampleSet exampleSet = new SortedExampleSet(new SortedExampleSet(sourceExampleSet, indexAttribute,
-				SortedExampleSet.INCREASING), groupAttribute, SortedExampleSet.INCREASING);
+		SortedExampleSet exampleSet = new SortedExampleSet(
+				new SortedExampleSet(sourceExampleSet, indexAttribute, SortedExampleSet.INCREASING), groupAttribute,
+				SortedExampleSet.INCREASING);
 		// identify static or dynamic attributes and record index values
 		List<String> indexValues = new Vector<>();
 		Attribute[] attributes = exampleSet.getAttributes().createRegularAttributeArray();
@@ -192,7 +193,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 		}
 
 		// init operator progress
-		getProgress().setTotal(exampleSet.size());
+		getProgress().setTotal(100);
 
 		Example lastExample = null;
 		int counter = 0;
@@ -217,12 +218,11 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 			}
 			lastExample = example;
 
-			++counter;
-			if (counter % 100 == 0) {
-				checkForStop();
-				counter = 0;
+			if (++counter % 100 == 0) {
+				getProgress().setCompleted((int) ((float) counter / exampleSet.size() * 30));
 			}
 		}
+		getProgress().setCompleted(30);
 		if (!indexAttribute.isNominal()) {
 			Collections.sort(indexValues);
 		}
@@ -243,16 +243,19 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 				} else {
 					for (String indexValue : indexValues) {
 						String newAttributeName = attribute.getName() + "_" + indexValue;
-						Attribute newAttribute = AttributeFactory
-								.createAttribute(newAttributeName, attribute.getValueType());
+						Attribute newAttribute = AttributeFactory.createAttribute(newAttributeName,
+								attribute.getValueType());
 						newAttribute.setDefault(Double.NaN);
 						newAttributes.add(newAttribute);
 						attributeNames.add(newAttributeName);
 					}
 				}
 			}
-			checkForStop();
+			if (i % 50 == 0) {
+				getProgress().setCompleted((int) ((float) i / attributes.length * 10 + 30));
+			}
 		}
+		getProgress().setCompleted(40);
 
 		MemoryExampleTable table = new MemoryExampleTable(newAttributes);
 		AggregationFunction aggregationFunction = null;
@@ -287,9 +290,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 						aggregationFunction = AbstractAggregationFunction
 								.createAggregationFunction(weightAggregationFunctionIndex);
 					} catch (Exception e) {
-						throw new UserError(
-								this,
-								904,
+						throw new UserError(this, 904,
 								AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES[weightAggregationFunctionIndex],
 								e.getMessage());
 					}
@@ -330,10 +331,8 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 			lastGroupValue = currentGroupValue;
 
 			// report progress every 100 examples
-			++counter;
-			if (counter % 100 == 0) {
-				getProgress().step(100);
-				counter = 0;
+			if (++counter % 100 == 0) {
+				getProgress().setCompleted((int) ((float) counter / exampleSet.size() * 60 + 40));
 			}
 		}
 		if (aggregationFunction != null) {
@@ -362,7 +361,8 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeAttribute(PARAMETER_GROUP_ATTRIBUTE,
-				"Attribute that groups the examples which form one example after pivoting.", getExampleSetInputPort(), false));
+				"Attribute that groups the examples which form one example after pivoting.", getExampleSetInputPort(),
+				false));
 		types.add(new ParameterTypeAttribute(PARAMETER_INDEX_ATTRIBUTE,
 				"Attribute which differentiates examples inside a group.", getExampleSetInputPort(), false));
 		types.add(new ParameterTypeBoolean(PARAMETER_CONSIDER_WEIGHTS,

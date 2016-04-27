@@ -66,6 +66,7 @@ import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.ConnectPortToRepositoryAction;
 import com.rapidminer.gui.actions.StoreInRepositoryAction;
 import com.rapidminer.gui.actions.export.PrintableComponent;
+import com.rapidminer.gui.animation.OperatorAnimationProcessListener;
 import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
 import com.rapidminer.gui.dnd.DragListener;
 import com.rapidminer.gui.dnd.OperatorTransferHandler;
@@ -695,6 +696,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	/** the mainframe instance */
 	private final MainFrame mainFrame;
 
+	/** the repaint filter to ensure a minimal interval between repaints */
+	private final RepaintFilter repaintFilter;
+
 	public ProcessRendererView(final ProcessRendererModel model, final ProcessPanel processPanel,
 			final MainFrame mainFrame) {
 		this.mainFrame = mainFrame;
@@ -702,6 +706,10 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		this.controller = new ProcessRendererController(this, model);
 		this.drawer = new ProcessDrawer(model, true);
 		this.drawerOverview = new ProcessDrawer(model, false);
+		this.repaintFilter = new RepaintFilter(this);
+
+		// initialize process listener for animations
+		new OperatorAnimationProcessListener(mainFrame);
 
 		// prepare event decorators for each phase
 		decorators = new HashMap<>();
@@ -734,6 +742,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 						controller.setInitialSizes();
 						setupExtensionButtons();
 						break;
+					case PROCESS_ZOOM_CHANGED:
+						controller.autoFit();
+						//$FALL-THROUGH$
 					case PROCESS_SIZE_CHANGED:
 						SwingUtilities.invokeLater(new Runnable() {
 
@@ -927,17 +938,16 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			return -1;
 		}
 
-		if (p.getY() < ProcessDrawer.PADDING || p.getY() > controller.getTotalHeight() - ProcessDrawer.PADDING) {
+		if (p.getY() < 0 || p.getY() > controller.getTotalHeight()) {
 			return -1;
 		}
 		int xOffset = 0;
 		for (int i = 0; i < model.getProcesses().size(); i++) {
-			xOffset += ProcessDrawer.WALL_WIDTH;
 			int relativeX = (int) p.getX() - xOffset;
 			if (relativeX >= 0 && relativeX <= model.getProcessWidth(model.getProcess(i))) {
 				return i;
 			}
-			xOffset += ProcessDrawer.WALL_WIDTH + model.getProcessWidth(model.getProcess(i));
+			xOffset += ProcessDrawer.WALL_WIDTH * 2 + model.getProcessWidth(model.getProcess(i));
 		}
 		return -1;
 	}
@@ -954,11 +964,12 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	public Point toProcessSpace(final Point p, final int processIndex) {
 		int xOffset = 0;
 		for (int i = 0; i < model.getProcesses().size(); i++) {
-			xOffset += ProcessDrawer.WALL_WIDTH;
 			if (i == processIndex) {
-				return new Point((int) p.getX() - xOffset, (int) p.getY() - ProcessDrawer.PADDING);
+				return new Point((int) (p.getX() * (1 / model.getZoomFactor()) - xOffset),
+						(int) (p.getY() * (1 / model.getZoomFactor())));
 			}
-			xOffset += ProcessDrawer.WALL_WIDTH + model.getProcessWidth(model.getProcess(i));
+			xOffset += (ProcessDrawer.WALL_WIDTH * 2 + model.getProcessWidth(model.getProcess(i)))
+					* (1 / model.getZoomFactor());
 		}
 		return null;
 	}
@@ -1021,6 +1032,18 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 	@Override
 	public void repaint() {
+		if (repaintFilter != null) {
+			repaintFilter.requestRepaint();
+		} else {
+			doRepaint();
+		}
+	}
+
+	/**
+	 * Does the repaint. Only call this method directly when there is a reason not to go through the
+	 * {@link RepaintFilter}. Otherwise use {{@link #repaint()}.
+	 */
+	void doRepaint() {
 		super.repaint();
 		if (overviewPanel != null && overviewPanel.isShowing()) {
 			overviewPanel.repaint();
@@ -1267,11 +1290,13 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		renameField.setHorizontalAlignment(SwingConstants.CENTER);
 		renameField.setText(op.getName());
 		renameField.selectAll();
-		Point p = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point((int) rect.getX(), (int) rect.getY()),
-				processIndex, model);
+
+		int x = (int) (rect.getX() * model.getZoomFactor());
+		int y = (int) (rect.getY() * model.getZoomFactor());
+		Point p = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(x, y), processIndex, model);
 
 		int padding = 7;
-		renameField.setBounds((int) (p.getX() + offset - padding), (int) p.getY() - 3, width + padding * 2, 21);
+		renameField.setBounds((int) (p.getX() + offset - padding), (int) (p.getY() - 3), width + padding * 2, 21);
 		renameField.setFont(ProcessDrawer.OPERATOR_FONT);
 		renameField.setBorder(null);
 		add(renameField);
@@ -1343,17 +1368,18 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	void updateExtensionButtons() {
 		for (ExtensionButton button : subprocessExtensionButtons) {
 			int subprocessIndex = button.getSubprocessIndex();
+			int buttonSize = button.getWidth();
+			int gap = 2 * ProcessDrawer.WALL_WIDTH;
 			if (subprocessIndex >= 0) {
-				Point loc = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(0, 0), subprocessIndex, model);
-				double width = model.getProcessWidth(model.getProcess(subprocessIndex)) + 1;
-				button.setBounds((int) (loc.getX() + width),
-						(int) loc.getY() + (button.isAdd() ? 0 : button.getHeight()) - 1,
-						(int) button.getPreferredSize().getWidth(), (int) button.getPreferredSize().getHeight());
+				Point location = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(0, 0), subprocessIndex, model);
+				int height = (int) model.getProcessHeight(model.getProcess(subprocessIndex));
+				int width = (int) model.getProcessWidth(model.getProcess(subprocessIndex));
+				button.setBounds(location.x + width - buttonSize - gap - (button.isAdd() ? 0 : buttonSize),
+						location.y + height - gap - buttonSize, buttonSize, buttonSize);
 			} else {
-				Point loc = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(0, 0), 0, model);
-				button.setBounds((int) loc.getX() - button.getWidth(),
-						(int) loc.getY() + (button.isAdd() ? 0 : button.getHeight()) - 1,
-						(int) button.getPreferredSize().getWidth(), (int) button.getPreferredSize().getHeight());
+				Point location = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(0, 0), 0, model);
+				int height = (int) model.getProcessHeight(model.getProcess(0));
+				button.setBounds(location.x + gap, location.y + height - gap - buttonSize, buttonSize, buttonSize);
 			}
 		}
 	}
@@ -1473,6 +1499,22 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			int index = model.getHoveringProcessIndex();
 			Action[] annotationActions = new Action[4];
 			final Operator hoveredOp = model.getHoveringOperator();
+
+			// reset zoom action if clicking on background and zoom is set
+			if (hoveredOp == null && model.getZoomFactor() != 1.0) {
+				menu.add(new ResourceAction(true, "processrenderer.reset_zoom") {
+
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						model.resetZoom();
+						model.fireProcessZoomChanged();
+					}
+				});
+				menu.addSeparator();
+			}
+
 			if (index != -1) {
 				ExecutionUnit process = model.getProcess(index);
 				Point point = toProcessSpace(e.getPoint(), index);
@@ -1600,6 +1642,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	private void init() {
 		addMouseMotionListener(mouseHandler);
 		addMouseListener(mouseHandler);
+		addMouseWheelListener(mouseHandler);
 		addKeyListener(keyHandler);
 
 		// for absolute positioning of tipPane

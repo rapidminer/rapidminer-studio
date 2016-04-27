@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -49,7 +49,6 @@ import com.rapidminer.tools.plugin.Plugin;
  * appropriate.
  *
  * @author Simon Fischer
- *
  */
 public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntry {
 
@@ -58,7 +57,7 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 
 	private static final String PROPERTY_IOOBJECT_CLASS = "ioobject-class";
 
-	private SoftReference<MetaData> metaData = null;
+	private WeakReference<MetaData> metaData = null;
 	private Class<? extends IOObject> dataObjectClass = null;
 
 	SimpleIOObjectEntry(String name, SimpleFolder containingFolder, LocalRepository repository) {
@@ -116,7 +115,7 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 			try {
 				objectIn = new RMObjectInputStream(new FileInputStream(metaDataFile));
 				readObject = (MetaData) objectIn.readObject();
-				this.metaData = new SoftReference<MetaData>(readObject);
+				this.metaData = new WeakReference<>(readObject);
 				if (readObject instanceof ExampleSetMetaData) {
 					for (AttributeMetaData amd : ((ExampleSetMetaData) readObject).getAllAttributes()) {
 						if (amd.isNominal()) {
@@ -188,7 +187,7 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 				l.complete();
 			}
 		}
-		this.metaData = new SoftReference<MetaData>(md);
+		this.metaData = new WeakReference<>(md);
 		putProperty(PROPERTY_IOOBJECT_CLASS, data.getClass().getName());
 	}
 

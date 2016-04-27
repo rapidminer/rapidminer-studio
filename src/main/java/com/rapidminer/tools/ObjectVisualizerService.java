@@ -18,38 +18,38 @@
  */
 package com.rapidminer.tools;
 
+import java.lang.ref.WeakReference;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import com.rapidminer.ObjectVisualizer;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.DummyObjectVisualizer;
 import com.rapidminer.gui.ExampleVisualizer;
-
-import java.lang.ref.SoftReference;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 
 /**
  * This class provides the management of {@link ObjectVisualizer}s. The visualizer are remembered
  * per object using a weak hash map and WeakReferences. Hence if the object isn't in ordinary use
  * any more, the visualizer will be discarded also.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land
  */
 public class ObjectVisualizerService {
 
 	private static final DummyObjectVisualizer DUMMY_VISUALIZER = new DummyObjectVisualizer();
 
-	private static final Map<Object, SoftReference<ObjectVisualizer>> visualizerMap = new WeakHashMap<Object, SoftReference<ObjectVisualizer>>();
+	private static final Map<Object, WeakReference<ObjectVisualizer>> visualizerMap = new WeakHashMap<>();
 
 	/**
 	 * This method adds the given visualizer for the target object. Please not that only one
 	 * visualizer per object is allowed. The subsequent added visualizer will overwrite the first.
-	 * 
+	 *
 	 * The targets will be remembered using a weak reference, so that they don't pose a memory leak:
 	 * If the object isn't referenced anywhere else, it will be deleted.
 	 */
 	public static void addObjectVisualizer(Object target, ObjectVisualizer visualizer) {
-		visualizerMap.put(target, new SoftReference<ObjectVisualizer>(visualizer));
+		visualizerMap.put(target, new WeakReference<>(visualizer));
 	}
 
 	/**
@@ -59,7 +59,7 @@ public class ObjectVisualizerService {
 	 */
 	public static ObjectVisualizer getVisualizerForObject(Object targetObject) {
 		ObjectVisualizer capableVisualizer = null;
-		SoftReference<ObjectVisualizer> visualizerReference = visualizerMap.get(targetObject);
+		WeakReference<ObjectVisualizer> visualizerReference = visualizerMap.get(targetObject);
 		if (visualizerReference != null) {
 			capableVisualizer = visualizerReference.get();
 		}

@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import com.rapidminer.gui.tools.dialogs.wizards.dataimport.csv.LineReader;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.nio.model.ParsingError.ErrorCode;
 import com.rapidminer.tools.CSVParseException;
@@ -73,14 +74,13 @@ public class CSVResultSet implements DataResultSet {
 	private Operator operator;
 	private final List<ParsingError> errors = new LinkedList<ParsingError>();
 	private int logCount = 0;
+	private long multiplier;
+	private long lineCounter = 0;
 
 	public static enum ColumnSplitter {
 
-		SEMI_COLON(";", Pattern.compile(";")),
-		COMMA(",", Pattern.compile(",")),
-		TAB("\t", Pattern.compile("\t")),
-		TILDE("~", Pattern.compile("~")),
-		PIPE("|", Pattern.compile("\\|"));
+		SEMI_COLON(";", Pattern.compile(";")), COMMA(",", Pattern.compile(",")), TAB("\t", Pattern.compile("\t")), TILDE("~",
+				Pattern.compile("~")), PIPE("|", Pattern.compile("\\|"));
 
 		private final Pattern pattern;
 		private final String seperator;
@@ -144,6 +144,17 @@ public class CSVResultSet implements DataResultSet {
 
 		reader = new LineReader(in, configuration.getEncoding());
 		parser = new LineParser(configuration);
+
+		try {
+			if (operator != null && reader.getSize() > 0L) {
+				multiplier = reader.getSize() / 100L;
+				lineCounter = 0;
+				operator.getProgress().setCheckForStop(false);
+				operator.getProgress().setTotal(100);
+			}
+		} catch (IOException e) {
+			// ignore and assume indeterminate progress
+		}
 
 		try {
 			readNext();
@@ -264,6 +275,19 @@ public class CSVResultSet implements DataResultSet {
 			}
 			try {
 				next = parser.parse(line);
+				if (operator != null && ++lineCounter % 1000 == 0) {
+					long position = reader.getPosition();
+					if (position > 0) {
+						int currentProgress = (int) (position / multiplier);
+						if (currentProgress != operator.getProgress().getCompleted()) {
+							try {
+								operator.getProgress().setCompleted(currentProgress);
+							} catch (ProcessStoppedException e) {
+								// Will not happen, because check for stop is deactivated.
+							}
+						}
+					}
+				}
 				if (next != null) { // no comment read
 					break;
 				}

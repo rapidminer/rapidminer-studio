@@ -31,6 +31,7 @@ import java.util.TimeZone;
 
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
@@ -74,6 +75,8 @@ public class ExcelResultSet implements DataResultSet {
 	private String[] attributeNames;
 
 	private final DateFormatProvider dateFormatProvider;
+
+	private Operator operator = null;
 
 	/**
 	 * The constructor to build an ExcelResultSet from the given configuration. The calling operator
@@ -206,6 +209,12 @@ public class ExcelResultSet implements DataResultSet {
 				}
 			};
 		}
+
+		if (callingOperator != null) {
+			callingOperator.getProgress().setCheckForStop(false);
+			callingOperator.getProgress().setTotal(totalNumberOfRows);
+			operator = callingOperator;
+		}
 	}
 
 	@Override
@@ -214,6 +223,10 @@ public class ExcelResultSet implements DataResultSet {
 		if (listener != null) {
 			listener.setTotal(totalNumberOfRows);
 			listener.setCompleted(0);
+		}
+
+		if (operator != null) {
+			operator.getProgress().setTotal(totalNumberOfRows);
 		}
 	}
 
@@ -249,6 +262,16 @@ public class ExcelResultSet implements DataResultSet {
 		// notifying progress listener
 		if (listener != null) {
 			listener.setCompleted(currentRow);
+		}
+
+		if (operator != null) {
+			try {
+				if (currentRow % 100 == 0) {
+					operator.getProgress().setCompleted(currentRow);
+				}
+			} catch (ProcessStoppedException e) {
+				// Will not happen, because check for stop is deactivated
+			}
 		}
 	}
 

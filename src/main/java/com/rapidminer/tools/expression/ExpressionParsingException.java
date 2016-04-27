@@ -51,7 +51,7 @@ import com.rapidminer.tools.I18N;
 public class ExpressionParsingException extends RuntimeException {
 
 	private static final long serialVersionUID = 5039785364556274963L;
-	private ParserRuleContext ctx;
+	private transient ParserRuleContext ctx;
 
 	/**
 	 * Creates a parsing exception with message associated to the i18n and the arguments.

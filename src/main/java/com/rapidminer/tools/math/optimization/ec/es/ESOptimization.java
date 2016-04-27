@@ -30,6 +30,7 @@ import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.gui.plotter.SimplePlotterDialog;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.meta.ParameterOptimizationOperator;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -111,10 +112,14 @@ public abstract class ESOptimization implements Optimization {
 	/** Indicates that the start population should be randomly initialized. */
 	public static final int INIT_TYPE_RANDOM = 0;
 
-	/** Indicates that the start population should be initialized with the minimum value. */
+	/**
+	 * Indicates that the start population should be initialized with the minimum value.
+	 */
 	public static final int INIT_TYPE_MIN = 1;
 
-	/** Indicates that the start population should be initialized with the maximum value. */
+	/**
+	 * Indicates that the start population should be initialized with the maximum value.
+	 */
 	public static final int INIT_TYPE_MAX = 2;
 
 	/** Indicates that the start population should be initialized with one. */
@@ -165,7 +170,9 @@ public abstract class ESOptimization implements Optimization {
 	/** Indicates if a convergence plot should be drawn. */
 	private boolean showConvergencePlot = false;
 
-	/** This field counts the total number of evaluations during optimization. */
+	/**
+	 * This field counts the total number of evaluations during optimization.
+	 */
 	private AtomicInteger totalEvalCounter = new AtomicInteger();
 
 	/**
@@ -186,11 +193,12 @@ public abstract class ESOptimization implements Optimization {
 	 * executingOperator is set.
 	 */
 	@Deprecated
-	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize, int initType, // population
-																														 // paras
-			int maxGenerations, int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
-			int mutationType, // type of mutation
+	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize, int initType,        // population
+			// paras
+			int maxGenerations, int generationsWithoutImprovement,        // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest,        // selection
+			// paras
+			int mutationType,        // type of mutation
 			double defaultSigma, double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot,
 			RandomGenerator random, LoggingHandler logging) {
 
@@ -201,11 +209,12 @@ public abstract class ESOptimization implements Optimization {
 
 	/** Creates a new evolutionary SVM optimization. */
 	@Deprecated
-	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize, int initType, // population
-																													 // paras
-			int maxGenerations, int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
-			int mutationType, // type of mutation
+	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize, int initType,        // population
+			// paras
+			int maxGenerations, int generationsWithoutImprovement,        // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest,        // selection
+			// paras
+			int mutationType,        // type of mutation
 			double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot, RandomGenerator random,
 			LoggingHandler logging) {
 		this(createBoundArray(minValue, individualSize), createBoundArray(maxValue, individualSize), populationSize,
@@ -221,11 +230,12 @@ public abstract class ESOptimization implements Optimization {
 	 * @param executingOperator
 	 *            If this parameter is null, no exception will be thrown.
 	 */
-	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize, int initType, // population
-																													 // paras
-			int maxGenerations, int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
-			int mutationType, // type of mutation
+	public ESOptimization(double minValue, double maxValue, int populationSize, int individualSize, int initType,        // population
+			// paras
+			int maxGenerations, int generationsWithoutImprovement,        // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest,        // selection
+			// paras
+			int mutationType,        // type of mutation
 			double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot, RandomGenerator random,
 			LoggingHandler logging, Operator executingOperator) {
 		this(createBoundArray(minValue, individualSize), createBoundArray(maxValue, individualSize), populationSize,
@@ -241,11 +251,12 @@ public abstract class ESOptimization implements Optimization {
 	 *            If this parameter is null, no exception will be thrown.
 	 *
 	 */
-	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize, int initType, // population
-																														 // paras
-			int maxGenerations, int generationsWithoutImprovement, // GA paras
-			int selectionType, double tournamentFraction, boolean keepBest, // selection paras
-			int mutationType, // type of mutation
+	public ESOptimization(double[] minValues, double[] maxValues, int populationSize, int individualSize, int initType,        // population
+			// paras
+			int maxGenerations, int generationsWithoutImprovement,        // GA paras
+			int selectionType, double tournamentFraction, boolean keepBest,        // selection
+			// paras
+			int mutationType,        // type of mutation
 			double defaultSigma, double crossoverProb, boolean showConvergencePlot, boolean showPopulationPlot,
 			RandomGenerator random, LoggingHandler logging, Operator executingOperator) {
 		this.logging = logging;
@@ -519,6 +530,19 @@ public abstract class ESOptimization implements Optimization {
 					|| fitness.getMainCriterion().getFitness() > currentBest.getFitness().getMainCriterion().getFitness()) {
 				currentBest = (Individual) current.clone();
 				currentBest.setFitness(current.getFitness());
+				// check if current best is the pest individual ever. If so, the individual is the
+				// result of the ESOptimization.
+				Individual bestEver = population.getBestEver();
+				if (executingOperator != null && executingOperator instanceof ParameterOptimizationOperator
+						&& (bestEver == null || fitness.getMainCriterion().getFitness() > bestEver.getFitness()
+								.getMainCriterion().getFitness())) {
+					/*
+					 * pass results through each time the fitness improved (only the last call of
+					 * passResultsThrough() matters, so it will be the best run.)
+					 */
+					ParameterOptimizationOperator op = (ParameterOptimizationOperator) executingOperator;
+					op.passResultsThrough();
+				}
 			}
 		} else {
 			population.remove(current);

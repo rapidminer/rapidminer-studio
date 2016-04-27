@@ -58,7 +58,7 @@ public class PerspectiveProperties {
 
 	private List<Dockable> focusedDockables = new ArrayList<>();
 
-	private Map<Dockable, ScrollBarsPosition> scrollBarsPositions = new HashMap<>();
+	private Map<String, ScrollBarsPosition> scrollBarsPositions = new HashMap<>();
 
 	private class ScrollBarsPosition {
 
@@ -145,7 +145,7 @@ public class PerspectiveProperties {
 						ScrollBarsPosition scrollBarsPosition = new ScrollBarsPosition(
 								scrollPane.getVerticalScrollBar().getValue(),
 								scrollPane.getHorizontalScrollBar().getValue());
-						scrollBarsPositions.put(dockable, scrollBarsPosition);
+						scrollBarsPositions.put(dockable.getDockKey().getKey(), scrollBarsPosition);
 					}
 				}
 			}
@@ -157,8 +157,9 @@ public class PerspectiveProperties {
 	 * saved by {@link #storeScrollBarPositions()}
 	 */
 	private void applyScrollBarPositions() {
-		for (final Entry<Dockable, ScrollBarsPosition> scrollBarsPosition : scrollBarsPositions.entrySet()) {
-			final Dockable dockable = scrollBarsPosition.getKey();
+		for (final Entry<String, ScrollBarsPosition> scrollBarsPosition : scrollBarsPositions.entrySet()) {
+			final Dockable dockable = RapidMinerGUI.getMainFrame().getDockingDesktop().getContext()
+					.getDockableByKey(scrollBarsPosition.getKey());
 			if (dockable.getComponent() instanceof Container) {
 				final JScrollPane scrollPane = findScrollPane((Container) dockable.getComponent());
 				if (scrollPane != null) {

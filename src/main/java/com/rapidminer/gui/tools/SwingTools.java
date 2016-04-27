@@ -1639,9 +1639,15 @@ public class SwingTools {
 			// remove extension group identifier
 			groupKey = groupKey.substring(groupKey.indexOf('.') + 1, groupKey.length());
 
-			// either remove extension name (if more groups are present) or use extension name in
-			// case of top-level operator
-			groupKey = groupKey.substring(groupKey.indexOf('.') + 1, groupKey.length());
+			Color operatorColor = GROUP_TO_COLOR_MAP.get(groupKey, operatorDescription.getProvider());
+
+			if (operatorColor != StringColorMap.DEFAULT_COLOR) {
+				return operatorColor;
+			} else {
+				// either remove extension name (if more groups are present) or use extension name
+				// in case of top-level operator
+				groupKey = groupKey.substring(groupKey.indexOf('.') + 1, groupKey.length());
+			}
 		}
 		return GROUP_TO_COLOR_MAP.get(groupKey, operatorDescription.getProvider());
 	}

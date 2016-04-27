@@ -190,7 +190,7 @@ public class Cut extends AbstractFunction {
 			return null;
 		} else if (index < 0 || length < 0) {
 			throw new FunctionInputException("expression_parser.function_non_negative", getFunctionName());
-		} else if (index + length >= text.length()) {
+		} else if (index + length > text.length()) {
 			throw new FunctionInputException("expression_parser.parameter_value_too_big", "start", "length",
 					getFunctionName(), text);
 		}

@@ -18,6 +18,10 @@
  */
 package com.rapidminer.operator.features.selection;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -33,10 +37,6 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-
 
 /**
  * <p>
@@ -44,7 +44,7 @@ import java.util.Vector;
  * in number of attributes. In order to get more stable results, the original, random, and reverse
  * order of attributes is available.
  * </p>
- * 
+ *
  * <p>
  * Please note that this operator might fail in some cases when the attributes should be filtered
  * out, e.g. it might not be able to remove for example all negative correlated features. The reason
@@ -54,11 +54,11 @@ import java.util.Vector;
  * a1, a2, and a3 that it might be that a2 was already ruled out by the negative correlation with a1
  * and is now not able to rule out a3 any longer.
  * </p>
- * 
+ *
  * <p>
  * The used correlation function is the Pearson correlation.
  * </p>
- * 
+ *
  * @author Daniel Hakenjos, Ingo Mierswa
  */
 public class RemoveCorrelatedFeatures extends AbstractFeatureSelection {
@@ -126,12 +126,14 @@ public class RemoveCorrelatedFeatures extends AbstractFeatureSelection {
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
+		getProgress().setTotal(100);
 		exampleSet.recalculateAllAttributeStatistics();
 
 		double[] means = new double[exampleSet.getAttributes().size()];
 		double[] deviations = new double[exampleSet.getAttributes().size()];
 		boolean[] removeFeature = new boolean[exampleSet.getAttributes().size()];
 		int[] attributeIndex = new int[exampleSet.getAttributes().size()];
+		getProgress().setCompleted(3);
 
 		int index = 0;
 		for (Attribute attribute : exampleSet.getAttributes()) {
@@ -198,7 +200,11 @@ public class RemoveCorrelatedFeatures extends AbstractFeatureSelection {
 		}
 
 		Attribute[] allAttributes = exampleSet.getAttributes().createRegularAttributeArray();
+		getProgress().setCompleted(5);
 		for (int i = 0; i < exampleSet.getAttributes().size() - 1; i++) {
+			if (i % 10 == 0) {
+				getProgress().setCompleted(5 + (int) (i * 95L / (exampleSet.getAttributes().size() - 1)));
+			}
 			if (removeFeature[attributeIndex[i]] == true) {
 				continue;
 			}
@@ -242,22 +248,22 @@ public class RemoveCorrelatedFeatures extends AbstractFeatureSelection {
 	private boolean fulfillRelation(double correlation, double threshold, int relation) {
 		switch (relation) {
 			case GREATER:
-				return (correlation > threshold);
+				return correlation > threshold;
 			case GREATER_EQUALS:
-				return (correlation >= threshold);
+				return correlation >= threshold;
 			case EQUALS:
-				return (correlation == threshold);
+				return correlation == threshold;
 			case LESS_EQUALS:
-				return (correlation <= threshold);
+				return correlation <= threshold;
 			case LESS:
-				return (correlation < threshold);
+				return correlation < threshold;
 		}
 		return false;
 	}
 
 	/**
 	 * Calculates the correlation between the two features
-	 * 
+	 *
 	 * @param att1
 	 *            index of feature 1
 	 * @param att2
@@ -274,7 +280,7 @@ public class RemoveCorrelatedFeatures extends AbstractFeatureSelection {
 
 		// calculate correlation
 		double correlation = 0.0d;
-		correlation = (deviations[att1] * deviations[att2]);
+		correlation = deviations[att1] * deviations[att2];
 		if (correlation == 0.0d) {
 			correlation = covariance;
 		} else {

@@ -40,9 +40,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
@@ -115,15 +115,15 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 *            the stream to use.
 	 *
 	 * @deprecated please use
-	 *             {@link ExcelExampleSetWriter#write(ExampleSet, Charset, OutputStream, OperatorProgress)}
-	 *             to support operator progress.
+	 *             {@link ExcelExampleSetWriter#write(ExampleSet, Charset, OutputStream, Operator)}
+	 *             to support checkForStop.
 	 */
 	@Deprecated
 	public static void write(ExampleSet exampleSet, Charset encoding, OutputStream out) throws IOException, WriteException {
 		try {
 			write(exampleSet, encoding, out, null);
 		} catch (ProcessStoppedException e) {
-			// can not happen because we do not deliver an OperatorProgressListener
+			// can not happen because we do not deliver an Operator
 		}
 	}
 
@@ -137,17 +137,16 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 *            the Charset to use for the file.
 	 * @param out
 	 *            the stream to use.
-	 * @param opProg
-	 *            will be used to provide a more detailed operator progress. The progress will be
-	 *            increased by the number of examples.
+	 * @param op
+	 *            will be used to provide checkForStop.
 	 */
-	public static void write(ExampleSet exampleSet, Charset encoding, OutputStream out, OperatorProgress opProg)
+	public static void write(ExampleSet exampleSet, Charset encoding, OutputStream out, Operator op)
 			throws IOException, WriteException, ProcessStoppedException {
 		try {
 			// .xls files can only store up to 256 columns, so throw error in case of more
 			if (exampleSet.getAttributes().allSize() > 256) {
-				throw new IllegalArgumentException(I18N.getMessage(I18N.getErrorBundle(),
-						"export.excel.excel_xls_file_exceeds_column_limit"));
+				throw new IllegalArgumentException(
+						I18N.getMessage(I18N.getErrorBundle(), "export.excel.excel_xls_file_exceeds_column_limit"));
 			}
 
 			WorkbookSettings ws = new WorkbookSettings();
@@ -156,7 +155,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 			WritableWorkbook workbook = Workbook.createWorkbook(out, ws);
 			WritableSheet s = workbook.createSheet(RAPID_MINER_DATA, 0);
-			writeDataSheet(s, exampleSet, opProg);
+			writeDataSheet(s, exampleSet, op);
 			workbook.write();
 			workbook.close();
 		} finally {
@@ -175,14 +174,12 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 *            the DataSheet to be filled
 	 * @param exampleSet
 	 *            the data to write
-	 * @param opProg
-	 *            an {@link OperatorProgress} of the executing operator to track the
-	 *            progress.
+	 * @param op
+	 *            an {@link Operator} of the executing operator to checkForStop.
 	 * @throws WriteException
 	 * @throws ProcessStoppedException
-	 *             will be thrown if the process of the executing operator has stopped.
 	 */
-	private static void writeDataSheet(WritableSheet s, ExampleSet exampleSet, OperatorProgress opProg)
+	private static void writeDataSheet(WritableSheet s, ExampleSet exampleSet, Operator op)
 			throws WriteException, ProcessStoppedException {
 
 		// Format the Font
@@ -205,7 +202,6 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 		WritableCellFormat dfCell = new WritableCellFormat(df);
 		int rowCounter = 1;
-		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			a = exampleSet.getAttributes().allAttributes();
 			int columnCounter = 0;
@@ -232,13 +228,9 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			}
 			rowCounter++;
 
-			// trigger operator progress every 100 examples
-			if (opProg != null) {
-				++progressCounter;
-				if (progressCounter % 100 == 0) {
-					opProg.step(100);
-					progressCounter = 0;
-				}
+			// checkForStop every 100 examples
+			if (op != null && rowCounter % 100 == 0) {
+				op.checkForStop();
 			}
 		}
 	}
@@ -253,8 +245,8 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 		types.add(makeFileParameterType());
 
 		types.add(new ParameterTypeCategory(PARAMETER_FILE_FORMAT,
-				"Defines the file format the excel file should be saved as.", FILE_FORMAT_CATEGORIES,
-				FILE_FORMAT_XLSX_INDEX, false));
+				"Defines the file format the excel file should be saved as.", FILE_FORMAT_CATEGORIES, FILE_FORMAT_XLSX_INDEX,
+				false));
 
 		List<ParameterType> encodingTypes = Encoding.getParameterTypes(this);
 		for (ParameterType type : encodingTypes) {
@@ -297,9 +289,6 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	protected void writeStream(ExampleSet exampleSet, OutputStream outputStream) throws OperatorException {
 		File file = getParameterAsFile(PARAMETER_EXCEL_FILE, true);
 
-		// init operator progress
-		getProgress().setTotal(exampleSet.size());
-
 		if (getParameterAsString(PARAMETER_FILE_FORMAT).equals(FILE_FORMAT_XLSX)) {
 
 			String dateFormat = isParameterSet(PARAMETER_DATE_FORMAT) ? getParameterAsString(PARAMETER_DATE_FORMAT) : null;
@@ -312,7 +301,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			}
 
 			try {
-				writeXLSX(exampleSet, sheetName, dateFormat, numberFormat, outputStream, getProgress());
+				writeXLSX(exampleSet, sheetName, dateFormat, numberFormat, outputStream, this);
 			} catch (WriteException | IOException e) {
 				throw new UserError(this, 303, file.getName(), e.getMessage());
 			}
@@ -324,13 +313,11 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			ws.setLocale(Locale.US);
 
 			try {
-				write(exampleSet, encoding, outputStream, getProgress());
+				write(exampleSet, encoding, outputStream, this);
 			} catch (WriteException | IOException e) {
 				throw new UserError(this, 303, file.getName(), e.getMessage());
 			}
 		}
-		getProgress().complete();
-
 	}
 
 	/**
@@ -349,8 +336,8 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 *            the stream to write the file to
 	 *
 	 * @deprecated please use
-	 *             {@link ExcelExampleSetWriter#writeXLSX(ExampleSet, String, String, String, OutputStream, OperatorProgress)}
-	 *             to support operator progress.
+	 *             {@link ExcelExampleSetWriter#writeXLSX(ExampleSet, String, String, String, OutputStream, Operator)}
+	 *             to support checkForStop.
 	 */
 	@Deprecated
 	public static void writeXLSX(ExampleSet exampleSet, String sheetName, String dateFormat, String numberFormat,
@@ -358,7 +345,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 		try {
 			writeXLSX(exampleSet, sheetName, dateFormat, numberFormat, outputStream, null);
 		} catch (ProcessStoppedException e) {
-			// can not happen because we provide no OperatorProgressListener
+			// can not happen because we provide no Operator
 		}
 	}
 
@@ -376,17 +363,15 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 *            a string which describes the format used for numbers.
 	 * @param outputStream
 	 *            the stream to write the file to
-	 * @param opProg
-	 *            increases the progress by the number of examples to provide a more detailed
-	 *            progress.
+	 * @param op
+	 *            needed for checkForStop
 	 */
 	public static void writeXLSX(ExampleSet exampleSet, String sheetName, String dateFormat, String numberFormat,
-			OutputStream outputStream, OperatorProgress opProg) throws WriteException, IOException,
-			ProcessStoppedException {
+			OutputStream outputStream, Operator op) throws WriteException, IOException, ProcessStoppedException {
 		// .xlsx files can only store up to 16384 columns, so throw error in case of more
 		if (exampleSet.getAttributes().allSize() > 16384) {
-			throw new IllegalArgumentException(I18N.getMessage(I18N.getErrorBundle(),
-					"export.excel.excel_xlsx_file_exceeds_column_limit"));
+			throw new IllegalArgumentException(
+					I18N.getMessage(I18N.getErrorBundle(), "export.excel.excel_xlsx_file_exceeds_column_limit"));
 		}
 
 		try {
@@ -397,7 +382,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 			numberFormat = numberFormat == null ? "#.0" : numberFormat;
 
-			writeXLSXDataSheet(workbook, sheet, dateFormat, numberFormat, exampleSet, opProg);
+			writeXLSXDataSheet(workbook, sheet, dateFormat, numberFormat, exampleSet, op);
 			workbook.write(outputStream);
 		} finally {
 			outputStream.flush();
@@ -418,15 +403,14 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 *            a string which describes the format used for numbers.
 	 * @param exampleSet
 	 *            the exampleSet to write
-	 * @param opProg
-	 *            increases the progress by the number of examples.
+	 * @param op
+	 *            needed for checkForStop
 	 * @throws ProcessStoppedException
 	 *             if the process was stopped by the user.
 	 * @throws WriteException
 	 */
 	private static void writeXLSXDataSheet(org.apache.poi.ss.usermodel.Workbook wb, Sheet sheet, String dateFormat,
-			String numberFormat, ExampleSet exampleSet, OperatorProgress opProg) throws WriteException,
-			ProcessStoppedException {
+			String numberFormat, ExampleSet exampleSet, Operator op) throws WriteException, ProcessStoppedException {
 
 		Font headerFont = wb.createFont();
 		headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -469,7 +453,6 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 		nominalStyle.setFont(bodyFont);
 
 		// fill body
-		int progressCounter = 0;
 		for (Example example : exampleSet) {
 
 			// create new row
@@ -499,13 +482,9 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			}
 			rowCounter++;
 
-			// trigger operator progress every 100 examples
-			if (opProg != null) {
-				++progressCounter;
-				if (progressCounter % 100 == 0) {
-					opProg.step(100);
-					progressCounter = 0;
-				}
+			// checkForStop every 100 examples
+			if (op != null && rowCounter % 100 == 0) {
+				op.checkForStop();
 			}
 		}
 	}

@@ -20,25 +20,25 @@ package com.rapidminer.gui.look.painters;
 
 import java.awt.GraphicsConfiguration;
 import java.awt.Image;
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 
 /**
  * A cache for the cached painter.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class Cache {
 
 	private int maxCount;
 
-	private List<SoftReference<Cache.Entry>> entries;
+	private List<WeakReference<Cache.Entry>> entries;
 
 	Cache(int maxCount) {
 		this.maxCount = maxCount;
-		this.entries = new ArrayList<SoftReference<Cache.Entry>>(maxCount);
+		this.entries = new ArrayList<WeakReference<Cache.Entry>>(maxCount);
 	}
 
 	void setMaxCount(int maxCount) {
@@ -51,7 +51,7 @@ public class Cache {
 
 			for (int counter = this.entries.size() - 1; counter >= 0; counter--) {
 
-				entry = (Cache.Entry) ((SoftReference) this.entries.get(counter)).get();
+				entry = this.entries.get(counter).get();
 
 				if (entry == null) {
 					this.entries.remove(counter);
@@ -63,7 +63,7 @@ public class Cache {
 			if (this.entries.size() == this.maxCount) {
 				this.entries.remove(0);
 			}
-			this.entries.add(new SoftReference<Cache.Entry>(entry));
+			this.entries.add(new WeakReference<Cache.Entry>(entry));
 			return entry;
 		}
 	}
@@ -119,13 +119,12 @@ public class Cache {
 		}
 
 		public boolean equals(GraphicsConfiguration config, int w, int h, Object[] args) {
-			if ((this.w == w)
-					&& (this.h == h)
-					&& (((this.config != null) && this.config.equals(config)) || ((this.config == null) && (config == null)))) {
-				if ((this.args == null) && (args == null)) {
+			if (this.w == w && this.h == h
+					&& (this.config != null && this.config.equals(config) || this.config == null && config == null)) {
+				if (this.args == null && args == null) {
 					return true;
 				}
-				if ((this.args != null) && (args != null) && (this.args.length == args.length)) {
+				if (this.args != null && args != null && this.args.length == args.length) {
 					for (int counter = args.length - 1; counter >= 0; counter--) {
 						if (!this.args[counter].equals(args[counter])) {
 							return false;

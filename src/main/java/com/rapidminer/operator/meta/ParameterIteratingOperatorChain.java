@@ -330,7 +330,7 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain {
 	}
 
 	/** Passes data from the inner sinks to the output ports. */
-	protected void passResultsThrough() {
+	public void passResultsThrough() {
 		innerSinkExtender.passDataThrough();
 	}
 

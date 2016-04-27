@@ -44,6 +44,9 @@ public final class ProcessRendererModelEvent {
 		/** fired when a process size has changed */
 		PROCESS_SIZE_CHANGED,
 
+		/** fired when the process zoom level has changed */
+		PROCESS_ZOOM_CHANGED,
+
 		/** fired when something minor changes which only requires a repaint */
 		MISC_CHANGED;
 	}

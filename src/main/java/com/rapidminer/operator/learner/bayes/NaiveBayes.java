@@ -18,6 +18,8 @@
  */
 package com.rapidminer.operator.learner.bayes;
 
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorCapability;
@@ -30,12 +32,10 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.List;
-
 
 /**
  * Naive Bayes learner.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class NaiveBayes extends AbstractLearner {
@@ -48,7 +48,7 @@ public class NaiveBayes extends AbstractLearner {
 
 	@Override
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
-		return new SimpleDistributionModel(exampleSet, getParameterAsBoolean(PARAMETER_LAPLACE_CORRECTION));
+		return new SimpleDistributionModel(exampleSet, getParameterAsBoolean(PARAMETER_LAPLACE_CORRECTION), getProgress());
 	}
 
 	@Override
@@ -85,7 +85,7 @@ public class NaiveBayes extends AbstractLearner {
 
 	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
-		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getExampleSetInputPort(),
-				NaiveBayes.class, null);
+		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getExampleSetInputPort(), NaiveBayes.class,
+				null);
 	}
 }

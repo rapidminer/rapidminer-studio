@@ -32,6 +32,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.apache.tika.io.CountingInputStream;
 import org.xml.sax.Attributes;
 
 import com.rapidminer.operator.nio.model.ParseException;
@@ -137,6 +138,9 @@ class XlsxSheetContentParser implements AutoCloseable {
 	/** Reads XML stream */
 	private XMLStreamReader reader;
 
+	/** CountingInputStream that is used to determine the operator progress */
+	private CountingInputStream cis;
+
 	/** The current row content. */
 	private XlsxCell[] currentRowContent;
 
@@ -198,7 +202,7 @@ class XlsxSheetContentParser implements AutoCloseable {
 	 */
 	public XlsxSheetContentParser(File xlsxFile, String workbookZipEntryPath, String[] sharedStrings,
 			XlsxNumberFormats numberFormats, XlsxSheetMetaData sheetMetaData, XMLInputFactory factory, Charset encoding)
-					throws XMLStreamException, IOException {
+			throws XMLStreamException, IOException {
 		this.xlsxFile = xlsxFile;
 		this.workbookZipEntryPath = workbookZipEntryPath;
 		this.sharedStrings = sharedStrings;
@@ -489,7 +493,8 @@ class XlsxSheetContentParser implements AutoCloseable {
 							+ workbookZipEntryPath);
 		}
 		InputStream inputStream = xlsxZipFile.getInputStream(workbookZipEntry);
-		reader = xmlFactory.createXMLStreamReader(new InputStreamReader(inputStream, encoding));
+		cis = new CountingInputStream(inputStream);
+		reader = xmlFactory.createXMLStreamReader(new InputStreamReader(cis, encoding));
 
 		// reset other variables
 		currentRowIndex = -1;
@@ -516,6 +521,24 @@ class XlsxSheetContentParser implements AutoCloseable {
 	 */
 	void setUseFirstRowAsNames(boolean isFirstRowAsNames) {
 		this.isUseFirstRowAsNames = isFirstRowAsNames;
+	}
+
+	/**
+	 *
+	 * @return The total size of the entry data, which can be used to determine the total operator
+	 *         progress
+	 */
+	long getTotalSize() {
+		return xlsxZipFile.getEntry(workbookZipEntryPath).getSize();
+	}
+
+	/**
+	 *
+	 * @return The current position in the entry data, which can be used to determine the current
+	 *         operator progress
+	 */
+	long getCurrentPosition() {
+		return cis.getByteCount();
 	}
 
 }

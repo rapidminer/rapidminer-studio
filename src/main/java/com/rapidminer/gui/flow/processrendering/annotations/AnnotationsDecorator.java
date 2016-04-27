@@ -80,7 +80,6 @@ import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationColo
 import com.rapidminer.gui.flow.processrendering.draw.OperatorDrawDecorator;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawDecorator;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
-import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.flow.processrendering.view.RenderPhase;
@@ -116,6 +115,9 @@ public final class AnnotationsDecorator {
 
 	/** the height of the edit panel above/below the annotation editor */
 	private static final int EDIT_PANEL_HEIGHT = 30;
+
+	/** the gap betwen the annotation and the edit buttons */
+	private static final int BUTTON_PANEL_GAP = 10;
 
 	/** the width of the color panel above/below the annotation editor */
 	private static final int EDIT_COLOR_PANEL_WIDTH = 215;
@@ -291,8 +293,9 @@ public final class AnnotationsDecorator {
 						// only paint border
 						Rectangle2D loc = selected.getLocation();
 						g2.setColor(Color.BLACK);
-						g2.draw(new Rectangle2D.Double(loc.getX() - 1, loc.getY() - 1, editPane.getBounds().getWidth() + 1,
-								editPane.getBounds().getHeight() + 1));
+						g2.draw(new Rectangle2D.Double(loc.getX() - 1, loc.getY() - 1,
+								editPane.getBounds().getWidth() * (1 / rendererModel.getZoomFactor()) + 1,
+								editPane.getBounds().getHeight() * (1 / rendererModel.getZoomFactor()) + 1));
 					}
 				}
 			}
@@ -443,11 +446,13 @@ public final class AnnotationsDecorator {
 		// JEditorPane to edit the comment string
 		editPane = new JEditorPane("text/html", "");
 		editPane.setBorder(null);
-		int paneX = (int) loc.getX();
-		int paneY = (int) loc.getY();
+		int paneX = (int) (loc.getX() * rendererModel.getZoomFactor());
+		int paneY = (int) (loc.getY() * rendererModel.getZoomFactor());
 		int index = view.getModel().getProcessIndex(selected.getProcess());
 		Point absolute = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(paneX, paneY), index, rendererModel);
-		editPane.setBounds((int) absolute.getX(), (int) absolute.getY(), (int) loc.getWidth(), (int) loc.getHeight());
+		editPane.setBounds((int) absolute.getX(), (int) absolute.getY(),
+				(int) (loc.getWidth() * rendererModel.getZoomFactor()),
+				(int) (loc.getHeight() * rendererModel.getZoomFactor()));
 		editPane.setText(AnnotationDrawUtils.createStyledCommentString(selected));
 		// use proxy for paste actions to trigger reload of editor after paste
 		Action pasteFromClipboard = editPane.getActionMap().get(PASTE_FROM_CLIPBOARD_ACTION_NAME);
@@ -470,8 +475,8 @@ public final class AnnotationsDecorator {
 			public void insertString(DocumentFilter.FilterBypass fb, int offs, String str, AttributeSet a)
 					throws BadLocationException {
 				// this is never called..
-				super.insertString(fb, offs,
-						str.replaceAll("\n", "\n" + AnnotationDrawUtils.ANNOTATION_HTML_NEWLINE_SIGNAL), a);
+				super.insertString(fb, offs, str.replaceAll("\n", "\n" + AnnotationDrawUtils.ANNOTATION_HTML_NEWLINE_SIGNAL),
+						a);
 			}
 
 			@Override
@@ -543,7 +548,8 @@ public final class AnnotationsDecorator {
 					controlDown = true;
 				}
 				// consume so undo/redo etc are not passed to the process
-				if (SwingTools.isControlOrMetaDown(e) && e.getKeyCode() == KeyEvent.VK_Z || e.getKeyCode() == KeyEvent.VK_Y) {
+				if (SwingTools.isControlOrMetaDown(e) && e.getKeyCode() == KeyEvent.VK_Z
+						|| e.getKeyCode() == KeyEvent.VK_Y) {
 					e.consume();
 				}
 			}
@@ -733,8 +739,8 @@ public final class AnnotationsDecorator {
 			colChangeButton.setBorderPainted(false);
 			colChangeButton.setBorder(null);
 			colChangeButton.setFocusable(false);
-			final Icon icon = SwingTools.createIconFromColor(color.getColor(), Color.BLACK, 16, 16, new Rectangle2D.Double(
-					1, 1, 14, 14));
+			final Icon icon = SwingTools.createIconFromColor(color.getColor(), Color.BLACK, 16, 16,
+					new Rectangle2D.Double(1, 1, 14, 14));
 			colChangeButton.setIcon(icon);
 			colChangeButton.addActionListener(new ActionListener() {
 
@@ -763,13 +769,13 @@ public final class AnnotationsDecorator {
 			colorOverlay.getRootPane().add(colChangeButton);
 		}
 
-		colorButton = new JToggleButton("<html><span style=\"color: 4F4F4F;\">" + Ionicon.ARROW_DOWN_B.getHtml()
-				+ "</span></html>");
+		colorButton = new JToggleButton(
+				"<html><span style=\"color: 4F4F4F;\">" + Ionicon.ARROW_DOWN_B.getHtml() + "</span></html>");
 		colorButton.setBorderPainted(false);
 		colorButton.setFocusable(false);
 		AnnotationColor color = selected.getStyle().getAnnotationColor();
-		colorButton.setIcon(SwingTools.createIconFromColor(color.getColor(), Color.BLACK, 16, 16, new Rectangle2D.Double(1,
-				1, 14, 14)));
+		colorButton.setIcon(
+				SwingTools.createIconFromColor(color.getColor(), Color.BLACK, 16, 16, new Rectangle2D.Double(1, 1, 14, 14)));
 		colorButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -806,8 +812,8 @@ public final class AnnotationsDecorator {
 		editPanel.add(separator);
 
 		// add delete button
-		final JButton deleteButton = new JButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.action.workflow.annotation.delete.label"));
+		final JButton deleteButton = new JButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.action.workflow.annotation.delete.label"));
 		deleteButton.setForeground(Color.RED);
 		deleteButton.setContentAreaFilled(false);
 		deleteButton.setFocusable(false);
@@ -870,8 +876,9 @@ public final class AnnotationsDecorator {
 		String comment = writer.toString();
 		comment = AnnotationDrawUtils.removeStyleFromComment(comment);
 		Rectangle2D loc = selected.getLocation();
-		Rectangle2D newLoc = new Rectangle2D.Double(loc.getX(), loc.getY(), editPane.getBounds().getWidth(), editPane
-				.getBounds().getHeight());
+		Rectangle2D newLoc = new Rectangle2D.Double(loc.getX(), loc.getY(),
+				editPane.getBounds().getWidth() * (1 / rendererModel.getZoomFactor()),
+				editPane.getBounds().getHeight() * (1 / rendererModel.getZoomFactor()));
 		selected.setLocation(newLoc);
 
 		boolean overflowing = false;
@@ -964,25 +971,25 @@ public final class AnnotationsDecorator {
 	 *            if {@code false} it is treated as relative to the current process
 	 */
 	private void updateEditPanelPosition(final Rectangle2D loc, final boolean absolute) {
-		int panelX = (int) loc.getCenterX() - EDIT_PANEL_WIDTH / 2;
-		int panelY = (int) loc.getY() - EDIT_PANEL_HEIGHT - ProcessDrawer.PADDING;
+		int panelX = (int) (loc.getCenterX() * rendererModel.getZoomFactor() - EDIT_PANEL_WIDTH / 2);
+		int panelY = (int) (loc.getY() * rendererModel.getZoomFactor() - EDIT_PANEL_HEIGHT - BUTTON_PANEL_GAP);
 		// if panel would be outside process renderer, fix it
 		if (panelX < WorkflowAnnotation.MIN_X) {
 			panelX = WorkflowAnnotation.MIN_X;
 		}
 		if (panelY < 0) {
-			panelY = (int) loc.getMaxY() + ProcessDrawer.PADDING;
+			panelY = (int) (loc.getMaxY() * rendererModel.getZoomFactor()) + BUTTON_PANEL_GAP;
 		}
 		// last fallback is cramped to the bottom. If that does not fit either, don't care
-		if (panelY + EDIT_PANEL_HEIGHT > view.getSize().getHeight() - ProcessDrawer.PADDING * 2) {
-			panelY = (int) loc.getMaxY();
+		if (panelY + EDIT_PANEL_HEIGHT > view.getSize().getHeight() - BUTTON_PANEL_GAP * 2) {
+			panelY = (int) (loc.getMaxY() * rendererModel.getZoomFactor());
 		}
 		int index = view.getModel().getProcessIndex(model.getSelected().getProcess());
 		if (absolute) {
 			editPanel.setBounds(panelX, panelY, EDIT_PANEL_WIDTH, EDIT_PANEL_HEIGHT);
 		} else {
-			Point absoluteP = ProcessDrawUtils
-					.convertToAbsoluteProcessPoint(new Point(panelX, panelY), index, rendererModel);
+			Point absoluteP = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(panelX, panelY), index,
+					rendererModel);
 			editPanel.setBounds((int) absoluteP.getX(), (int) absoluteP.getY(), EDIT_PANEL_WIDTH, EDIT_PANEL_HEIGHT);
 		}
 	}
@@ -1051,7 +1058,7 @@ public final class AnnotationsDecorator {
 		return Math.min(
 				AnnotationDrawUtils.getContentHeight(
 						AnnotationDrawUtils.createStyledCommentString(comment, model.getSelected().getStyle()), width),
-						maxHeight);
+				maxHeight);
 	}
 
 }

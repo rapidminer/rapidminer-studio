@@ -383,6 +383,27 @@ public class AntlrParserStringTransformationTest extends AntlrParserTest {
 		}
 	}
 
+	@Test
+	public void cutText() {
+		try {
+			Expression expression = getExpressionWithFunctionContext(" cut(\"text\",1, 3)");
+			assertEquals(ExpressionType.STRING, expression.getExpressionType());
+			assertEquals("ext", expression.evaluateNominal());
+		} catch (ExpressionException e) {
+			fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void cutTextTooLong() {
+		try {
+			getExpressionWithFunctionContext(" cut(\"text\",1, 4)");
+			fail();
+		} catch (ExpressionException e) {
+			assertNotNull(e.getMessage());
+		}
+	}
+
 	// replace
 
 	@Test

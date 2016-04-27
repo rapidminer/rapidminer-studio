@@ -429,7 +429,7 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 			showAdvancedParameters.setVisible(false);
 			if (advancedCount > 0) {
 				hideAdvancedParameters.setVisible(true);
-				showAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.hide_advanced.tip",
+				hideAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.hide_advanced.tip",
 						advancedCount));
 			} else {
 				hideAdvancedParameters.setVisible(false);

@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.rapidminer.MacroHandler;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.expression.FunctionInput.Category;
@@ -39,6 +40,7 @@ import com.rapidminer.tools.expression.FunctionInput.Category;
 public class MacroResolver implements Resolver {
 
 	private final MacroHandler macroHandler;
+	private final Operator operator;
 
 	private static final String KEY_MACROS = I18N.getGUIMessage("gui.dialog.function_input.macros");
 
@@ -49,7 +51,20 @@ public class MacroResolver implements Resolver {
 	 *            the macro handler to resolve macros
 	 */
 	public MacroResolver(MacroHandler macroHandler) {
+		this(macroHandler, null);
+	}
+
+	/**
+	 * * Creates a {@link MacroResolver} that uses the given macroHandler and operator.
+	 * 
+	 * @param macroHandler
+	 *            the macro handler to resolve macros
+	 * @param operator
+	 *            the operator used for resolving operator dependent predefined macros
+	 */
+	public MacroResolver(MacroHandler macroHandler, Operator operator) {
 		this.macroHandler = macroHandler;
+		this.operator = operator;
 	}
 
 	@Override
@@ -71,7 +86,7 @@ public class MacroResolver implements Resolver {
 
 	@Override
 	public ExpressionType getVariableType(String variableName) {
-		if (!macroHandler.isMacroSet(variableName)) {
+		if (!macroHandler.isMacroSet(variableName, operator)) {
 			return null;
 		}
 		return ExpressionType.STRING;
@@ -79,7 +94,7 @@ public class MacroResolver implements Resolver {
 
 	@Override
 	public String getStringValue(String variableName) {
-		return macroHandler.getMacro(variableName);
+		return macroHandler.getMacro(variableName, operator);
 	}
 
 	@Override

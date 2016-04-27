@@ -206,7 +206,7 @@ public class ExampleFilter extends AbstractDataProcessing {
 		}
 		try {
 			ExampleSet result = new ConditionedExampleSet(inputSet, condition,
-					getParameterAsBoolean(PARAMETER_INVERT_FILTER));
+					getParameterAsBoolean(PARAMETER_INVERT_FILTER), getProgress());
 			if (unmatchedOutput.isConnected()) {
 				ExampleSet unmatchedResult = new ConditionedExampleSet(inputSet, condition,
 						!getParameterAsBoolean(PARAMETER_INVERT_FILTER));

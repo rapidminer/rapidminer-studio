@@ -244,7 +244,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 		resultMD.clear();
 
 		// add group by attributes
-		if (isParameterSet(PARAMETER_GROUP_BY_ATTRIBUTES) && !getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES).isEmpty()) {
+		if (isParameterSet(PARAMETER_GROUP_BY_ATTRIBUTES)
+				&& !getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES).isEmpty()) {
 			String attributeRegex = getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES);
 			Pattern pattern = Pattern.compile(attributeRegex);
 
@@ -302,11 +303,10 @@ public class AggregationOperator extends AbstractDataProcessing {
 			} else {
 				// in this case we should register a warning, but continue anyway in cases we don't
 				// have the correct set available
-				getExampleSetInputPort().addError(
-						new SimpleMetaDataError(Severity.WARNING, getExampleSetInputPort(), "aggregation.attribute_unknown",
-								function[0]));
-				AttributeMetaData newAMD = AggregationFunction.getAttributeMetaData(function[1], new AttributeMetaData(
-						function[0], Ontology.ATTRIBUTE_VALUE), getExampleSetInputPort());
+				getExampleSetInputPort().addError(new SimpleMetaDataError(Severity.WARNING, getExampleSetInputPort(),
+						"aggregation.attribute_unknown", function[0]));
+				AttributeMetaData newAMD = AggregationFunction.getAttributeMetaData(function[1],
+						new AttributeMetaData(function[0], Ontology.ATTRIBUTE_VALUE), getExampleSetInputPort());
 				if (newAMD != null) {
 					resultMD.addAttribute(newAMD);
 				}
@@ -314,14 +314,13 @@ public class AggregationOperator extends AbstractDataProcessing {
 		}
 
 		if (getCompatibilityLevel().isAbove(VERSION_6_0_6)) {
-			String[] groupByAttributes = getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES).split(
-					ParameterTypeAttributes.ATTRIBUTE_SEPARATOR_REGEX);
+			String[] groupByAttributes = getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES)
+					.split(ParameterTypeAttributes.ATTRIBUTE_SEPARATOR_REGEX);
 			for (String attribute : groupByAttributes) {
 				// if the list is empty, there is already a warning:
 				if (!attribute.isEmpty() && metaData.getAttributeByName(attribute) == null) {
-					getExampleSetInputPort().addError(
-							new SimpleMetaDataError(Severity.WARNING, getExampleSetInputPort(),
-									"aggregation.group_by_attribute_unknown", attribute));
+					getExampleSetInputPort().addError(new SimpleMetaDataError(Severity.WARNING, getExampleSetInputPort(),
+							"aggregation.group_by_attribute_unknown", attribute));
 				}
 			}
 		}
@@ -341,8 +340,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 		 * characters like "|").
 		 */
 		if (getCompatibilityLevel().isAbove(VERSION_6_0_6)) {
-			String[] groupByAttributesNames = getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES).split(
-					ParameterTypeAttributes.ATTRIBUTE_SEPARATOR_REGEX);
+			String[] groupByAttributesNames = getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES)
+					.split(ParameterTypeAttributes.ATTRIBUTE_SEPARATOR_REGEX);
 
 			// if the group-by-attributes parameter is empty, we can skip these checks
 			boolean emptySelection = groupByAttributesNames.length == 1 && groupByAttributesNames[0].trim().isEmpty();
@@ -401,6 +400,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 			// if no grouping, we will directly insert into leaf node
 			leafNode = new LeafAggregationTreeNode(aggregationFunctions);
 		}
+		getProgress().setTotal(exampleSet.size());
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			if (groupAttributes.length > 0) {
 				AggregationTreeNode currentNode = rootNode;
@@ -427,6 +428,11 @@ public class AggregationOperator extends AbstractDataProcessing {
 				leafNode.count(example);
 			} else {
 				leafNode.count(example, example.getValue(weightAttribute));
+			}
+
+			// Trigger operator progress
+			if (++progressCounter % 100 == 0) {
+				getProgress().setCompleted(progressCounter);
 			}
 		}
 
@@ -574,10 +580,10 @@ public class AggregationOperator extends AbstractDataProcessing {
 		// table.addDataRow(row);
 	}
 
-	private void parseTree(AggregationTreeNode node, Attribute[] groupAttributes, double[] dataOfUpperLevels,
-			int groupLevel, List<double[]> allGroupCombinations, List<List<Aggregator>> allAggregators,
-			DataRowFactory factory, Attribute[] newAttributes, boolean isCountingAllCombinations,
-			List<AggregationFunction> aggregationFunctions) throws UserError {
+	private void parseTree(AggregationTreeNode node, Attribute[] groupAttributes, double[] dataOfUpperLevels, int groupLevel,
+			List<double[]> allGroupCombinations, List<List<Aggregator>> allAggregators, DataRowFactory factory,
+			Attribute[] newAttributes, boolean isCountingAllCombinations, List<AggregationFunction> aggregationFunctions)
+			throws UserError {
 		Attribute currentAttribute = groupAttributes[groupLevel];
 		if (currentAttribute.isNominal()) {
 			Collection<? extends Object> nominalValues = null;
@@ -610,8 +616,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 							aggregationFunctions);
 				} else {
 					// if not, insert values from aggregation functions
-					parseLeaf(node.getLeaf(numericalValue), dataOfUpperLevels, allGroupCombinations, allAggregators,
-							factory, newAttributes, aggregationFunctions);
+					parseLeaf(node.getLeaf(numericalValue), dataOfUpperLevels, allGroupCombinations, allAggregators, factory,
+							newAttributes, aggregationFunctions);
 				}
 			}
 		} else {
@@ -701,36 +707,36 @@ public class AggregationOperator extends AbstractDataProcessing {
 				"If checked you can select a default aggregation function for a subset of the attributes.", false, false));
 		List<ParameterType> parameterTypes = attributeSelector.getParameterTypes();
 		for (ParameterType type : parameterTypes) {
-			type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_DEFAULT_AGGREGATION, false,
-					true));
+			type.registerDependencyCondition(
+					new BooleanParameterCondition(this, PARAMETER_USE_DEFAULT_AGGREGATION, false, true));
 			types.add(type);
 		}
 		String[] functions = AggregationFunction.getAvailableAggregationFunctionNames();
 		ParameterType type = new ParameterTypeStringCategory(PARAMETER_DEFAULT_AGGREGATION_FUNCTION,
 				"The type of the used aggregation function for all default attributes.", functions, functions[0]);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_DEFAULT_AGGREGATION, false, true));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_USE_DEFAULT_AGGREGATION, false, true));
 		type.setExpert(false);
 		types.add(type);
 
 		types.add(new ParameterTypeList(PARAMETER_AGGREGATION_ATTRIBUTES, "The attributes which should be aggregated.",
 				new ParameterTypeAttribute("aggregation_attribute", "Specifies the attribute which is aggregated.",
-						getExampleSetInputPort(), false), new ParameterTypeStringCategory(PARAMETER_AGGREGATION_FUNCTIONS,
-						"The type of the used aggregation function.", functions, functions[0]), false));
+						getExampleSetInputPort(), false),
+				new ParameterTypeStringCategory(PARAMETER_AGGREGATION_FUNCTIONS,
+						"The type of the used aggregation function.", functions, functions[0]),
+				false));
 		types.add(new ParameterTypeAttributes(PARAMETER_GROUP_BY_ATTRIBUTES,
 				"Performs a grouping by the values of the attributes by the selected attributes.", getExampleSetInputPort(),
 				true, false));
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_ALL_COMBINATIONS,
+		types.add(new ParameterTypeBoolean(PARAMETER_ALL_COMBINATIONS,
 				"Indicates that all possible combinations of the values of the group by attributes are counted, even if they don't occur. Please handle with care, since the number might be enormous.",
 				false));
-		type = new ParameterTypeBoolean(
-				PARAMETER_ONLY_DISTINCT,
+		type = new ParameterTypeBoolean(PARAMETER_ONLY_DISTINCT,
 				"Indicates if only rows with distinct values for the aggregation attribute should be used for the calculation of the aggregation function.",
 				false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_ALL_COMBINATIONS, false, false));
 		types.add(type);
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_IGNORE_MISSINGS,
+		types.add(new ParameterTypeBoolean(PARAMETER_IGNORE_MISSINGS,
 				"Indicates if missings should be ignored and aggregation should be based only on existing values or not. In the latter case the aggregated value will be missing in the presence of missing values.",
 				true));
 		return types;
@@ -738,8 +744,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(), new OperatorVersion[] {
-				VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6 });
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6 });
 	}
 
 	@Override

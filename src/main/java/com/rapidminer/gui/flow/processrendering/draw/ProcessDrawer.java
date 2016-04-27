@@ -24,9 +24,11 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -43,8 +45,12 @@ import java.util.logging.Level;
 import javax.swing.ImageIcon;
 
 import com.rapidminer.BreakpointListener;
+import com.rapidminer.Process;
+import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.RapidMinerGUI.DragHighlightMode;
+import com.rapidminer.gui.animation.Animation;
+import com.rapidminer.gui.animation.ProcessAnimationManager;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.flow.processrendering.view.RenderPhase;
@@ -66,6 +72,7 @@ import com.rapidminer.operator.ports.metadata.CollectionMetaData;
 import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tutorial.Tutorial;
 
 
 /**
@@ -85,8 +92,7 @@ public final class ProcessDrawer {
 	public static final int PORT_SIZE = ProcessRendererModel.PORT_SIZE;
 	public static final int PORT_SIZE_HIGHLIGHT = (int) (PORT_SIZE * 1.4f);
 	public static final int PORT_OFFSET = OPERATOR_FONT.getSize() + 6 + PORT_SIZE;
-	public static final int PADDING = 10;
-	public static final int WALL_WIDTH = 25;
+	public static final int WALL_WIDTH = 3;
 
 	public static final int GRID_WIDTH = OPERATOR_WIDTH * 3 / 4;
 	public static final int GRID_HEIGHT = OPERATOR_MIN_HEIGHT * 3 / 4;
@@ -122,7 +128,6 @@ public final class ProcessDrawer {
 	private static final Color BORDER_COLOR = Colors.TAB_BORDER;
 	private static final Color HINT_COLOR = new Color(230, 230, 230);
 
-	private static final Stroke BORDER_STROKE = new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 	private static final Color LINE_COLOR = Color.DARK_GRAY;
 	private static final Stroke LINE_STROKE = new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 	private static final Stroke PORT_STROKE = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
@@ -184,6 +189,8 @@ public final class ProcessDrawer {
 	private static final Color DRAG_BG_COLOR = BORDER_DRAG_COLOR;
 	private static final Color DRAG_FG_COLOR = new Color(254, 254, 254);
 
+	private static final int PROCESS_TITLE_PADDING = 10;
+
 	private static final double PORT_SIZE_BACKGROUND = PORT_SIZE * 2f;
 	private static final double MAX_HEADER_RATIO = 1.35;
 
@@ -200,6 +207,9 @@ public final class ProcessDrawer {
 
 	private static final ImageIcon OPERATOR_RUNNING = SwingTools.createIcon("16/media_play2.png");
 	private static final ImageIcon OPERATOR_READY = SwingTools.createIcon("16/check.png");
+
+	/** the size of the operator icon */
+	private static final int OPERATOR_ICON_SIZE = 24;
 
 	/** the model backing the process renderer view */
 	private ProcessRendererModel model;
@@ -251,16 +261,23 @@ public final class ProcessDrawer {
 	 */
 	public void draw(final Graphics2D g2, final boolean printing) {
 		Graphics2D g = (Graphics2D) g2.create();
-		g.translate(0, PADDING);
+		double zoomFactor = model.getZoomFactor();
 
 		// draw every process
 		for (ExecutionUnit process : model.getProcesses()) {
-			g.translate(WALL_WIDTH, 0);
-
 			// draw background in own graphics context to avoid cross-phase manipulations
 			Graphics2D gBG = (Graphics2D) g.create();
 			drawBackground(process, gBG, printing);
 			gBG.dispose();
+
+			// remember non-scaled transform
+			AffineTransform at = g.getTransform();
+			g.scale(zoomFactor, zoomFactor);
+
+			// let decorators draw
+			Graphics2D gBGD = (Graphics2D) g.create();
+			drawPhaseDecorators(process, gBGD, RenderPhase.BACKGROUND, printing);
+			gBGD.dispose();
 
 			// draw annotations in own graphics context to avoid cross-phase manipulations
 			Graphics2D gAN = (Graphics2D) g.create();
@@ -297,33 +314,53 @@ public final class ProcessDrawer {
 			drawOverlay(process, gOL, printing);
 			gOL.dispose();
 
-			// draw foreground in own graphics context to avoid cross-phase manipulations
+			// let decorators draw
 			Graphics2D gFG = (Graphics2D) g.create();
-			drawForeground(process, gFG, printing);
+			drawPhaseDecorators(process, gFG, RenderPhase.FOREGROUND, printing);
 			gFG.dispose();
 
-			g.translate(model.getProcessWidth(process) + WALL_WIDTH, 0);
+			// restore non-scaled transform
+			g.setTransform(at);
+
+			// draw foreground in own graphics context to avoid cross-phase manipulations
+			Graphics2D gFGF = (Graphics2D) g.create();
+			drawForeground(process, gFGF, printing);
+			gFGF.dispose();
+
+			g.translate(model.getProcessWidth(process) + WALL_WIDTH * 2, 0);
 		}
 		g.dispose();
+
+		// draw wall element over execution engines
+		Graphics2D gW = (Graphics2D) g2.create();
+		for (int i = 0; i < model.getProcesses().size() - 1; i++) {
+			ExecutionUnit process = model.getProcesses().get(i);
+			renderProcessWall(process, gW);
+			gW.translate(model.getProcessWidth(process) + WALL_WIDTH * 2, 0);
+		}
 
 		// draw port connection attached to mouse over everything
 		Port portSource = model.getConnectingPortSource();
 		if (portSource != null && model.getMousePositionRelativeToProcess() != null) {
 			Graphics2D conG = (Graphics2D) g2.create();
 			// translate to correct position
-			int width = WALL_WIDTH;
+			int width = 0;
 			int index = model.getProcessIndex(portSource.getPorts().getOwner().getConnectionContext());
 			for (int i = 0; i < index; i++) {
 				width += model.getProcessWidth(model.getProcess(i)) + WALL_WIDTH * 2;
 			}
-			conG.translate(width, PADDING);
+
+			conG.translate(width, 0);
+			conG.scale(zoomFactor, zoomFactor);
 
 			conG.setColor(ACTIVE_EDGE_COLOR);
 			Point2D fromLoc = ProcessDrawUtils.createPortLocation(portSource, model);
-			double x = portSource instanceof OutputPort ? fromLoc.getX() + PORT_SIZE_HIGHLIGHT / 2 : fromLoc.getX()
-					- PORT_SIZE_HIGHLIGHT / 2;
-			conG.draw(new Line2D.Double(x, fromLoc.getY(), model.getMousePositionRelativeToProcess().getX(), model
-					.getMousePositionRelativeToProcess().getY()));
+			if (fromLoc != null) {
+				double x = portSource instanceof OutputPort ? fromLoc.getX() + PORT_SIZE_HIGHLIGHT / 2
+						: fromLoc.getX() - PORT_SIZE_HIGHLIGHT / 2;
+				conG.draw(new Line2D.Double(x, fromLoc.getY(), model.getMousePositionRelativeToProcess().getX(),
+						model.getMousePositionRelativeToProcess().getY()));
+			}
 			conG.dispose();
 		}
 
@@ -335,6 +372,27 @@ public final class ProcessDrawer {
 			selG.draw(model.getSelectionRectangle());
 			selG.dispose();
 		}
+	}
+
+	/**
+	 * Draws a wall (grey bar) right to the process box. Used for operator chains with multiple
+	 * units.
+	 *
+	 * @param process
+	 *            the process to draw the wall for
+	 * @param g2
+	 *            the graphics context to draw on
+	 */
+	private void renderProcessWall(ExecutionUnit process, Graphics2D g2) {
+		double width = model.getProcessWidth(process);
+		double height = model.getProcessHeight(process);
+		Shape wall = new Rectangle2D.Double(width, -10, 2 * WALL_WIDTH - 1, height + 20);
+
+		g2.setColor(Colors.WINDOW_BACKGROUND);
+		g2.fill(wall);
+
+		g2.setColor(Colors.TEXTFIELD_BORDER);
+		g2.draw(wall);
 	}
 
 	/**
@@ -352,9 +410,6 @@ public final class ProcessDrawer {
 		Graphics2D gBG = (Graphics2D) g2.create();
 		renderBackground(process, gBG, printing);
 		gBG.dispose();
-
-		// let decorators draw
-		drawPhaseDecorators(process, g2, RenderPhase.BACKGROUND, printing);
 	}
 
 	/**
@@ -544,9 +599,6 @@ public final class ProcessDrawer {
 		Graphics2D gBG = (Graphics2D) g2.create();
 		renderForeground(process, gBG, printing);
 		gBG.dispose();
-
-		// let decorators draw
-		drawPhaseDecorators(process, g2, RenderPhase.FOREGROUND, printing);
 	}
 
 	/**
@@ -739,14 +791,27 @@ public final class ProcessDrawer {
 		}
 		g2.drawString(name, x, (int) (frame.getY() + OPERATOR_FONT.getSize() + 1));
 
-		// Icon
-		ImageIcon icon = operator.getOperatorDescription().getIcon();
-		if (icon != null) {
-			if (!operator.isEnabled()) {
-				icon = ProcessDrawUtils.getIcon(operator, icon);
+		double yPosition = frame.getY() + ProcessRendererModel.HEADER_HEIGHT + 7;
+
+		if (operator.isAnimating() && ProcessAnimationManager.INSTANCE.getAnimationForOperator(operator) != null) {
+			// draw progress animation if operator is running
+			AffineTransform transformBefore = g2.getTransform();
+			Animation animation = ProcessAnimationManager.INSTANCE.getAnimationForOperator(operator);
+			Rectangle bounds = animation.getBounds();
+			g2.translate(frame.getX() + frame.getWidth() / 2, yPosition + OPERATOR_ICON_SIZE / 2);
+			g2.scale(OPERATOR_ICON_SIZE / bounds.getWidth(), OPERATOR_ICON_SIZE / bounds.getHeight());
+			animation.draw(g2);
+			g2.setTransform(transformBefore);
+		} else {
+			// Icon
+			ImageIcon icon = operator.getOperatorDescription().getIcon();
+			if (icon != null) {
+				if (!operator.isEnabled()) {
+					icon = ProcessDrawUtils.getIcon(operator, icon);
+				}
+				icon.paintIcon(null, g2, (int) (frame.getX() + frame.getWidth() / 2 - icon.getIconWidth() / 2),
+						(int) yPosition);
 			}
-			icon.paintIcon(null, g2, (int) (frame.getX() + frame.getWidth() / 2 - icon.getIconWidth() / 2),
-					(int) (frame.getY() + ProcessRendererModel.HEADER_HEIGHT + 7));
 		}
 
 		// Small icons
@@ -877,21 +942,21 @@ public final class ProcessDrawer {
 
 			if (input) {
 				startAngle = 90;
-				ellipseTop = new Arc2D.Double(
-						new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize), startAngle, 90,
+				ellipseTop = new Arc2D.Double(new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize),
+						startAngle, 90, Arc2D.PIE);
+				ellipseBottom = new Arc2D.Double(
+						new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize), startAngle + 90, 90,
 						Arc2D.PIE);
-				ellipseBottom = new Arc2D.Double(new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize,
-						portSize), startAngle + 90, 90, Arc2D.PIE);
 				ellipseBoth = new Arc2D.Double(
 						new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize), startAngle, 180,
 						Arc2D.PIE);
 			} else {
 				startAngle = 270;
-				ellipseBottom = new Arc2D.Double(new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize,
-						portSize), startAngle, 90, Arc2D.PIE);
-				ellipseTop = new Arc2D.Double(
-						new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize), startAngle + 90, 90,
+				ellipseBottom = new Arc2D.Double(
+						new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize), startAngle, 90,
 						Arc2D.PIE);
+				ellipseTop = new Arc2D.Double(new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize),
+						startAngle + 90, 90, Arc2D.PIE);
 				ellipseBoth = new Arc2D.Double(
 						new Rectangle2D.Double(x - portSize / 2, y - portSize / 2, portSize, portSize), startAngle, 180,
 						Arc2D.PIE);
@@ -1151,12 +1216,14 @@ public final class ProcessDrawer {
 			int startAngle;
 			if (input) {
 				startAngle = 90;
-				ellipseBoth = new Arc2D.Double(new Rectangle2D.Double(x - PORT_SIZE_BACKGROUND / 2, y - PORT_SIZE_BACKGROUND
-						/ 2, PORT_SIZE_BACKGROUND, PORT_SIZE_BACKGROUND), startAngle, 180, Arc2D.PIE);
+				ellipseBoth = new Arc2D.Double(new Rectangle2D.Double(x - PORT_SIZE_BACKGROUND / 2,
+						y - PORT_SIZE_BACKGROUND / 2, PORT_SIZE_BACKGROUND, PORT_SIZE_BACKGROUND), startAngle, 180,
+						Arc2D.PIE);
 			} else {
 				startAngle = 270;
-				ellipseBoth = new Arc2D.Double(new Rectangle2D.Double(x - PORT_SIZE_BACKGROUND / 2, y - PORT_SIZE_BACKGROUND
-						/ 2, PORT_SIZE_BACKGROUND, PORT_SIZE_BACKGROUND), startAngle, 180, Arc2D.PIE);
+				ellipseBoth = new Arc2D.Double(new Rectangle2D.Double(x - PORT_SIZE_BACKGROUND / 2,
+						y - PORT_SIZE_BACKGROUND / 2, PORT_SIZE_BACKGROUND, PORT_SIZE_BACKGROUND), startAngle, 180,
+						Arc2D.PIE);
 			}
 
 			g2.setColor(Color.WHITE);
@@ -1179,23 +1246,30 @@ public final class ProcessDrawer {
 		Shape frame = new Rectangle2D.Double(0, 0, width, height);
 
 		Color currentInnerColor = INNER_COLOR;
-		Stroke currentBorderStroke = BORDER_STROKE;
-		Color currentBorderColor = BORDER_COLOR;
 
 		// background color
 		g2.setColor(currentInnerColor);
 		g2.fill(frame);
 
+		// remember pre-scaling transform
+		AffineTransform at = g2.getTransform();
+		g2.scale(model.getZoomFactor(), model.getZoomFactor());
+
 		// process title
 		g2.setColor(PROCESS_TITLE_COLOR);
 		g2.setFont(PROCESS_FONT);
 		Operator displayedChain = process.getEnclosingOperator();
+
 		if (model.getProcesses().size() == 1) {
-			g2.drawString(displayedChain.getName(), PADDING + 2, PROCESS_FONT.getSize() + PADDING);
+			g2.drawString(displayedChain.getName(), PROCESS_TITLE_PADDING + 2,
+					PROCESS_FONT.getSize() + PROCESS_TITLE_PADDING);
 		} else {
 			// multiple subprocesses have special names so show them instead of operator name
-			g2.drawString(process.getName(), PADDING + 2, PROCESS_FONT.getSize() + PADDING);
+			g2.drawString(process.getName(), PROCESS_TITLE_PADDING + 2, PROCESS_FONT.getSize() + PROCESS_TITLE_PADDING);
 		}
+
+		// restore transform
+		g2.setTransform(at);
 
 		// breakpoint
 		if (displayedChain.hasBreakpoint()) {
@@ -1212,13 +1286,8 @@ public final class ProcessDrawer {
 				breakpointIcon = IMAGE_BREAKPOINTS_LARGE;
 			}
 			ProcessDrawUtils.getIcon(displayedChain, breakpointIcon).paintIcon(null, g2,
-					(int) width - PADDING - IMAGE_BREAKPOINTS_LARGE.getIconWidth(), PADDING);
+					(int) width - PROCESS_TITLE_PADDING - IMAGE_BREAKPOINTS_LARGE.getIconWidth(), PROCESS_TITLE_PADDING);
 		}
-
-		// frame color
-		g2.setColor(currentBorderColor);
-		g2.setStroke(currentBorderStroke);
-		g2.draw(frame);
 
 		boolean dragIndicate = false;
 		if (drawHighlight && (model.isDragStarted() || model.isDropTargetSet() && model.isImportDragged())
@@ -1238,6 +1307,19 @@ public final class ProcessDrawer {
 		if (dragIndicate && !printing) {
 
 			if (RapidMinerGUI.getDragHighlighteMode() == DragHighlightMode.FULL) {
+
+				// do nothing if we are in a tutorial process
+				MainFrame mainFrame = RapidMinerGUI.getMainFrame();
+				if (mainFrame != null) {
+					Process currentProcess = mainFrame.getProcess();
+					if (currentProcess != null) {
+						ProcessRootOperator rootOperator = currentProcess.getRootOperator();
+						if (rootOperator != null && rootOperator.getUserData(Tutorial.KEY_USER_DATA_FLAG) != null) {
+							return;
+						}
+					}
+				}
+
 				Font dragFont;
 				if (width >= 600) {
 					dragFont = DRAG_FONT_LARGE;
@@ -1279,8 +1361,10 @@ public final class ProcessDrawer {
 					drawCenteredText(process, g2, dragFont, DRAG_HERE, DRAG_FG_COLOR, 0);
 				}
 			}
-		} else if (process.getEnclosingOperator() instanceof ProcessRootOperator && process.getAllInnerOperators().isEmpty()) {
+		} else if (process.getEnclosingOperator() instanceof ProcessRootOperator && process.getAllInnerOperators().isEmpty()
+				&& ((ProcessRootOperator) process.getEnclosingOperator()).getUserData(Tutorial.KEY_USER_DATA_FLAG) == null) {
 			// empty process hint text
+			// but only if we are not in a tutorial process as indicated by the flag
 
 			g2.setColor(HINT_COLOR);
 			Font hintFont;
@@ -1334,8 +1418,8 @@ public final class ProcessDrawer {
 	private void drawDragBorder(final ExecutionUnit process, final Graphics2D g2) {
 		double width = model.getProcessWidth(process);
 		double height = model.getProcessHeight(process);
-		Shape dragFrame = new RoundRectangle2D.Double(DRAG_BORDER_PADDING, DRAG_BORDER_PADDING, width - 2
-				* DRAG_BORDER_PADDING, height - 2 * DRAG_BORDER_PADDING, DRAG_BORDER_CORNER, DRAG_BORDER_CORNER);
+		Shape dragFrame = new RoundRectangle2D.Double(DRAG_BORDER_PADDING, DRAG_BORDER_PADDING,
+				width - 2 * DRAG_BORDER_PADDING, height - 2 * DRAG_BORDER_PADDING, DRAG_BORDER_CORNER, DRAG_BORDER_CORNER);
 		g2.setColor(BORDER_DRAG_COLOR);
 		g2.setStroke(BORDER_DRAG_STROKE);
 		g2.draw(dragFrame);
@@ -1356,11 +1440,11 @@ public final class ProcessDrawer {
 	 */
 	private void drawPhaseDecorators(final ExecutionUnit process, final Graphics2D g2, final RenderPhase phase,
 			final boolean printing) {
-		double width = model.getProcessWidth(process);
-		double height = model.getProcessHeight(process);
+		double width = model.getProcessWidth(process) * (1 / model.getZoomFactor());
+		double height = model.getProcessHeight(process) * (1 / model.getZoomFactor());
 		int borderWidth = 2;
-		Shape frame = new Rectangle2D.Double(0 + borderWidth, 0 + borderWidth, width - 2 * borderWidth, height - 2
-				* borderWidth);
+		Shape frame = new Rectangle2D.Double(0 + borderWidth, 0 + borderWidth, width - 2 * borderWidth,
+				height - 2 * borderWidth);
 
 		for (ProcessDrawDecorator decorater : decorators.get(phase)) {
 			Graphics2D g2Deco = null;
@@ -1394,10 +1478,18 @@ public final class ProcessDrawer {
 	 *            if {@code true} we are printing instead of drawing to the screen
 	 */
 	private void drawOperatorDecorators(final Operator operator, final Graphics2D g2, final boolean printing) {
+		double width = model.getProcessWidth(operator.getExecutionUnit()) * (1 / model.getZoomFactor());
+		double height = model.getProcessHeight(operator.getExecutionUnit()) * (1 / model.getZoomFactor());
+		int borderWidth = 2;
+		Shape frame = new Rectangle2D.Double(0 + borderWidth, 0 + borderWidth, width - 2 * borderWidth,
+				height - 2 * borderWidth);
+
 		for (OperatorDrawDecorator decorater : operatorDecorators) {
 			Graphics2D g2Deco = null;
 			try {
 				g2Deco = (Graphics2D) g2.create();
+				g2Deco.clip(frame);
+
 				if (printing) {
 					decorater.print(operator, g2Deco, model);
 				} else {
@@ -1426,7 +1518,8 @@ public final class ProcessDrawer {
 	 * @param color
 	 * @param yOffset
 	 */
-	private void drawCenteredText(ExecutionUnit process, Graphics2D g2, Font font, String text, Color color, double yOffset) {
+	private void drawCenteredText(ExecutionUnit process, Graphics2D g2, Font font, String text, Color color,
+			double yOffset) {
 		double width = model.getProcessWidth(process);
 		double height = model.getProcessHeight(process);
 

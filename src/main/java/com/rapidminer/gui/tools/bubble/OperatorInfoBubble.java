@@ -200,14 +200,18 @@ public class OperatorInfoBubble extends BubbleWindow {
 		}
 
 		this.operator = toAttach;
-		this.operatorChain = operator.getParent() == null ? (OperatorChain) operator : operator.getParent();
+		if (operator.getParent() != null) {
+			operatorChain = operator.getParent();
+		} else {
+			this.operatorChain = operator instanceof OperatorChain ? (OperatorChain) operator : null;
+		}
 		this.hideOnDisable = hideOnDisable;
 		this.hideOnRun = hideOnRun;
 
 		// if we need to ensure that the bubble is visible:
 		if (ensureVisible) {
 			// switch to correct subprocess
-			if (!renderer.getModel().getDisplayedChain().equals(operatorChain)) {
+			if (!renderer.getModel().getDisplayedChain().equals(operatorChain) && operatorChain != null) {
 				renderer.getModel().setDisplayedChain(operatorChain);
 				renderer.getModel().fireDisplayedChainChanged();
 			}
@@ -219,7 +223,12 @@ public class OperatorInfoBubble extends BubbleWindow {
 			// make sure dockable is visible
 			DockingTools.openDockable(ProcessPanel.PROCESS_PANEL_DOCK_KEY, null, RelativeDockablePosition.TOP_CENTER);
 
-			RapidMinerGUI.getMainFrame().selectOperator(operator);
+			// make sure the operator has a parent (which could be the ProcessRootOperator)
+			// if the operator has no parent, e.g. because it is used internally by another
+			// operator, it can not be selected
+			if (operatorChain != null) {
+				RapidMinerGUI.getMainFrame().selectOperator(operator);
+			}
 		}
 
 		// keyboard accessibility
@@ -264,6 +273,7 @@ public class OperatorInfoBubble extends BubbleWindow {
 							killBubble(true);
 						}
 						break;
+					case PROCESS_ZOOM_CHANGED:
 					case PROCESS_SIZE_CHANGED:
 						OperatorInfoBubble.this.paint(false);
 						break;
@@ -380,6 +390,8 @@ public class OperatorInfoBubble extends BubbleWindow {
 			return rendererLoc;
 		}
 		Point loc = new Point((int) targetRect.getX(), (int) targetRect.getY());
+		loc.x = (int) (loc.x * renderer.getModel().getZoomFactor());
+		loc.y = (int) (loc.y * renderer.getModel().getZoomFactor());
 		loc = ProcessDrawUtils.convertToAbsoluteProcessPoint(loc,
 				renderer.getModel().getProcessIndex(operator.getExecutionUnit()), renderer.getModel());
 		if (loc == null) {
@@ -387,7 +399,6 @@ public class OperatorInfoBubble extends BubbleWindow {
 		}
 
 		// calculate actual on screen loc of the operator and return it
-
 		Point absoluteLoc = new Point((int) (viewport.getLocationOnScreen().x + (loc.getX() - rendererLoc.getX())),
 				(int) (viewport.getLocationOnScreen().y + (loc.getY() - rendererLoc.getY())));
 
@@ -398,13 +409,14 @@ public class OperatorInfoBubble extends BubbleWindow {
 
 	@Override
 	protected int getObjectWidth() {
-		return ProcessDrawer.OPERATOR_WIDTH;
+		return (int) (ProcessDrawer.OPERATOR_WIDTH * renderer.getModel().getZoomFactor());
 	}
 
 	@Override
 	protected int getObjectHeight() {
 		Rectangle2D rect = renderer.getModel().getOperatorRect(operator);
-		return rect != null ? (int) rect.getHeight() : ProcessDrawer.OPERATOR_MIN_HEIGHT;
+		int height = rect != null ? (int) rect.getHeight() : ProcessDrawer.OPERATOR_MIN_HEIGHT;
+		return (int) (height * renderer.getModel().getZoomFactor());
 	}
 
 	@Override

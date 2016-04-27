@@ -32,7 +32,7 @@ dependencies {
 	compile 'com.rapidminer:rapidminer-api:0.2.0'
 
 	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
-	compile 'com.rapidminer.external:vldocking:1.1.0'
+	compile 'com.rapidminer.external:vldocking:1.1.1'
 
 	// Freehep for vector graphic export (http://java.freehep.org/)
 	compile('org.freehep:freehep-graphicsio-ps:2.3') {

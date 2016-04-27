@@ -132,14 +132,13 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	 *            if {@code true} dates are formatted to "M/d/yy h:mm a", otherwise milliseconds
 	 *            since the epoch are used
 	 * @param opProg
-	 *            the {@link OperatorProgress} is used to provide a more detailed progress.
-	 *            Within this method the progress will be increased by number of examples times the
-	 *            number of attributes. If you do not want the operator progress, just provide
-	 *            <code> null <code>.
+	 *            the {@link OperatorProgress} is used to provide a more detailed progress. Within
+	 *            this method the progress will be increased by number of examples times the number
+	 *            of attributes. If you do not want the operator progress, just provide <code> null
+	 *            <code>.
 	 */
 	public static void writeCSV(ExampleSet exampleSet, PrintWriter out, String colSeparator, boolean quoteNomValues,
-			boolean writeAttribNames, boolean formatDate, OperatorProgress operatorProgress)
-					throws ProcessStoppedException {
+			boolean writeAttribNames, boolean formatDate, OperatorProgress operatorProgress) throws ProcessStoppedException {
 		writeCSV(exampleSet, out, colSeparator, quoteNomValues, writeAttribNames, formatDate, null, operatorProgress);
 	}
 
@@ -199,14 +198,14 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	 *            the symbol to use for infinite values; if {@code null} the default symbol
 	 *            "Infinity" is used
 	 * @param opProg
-	 *            the {@link OperatorProgress} is used to provide a more detailed progress.
-	 *            Within this method the progress will be increased by number of examples times the
-	 *            number of attributes. If you do not want the operator progress, just provide
-	 *            <code> null <code>.
+	 *            the {@link OperatorProgress} is used to provide a more detailed progress. Within
+	 *            this method the progress will be increased by number of examples times the number
+	 *            of attributes. If you do not want the operator progress, just provide <code> null
+	 *            <code>.
 	 */
 	public static void writeCSV(ExampleSet exampleSet, PrintWriter out, String colSeparator, boolean quoteNomValues,
 			boolean writeAttribNames, boolean formatDate, String infinitySymbol, OperatorProgress opProg)
-					throws ProcessStoppedException {
+			throws ProcessStoppedException {
 		String negativeInfinitySymbol = null;
 		if (infinitySymbol != null) {
 			negativeInfinitySymbol = "-" + infinitySymbol;
@@ -300,23 +299,12 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		boolean quoteNominalValues = getParameterAsBoolean(PARAMETER_QUOTE_NOMINAL_VALUES);
 		boolean writeAttribNames = getParameterAsBoolean(PARAMETER_WRITE_ATTRIBUTE_NAMES);
 		boolean formatDate = getParameterAsBoolean(PARAMETER_FORMAT_DATE);
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new OutputStreamWriter(outputStream, Encoding.getEncoding(this)));
-
+		try (PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream, Encoding.getEncoding(this)))) {
 			// init operator progress
-			getProgress().setTotal(exampleSet.size() * exampleSet.getAttributes().allSize());
-
-			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, formatDate,
-					getProgress());
-			out.flush();
+			getProgress().setTotal(exampleSet.size());
+			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, formatDate, getProgress());
 			getProgress().complete();
-		} finally {
-			if (out != null) {
-				out.close();
-			}
 		}
-
 	}
 
 	@Override
@@ -340,12 +328,10 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 				"Indicates if the attribute names should be written as first row.", true, false));
 		types.add(new ParameterTypeBoolean(PARAMETER_QUOTE_NOMINAL_VALUES,
 				"Indicates if nominal values should be quoted with double quotes.", true, false));
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_FORMAT_DATE,
+		types.add(new ParameterTypeBoolean(PARAMETER_FORMAT_DATE,
 				"Indicates if date attributes are written as a formated string or as milliseconds past since January 1, 1970, 00:00:00 GMT",
 				true, true));
-		ParameterType type = new ParameterTypeBoolean(
-				PARAMETER_APPEND_FILE,
+		ParameterType type = new ParameterTypeBoolean(PARAMETER_APPEND_FILE,
 				"Indicates if new content should be appended to the file or if the pre-existing file content should be overwritten.",
 				false, false);
 		type.registerDependencyCondition(new PortConnectedCondition(this, new PortProvider() {

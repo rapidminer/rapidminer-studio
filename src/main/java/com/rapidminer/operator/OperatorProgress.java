@@ -197,7 +197,8 @@ public final class OperatorProgress extends AbstractObservable<OperatorProgress>
 	 */
 	public int getProgress() {
 		if (total > 0) {
-			return completed / total * 100;
+			// prevent integer overflow of completed * 100
+			return (int) (completed * (long) 100 / total);
 		}
 		return 0;
 	}

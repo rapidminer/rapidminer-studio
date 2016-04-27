@@ -18,6 +18,10 @@
  */
 package com.rapidminer.operator.visualization.dependencies;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.NonSpecialAttributesExampleSet;
@@ -42,10 +46,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.math.SignificanceTestResult;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * <p>
@@ -53,7 +53,7 @@ import java.util.List;
  * attributes depending on the groups defined by all nominal attributes. Please refer to the
  * operator {@link GroupedANOVAOperator} for details of the calculation.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ANOVAMatrixOperator extends Operator {
@@ -123,8 +123,13 @@ public class ANOVAMatrixOperator extends Operator {
 				String nominalAttributeName = nominalAttributes.get(nominalCounter);
 				groupedAnovaOperator.setParameter(GroupedANOVAOperator.PARAMETER_ANOVA_ATTRIBUTE, numericalAttributeName);
 				groupedAnovaOperator.setParameter(GroupedANOVAOperator.PARAMETER_GROUP_BY_ATTRIBUTE, nominalAttributeName);
-				SignificanceTestResult testResult = groupedAnovaOperator.apply((ExampleSet) exampleSet.clone());
-				probabilities[numericalCounter][nominalCounter] = testResult.getProbability();
+				try {
+					SignificanceTestResult testResult = groupedAnovaOperator.apply((ExampleSet) exampleSet.clone());
+					probabilities[numericalCounter][nominalCounter] = testResult.getProbability();
+				} catch (UserError e) {
+					e.setOperator(this);
+					throw e;
+				}
 			}
 		}
 
@@ -138,8 +143,7 @@ public class ANOVAMatrixOperator extends Operator {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeDouble(GroupedANOVAOperator.PARAMETER_SIGNIFICANCE_LEVEL,
 				"The significance level for the ANOVA calculation.", 0.0d, 1.0d, 0.05d));
-		types.add(new ParameterTypeBoolean(
-				GroupedANOVAOperator.PARAMETER_ONLY_DISTINCT,
+		types.add(new ParameterTypeBoolean(GroupedANOVAOperator.PARAMETER_ONLY_DISTINCT,
 				"Indicates if only rows with distinct values for the aggregation attribute should be used for the calculation of the aggregation function.",
 				false));
 		return types;

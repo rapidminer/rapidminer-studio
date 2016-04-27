@@ -34,8 +34,8 @@ import com.rapidminer.gui.tools.DockingTools;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
-import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tutorial.Tutorial;
 import com.vlsolutions.swing.docking.Dockable;
@@ -216,10 +216,10 @@ public class TutorialSelector extends AbstractObservable<Tutorial> {
 						} else {
 							// Keep process but remove the tutorial process flag and the fire remove
 							// background event (to remove tutorial background).
-							ExecutionUnit rootOperator = mainFrame.getProcess().getRootOperator().getSubprocess(0);
+							ProcessRootOperator rootOperator = mainFrame.getProcess().getRootOperator();
 							rootOperator.setUserData(Tutorial.KEY_USER_DATA_FLAG, null);
 							mainFrame.getProcessPanel().getBackgroundImageHandler()
-									.makeRemoveBackgroundImageAction(rootOperator).actionPerformed(null);
+									.makeRemoveBackgroundImageAction(rootOperator.getSubprocess(0)).actionPerformed(null);
 						}
 					}
 

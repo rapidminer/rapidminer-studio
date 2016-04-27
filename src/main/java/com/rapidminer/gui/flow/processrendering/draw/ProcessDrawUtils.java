@@ -345,7 +345,7 @@ public final class ProcessDrawUtils {
 		Operator op = port.getPorts().getOwner().getOperator();
 		int index = port.getPorts().getAllPorts().indexOf(port);
 		int addOffset = 0;
-		int xOffset = 1;
+		int xOffset = 0;
 		for (int i = 0; i <= index; i++) {
 			addOffset += model.getPortSpacing(port.getPorts().getPortByIndex(i));
 		}
@@ -359,7 +359,7 @@ public final class ProcessDrawUtils {
 				point = new Point(0 + xOffset, ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET
 						+ index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
 			} else {
-				point = new Point((int) Math.ceil(model.getProcessWidth(process) - xOffset),
+				point = new Point((int) Math.ceil(model.getProcessWidth(process) * (1 / model.getZoomFactor()) - xOffset),
 						ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET
 								+ index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
 			}
@@ -400,11 +400,10 @@ public final class ProcessDrawUtils {
 			final ProcessRendererModel model) {
 		double xOffset = 0;
 		for (int i = 0; i < model.getProcesses().size(); i++) {
-			xOffset += ProcessDrawer.WALL_WIDTH;
 			if (i == processIndex) {
-				return new Point((int) (p.getX() + xOffset), (int) (p.getY() + ProcessDrawer.PADDING));
+				return new Point((int) (p.getX() + xOffset), (int) p.getY());
 			}
-			xOffset += ProcessDrawer.WALL_WIDTH + model.getProcessWidth(model.getProcess(i));
+			xOffset += ProcessDrawer.WALL_WIDTH * 2 + model.getProcessWidth(model.getProcess(i));
 		}
 		return null;
 	}
@@ -424,11 +423,10 @@ public final class ProcessDrawUtils {
 	public static Point convertToRelativePoint(final Point p, final int processIndex, final ProcessRendererModel model) {
 		double xOffset = 0;
 		for (int i = 0; i < model.getProcesses().size(); i++) {
-			xOffset += ProcessDrawer.WALL_WIDTH;
 			if (i == processIndex) {
-				return new Point((int) (p.getX() - xOffset), (int) (p.getY() - ProcessDrawer.PADDING));
+				return new Point((int) (p.getX() - xOffset), (int) p.getY());
 			}
-			xOffset += ProcessDrawer.WALL_WIDTH + model.getProcessWidth(model.getProcess(i));
+			xOffset += ProcessDrawer.WALL_WIDTH * 2 + model.getProcessWidth(model.getProcess(i));
 		}
 		return null;
 	}

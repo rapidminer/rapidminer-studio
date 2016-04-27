@@ -46,9 +46,11 @@ public class ProcessButtonBar extends ParentButtonPanel<Operator> {
 			public void actionPerformed(ActionEvent e) {
 				mainFrame.selectOperator(getSelectedNode());
 				if (getSelectedNode() instanceof OperatorChain) {
-					mainFrame.getProcessPanel().getProcessRenderer().getModel().setDisplayedChain((OperatorChain) getSelectedNode());
+					mainFrame.getProcessPanel().getProcessRenderer().getModel()
+							.setDisplayedChain((OperatorChain) getSelectedNode());
 				} else {
-					mainFrame.getProcessPanel().getProcessRenderer().getModel().setDisplayedChain(getSelectedNode().getParent());
+					mainFrame.getProcessPanel().getProcessRenderer().getModel()
+							.setDisplayedChain(getSelectedNode().getParent());
 				}
 				mainFrame.getProcessPanel().getProcessRenderer().getModel().fireDisplayedChainChanged();
 				mainFrame.addViewSwitchToUndo();

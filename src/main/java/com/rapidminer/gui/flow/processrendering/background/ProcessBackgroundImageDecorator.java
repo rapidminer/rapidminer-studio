@@ -18,7 +18,9 @@
  */
 package com.rapidminer.gui.flow.processrendering.background;
 
+import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawDecorator;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
@@ -38,6 +40,9 @@ import com.rapidminer.operator.ExecutionUnit;
  *
  */
 public final class ProcessBackgroundImageDecorator {
+
+	/** minimum alpha value for background images (if zommed in) */
+	private static final float MIN_OPACITY = 0.15f;
 
 	/** the process renderer */
 	private final ProcessRendererView view;
@@ -59,7 +64,7 @@ public final class ProcessBackgroundImageDecorator {
 		}
 
 		/**
-		 * Draws the background annoations.
+		 * Draws the background annotations.
 		 */
 		private void draw(final ExecutionUnit process, final Graphics2D g2, final ProcessRendererModel rendererModel,
 				final boolean printing) {
@@ -68,7 +73,6 @@ public final class ProcessBackgroundImageDecorator {
 			ProcessBackgroundImage image = rendererModel.getBackgroundImage(process);
 			if (image != null) {
 				Graphics2D g2D = (Graphics2D) g2.create();
-
 				int x = image.getX();
 				int y = image.getY();
 				int w = image.getWidth();
@@ -84,6 +88,15 @@ public final class ProcessBackgroundImageDecorator {
 					y = (int) ((processHeight - h) / 2);
 				}
 
+				if (rendererModel.getZoomFactor() > 1.0) {
+					/** fade out background image when zooming in */
+					float alpha = Math.max(MIN_OPACITY, 2.0f - (float) rendererModel.getZoomFactor());
+					AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+					g2D.setComposite(ac);
+				}
+
+				// interpolate scaled background images
+				g2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 				g2D.drawImage(image.getImage(loadListener), x, y, w, h, null);
 				g2D.dispose();
 			}

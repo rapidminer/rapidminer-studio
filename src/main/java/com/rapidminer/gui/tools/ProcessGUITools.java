@@ -916,9 +916,10 @@ public class ProcessGUITools {
 
 		OperatorBubbleBuilder builder = new OperatorBubbleBuilder(RapidMinerGUI.getMainFrame(), error.getOperator(), i18nKey,
 				message, "");
-		// if no operator or root operator, show in middle, otherwise below
-		AlignedSide prefSide = error.getOperator() == null || error.getOperator() instanceof ProcessRootOperator
-				? AlignedSide.MIDDLE : AlignedSide.BOTTOM;
+		// if no operator, root operator or orphan, e.g. because operator is used internally by
+		// another operator, show in middle, otherwise below
+		AlignedSide prefSide = error.getOperator() == null || error.getOperator().getParent() == null ? AlignedSide.MIDDLE
+				: AlignedSide.BOTTOM;
 		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setAlignment(prefSide)
 				.setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
 				.setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();

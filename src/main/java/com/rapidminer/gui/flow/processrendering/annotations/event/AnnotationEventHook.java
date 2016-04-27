@@ -448,6 +448,7 @@ public final class AnnotationEventHook {
 					break;
 				case MISC_CHANGED:
 				case PROCESS_SIZE_CHANGED:
+				case PROCESS_ZOOM_CHANGED:
 				default:
 					break;
 

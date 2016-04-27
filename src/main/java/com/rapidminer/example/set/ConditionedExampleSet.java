@@ -18,22 +18,24 @@
  */
 package com.rapidminer.example.set;
 
-import com.rapidminer.example.Attributes;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.operator.Annotations;
-import com.rapidminer.operator.tools.ExpressionEvaluationException;
-
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.rapidminer.example.Attributes;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.table.ExampleTable;
+import com.rapidminer.operator.Annotations;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
+import com.rapidminer.operator.tools.ExpressionEvaluationException;
+
 
 /**
  * Hides {@link Example}s that do not fulfill a given {@link Condition}.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ConditionedExampleSet extends AbstractExampleSet {
@@ -73,7 +75,7 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 
 	/**
 	 * Creates a new example which used only examples fulfilling the given condition.
-	 * 
+	 *
 	 * @throws ExpressionEvaluationException
 	 */
 	public ConditionedExampleSet(ExampleSet parent, Condition condition) throws ExpressionEvaluationException {
@@ -82,13 +84,32 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 
 	/**
 	 * Creates a new example which used only examples fulfilling the given condition.
-	 * 
+	 *
 	 * @throws ExpressionEvaluationException
 	 */
 	public ConditionedExampleSet(ExampleSet parent, Condition condition, boolean inverted)
 			throws ExpressionEvaluationException {
 		this.parent = (ExampleSet) parent.clone();
-		this.mapping = calculateMapping(condition, inverted);
+		try {
+			this.mapping = calculateMapping(condition, inverted, null);
+		} catch (ProcessStoppedException e) {
+			// Cannot happen because progress is null
+		}
+	}
+
+	/**
+	 * Creates a new example which used only examples fulfilling the given condition.
+	 *
+	 * @param progress
+	 *            the {@link OperatorProgress} to report the progress to
+	 * @throws ExpressionEvaluationException
+	 * @throws ProcessStoppedException
+	 *             if the process was stopped, can only happen if progress not {@code null}
+	 */
+	public ConditionedExampleSet(ExampleSet parent, Condition condition, boolean inverted, OperatorProgress progress)
+			throws ExpressionEvaluationException, ProcessStoppedException {
+		this.parent = (ExampleSet) parent.clone();
+		this.mapping = calculateMapping(condition, inverted, progress);
 	}
 
 	/** Clone constructor. */
@@ -123,7 +144,12 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 		return super.hashCode() ^ Arrays.hashCode(this.mapping);
 	}
 
-	private int[] calculateMapping(Condition condition, boolean inverted) throws ExpressionEvaluationException {
+	private int[] calculateMapping(Condition condition, boolean inverted, OperatorProgress progress)
+			throws ExpressionEvaluationException, ProcessStoppedException {
+		if (progress != null) {
+			// +1 since a little is happening afterwards
+			progress.setTotal(parent.size() + 1);
+		}
 		List<Integer> indices = new LinkedList<Integer>();
 
 		// create mapping
@@ -139,6 +165,9 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 				}
 			}
 			exampleCounter++;
+			if (progress != null && exampleCounter % 1000 == 0) {
+				progress.setCompleted(exampleCounter);
+			}
 		}
 
 		int[] mapping = new int[indices.size()];

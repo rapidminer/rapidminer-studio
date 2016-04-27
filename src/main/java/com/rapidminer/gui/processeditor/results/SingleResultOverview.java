@@ -29,7 +29,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.lang.ref.SoftReference;
 import java.util.List;
 
 import javax.swing.Action;
@@ -68,6 +67,7 @@ import com.rapidminer.report.Reportable;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.ReferenceCache;
 
 
 /**
@@ -82,11 +82,13 @@ public class SingleResultOverview extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
+	private static final ReferenceCache<ResultObject> RESULT_OBJECT_CACHE = new ReferenceCache<>(20);
+
 	private final JLabel title;
 	private final Component main;
 	private String repositoryLocation = null;
 	private RepositoryLocation processFolderLocation = null;
-	private SoftReference<ResultObject> ioObject;
+	private ReferenceCache<ResultObject>.Reference ioObject;
 
 	static final int MIN_HEIGHT = 300;
 	static final int MIN_WIDTH = 300;
@@ -150,12 +152,12 @@ public class SingleResultOverview extends JPanel {
 		gbc.anchor = GridBagConstraints.NORTHWEST;
 
 		MetaData metaData = MetaData.forIOObject(result, true);
-		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5), new RapidBorder(
-				ProcessDrawUtils.getColorFor(metaData), RapidLookAndFeel.CORNER_DEFAULT_RADIUS, 35)));
+		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5),
+				new RapidBorder(ProcessDrawUtils.getColorFor(metaData), RapidLookAndFeel.CORNER_DEFAULT_RADIUS, 35)));
 		setBackground(Colors.WHITE);
 
 		if (result instanceof ResultObject) {
-			this.ioObject = new SoftReference<ResultObject>((ResultObject) result);
+			this.ioObject = RESULT_OBJECT_CACHE.newReference((ResultObject) result);
 		}
 
 		if (process.getRootOperator().getSubprocess(0).getInnerSinks().getNumberOfPorts() > resultIndex) {
@@ -166,8 +168,8 @@ public class SingleResultOverview extends JPanel {
 				// from inner sink
 				if (process.getContext().getOutputRepositoryLocations().size() > resultIndex) {
 					repositoryLocation = process.getContext().getOutputRepositoryLocations().get(resultIndex).toString();
-					processFolderLocation = process.getRepositoryLocation() != null ? process.getRepositoryLocation()
-							.parent() : null;
+					processFolderLocation = process.getRepositoryLocation() != null
+							? process.getRepositoryLocation().parent() : null;
 				}
 			}
 		}
@@ -375,8 +377,8 @@ public class SingleResultOverview extends JPanel {
 							Graphics2D graphics = (Graphics2D) img.getGraphics();
 							graphics.setColor(Colors.WHITE);
 							graphics.fillRect(0, 0, 5000, 3000);
-							double scale = Math.min((double) width / (double) preferredWidth, (double) height
-									/ (double) preferredHeight);
+							double scale = Math.min((double) width / (double) preferredWidth,
+									(double) height / (double) preferredHeight);
 							graphics.scale(scale, scale);
 							renderable.render(graphics, preferredWidth, preferredHeight);
 

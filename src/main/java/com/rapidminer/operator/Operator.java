@@ -992,6 +992,8 @@ public abstract class Operator extends AbstractObservable<Operator>
 				formatIO(getInputPorts(), builder);
 				getLogger().log(WrapperLoggingHandler.LEVELS[LogService.IO], builder.toString());
 			}
+			// reset progress listener to default value
+			getProgress().setTotal(OperatorProgress.NO_PROGRESS);
 
 			getOutputPorts().clear(Port.CLEAR_DATA);
 			try {
@@ -2375,6 +2377,18 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 */
 	public boolean isRunning() {
 		return isRunning;
+	}
+	
+	/**
+	 * Returns if this operator should currently show progress animation.
+	 * This method can be overridden to provide unique animation display criteria.
+	 * By default it checks if the operator is running.
+	 * Please note that
+	 * {@link com.rapidminer.gui.animation.OperatorAnimationProcessListener#processFinishedOperator}
+	 * also depends on this method.
+	 */
+	public boolean isAnimating() {
+		return isRunning();
 	}
 
 	/**

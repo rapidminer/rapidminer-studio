@@ -28,6 +28,8 @@ import com.rapidminer.tools.plugin.Plugin;
  */
 public class StringColorMap extends ParentResolvingMap<String, Color> {
 
+	public static final Color DEFAULT_COLOR = Color.WHITE;
+
 	@Override
 	public String getParent(String child, Plugin provider) {
 		if (child == null) {
@@ -46,10 +48,15 @@ public class StringColorMap extends ParentResolvingMap<String, Color> {
 
 	@Override
 	public String parseKey(String key, ClassLoader classLoader, Plugin provider) {
-		if (provider != null && provider.useExtensionTreeRoot() && key.trim().isEmpty()) {
-			// use extension name as top-level group in case group..color was defined in
-			// groups.properties file
-			return provider.getName();
+		if (provider != null && provider.useExtensionTreeRoot()) {
+			if (key.trim().isEmpty()) {
+				// use extension name as top-level group in case group..color was defined in
+				// groups.properties file
+				return provider.getName();
+			} else {
+				// otherwise add the extension name to the key to prevent duplicate keys
+				return provider.getName() + "." + key;
+			}
 		}
 		return key;
 	}
@@ -61,7 +68,7 @@ public class StringColorMap extends ParentResolvingMap<String, Color> {
 
 	@Override
 	public Color getDefault() {
-		return Color.WHITE;
+		return DEFAULT_COLOR;
 	}
 
 }

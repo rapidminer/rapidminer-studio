@@ -32,7 +32,8 @@ import com.rapidminer.tools.expression.internal.ExpressionParserUtils;
 
 /**
  * The condition is fulfilled if the expression evaluates to <code>true</code>. Respectively the
- * condition is not fulfilled if the expression evaluates to <code>false</code>.
+ * condition is not fulfilled if the expression evaluates to <code>false</code> or <code>null</code>
+ * .
  *
  * @author Marco Boeck
  */
@@ -116,19 +117,23 @@ public class ExpressionFilter implements Condition {
 			resolver.bind(e);
 
 			if (type == ExpressionType.BOOLEAN) {
-				return result.evaluateBoolean();
+				Boolean resultValue = result.evaluateBoolean();
+				if (resultValue == null) {
+					return false;
+				}
+				return resultValue;
 			} else if (type == ExpressionType.DOUBLE) {
 				double resultValue = result.evaluateNumerical();
 				if (resultValue == 1d || resultValue == 0d) {
 					return resultValue == 1d;
 				}
 			}
-			throw new ExpressionEvaluationException(I18N.getMessageOrNull(I18N.getErrorBundle(),
-					"expression_filter.expression_not_boolean", expression));
+			throw new ExpressionEvaluationException(
+					I18N.getMessageOrNull(I18N.getErrorBundle(), "expression_filter.expression_not_boolean", expression));
 		} catch (ExpressionException e1) {
 			// all parsing tries failed, show warning and return false
-			throw new ExpressionEvaluationException(I18N.getMessageOrNull(I18N.getErrorBundle(),
-					"expression_filter.parser_parsing_failed", expression));
+			throw new ExpressionEvaluationException(
+					I18N.getMessageOrNull(I18N.getErrorBundle(), "expression_filter.parser_parsing_failed", expression));
 		} finally {
 			// avoid memory leak
 			resolver.unbind();

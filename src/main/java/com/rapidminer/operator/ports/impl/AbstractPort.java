@@ -18,7 +18,6 @@
  */
 package com.rapidminer.operator.ports.impl;
 
-import java.lang.ref.SoftReference;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -35,6 +34,7 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataError;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.tools.AbstractObservable;
+import com.rapidminer.tools.ReferenceCache;
 
 
 /**
@@ -54,7 +54,8 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 
 	private String name;
 
-	private SoftReference<IOObject> weakDataReference;
+	private static final ReferenceCache<IOObject> IOO_REFERENCE_CACHE = new ReferenceCache<>(20);
+	private ReferenceCache<IOObject>.Reference weakDataReference;
 
 	private IOObject hardDataReference;
 
@@ -68,7 +69,7 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 	}
 
 	protected final void setData(IOObject object) {
-		this.weakDataReference = new SoftReference<>(object);
+		this.weakDataReference = IOO_REFERENCE_CACHE.newReference(object);
 		this.hardDataReference = object;
 	}
 
@@ -88,7 +89,9 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 		if (hardDataReference != null) {
 			return hardDataReference;
 		} else {
-			return this.weakDataReference != null ? this.weakDataReference.get() : null;
+			// This method is invoked from many places that should not keep the cache entry warm
+			// (e.g., visualizations). Thus, perform only a weak get.
+			return this.weakDataReference != null ? this.weakDataReference.weakGet() : null;
 		}
 	}
 

@@ -86,7 +86,7 @@ import com.rapidminer.tools.I18N;
 public class ProcessRendererController {
 
 	/** used to detect connection hovering */
-	private static final Stroke CONNECTION_HOVER_DETECTION_STROKE = new BasicStroke(10);
+	private static final Stroke CONNECTION_HOVER_DETECTION_STROKE = new BasicStroke(30);
 
 	/** the view this controller manipulates */
 	private ProcessRendererView view;
@@ -236,8 +236,7 @@ public class ProcessRendererController {
 	 */
 	public Rectangle2D autoPosition(Operator op, int index, boolean setPosition) {
 		int maxPerRow = (int) Math.max(1,
-				Math.floor((model.getProcessWidth(op.getExecutionUnit()) + ProcessDrawer.WALL_WIDTH)
-						/ (ProcessDrawer.GRID_AUTOARRANGE_WIDTH + 10)));
+				Math.floor(model.getProcessWidth(op.getExecutionUnit()) / (ProcessDrawer.GRID_AUTOARRANGE_WIDTH + 10)));
 		int col = index % maxPerRow;
 		int row = index / maxPerRow;
 		Rectangle2D old = model.getOperatorRect(op);
@@ -590,8 +589,8 @@ public class ProcessRendererController {
 
 		boolean needsResize = false;
 
-		double processWidth = processSize.getWidth();
-		double processHeight = processSize.getHeight();
+		double processWidth = processSize.getWidth() * (1 / model.getZoomFactor());
+		double processHeight = processSize.getHeight() * (1 / model.getZoomFactor());
 		double width = processWidth;
 		double height = processHeight;
 		if (processSize != null) {
@@ -687,7 +686,7 @@ public class ProcessRendererController {
 	double getTotalHeight() {
 		double height = 0;
 		for (ExecutionUnit u : model.getProcesses()) {
-			double h = model.getProcessHeight(u) + 2 * ProcessDrawer.PADDING;
+			double h = model.getProcessHeight(u);
 			if (h > height) {
 				height = h;
 			}
@@ -702,9 +701,15 @@ public class ProcessRendererController {
 	 */
 	double getTotalWidth() {
 		double width = 0;
+		int count = 0;
 		for (ExecutionUnit u : model.getProcesses()) {
-			double w = model.getProcessWidth(u) + 2 * ProcessDrawer.WALL_WIDTH;
+			if (count > 0) {
+				width += 2 * ProcessDrawer.WALL_WIDTH;
+			}
+			double w = model.getProcessWidth(u);
 			width += w;
+
+			count++;
 		}
 		return width;
 	}
@@ -894,7 +899,7 @@ public class ProcessRendererController {
 			Point bottomPortPos = ProcessDrawUtils.createPortLocation(ports.getPortByIndex(ports.getNumberOfPorts() - 1),
 					model);
 			// if it doesn't, revert
-			double height = model.getProcessHeight(ports.getOwner().getConnectionContext()) - ProcessDrawer.PADDING;
+			double height = model.getProcessHeight(ports.getOwner().getConnectionContext());
 			if (bottomPortPos != null && bottomPortPos.getY() > height) {
 				double tooMuch = bottomPortPos.getY() - height;
 				diff -= tooMuch;
@@ -1031,8 +1036,9 @@ public class ProcessRendererController {
 		} else {
 			frameSize = view.getSize();
 		}
-		return new Dimension((int) (frameSize.getWidth() / model.getProcesses().size() - ProcessDrawer.WALL_WIDTH * 2),
-				(int) (frameSize.getHeight() - 2 * ProcessDrawer.PADDING));
+		int processes = model.getProcesses().size();
+		int wallSpace = (processes - 1) * 2 * ProcessDrawer.WALL_WIDTH;
+		return new Dimension((int) ((frameSize.getWidth() - wallSpace) / processes), (int) frameSize.getHeight());
 	}
 
 	/**
@@ -1116,7 +1122,9 @@ public class ProcessRendererController {
 				}
 
 				// after moving all operators, update UI, increase counter, and reset timer
-				view.repaint();
+				// use {@link ProcessRendererView#doRepaint()} instead of {@link
+				// ProcessRendererView#repaint()} since repaint must happen instantly
+				view.doRepaint();
 				++count;
 				if (count == steps) {
 					operatorMoverTimer.stop();
@@ -1170,7 +1178,7 @@ public class ProcessRendererController {
 			}
 		}
 		for (ExecutionUnit p : model.getProcesses()) {
-			setHeight(p, height);
+			setHeight(p, height * model.getZoomFactor());
 		}
 	}
 
@@ -1186,7 +1194,7 @@ public class ProcessRendererController {
 	 */
 	private void setHeight(final ExecutionUnit executionUnit, final double height) {
 		if (model.getProcessHeight(executionUnit) != height) {
-			model.setProcessHeight(executionUnit, height);
+			model.setProcessHeight(executionUnit, height * (1 / model.getZoomFactor()));
 			model.fireProcessSizeChanged();
 		}
 	}
@@ -1253,7 +1261,7 @@ public class ProcessRendererController {
 			}
 		}
 
-		double minWidth = ProcessDrawer.OPERATOR_WIDTH * 2 + ProcessDrawer.WALL_WIDTH * 2;
+		double minWidth = ProcessDrawer.OPERATOR_WIDTH * 2;
 		double subprocessWidth = w + ProcessDrawer.GRID_X_OFFSET;
 		double subprocessHeight = h + ProcessDrawer.GRID_Y_OFFSET;
 		double height = subprocessHeight;
@@ -1279,10 +1287,10 @@ public class ProcessRendererController {
 				double targetHeight = sp.getSize().getHeight();
 				double sbWidth = sp.getVerticalScrollBar().getSize().getWidth() / model.getProcesses().size();
 				double sbHeight = sp.getHorizontalScrollBar().getSize().getHeight();
-				if (width + ProcessDrawer.WALL_WIDTH * 2 < targetWidth && subprocessWidth < targetWidth) {
+				if (width < targetWidth && subprocessWidth < targetWidth) {
 					width += sbWidth;
 				}
-				if (height + ProcessDrawer.PADDING * 2 < targetHeight && subprocessHeight < targetHeight) {
+				if (height < targetHeight && subprocessHeight < targetHeight) {
 					height += sbHeight;
 				}
 			}

@@ -36,16 +36,22 @@ import java.nio.charset.Charset;
 public class LineReader implements AutoCloseable {
 
 	private BufferedReader reader = null;
+	private FileInputStream fis = null;
 
 	public LineReader(File file) throws FileNotFoundException {
-		reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+		fis = new FileInputStream(file);
+		reader = new BufferedReader(new InputStreamReader(fis));
 	}
 
 	public LineReader(File file, Charset encoding) throws FileNotFoundException {
-		reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding));
+		fis = new FileInputStream(file);
+		reader = new BufferedReader(new InputStreamReader(fis, encoding));
 	}
 
 	public LineReader(InputStream stream, Charset encoding) {
+		if (stream instanceof FileInputStream) {
+			fis = (FileInputStream) stream;
+		}
 		reader = new BufferedReader(new InputStreamReader(stream, encoding));
 	}
 
@@ -56,5 +62,29 @@ public class LineReader implements AutoCloseable {
 	@Override
 	public void close() throws IOException {
 		reader.close();
+	}
+
+	/**
+	 * @return If the LineReader reads from a FileInputStream, the size of the FileChannel is
+	 *         returned. Returns -1 otherwise.
+	 *
+	 * @throws IOException
+	 */
+	public long getSize() throws IOException {
+		if (fis != null) {
+			return fis.getChannel().size();
+		}
+		return -1L;
+	}
+
+	/**
+	 * @return If the LineReader reads from a FileInputStream, the position of the FileChannel is
+	 *         returned. Returns -1 otherwise.
+	 */
+	public long getPosition() throws IOException {
+		if (fis != null) {
+			return fis.getChannel().position();
+		}
+		return -1L;
 	}
 }

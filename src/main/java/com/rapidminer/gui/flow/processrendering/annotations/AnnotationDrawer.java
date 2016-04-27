@@ -25,11 +25,12 @@ import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -79,9 +80,11 @@ public final class AnnotationDrawer {
 	private final ProcessRendererModel rendererModel;
 
 	/** this map caches images for workflow annotations for faster drawing */
-	private final Map<UUID, SoftReference<Image>> displayCache;
+	private final Map<UUID, WeakReference<Image>> displayCache;
 
-	/** this map stores an id of the cached image for a workflow annotation to identify old images */
+	/**
+	 * this map stores an id of the cached image for a workflow annotation to identify old images
+	 */
 	private final Map<UUID, Integer> cachedID;
 
 	/**
@@ -115,6 +118,9 @@ public final class AnnotationDrawer {
 	 *            if {@code true} we are printing instead of drawing to the screen
 	 */
 	public void drawAnnotation(final WorkflowAnnotation anno, final Graphics2D g2, final boolean printing) {
+		// do basic interpolation when zooming or on high dpi screens
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
 		Rectangle2D loc = anno.getLocation();
 		AnnotationColor col = anno.getStyle().getAnnotationColor();
 
@@ -137,8 +143,8 @@ public final class AnnotationDrawer {
 		}
 		if (anno.equals(model.getSelected())) {
 			// during resize and drag make background more transparent to improve usability
-			if (model.getDragged() != null && model.getDragged().isDragInProgress() || model.getResized() != null
-					&& model.getResized().isResizeInProgress()) {
+			if (model.getDragged() != null && model.getDragged().isDragInProgress()
+					|| model.getResized() != null && model.getResized().isResizeInProgress()) {
 				g2.setColor(col.getColorTransparent());
 			} else {
 				g2.setColor(col.getColorHighlight());
@@ -151,7 +157,7 @@ public final class AnnotationDrawer {
 		// draw text by drawing image of JEditorPane
 		// check if we can paint annotation from cache
 		int cacheId = createCacheId(anno);
-		SoftReference<Image> cachedImgRef = displayCache.get(anno.getId());
+		WeakReference<Image> cachedImgRef = displayCache.get(anno.getId());
 		Image cachedImage = cachedImgRef != null ? cachedImgRef.get() : null;
 		if (cachedID.get(anno.getId()) == null || cachedID.get(anno.getId()) != cacheId || cachedImage == null) {
 			// not in cache/not up to date, refresh cache
@@ -247,17 +253,17 @@ public final class AnnotationDrawer {
 		AnnotationResizeHelper resized = model.getResized();
 		ResizeDirection resizeDirection = model.getHoveredResizeDirection();
 		// top right
-		if (resizeDirection == ResizeDirection.TOP_RIGHT || resized != null
-				&& resized.getDirection() == ResizeDirection.TOP_RIGHT) {
+		if (resizeDirection == ResizeDirection.TOP_RIGHT
+				|| resized != null && resized.getDirection() == ResizeDirection.TOP_RIGHT) {
 			g2.setColor(Color.BLACK);
-			line = new Line2D.Double(loc.getMaxX() - offset, loc.getY() + startValue + distance * 2, loc.getMaxX()
-					- (startValue + distance * 2), loc.getY() + offset);
+			line = new Line2D.Double(loc.getMaxX() - offset, loc.getY() + startValue + distance * 2,
+					loc.getMaxX() - (startValue + distance * 2), loc.getY() + offset);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getMaxX() - offset, loc.getY() + startValue + distance, loc.getMaxX()
-					- (startValue + distance), loc.getY() + offset);
+			line = new Line2D.Double(loc.getMaxX() - offset, loc.getY() + startValue + distance,
+					loc.getMaxX() - (startValue + distance), loc.getY() + offset);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getMaxX() - offset, loc.getY() + startValue, loc.getMaxX() - startValue, loc.getY()
-					+ offset);
+			line = new Line2D.Double(loc.getMaxX() - offset, loc.getY() + startValue, loc.getMaxX() - startValue,
+					loc.getY() + offset);
 			g2.draw(line);
 		} else if (resized == null) {
 			g2.setColor(Color.GRAY);
@@ -269,69 +275,69 @@ public final class AnnotationDrawer {
 			g2.draw(line);
 		}
 		// bottom right
-		if (resizeDirection == ResizeDirection.BOTTOM_RIGHT || resized != null
-				&& resized.getDirection() == ResizeDirection.BOTTOM_RIGHT) {
+		if (resizeDirection == ResizeDirection.BOTTOM_RIGHT
+				|| resized != null && resized.getDirection() == ResizeDirection.BOTTOM_RIGHT) {
 			g2.setColor(Color.BLACK);
-			line = new Line2D.Double(loc.getMaxX() - offset, loc.getMaxY() - (startValue + distance * 2), loc.getMaxX()
-					- (startValue + distance * 2), loc.getMaxY() - offset);
+			line = new Line2D.Double(loc.getMaxX() - offset, loc.getMaxY() - (startValue + distance * 2),
+					loc.getMaxX() - (startValue + distance * 2), loc.getMaxY() - offset);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getMaxX() - offset, loc.getMaxY() - (startValue + distance), loc.getMaxX()
-					- (startValue + distance), loc.getMaxY() - offset);
+			line = new Line2D.Double(loc.getMaxX() - offset, loc.getMaxY() - (startValue + distance),
+					loc.getMaxX() - (startValue + distance), loc.getMaxY() - offset);
 			g2.draw(line);
 			line = new Line2D.Double(loc.getMaxX() - offset, loc.getMaxY() - startValue, loc.getMaxX() - startValue,
 					loc.getMaxY() - offset);
 			g2.draw(line);
 		} else if (resized == null) {
 			g2.setColor(Color.GRAY);
-			line = new Line2D.Double(loc.getMaxX() - indicatorOffsetXMax, loc.getMaxY() - indicatorOffsetYMin, loc.getMaxX()
-					- indicatorOffsetXMin, loc.getMaxY() - indicatorOffsetYMin);
+			line = new Line2D.Double(loc.getMaxX() - indicatorOffsetXMax, loc.getMaxY() - indicatorOffsetYMin,
+					loc.getMaxX() - indicatorOffsetXMin, loc.getMaxY() - indicatorOffsetYMin);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getMaxX() - indicatorOffsetXMin, loc.getMaxY() - indicatorOffsetYMin, loc.getMaxX()
-					- indicatorOffsetXMin, loc.getMaxY() - indicatorOffsetYMax);
+			line = new Line2D.Double(loc.getMaxX() - indicatorOffsetXMin, loc.getMaxY() - indicatorOffsetYMin,
+					loc.getMaxX() - indicatorOffsetXMin, loc.getMaxY() - indicatorOffsetYMax);
 			g2.draw(line);
 		}
 		// bottom left
-		if (resizeDirection == ResizeDirection.BOTTOM_LEFT || resized != null
-				&& resized.getDirection() == ResizeDirection.BOTTOM_LEFT) {
+		if (resizeDirection == ResizeDirection.BOTTOM_LEFT
+				|| resized != null && resized.getDirection() == ResizeDirection.BOTTOM_LEFT) {
 			g2.setColor(Color.BLACK);
-			line = new Line2D.Double(loc.getX() + offset, loc.getMaxY() - (startValue + distance * 2), loc.getX()
-					+ startValue + distance * 2, loc.getMaxY() - offset);
+			line = new Line2D.Double(loc.getX() + offset, loc.getMaxY() - (startValue + distance * 2),
+					loc.getX() + startValue + distance * 2, loc.getMaxY() - offset);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getX() + offset, loc.getMaxY() - (startValue + distance), loc.getX() + startValue
-					+ distance, loc.getMaxY() - offset);
+			line = new Line2D.Double(loc.getX() + offset, loc.getMaxY() - (startValue + distance),
+					loc.getX() + startValue + distance, loc.getMaxY() - offset);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getX() + offset, loc.getMaxY() - startValue, loc.getX() + startValue, loc.getMaxY()
-					- offset);
+			line = new Line2D.Double(loc.getX() + offset, loc.getMaxY() - startValue, loc.getX() + startValue,
+					loc.getMaxY() - offset);
 			g2.draw(line);
 		} else if (resized == null) {
 			g2.setColor(Color.GRAY);
-			line = new Line2D.Double(loc.getX() + indicatorOffsetXMax - 1, loc.getMaxY() - indicatorOffsetYMin, loc.getX()
-					+ indicatorOffsetXMin - 1, loc.getMaxY() - indicatorOffsetYMin);
+			line = new Line2D.Double(loc.getX() + indicatorOffsetXMax - 1, loc.getMaxY() - indicatorOffsetYMin,
+					loc.getX() + indicatorOffsetXMin - 1, loc.getMaxY() - indicatorOffsetYMin);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getX() + indicatorOffsetXMin - 1, loc.getMaxY() - indicatorOffsetYMin, loc.getX()
-					+ indicatorOffsetXMin - 1, loc.getMaxY() - indicatorOffsetYMax);
+			line = new Line2D.Double(loc.getX() + indicatorOffsetXMin - 1, loc.getMaxY() - indicatorOffsetYMin,
+					loc.getX() + indicatorOffsetXMin - 1, loc.getMaxY() - indicatorOffsetYMax);
 			g2.draw(line);
 		}
 		// top left
-		if (resizeDirection == ResizeDirection.TOP_LEFT || resized != null
-				&& resized.getDirection() == ResizeDirection.TOP_LEFT) {
+		if (resizeDirection == ResizeDirection.TOP_LEFT
+				|| resized != null && resized.getDirection() == ResizeDirection.TOP_LEFT) {
 			g2.setColor(Color.BLACK);
-			line = new Line2D.Double(loc.getX() + offset, loc.getY() + startValue + distance * 2, loc.getX() + startValue
-					+ distance * 2, loc.getY() + offset);
+			line = new Line2D.Double(loc.getX() + offset, loc.getY() + startValue + distance * 2,
+					loc.getX() + startValue + distance * 2, loc.getY() + offset);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getX() + offset, loc.getY() + startValue + distance, loc.getX() + startValue
-					+ distance, loc.getY() + offset);
+			line = new Line2D.Double(loc.getX() + offset, loc.getY() + startValue + distance,
+					loc.getX() + startValue + distance, loc.getY() + offset);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getX() + offset, loc.getY() + startValue, loc.getX() + startValue, loc.getY()
-					+ offset);
+			line = new Line2D.Double(loc.getX() + offset, loc.getY() + startValue, loc.getX() + startValue,
+					loc.getY() + offset);
 			g2.draw(line);
 		} else if (resized == null) {
 			g2.setColor(Color.GRAY);
-			line = new Line2D.Double(loc.getX() + indicatorOffsetXMax - 1, loc.getY() + indicatorOffsetYMin - 1, loc.getX()
-					+ indicatorOffsetXMin - 1, loc.getY() + indicatorOffsetYMin - 1);
+			line = new Line2D.Double(loc.getX() + indicatorOffsetXMax - 1, loc.getY() + indicatorOffsetYMin - 1,
+					loc.getX() + indicatorOffsetXMin - 1, loc.getY() + indicatorOffsetYMin - 1);
 			g2.draw(line);
-			line = new Line2D.Double(loc.getX() + indicatorOffsetXMin - 1, loc.getY() + indicatorOffsetYMin - 1, loc.getX()
-					+ indicatorOffsetXMin - 1, loc.getY() + indicatorOffsetYMax - 1);
+			line = new Line2D.Double(loc.getX() + indicatorOffsetXMin - 1, loc.getY() + indicatorOffsetYMin - 1,
+					loc.getX() + indicatorOffsetXMin - 1, loc.getY() + indicatorOffsetYMax - 1);
 			g2.draw(line);
 		}
 
@@ -498,7 +504,7 @@ public final class AnnotationDrawer {
 		gImg.setComposite(AlphaComposite.SrcOver);
 		// paint JEditorPane to image
 		pane.paint(gImg);
-		displayCache.put(anno.getId(), new SoftReference<Image>(img));
+		displayCache.put(anno.getId(), new WeakReference<Image>(img));
 		cachedID.put(anno.getId(), cacheId);
 
 		return img;
@@ -566,7 +572,7 @@ public final class AnnotationDrawer {
 			throw new IllegalArgumentException("rendererModel must not be null!");
 		}
 		return !(rendererModel.getHoveringOperator() == null && rendererModel.getHoveringPort() == null
-				&& rendererModel.getHoveringConnectionSource() == null && !rendererModel.isDragStarted() && rendererModel
-				.getConnectingPortSource() == null);
+				&& rendererModel.getHoveringConnectionSource() == null && !rendererModel.isDragStarted()
+				&& rendererModel.getConnectingPortSource() == null);
 	}
 }
