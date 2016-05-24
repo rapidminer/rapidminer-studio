@@ -1,0 +1,134 @@
+buildscript {
+	repositories {
+		jcenter()
+		maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+	}
+	dependencies {
+		classpath 'com.rapidminer.gradle:java-basics:0.3.3'
+		classpath 'com.rapidminer.gradle:java-publishing:0.2.0'
+		classpath 'com.rapidminer.gradle:java-signing:0.1.0'
+	}
+}
+
+apply plugin: 'com.rapidminer.java-basics'
+apply plugin: 'com.rapidminer.java-signing'
+apply plugin: 'com.rapidminer.java-publishing.agpl-v3'
+
+repositories {
+	jcenter()
+	maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+}
+
+dependencies {
+
+	// OS X adapter to add platform specific UI
+	compile 'com.rapidminer.studio:rapidminer-studio-osx-adapter:1.0.1'
+
+	// RapidMiner license framework for license management
+	compile 'com.rapidminer.license:rapidminer-license-api:3.1.0'
+	compile 'com.rapidminer.license:rapidminer-license-commons:3.1.0'
+
+	// RapidMiner API
+	compile 'com.rapidminer:rapidminer-api:0.2.0'
+
+	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
+	compile 'com.rapidminer.external:vldocking:1.1.1'
+
+	// Freehep for vector graphic export (http://java.freehep.org/)
+	compile('org.freehep:freehep-graphicsio-ps:2.3') {
+		exclude group:'junit', module: 'junit'
+		exclude group: 'org.freehep',module: 'freehep-graphicsio-tests'
+	}
+	compile('org.freehep:freehep-graphicsio-svg:2.3') {
+		exclude group:'junit', module: 'junit'
+		exclude group: 'org.freehep', module: 'freehep-graphicsio-tests'
+	}
+
+	// iText for PDF export (http://www.lowagie.com/iText/)
+	compile('com.lowagie:itext:2.1.7'){
+		exclude group: 'bouncycastle', module: 'bcmail-jdk14'
+		exclude group: 'bouncycastle', module: 'bcprov-jdk14'
+		exclude group: 'bouncycastle', module: 'bctsp-jdk14'
+	}
+
+	// RSyntaxTextArea adds text fields with syntax highlighting (http://fifesoft.com/rsyntaxtextarea/)
+	compile 'com.fifesoft:rsyntaxtextarea:2.5.0'
+	compile 'com.fifesoft:autocomplete:2.5.0'
+
+	// JXL for the ability to read, write, and modify old format Microsoft Excel spreadsheets (http://www.jexcelapi.org)
+	compile('net.sourceforge.jexcelapi:jxl:2.6.12') { exclude group: 'log4j', module: 'log4j' }
+
+	// Apache POI for  manipulating various file formats based upon Office Open XML standards (http://poi.apache.org/)
+	compile 'org.apache.poi:poi-ooxml:3.10-FINAL'
+	compile 'org.apache.poi:poi-scratchpad:3.10-FINAL'
+
+	// JGoodies Looks for TODO (http://www.jgoodies.com/freeware/libraries/looks/)
+	compile 'com.jgoodies:looks:2.2.2'
+
+	// JUNG for displaying graphs and trees (http://jung.sourceforge.net/)
+	compile 'net.sf.jung:jung-visualization:2.0.1'
+	compile 'net.sf.jung:jung-graph-impl:2.0.1'
+
+	// JFreeChart for chart rendering (http://www.jfree.org/jfreechart/)
+	compile 'org.jfree:jfreechart:1.0.17'
+
+	// Java Mail API for mail sending
+	compile 'javax.mail:mail:1.4.7'
+
+	// Groovy for 'Execute Script' operator (http://groovy.codehaus.org/)
+	compile 'org.codehaus.groovy:groovy-all:2.3.3'
+
+	// SwingX for various Swing components (https://swingx.java.net/)
+	compile 'org.swinglabs.swingx:swingx-all:1.6.5'
+
+	// XStreams for generic XML serialization (http://xstream.codehaus.org/)
+	compile 'com.thoughtworks.xstream:xstream:1.4.7'
+
+	// XMLRPC for XMLRPC connections to Bugzilla (http://ws.apache.org/xmlrpc/)
+	compile('org.apache.xmlrpc:xmlrpc-client:3.1.3') { exclude group: 'junit', module: 'junit' }
+
+	// HttpClient used by the Bugzilla XML RPC client (http://hc.apache.org/httpcomponents-client)
+	compile 'commons-httpclient:commons-httpclient:3.1'
+
+	// JAMA for matrix calculations (http://math.nist.gov/javanumerics/jama/)
+	compile 'gov.nist.math:jama:1.0.3'
+
+	// commons-math for matrix calculations (http://commons.apache.org/proper/commons-math/)
+	compile 'org.apache.commons:commons-math3:3.3'
+
+	// commons-lang for different String utility functions (http://commons.apache.org/proper/commons-lang/)
+	compile 'commons-lang:commons-lang:2.6'
+
+	// bouncycastle for encryption algorithms (https://www.bouncycastle.org/)
+	compile 'org.bouncycastle:bcprov-jdk15on:1.50'
+
+	// jasypt for simplified encryption (http://www.jasypt.org/)
+	compile 'org.jasypt:jasypt:1.9.1:lite'
+
+	// antlr for parsing expressions (http://www.antlr.org/)
+	compile 'org.antlr:antlr4-runtime:4.5'
+ 
+	// SLF4J API (http://www.slf4j.org) 
+	compile 'org.slf4j:slf4j-api:1.7.12'
+	
+	// add testing suite
+	//TODO should be test compile but RapidMiner src/main contains code that references JUnit
+	compile 'junit:junit:4.12'
+
+	// JGraphx for automatic operator arrangement (https://github.com/jgraph/jgraphx)
+	compile 'com.rapidminer.external:jgraphx:2.1.0.2'
+
+	// JMathPlot for 2D and 3D plots like Box plot, Stick plot, etc. (https://code.google.com/p/jmathplot/)
+	compile 'com.rapidminer.external:jmathplot:1.0.0'
+	
+	// Microba adds a Swing date picker (http://microba.sf.net/)
+	compile 'com.github.tdbear:microba:0.4.4.3'
+	
+	// Apache Tika for file MIME type detection (https://tika.apache.org/)
+	compile 'org.apache.tika:tika-core:1.11'
+}
+
+task wrapper(type: Wrapper) { gradleVersion = '2.12' }
+
+apply from: 'gradle/wsimport.gradle'
+apply from: 'gradle/props.gradle'

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
+      </operator>
+      <operator activated="true" class="replace_missing_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="MissingValueReplenishment" width="90" x="180" y="30">
+        <list key="columns"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="315" y="30">
+        <parameter key="number_of_validations" value="5"/>
+        <process expanded="true">
+          <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" name="NearestNeighbors">
+            <parameter key="k" value="3"/>
+          </operator>
+          <connect from_port="training" to_op="NearestNeighbors" to_port="training set"/>
+          <connect from_op="NearestNeighbors" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ClassificationPerformance">
+            <parameter key="accuracy" value="false"/>
+            <parameter key="classification_error" value="true"/>
+            <list key="class_weights"/>
+          </operator>
+          <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+          <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
+          <connect from_op="ClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="MissingValueReplenishment" to_port="example set input"/>
+      <connect from_op="MissingValueReplenishment" from_port="example set output" to_op="XValidation" to_port="training"/>
+      <connect from_op="XValidation" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="210" resized="true" width="531" x="27" y="158">This process is very similar to the process &amp;quot;03_XValidation_Numerical.xml&amp;quot;. The basic process setup is exactly the same, i.e. the first inner operator must produce a model from the given training data set and the second inner operator must be able to handle this model and the test data and must provide a PerformanceVector.&lt;br/&gt;&lt;br/&gt;In contrast to the previous process we now use a classification learner (J48) which is evaluated by several nominal performance criteria.&lt;br/&gt;&lt;br/&gt;The cross validation building block is very common for many (more complex) RapidMiner processes. However, there are several more validation schemes available in RapidMiner which will be dicussed in the next sample processes.</description>
+    </process>
+  </operator>
+</process>

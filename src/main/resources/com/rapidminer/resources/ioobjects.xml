@@ -1,0 +1,800 @@
+<ioobjects>
+	<!--  Plain IOObject -->
+    <ioobject
+        name="IOObject"
+        class="com.rapidminer.operator.IOObject"
+        reportable="false"
+        >
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+
+	<!--  Collections -->
+    <ioobject
+        name="Collection"
+        class="com.rapidminer.operator.IOObjectCollection"
+        reportable="false"
+        icon="memory.png"
+        >
+      <renderer>com.rapidminer.gui.renderer.CollectionRenderer</renderer>
+      <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <!-- Data Tables (Example Sets) -->
+    
+    <ioobject 
+        name="Data Table" 
+        class="com.rapidminer.example.ExampleSet"
+        reportable="true"
+        icon="data.png">
+        <renderer>com.rapidminer.gui.renderer.data.ExampleSetDataRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.data.ExampleSetMetaDataRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.data.ExampleSetPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.new_plotter.integration.ExpertDataTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>     
+    </ioobject>
+        
+        
+    <!-- Attribute Weights -->
+    
+    <ioobject 
+        name="Attribute Weights" 
+        class="com.rapidminer.example.AttributeWeights"
+        reportable="true"
+        icon="sort_descending.png">
+        <renderer>com.rapidminer.gui.renderer.weights.AttributeWeightsTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.weights.AttributeWeightsPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                           
+    </ioobject>
+    
+        
+    <!-- Similarity Measures -->
+    
+    <ioobject 
+        name="Similarity Measure" 
+        class="com.rapidminer.operator.similarity.SimilarityMeasureObject"
+        reportable="true"
+        icon="graph_connection_directed.png">
+        <renderer>com.rapidminer.gui.renderer.similarity.SimilarityTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.similarity.SimilarityGraphRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.similarity.SimilarityHistogramRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.similarity.SimilarityKDistanceRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                                     
+    </ioobject>
+
+
+    <!-- Transition Graphs -->
+    
+    <ioobject 
+        name="Transition Graph" 
+        class="com.rapidminer.operator.visualization.dependencies.TransitionGraph"
+        reportable="true"
+        icon="chart_bubble.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>        
+        <renderer>com.rapidminer.gui.renderer.visualization.TransitionGraphRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                                      
+    </ioobject>         
+
+            
+    <!-- Cluster Models -->
+    
+    <ioobject 
+        name="Cluster Model"
+        class="com.rapidminer.operator.clustering.ClusterModel"
+        reportable="true"
+        icon="chart_dot.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelFolderRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelGraphRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject 
+        name="Centroid Cluster Model"
+        class="com.rapidminer.operator.clustering.CentroidClusterModel"
+        reportable="true"
+        icon="chart_dot.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelFolderRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelGraphRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelCentroidTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelCentroidPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Hierachical Cluster Model"
+        class="com.rapidminer.operator.clustering.HierarchicalClusterModel"
+        reportable="true"
+        icon="chart_dot.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelFolderRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelGraphRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Dendogram Cluster Model"
+        class="com.rapidminer.operator.clustering.DendogramHierarchicalClusterModel"
+        reportable="true"
+        icon="chart_dot.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelFolderRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelGraphRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.cluster.ClusterModelDendogrammRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+
+    <!--  Models -->
+    
+    <ioobject
+        name="Model"
+        class="com.rapidminer.operator.Model"
+        reportable="false"
+        icon="lightbulb_off.png"
+        >
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>    
+    
+    <ioobject
+        name="Voting Model"
+        class="com.rapidminer.operator.learner.lazy.AttributeBasedVotingModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Bayes Model"
+        class="com.rapidminer.operator.learner.bayes.DistributionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.DistributionModelPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Kernel Bayes Model"
+        class="com.rapidminer.operator.learner.bayes.KernelDistributionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.DistributionModelPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Nearest Neighbour Model"
+        class="com.rapidminer.operator.learner.lazy.KNNRegressionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Decision Rule Model"
+        class="com.rapidminer.operator.learner.rules.RuleModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Nearest Neighbour Model"
+        class="com.rapidminer.operator.learner.lazy.KNNClassificationModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+
+    <ioobject
+        name="Kernel Bayes Model"
+        class="com.rapidminer.operator.learner.bayes.KernelDistributionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.DistributionModelPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Kernel Model"
+        class="com.rapidminer.operator.learner.functions.kernel.KernelModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.KernelModelWeightsRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.KernelModelSupportVectorRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.KernelModelPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Hyperplane Model"
+        class="com.rapidminer.operator.learner.functions.HyperplaneModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.HyperplaneModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Hyper Model"
+        class="com.rapidminer.operator.learner.functions.kernel.hyperhyper.HyperModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.HyperModelWeightsRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Decision Tree"
+        class="com.rapidminer.operator.learner.tree.TreeModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.TreeModelGraphRenderer</renderer>      
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Random Forest Model"
+        class="com.rapidminer.operator.learner.tree.RandomForestModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+
+    <ioobject
+        name="Random Forest Model"
+        class="com.rapidminer.operator.learner.tree.ConfigurableRandomForestModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+
+    <ioobject
+        name="Hierarchical Classification Model"
+        class="com.rapidminer.operator.learner.meta.HierarchicalModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+
+    <ioobject
+        name="Hierarchical Multi Class Classification Model"
+        class="com.rapidminer.operator.learner.meta.HierarchicalMultiClassModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+
+    <ioobject
+        name="Distribution Model"
+        class="com.rapidminer.operator.learner.bayes.DistributionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.DistributionModelPlotRenderer</renderer>       
+        <renderer>com.rapidminer.gui.renderer.models.DistributionModelTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>      
+    </ioobject>
+    
+        <ioobject
+        name="Distribution Model"
+        class="com.rapidminer.operator.learner.bayes.SimpleDistributionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.DistributionModelPlotRenderer</renderer>       
+        <renderer>com.rapidminer.gui.renderer.models.DistributionModelTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>      
+    </ioobject>
+
+    <ioobject
+        name="Improved Neural Net"
+        class="com.rapidminer.operator.learner.functions.neuralnet.ImprovedNeuralNetModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.ImprovedNeuralNetModelRenderer</renderer>      
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+   <ioobject 
+        name="AutoMLP"
+        class="de.dfki.madm.paren.operator.learner.functions.neuralnet.AutoMLPImprovedNeuralNetModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>de.dfki.madm.paren.gui.renderer.models.AutoMLPImprovedNeuralNetModelRenderer</renderer>      
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+    </ioobject>
+        
+    <ioobject
+        name="Rule Set"
+        class="com.rapidminer.operator.learner.subgroups.RuleSet"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.RuleSetRenderer</renderer>     
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+        
+    <ioobject
+        name="Linear Regression Model"
+        class="com.rapidminer.operator.learner.functions.LinearRegressionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.LinearRegressionModelTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+        
+    <ioobject
+        name="Ada Boost Model"
+        class="com.rapidminer.operator.learner.meta.AdaBoostModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject>     
+    
+    <ioobject
+        name="Grouped Model"
+        class="com.rapidminer.operator.GroupedModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+    
+    <ioobject
+        name="Additive Regression Model"
+        class="com.rapidminer.operator.learner.meta.AdditiveRegressionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject>     
+
+    <ioobject
+        name="Bagging Model"
+        class="com.rapidminer.operator.learner.meta.BaggingModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject>     
+
+    <ioobject
+        name="Baysian Boosting Model"
+        class="com.rapidminer.operator.learner.meta.BayBoostModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+    
+    <ioobject
+        name="Binary2Multiclass Model"
+        class="com.rapidminer.operator.learner.meta.Binary2MultiClassModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+    
+    <ioobject
+        name="MetaCost Model"
+        class="com.rapidminer.operator.learner.meta.MetaCostModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+
+    <ioobject
+        name="Majority Vote Model"
+        class="com.rapidminer.operator.learner.meta.SimpleVoteModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+
+    <ioobject
+        name="Confidence Vote Model"
+        class="com.rapidminer.operator.learner.meta.ConfidenceVoteModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+
+    <ioobject
+        name="Stacking Model"
+        class="com.rapidminer.operator.learner.meta.StackingModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.MetaModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject> 
+    
+    
+    
+    <ioobject
+        name="Relative Regression Model"
+        class="com.rapidminer.operator.learner.meta.RelativeRegressionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.DelegationModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>     
+    </ioobject> 
+
+    <ioobject
+        name="Threshold Model"
+        class="com.rapidminer.operator.learner.meta.ThresholdModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.DelegationModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>     
+    </ioobject> 
+    
+    <ioobject
+        name="Transformed Regression Model"
+        class="com.rapidminer.operator.learner.meta.TransformedRegressionModel"
+        reportable="true"
+        icon="lightbulb_off.png">
+        <renderer>com.rapidminer.gui.renderer.models.DelegationModelRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>     
+    </ioobject> 
+
+    <!-- Column transformation models -->
+    <ioobject
+        name="GHA Model"
+        class="com.rapidminer.operator.features.transformation.GHAModel"
+        reportable="true"
+        icon="table_selection_column_tool.png">
+        <renderer>com.rapidminer.gui.renderer.models.EigenvectorModelEigenvalueRenderer</renderer>      
+        <renderer>com.rapidminer.gui.renderer.models.EigenvectorModelEigenvectorRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.EigenvectorModelVariancePlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                
+    </ioobject> 
+
+    <ioobject
+        name="Kernel PCA Model"
+        class="com.rapidminer.operator.features.transformation.KernelPCAModel"
+        reportable="true"
+        icon="table_selection_column_tool.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                
+    </ioobject> 
+
+    <ioobject
+        name="PCA Model"
+        class="com.rapidminer.operator.features.transformation.PCAModel"
+        reportable="true"
+        icon="table_selection_column_tool.png">
+        <renderer>com.rapidminer.gui.renderer.models.EigenvectorModelEigenvalueRenderer</renderer>      
+        <renderer>com.rapidminer.gui.renderer.models.EigenvectorModelEigenvectorRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.EigenvectorModelVariancePlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                
+    </ioobject> 
+
+    <ioobject
+        name="SVD Model"
+        class="com.rapidminer.operator.features.transformation.SVDModel"
+        reportable="true"
+        icon="table_selection_column_tool.png">
+        <renderer>com.rapidminer.gui.renderer.models.SVDModelValueRenderer</renderer>      
+        <renderer>com.rapidminer.gui.renderer.models.SVDModelVectorRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.models.SVDModelCumulativePlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                
+    </ioobject> 
+
+    <!-- Preprocessing models -->
+    <ioobject
+        name="Discretization Model"
+        class="com.rapidminer.operator.preprocessing.discretization.DiscretizationModel"
+        reportable="true"
+        icon="objects_transform.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                
+    </ioobject> 
+<ioobject
+        name="Normalization Model"
+        class="com.rapidminer.operator.preprocessing.normalization.AbstractNormalizationModel"
+        reportable="true"
+        icon="table_selection_cell.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                
+    </ioobject>
+    
+    <ioobject
+        name="Preprocessing Model"
+        class="com.rapidminer.operator.preprocessing.PreprocessingModel"
+        reportable="true"
+        icon="objects_transform.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>                
+    </ioobject> 
+
+    <!--  Item Sets and Association Rules -->
+        
+    <ioobject
+        name="Frequent Item Sets"
+        class="com.rapidminer.operator.learner.associations.FrequentItemSets"
+        reportable="true"
+        icon="shopping_cart.png">
+        <renderer>com.rapidminer.gui.renderer.itemsets.FrequentItemSetsTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Association Rules"
+        class="com.rapidminer.operator.learner.associations.AssociationRules"
+        reportable="true"
+        icon="shopping_cart.png">
+        <renderer>com.rapidminer.gui.renderer.itemsets.AssociationRulesTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.itemsets.AssociationRulesGraphRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+      name="Generalized Sequential Patterns"
+      class="com.rapidminer.operator.learner.associations.gsp.GSPSet"
+      reportable="true"
+      icon="shopping_cart.png">
+      <renderer>com.rapidminer.gui.renderer.associations.GSPRenderer</renderer>
+      <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+      <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <!-- Performance Vector -->
+    
+    <ioobject
+        name="Performance Vector"
+        class="com.rapidminer.operator.performance.PerformanceVector"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.PerformanceVectorRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Averagable"
+        class="com.rapidminer.tools.math.Averagable"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+    </ioobject> 
+    
+    <ioobject
+        name="Average Vector"
+        class="com.rapidminer.tools.math.AverageVector"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.AverageVectorRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Binary Classification Performance"
+        class="com.rapidminer.operator.performance.BinaryClassificationPerformance"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.BinaryClassificationPerformanceRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Multiclass Classification Performance"
+        class="com.rapidminer.operator.performance.MultiClassificationPerformance"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.MultiClassificationPerformanceRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Weighted Multiclass Classification Performance"
+        class="com.rapidminer.operator.performance.WeightedMultiClassPerformance"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.WeightedMultiClassPerformanceRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="ANOVA Significance"
+        class="com.rapidminer.tools.math.AnovaCalculator$AnovaSignificanceTestResult"
+        reportable="false"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.AnovaCalculatorViewerRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="T-Test Significance"
+        class="com.rapidminer.operator.validation.significance.TTestSignificanceTestOperator$TTestSignificanceTestResult"
+        reportable="false"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.TTestSignificanceTestRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    
+    <ioobject
+        name="Area Under Curve"
+        class="com.rapidminer.operator.performance.AreaUnderCurve"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.AreaUnderCurveRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>        
+    </ioobject>
+
+    <ioobject
+        name="Area Under Curve"
+        class="com.rapidminer.operator.performance.AreaUnderCurve$Neutral"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.AreaUnderCurveRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>        
+    </ioobject>
+
+    <ioobject
+        name="Area Under Curve"
+        class="com.rapidminer.operator.performance.AreaUnderCurve$Optimistic"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.AreaUnderCurveRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>        
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject
+        name="Area Under Curve"
+        class="com.rapidminer.operator.performance.AreaUnderCurve$Pessimistic"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.AreaUnderCurveRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>        
+    </ioobject>
+
+    <!-- Matrixes -->
+    
+    <ioobject
+        name="ANOVA Matrix"
+        class="com.rapidminer.operator.visualization.dependencies.ANOVAMatrix"
+        reportable="false"
+        icon="chart_bubble.png">
+        <renderer>com.rapidminer.gui.renderer.visualization.AnovaMatrixRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Numerical Matrix"
+        class="com.rapidminer.operator.visualization.dependencies.NumericalMatrix"
+        reportable="true"
+        icon="chart_bubble.png">
+        <renderer>com.rapidminer.gui.renderer.math.NumericalMatrixTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.math.NumericalMatrixPairwiseRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.math.NumericalMatrixPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>       
+    </ioobject>
+    
+    <ioobject
+        name="Rainflow Matrix"
+        class="com.rapidminer.operator.visualization.dependencies.RainflowMatrix"
+        reportable="true"
+        icon="chart_bubble.png">
+        <renderer>com.rapidminer.gui.renderer.math.NumericalMatrixTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.math.NumericalMatrixPairwiseRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.math.NumericalMatrixPlotRenderer</renderer>   
+        <renderer>com.rapidminer.gui.renderer.math.RainflowMatrixTableRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.math.RainflowMatrixPlotRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>        
+    </ioobject>
+    
+    <!-- Visualizations -->
+    
+    <ioobject
+        name="Lift Pareto Chart"
+        class="com.rapidminer.operator.visualization.LiftParetoChart"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.visualization.LiftChartRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    <ioobject
+        name="Formula"
+        class="com.rapidminer.operator.visualization.FormulaExtractor$FormulaResult"
+        reportable="true"
+        icon="formula.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    
+    <!--  ROCComparison  -->
+    <ioobject 
+        name="ROC Comparison"
+        class="com.rapidminer.operator.visualization.ROCComparison"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.performance.ROCComparisonRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <!-- ParameterSet -->
+    <ioobject 
+        name="Parameter Set"
+        class="com.rapidminer.operator.meta.ParameterSet"
+        reportable="true"
+        icon="form.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
+    <ioobject 
+        name="File"
+        class="com.rapidminer.operator.nio.file.FileObject"
+        reportable="true" 
+        icon="floppy_disk.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Archive File"
+        class="com.rapidminer.operator.nio.file.compression.ArchiveFileObject"
+        reportable="true"
+        icon="box_open.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+    <ioobject
+        name="Zip File"
+        class="com.rapidminer.operator.nio.file.compression.ZipFileObject"
+        reportable="true"
+        icon="box_open.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+   
+     
+    <!-- Dummy Entry -->
+    
+    <!--  ioobject 
+        name=""
+        class=""
+        reportable="true">
+        <renderer></renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject
+-->
+                    
+</ioobjects>

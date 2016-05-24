@@ -1,0 +1,51 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'org.ajoberstar:grgit:0.3.+'
+	}
+}
+
+import org.ajoberstar.grgit.Grgit
+
+// Generates a file containing the current Git revision
+task generateGitRevFile() {
+
+	ext { outputFile = file("$buildDir/tmp/generateGitRev/gitrev") }
+
+	outputs.file outputFile
+	outputs.upToDateWhen { false }
+
+	doLast {
+		def repo = Grgit.open(rootProject.file('.'))
+		if (!outputFile.parentFile.isDirectory()) { outputFile.parentFile.mkdirs() }
+		outputFile.text = repo.head().id
+	}
+}
+
+// Define a tasks that creates the version.properties file and stores it in the resources
+task generateVersionProperties {
+
+	// define version properties file location
+	ext { versionPropFile = file("$buildDir/tmp/generateVersionProperties/version.properties") }
+
+	// configure version properties generation task input and output
+	inputs.property "version", version
+	inputs.file generateGitRevFile
+	outputs.files versionPropFile
+
+	// check if file exists and create it if necessary
+	doLast {
+		if(!versionPropFile.isFile()){
+			versionPropFile.parentFile.mkdirs()
+			versionPropFile.createNewFile()
+		}
+		Properties props = new Properties()
+		props.version = version
+		props.revision = inputs.files[0].text
+		props.store(versionPropFile.newWriter(), null)
+	}
+}
+
+jar { into('com/rapidminer/tools/') { from generateVersionProperties } }

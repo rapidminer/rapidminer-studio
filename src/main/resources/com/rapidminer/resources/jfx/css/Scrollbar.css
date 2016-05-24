@@ -1,0 +1,78 @@
+/*==============GLOBAL STYLES==============*/
+
+/*color the background of the scrollbar element*/
+.track-background{
+	-fx-background-color: #838499;
+	-fx-background-radius: 5px;
+}
+
+/*color the space the scrollbar moves in*/
+.track{
+	-fx-background-color: #f8f8f8;
+	-fx-border-color: #838499 #bbbcd2;
+}
+
+/*color the arrow of the up/down buttons*/
+.increment-arrow, .decrement-arrow{
+	-fx-background-color: white;
+}
+
+/*set the image placement on the scrollbar*/
+.thumb{
+	-fx-background-repeat:no-repeat;
+	-fx-background-position:center;
+}
+
+/*==============VERTICAL SCROLL BAR STYLES==============*/
+
+/*set the scrollbar texture image and color*/
+.scroll-bar:vertical .thumb{
+	-fx-background-image: url(vert_thumb_texture.png);
+	-fx-background-color:linear-gradient(to right, #bbbcd2, #a4a5bb 45%, #a4a5bb);
+	-fx-background-radius: 1px;
+}
+
+/*color the down button*/
+.scroll-bar:vertical .increment-button{
+	-fx-background-color:linear-gradient(to bottom, #bbbcd2, #838499 40%, #838499 80%, #bbbcd2);
+}
+
+/*color the up button*/
+.scroll-bar:vertical .decrement-button{
+	-fx-background-color:linear-gradient(to top, #bbbcd2, #838499 40%, #838499 80%, #bbbcd2);
+
+}
+
+/*make the up/down buttons square*/
+.scroll-bar:vertical .increment-button, .scroll-bar:vertical .decrement-button {
+	-fx-min-height: 10px;
+	-fx-pref-height: 16px;
+	-fx-max-height: 50px;
+}
+
+/*==============HORIZONTAL SCROLL BAR STYLES==============*/
+
+/*set the scrollbar texture image and color*/
+.scroll-bar:horizontal .thumb{
+	-fx-background-image: url(horiz_thumb_texture.png);
+	-fx-background-color:linear-gradient(to bottom, #bbbcd2, #a4a5bb 45%, #a4a5bb);
+	-fx-background-radius: 1px;
+}
+
+/*color the down button*/
+.scroll-bar:horizontal .increment-button{
+	-fx-background-color:linear-gradient(to right, #bbbcd2, #838499 35%, #838499 80%, #bbbcd2);
+}
+
+/*color the up button*/
+.scroll-bar:horizontal .decrement-button{
+	-fx-background-color:linear-gradient(to left, #bbbcd2, #838499 35%, #838499 80%, #bbbcd2);
+
+}
+
+/*make the up/down buttons square*/
+.scroll-bar:horizontal .increment-button, .scroll-bar:horizontal .decrement-button {
+	-fx-min-width: 10px;
+	-fx-pref-width: 15px;
+	-fx-max-width: 50px;
+}

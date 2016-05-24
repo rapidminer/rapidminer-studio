@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/console.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Execute Script</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Execute_Script skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator executes arbitrary Groovy scripts.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This operator can be used to execute arbitrary Groovy scripts. This basically means that analysts can write their own operators directly within the process by specifiying Java code and / or a Groovy script which will be interpreted and executed during process runtime. For a complete reference of Groovy scripting please refer to <a class="external free" href="http://groovy.codehaus.org/" rel="nofollow" shape="rect">http://groovy.codehaus.org/</a>.
+</p>
+<p>
+In addition to the usual scripting code elements from Groovy, the RapidMiner scripting operator defines some special scripting elements:
+</p>
+
+<ul class="ports">
+<li> If you use the standard <i>imports</i>, all important types like Example, ExampleSet, Attribute, Operator etc. as well as the most important Java types like collections etc. are automatically imported and can directly be used within the script. Hence, there is no need for importing them in your script. However, you can of course import any other class you want and use this in your script.
+</li>
+<li> The <i>current operator</i> (the scripting operator for which you define the script) is referenced by <code>operator</code>.
+</li>
+</ul>
+<p>
+Example: <code>operator.log("text")</code>
+</p>
+<ul class="ports">
+<li> All <i>operator methods</i> like <code>log</code> (see above), accessing the input or the complete process can directly be used by writing a preceding <code>operator</code>.
+</li>
+</ul>
+<p>
+Example: <code>operator.getProcess()</code>
+</p>
+<ul class="ports">
+<li> <i>Input of the operator</i> can be retrieved via the input method getInput(Class) of the surrounding operator.
+</li>
+</ul>
+<p>
+Example: <code>ExampleSet exampleSet = operator.getInput(ExampleSet.class)</code>
+</p>
+<ul class="ports">
+<li> You can <i>iterate over examples</i> with the following construct:
+</li>
+</ul>
+<p>
+<code>for (Example example : exampleSet) { ... }</code>
+</p>
+<ul class="ports">
+<li> You can <i>retrieve example values</i> with the shortcut
+</li>
+</ul>
+<p>
+<code>String value = example["attribute_name"];</code> or 
+
+<code>double value = example["attribute_name"];</code>
+</p>
+<ul class="ports">
+<li> You can <i>set example values</i> with <code>example["attribute_name"] = "value";</code> or 
+</li>
+</ul>
+<p>
+<code>example["attribute_name"] = 5.7;</code>
+</p>
+<p>
+<i>Note:</i> Scripts written for this operator may access Java code. Scripts may hence become incompatible in future releases of RapidMiner.
+</p><br/><h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>input 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>output 1</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>script</b>:  The script to execute.
+</li>
+<li> <b>standard imports</b>:  Indicates if standard imports for examples and attributes etc. should be automatically generated.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>

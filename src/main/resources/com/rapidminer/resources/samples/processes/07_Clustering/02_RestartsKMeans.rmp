@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="gaussian mixture clusters"/>
+        <parameter key="number_examples" value="200"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="loop_and_deliver_best" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="RandomOptimizer" width="90" x="313" y="30">
+        <process expanded="true">
+          <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="45" y="30">
+            <parameter key="k" value="4"/>
+          </operator>
+          <operator activated="true" class="cluster_distance_performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ClusterCentroidEvaluator" width="90" x="180" y="30"/>
+          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ProcessLog" width="90" x="580" y="30">
+            <list key="log">
+              <parameter key="Iteration" value="operator.RandomOptimizer.value.iteration"/>
+              <parameter key="Performance" value="operator.RandomOptimizer.value.performance"/>
+            </list>
+          </operator>
+          <connect from_port="in 1" to_op="KMeans" to_port="example set"/>
+          <connect from_op="KMeans" from_port="cluster model" to_op="ClusterCentroidEvaluator" to_port="cluster model"/>
+          <connect from_op="KMeans" from_port="clustered set" to_op="ClusterCentroidEvaluator" to_port="example set"/>
+          <connect from_op="ClusterCentroidEvaluator" from_port="performance" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="ClusterCentroidEvaluator" from_port="cluster model" to_op="ProcessLog" to_port="through 2"/>
+          <connect from_op="ProcessLog" from_port="through 1" to_port="performance vector"/>
+          <connect from_op="ProcessLog" from_port="through 2" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_performance vector" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="RandomOptimizer" to_port="in 1"/>
+      <connect from_op="RandomOptimizer" from_port="performance" to_port="result 1"/>
+      <connect from_op="RandomOptimizer" from_port="out 1" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="center" color="yellow" colored="false" height="50" resized="true" width="384" x="33" y="144">This process shows how restarts can be performed in order to find the optimal clustering, independent of the initialization.</description>
+    </process>
+  </operator>
+</process>

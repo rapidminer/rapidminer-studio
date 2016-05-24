@@ -1,0 +1,14 @@
+ENTRY 01_PerformanceEvaluator_Nominal.rmp
+ENTRY 02_PerformanceEvaluator_Regression.rmp
+ENTRY 03_XValidation_Numerical.rmp
+ENTRY 04_XValidation_Nominal.rmp
+ENTRY 05_XValidation_IntermediateOutputs.rmp
+ENTRY 06_ConfusionMatrix.rmp
+ENTRY 07_AreaUnderCurve.rmp
+ENTRY 08_SimpleValidation.rmp
+ENTRY 09_FixedSplitValidation.rmp
+ENTRY 10_TestSet.rmp
+ENTRY 11_LeaveOneOut.rmp
+ENTRY 12_WrapperValidation.rmp
+ENTRY 13_SignificanceTest.rmp
+ENTRY 14_LiftChart.rmp

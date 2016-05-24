@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr"><head><table cellpadding=0 cellspacing=0><tr><td><img src="icon:///24/symbol_percent.png" /></td><td width="5"></td><td><h2 class="firstHeading" id="firstHeading">Performance (Ranking)</h4></td></tr></table><hr noshade="true"></head>
+<body class="mediawiki ltr ns-0 ns-subject page-Performance_Ranking skin-monobook">
+<div id="content">
+	
+	
+	
+	<div id="bodyContent">
+		
+		
+		
+		
+<div id="synopsis">
+<h4>
+<span class="mw-headline" id="Synopsis">Synopsis</span>
+</h4>
+<p>
+This operator delivers a performance value representing costs for the confidence rank of the true label.
+</p>
+</div><br/><h4> <span class="mw-headline" id="Description"> Description </span>
+</h4>
+<p>
+This performance evaluator operator should be used for tasks, where it is not only important that the real class is selected, but also that it receives a comparably high confidence.
+</p>
+<p>
+This operator will sort the confidences for each label and depending on the rank position of the real label, costs are generated. You can define these costs by the parameter ranking_costs. The costs are entered for hole intervals, so you  don't have to enter a cost value for each rank. These intervals are defined by their start rank and range either until the start of the next interval or infinite. Everything before the first mentioned rank will receive costs of 0. The counting of rank starts with 0, so the most confident label is rank 0.
+</p>
+<p>
+The costs are entered on the right side of the table.
+</p>
+<p>
+For example, if you want to assign costs of zero if the true label is predicted with the highest confidence, 1 for the second place, 2 for the third and 10 for each following, you have to enter:
+</p>
+<table border="1px">
+<tr>
+<td colspan="1" rowspan="1"> 1 </td>
+<td colspan="1" rowspan="1"> 1 </td>
+</tr>
+<tr>
+<td colspan="1" rowspan="1"> 2 </td>
+<td colspan="1" rowspan="1"> 2 </td>
+</tr>
+<tr>
+<td colspan="1" rowspan="1"> 3 </td>
+<td colspan="1" rowspan="1"> 10 </td>
+</tr>
+</table>
+
+<h4> <span class="mw-headline" id="Input"> Input </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>: <i>expects:</i> ExampleSet
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Output"> Output </span>
+</h4>
+
+<ul class="ports">
+<li> <b>example set</b>:
+</li>
+<li> <b>performance</b>:
+</li>
+</ul><br/><h4> <span class="mw-headline" id="Parameters"> Parameters </span>
+</h4>
+
+<ul class="ports">
+<li> <b>ranking costs</b>:  This parameter defines the costs when the real call isn't the one with the highest confidence.
+</li>
+</ul><br/><h4> <span class="mw-headline" id="ExampleProcess"> ExampleProcess </span>
+</h4><br/><div>
+</div>
+</body>
+</html>
