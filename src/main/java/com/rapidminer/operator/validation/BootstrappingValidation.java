@@ -100,7 +100,11 @@ public class BootstrappingValidation extends ValidationChain {
 
 		// start bootstrapping loop
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
-		getProgress().setTotal(number);
+		if (modelOutput.isConnected()) {
+			getProgress().setTotal(number + 1);
+		} else {
+			getProgress().setTotal(number);
+		}
 		getProgress().setCheckForStop(false);
 
 		for (iteration = 0; iteration < number; iteration++) {
@@ -118,8 +122,6 @@ public class BootstrappingValidation extends ValidationChain {
 			inApplyLoop();
 			getProgress().step();
 		}
-		// end loop
-		getProgress().complete();
 	}
 
 	@Override
@@ -145,7 +147,8 @@ public class BootstrappingValidation extends ValidationChain {
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_WEIGHTS,
 				"If checked, example weights will be used for bootstrapping if such weights are available.", true));
 		types.add(new ParameterTypeBoolean(PARAMETER_AVERAGE_PERFORMANCES_ONLY,
-				"Indicates if only performance vectors should be averaged or all types of averagable result vectors.", true));
+				"Indicates if only performance vectors should be averaged or all types of averagable result vectors.",
+				true));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
 	}

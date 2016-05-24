@@ -25,6 +25,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.ImageIcon;
@@ -39,6 +40,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.rapidminer.core.io.data.source.FileDataSource;
 import com.rapidminer.core.io.gui.ImportWizard;
 import com.rapidminer.core.io.gui.InvalidConfigurationException;
 import com.rapidminer.core.io.gui.WizardDirection;
@@ -171,6 +173,9 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 	/** Flag which is set to {@code true} if the user wants to close the dialog */
 	private boolean closeDialog;
 
+	/** Flag used to set the default file name once */
+	private boolean defaultFileNameInitialized;
+
 	/** the import wizard which holds this step */
 	protected final ImportWizard wizard;
 
@@ -195,12 +200,10 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 			if (entry != null) {
 				initalLocation = entry.getLocation().getAbsoluteLocation();
 			}
-
 			// The validity of the step goes hand in hand with the state of the repository location
 			// chooser. Wrap respective events.
 			chooser = initializeChooser(initalLocation);
 			chooser.addChangeListener(changeListener);
-
 			mainPanel = new JPanel(new CardLayout());
 			mainPanel.add(getContentPanel(), CARD_ID_CHOOSER);
 			mainPanel.add(createProgressPanel(), CARD_ID_PROGRESS);
@@ -219,6 +222,28 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 	@Override
 	public void viewWillBecomeVisible(WizardDirection direction) throws InvalidConfigurationException {
 		wizard.setProgress(100);
+
+		if (!defaultFileNameInitialized) {
+			defaultFileNameInitialized = true;
+			// try to get a file location
+			Path filePath = null;
+			try {
+				// if there is a location it comes from a FileDataSource
+				filePath = wizard.getDataSource(FileDataSource.class).getLocation();
+			} catch (InvalidConfigurationException e) {
+				// is not a data source with a location
+			}
+
+			if (filePath != null) {
+				// extract file name without extension and set it
+				String fileName = filePath.getFileName().toString();
+				int separatorLocation = fileName.lastIndexOf('.');
+				if (separatorLocation > -1) {
+					fileName = fileName.substring(0, separatorLocation);
+				}
+				chooser.setRepositoryEntryName(fileName);
+			}
+		}
 	}
 
 	@Override

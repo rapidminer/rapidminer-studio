@@ -52,4 +52,11 @@ public class GenerateModelTransformationRule implements MDTransformationRule {
 		outputPort.deliverMD(null);
 		return;
 	}
+
+	/**
+	 * @return the {@link OutputPort} the MD rule is for
+	 */
+	public OutputPort getOutputPort() {
+		return outputPort;
+	}
 }

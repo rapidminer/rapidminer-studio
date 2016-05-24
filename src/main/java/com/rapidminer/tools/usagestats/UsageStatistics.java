@@ -18,17 +18,6 @@
  */
 package com.rapidminer.tools.usagestats;
 
-import com.rapidminer.RapidMiner;
-import com.rapidminer.RapidMinerVersion;
-import com.rapidminer.core.license.ProductConstraintManager;
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.license.License;
-import com.rapidminer.tools.FileSystemService;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ProgressListener;
-import com.rapidminer.tools.WebServiceTools;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -49,15 +38,28 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.rapidminer.RapidMiner;
+import com.rapidminer.RapidMinerVersion;
+import com.rapidminer.core.license.ProductConstraintManager;
+import com.rapidminer.gui.dialog.EULADialog;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.license.License;
+import com.rapidminer.tools.FileSystemService;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.SystemInfoUtilities;
+import com.rapidminer.tools.WebServiceTools;
+
 
 /**
  * Collects statistics about usage of operators. Statistics can be sent to a server collecting them.
  * Counting and resetting is thread safe.
- * 
+ *
  * @see UsageStatsTransmissionDialog
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class UsageStatistics {
 
@@ -71,11 +73,19 @@ public class UsageStatistics {
 		}
 	};
 
-	/** URL to send the statistics values to. TODO: Use correct URL */
+	/** URL to send the statistics values to. */
 	private static final String WEB_SERVICE_URL = "http://stats.rapidminer.com/usage-stats/upload/rapidminer";
 
-	private static final long TRANSMISSION_INTERVAL = 1000 * 60 * 60 * 24 * 14; // 14 days
+	/** Use the high frequency interval for 14 days before switching to the low frequency one. */
+	private static final long TRANSMISSION_TYPE_THRESHOLD = 1000 * 60 * 60 * 24 * 14;
 
+	/** Transmit usage statistics daily */
+	private static final long HIGH_FREQUENCY_INTERVAL = 1000 * 60 * 60 * 24;
+
+	/** Transmit usage statistics every week. */
+	private static final long LOW_FREQUENCY_INTERVAL = 1000 * 60 * 60 * 24 * 7;
+
+	private Date initialSetup;
 	private Date lastReset;
 	private Date nextTransmission;
 
@@ -108,7 +118,7 @@ public class UsageStatistics {
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
 				Element root = doc.getDocumentElement();
 				String lastReset = root.getAttribute("last-reset");
-				if ((lastReset != null) && !lastReset.isEmpty()) {
+				if (lastReset != null && !lastReset.isEmpty()) {
 					try {
 						this.lastReset = getDateFormat().parse(lastReset);
 					} catch (ParseException e) {
@@ -119,12 +129,21 @@ public class UsageStatistics {
 				}
 
 				this.randomKey = root.getAttribute("random-key");
-				if ((randomKey == null) || randomKey.isEmpty()) {
+				if (randomKey == null || randomKey.isEmpty()) {
 					this.randomKey = createRandomKey();
 				}
 
+				String initialSetup = root.getAttribute("initial-setup");
+				if (initialSetup != null) {
+					try {
+						this.initialSetup = getDateFormat().parse(initialSetup);
+					} catch (ParseException e) {
+						// ignore malformed files
+					}
+				}
+
 				String nextTransmission = root.getAttribute("next-transmission");
-				if ((lastReset != null) && !lastReset.isEmpty()) {
+				if (lastReset != null && !lastReset.isEmpty()) {
 					try {
 						this.nextTransmission = getDateFormat().parse(nextTransmission);
 					} catch (ParseException e) {
@@ -139,14 +158,36 @@ public class UsageStatistics {
 					ActionStatisticsCollector.getInstance().load(actionStats);
 				}
 			} catch (Exception e) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.tools.usagestats.UsageStatistics.loading_operator_usage_error", e), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.tools.usagestats.UsageStatistics.loading_operator_usage_error", e), e);
 			}
 		} else {
 			this.randomKey = createRandomKey();
+			this.initialSetup = new Date();
+			this.lastReset = new Date();
 		}
+	}
+
+	/**
+	 * @return the transmission interval to be used (in milliseconds)
+	 */
+	private long getTransmissionInterval() {
+		if (failedToday || initialSetup != null
+				&& System.currentTimeMillis() - initialSetup.getTime() < TRANSMISSION_TYPE_THRESHOLD) {
+			return HIGH_FREQUENCY_INTERVAL;
+		} else {
+			return LOW_FREQUENCY_INTERVAL;
+		}
+	}
+
+	/**
+	 * Checks whether the usage statistics should be transmitted on studio shutdown.
+	 *
+	 * @return {@code true} if the usage statistics should be transmitted
+	 */
+	boolean shouldTransmitOnShutdown() {
+		return initialSetup != null && System.currentTimeMillis() - initialSetup.getTime() < TRANSMISSION_TYPE_THRESHOLD
+				&& EULADialog.getEULAAccepted();
 	}
 
 	private String createRandomKey() {
@@ -180,11 +221,20 @@ public class UsageStatistics {
 			root.setAttribute("next-transmission", getDateFormat().format(nextTransmission));
 		}
 		root.setAttribute("random-key", this.randomKey);
+		if (this.initialSetup != null) {
+			root.setAttribute("initial-setup", getDateFormat().format(initialSetup));
+		}
 		root.setAttribute("rapidminer-version", new RapidMinerVersion().toString());
 		root.setAttribute("os-name", System.getProperties().getProperty("os.name"));
 		root.setAttribute("os-version", System.getProperties().getProperty("os.version"));
+		root.setAttribute("os-cores", "" + SystemInfoUtilities.getNumberOfProcessors());
+		String osMemory = getOSMemory();
+		if (osMemory != null) {
+			root.setAttribute("os-memory", osMemory);
+		}
+		root.setAttribute("jvm-max-heap", "" + SystemInfoUtilities.getMaxHeapMemorySize());
 		License activeLicense = ProductConstraintManager.INSTANCE.getActiveLicense();
-		if ((activeLicense != null) && (activeLicense.getLicenseID() != null)) {
+		if (activeLicense != null && activeLicense.getLicenseID() != null) {
 			root.setAttribute("lid", activeLicense.getLicenseID());
 		}
 
@@ -192,6 +242,22 @@ public class UsageStatistics {
 
 		root.appendChild(ActionStatisticsCollector.getInstance().getXML(doc));
 		return doc;
+	}
+
+	/**
+	 * @return the total memory of the os or {@code null} if it cannot be read
+	 */
+	private String getOSMemory() {
+		try {
+			Long total = SystemInfoUtilities.getTotalPhysicalMemorySize();
+			if (total != null) {
+				return total.toString();
+			}
+			return null;
+		} catch (IOException e) {
+			// cannot read total memory
+			return null;
+		}
 	}
 
 	/** Saves the statistics to a user file. */
@@ -203,10 +269,8 @@ public class UsageStatistics {
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.saving_operator_usage");
 				XMLTools.stream(getXML(), file, null);
 			} catch (Exception e) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.tools.usagestats.UsageStatistics.saving_operator_usage_error", e), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.tools.usagestats.UsageStatistics.saving_operator_usage_error", e), e);
 			}
 		} else {
 			LogService.getRoot().config(
@@ -224,7 +288,7 @@ public class UsageStatistics {
 	}
 
 	/**
-	 * 
+	 *
 	 * @return true on success
 	 */
 	public boolean transferUsageStats(ProgressListener progressListener) throws Exception {
@@ -248,18 +312,19 @@ public class UsageStatistics {
 			}
 		} finally {
 			progressListener.complete();
+
 		}
 	}
 
 	/** Sets the date for the next transmission. Starts no timers. */
 	void scheduleTransmission(boolean lastAttemptFailed) {
-		this.failedToday = true;
-		this.nextTransmission = new Date(lastReset.getTime() + TRANSMISSION_INTERVAL);
+		this.failedToday = lastAttemptFailed;
+		this.nextTransmission = new Date(lastReset.getTime() + getTransmissionInterval());
 	}
 
 	/**
 	 * Returns the user key for this session.
-	 * 
+	 *
 	 * @return the user key
 	 */
 	public String getUserKey() {
@@ -275,7 +340,7 @@ public class UsageStatistics {
 	}
 
 	public void scheduleTransmissionFromNow() {
-		this.nextTransmission = new Date(System.currentTimeMillis() + TRANSMISSION_INTERVAL);
+		this.nextTransmission = new Date(System.currentTimeMillis() + getTransmissionInterval());
 	}
 
 	public boolean hasFailedToday() {

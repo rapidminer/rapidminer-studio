@@ -845,7 +845,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 						} else {
 							getLogger().info(
 									"Cannot assigning " + loc + " to input port " + port.getSpec()
-											+ ": Repository location does not reference an IOObject entry.");
+									+ ": Repository location does not reference an IOObject entry.");
 							throw new PortUserError(port, 312, loc, "Not an IOObject entry.");
 						}
 					} catch (RepositoryException e) {
@@ -1106,6 +1106,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 				getLogger().removeHandler(logHandler);
 				logHandler.close();
 			}
+			ActionStatisticsCollector.getInstance().logExecutionFinished(this);
 		}
 	}
 

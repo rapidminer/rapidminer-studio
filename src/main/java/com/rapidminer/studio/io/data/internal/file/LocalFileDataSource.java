@@ -38,7 +38,7 @@ import com.rapidminer.core.io.data.source.FileDataSourceFactory;
  * @author Nils Woehler
  * @since 7.0.0
  */
-class LocalFileDataSource implements DataSource {
+class LocalFileDataSource extends FileDataSource {
 
 	/**
 	 * Key to store the file factory I18N key for the {@link DataSource} configuration.
@@ -68,7 +68,8 @@ class LocalFileDataSource implements DataSource {
 	 * @return the location of the file for this data source. Can be {@code null} in case no
 	 *         location has been selected yet.
 	 */
-	Path getLocation() {
+	@Override
+	public Path getLocation() {
 		return fileLocation;
 	}
 
@@ -76,7 +77,8 @@ class LocalFileDataSource implements DataSource {
 	 * @param selectedLocation
 	 *            the new location of the file for this data source
 	 */
-	void setLocation(Path selectedLocation) {
+	@Override
+	public void setLocation(Path selectedLocation) {
 		this.fileLocation = selectedLocation;
 	}
 

@@ -663,6 +663,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			model.fireMiscChanged();
 		}
 	};
+
 	private final ResourceAction renameAction;
 	private final ResourceAction selectAllAction;
 	private final ResourceAction deleteSelectedAction;

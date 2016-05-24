@@ -287,6 +287,8 @@ public class TutorialBrowser extends JPanel implements Dockable {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
+						"tutorial:" + selectedTutorial.getIdentifier(), "step_" + (stepIndex + 1) + "_previous");
 				displayStep(--stepIndex);
 			}
 		});
@@ -300,6 +302,8 @@ public class TutorialBrowser extends JPanel implements Dockable {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
+						"tutorial:" + selectedTutorial.getIdentifier(), "step_" + (stepIndex + 1) + "_next");
 				displayStep(++stepIndex);
 			}
 		});

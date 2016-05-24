@@ -18,6 +18,17 @@
  */
 package com.rapidminer.operator.learner.associations.fpgrowth;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -43,17 +54,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.Ontology;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 /**
  * <p>
@@ -63,7 +63,7 @@ import java.util.regex.Pattern;
  * derived. A major advantage of FPGrowth compared to Apriori is that it uses only 2 data scans and
  * is therefore often applicable even on large data sets.
  * </p>
- * 
+ *
  * <p>
  * Please note that the given data set is only allowed to contain binominal attributes, i.e. nominal
  * attributes with only two different values. Simply use the provided preprocessing operators in
@@ -71,25 +71,25 @@ import java.util.regex.Pattern;
  * changing the value types of numerical attributes to nominal and the operator Nominal2Binominal
  * for transforming nominal attributes into binominal / binary ones.
  * </p>
- * 
+ *
  * <p>
  * The frequent item sets are mined for the positive entries in your data base, i.e. for those
  * nominal values which are defined as positive in your data base. If you use an attribute
  * description file (.aml) for the {@link ExampleSource} operator this corresponds to the second
  * value which is defined via the classes attribute or inner value tags.
  * </p>
- * 
+ *
  * <p>
  * If your data does not specify the positive entries correctly, you may set them using the
  * parameter positive_value. This only works if all your attributes contain this value!
  * </p>
- * 
+ *
  * <p>
  * This operator has two basic working modes: finding at least the specified number of item sets
  * with highest support without taking the min_support into account (default) or finding all item
  * sets with a support large than min_support.
  * </p>
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa, Marius Helf
  */
 public class FPGrowth extends Operator {
@@ -149,7 +149,11 @@ public class FPGrowth extends Operator {
 		// determine frequent items sets
 		FrequentItemSets sets = null;
 		int retryCount = 0;
-		while ((sets == null) || (sets.size() < minimumNumberOfItemsets && retryCount < maximalNumberOfRetries)) {
+		if (shouldFindMinimumNumber) {
+			getProgress().setTotal(maximalNumberOfRetries);
+			getProgress().setCheckForStop(false);
+		}
+		while (sets == null || sets.size() < minimumNumberOfItemsets && retryCount < maximalNumberOfRetries) {
 			int currentMinTotalSupport = (int) Math.ceil(currentSupport * exampleSet.size());
 
 			// pre-computing data properties
@@ -189,7 +193,7 @@ public class FPGrowth extends Operator {
 			sets = new FrequentItemSets(workingSet.size());
 			String mustContainItems = getParameterAsString(PARAMETER_MUST_CONTAIN);
 			if (mustContainItems == null || mustContainItems.isEmpty()) {
-				mineTree(tree, sets, 0, currentMinTotalSupport, maxItems);
+				mineTree(tree, sets, 0, new FrequentItemSet(), currentMinTotalSupport, maxItems, !shouldFindMinimumNumber);
 			} else {
 				FrequentItemSet conditionalItems = new FrequentItemSet();
 				Pattern pattern = Pattern.compile(mustContainItems);
@@ -260,12 +264,18 @@ public class FPGrowth extends Operator {
 
 				// only mine tree if the mandatory attributes have sufficient support
 				if (!supportOfMandatoryItemsTooLow) {
-					mineTree(tree, sets, depth, conditionalItems, currentMinTotalSupport, maxItems);
+					mineTree(tree, sets, depth, conditionalItems, currentMinTotalSupport, maxItems,
+							!shouldFindMinimumNumber);
 				}
 			}
 
 			currentSupport *= 0.9;
 			retryCount++;
+
+			// trigger progress
+			if (shouldFindMinimumNumber) {
+				getProgress().step();
+			}
 		}
 
 		exampleSetOutput.deliver(exampleSet);
@@ -275,20 +285,20 @@ public class FPGrowth extends Operator {
 	/**
 	 * Recursivly increases the frequencies of the next recursion level for
 	 * <code>startingNode</code> and all its descendants.
-	 * 
+	 *
 	 * This is necessary for the constrained search of frequent item sets, where only some branches
 	 * of the fptree are mined, e.g. when searching for itemsets which must contain a user-defined
 	 * set of items.
-	 * 
+	 *
 	 * Usually, the subtrees are reached via the sibling link of the header items when mining the
 	 * other branches of the tree. When they are filtered away, this has to be done explicitly when
 	 * adding matching items.
-	 * 
+	 *
 	 * For more information see: Mining Frequent Patterns without Candidate Generation: A
 	 * Frequent-Pattern Tree Approach by Han, Pei, Yin and Mao 2001.
-	 * 
+	 *
 	 * For the note on constrained sets, see section 6.2.1: FP-tree mining with constraints.
-	 * 
+	 *
 	 * @param tree
 	 * @param startingNode
 	 * @param currentDepth
@@ -319,8 +329,7 @@ public class FPGrowth extends Operator {
 			if (removeCount == 1) {
 				message = "Removed 1 non-binominal attribute, frequent item set mining is only supported for the positive values of binominal attributes.";
 			} else {
-				message = "Removed "
-						+ removeCount
+				message = "Removed " + removeCount
 						+ " non-binominal attributes, frequent item set mining is only supported for the positive values of binominal attributes.";
 			}
 			logWarning(message);
@@ -329,15 +338,14 @@ public class FPGrowth extends Operator {
 		return workingSet;
 	}
 
-	private void mineTree(FPTree tree, FrequentItemSets sets, int recursionDepth, int minTotalSupport, int maxItems)
-			throws ProcessStoppedException {
-		mineTree(tree, sets, recursionDepth, new FrequentItemSet(), minTotalSupport, maxItems);
+	private void mineTree(FPTree tree, FrequentItemSets sets, int recursionDepth, FrequentItemSet conditionalItems,
+			int minTotalSupport, int maxItems) throws ProcessStoppedException {
+		mineTree(tree, sets, recursionDepth, conditionalItems, minTotalSupport, maxItems, false);
 	}
 
 	private void mineTree(FPTree tree, FrequentItemSets sets, int recursionDepth, FrequentItemSet conditionalItems,
-			int minTotalSupport, int maxItems) throws ProcessStoppedException {
-		checkForStop();
-		if (!(treeIsEmpty(tree, recursionDepth))) {
+			int minTotalSupport, int maxItems, boolean showProgress) throws ProcessStoppedException {
+		if (!treeIsEmpty(tree, recursionDepth)) {
 			if (maxItems > 0) {
 				if (recursionDepth >= maxItems) {
 					return;
@@ -346,6 +354,9 @@ public class FPGrowth extends Operator {
 			// recursively mine tree
 			Map<Item, Header> headerTable = tree.getHeaderTable();
 			Iterator<Map.Entry<Item, Header>> headerIterator = headerTable.entrySet().iterator();
+			if (showProgress && recursionDepth == 0) {
+				getProgress().setTotal(headerTable.entrySet().size());
+			}
 			while (headerIterator.hasNext()) {
 				Map.Entry<Item, Header> headerEntry = headerIterator.next();
 				Item item = headerEntry.getKey();
@@ -395,13 +406,19 @@ public class FPGrowth extends Operator {
 						currentItemHeader.getFrequencies().popFrequency(recursionDepth + 1);
 					}
 				}
+				if (recursionDepth == 0 && showProgress) {
+					getProgress().step();
+				}
+			}
+			if (!showProgress) {
+				checkForStop();
 			}
 		}
 	}
 
 	/**
 	 * Removes every non boolean attribute.
-	 * 
+	 *
 	 * @param exampleSet
 	 *            exampleSet, which attributes are tested
 	 */
@@ -409,7 +426,7 @@ public class FPGrowth extends Operator {
 		// removing non boolean attributes
 		Collection<Attribute> deleteAttributes = new ArrayList<Attribute>();
 		for (Attribute attribute : exampleSet.getAttributes()) {
-			if (!attribute.isNominal() || (attribute.getMapping().size() != 2)) {
+			if (!attribute.isNominal() || attribute.getMapping().size() != 2) {
 				deleteAttributes.add(attribute);
 			}
 		}
@@ -420,7 +437,7 @@ public class FPGrowth extends Operator {
 
 	/**
 	 * This method maps the attributes of the given exampleSet to an Item.
-	 * 
+	 *
 	 * @param exampleSet
 	 *            the exampleSet which attributes are mapped
 	 */
@@ -436,7 +453,7 @@ public class FPGrowth extends Operator {
 
 	/**
 	 * This method scans the exampleSet and counts the frequency of every item
-	 * 
+	 *
 	 * @param exampleSet
 	 *            the exampleSet to be scaned
 	 * @param mapping
@@ -474,7 +491,7 @@ public class FPGrowth extends Operator {
 
 	/**
 	 * Returns a new FPTree, representing the complete ExampleSet.
-	 * 
+	 *
 	 * @param exampleSet
 	 *            is the exampleSet, which shall be represented
 	 * @param mapping
@@ -512,31 +529,27 @@ public class FPGrowth extends Operator {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeBoolean(
-				PARAMETER_FIND_MIN_NUMBER_OF_ITEMSETS,
+		ParameterType type = new ParameterTypeBoolean(PARAMETER_FIND_MIN_NUMBER_OF_ITEMSETS,
 				"Indicates if the mininmal support should be decreased automatically until the specified minimum number of frequent item sets is found. The defined minimal support is lowered by 20 percent each time.",
 				true);
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeInt(
-				PARAMETER_MIN_NUMBER_OF_ITEMSETS,
+		type = new ParameterTypeInt(PARAMETER_MIN_NUMBER_OF_ITEMSETS,
 				"Indicates the minimum number of itemsets which should be determined if the corresponding parameter is activated.",
 				0, Integer.MAX_VALUE, 100);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_FIND_MIN_NUMBER_OF_ITEMSETS, true,
-				true));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_FIND_MIN_NUMBER_OF_ITEMSETS, true, true));
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeInt(
-				PARAMETER_MAX_REDUCTION_STEPS,
+		type = new ParameterTypeInt(PARAMETER_MAX_REDUCTION_STEPS,
 				"This determines how many times the operator lowers min support to find the minimal number of item sets. Each time the minimal support is lowered by 20 percent.",
 				2, Integer.MAX_VALUE, 15);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_FIND_MIN_NUMBER_OF_ITEMSETS, false,
-				true));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_FIND_MIN_NUMBER_OF_ITEMSETS, false, true));
 		type.setExpert(true);
 		types.add(type);
 
-		type = new ParameterTypeString(
-				PARAMETER_POSITIVE_VALUE,
+		type = new ParameterTypeString(PARAMETER_POSITIVE_VALUE,
 				"This parameter determines, which value of the binominal attributes is treated as positive. Attributes with that value are considered as part of a transaction. If left blank, the example set determines, which is value is used.",
 				true);
 		type.setExpert(true);

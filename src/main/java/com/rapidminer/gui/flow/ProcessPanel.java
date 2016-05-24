@@ -47,6 +47,7 @@ import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEve
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.flow.processrendering.view.RenderPhase;
+import com.rapidminer.gui.flow.processrendering.view.components.OperatorWarningHandler;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -80,6 +81,9 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 	/** the background image handler */
 	private final ProcessBackgroundImageVisualizer backgroundImageHandler;
+
+	/** the handler for operator warning bubbles */
+	private final OperatorWarningHandler operatorWarningHandler;
 
 	private final ProcessButtonBar processButtonBar;
 
@@ -207,6 +211,10 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 		add(scrollPane, BorderLayout.CENTER);
 
 		new ProcessPanelScroller(renderer, scrollPane);
+
+		// add event decorator for operator warning icons
+		operatorWarningHandler = new OperatorWarningHandler(model);
+		renderer.addEventDecorator(operatorWarningHandler, RenderPhase.OPERATOR_ADDITIONS);
 	}
 
 	/**
@@ -306,6 +314,15 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 	public JViewport getViewPort() {
 		return scrollPane.getViewport();
+	}
+
+	/**
+	 * Returns the handler for operator warning bubbles.
+	 *
+	 * @return the handler for operator warnings, never {@code null}
+	 */
+	public OperatorWarningHandler getOperatorWarningHandler() {
+		return operatorWarningHandler;
 	}
 
 }

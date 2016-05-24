@@ -2378,7 +2378,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	public boolean isRunning() {
 		return isRunning;
 	}
-	
+
 	/**
 	 * Returns if this operator should currently show progress animation.
 	 * This method can be overridden to provide unique animation display criteria.

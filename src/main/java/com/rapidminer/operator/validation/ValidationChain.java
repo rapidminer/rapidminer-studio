@@ -82,11 +82,11 @@ public abstract class ValidationChain extends OperatorChain implements Capabilit
 	// testing
 	private final OutputPort applyProcessModelOutput = getSubprocess(1).getInnerSources().createPort("model");
 	private final OutputPort applyProcessExampleSetOutput = getSubprocess(1).getInnerSources().createPort("test set");
-	private final PortPairExtender applyProcessPerformancePortExtender = new PortPairExtender("averagable", getSubprocess(1)
-			.getInnerSinks(), getOutputPorts(), new MetaData(AverageVector.class));
+	private final PortPairExtender applyProcessPerformancePortExtender = new PortPairExtender("averagable",
+			getSubprocess(1).getInnerSinks(), getOutputPorts(), new MetaData(AverageVector.class));
 
 	// output
-	private final OutputPort modelOutput = getOutputPorts().createPort("model");
+	protected final OutputPort modelOutput = getOutputPorts().createPort("model");
 	private final OutputPort exampleSetOutput = getOutputPorts().createPort("training");
 
 	private double lastMainPerformance = Double.NaN;
@@ -121,8 +121,8 @@ public abstract class ValidationChain extends OperatorChain implements Capabilit
 						return super.modifyExampleSet(metaData);
 					}
 				});
-		getTransformer().addRule(
-				new ExampleSetPassThroughRule(trainingSetInput, applyProcessExampleSetOutput, SetRelation.EQUAL) {
+		getTransformer()
+				.addRule(new ExampleSetPassThroughRule(trainingSetInput, applyProcessExampleSetOutput, SetRelation.EQUAL) {
 
 					@Override
 					public ExampleSetMetaData modifyExampleSet(ExampleSetMetaData metaData) throws UndefinedParameterError {
@@ -287,6 +287,7 @@ public abstract class ValidationChain extends OperatorChain implements Capabilit
 		// Generate complete model, if desired
 		if (modelOutput.isConnected()) {
 			learnFinalModel(eSet);
+			getProgress().complete();
 			modelOutput.deliver(trainingProcessModelInput.getData(IOObject.class));
 		}
 		exampleSetOutput.deliver(eSet);

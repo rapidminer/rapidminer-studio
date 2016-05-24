@@ -104,7 +104,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 			// create tokens by considering the current token type
 			switch (currentTokenType) {
 
-			// if the token type is null, i.e. at the beginning of a line
+				// if the token type is null, i.e. at the beginning of a line
 				case Token.NULL:
 
 					// start a new token here
@@ -175,7 +175,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					} // End of switch (c).
 					break;
 
-				// case that the character before was an operator
+					// case that the character before was an operator
 				case Token.OPERATOR:
 
 					switch (c) {
@@ -264,7 +264,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					} // End of switch (c).
 					break;
 
-				// case that the character before was a separator
+					// case that the character before was a separator
 				case Token.SEPARATOR:
 
 					switch (c) {
@@ -345,7 +345,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					} // End of switch (c).
 					break;
 
-				// case that the character before was a whitespace
+					// case that the character before was a whitespace
 				case Token.WHITESPACE:
 
 					switch (c) {
@@ -422,7 +422,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					} // End of switch (c).
 					break;
 
-				// case that the character before was an identifier (part of function, attribute or
+					// case that the character before was an identifier (part of function, attribute or
 					// unknown word)
 				case Token.IDENTIFIER:
 
@@ -491,7 +491,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					} // End of switch (c).
 					break;
 
-				// case that the character before was an integer
+					// case that the character before was an integer
 				case Token.LITERAL_NUMBER_DECIMAL_INT:
 
 					switch (c) {
@@ -600,7 +600,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					} // End of switch (c).
 					break;
 
-				// case that the character before was a float
+					// case that the character before was a float
 				case Token.LITERAL_NUMBER_FLOAT:
 
 					switch (c) {
@@ -748,7 +748,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					}
 					break;
 
-				// case that the character before was part of a macro
+					// case that the character before was part of a macro
 				case Token.COMMENT_MULTILINE:
 
 					if (c == '}') {
@@ -770,7 +770,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 						}
 					}
 					break;
-				// case that the character before was part of an attribute
+					// case that the character before was part of an attribute
 				case Token.COMMENT_KEYWORD:
 
 					if (c == ']') {
@@ -805,12 +805,12 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 				addToken(text, currentTokenStart, end - 1, currentTokenType, newStartOffset + currentTokenStart);
 				break;
 
-			// Do nothing if everything was okay.
+				// Do nothing if everything was okay.
 			case Token.NULL:
 				addNullToken();
 				break;
 
-			// All other token types don't continue to the next line and are cut here
+				// All other token types don't continue to the next line and are cut here
 			default:
 				addToken(text, currentTokenStart, end - 1, currentTokenType, newStartOffset + currentTokenStart);
 				addNullToken();
@@ -844,7 +844,7 @@ public class ExpressionTokenMaker extends AbstractTokenMaker {
 					// Token.VARIABLE does only say in which style the dynamic variables are
 					// rendered
 					String inputName = input.getName();
-					if (inputName.matches("(^[A-Za-z])([A-Za-z\\d]*)")) {
+					if (inputName.matches("(^[A-Za-z])([A-Z_a-z\\d]*)")) {
 						// check whether the attribute is alphanumerical without a number at the
 						// front
 						tokenMap.put(inputName, Token.VARIABLE);

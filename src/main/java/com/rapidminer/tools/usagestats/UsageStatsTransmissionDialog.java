@@ -31,7 +31,10 @@ import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.gui.tools.ProgressThreadDialog;
 import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -125,9 +128,16 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 		} else if ("always".equals(property)) {
 			return true;
 		} else {
-			UsageStatsTransmissionDialog trd = new UsageStatsTransmissionDialog();
-			trd.setVisible(true);
-			return trd.answer == YES;
+			return SwingTools.invokeAndWaitWithResult(new ResultRunnable<Boolean>() {
+
+				@Override
+				public Boolean run() {
+					UsageStatsTransmissionDialog trd = new UsageStatsTransmissionDialog();
+					trd.setVisible(true);
+					return trd.answer == YES;
+				}
+			});
+
 		}
 	}
 
@@ -162,12 +172,10 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 									UsageStatistics.getInstance().scheduleTransmission(true);
 								}
 							} catch (Exception e) {
-								LogService
-								.getRoot()
-								.log(Level.WARNING,
+								LogService.getRoot().log(Level.WARNING,
 										I18N.getMessage(LogService.getRoot().getResourceBundle(),
 												"com.rapidminer.tools.usagestats.UsageStatsTransmissionDialog.submitting_operator_usage_statistics_error"),
-												e);
+										e);
 								UsageStatistics.getInstance().scheduleTransmission(true);
 							}
 							getProgressListener().setCompleted(90);
@@ -181,8 +189,45 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 					startTimer();
 				}
 			}
+
 		});
 		timer.setRepeats(false);
 		timer.start();
+	}
+
+	/**
+	 * Transmits user statistics data if required. Expects to be called from the shutdown hook on
+	 * the EDT.
+	 */
+	public static void transmitOnShutdown() {
+		if (UsageStatistics.getInstance().shouldTransmitOnShutdown()) {
+			if (UsageStatsTransmissionDialog.askForTransmission()) {
+				ProgressThread thread = new ProgressThread("transmit_usagestats", true) {
+
+					@Override
+					public void run() {
+						getProgressListener().setTotal(100);
+						getProgressListener().setCompleted(10);
+						try {
+							if (UsageStatistics.getInstance().transferUsageStats(getProgressListener())) {
+								UsageStatistics.getInstance().reset();
+								UsageStatistics.getInstance().scheduleTransmission(false);
+							} else {
+								UsageStatistics.getInstance().scheduleTransmission(true);
+							}
+						} catch (Exception e) {
+							UsageStatistics.getInstance().scheduleTransmission(true);
+						}
+						getProgressListener().complete();
+						ProgressThreadDialog.getInstance().setVisible(false, false);
+					}
+				};
+				// wait for the progress thread - otherwise program ends before it is done
+				thread.startAndWait();
+			} else {
+				UsageStatistics.getInstance().scheduleTransmissionFromNow();
+			}
+			UsageStatistics.getInstance().save();
+		}
 	}
 }

@@ -18,6 +18,11 @@
  */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessSetupError.Severity;
@@ -25,21 +30,18 @@ import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 
-import java.util.LinkedList;
-import java.util.logging.Level;
-
 
 /**
  * This class mirrors the behavior of an Operator's apply-method with respect to the I/O meta data.
  * This functionality is performed by a class of its own (rather than another method in Operator) to
  * keep Operator lean and since it is assumed that most meta data transformations can be handled by
  * a small set of standard rules.
- * 
+ *
  * The general rule is that methods of this package should not throw exceptions but rather register
  * possible errors with the ports if preconditions are not satisfied etc.
- * 
+ *
  * @author Simon Fischer
- * */
+ */
 public class MDTransformer {
 
 	private final LinkedList<MDTransformationRule> transformationRules = new LinkedList<MDTransformationRule>();
@@ -82,6 +84,13 @@ public class MDTransformer {
 
 	public void addRuleAtBeginning(MDTransformationRule mdTransformationRule) {
 		transformationRules.addFirst(mdTransformationRule);
+	}
+
+	/**
+	 * @return an unmodifiable list of MDTransformationRules
+	 */
+	public final List<MDTransformationRule> getRules() {
+		return Collections.unmodifiableList(transformationRules);
 	}
 
 }

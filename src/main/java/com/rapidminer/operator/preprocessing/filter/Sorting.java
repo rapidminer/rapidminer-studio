@@ -58,9 +58,8 @@ public class Sorting extends AbstractDataProcessing {
 	public Sorting(OperatorDescription description) {
 		super(description);
 
-		getExampleSetInputPort().addPrecondition(
-				new AttributeSetPrecondition(getExampleSetInputPort(), AttributeSetPrecondition.getAttributesByParameter(
-						this, PARAMETER_ATTRIBUTE_NAME)));
+		getExampleSetInputPort().addPrecondition(new AttributeSetPrecondition(getExampleSetInputPort(),
+				AttributeSetPrecondition.getAttributesByParameter(this, PARAMETER_ATTRIBUTE_NAME)));
 	}
 
 	@Override
@@ -72,7 +71,7 @@ public class Sorting extends AbstractDataProcessing {
 			throw new AttributeNotFoundError(this, PARAMETER_ATTRIBUTE_NAME, getParameterAsString(PARAMETER_ATTRIBUTE_NAME));
 		}
 
-		ExampleSet result = new SortedExampleSet(exampleSet, sortingAttribute, sortingDirection);
+		ExampleSet result = new SortedExampleSet(exampleSet, sortingAttribute, sortingDirection, getProgress());
 
 		return result;
 	}
@@ -81,7 +80,8 @@ public class Sorting extends AbstractDataProcessing {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeAttribute(PARAMETER_ATTRIBUTE_NAME,
-				"Indicates the attribute which should be used for determining the sorting.", getExampleSetInputPort(), false));
+				"Indicates the attribute which should be used for determining the sorting.", getExampleSetInputPort(),
+				false));
 		types.add(new ParameterTypeCategory(PARAMETER_SORTING_DIRECTION, "Indicates the direction of the sorting.",
 				SortedExampleSet.SORTING_DIRECTIONS, SortedExampleSet.INCREASING, false));
 		return types;

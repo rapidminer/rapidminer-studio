@@ -110,7 +110,11 @@ public class BatchXValidation extends ValidationChain {
 		SplittedExampleSet splittedES = SplittedExampleSet.splitByAttribute(inputSet, batchAttribute);
 
 		// start crossvalidation
-		getProgress().setTotal(splittedES.getNumberOfSubsets());
+		if (modelOutput.isConnected()) {
+			getProgress().setTotal(splittedES.getNumberOfSubsets() + 1);
+		} else {
+			getProgress().setTotal(splittedES.getNumberOfSubsets());
+		}
 		getProgress().setCheckForStop(false);
 
 		for (iteration = 0; iteration < splittedES.getNumberOfSubsets(); iteration++) {
@@ -122,8 +126,6 @@ public class BatchXValidation extends ValidationChain {
 			inApplyLoop();
 			getProgress().step();
 		}
-		// end crossvalidation
-		getProgress().complete();
 	}
 
 	@Override

@@ -24,7 +24,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -60,17 +61,14 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 				return entryA.getName().compareTo(entryB.getName());
 			}
 		}
-
 	};
 
 	private List<DataEntry> data;
 	private List<Folder> folders;
 
-	/**
-	 * Used in {@link #refresh()} to avoid concurrency exceptions during multiple user-triggered
-	 * refresh operations
-	 */
-	private final ReentrantLock refreshLock = new ReentrantLock();
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	private final Lock readLock = lock.readLock();
+	private final Lock writeLock = lock.writeLock();
 
 	SimpleFolder(String name, SimpleFolder parent, LocalRepository repository) throws RepositoryException {
 		super(name, parent, repository);
@@ -101,18 +99,52 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 
 	@Override
 	public List<DataEntry> getDataEntries() throws RepositoryException {
-		ensureLoaded();
-		return Collections.unmodifiableList(data);
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return Collections.unmodifiableList(data);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return Collections.unmodifiableList(data);
+		} finally {
+			releaseWriteLock();
+		}
 	}
 
 	@Override
 	public List<Folder> getSubfolders() throws RepositoryException {
-		ensureLoaded();
-		return Collections.unmodifiableList(folders);
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return Collections.unmodifiableList(folders);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return Collections.unmodifiableList(folders);
+		} finally {
+			releaseWriteLock();
+		}
 	}
 
+	private boolean isLoaded() {
+		return data != null && folders != null;
+	}
+
+	/**
+	 * Makes sure the corresponding content is loaded. This method will perform write operations,
+	 * you need to acquire the write lock before calling it.
+	 */
 	private void ensureLoaded() throws RepositoryException {
-		if (data != null && folders != null) {
+		if (isLoaded()) {
 			return;
 		}
 		data = new ArrayList<DataEntry>();
@@ -148,13 +180,20 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 			throws RepositoryException {
 		// check for possible invalid name
 		if (!RepositoryLocation.isNameValid(name)) {
-			throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name,
-					getLocation()));
+			throw new RepositoryException(
+					I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name, getLocation()));
 		}
 
-		ensureLoaded();
 		IOObjectEntry entry = new SimpleIOObjectEntry(name, this, getRepository());
-		data.add(entry);
+
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			data.add(entry);
+		} finally {
+			releaseWriteLock();
+		}
+
 		if (ioobject != null) {
 			entry.storeData(ioobject, null, l);
 		}
@@ -166,31 +205,36 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 	public Folder createFolder(String name) throws RepositoryException {
 		// check for possible invalid name
 		if (!RepositoryLocation.isNameValid(name)) {
-			throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name,
-					getLocation()));
+			throw new RepositoryException(
+					I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name, getLocation()));
 		}
 
-		ensureLoaded();
-		for (Folder folder : folders) {
-			// folder with the same name (no matter if they have different capitalization) must not
-			// be created
-			if (folder.getName().toLowerCase(Locale.ENGLISH).equals(name.toLowerCase(Locale.ENGLISH))) {
-				throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-						"repository.repository_folder_already_exists", name));
+		SimpleFolder newFolder = new SimpleFolder(name, this, getRepository());
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			for (Folder folder : folders) {
+				// folder with the same name (no matter if they have different capitalization) must
+				// not
+				// be created
+				if (folder.getName().toLowerCase(Locale.ENGLISH).equals(name.toLowerCase(Locale.ENGLISH))) {
+					throw new RepositoryException(
+							I18N.getMessage(I18N.getErrorBundle(), "repository.repository_folder_already_exists", name));
+				}
 			}
-		}
-		for (DataEntry entry : data) {
-			if (entry.getName().equals(name)) {
-				throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-						"repository.repository_entry_with_same_name_already_exists", name));
+			for (DataEntry entry : data) {
+				if (entry.getName().equals(name)) {
+					throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
+							"repository.repository_entry_with_same_name_already_exists", name));
+				}
 			}
+			newFolder.mkdir();
+			folders.add(newFolder);
+		} finally {
+			releaseWriteLock();
 		}
-
-		SimpleFolder folder = new SimpleFolder(name, this, getRepository());
-		folder.mkdir();
-		folders.add(folder);
-		getRepository().fireEntryAdded(folder, this);
-		return folder;
+		getRepository().fireEntryAdded(newFolder, this);
+		return newFolder;
 	}
 
 	@Override
@@ -209,20 +253,37 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 	}
 
 	@Override
-	public void refresh() {
-		refreshLock.lock();
+	public void refresh() throws RepositoryException {
+		acquireWriteLock();
 		try {
 			data = null;
 			folders = null;
-			getRepository().fireRefreshed(this);
 		} finally {
-			refreshLock.unlock();
+			releaseWriteLock();
 		}
+		getRepository().fireRefreshed(this);
 	}
 
 	@Override
 	public boolean containsEntry(String name) throws RepositoryException {
-		ensureLoaded();
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return containsEntryNotThreadSafe(name);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return containsEntryNotThreadSafe(name);
+		} finally {
+			releaseWriteLock();
+		}
+	}
+
+	private boolean containsEntryNotThreadSafe(String name) throws RepositoryException {
 		for (Folder folder : folders) {
 			if (folder.getName().equals(name)) {
 				return true;
@@ -245,23 +306,35 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 		}
 	}
 
-	void removeChild(SimpleEntry child) {
+	void removeChild(SimpleEntry child) throws RepositoryException {
 		int index;
-		if (child instanceof SimpleFolder) {
-			index = folders.indexOf(child);
-			folders.remove(child);
-		} else {
-			index = data.indexOf(child) + folders.size();
-			data.remove(child);
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			if (child instanceof SimpleFolder) {
+				index = folders.indexOf(child);
+				folders.remove(child);
+			} else {
+				index = data.indexOf(child) + folders.size();
+				data.remove(child);
+			}
+		} finally {
+			releaseWriteLock();
 		}
 		getRepository().fireEntryRemoved(child, this, index);
 	}
 
-	void addChild(SimpleEntry child) {
-		if (child instanceof SimpleFolder) {
-			folders.add((Folder) child);
-		} else {
-			data.add((DataEntry) child);
+	void addChild(SimpleEntry child) throws RepositoryException {
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			if (child instanceof SimpleFolder) {
+				folders.add((Folder) child);
+			} else {
+				data.add((DataEntry) child);
+			}
+		} finally {
+			releaseWriteLock();
 		}
 		getRepository().fireEntryAdded(child, this);
 	}
@@ -270,22 +343,28 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 	public ProcessEntry createProcessEntry(String name, String processXML) throws RepositoryException {
 		// check for possible invalid name
 		if (!RepositoryLocation.isNameValid(name)) {
-			throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name,
-					getLocation()));
+			throw new RepositoryException(
+					I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name, getLocation()));
 		}
 
 		SimpleProcessEntry entry = null;
+		acquireWriteLock();
 		try {
+			ensureLoaded();
 			entry = new SimpleProcessEntry(name, this, getRepository());
-			if (data != null) {
-				data.add(entry);
+			data.add(entry);
+			try {
+				entry.storeXML(processXML);
+			} catch (RepositoryException e) {
+				data.remove(entry);
+				throw e;
 			}
-			entry.storeXML(processXML);
-		} catch (RepositoryException e) {
-			data.remove(data.size() - 1);
-			throw e;
+		} finally {
+			releaseWriteLock();
 		}
-		getRepository().fireEntryAdded(entry, this);
+		if (entry != null) {
+			getRepository().fireEntryAdded(entry, this);
+		}
 		return entry;
 	}
 
@@ -293,15 +372,22 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 	public BlobEntry createBlobEntry(String name) throws RepositoryException {
 		// check for possible invalid name
 		if (!RepositoryLocation.isNameValid(name)) {
-			throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name,
-					getLocation()));
+			throw new RepositoryException(
+					I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", name, getLocation()));
 		}
 
-		BlobEntry entry = new SimpleBlobEntry(name, this, getRepository());
-		if (data != null) {
+		BlobEntry entry = null;
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			entry = new SimpleBlobEntry(name, this, getRepository());
 			data.add(entry);
+		} finally {
+			releaseWriteLock();
 		}
-		getRepository().fireEntryAdded(entry, this);
+		if (entry != null) {
+			getRepository().fireEntryAdded(entry, this);
+		}
 		return entry;
 	}
 
@@ -309,5 +395,37 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 	public boolean canRefreshChild(String childName) throws RepositoryException {
 		// check existence of properties file
 		return new File(getFile(), childName + SimpleEntry.PROPERTIES_SUFFIX).exists();
+	}
+
+	private void acquireReadLock() throws RepositoryException {
+		try {
+			readLock.lock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not get read lock", e);
+		}
+	}
+
+	private void releaseReadLock() throws RepositoryException {
+		try {
+			readLock.unlock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not release read lock", e);
+		}
+	}
+
+	private void acquireWriteLock() throws RepositoryException {
+		try {
+			writeLock.lock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not get write lock", e);
+		}
+	}
+
+	private void releaseWriteLock() throws RepositoryException {
+		try {
+			writeLock.unlock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not release write lock", e);
+		}
 	}
 }

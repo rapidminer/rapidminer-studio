@@ -185,7 +185,7 @@ public class RapidMinerGUI extends RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_DISCONNECT_ON_DISABLE, "", true));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_SHOW_NO_RESULT_WARNING, "", true));
 		RapidMiner.registerParameter(new ParameterTypeCategory(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS, "",
-				RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS_ANSWERS, UsageStatsTransmissionDialog.ASK));
+				RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS_ANSWERS, UsageStatsTransmissionDialog.ALWAYS));
 		RapidMiner.registerParameter(new ParameterTypeCategory(RapidMinerGUI.PROPERTY_DRAG_TARGET_HIGHLIGHTING, "",
 				PROPERTY_DRAG_TARGET_HIGHLIGHTING_VALUES, DRAG_TARGET_HIGHLIGHTING_FULL));
 
@@ -272,6 +272,7 @@ public class RapidMinerGUI extends RapidMiner {
 			RapidMinerGUI.saveGUIProperties();
 			UsageStatistics.getInstance().save();
 			RepositoryManager.shutdown();
+			UsageStatsTransmissionDialog.transmitOnShutdown();
 		}
 	}
 

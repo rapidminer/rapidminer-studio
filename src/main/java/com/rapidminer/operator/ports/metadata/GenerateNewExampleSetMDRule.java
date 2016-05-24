@@ -23,7 +23,7 @@ import com.rapidminer.operator.ports.OutputPort;
 
 /**
  * This rule is for operators, which create a completely new example set
- * 
+ *
  * @author Sebastian Land
  */
 public class GenerateNewExampleSetMDRule implements MDTransformationRule {
@@ -50,6 +50,13 @@ public class GenerateNewExampleSetMDRule implements MDTransformationRule {
 	 */
 	public MetaData modifyMetaData(ExampleSetMetaData unmodifiedMetaData) {
 		return unmodifiedMetaData;
+	}
+
+	/**
+	 * @return the {@link OutputPort} the MD rule is for
+	 */
+	public OutputPort getOutputPort() {
+		return outputPort;
 	}
 
 }

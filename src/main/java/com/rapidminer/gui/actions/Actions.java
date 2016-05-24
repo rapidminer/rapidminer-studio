@@ -110,6 +110,20 @@ public class Actions implements ProcessEditor {
 		}
 	};
 
+	private transient final Action SHOW_PROBLEM_ACTION = new ResourceAction(true, "show_potential_problem") {
+
+		private static final long serialVersionUID = -1260942717363137733L;
+
+		{
+			setCondition(OPERATOR_SELECTED, MANDATORY);
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			mainFrame.getProcessPanel().getOperatorWarningHandler().showOperatorWarning(getFirstSelectedOperator());
+		}
+	};
+
 	private List<Operator> selection;
 
 	private Process process;
@@ -188,6 +202,9 @@ public class Actions implements ProcessEditor {
 					menu.add(renameAction);
 				} else {
 					menu.add(RENAME_OPERATOR_ACTION);
+				}
+				if (!op.getErrorList().isEmpty()) {
+					menu.add(SHOW_PROBLEM_ACTION);
 				}
 				menu.addSeparator();
 				if (op instanceof OperatorChain && ((OperatorChain) op).getAllInnerOperators().size() > 0) {
@@ -338,11 +355,8 @@ public class Actions implements ProcessEditor {
 			return;
 		} else if (mainFrame.getProcessPanel().getProcessRenderer().getModel().getDisplayedChain() == selectedNode) {
 			for (Operator newOperator : newOperators) {
-				int index = mainFrame
-						.getProcessPanel()
-						.getProcessRenderer()
-						.getProcessIndexUnder(
-								mainFrame.getProcessPanel().getProcessRenderer().getModel().getCurrentMousePosition());
+				int index = mainFrame.getProcessPanel().getProcessRenderer().getProcessIndexUnder(
+						mainFrame.getProcessPanel().getProcessRenderer().getModel().getCurrentMousePosition());
 				if (index == -1) {
 					index = 0;
 				}

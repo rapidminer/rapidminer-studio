@@ -73,12 +73,14 @@ public class ResourceRepository extends ResourceFolder implements Repository {
 
 	@Override
 	protected void ensureLoaded() throws RepositoryException {
-		boolean noFoldersYet = folders == null;
+		if (isLoaded()) {
+			return;
+		}
 		super.ensureLoaded();
 
 		// add template and tutorial folder in case folders are not available yet
 		// and repository should contain the template or tutorial folder
-		if (noFoldersYet && addTemplateFolder) {
+		if (addTemplateFolder) {
 			try {
 				addFolder(new TemplatesFolder(this, getPath(), getRepository()));
 			} catch (RepositoryException e) {
@@ -86,7 +88,7 @@ public class ResourceRepository extends ResourceFolder implements Repository {
 						"com.rapidminer.repository.resource.ResourceRepository.error_adding_template_folder", e);
 			}
 		}
-		if (noFoldersYet && addTutorialFolder) {
+		if (addTutorialFolder) {
 			try {
 				addFolder(new TutorialFolder(this, getPath(), getRepository()));
 			} catch (RepositoryException e) {

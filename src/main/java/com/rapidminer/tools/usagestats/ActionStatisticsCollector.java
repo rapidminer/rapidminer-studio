@@ -38,12 +38,19 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import com.rapidminer.Process;
+import com.rapidminer.ProcessListener;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.components.AbstractLinkButton;
 import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.Port;
 import com.rapidminer.tools.XMLException;
 import com.vlsolutions.swing.docking.event.DockableStateChangeEvent;
 import com.vlsolutions.swing.docking.event.DockableStateChangeListener;
@@ -89,12 +96,56 @@ public enum ActionStatisticsCollector {
 	/** start-up dialog (since 7.0.0) */
 	public static final String TYPE_GETTING_STARTED = "getting_started";
 
+	/** operator search field (since 7.1.1) */
+	public static final String TYPE_OPERATOR_SEARCH = "operator_search";
+
+	/** onboarding dialog (since 7.1.1) */
+	public static final String TYPE_ONBOARDING = "onboarding";
+
 	public static final String OPERATOR_EVENT_EXECUTION = "EXECUTE";
 	public static final String OPERATOR_EVENT_STOPPED = "STOPPED";
 	public static final String OPERATOR_EVENT_FAILURE = "FAILURE";
 	public static final String OPERATOR_EVENT_USER_ERROR = "USER_ERROR";
 	public static final String OPERATOR_EVENT_OPERATOR_EXCEPTION = "OPERATOR_EXCEPTION";
 	public static final String OPERATOR_EVENT_RUNTIME_EXCEPTION = "RUNTIME_EXCEPTION";
+
+	/** runtime of an operator (since 7.1.1) */
+	private static final String OPERATOR_RUNTIME = "RUNTIME";
+
+	/** input and output volume of an operator port (since 7.1.1) */
+	private static final String TYPE_INPUT_VOLUME = "input_volume";
+	private static final String TYPE_OUTPUT_VOLUME = "output_volume";
+
+	/** jvm total memory logging (since 7.1.1) */
+	private static final String TYPE_MEMORY = "memory";
+	private static final String MEMORY_USED = "used";
+	private static final String MEMORY_ARG = "MEMORY";
+
+	/** arguments to log operator port volume, cells = columns*rows, (since 7.1.1) */
+	private static final String VOLUMNE_CELLS = "CELLS";
+	private static final String VOLUME_COLUMNS = "COLUMNS";
+	private static final String VOLUME_ROWS = "ROWS";
+
+	/**
+	 * added to a key arg to indicated that this stores the maximum amount of all the amounts stored
+	 * for arg
+	 */
+	private static final String MAXIMUM_INDICATOR = "_MAX";
+
+	/**
+	 * added to a key arg to indicated that this stores the minimum amount of all the amounts stored
+	 * for arg
+	 */
+	private static final String MINIMUM_INDICATOR = "_MIN";
+
+	/**
+	 * added to a key arg to indicated that this stores the number of times an amount was stored for
+	 * arg
+	 */
+	private static final String COUNT_INDICATOR = "_COUNT";
+
+	/** conversion constant for bytes to megabytes */
+	private static final int BYTE_TO_MB = 1024 * 1024;
 
 	public static final String XML_TAG = "action-statistics";
 
@@ -175,6 +226,55 @@ public enum ActionStatisticsCollector {
 		}
 	}
 
+	/** Listener that logs input and output volume at operator ports. */
+	private final ProcessListener operatorVolumeListener = new ProcessListener() {
+
+		@Override
+		public void processStarts(Process process) {
+			// not needed
+		}
+
+		@Override
+		public void processStartedOperator(Process process, Operator op) {
+			// log the input volumes of the operator
+			for (InputPort inputPort : op.getInputPorts().getAllPorts()) {
+				try {
+					IOObject ioObject = inputPort.getDataOrNull(IOObject.class);
+					if (ioObject instanceof ExampleSet) {
+						ExampleSet exampleSet = (ExampleSet) ioObject;
+						logInputVolume(op, inputPort, exampleSet.size(), exampleSet.getAttributes().allSize());
+					}
+				} catch (UserError e) {
+					// cannot log volume
+				}
+			}
+		}
+
+		@Override
+		public void processFinishedOperator(Process process, Operator op) {
+			// log the output volumes of the operator
+			for (OutputPort outputPort : op.getOutputPorts().getAllPorts()) {
+				try {
+					IOObject ioObject = outputPort.getDataOrNull(IOObject.class);
+					if (ioObject instanceof ExampleSet) {
+						ExampleSet exampleSet = (ExampleSet) ioObject;
+						logOutputVolume(op, outputPort, exampleSet.size(), exampleSet.getAttributes().allSize());
+					}
+				} catch (UserError e) {
+					// cannot log volume
+				}
+
+			}
+			// log the memory volume used
+			logMemory();
+		}
+
+		@Override
+		public void processEnded(Process process) {
+			// not needed
+		}
+	};
+
 	private final Map<Key, Long> counts = new HashMap<>();
 
 	public static ActionStatisticsCollector getInstance() {
@@ -240,14 +340,81 @@ public enum ActionStatisticsCollector {
 		}
 	}
 
+	/**
+	 * Logs the operator execution event and adds the {@link ProcessListener} logging the operator
+	 * volumes.
+	 *
+	 * @param process
+	 *            the started process
+	 */
 	public void logExecution(Process process) {
 		if (process == null) {
 			return;
 		}
+		// add listener for operator port volume logging
+		process.getRootOperator().addProcessListener(operatorVolumeListener);
 		List<Operator> allInnerOperators = process.getRootOperator().getAllInnerOperators();
 		for (Operator op : allInnerOperators) {
 			log(TYPE_OPERATOR, op.getOperatorDescription().getKey(), OPERATOR_EVENT_EXECUTION);
 		}
+	}
+
+	/**
+	 * Logs the execution time for all operators in the process and removes the
+	 * {@link ProcessListener} logging the operator volumes.
+	 *
+	 * @param process
+	 *            the finished process
+	 */
+	public void logExecutionFinished(Process process) {
+		if (process == null) {
+			return;
+		}
+		// remove listener for operator port volume logging
+		process.getRootOperator().removeProcessListener(operatorVolumeListener);
+		List<Operator> allInnerOperators = process.getRootOperator().getAllInnerOperators();
+		for (Operator op : allInnerOperators) {
+			// only log if the operator finished
+			if (!op.isDirty()) {
+				// retrieve execution time stored with the operator
+				double executionTime = (double) op.getValue("execution-time").getValue();
+				logOperatorExecutionTime(op, (long) executionTime);
+			}
+		}
+	}
+
+	/**
+	 * Logs the volume for the operator input port. Logs the columns, rows and cells (rows *
+	 * columns) and for each their sum, min, max and count.
+	 *
+	 * @param operator
+	 *            the operator the input port belongs to
+	 * @param port
+	 *            the input port for which to log the volume
+	 * @param rows
+	 *            the rows of the example set at the port
+	 * @param columns
+	 *            the columns of the example set at the port
+	 */
+	private void logInputVolume(Operator operator, InputPort port, int rows, int columns) {
+		logVolume(TYPE_INPUT_VOLUME, operator, port, rows, columns);
+	}
+
+	/**
+	 * Logs the volume for the operator output port. Logs the columns, rows and cells (rows *
+	 * columns) and for each their sum, min, max and count.
+	 *
+	 * @param operator
+	 *            the operator the output port belongs to
+	 * @param port
+	 *            the output port for which to log the volume
+	 * @param rows
+	 *            the rows of the example set at the port
+	 * @param columns
+	 *            the columns of the example set at the port
+	 */
+	private void logOutputVolume(Operator operator, OutputPort port, int rows, int columns) {
+		logVolume(TYPE_OUTPUT_VOLUME, operator, port, rows, columns);
 	}
 
 	public void log(Operator op, String event) {
@@ -261,6 +428,51 @@ public enum ActionStatisticsCollector {
 		log(type, value, arg, 1);
 	}
 
+	/**
+	 * Logs the executionTime for the operator. Adjusts the sum, min, max and count of the execution
+	 * times logged before.
+	 *
+	 * @param operator
+	 *            the operator to log
+	 * @param executionTime
+	 *            the execution time (in milliseconds) to log
+	 */
+	private void logOperatorExecutionTime(Operator operator, long executionTime) {
+		logCountSumMinMax(TYPE_OPERATOR, operator.getOperatorDescription().getKey(), OPERATOR_RUNTIME, executionTime);
+	}
+
+	/**
+	 * Logs sum, max and count of the total memory currently used.
+	 */
+	private void logMemory() {
+		long totalSize = Runtime.getRuntime().totalMemory() / BYTE_TO_MB;
+		log(TYPE_MEMORY, MEMORY_USED, MEMORY_ARG + COUNT_INDICATOR);
+		log(TYPE_MEMORY, MEMORY_USED, MEMORY_ARG, totalSize);
+		logMax(TYPE_MEMORY, MEMORY_USED, MEMORY_ARG, totalSize);
+	}
+
+	/**
+	 * Logs the volume for an operator port. Logs the columns, rows and cells and for each their
+	 * sum, min, max and count.
+	 */
+	private void logVolume(String type, Operator operator, Port port, int rows, int columns) {
+		String value = operator.getOperatorDescription().getKey() + "." + port.getName();
+		logCountSumMinMax(type, value, VOLUME_ROWS, rows);
+		logCountSumMinMax(type, value, VOLUME_COLUMNS, columns);
+		logCountSumMinMax(type, value, VOLUMNE_CELLS, (long) columns * rows);
+	}
+
+	/**
+	 * For the key given by type, value and arg logs the amount, its minimum and maximum and how
+	 * often a amount was logged.
+	 */
+	private void logCountSumMinMax(String type, String value, String arg, long amount) {
+		log(type, value, arg + COUNT_INDICATOR);
+		log(type, value, arg, amount);
+		logMin(type, value, arg, amount);
+		logMax(type, value, arg, amount);
+	}
+
 	private void log(String type, String value, String arg, long count) {
 		Key key = new Key(type, value, arg);
 		synchronized (counts) {
@@ -269,6 +481,34 @@ public enum ActionStatisticsCollector {
 				oldAggregate = 0l;
 			}
 			counts.put(key, oldAggregate + count);
+		}
+	}
+
+	/**
+	 * Logs the minimum amount that was logged for (type, value, arg) under (type, value, arg_MIN).
+	 */
+	private void logMin(String type, String value, String arg, long amount) {
+		Key key = new Key(type, value, arg + MINIMUM_INDICATOR);
+		synchronized (counts) {
+			Long oldMin = counts.get(key);
+			if (oldMin == null) {
+				oldMin = amount;
+			}
+			counts.put(key, Math.min(oldMin, amount));
+		}
+	}
+
+	/**
+	 * Logs the maximum amount that was logged for (type, value, arg) under (type, value, arg_MAX).
+	 */
+	private void logMax(String type, String value, String arg, long amount) {
+		Key key = new Key(type, value, arg + MAXIMUM_INDICATOR);
+		synchronized (counts) {
+			Long oldMax = counts.get(key);
+			if (oldMax == null) {
+				oldMax = amount;
+			}
+			counts.put(key, Math.max(oldMax, amount));
 		}
 	}
 
@@ -335,4 +575,5 @@ public enum ActionStatisticsCollector {
 		Long count = counts.get(new Key(type, value, arg));
 		return count != null ? count : 0;
 	}
+
 }

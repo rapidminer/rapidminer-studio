@@ -21,8 +21,11 @@ package com.rapidminer.repository.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -44,8 +47,12 @@ import com.rapidminer.tools.Tools;
  */
 public class ResourceFolder extends ResourceEntry implements Folder {
 
-	protected List<Folder> folders;
+	private List<Folder> folders;
 	private List<DataEntry> data;
+
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	private final Lock readLock = lock.readLock();
+	private final Lock writeLock = lock.writeLock();
 
 	protected ResourceFolder(ResourceFolder parent, String name, String resource, ResourceRepository repository) {
 		super(parent, name, resource, repository);
@@ -53,7 +60,25 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 
 	@Override
 	public boolean containsEntry(String name) throws RepositoryException {
-		ensureLoaded();
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return containsEntryNotThreadSafe(name);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return containsEntryNotThreadSafe(name);
+		} finally {
+			releaseWriteLock();
+		}
+
+	}
+
+	private boolean containsEntryNotThreadSafe(String name) throws RepositoryException {
 		for (Entry entry : data) {
 			if (entry.getName().equals(name)) {
 				return true;
@@ -90,14 +115,36 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 
 	@Override
 	public List<DataEntry> getDataEntries() throws RepositoryException {
-		ensureLoaded();
-		return data;
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return Collections.unmodifiableList(data);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return Collections.unmodifiableList(data);
+		} finally {
+			releaseWriteLock();
+		}
 	}
 
+	protected boolean isLoaded() {
+		return folders != null && data != null;
+	}
+
+	/**
+	 * Makes sure the corresponding content is loaded. This method will perform write operations,
+	 * you need to acquire the write lock before calling it.
+	 */
 	protected void ensureLoaded() throws RepositoryException {
-		if (folders != null && data != null) {
+		if (isLoaded()) {
 			return;
 		}
+
 		String resourcePath = getResource() + "/CONTENTS";
 		InputStream in = null;
 		try {
@@ -132,7 +179,6 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 					}
 				}
 			}
-
 		} catch (Exception e) {
 			throw new RepositoryException("Error reading contents of folder " + getName() + ": " + e, e);
 		} finally {
@@ -145,14 +191,32 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 
 	@Override
 	public List<Folder> getSubfolders() throws RepositoryException {
-		ensureLoaded();
-		return folders;
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return folders;
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return folders;
+		} finally {
+			releaseWriteLock();
+		}
 	}
 
 	@Override
 	public void refresh() throws RepositoryException {
-		folders = null;
-		data = null;
+		acquireWriteLock();
+		try {
+			folders = null;
+			data = null;
+		} finally {
+			releaseWriteLock();
+		}
 		getRepository().fireRefreshed(this);
 	}
 
@@ -179,7 +243,43 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 	 * @throws RepositoryException
 	 */
 	void addFolder(Folder folder) throws RepositoryException {
-		this.folders.add(folder);
+		acquireWriteLock();
+		try {
+			folders.add(folder);
+		} finally {
+			releaseWriteLock();
+		}
 	}
 
+	private void acquireReadLock() throws RepositoryException {
+		try {
+			readLock.lock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not get read lock", e);
+		}
+	}
+
+	private void releaseReadLock() throws RepositoryException {
+		try {
+			readLock.unlock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not release read lock", e);
+		}
+	}
+
+	private void acquireWriteLock() throws RepositoryException {
+		try {
+			writeLock.lock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not get write lock", e);
+		}
+	}
+
+	private void releaseWriteLock() throws RepositoryException {
+		try {
+			writeLock.unlock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not release write lock", e);
+		}
+	}
 }

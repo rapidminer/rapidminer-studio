@@ -27,7 +27,7 @@ import com.rapidminer.operator.ports.OutputPort;
  * Assigns a predefined meta data object to an output port. Useful if operators newly generate
  * IOObjects. If the meta data changes dynamically, can be modified by overriding
  * {@link #modifyMetaData(MetaData)}.
- * 
+ *
  * @author Simon Fischer
  */
 public class GenerateNewMDRule implements MDTransformationRule {
@@ -58,6 +58,20 @@ public class GenerateNewMDRule implements MDTransformationRule {
 	 */
 	public MetaData modifyMetaData(MetaData unmodifiedMetaData) {
 		return unmodifiedMetaData;
+	}
+
+	/**
+	 * @return a clone of the unmodified meta data object
+	 */
+	public MetaData getUnmodifiedMetaData() {
+		return unmodifiedMetaData.clone();
+	}
+
+	/**
+	 * @return the {@link OutputPort} the MD rule is for
+	 */
+	public OutputPort getOutputPort() {
+		return outputPort;
 	}
 
 }

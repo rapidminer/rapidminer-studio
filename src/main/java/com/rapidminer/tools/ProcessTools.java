@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.rapidminer.Process;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.ports.Port;
@@ -130,6 +131,34 @@ public final class ProcessTools {
 	}
 
 	/**
+	 * Checks whether the given operator or one of its suboperators has a mandatory input port which
+	 * is not connected. The port is then returned. If no such port can be found, returns
+	 * {@code null}.
+	 * <p>
+	 * This method explicitly only checks for unconnected ports because metadata alone could lead to
+	 * a false positive.
+	 * </p>
+	 *
+	 * @param operator
+	 *            the operator for which to check for unconnected mandatory ports
+	 * @return the first {@link Port} found if the operator has at least one input port which is not
+	 *         connected; {@code null} otherwise
+	 */
+	public static Port getMissingPortConnection(Operator operator) {
+		// look for matching errors. We can only identify this via metadata errors
+		for (ProcessSetupError error : operator.getErrorList()) {
+			if (error instanceof InputMissingMetaDataError) {
+				InputMissingMetaDataError err = (InputMissingMetaDataError) error;
+				// as we don't know what will be sent at runtime, we only look for unconnected
+				if (!err.getPort().isConnected()) {
+					return err.getPort();
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Checks whether the given process contains at least one operator with a mandatory parameter
 	 * which has no value and no default value. Both the operator and the parameter are then
 	 * returned. If no such operator can be found, returns {@code null}.
@@ -152,20 +181,79 @@ public final class ProcessTools {
 			}
 
 			// check all parameters and see if they have no value and are non optional
-			for (String key : op.getParameters().getKeys()) {
-				ParameterType param = op.getParameterType(key);
-				if (!param.isOptional()) {
-					if (op.getParameters().getParameterOrNull(key) == null) {
-						return new Pair<>(op, param);
-					} else if (param instanceof ParameterTypeAttribute
-							&& "".equals(op.getParameters().getParameterOrNull(key))) {
-						return new Pair<>(op, param);
-					}
+			ParameterType param = getMissingMandatoryParameter(op);
+			if (param != null) {
+				return new Pair<>(op, param);
+			}
+		}
+
+		// no operator with missing mandatory parameter found
+		return null;
+	}
+
+	/**
+	 * Checks whether the given operator or one of its sub-operators has a mandatory parameter which
+	 * has no value and no default value. Both the operator and the parameter are then returned. If
+	 * no such operator can be found, returns {@code null}.
+	 *
+	 * @param operator
+	 *            the operator in question
+	 * @return the first {@link Operator} found if the operator or one of its sub-operators has a
+	 *         mandatory parameter which is neither set nor has a default value; {@code null}
+	 *         otherwise
+	 */
+	public static Pair<Operator, ParameterType> getOperatorWithoutMandatoryParameter(final Operator operator) {
+		if (operator == null) {
+			throw new IllegalArgumentException("operator must not be null!");
+		}
+
+		// check the operator first
+		ParameterType param = getMissingMandatoryParameter(operator);
+		if (param != null) {
+			return new Pair<>(operator, param);
+		}
+
+		// if it has children check them
+		if (operator instanceof OperatorChain) {
+			for (Operator op : ((OperatorChain) operator).getAllInnerOperators()) {
+				// if operator or one of its parents is disabled, we don't care
+				if (isSuperOperatorDisabled(op)) {
+					continue;
+				}
+
+				// check all parameters and see if they have no value and are non optional
+				param = getMissingMandatoryParameter(op);
+				if (param != null) {
+					return new Pair<>(op, param);
 				}
 			}
 		}
 
 		// no operator with missing mandatory parameter found
+		return null;
+	}
+
+	/**
+	 * Checks whether the given operator has a mandatory parameter which has no value and no default
+	 * value and returns the parameter. If no such parameter can be found, returns {@code null}.
+	 *
+	 * @param operator
+	 *            the operator in question
+	 * @return the first mandatory parameter which is neither set nor has a default value;
+	 *         {@code null} otherwise
+	 */
+	private static ParameterType getMissingMandatoryParameter(Operator operator) {
+		for (String key : operator.getParameters().getKeys()) {
+			ParameterType param = operator.getParameterType(key);
+			if (!param.isOptional()) {
+				if (operator.getParameters().getParameterOrNull(key) == null) {
+					return param;
+				} else if (param instanceof ParameterTypeAttribute
+						&& "".equals(operator.getParameters().getParameterOrNull(key))) {
+					return param;
+				}
+			}
+		}
 		return null;
 	}
 

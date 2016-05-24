@@ -253,14 +253,9 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 
 			@Override
 			public void keyTyped(KeyEvent e) {
-				TreePath selectionPath = tree.getSelectionPath();
-				if (selectionPath != null) {
-					Entry selectedEntry = (Entry) selectionPath.getLastPathComponent();
-					if (!(selectedEntry instanceof Folder)) {
-						tree.setSelectionPath(selectionPath.getParentPath());
-					}
-				}
+				updateSelection();
 			}
+
 		};
 		locationField.addKeyListener(keyListener);
 		locationFieldRepositoryEntry.addKeyListener(keyListener);
@@ -349,6 +344,19 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		}
 	}
 
+	/**
+	 * Sets the name of the repository entry for the file chooser.
+	 *
+	 * @param name
+	 *            the new name of the repository entry
+	 */
+	public void setRepositoryEntryName(final String name) {
+		locationFieldRepositoryEntry.setText(name);
+		locationField.setText(name);
+		updateSelection();
+		updateResult();
+	}
+
 	public String getRepositoryLocation() throws MalformedRepositoryLocationException {
 		if (tree.getSelectionPath() != null) {
 			Entry selectedEntry = (Entry) tree.getSelectionPath().getLastPathComponent();
@@ -394,8 +402,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 						|| !enforceValidRepositoryEntryName && locationField.getText().isEmpty()
 						|| enforceValidRepositoryEntryName
 								&& !RepositoryLocation.isNameValid(locationFieldRepositoryEntry.getText())
-				|| enforceValidRepositoryEntryName && tree.getSelectedEntry() == null
-				|| !enforceValidRepositoryEntryName && tree.getSelectedEntry() == null)) {
+						|| enforceValidRepositoryEntryName && tree.getSelectedEntry() == null
+						|| !enforceValidRepositoryEntryName && tree.getSelectedEntry() == null)) {
 			return false;
 		} else {
 			try {
@@ -522,6 +530,19 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			}
 		} else {
 			return null;
+		}
+	}
+
+	/**
+	 * Updates the path selected via the tree.
+	 */
+	private void updateSelection() {
+		TreePath selectionPath = tree.getSelectionPath();
+		if (selectionPath != null) {
+			Entry selectedEntry = (Entry) selectionPath.getLastPathComponent();
+			if (!(selectedEntry instanceof Folder)) {
+				tree.setSelectionPath(selectionPath.getParentPath());
+			}
 		}
 	}
 

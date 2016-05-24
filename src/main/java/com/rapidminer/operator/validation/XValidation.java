@@ -158,15 +158,16 @@ public class XValidation extends ValidationChain {
 				getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 
 		// start crossvalidation
-		getProgress().setTotal(number);
+		if (modelOutput.isConnected()) {
+			getProgress().setTotal(number + 1);
+		} else {
+			getProgress().setTotal(number);
+		}
 		getProgress().setCheckForStop(false);
 
 		for (iteration = 0; iteration < number; iteration++) {
 			performIteration(splittedES, iteration);
 		}
-
-		// end crossvalidation
-		getProgress().complete();
 	}
 
 	protected void performIteration(SplittedExampleSet splittedES, int iteration)
@@ -214,8 +215,7 @@ public class XValidation extends ValidationChain {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeCategory(
-				PARAMETER_SAMPLING_TYPE,
+		type = new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE,
 				"Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant)",
 				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.AUTOMATIC);
 		type.setExpert(false);

@@ -18,6 +18,12 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
@@ -33,12 +39,6 @@ import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
 
 /**
  * This model maps the values of all nominal values to binary attributes. For example, if a nominal
@@ -47,7 +47,7 @@ import java.util.Set;
  * attributes &quot;costs = low&quot;, &quot;costs = moderate&quot;, and &quot;costs = high&quot;.
  * Only one of the values of each attribute is true for a specific example, the other values are
  * false.
- * 
+ *
  * @author Sebastian Land
  */
 public class NominalToBinominalModel extends PreprocessingModel {
@@ -69,7 +69,7 @@ public class NominalToBinominalModel extends PreprocessingModel {
 		this.changeTypeAttributeNames = new HashSet<String>();
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			if (attribute.isNominal()) {
-				if ((attribute.getMapping().size() > 2 || translateBinominals)) {
+				if (attribute.getMapping().size() > 2 || translateBinominals) {
 					dichotomizationAttributeNames.add(attribute.getName());
 				} else {
 					changeTypeAttributeNames.add(attribute.getName());
@@ -91,8 +91,8 @@ public class NominalToBinominalModel extends PreprocessingModel {
 			if (dichotomizationAttributeNames.contains(sourceAttributeName)) {
 				for (String value : getTrainingHeader().getAttributes().get(sourceAttributeName).getMapping().getValues()) {
 					// create nominal mapping
-					Attribute newAttribute = AttributeFactory.createAttribute(
-							createAttributeName(sourceAttributeName, value), Ontology.BINOMINAL);
+					Attribute newAttribute = AttributeFactory
+							.createAttribute(createAttributeName(sourceAttributeName, value), Ontology.BINOMINAL);
 					NominalMapping mapping = new BinominalMapping();
 					mapping.mapString("false");
 					mapping.mapString("true");
@@ -140,6 +140,14 @@ public class NominalToBinominalModel extends PreprocessingModel {
 		// rebuild attribute map because of changed hashCode of exampleTableColumn
 		binominalAttributeValueMap = new LinkedHashMap<Attribute, Double>(binominalAttributeValueMap);
 
+		// initialize progress
+		int progressCompletedCounter = 0;
+		long workloadForEachLoop = dichotomizationMap.size() + changeTypeMap.size();
+		long progressTriggerCounter = 0;
+		if (getOperator() != null) {
+			getOperator().getProgress().setTotal(exampleSet.size());
+		}
+
 		// fill new attributes with values
 		for (Example example : exampleSet) {
 			// perform dichotomization
@@ -152,6 +160,13 @@ public class NominalToBinominalModel extends PreprocessingModel {
 			for (Map.Entry<Attribute, Attribute> entry : changeTypeMap.entrySet()) {
 				double sourceValue = example.getValue(entry.getValue());
 				example.setValue(entry.getKey(), sourceValue);
+			}
+
+			// trigger progress
+			++progressCompletedCounter;
+			if (getOperator() != null && ++progressTriggerCounter * workloadForEachLoop > 1000000L) {
+				progressTriggerCounter = 0;
+				getOperator().getProgress().setCompleted(progressCompletedCounter);
 			}
 		}
 
@@ -242,7 +257,7 @@ public class NominalToBinominalModel extends PreprocessingModel {
 			return base + " = " + value;
 		}
 	}
-	
+
 	public Set<String> getDichotomizationAttributeNames() {
 		return dichotomizationAttributeNames;
 	}
@@ -250,13 +265,13 @@ public class NominalToBinominalModel extends PreprocessingModel {
 	public Set<String> getChangeTypeAttributeNames() {
 		return changeTypeAttributeNames;
 	}
-	
+
 	public Map<Attribute, Double> getBinominalAttributeValueMap() {
 		return binominalAttributeValueMap;
 	}
-	
+
 	public boolean shouldUseOnlyUnderscoreInNames() {
 		return useOnlyUnderscoreInNames;
 	}
-	
+
 }

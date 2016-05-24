@@ -1794,6 +1794,9 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	 *         execution; {@code false} otherwise
 	 */
 	private boolean doesProcessContainShowstoppers() {
+		// prevent two bubbles on top of each other
+		getProcessPanel().getOperatorWarningHandler().killWarningBubble();
+
 		// if any operator has a mandatory parameter with no value and no default value. As it
 		// cannot predict execution behavior (e.g. Branch operators), this may turn up problems
 		// which would not occur during process execution

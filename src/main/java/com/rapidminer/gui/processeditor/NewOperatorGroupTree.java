@@ -23,6 +23,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -38,6 +41,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
@@ -71,6 +77,7 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
 /**
@@ -133,6 +140,56 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		filterField.addFilterListener(this);
 		filterField.addSelectionNavigationListener(this);
 		filterField.setDefaultFilterText(I18N.getMessage(I18N.getGUIBundle(), "gui.field.filter_operators.prompt"));
+		filterField.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				// log focus lost for operator search statistics
+				String text = filterField.getText();
+				if (!text.isEmpty()) {
+					logSearchTerm("focus_lost", text);
+				}
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				// not needed
+			}
+		});
+		filterField.getDocument().addDocumentListener(new DocumentListener() {
+
+			private Timer updateTimer;
+
+			{
+				updateTimer = new Timer(1000, new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						// log timeout for operator search statistics
+						String text = filterField.getText();
+						if (!text.isEmpty()) {
+							logSearchTerm("timeout", text);
+						}
+					}
+				});
+				updateTimer.setRepeats(false);
+			}
+
+			@Override
+			public void removeUpdate(final DocumentEvent e) {
+				updateTimer.restart();
+			}
+
+			@Override
+			public void insertUpdate(final DocumentEvent e) {
+				updateTimer.restart();
+			}
+
+			@Override
+			public void changedUpdate(final DocumentEvent e) {
+				updateTimer.restart();
+			}
+		});
 
 		JPanel headerBar = new JPanel(new BorderLayout());
 		TextFieldWithAction tf = new TextFieldWithAction(filterField, CLEAR_FILTER_ACTION, CLEAR_FILTER_HOVERED_ICON) {
@@ -172,6 +229,7 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 				if (selectedOperator == null) {
 					return Collections.emptyList();
 				} else {
+					logSearchTerm("inserted", filterField.getText());
 					return Collections.singletonList(selectedOperator);
 				}
 			}
@@ -427,6 +485,7 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		}
 		MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 		mainFrame.getActions().insert(Collections.singletonList(operator));
+		logSearchTerm("inserted", filterField.getText());
 	}
 
 	@Override
@@ -470,5 +529,16 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 
 	public AbstractPatchedTransferHandler getOperatorTreeTransferhandler() {
 		return (AbstractPatchedTransferHandler) operatorGroupTree.getTransferHandler();
+	}
+
+	/**
+	 * Logs the searchText under the given event. Shortens the searchText if is longer than 50
+	 * characters.
+	 */
+	private void logSearchTerm(String event, String searchText) {
+		if (searchText.length() > 50) {
+			searchText = searchText.substring(0, 50) + "[...]";
+		}
+		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_OPERATOR_SEARCH, event, searchText);
 	}
 }

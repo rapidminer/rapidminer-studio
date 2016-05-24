@@ -139,8 +139,8 @@ public class ManagedExtension {
 	public JarFile findArchive(String version) throws IOException {
 		File findFile = findFile(version);
 		if (findFile == null) {
-			throw new IOException("Failed to find extension jar file (extension " + getName() + ", version " + version
-					+ ").");
+			throw new IOException(
+					"Failed to find extension jar file (extension " + getName() + ", version " + version + ").");
 		} else {
 			try {
 				return new JarFile(findFile);
@@ -160,11 +160,9 @@ public class ManagedExtension {
 			File global = getGlobalExtensionsDir();
 			return new File[] { global, local };
 		} catch (IOException e) {
-			LogService.getRoot()
-			.log(Level.WARNING,
-					"com.rapid_i.deployment.update.client.ManagedExtension.no_properties_set",
-					new Object[] { RapidMiner.PROPERTY_RAPIDMINER_INIT_PLUGINS,
-					PlatformUtilities.PROPERTY_RAPIDMINER_HOME });
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapid_i.deployment.update.client.ManagedExtension.no_properties_set", new Object[] {
+							RapidMiner.PROPERTY_RAPIDMINER_INIT_PLUGINS, PlatformUtilities.PROPERTY_RAPIDMINER_HOME });
 
 			return new File[] { local };
 		}
@@ -213,30 +211,14 @@ public class ManagedExtension {
 			}
 			XMLTools.stream(toXML(true), new File(localDir, "extensions.xml"), Charset.forName("UTF-8"));
 		} catch (Exception e) {
-			// LogService.getRoot().log(Level.WARNING, "Cannot save local user extensions: "+e, e);
-			LogService.getRoot().log(
-					Level.WARNING,
+			LogService.getRoot().log(Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapid_i.deployment.update.client.ManagedExtension.saving_local_user_extensions_error", e),
 					e);
 
 		}
-		try {
-			File globalDir = getGlobalExtensionsDir();
-			if (!globalDir.exists()) {
-				globalDir.mkdirs();
-			}
-			XMLTools.stream(toXML(false), new File(globalDir, "extensions.xml"), Charset.forName("UTF-8"));
-		} catch (Exception e) {
-			// LogService.getRoot().log(Level.WARNING, "Cannot save global extensions: "+e, e);
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapid_i.deployment.update.client.ManagedExtension.saving_global_extensions_error", e), e);
-		}
-		// LogService.getRoot().config("Saved extension state.");
-		LogService.getRoot()
-				.log(Level.CONFIG, "com.rapid_i.deployment.update.client.ManagedExtension.saved_extension_state");
+		LogService.getRoot().log(Level.CONFIG,
+				"com.rapid_i.deployment.update.client.ManagedExtension.saved_extension_state");
 	}
 
 	/** Reads configuration files. */
@@ -248,33 +230,11 @@ public class ManagedExtension {
 				parse(XMLTools.parse(file), true);
 			}
 		} catch (Exception e) {
-			// LogService.getRoot().log(Level.WARNING, "Failed to read local extension state: "+e,
-			// e);
-			LogService
-					.getRoot()
-					.log(Level.WARNING,
-							I18N.getMessage(
-									LogService.getRoot().getResourceBundle(),
-									"com.rapid_i.deployment.update.client.ManagedExtension.reading_local_extensions_state_error",
-									e), e);
+			LogService.getRoot().log(Level.WARNING,
+					I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapid_i.deployment.update.client.ManagedExtension.reading_local_extensions_state_error", e),
+					e);
 		}
-		try {
-			File file = new File(getGlobalExtensionsDir(), "extensions.xml");
-			if (file.exists()) {
-				parse(XMLTools.parse(file), false);
-			}
-		} catch (Exception e) {
-			// LogService.getRoot().log(Level.WARNING, "Failed to read global extension state: "+e,
-			// e);
-			LogService
-					.getRoot()
-					.log(Level.WARNING,
-							I18N.getMessage(
-									LogService.getRoot().getResourceBundle(),
-									"com.rapid_i.deployment.update.client.ManagedExtension.reading_global_extensions_state_error",
-									e), e);
-		}
-		// LogService.getRoot().config("Read extension state.");
 		LogService.getRoot().log(Level.CONFIG, "com.rapid_i.deployment.update.client.ManagedExtension.read_extansion_state");
 	}
 
@@ -381,7 +341,7 @@ public class ManagedExtension {
 	}
 
 	/**
-	 * Adds leading zeroes until the version is of the form "XX.XX.XXX".
+	 * Adds leading zeroes until the version is of the form {@code xx.yy.zzz}.
 	 */
 	public static String normalizeVersion(String version) {
 		if (version == null) {
@@ -416,16 +376,6 @@ public class ManagedExtension {
 			result.append(digits).append(letters);
 		}
 		return result.toString();
-	}
-
-	private static Collection<ManagedExtension> getActiveByLicense(String license) {
-		List<ManagedExtension> result = new LinkedList<>();
-		for (ManagedExtension ext : MANAGED_EXTENSIONS.values()) {
-			if (ext.isActive() && ext.license != null && ext.license.equals(license)) {
-				result.add(ext);
-			}
-		}
-		return result;
 	}
 
 	/** Returns true if uninstall was successful. */

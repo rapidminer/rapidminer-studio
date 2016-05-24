@@ -18,14 +18,6 @@
  */
 package com.rapidminer.example.set;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Attributes;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.operator.Annotations;
-import com.rapidminer.tools.Ontology;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +25,16 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.table.ExampleTable;
+import com.rapidminer.operator.Annotations;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
+import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -42,7 +44,7 @@ import java.util.List;
  * performance reasons this class simply use the given mapping. A convenience constructor exist to
  * create a view based on the sorting based on a specific attribute.
  * </p>
- * 
+ *
  * @author Ingo Mierswa, Nils Woehler
  */
 public class SortedExampleSet extends AbstractExampleSet {
@@ -93,25 +95,54 @@ public class SortedExampleSet extends AbstractExampleSet {
 	/** The used mapping. */
 	private int[] mapping;
 
-	public SortedExampleSet(ExampleSet parent, final Attribute sortingAttribute, int sortingDirection) {
+	public SortedExampleSet(ExampleSet parent, Attribute sortingAttribute, int sortingDirection) {
+		try {
+			createSortedExampleSet(parent, sortingAttribute, sortingDirection, null);
+		} catch (ProcessStoppedException e) {
+			// Cannot happen, OperatorProgress is null
+		}
+	}
+
+	public SortedExampleSet(ExampleSet parent, final Attribute sortingAttribute, int sortingDirection,
+			OperatorProgress progress) throws ProcessStoppedException {
+		createSortedExampleSet(parent, sortingAttribute, sortingDirection, progress);
+	}
+
+	/**
+	 * Helper method for constructor
+	 */
+	private void createSortedExampleSet(ExampleSet parent, final Attribute sortingAttribute, int sortingDirection,
+			OperatorProgress progress) throws ProcessStoppedException {
 		this.parent = (ExampleSet) parent.clone();
 		List<SortingIndex> sortingIndex = new ArrayList<SortingIndex>(parent.size());
+		if (progress != null) {
+			progress.setTotal(100);
+		}
 
 		// create sort index
-		Integer counter = 0;
+		int exampleCounter = 0;
+		int progressTriggerCounter = 0;
 		Iterator<Example> i = parent.iterator();
 		while (i.hasNext()) {
 			Example example = i.next();
 			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(sortingAttribute.getValueType(), Ontology.DATE_TIME)) {
-				sortingIndex.add(new SortingIndex(example.getDateValue(sortingAttribute), counter));
+				sortingIndex.add(new SortingIndex(example.getDateValue(sortingAttribute), exampleCounter));
 			} else if (sortingAttribute.isNumerical()) {
-				sortingIndex.add(new SortingIndex(example.getNumericalValue(sortingAttribute), counter));
+				sortingIndex.add(new SortingIndex(example.getNumericalValue(sortingAttribute), exampleCounter));
 
 			} else {
-				sortingIndex.add(new SortingIndex(example.getNominalValue(sortingAttribute), counter));
+				sortingIndex.add(new SortingIndex(example.getNominalValue(sortingAttribute), exampleCounter));
 
 			}
-			counter++;
+			exampleCounter++;
+			progressTriggerCounter++;
+			if (progress != null && progressTriggerCounter > 2_000_000) {
+				progressTriggerCounter = 0;
+				progress.setCompleted((int) ((long) exampleCounter * 40 / parent.size()));
+			}
+		}
+		if (progress != null) {
+			progress.setCompleted(40);
 		}
 
 		// create comparator
@@ -154,15 +185,23 @@ public class SortedExampleSet extends AbstractExampleSet {
 		} else {
 			Collections.sort(sortingIndex, Collections.reverseOrder(sortComparator));
 		}
+		if (progress != null) {
+			progress.setCompleted(60);
+		}
 
 		// change mapping
 		int[] mapping = new int[parent.size()];
-		counter = 0;
+		exampleCounter = 0;
+		progressTriggerCounter = 0;
 		Iterator<SortingIndex> k = sortingIndex.iterator();
 		while (k.hasNext()) {
 			Integer index = k.next().getIndex();
-			mapping[counter] = index;
-			counter++;
+			mapping[exampleCounter++] = index;
+			progressTriggerCounter++;
+			if (progress != null && progressTriggerCounter > 2_000_000) {
+				progressTriggerCounter = 0;
+				progress.setCompleted((int) (60 + (long) exampleCounter * 40 / sortingIndex.size()));
+			}
 		}
 
 		this.mapping = mapping;
@@ -216,7 +255,7 @@ public class SortedExampleSet extends AbstractExampleSet {
 	/** Returns the i-th example in the mapping. */
 	@Override
 	public Example getExample(int index) {
-		if ((index < 0) || (index >= this.mapping.length)) {
+		if (index < 0 || index >= this.mapping.length) {
 			throw new RuntimeException("Given index '" + index + "' does not fit the mapped ExampleSet!");
 		} else {
 			return this.parent.getExample(this.mapping[index]);

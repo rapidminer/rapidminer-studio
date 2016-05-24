@@ -128,7 +128,7 @@ dependencies {
 	compile 'org.apache.tika:tika-core:1.11'
 }
 
-task wrapper(type: Wrapper) { gradleVersion = '2.8' }
+task wrapper(type: Wrapper) { gradleVersion = '2.12' }
 
 apply from: 'gradle/wsimport.gradle'
 apply from: 'gradle/props.gradle'

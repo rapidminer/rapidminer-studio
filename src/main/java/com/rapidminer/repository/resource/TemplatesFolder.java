@@ -18,8 +18,11 @@
  */
 package com.rapidminer.repository.resource;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
@@ -41,13 +44,35 @@ public class TemplatesFolder extends ResourceFolder {
 	private List<Folder> folders;
 	private List<DataEntry> data;
 
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	private final Lock readLock = lock.readLock();
+	private final Lock writeLock = lock.writeLock();
+
 	protected TemplatesFolder(ResourceFolder parent, String parentPath, ResourceRepository repository) {
 		super(parent, TEMPLATES_FOLDER_NAME, parentPath + "/" + TEMPLATES_FOLDER_NAME, repository);
 	}
 
 	@Override
 	public boolean containsEntry(String name) throws RepositoryException {
-		ensureLoaded();
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return containsEntryNotThreadSafe(name);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return containsEntryNotThreadSafe(name);
+		} finally {
+			releaseWriteLock();
+		}
+
+	}
+
+	private boolean containsEntryNotThreadSafe(String name) {
 		for (Entry entry : data) {
 			if (entry.getName().equals(name)) {
 				return true;
@@ -63,13 +88,31 @@ public class TemplatesFolder extends ResourceFolder {
 
 	@Override
 	public List<DataEntry> getDataEntries() throws RepositoryException {
-		ensureLoaded();
-		return data;
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return Collections.unmodifiableList(data);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return Collections.unmodifiableList(data);
+		} finally {
+			releaseWriteLock();
+		}
+	}
+
+	@Override
+	protected boolean isLoaded() {
+		return folders != null && data != null;
 	}
 
 	@Override
 	protected void ensureLoaded() throws RepositoryException {
-		if (folders != null && data != null) {
+		if (isLoaded()) {
 			return;
 		}
 		this.folders = new LinkedList<Folder>();
@@ -87,15 +130,64 @@ public class TemplatesFolder extends ResourceFolder {
 
 	@Override
 	public List<Folder> getSubfolders() throws RepositoryException {
-		ensureLoaded();
-		return folders;
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return Collections.unmodifiableList(folders);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return Collections.unmodifiableList(folders);
+		} finally {
+			releaseWriteLock();
+		}
 	}
 
 	@Override
 	public void refresh() throws RepositoryException {
-		folders = null;
-		data = null;
+		acquireWriteLock();
+		try {
+			folders = null;
+			data = null;
+		} finally {
+			releaseWriteLock();
+		}
 		getRepository().fireRefreshed(this);
 	}
 
+	private void acquireReadLock() throws RepositoryException {
+		try {
+			readLock.lock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not get read lock", e);
+		}
+	}
+
+	private void releaseReadLock() throws RepositoryException {
+		try {
+			readLock.unlock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not release read lock", e);
+		}
+	}
+
+	private void acquireWriteLock() throws RepositoryException {
+		try {
+			writeLock.lock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not get write lock", e);
+		}
+	}
+
+	private void releaseWriteLock() throws RepositoryException {
+		try {
+			writeLock.unlock();
+		} catch (RuntimeException e) {
+			throw new RepositoryException("Could not release write lock", e);
+		}
+	}
 }

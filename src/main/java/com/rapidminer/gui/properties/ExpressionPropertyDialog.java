@@ -170,7 +170,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 						// brackets
 						addToExpression("[" + arg.getInputName() + "]");
 
-					} else if (arg.getInputName().matches("(^[A-Za-z])([A-Za-z\\d]*)")) {
+					} else if (arg.getInputName().matches("(^[A-Za-z])([A-Z_a-z\\d]*)")) {
 						// check whether the attribute is alphanumerical without a number at the
 						// front
 						addToExpression(arg.getInputName());

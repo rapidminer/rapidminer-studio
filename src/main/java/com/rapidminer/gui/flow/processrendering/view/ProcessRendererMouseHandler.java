@@ -232,8 +232,8 @@ public class ProcessRendererMouseHandler {
 			// ports are draggeable only if they belong to the displayed chain <->
 			// they are innersinks of our sources
 			if (isDisplayChainPortDragged() &&
-					// furthermore they can only be dragged with left mouse button + shift key
-					// pressed
+			// furthermore they can only be dragged with left mouse button + shift key
+			// pressed
 					pressedMouseButton == MouseEvent.BUTTON1 && e.isShiftDown()) {
 
 				double diff = e.getY() - mousePositionAtLastEvaluation.getY();
@@ -771,6 +771,10 @@ public class ProcessRendererMouseHandler {
 
 				// calculate popup position
 				Point popupPosition = ProcessDrawUtils.createPortLocation(hoveringPort, model);
+				// correct by zoomFactor
+				double zoomFactor = model.getZoomFactor();
+				popupPosition = new Point((int) (popupPosition.getX() * zoomFactor),
+						(int) (popupPosition.getY() * zoomFactor));
 
 				// take splitted process pane into account and add offset for each process we
 				// have to the left of our current one

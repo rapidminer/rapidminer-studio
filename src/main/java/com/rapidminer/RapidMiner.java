@@ -298,6 +298,13 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_TOOLS_DB_ONLY_STANDARD_TABLES = "rapidminer.tools.db.assist.show_only_standard_tables";
 
 	/**
+	 * The property name for the JDBC login timeout setting. This is a global setting in the
+	 * DriverManager and may be used differently by the JDBC drivers.
+	 */
+	public static final String PROPERTY_RAPIDMINER_TOOLS_DB_LOGIN_TIMEOUT = "rapidminer.tools.db.login.timeout";
+	public static final int DB_LOGIN_TIMEOUT_DEFAULT = 60;
+
+	/**
 	 * The property name for &quot;Use unix special characters for logfile highlighting (requires
 	 * new RapidMiner instance).&quot;
 	 */
@@ -426,6 +433,8 @@ public class RapidMiner {
 		registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD, ""));
 
 		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_TOOLS_DB_ONLY_STANDARD_TABLES, "", true));
+		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_TOOLS_DB_LOGIN_TIMEOUT, "", 0, Integer.MAX_VALUE,
+				DB_LOGIN_TIMEOUT_DEFAULT));
 
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_INIT_PLUGINS, "", true));
 		RapidMiner.registerParameter(new ParameterTypeDirectory(PROPERTY_RAPIDMINER_INIT_PLUGINS_LOCATION, "", true));

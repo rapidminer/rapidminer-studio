@@ -18,6 +18,10 @@
  */
 package com.rapidminer.operator.learner.associations;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -30,10 +34,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-
 
 /**
  * <p>
@@ -41,12 +41,12 @@ import java.util.List;
  * frequent item set mining is divided into two parts: first, the generation of frequent item sets
  * and second, the generation of association rules from these sets.
  * </p>
- * 
+ *
  * <p>
  * For the generation of frequent item sets, you can use for example the operator {@link FPGrowth}.
  * The result will be a set of frequent item sets which could be used as input for this operator.
  * </p>
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class AssociationRuleGenerator extends Operator {
@@ -96,6 +96,8 @@ public class AssociationRuleGenerator extends Operator {
 		// iterating sorted over every frequent Set, generating every possible rule and building
 		// frequency map
 		sets.sortSets();
+		int progressCounter = 0;
+		getProgress().setTotal(sets.size());
 		for (FrequentItemSet set : sets) {
 			setFrequencyMap.put(set.getItems(), set.getFrequency());
 			// generating rule by splitting set in every two parts for head and body of rule
@@ -111,15 +113,15 @@ public class AssociationRuleGenerator extends Operator {
 						double value = getCriterionValue(totalFrequency, preconditionFrequency, conclusionFrequency,
 								numberOfTransactions, theta, laplaceK);
 						if (value >= minValue) {
-							AssociationRule rule = new AssociationRule(premises, conclusion, getSupport(totalFrequency,
-									numberOfTransactions));
+							AssociationRule rule = new AssociationRule(premises, conclusion,
+									getSupport(totalFrequency, numberOfTransactions));
 							rule.setConfidence(getConfidence(totalFrequency, preconditionFrequency));
 							rule.setLift(getLift(totalFrequency, preconditionFrequency, conclusionFrequency,
 									numberOfTransactions));
 							rule.setConviction(getConviction(totalFrequency, preconditionFrequency, conclusionFrequency,
 									numberOfTransactions));
-							rule.setPs(getPs(totalFrequency, preconditionFrequency, conclusionFrequency,
-									numberOfTransactions));
+							rule.setPs(
+									getPs(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions));
 							rule.setGain(getGain(theta, totalFrequency, preconditionFrequency, conclusionFrequency,
 									numberOfTransactions));
 							rule.setLaplace(getLaPlace(laplaceK, totalFrequency, preconditionFrequency, conclusionFrequency,
@@ -128,6 +130,9 @@ public class AssociationRuleGenerator extends Operator {
 						}
 					}
 				}
+			}
+			if (++progressCounter % 100 == 0) {
+				getProgress().step(100);
 			}
 		}
 		rulesOutput.deliver(rules);
@@ -147,7 +152,8 @@ public class AssociationRuleGenerator extends Operator {
 			case GAIN:
 				return getGain(theta, totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions);
 			case LAPLACE:
-				return getLaPlace(laplaceK, totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions);
+				return getLaPlace(laplaceK, totalFrequency, preconditionFrequency, conclusionFrequency,
+						numberOfTransactions);
 			case CONFIDENCE:
 			default:
 				return getConfidence(totalFrequency, preconditionFrequency);
@@ -156,12 +162,13 @@ public class AssociationRuleGenerator extends Operator {
 
 	private double getGain(double theta, int totalFrequency, int preconditionFrequency, int conclusionFrequency,
 			int numberOfTransactions) {
-		return getSupport(totalFrequency, numberOfTransactions) - theta
-				* getSupport(preconditionFrequency, numberOfTransactions);
+		return getSupport(totalFrequency, numberOfTransactions)
+				- theta * getSupport(preconditionFrequency, numberOfTransactions);
 	}
 
-	private double getLift(int totalFrequency, int preconditionFrequency, int conclusionFrequency, int numberOfTransactions) {
-		return ((double) totalFrequency * ((double) numberOfTransactions))
+	private double getLift(int totalFrequency, int preconditionFrequency, int conclusionFrequency,
+			int numberOfTransactions) {
+		return (double) totalFrequency * (double) numberOfTransactions
 				/ ((double) preconditionFrequency * conclusionFrequency);
 	}
 
@@ -218,8 +225,8 @@ public class AssociationRuleGenerator extends Operator {
 				"The minimum value of the rules for the selected criterion", Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY, 0.8d);
 		type.setExpert(false);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_CRITERION, CRITERIA, true, LIFT, CONVICTION,
-				PS, GAIN, LAPLACE));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_CRITERION, CRITERIA, true, LIFT, CONVICTION, PS, GAIN, LAPLACE));
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_GAIN_THETA, "The Parameter Theta in Gain calculation",

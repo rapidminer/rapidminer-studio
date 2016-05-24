@@ -18,6 +18,10 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -30,14 +34,10 @@ import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 
 /**
  * Converts all numerical attributes to nominal ones.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class NumericToNominal extends AbstractFilteredDataProcessing {
@@ -99,6 +99,12 @@ public abstract class NumericToNominal extends AbstractFilteredDataProcessing {
 		// invoke init
 		init();
 
+		// initialize progress
+		getProgress().setTotal(exampleSet.size());
+		int numberOfAttributes = exampleSet.getAttributes().allSize();
+		int progressTriggerCounter = 0;
+		int progressCompletedCounter = 0;
+
 		// over all examples change attribute values
 		for (Example example : exampleSet) {
 			for (Entry<Attribute, Attribute> replacement : translationMap.entrySet()) {
@@ -107,7 +113,13 @@ public abstract class NumericToNominal extends AbstractFilteredDataProcessing {
 				double oldValue = example.getValue(oldAttribute);
 				setValue(example, newAttribute, oldValue);
 			}
-			checkForStop();
+			++progressCompletedCounter;
+			++progressTriggerCounter;
+			if (getProgress().getProgress() / 20 < (int) (progressCompletedCounter * 5L / exampleSet.size())
+					|| progressTriggerCounter * numberOfAttributes > 500000) {
+				progressTriggerCounter = 0;
+				getProgress().setCompleted(progressCompletedCounter);
+			}
 		}
 
 		// clean up

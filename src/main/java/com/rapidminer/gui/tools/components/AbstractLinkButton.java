@@ -126,8 +126,8 @@ public class AbstractLinkButton extends ExtendedHTMLJEditorPane {
 			@Override
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if (e.getEventType() == EventType.ACTIVATED) {
-					action.actionPerformed(new ActionEvent(AbstractLinkButton.this, ActionEvent.ACTION_PERFORMED, e
-							.getDescription()));
+					action.actionPerformed(
+							new ActionEvent(AbstractLinkButton.this, ActionEvent.ACTION_PERFORMED, e.getDescription()));
 				}
 			}
 		};

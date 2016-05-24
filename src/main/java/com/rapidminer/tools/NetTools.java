@@ -40,7 +40,6 @@ public class NetTools {
 	protected static final String ICON_PROTOCOL = "icon";
 	protected static final String RESOURCE_PROTOCOL = "resource";
 	protected static final String DYNAMIC_ICON_PROTOCOL = "dynicon";
-
 	private static boolean initialized = false;
 
 	public static void init() {
@@ -75,6 +74,7 @@ public class NetTools {
 									return conn;
 								}
 								throw new IOException("Resource not found.");
+
 							}
 						};
 					} else if (DYNAMIC_ICON_PROTOCOL.equals(protocol)) {
@@ -86,4 +86,5 @@ public class NetTools {
 			initialized = true;
 		}
 	}
+
 }
