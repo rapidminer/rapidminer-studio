@@ -95,8 +95,6 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 
 	private final JTree operatorGroupTree = new JTree(model);
 
-	private final NewOperatorEditor editor;
-
 	private transient final ResourceAction CLEAR_FILTER_ACTION = new ResourceAction(true, "clear_filter") {
 
 		private static final long serialVersionUID = 3236281211064051583L;
@@ -122,8 +120,12 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 
 	private NewOperatorGroupTreeRenderer renderer;
 
+	/**
+	 *
+	 * @param editor
+	 *            NewOperatorEditor is no longer used
+	 */
 	public NewOperatorGroupTree(final NewOperatorEditor editor) {
-		this.editor = editor;
 		setLayout(new BorderLayout());
 
 		operatorGroupTree.setShowsRootHandles(true);
@@ -404,7 +406,6 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		if (tree.getSubGroups().size() == 0) {
 			int row = this.operatorGroupTree.getRowForPath(path);
 			this.operatorGroupTree.expandRow(row);
-			this.editor.setOperatorList(tree);
 		} else if (tree.getSubGroups().size() > 0) {
 			int row = this.operatorGroupTree.getRowForPath(path);
 			this.operatorGroupTree.expandRow(row);
@@ -417,7 +418,6 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		} else {
 			int row = this.operatorGroupTree.getRowForPath(path);
 			this.operatorGroupTree.expandRow(row);
-			this.editor.setOperatorList(null);
 		}
 	}
 
@@ -540,5 +540,9 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 			searchText = searchText.substring(0, 50) + "[...]";
 		}
 		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_OPERATOR_SEARCH, event, searchText);
+	}
+	
+	public FilterTextField getFilterField() {
+		return filterField;
 	}
 }

@@ -48,7 +48,7 @@ public enum TutorialRegistry {
 	/** the folder inside .RapidMiner containing the tutorials */
 	private static final String FOLDER_NAME_TUTORIALS = "tutorials";
 
-	private Map<String, TutorialGroup> tutorialGorupsByName = new LinkedHashMap<>();
+	private Map<String, TutorialGroup> tutorialGroupsByName = new LinkedHashMap<>();
 
 	private TutorialRegistry() {
 		// register tutorials from bundled resources
@@ -93,7 +93,7 @@ public enum TutorialRegistry {
 		if (tutorialGroupName == null) {
 			throw new IllegalArgumentException("tutorialGroupName must not be null!");
 		}
-		if (tutorialGorupsByName.containsKey(tutorialGroupName)) {
+		if (tutorialGroupsByName.containsKey(tutorialGroupName)) {
 			LogService.getRoot().log(Level.INFO,
 					"Tutorial group with name '" + tutorialGroupName + "' was already registerd. Skipping registration.");
 			return;
@@ -106,13 +106,24 @@ public enum TutorialRegistry {
 	}
 
 	private void register(TutorialGroup tutorialGroup) {
-		tutorialGorupsByName.put(tutorialGroup.getName(), tutorialGroup);
+		tutorialGroupsByName.put(tutorialGroup.getName(), tutorialGroup);
+	}
+
+	/**
+	 * Gets a {@link TutorialGroup} by name.
+	 * 
+	 * @param tutorialGroupName
+	 *            the name the tutorial group
+	 * @return the found tutorial group or {@code null}
+	 */
+	public TutorialGroup getTutorialGroup(String tutorialGroupName) {
+		return tutorialGroupsByName.get(tutorialGroupName);
 	}
 
 	/**
 	 * @return all registered {@link TutorialGroup}s
 	 */
 	public List<TutorialGroup> getAllTutorialGroups() {
-		return new ArrayList<>(tutorialGorupsByName.values());
+		return new ArrayList<>(tutorialGroupsByName.values());
 	}
 }

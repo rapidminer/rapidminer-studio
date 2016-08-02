@@ -23,13 +23,14 @@ import java.awt.Graphics;
 import java.awt.Insets;
 
 import javax.swing.border.AbstractBorder;
-import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.UIResource;
+
+import com.rapidminer.gui.look.Colors;
 
 
 /**
  * The UIResource for menu bar borders.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class MenuBarBorder extends AbstractBorder implements UIResource {
@@ -38,14 +39,8 @@ public class MenuBarBorder extends AbstractBorder implements UIResource {
 
 	@Override
 	public void paintBorder(Component c, Graphics g, int x, int y, int w, int h) {
-		g.translate(x, y);
-		g.setColor(new ColorUIResource(220, 220, 220));
-		g.drawLine(0, 0, w, 0);
+		g.setColor(Colors.MENUBAR_BORDER);
 		g.drawLine(0, h - 1, w, h - 1);
-		g.setColor(new ColorUIResource(200, 200, 200));
-		g.drawLine(0, 1, w, 1);
-		g.drawLine(0, h - 2, w, h - 2);
-		g.translate(-x, -y);
 	}
 
 	@Override

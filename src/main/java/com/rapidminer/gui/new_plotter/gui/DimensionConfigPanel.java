@@ -43,6 +43,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Objects;
 import java.util.Vector;
 
 import javax.swing.AbstractButton;
@@ -64,7 +65,7 @@ import javax.swing.event.PopupMenuListener;
 
 /**
  * @author Nils Woehler
- * 
+ *
  */
 public class DimensionConfigPanel extends AbstractConfigurationPanel {
 
@@ -408,7 +409,7 @@ public class DimensionConfigPanel extends AbstractConfigurationPanel {
 					if (dimensionConfig != null) {
 						Double oldUpperBound = dimensionConfig.getUserDefinedUpperBound();
 						Double newUpperBound = (Double) upperBoundSpinner.getValue();
-						if (oldUpperBound != newUpperBound) {
+						if (!Objects.equals(oldUpperBound, newUpperBound)) {
 							// Double currentLowerBound =
 							// dimensionConfig.getUserDefinedLowerBound();
 							// if (oldUpperBound != null && currentLowerBound != null) {
@@ -460,7 +461,7 @@ public class DimensionConfigPanel extends AbstractConfigurationPanel {
 
 						Double oldLowerBound = dimensionConfig.getUserDefinedLowerBound();
 						Double newLowerBound = (Double) lowerBoundSpinner.getValue();
-						if (oldLowerBound != newLowerBound) {
+						if (!Objects.equals(oldLowerBound, newLowerBound)) {
 							dimensionConfig.setLowerBound(newLowerBound);
 						}
 					}

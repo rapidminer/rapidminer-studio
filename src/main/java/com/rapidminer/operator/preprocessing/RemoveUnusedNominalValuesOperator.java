@@ -18,12 +18,21 @@
  */
 package com.rapidminer.operator.preprocessing;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.SetRelation;
@@ -33,21 +42,21 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * This operator will remove each unused (=not occurring) nominal value from the mapping.
- * 
+ *
  * @author Sebastian Land
  */
 public class RemoveUnusedNominalValuesOperator extends PreprocessingOperator {
 
 	private static final String PARAMETER_SORT_MAPPING_ALPHABETICALLY = "sort_alphabetically";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public RemoveUnusedNominalValuesOperator(OperatorDescription description) {
 		super(description);
@@ -105,5 +114,21 @@ public class RemoveUnusedNominalValuesOperator extends PreprocessingOperator {
 				"If checked, the resulting mapping will be sorted alphabetically.", true, false));
 
 		return types;
+	}
+
+	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

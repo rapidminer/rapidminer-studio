@@ -170,6 +170,8 @@ public class Colors {
 	public static final ColorUIResource PROGRESSBAR_INDETERMINATE_FOREGROUND_2 = new ColorUIResource(255, 181, 58);
 	public static final ColorUIResource PROGRESSBAR_BORDER = new ColorUIResource(221, 221, 221);
 
+	public static final ColorUIResource WARNING_COLOR = new ColorUIResource(255, 230, 152);
+
 	public static final ColorUIResource WHITE = new ColorUIResource(255, 255, 255);
 
 	private ColorUIResource[] tabbedPaneColors = new ColorUIResource[] { new ColorUIResource(200, 205, 210),

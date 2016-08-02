@@ -18,6 +18,13 @@
  */
 package com.rapidminer.example.table;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeDescription;
 import com.rapidminer.example.AttributeTransformation;
@@ -27,17 +34,11 @@ import com.rapidminer.example.Statistics;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.tools.Ontology;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * This is a possible abstract superclass for all attribute implementations. Most methods of
  * {@link Attribute} are already implemented here.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractAttribute implements Attribute {
@@ -49,7 +50,7 @@ public abstract class AbstractAttribute implements Attribute {
 	/** The basic information about the attribute. Will only be shallowly cloned. */
 	private AttributeDescription attributeDescription;
 
-	private final LinkedList<AttributeTransformation> transformations = new LinkedList<AttributeTransformation>();
+	private final List<AttributeTransformation> transformations = new ArrayList<AttributeTransformation>();
 
 	/** Contains all attribute statistics calculation algorithms. */
 	private List<Statistics> statistics = new LinkedList<Statistics>();
@@ -158,8 +159,9 @@ public abstract class AbstractAttribute implements Attribute {
 
 	@Override
 	public AttributeTransformation getLastTransformation() {
-		if (this.transformations.size() > 0) {
-			return this.transformations.getLast();
+		int size = this.transformations.size();
+		if (size > 0) {
+			return this.transformations.get(size - 1);
 		} else {
 			return null;
 		}
@@ -167,10 +169,11 @@ public abstract class AbstractAttribute implements Attribute {
 
 	@Override
 	public double getValue(DataRow row) {
-		double tableValue = row.get(getTableIndex(), getDefault());
-		double result = tableValue;
-		for (AttributeTransformation transformation : transformations) {
-			result = transformation.transform(this, result);
+		double result = row.get(getTableIndex(), getDefault());
+		if (!transformations.isEmpty()) {
+			for (AttributeTransformation transformation : transformations) {
+				result = transformation.transform(this, result);
+			}
 		}
 		return result;
 	}
@@ -225,7 +228,7 @@ public abstract class AbstractAttribute implements Attribute {
 
 	/**
 	 * Returns the block type of this attribute.
-	 * 
+	 *
 	 * @see com.rapidminer.tools.Ontology#ATTRIBUTE_BLOCK_TYPE
 	 */
 	@Override
@@ -235,7 +238,7 @@ public abstract class AbstractAttribute implements Attribute {
 
 	/**
 	 * Sets the block type of this attribute.
-	 * 
+	 *
 	 * @see com.rapidminer.tools.Ontology#ATTRIBUTE_BLOCK_TYPE
 	 */
 	@Override
@@ -246,7 +249,7 @@ public abstract class AbstractAttribute implements Attribute {
 
 	/**
 	 * Returns the value type of this attribute.
-	 * 
+	 *
 	 * @see com.rapidminer.tools.Ontology#ATTRIBUTE_VALUE_TYPE
 	 */
 	@Override
@@ -267,7 +270,7 @@ public abstract class AbstractAttribute implements Attribute {
 
 	/**
 	 * Returns the attribute statistics.
-	 * 
+	 *
 	 * @deprecated Please use the method {@link ExampleSet#getStatistics(Attribute, String)}
 	 *             instead.
 	 */
@@ -279,7 +282,7 @@ public abstract class AbstractAttribute implements Attribute {
 
 	/**
 	 * Returns the attribute statistics.
-	 * 
+	 *
 	 * @deprecated Please use the method {@link ExampleSet#getStatistics(Attribute, String)}
 	 *             instead.
 	 */

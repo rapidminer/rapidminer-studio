@@ -25,9 +25,14 @@ import java.util.List;
 import java.util.Set;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.math.container.Range;
 
 
 /**
@@ -92,9 +97,6 @@ public class GaussianMixtureFunction extends ClusterFunction {
 
 	@Override
 	public double[] createArguments(int number, RandomGenerator random) throws FunctionException {
-		if (number <= 0) {
-			throw new FunctionException("Gaussian mixture clustering function", "must have at least one attribute!");
-		}
 		int c = 0;
 		double prob = random.nextDouble();
 		double sizeSum = 0.0d;
@@ -129,4 +131,23 @@ public class GaussianMixtureFunction extends ClusterFunction {
 	private int getNumberOfClusters() {
 		return (int) Math.min(MAX_CLUSTERS, Math.pow(CLUSTER_PER_DIMENSION, numberOfAttributes));
 	}
+
+	@Override
+	public ExampleSetMetaData getGeneratedMetaData() {
+		ExampleSetMetaData emd = new ExampleSetMetaData();
+		// label
+		AttributeMetaData amd = new AttributeMetaData("label", Ontology.NOMINAL, Attributes.LABEL_NAME);
+		amd.setValueSet(getClusterSet(), SetRelation.EQUAL);
+		emd.addAttribute(amd);
+
+		// attributes
+		for (int i = 0; i < numberOfAttributes; i++) {
+			amd = new AttributeMetaData("att" + (i + 1), Ontology.REAL);
+			amd.setValueRange(new Range(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY), SetRelation.SUBSET);
+			emd.addAttribute(amd);
+		}
+		emd.setNumberOfExamples(numberOfExamples);
+		return emd;
+	}
+
 }

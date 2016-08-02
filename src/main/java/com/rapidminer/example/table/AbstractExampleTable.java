@@ -20,8 +20,9 @@ package com.rapidminer.example.table;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -227,7 +228,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 	 */
 	@Override
 	public ExampleSet createExampleSet(Attribute labelAttribute, Attribute weightAttribute, Attribute idAttribute) {
-		Map<Attribute, String> specialAttributes = new HashMap<>();
+		Map<Attribute, String> specialAttributes = new LinkedHashMap<>();
 		if (labelAttribute != null) {
 			specialAttributes.put(labelAttribute, Attributes.LABEL_NAME);
 		}
@@ -246,7 +247,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 	 */
 	@Override
 	public ExampleSet createExampleSet(Iterator<AttributeRole> newSpecialAttributes) {
-		Map<Attribute, String> specialAttributes = new HashMap<>();
+		Map<Attribute, String> specialAttributes = new LinkedHashMap<>();
 		while (newSpecialAttributes.hasNext()) {
 			AttributeRole role = newSpecialAttributes.next();
 			specialAttributes.put(role.getAttribute(), role.getSpecialName());
@@ -260,7 +261,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 	 */
 	@Override
 	public ExampleSet createExampleSet(AttributeSet attributeSet) {
-		Map<Attribute, String> specialAttributes = new HashMap<>();
+		Map<Attribute, String> specialAttributes = new LinkedHashMap<>();
 		Iterator<String> i = attributeSet.getSpecialNames().iterator();
 		while (i.hasNext()) {
 			String name = i.next();
@@ -275,13 +276,14 @@ public abstract class AbstractExampleTable implements ExampleTable {
 	 */
 	@Override
 	public ExampleSet createExampleSet() {
-		return createExampleSet(new HashMap<Attribute, String>());
+		return createExampleSet(Collections.<Attribute, String> emptyMap());
 	}
 
 	/**
 	 * Returns a new example set with all attributes switched on. The attributes in the given map
 	 * will be used as special attributes with the specified names, all other attributes given at
-	 * creation time will be regular.
+	 * creation time will be regular. The ordering of the attributes is defined by the iteration
+	 * order of the map.
 	 */
 	@Override
 	public ExampleSet createExampleSet(Map<Attribute, String> specialAttributes) {

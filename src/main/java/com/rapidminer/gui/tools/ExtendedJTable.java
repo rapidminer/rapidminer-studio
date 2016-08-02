@@ -47,7 +47,6 @@ import javax.swing.table.TableModel;
 
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.look.Colors;
-import com.rapidminer.gui.operatortree.actions.CutCopyPasteDeleteAction;
 import com.rapidminer.gui.tools.actions.EqualColumnWidthsAction;
 import com.rapidminer.gui.tools.actions.FitAllColumnWidthsAction;
 import com.rapidminer.gui.tools.actions.FitColumnWidthAction;
@@ -106,7 +105,7 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 
 	private boolean sortable = true;
 
-	private CellColorProvider cellColorProvider = new CellColorProviderAlternating();
+	private transient CellColorProvider cellColorProvider = new CellColorProviderAlternating();
 
 	private boolean useColoredCellRenderer = true;
 
@@ -202,7 +201,7 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 				}
 
 				if (checkHighlight) {
-					rowHighlight = convertRowIndexToView(rowAtPoint(e.getPoint()));
+					rowHighlight = rowAtPoint(e.getPoint());
 					if (rowHighlight != lastColoredHighlightedRow) {
 						repaint();
 					}
@@ -620,9 +619,17 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 				&& realColumnIndex < getModel().getColumnCount()) {
 			Object value = getModel().getValueAt(rowIndex, realColumnIndex);
 			if (value instanceof Number) {
+				// display
 				Number number = (Number) value;
 				double numberValue = number.doubleValue();
-				text = Tools.formatIntegerIfPossible(numberValue);
+				long longValue = Math.round(numberValue);
+				if (Math.abs(longValue - numberValue) <= Double.MIN_VALUE) {
+					// for all intents and purposes we consider these integer
+					text = String.valueOf(longValue);
+				} else {
+					// real values here
+					text = String.valueOf(numberValue);
+				}
 			} else {
 				if (value != null) {
 					if (value instanceof Date) {
@@ -821,8 +828,8 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 					return;
 				}
 				// only set cell selection if clicked cell is outside current selection
-				if (row != -1 && (row < getSelectedRow() || row > getSelectedRow() + getSelectedRowCount() - 1)
-						|| c != -1 && (c < getSelectedColumn() || c > getSelectedColumn() + getSelectedColumnCount() - 1)) {
+				if (row < getSelectedRow() || row > getSelectedRow() + getSelectedRowCount() - 1 || c < getSelectedColumn()
+						|| c > getSelectedColumn() + getSelectedColumnCount() - 1) {
 					if (row < getRowCount() && c < getColumnCount()) {
 						// needed because sometimes row could be outside [0, getRowCount()-1]
 						setRowSelectionInterval(row, row);

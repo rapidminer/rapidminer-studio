@@ -18,7 +18,7 @@
  */
 package com.rapidminer.operator.generator;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -174,7 +174,7 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 		table.readExamples(new ListDataRowReader(data.iterator()));
 
 		// create example set and return it
-		Map<Attribute, String> specialMap = new HashMap<Attribute, String>();
+		Map<Attribute, String> specialMap = new LinkedHashMap<Attribute, String>();
 		specialMap.put(label1, Attributes.LABEL_NAME + 1);
 		specialMap.put(label2, Attributes.LABEL_NAME + 2);
 		specialMap.put(label3, Attributes.LABEL_NAME + 3);

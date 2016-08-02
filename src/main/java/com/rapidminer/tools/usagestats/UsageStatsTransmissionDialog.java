@@ -60,6 +60,8 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 	private static final int YES = 0;
 	private static final int NO = 1;
 
+	private static Timer timer;
+
 	private int answer;
 
 	private UsageStatsTransmissionDialog() {
@@ -145,15 +147,18 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 	 * Schedules the next dialog popup to the next transmission time of the UsageStatistics, but at
 	 * least {@link #MIN_FIRE_INTERVAL} milliseconds from now.
 	 */
-	private static void startTimer() {
+	static void startTimer() {
 		if (UsageStatistics.getInstance().hasFailedToday()) {
 			return;
+		}
+		if (timer != null) {
+			timer.stop();
 		}
 		long timeToFire = UsageStatistics.getInstance().getNextTransmission().getTime() - System.currentTimeMillis();
 		if (timeToFire < 0) {
 			timeToFire = MIN_FIRE_INTERVAL;
 		}
-		Timer timer = new Timer((int) timeToFire, new ActionListener() {
+		timer = new Timer((int) timeToFire, new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {

@@ -22,9 +22,10 @@ import java.util.List;
 
 import com.rapidminer.license.License;
 import com.rapidminer.license.LicenseEvent;
-import com.rapidminer.license.LicenseManagerListener;
 import com.rapidminer.license.LicenseEvent.LicenseEventType;
+import com.rapidminer.license.LicenseManagerListener;
 import com.rapidminer.license.annotation.LicenseLevel;
+import com.rapidminer.license.product.Constraint;
 import com.rapidminer.license.violation.LicenseConstraintViolation;
 import com.rapidminer.license.violation.LicenseLevelViolation;
 import com.rapidminer.license.violation.LicenseViolation;
@@ -101,11 +102,11 @@ public enum ActionStatisticsLicenseManagerListener implements LicenseManagerList
 	private void logConstraintViolation(LicenseConstraintViolation<?, ?> constraintViolation) {
 
 		License license = constraintViolation.getLicense();
+		Constraint<?, ?> constraint = constraintViolation.getConstraint();
 
 		// only count violations for licenses that are not null
-		if (license != null) {
-			ActionStatisticsCollector.getInstance()
-			.log(ActionStatisticsCollector.TYPE_CONSTRAINT, constraintViolation.getConstraint().getKey(),
+		if (license != null && constraint != null) {
+			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_CONSTRAINT, constraint.getKey(),
 					license.getProductId() + ":" + license.getProductEdition());
 		}
 	}

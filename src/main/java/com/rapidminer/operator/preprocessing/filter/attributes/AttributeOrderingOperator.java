@@ -473,10 +473,6 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 				SORT_MODES, USER_SPECIFIED_RULES_MODE_INDEX, false);
 		parameterTypes.add(type);
 
-		type = new ParameterTypeCategory(PARAMETER_SORT_DIRECTION, "Sort direction for attribute names.", SORT_DIRECTIONS,
-				DIRECTION_ASCENDING_INDEX, false);
-		parameterTypes.add(type);
-
 		// --------------------------- USER SPECIFIED -------------------------
 
 		type = new ParameterTypeAttributeOrderingRules(PARAMETER_ORDER_RULES, "Rules to order attributes.", getInputPorts()
@@ -486,6 +482,12 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 				USER_SPECIFIED_RULES_MODE_INDEX));
 		parameterTypes.add(type);
 
+		type = new ParameterTypeBoolean(PARAMETER_USE_REGEXP,
+				"If checked attribute orders will be evaluated as regular expressions.", false, true);
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_ORDER_MODE, SORT_MODES, true, USER_SPECIFIED_RULES_MODE_INDEX));
+		parameterTypes.add(type);
+
 		type = new ParameterTypeCategory(PARAMETER_HANDLE_UNMATCHED_ATTRIBUTES,
 				"Defines the behavior for unmatched attributes.", HANDLE_UNMATCHED_MODES, APPEND_UNMATCHED_MODE_INDEX, false);
 		type.setOptional(true);
@@ -493,10 +495,8 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 				USER_SPECIFIED_RULES_MODE_INDEX, REFERENCE_DATA_INDEX));
 		parameterTypes.add(type);
 
-		type = new ParameterTypeBoolean(PARAMETER_USE_REGEXP,
-				"If checked attribute orders will be evaluated as regular expressions.", false, true);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_ORDER_MODE, SORT_MODES, true,
-				USER_SPECIFIED_RULES_MODE_INDEX));
+		type = new ParameterTypeCategory(PARAMETER_SORT_DIRECTION, "Sort direction for attribute names.", SORT_DIRECTIONS,
+				DIRECTION_ASCENDING_INDEX, false);
 		parameterTypes.add(type);
 
 		return parameterTypes;

@@ -126,6 +126,17 @@ public enum ActionStatisticsCollector {
 	private static final String VOLUME_COLUMNS = "COLUMNS";
 	private static final String VOLUME_ROWS = "ROWS";
 
+	/** row limit check (since 7.2) */
+	public static final String TYPE_ROW_LIMIT = "row-limit";
+	public static final String VALUE_ROW_LIMIT_EXCEEDED = "exceeded";
+	public static final String ARG_ROW_LIMIT_CHECK = "check";
+	public static final String ARG_ROW_LIMIT_DOWNSAMPLED = "downsampled";
+	public static final String ARG_ROW_LIMIT_ABORTED = "aborted";
+	public static final String VALUE_ROW_LIMIT_UPGRADE_FIX = "upgrade_fix";
+	public static final String VALUE_ROW_LIMIT_UPGRADE_NOT_ENOUGH = "upgrade_not_enough";
+	public static final String VALUE_ROW_LIMIT_UPGRADE_SELECTED = "upgrade_selected";
+	public static final String ARG_ROW_LIMIT_NO_UPGRADE = "no_upgrade";
+
 	/**
 	 * added to a key arg to indicated that this stores the maximum amount of all the amounts stored
 	 * for arg
@@ -277,6 +288,9 @@ public enum ActionStatisticsCollector {
 
 	private final Map<Key, Long> counts = new HashMap<>();
 
+	/** flag whether the rowLimit was already exceeded during this session */
+	private boolean rowLimitExceeded;
+
 	public static ActionStatisticsCollector getInstance() {
 		return INSTANCE;
 	}
@@ -380,6 +394,18 @@ public enum ActionStatisticsCollector {
 				double executionTime = (double) op.getValue("execution-time").getValue();
 				logOperatorExecutionTime(op, (long) executionTime);
 			}
+		}
+	}
+
+	/**
+	 * Logs that the user exceeded the row limit and schedules a transmission soon.
+	 */
+	public void logRowLimitExceeded() {
+		log(ActionStatisticsCollector.TYPE_ROW_LIMIT, ActionStatisticsCollector.VALUE_ROW_LIMIT_EXCEEDED,
+				ActionStatisticsCollector.ARG_ROW_LIMIT_CHECK);
+		if (!rowLimitExceeded) {
+			rowLimitExceeded = true;
+			UsageStatistics.getInstance().scheduleTransmissionSoon();
 		}
 	}
 

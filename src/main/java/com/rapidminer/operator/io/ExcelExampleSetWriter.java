@@ -35,7 +35,7 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.WorkbookUtil;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -98,6 +98,14 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 	public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 	public static final String DEFAULT_NUMBER_FORMAT = "#.0";
+
+	/**
+	 * the limit of an excel cell, see the <a href=
+	 * "https://support.office.com/en-gb/article/Excel-specifications-and-limits-16c69c74-3d6a-4aaf-ba35-e6eb276e8eaa">
+	 * Microsoft limit documentation</a> for more information.
+	 */
+	private static final int CHARACTER_CELL_LIMIT = 32_767;
+	private static final String CROP_INDICATOR = "[...]";
 
 	public ExcelExampleSetWriter(OperatorDescription description) {
 		super(description);
@@ -175,7 +183,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 * @param exampleSet
 	 *            the data to write
 	 * @param op
-	 *            an {@link Operator} of the executing operator to checkForStop.
+	 *            an {@link Operator} of the executing operator to checkForStop
 	 * @throws WriteException
 	 * @throws ProcessStoppedException
 	 */
@@ -210,7 +218,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 				if (!Double.isNaN(example.getValue(attribute))) {
 					if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NOMINAL)) {
 						s.addCell(new Label(columnCounter, rowCounter,
-								replaceForbiddenChars(example.getValueAsString(attribute)), cf2));
+								stripIfNecessary(replaceForbiddenChars(example.getValueAsString(attribute))), cf2));
 					} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
 						DateTime dateTime = new DateTime(columnCounter, rowCounter,
 								new Date((long) example.getValue(attribute)), dfCell);
@@ -221,7 +229,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 					} else {
 						// default: write as a String
 						s.addCell(new Label(columnCounter, rowCounter,
-								replaceForbiddenChars(example.getValueAsString(attribute)), cf2));
+								stripIfNecessary(replaceForbiddenChars(example.getValueAsString(attribute))), cf2));
 					}
 				}
 				columnCounter++;
@@ -374,14 +382,12 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 					I18N.getMessage(I18N.getErrorBundle(), "export.excel.excel_xlsx_file_exceeds_column_limit"));
 		}
 
-		try {
-			XSSFWorkbook workbook = new XSSFWorkbook();
-
+		try (SXSSFWorkbook workbook = new SXSSFWorkbook(null, SXSSFWorkbook.DEFAULT_WINDOW_SIZE, false, true)) {
 			Sheet sheet = workbook.createSheet(WorkbookUtil.createSafeSheetName(sheetName));
+
 			dateFormat = dateFormat == null ? DEFAULT_DATE_FORMAT : dateFormat;
 
 			numberFormat = numberFormat == null ? "#.0" : numberFormat;
-
 			writeXLSXDataSheet(workbook, sheet, dateFormat, numberFormat, exampleSet, op);
 			workbook.write(outputStream);
 		} finally {
@@ -409,8 +415,8 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	 *             if the process was stopped by the user.
 	 * @throws WriteException
 	 */
-	private static void writeXLSXDataSheet(org.apache.poi.ss.usermodel.Workbook wb, Sheet sheet, String dateFormat,
-			String numberFormat, ExampleSet exampleSet, Operator op) throws WriteException, ProcessStoppedException {
+	private static void writeXLSXDataSheet(SXSSFWorkbook wb, Sheet sheet, String dateFormat, String numberFormat,
+			ExampleSet exampleSet, Operator op) throws WriteException, ProcessStoppedException {
 
 		Font headerFont = wb.createFont();
 		headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -474,7 +480,8 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 						currentCell.setCellValue(numericalValue);
 						currentCell.setCellStyle(numericalStyle);
 					} else {
-						currentCell.setCellValue(replaceForbiddenChars(example.getValueAsString(attribute)));
+						currentCell
+								.setCellValue(stripIfNecessary(replaceForbiddenChars(example.getValueAsString(attribute))));
 						currentCell.setCellStyle(nominalStyle);
 					}
 				}
@@ -486,6 +493,22 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			if (op != null && rowCounter % 100 == 0) {
 				op.checkForStop();
 			}
+		}
+	}
+
+	/**
+	 * Checks if the given value length is greater than the allowed Excel cell limit (
+	 * {@value #CHARACTER_CELL_LIMIT}). If it exceeds the limit the string will be stripped.
+	 *
+	 * @param value
+	 *            the string value which should be checked
+	 * @return the original string if the character limit is not exceeded, otherwise a stripped one
+	 */
+	private static String stripIfNecessary(String value) {
+		if (value.length() > CHARACTER_CELL_LIMIT) {
+			return value.substring(0, CHARACTER_CELL_LIMIT - CROP_INDICATOR.length()) + CROP_INDICATOR;
+		} else {
+			return value;
 		}
 	}
 }

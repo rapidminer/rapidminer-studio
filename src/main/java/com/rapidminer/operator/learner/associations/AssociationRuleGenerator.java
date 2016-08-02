@@ -135,6 +135,7 @@ public class AssociationRuleGenerator extends Operator {
 				getProgress().step(100);
 			}
 		}
+		rules.sort();
 		rulesOutput.deliver(rules);
 		itemSetsOutput.deliver(sets);
 	}

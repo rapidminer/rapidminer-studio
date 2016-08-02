@@ -84,11 +84,13 @@ public class OperatorInfoBubble extends BubbleWindow {
 		private boolean hideOnDisable;
 		private boolean hideOnRun;
 		private boolean ensureVisible;
+		private boolean killOnPerspectiveChange;
 
 		public OperatorBubbleBuilder(final Window owner, final Operator attachTo, final String i18nKey,
 				final Object... arguments) {
 			super(owner, i18nKey, arguments);
 			this.attachTo = attachTo;
+			this.killOnPerspectiveChange = true;
 		}
 
 		/**
@@ -132,10 +134,24 @@ public class OperatorInfoBubble extends BubbleWindow {
 			return this;
 		}
 
+		/**
+		 * Sets whether the bubble should be automatically killed by switching perspective. Defaults
+		 * to {@code true}.
+		 *
+		 * @param killOnPerspectiveChange
+		 *            {@code true} if the bubble should be killed on perspective change;
+		 *            {@code false} otherwise
+		 * @return the builder instance
+		 */
+		public OperatorBubbleBuilder setKillOnPerspectiveChange(final boolean killOnPerspectiveChange) {
+			this.killOnPerspectiveChange = killOnPerspectiveChange;
+			return this;
+		}
+
 		@Override
 		public OperatorInfoBubble build() {
 			return new OperatorInfoBubble(owner, style, alignment, i18nKey, attachTo, componentsToAdd, hideOnDisable,
-					hideOnRun, ensureVisible, moveable, showCloseButton, arguments);
+					hideOnRun, ensureVisible, moveable, showCloseButton, killOnPerspectiveChange, arguments);
 		}
 
 		@Override
@@ -151,6 +167,7 @@ public class OperatorInfoBubble extends BubbleWindow {
 	private final OperatorChain operatorChain;
 	private final boolean hideOnDisable;
 	private final boolean hideOnRun;
+	private final boolean killOnPerspectiveChange;
 	private final ProcessRendererView renderer = RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer();
 	private final JViewport viewport = RapidMinerGUI.getMainFrame().getProcessPanel().getViewPort();
 
@@ -187,12 +204,14 @@ public class OperatorInfoBubble extends BubbleWindow {
 	 * @param showCloseButton
 	 *            if {@code true} the user can close the bubble via an "x" button in the top right
 	 *            corner
+	 * @param killOnPerspectiveChange
+	 *            if {@code true} the bubble will be automatically killed if the perspective changes
 	 * @param arguments
 	 *            arguments to pass thought to the I18N Object
 	 */
 	OperatorInfoBubble(Window owner, BubbleStyle style, AlignedSide preferredAlignment, String i18nKey, Operator toAttach,
 			JComponent[] componentsToAdd, boolean hideOnDisable, boolean hideOnRun, boolean ensureVisible, boolean moveable,
-			boolean showCloseButton, Object... arguments) {
+			boolean showCloseButton, boolean killOnPerspectiveChange, Object... arguments) {
 		super(owner, style, preferredAlignment, i18nKey, ProcessPanel.PROCESS_PANEL_DOCK_KEY, null, null, moveable,
 				showCloseButton, componentsToAdd, arguments);
 		if (toAttach == null) {
@@ -207,6 +226,7 @@ public class OperatorInfoBubble extends BubbleWindow {
 		}
 		this.hideOnDisable = hideOnDisable;
 		this.hideOnRun = hideOnRun;
+		this.killOnPerspectiveChange = killOnPerspectiveChange;
 
 		// if we need to ensure that the bubble is visible:
 		if (ensureVisible) {
@@ -216,9 +236,10 @@ public class OperatorInfoBubble extends BubbleWindow {
 				renderer.getModel().fireDisplayedChainChanged();
 			}
 			// switch to correct perspective
-			if (!RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective()
+			if (!RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName()
 					.equals(PerspectiveModel.DESIGN)) {
 				RapidMinerGUI.getMainFrame().getPerspectiveController().showPerspective(PerspectiveModel.DESIGN);
+				this.myPerspective = PerspectiveModel.DESIGN;
 			}
 			// make sure dockable is visible
 			DockingTools.openDockable(ProcessPanel.PROCESS_PANEL_DOCK_KEY, null, RelativeDockablePosition.TOP_CENTER);
@@ -398,6 +419,9 @@ public class OperatorInfoBubble extends BubbleWindow {
 			return rendererLoc;
 		}
 
+		if (!viewport.isShowing()) {
+			return new Point(0, 0);
+		}
 		// calculate actual on screen loc of the operator and return it
 		Point absoluteLoc = new Point((int) (viewport.getLocationOnScreen().x + (loc.getX() - rendererLoc.getX())),
 				(int) (viewport.getLocationOnScreen().y + (loc.getY() - rendererLoc.getY())));
@@ -421,9 +445,11 @@ public class OperatorInfoBubble extends BubbleWindow {
 
 	@Override
 	protected void changeToAssistant(final AssistantType type) {
-		// no assistents, just kill bubble
-		killBubble(true);
-		return;
+		if (AssistantType.WRONG_PERSPECTIVE == type && !killOnPerspectiveChange) {
+			setVisible(false);
+		} else {
+			killBubble(true);
+		}
 	}
 
 	/**

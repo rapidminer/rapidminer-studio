@@ -38,12 +38,8 @@ public class GreaterEqualThan extends AbstractComparisonFunctionWith2Inputs {
 
 	@Override
 	protected Boolean compute(double left, double right) {
-		if (left == Double.NaN || right == Double.NaN) {
-			// like it was done before
-			return false;
-		} else {
-			return left >= right;
-		}
+		// false for Double.NaN values
+		return left >= right;
 	}
 
 	@Override

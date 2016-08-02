@@ -23,8 +23,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.Example;
@@ -37,6 +35,8 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.VectorMath;
+
+import Jama.Matrix;
 
 
 /**
@@ -119,16 +119,6 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 
 		// 1) prepare data
 		double[][] data = new double[exampleSet.size()][exampleSet.getAttributes().size()];
-		boolean haslabel = exampleSet.getAttributes().getLabel() != null;
-		boolean haspredlabel = exampleSet.getAttributes().getPredictedLabel() != null;
-
-		double[] labelvalues = new double[0], predvalues = new double[0];
-		if (haslabel) {
-			labelvalues = new double[exampleSet.size()];
-		}
-		if (haspredlabel) {
-			predvalues = new double[exampleSet.size()];
-		}
 
 		Iterator<Example> reader = exampleSet.iterator();
 		Example example;
@@ -138,12 +128,6 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 			int d = 0;
 			for (Attribute attribute : exampleSet.getAttributes()) {
 				data[sample][d] = example.getValue(attribute) - means[d];
-				if (haslabel) {
-					labelvalues[sample] = example.getValue(example.getAttributes().getLabel());
-				}
-				if (haspredlabel) {
-					predvalues[sample] = example.getValue(example.getAttributes().getPredictedLabel());
-				}
 				d++;
 			}
 

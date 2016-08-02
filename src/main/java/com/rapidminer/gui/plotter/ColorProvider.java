@@ -35,29 +35,14 @@ import com.rapidminer.tools.parameter.ParameterChangeListener;
  */
 public class ColorProvider {
 
-	private static final Color MIN_DEFAULT_COLOR = new Color(58, 58, 255);
-	private static final Color MAX_DEFAULT_COLOR = new Color(255, 48, 48);
+	private static Color minColor;
+	private static Color maxColor;
 
-	private boolean reduceBrightness;
-	private Color minColor;
-	private Color maxColor;
+	public static final Color MIN_DEFAULT_COLOR = new Color(58, 58, 255);
+	public static final Color MAX_DEFAULT_COLOR = new Color(255, 48, 48);
 
-	/**
-	 * Creates a new {@link ColorProvider}.
-	 */
-	public ColorProvider() {
-		this(false);
-	}
-
-	/**
-	 * Creates a new {@link ColorProvider} which reduces the brightness of the returned colors.
-	 *
-	 * @param reduceBrightness
-	 *            if <code>true</code>, will reduce brightness of returned colors
-	 */
-	public ColorProvider(boolean reduceBrightness) {
-		this.reduceBrightness = reduceBrightness;
-
+	static {
+		// update colors when user changes them in the settings
 		ParameterService.registerParameterChangeListener(new ParameterChangeListener() {
 
 			@Override
@@ -72,7 +57,7 @@ public class ColorProvider {
 							MIN_DEFAULT_COLOR);
 				}
 				if (MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR.equals(key)) {
-					minColor = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR,
+					maxColor = getColorFromProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_LEGEND_MAXCOLOR,
 							MAX_DEFAULT_COLOR);
 				}
 			}
@@ -101,29 +86,31 @@ public class ColorProvider {
 		}
 	}
 
+	private boolean reduceBrightness;
+
+	/**
+	 * Creates a new {@link ColorProvider}.
+	 */
+	public ColorProvider() {
+		this(false);
+	}
+
+	/**
+	 * Creates a new {@link ColorProvider} which reduces the brightness of the returned colors.
+	 *
+	 * @param reduceBrightness
+	 *            if <code>true</code>, will reduce brightness of returned colors
+	 */
+	public ColorProvider(boolean reduceBrightness) {
+		this.reduceBrightness = reduceBrightness;
+	}
+
 	public Color getMinLegendColor() {
 		return minColor;
 	}
 
 	public Color getMaxLegendColor() {
 		return maxColor;
-	}
-
-	private Color getColorFromProperty(String propertyName, Color errorColor) {
-		String propertyString = ParameterService.getParameterValue(propertyName);
-		if (propertyString != null) {
-			String[] colors = propertyString.split(",");
-			if (colors.length != 3) {
-				throw new IllegalArgumentException("Color '" + propertyString + "' defined as value for property '"
-						+ propertyName + "' is not a vaild color. Colors must be of the form 'r,g,b'.");
-			} else {
-				Color color = new Color(Integer.parseInt(colors[0].trim()), Integer.parseInt(colors[1].trim()),
-						Integer.parseInt(colors[2].trim()));
-				return color;
-			}
-		} else {
-			return errorColor;
-		}
 	}
 
 	/**
@@ -238,8 +225,8 @@ public class ColorProvider {
 		double bColorDiff = maxCol[2] - minCol[2];
 
 		// lower brightness to 90%
-		Color color = new Color(Color.HSBtoRGB((float) (minCol[0] + hColorDiff * value), (float) (minCol[1] + value
-				* sColorDiff), (float) (minCol[2] + value * bColorDiff)));
+		Color color = new Color(Color.HSBtoRGB((float) (minCol[0] + hColorDiff * value),
+				(float) (minCol[1] + value * sColorDiff), (float) (minCol[2] + value * bColorDiff)));
 
 		if (alpha < 255) {
 			color = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
@@ -270,5 +257,22 @@ public class ColorProvider {
 		// saturation
 		hsb[1] *= 0.85f;
 		return Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
+	}
+
+	private static Color getColorFromProperty(String propertyName, Color errorColor) {
+		String propertyString = ParameterService.getParameterValue(propertyName);
+		if (propertyString != null) {
+			String[] colors = propertyString.split(",");
+			if (colors.length != 3) {
+				throw new IllegalArgumentException("Color '" + propertyString + "' defined as value for property '"
+						+ propertyName + "' is not a vaild color. Colors must be of the form 'r,g,b'.");
+			} else {
+				Color color = new Color(Integer.parseInt(colors[0].trim()), Integer.parseInt(colors[1].trim()),
+						Integer.parseInt(colors[2].trim()));
+				return color;
+			}
+		} else {
+			return errorColor;
+		}
 	}
 }

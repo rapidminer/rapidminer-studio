@@ -547,69 +547,85 @@ public class SwingTools {
 		synchronized (ICON_LOCK) {
 			if (ICON_CACHE.containsKey(imageName)) {
 				return ICON_CACHE.get(imageName);
-			} else {
-				URL url;
-				// Handling retina icons
-				if (scaling == Scaling.RETINA) {
-					// detect desired icon size
-					// an icon path of the format ".../size(/mono)/icon.png" is expected
-					int indexOfLastSlash = imageName.lastIndexOf("/");
-					if (indexOfLastSlash != -1) {
-						String prefix = imageName.substring(0, indexOfLastSlash);
-						if (prefix.endsWith(MONO_COLOR_ICON_PREFIX)) {
-							prefix = prefix.substring(0, prefix.length() - MONO_COLOR_ICON_PREFIX.length());
-						}
+			}
 
-						int indexOfSlashBeforeResolution = prefix.lastIndexOf("/");
-						if (indexOfSlashBeforeResolution >= 0) {
-							String potentialSizeString = prefix.substring(indexOfSlashBeforeResolution + 1);
-							try {
-								int iconSize = Integer.parseInt(potentialSizeString);
+			// For compatibility reasons, return an uninitialized icon or null whenever the image
+			// name points to a folder. Uninitialized image icons take zero space, whereas a scaled
+			// image icon will always claim its given size (regardless of whether the image could
+			// be loaded).
+			int indexOfLastSlash = imageName.lastIndexOf("/");
+			if (indexOfLastSlash == imageName.length() - 1) {
+				return usePlaceholder ? new ImageIcon() : null;
+			}
 
-								// load icon from high-dpi subfolder
-								StringBuilder scaledIconName = new StringBuilder(32);
-								scaledIconName.append(imageName.substring(0, indexOfLastSlash));
-								scaledIconName.append(RETINA_ICON_PREFIX);
-								scaledIconName.append(imageName.substring(indexOfLastSlash, imageName.length()));
-								url = Tools.getResource(scaledIconName.toString());
-								if (url != null) {
-									ImageIcon icon = new ScaledImageIcon(url, iconSize, iconSize);
-									ICON_CACHE.put(imageName, icon);
-									return icon;
-								}
-
-							} catch (NumberFormatException e) {
-								// Do nothing and fallback to normal icon
-							}
-						}
+			// Try to load high-resolution icon (if appropriate)
+			if (scaling == Scaling.RETINA) {
+				// an icon path of the format ".../size(/mono)/icon.png" is expected
+				if (indexOfLastSlash != -1) {
+					String prefix = imageName.substring(0, indexOfLastSlash);
+					if (prefix.endsWith(MONO_COLOR_ICON_PREFIX)) {
+						prefix = prefix.substring(0, prefix.length() - MONO_COLOR_ICON_PREFIX.length());
 					}
-				}
-				url = Tools.getResource(imageName);
-				if (url != null) {
-					ImageIcon icon = new ImageIcon(url);
-					ICON_CACHE.put(imageName, icon);
-					return icon;
-				} else {
-					if (usePlaceholder) {
-						LogService.getRoot().log(Level.FINE, "com.rapidminer.gui.tools.SwingTools.loading_image_error",
-								imageName);
-						int indexOfLastSlash = imageName.lastIndexOf("/");
-						if (indexOfLastSlash != -1) {
-							String errorIconName = imageName.substring(0, indexOfLastSlash + 1) + UNKNOWN_ICON_NAME;
-							url = Tools.getResource(errorIconName);
-							if (url != null) {
-								ImageIcon icon = new ImageIcon(url);
+
+					int indexOfSlashBeforeResolution = prefix.lastIndexOf("/");
+					if (indexOfSlashBeforeResolution >= 0) {
+						String potentialSizeString = prefix.substring(indexOfSlashBeforeResolution + 1);
+						try {
+							int iconSize = Integer.parseInt(potentialSizeString);
+
+							// load icon from high-dpi subfolder
+							StringBuilder scaledIconName = new StringBuilder(32);
+							scaledIconName.append(imageName.substring(0, indexOfLastSlash));
+							scaledIconName.append(RETINA_ICON_PREFIX);
+							scaledIconName.append(imageName.substring(indexOfLastSlash, imageName.length()));
+							URL scaledIconUrl = Tools.getResource(scaledIconName.toString());
+							if (scaledIconUrl != null) {
+								ImageIcon icon = new ScaledImageIcon(scaledIconUrl, iconSize, iconSize);
+								ICON_CACHE.put(imageName, icon);
 								return icon;
 							}
+
+						} catch (NumberFormatException | NullPointerException e) {
+							// Do nothing and fall back to normal icon. The NPE might occur if
+							// the security manager intercepts the lookup of the icon (e.g., if
+							// the icon is missing on OS X).
 						}
-						// return default 16x16 unknown icon
-						return UNKNOWN_ICON;
-					} else {
-						return null;
 					}
 				}
 			}
+
+			// try to load standard-resolution icon
+			URL iconUrl = Tools.getResource(imageName);
+			if (iconUrl != null) {
+				try {
+					ImageIcon icon = new ImageIcon(iconUrl);
+					ICON_CACHE.put(imageName, icon);
+					return icon;
+				} catch (NullPointerException e) {
+					// Do nothing and fall back to placeholder icon. The NPE might occur if
+					// the security manager intercepts the lookup of the icon (e.g., if
+					// the icon is missing on OS X).
+				}
+			}
+
+			// fall back to placeholder or null
+			if (usePlaceholder) {
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.gui.tools.SwingTools.loading_image_error", imageName);
+				if (indexOfLastSlash != -1) {
+					String errorIconName = imageName.substring(0, indexOfLastSlash + 1) + UNKNOWN_ICON_NAME;
+					iconUrl = Tools.getResource(errorIconName);
+					if (iconUrl != null) {
+						ImageIcon icon = new ImageIcon(iconUrl);
+						return icon;
+					}
+				}
+				// return default 16x16 unknown icon
+				return UNKNOWN_ICON;
+			} else {
+				return null;
+			}
 		}
+
 	}
 
 	/**

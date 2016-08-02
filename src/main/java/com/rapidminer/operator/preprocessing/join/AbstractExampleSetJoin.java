@@ -19,9 +19,9 @@
 package com.rapidminer.operator.preprocessing.join;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +59,7 @@ import com.rapidminer.tools.container.Pair;
  * Special attributes of the second input example set which do not exist in the first example set
  * will simply be added. If they already exist they are simply skipped.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractExampleSetJoin extends Operator {
@@ -215,7 +215,7 @@ public abstract class AbstractExampleSetJoin extends Operator {
 		}
 
 		// special attributes
-		Map<Attribute, String> unionSpecialAttributes = new HashMap<>();
+		Map<Attribute, String> unionSpecialAttributes = new LinkedHashMap<>();
 		Set<String> usedSpecialAttributes = new HashSet<>();
 
 		// first example set's special attributes

@@ -20,13 +20,12 @@ package com.rapidminer.test_utils;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-
-import junit.framework.AssertionFailedError;
 
 import org.junit.Assert;
 import org.junit.ComparisonFailure;
@@ -40,6 +39,8 @@ import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.meta.ParameterValue;
 import com.rapidminer.tools.Ontology;
+
+import junit.framework.AssertionFailedError;
 
 
 /**
@@ -244,7 +245,7 @@ public class RapidAssert extends Assert {
 			return;
 		}
 		if (actual == null) {
-			throw new AssertionFailedError(message + " (expected " + expected.toString() + " , but is null)");
+			throw new AssertionFailedError(message + " (expected " + Arrays.toString(expected) + " , but is null)");
 		}
 		assertEquals(message + " (array length is not equal)", expected.length, actual.length);
 		for (int i = 0; i < expected.length; i++) {
@@ -258,7 +259,7 @@ public class RapidAssert extends Assert {
 			return;
 		}
 		if (actual == null) {
-			throw new AssertionFailedError(message + " (expected " + expected.toString() + " , but is null)");
+			throw new AssertionFailedError(message + " (expected " + Arrays.toString(expected) + " , but is null)");
 		}
 		assertEquals(message + " (array length is not equal)", expected.length, actual.length);
 		for (int i = 0; i < expected.length; i++) {

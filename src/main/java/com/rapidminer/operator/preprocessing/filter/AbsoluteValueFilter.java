@@ -18,11 +18,14 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.preprocessing.AbstractValueProcessing;
@@ -32,10 +35,16 @@ import com.rapidminer.tools.math.container.Range;
 
 /**
  * This operator simply replaces all values by their absolute respective value.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land, Tobias Malbrecht
  */
 public class AbsoluteValueFilter extends AbstractValueProcessing {
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public AbsoluteValueFilter(OperatorDescription description) {
 		super(description);
@@ -76,6 +85,17 @@ public class AbsoluteValueFilter extends AbstractValueProcessing {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

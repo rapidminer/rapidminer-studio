@@ -20,8 +20,8 @@ package com.rapidminer.example.table;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +42,7 @@ public class PolynominalMapping implements NominalMapping {
 	private static final long serialVersionUID = 5021638750496191771L;
 
 	/** The map between symbolic values and their indices. */
-	private final Map<String, Integer> symbolToIndexMap = new HashMap<>();
+	private final Map<String, Integer> symbolToIndexMap = new LinkedHashMap<>();
 
 	/** The map between indices of nominal values and the actual nominal value. */
 	private final List<String> indexToSymbolMap = new ArrayList<>();

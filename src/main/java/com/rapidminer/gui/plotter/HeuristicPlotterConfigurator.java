@@ -18,11 +18,6 @@
  */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableExampleSetAdapter;
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.tools.ParameterService;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,12 +26,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableExampleSetAdapter;
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.tools.ParameterService;
+
 
 /**
  * Control class used to handle the logic behind preselecting plotter axes.
- * 
+ *
  * @author David Arnu, Nils Woehler
- * 
+ *
  */
 public class HeuristicPlotterConfigurator {
 
@@ -127,10 +127,10 @@ public class HeuristicPlotterConfigurator {
 			}
 
 		} else { // set empty values unless Label and Nominal are already set
-			if (categoryToColumnListMap.get(HeuristicPlotterConfigurator.LABEL).equals("")) {
+			if (categoryToColumnListMap.get(HeuristicPlotterConfigurator.LABEL).isEmpty()) {
 				this.categoryToColumnListMap.put(HeuristicPlotterConfigurator.LABEL, new ArrayList<String>());
 			}
-			if (categoryToColumnListMap.get(HeuristicPlotterConfigurator.NOMINAL).equals("")) {
+			if (categoryToColumnListMap.get(HeuristicPlotterConfigurator.NOMINAL).isEmpty()) {
 				this.categoryToColumnListMap.put(HeuristicPlotterConfigurator.NOMINAL, new ArrayList<String>());
 			}
 		}
@@ -138,7 +138,7 @@ public class HeuristicPlotterConfigurator {
 
 	/**
 	 * Returns name of the n-th entry of the specified value type or an empty String.
-	 * 
+	 *
 	 * @param type
 	 *            The wanted value type
 	 * @param number
@@ -154,7 +154,7 @@ public class HeuristicPlotterConfigurator {
 			if (!type.equals(DATE) && columnNames.length != 0) {
 				selection = columnNames[0]; // default case
 			} // selection remains empty for "Date" if there is no Date value or if the columnNames
-				// list is empty
+			// list is empty
 		}
 
 		return selection;
@@ -175,7 +175,7 @@ public class HeuristicPlotterConfigurator {
 		settings.put(PlotterConfigurationSettings.CLASS_COLUMN, getNameListEntry(LABEL, 0));
 
 		String multipleNames = getNameListEntry(NUMERICAL, 1);  // selected axes for multiple
-																// selection field
+		// selection field
 		for (int i = 2; i <= DEFAULT_SELECTION_NUMBER; i++) {
 			if (i >= categoryToColumnListMap.get(NUMERICAL).size()) {
 				break;
@@ -193,7 +193,7 @@ public class HeuristicPlotterConfigurator {
 
 		// declare and overwrite special cases for certain renderer types here:
 		if (this.settings.getAvailablePlotters().containsKey(PlotterConfigurationModel.LINES_PLOT)) {  // AttributeWeight
-																										// IOObject
+			// IOObject
 			settings.remove(PlotterConfigurationSettings.AGGREGATION);
 			settings.put(PlotterConfigurationSettings.AGGREGATION, SUM);
 			settings.remove(PlotterConfigurationSettings.AXIS_PLOT_COLUMN);
@@ -213,13 +213,13 @@ public class HeuristicPlotterConfigurator {
 
 		if (categoryToColumnListMap.get(NUMERICAL).size() < 2
 				&& this.settings.getAvailablePlotters().containsKey(PlotterConfigurationModel.BAR_CHART)) { // no
-																											// numerical
-																											// values
-																											// present
+			// numerical
+			// values
+			// present
 			return PlotterConfigurationModel.BAR_CHART;
 		}
 		if (this.settings.getAvailablePlotters().containsKey(PlotterConfigurationModel.LINES_PLOT)) { // AttributeWeight
-																										// IOObject
+			// IOObject
 			return PlotterConfigurationModel.LINES_PLOT;
 		}
 

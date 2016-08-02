@@ -201,6 +201,7 @@ public class AnnotationsRenderer extends AbstractRenderer {
 		final IOObject ioobject = (IOObject) renderable;
 
 		JPanel component = new JPanel(new BorderLayout());
+		component.setBackground(Colors.WHITE);
 		final AnnotationsTableModel model = new AnnotationsTableModel(ioobject);
 		final ExtendedJTable table = new ExtendedJTable(model, true);
 		table.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);

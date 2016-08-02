@@ -664,6 +664,21 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 *            This parameter is not used at all.
 	 */
 	public Operator cloneOperator(String name, boolean forParallelExecution) {
+		return cloneOperator(forParallelExecution, false);
+	}
+
+	/**
+	 * Performs a deep clone on the most parts of this operator. The breakpointThread is empty (as
+	 * it is in initialization). The parent will be clone in the method of OperatorChain overwriting
+	 * this one. By default the in- and output containers and the error list are only cloned by
+	 * reference copying. Use this method only if you are sure what you are doing.
+	 *
+	 * @param forParallelExecution
+	 *            Clone applyCount by reference
+	 * @param deepCopyErrorList
+	 *            indicates if errorList should be deep copied
+	 */
+	public Operator cloneOperator(boolean forParallelExecution, boolean deepCopyErrorList) {
 		Operator clone = null;
 		try {
 			clone = operatorDescription.createOperatorInstance();
@@ -700,7 +715,11 @@ public abstract class Operator extends AbstractObservable<Operator>
 		clone.loopStartTime = loopStartTime;
 		clone.getParameters().copyFrom(this.getParameters());
 		clone.compatibilityLevel = compatibilityLevel;
-		clone.errorList = errorList; // reference
+		if (deepCopyErrorList) {
+			clone.errorList.addAll(errorList); // value
+		} else {
+			clone.errorList = errorList; // reference
+		}
 		return clone;
 	}
 
@@ -1127,10 +1146,10 @@ public abstract class Operator extends AbstractObservable<Operator>
 	private void processBreakpoint(IOContainer container, int breakpointType) throws ProcessStoppedException {
 		getLogger().info(getName() + ": Breakpoint reached.");
 		Process process = getProcess();
-		process.pause(this, container, breakpointType);
 		if (process.shouldStop()) {
 			stop();
 		}
+		process.pause(this, container, breakpointType);
 	}
 
 	/**

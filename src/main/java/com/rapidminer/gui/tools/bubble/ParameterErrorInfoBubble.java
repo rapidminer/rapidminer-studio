@@ -67,8 +67,8 @@ public class ParameterErrorInfoBubble extends OperatorInfoBubble {
 	 * @since 6.5.0
 	 *
 	 */
-	public static class ParameterErrorBubbleBuilder extends
-			BubbleWindowBuilder<ParameterErrorInfoBubble, ParameterErrorBubbleBuilder> {
+	public static class ParameterErrorBubbleBuilder
+			extends BubbleWindowBuilder<ParameterErrorInfoBubble, ParameterErrorBubbleBuilder> {
 
 		private final Operator attachTo;
 		private final ParameterType parameter;
@@ -186,7 +186,7 @@ public class ParameterErrorInfoBubble extends OperatorInfoBubble {
 			boolean hideOnDisable, boolean hideOnRun, boolean ensureVisible, boolean moveable, boolean showCloseButton,
 			Object... arguments) {
 		super(owner, style, preferredAlignment, i18nKey, toAttach, componentsToAdd, hideOnDisable, hideOnRun, ensureVisible,
-				moveable, showCloseButton, arguments);
+				moveable, showCloseButton, true, arguments);
 		if (parameter == null) {
 			throw new IllegalArgumentException("parameter must not be null");
 		}

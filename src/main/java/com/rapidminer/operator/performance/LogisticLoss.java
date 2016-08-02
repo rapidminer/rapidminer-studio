@@ -18,18 +18,18 @@
  */
 package com.rapidminer.operator.performance;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.math.Averagable;
 
-import java.util.Iterator;
-
 
 /**
  * The logistic loss of a classifier, defined as the average over all ln(1 + exp(-y * f(x)))
- * 
+ *
  * @author Ingo Mierswa
  */
 public class LogisticLoss extends MeasuredPerformance {
@@ -57,6 +57,7 @@ public class LogisticLoss extends MeasuredPerformance {
 		// compute margin
 		Iterator<Example> reader = exampleSet.iterator();
 		this.loss = 0.0d;
+		this.counter = 0.0d;
 		Attribute labelAttr = exampleSet.getAttributes().getLabel();
 		Attribute weightAttr = null;
 		if (useExampleWeights) {
@@ -73,8 +74,8 @@ public class LogisticLoss extends MeasuredPerformance {
 			}
 			double currentMargin = weight * Math.log(1.0d + Math.exp(-1 * confidence));
 			this.loss += currentMargin;
+			this.counter += weight;
 		}
-		this.loss /= exampleSet.size();
 	}
 
 	/** Does nothing. Everything is done in {@link #startCounting(ExampleSet, boolean)}. */

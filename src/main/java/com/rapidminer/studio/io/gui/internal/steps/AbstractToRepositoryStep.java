@@ -197,7 +197,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 			String initalLocation = null;
 			RepositoryTree tree = RapidMinerGUI.getMainFrame().getRepositoryBrowser().getRepositoryTree();
 			Entry entry = tree.getSelectedEntry();
-			if (entry != null) {
+			if (entry != null && !entry.isReadOnly()) {
 				initalLocation = entry.getLocation().getAbsoluteLocation();
 			}
 			// The validity of the step goes hand in hand with the state of the repository location

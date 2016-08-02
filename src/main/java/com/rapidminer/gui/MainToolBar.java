@@ -238,11 +238,11 @@ public class MainToolBar extends JPanel {
 		builder.add(new TutorialAction());
 
 		builder.add(new BrowseAction("toolbar_resources.documentation",
-				URI.create("http://redirects.rapidminer.com/app/studio/6/documentation")));
+				URI.create("http://redirects.rapidminer.com/app/studio/7.2/documentation/main_tool_bar")));
 		builder.add(new BrowseAction("toolbar_resources.help_forum",
-				URI.create("http://redirects.rapidminer.com/app/studio/6/forum")));
+				URI.create("http://redirects.rapidminer.com/app/studio/7.2/forum/main_tool_bar")));
 		builder.add(new BrowseAction("toolbar_resources.support",
-				URI.create("http://redirects.rapidminer.com/app/studio/6/support/")));
+				URI.create("http://redirects.rapidminer.com/app/studio/7.2/support/main_tool_bar")));
 
 		// put "About RapidMiner Studio" action as last action if not on ox
 		if (SystemInfoUtilities.getOperatingSystem() != OperatingSystem.OSX || !OSXAdapter.isAdapted()) {

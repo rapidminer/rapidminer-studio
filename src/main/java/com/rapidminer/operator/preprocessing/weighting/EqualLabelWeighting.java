@@ -18,6 +18,12 @@
  */
 package com.rapidminer.operator.preprocessing.weighting;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -27,6 +33,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.parameter.ParameterType;
@@ -36,19 +43,21 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * This operator distributes example weights so that all example weights of labels sum up equally.
- * 
+ *
  * @author Sebastian Land
  */
 public class EqualLabelWeighting extends AbstractExampleWeighting {
 
 	private static final String PARAMETER_TOTAL_WEIGHT = "total_weight";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public EqualLabelWeighting(OperatorDescription description) {
 		super(description);
@@ -106,7 +115,12 @@ public class EqualLabelWeighting extends AbstractExampleWeighting {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
 	}
 
 	@Override
@@ -115,4 +129,9 @@ public class EqualLabelWeighting extends AbstractExampleWeighting {
 				null);
 	}
 
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+	}
 }

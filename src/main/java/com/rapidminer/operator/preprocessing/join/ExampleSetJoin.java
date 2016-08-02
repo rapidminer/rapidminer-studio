@@ -430,6 +430,9 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			leftKeyMapping = createKeyMapping(leftExampleSet, leftKeyAttributes, rightKeyAttributes);
 		}
 
+		boolean keepBoth = getParameterAsBoolean(PARAMETER_KEEP_BOTH_JOIN_ATTRIBUTES);
+		boolean removeDoubleAttributes = getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES);
+
 		int progressCounter = 0;
 		// iterate over all example from left table and search for matching examples in right table:
 		for (Example rightExample : rightExampleSet) {
@@ -444,7 +447,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 				}
 			} else {
 				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, rightExample,
-						leftKeyAttributes, rightKeyAttributes);
+						leftKeyAttributes, rightKeyAttributes, keepBoth, removeDoubleAttributes);
 			}
 			// trigger operator progress every 100 examples
 			++progressCounter;
@@ -474,13 +477,15 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 		unionTable = performLeftJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
 				keyAttributes, mappedRightExamples);
 
+		boolean keepBoth = getParameterAsBoolean(PARAMETER_KEEP_BOTH_JOIN_ATTRIBUTES);
+		boolean removeDoubleAttributes = getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES);
 		int progressCounter = 0;
 		for (Example rightExample : rightExampleSet) {
 			// perform right join, but add example only if it has not been matched during left join
 			// above
 			if (!mappedRightExamples.contains(new DoubleArrayWrapper(getKeyValues(rightExample, rightKeyAttributes)))) {
 				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, rightExample,
-						leftKeyAttributes, rightKeyAttributes);
+						leftKeyAttributes, rightKeyAttributes, keepBoth, removeDoubleAttributes);
 			}
 			// trigger operator progress every 100 examples
 			++progressCounter;
@@ -541,7 +546,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	 */
 	private void addRightOnlyOccurence(List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
 			MemoryExampleTable unionTable, Example rightExample, Attribute[] leftKeyAttributes,
-			Attribute[] rightKeyAttributes) {
+			Attribute[] rightKeyAttributes, boolean keepBoth, boolean removeDoubleAttributes) {
 		double[] unionDataRow = new double[unionAttributeList.size()];
 		int attributeIndex = 0;
 		for (AttributeSource attributeSource : originalAttributeSources) {
@@ -561,9 +566,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 				// now use correct key attribute
 				if (id >= 0) {
-					boolean keepBoth = getParameterAsBoolean(PARAMETER_KEEP_BOTH_JOIN_ATTRIBUTES);
 					boolean sameName = leftKeyAttributes[id].getName().equals(rightKeyAttributes[id].getName());
-					boolean removeDoubleAttributes = getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES);
 					if (keepBoth && !(removeDoubleAttributes && sameName)) {
 						unionDataRow[attributeIndex] = Double.NaN;
 					} else {

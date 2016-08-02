@@ -18,19 +18,18 @@
  */
 package com.rapidminer.gui.actions;
 
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.RMUrlHandler;
-
 import java.awt.event.ActionEvent;
 import java.net.URI;
+
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.tools.RMUrlHandler;
 
 
 /**
  * Opens a browser.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class BrowseAction extends ResourceAction {
 
@@ -46,10 +45,6 @@ public class BrowseAction extends ResourceAction {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		try {
-			RMUrlHandler.browse(uri);
-		} catch (Exception e1) {
-			SwingTools.showSimpleErrorMessage("cannot_open_browser", e1);
-		}
+		RMUrlHandler.openInBrowser(uri);
 	}
 }

@@ -30,9 +30,9 @@ import java.util.List;
 
 /**
  * A class which configures a line which is parallel to one of the plot axes.
- * 
+ *
  * @author Marius Helf
- * 
+ *
  */
 public class AxisParallelLineConfiguration implements LineFormatListener, Cloneable {
 
@@ -46,10 +46,7 @@ public class AxisParallelLineConfiguration implements LineFormatListener, Clonea
 	 * Creates a new {@link AxisParallelLineConfiguration}.
 	 */
 	public AxisParallelLineConfiguration(double value, boolean labelVisible) {
-		if (this.value != value) {
-			this.value = value;
-			fireAxisParallelLineConfigurationChanged(new AxisParallelLineConfigurationChangeEvent(this, value));
-		}
+		this.value = value;
 	}
 
 	public double getValue() {
@@ -159,7 +156,7 @@ public class AxisParallelLineConfiguration implements LineFormatListener, Clonea
 	 * perfect, passing in values very close to zero where one is positive and the other is negative
 	 * will fail the check, despite them being very close together. But in this case that should not
 	 * be too much of a problem.
-	 * 
+	 *
 	 * @param expected
 	 * @param actual
 	 * @return

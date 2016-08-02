@@ -18,6 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing.discretization;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -25,6 +35,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
@@ -42,14 +53,6 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.math.MathFunctions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * <p>
@@ -60,13 +63,13 @@ import java.util.List;
  * attributes for classification learning (Fayyad,Irani) and b) Supervised and Unsupervised
  * Discretization (Dougherty,Kohavi,Sahami). Skips all special attributes including the label.
  * </p>
- * 
+ *
  * <p>
  * Please note that this operator automatically removes all attributes with only one range (i.e.
  * those attributes which are not actually discretized since the entropy criterion is not
  * fulfilled). This behavior can be controlled by the remove_useless parameter.
  * </p>
- * 
+ *
  * @author Sebastian Land, Dirk Dach
  */
 public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator {
@@ -83,6 +86,12 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 	 * after discretization should be removed.
 	 */
 	public static final String PARAMETER_REMOVE_USELESS = "remove_useless";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public MinimalEntropyDiscretization(OperatorDescription description) {
 		super(description);
@@ -296,7 +305,7 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 	/**
 	 * Delivers the maximum range thresholds for all attributes, i.e. the value getRanges()[a][b] is
 	 * the b-th threshold for the a-th attribute.
-	 * 
+	 *
 	 * @throws UserError
 	 *             is label is missing
 	 */
@@ -369,8 +378,24 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getExampleSetInputPort(),
 				MinimalEntropyDiscretization.class, attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

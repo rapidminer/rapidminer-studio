@@ -77,18 +77,18 @@ public class DataTableColumnListCellRenderer implements ListCellRenderer {
 			boolean cellHasFocus) {
 
 		String text;
+		ValueType valueType = null;
 		if (value == null) {
 			text = "##ERROR## Empty";
 		} else {
 			text = value.toString();
+			valueType = ((DataTableColumn) value).getValueType();
 		}
 
-		DataTableColumn column = (DataTableColumn) value;
 		tableColumnLabel.setText(text);
 
 		String i18nKey;
 
-		ValueType valueType = column.getValueType();
 		if (valueType == ValueType.DATE_TIME) {
 			tableColumnLabel.setForeground(TreeNodeColors.getDateColor());
 			i18nKey = "plotter.configuration_dialog.table_column_date_time";

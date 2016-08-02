@@ -33,9 +33,9 @@ import java.util.List;
 /**
  * A class which defines lines which shall be drawn on an axis. It defines the value on the axis,
  * and if a label will be shown.
- * 
+ *
  * @author Marius Helf
- * 
+ *
  */
 public class AxisParallelLinesConfiguration implements AxisParallelLineConfigurationListener, Cloneable {
 
@@ -52,7 +52,7 @@ public class AxisParallelLinesConfiguration implements AxisParallelLineConfigura
 	/**
 	 * Adds the given {@link AxisParallelLineConfiguration} line. If the exact same line already
 	 * exists, the line will NOT be added again.
-	 * 
+	 *
 	 * @param line
 	 */
 	public void addLine(AxisParallelLineConfiguration line) {
@@ -103,8 +103,10 @@ public class AxisParallelLinesConfiguration implements AxisParallelLineConfigura
 	}
 
 	public void addAxisParallelLinesConfigurationListener(AxisParallelLinesConfigurationListener l) {
-		if (listeners.contains(l)) {
-			return;
+		for (WeakReference<AxisParallelLinesConfigurationListener> listenerRef : listeners) {
+			if (l.equals(listenerRef.get())) {
+				return;
+			}
 		}
 		listeners.add(new WeakReference<AxisParallelLinesConfigurationListener>(l));
 	}

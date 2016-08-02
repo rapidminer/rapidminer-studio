@@ -24,6 +24,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -76,14 +77,11 @@ public class UsageStatistics {
 	/** URL to send the statistics values to. */
 	private static final String WEB_SERVICE_URL = "http://stats.rapidminer.com/usage-stats/upload/rapidminer";
 
-	/** Use the high frequency interval for 14 days before switching to the low frequency one. */
-	private static final long TRANSMISSION_TYPE_THRESHOLD = 1000 * 60 * 60 * 24 * 14;
-
 	/** Transmit usage statistics daily */
-	private static final long HIGH_FREQUENCY_INTERVAL = 1000 * 60 * 60 * 24;
+	private static final long DEFAULT_TRANSMISSION_INTERVAL = 1000 * 60 * 60 * 24;
 
-	/** Transmit usage statistics every week. */
-	private static final long LOW_FREQUENCY_INTERVAL = 1000 * 60 * 60 * 24 * 7;
+	/** Schedule extra transmission 10 minutes from now */
+	private static final long SOON_TRANSMISSION_INTERVAL = 1000 * 60 * 10;
 
 	private Date initialSetup;
 	private Date lastReset;
@@ -172,12 +170,7 @@ public class UsageStatistics {
 	 * @return the transmission interval to be used (in milliseconds)
 	 */
 	private long getTransmissionInterval() {
-		if (failedToday || initialSetup != null
-				&& System.currentTimeMillis() - initialSetup.getTime() < TRANSMISSION_TYPE_THRESHOLD) {
-			return HIGH_FREQUENCY_INTERVAL;
-		} else {
-			return LOW_FREQUENCY_INTERVAL;
-		}
+		return DEFAULT_TRANSMISSION_INTERVAL;
 	}
 
 	/**
@@ -186,8 +179,7 @@ public class UsageStatistics {
 	 * @return {@code true} if the usage statistics should be transmitted
 	 */
 	boolean shouldTransmitOnShutdown() {
-		return initialSetup != null && System.currentTimeMillis() - initialSetup.getTime() < TRANSMISSION_TYPE_THRESHOLD
-				&& EULADialog.getEULAAccepted();
+		return EULADialog.getEULAAccepted();
 	}
 
 	private String createRandomKey() {
@@ -267,7 +259,7 @@ public class UsageStatistics {
 			try {
 				LogService.getRoot().log(Level.CONFIG,
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.saving_operator_usage");
-				XMLTools.stream(getXML(), file, null);
+				XMLTools.stream(getXML(), file, StandardCharsets.UTF_8);
 			} catch (Exception e) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.saving_operator_usage_error", e), e);
@@ -300,7 +292,7 @@ public class UsageStatistics {
 		con.setDoOutput(true);
 		con.setRequestMethod("POST");
 		WebServiceTools.setURLConnectionDefaults(con);
-		try (Writer writer = new OutputStreamWriter(con.getOutputStream())) {
+		try (Writer writer = new OutputStreamWriter(con.getOutputStream(), StandardCharsets.UTF_8)) {
 			progressListener.setCompleted(30);
 			writer.write(xml);
 			writer.flush();
@@ -345,5 +337,16 @@ public class UsageStatistics {
 
 	public boolean hasFailedToday() {
 		return failedToday;
+	}
+
+	/**
+	 * Schedules a new transmission in 10 minutes. Restarts the timer for the transmission dialog if
+	 * not in headless mode.
+	 */
+	void scheduleTransmissionSoon() {
+		this.nextTransmission = new Date(System.currentTimeMillis() + SOON_TRANSMISSION_INTERVAL);
+		if (!RapidMiner.getExecutionMode().isHeadless()) {
+			UsageStatsTransmissionDialog.startTimer();
+		}
 	}
 }

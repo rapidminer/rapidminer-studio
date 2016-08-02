@@ -18,6 +18,14 @@
  */
 package com.rapidminer.gui.viewer.metadata.actions;
 
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.event.ActionEvent;
+
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
 import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.plotter.PlotterConfigurationSettings;
 import com.rapidminer.gui.plotter.PlotterPanel;
@@ -29,21 +37,13 @@ import com.rapidminer.gui.viewer.metadata.model.DateTimeAttributeStatisticsModel
 import com.rapidminer.gui.viewer.metadata.model.NominalAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.NumericalAttributeStatisticsModel;
 
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
 
 /**
  * This action is only to be used by the {@link AttributePopupMenu} or as a button inside a
  * {@link AttributeStatisticsPanel}.
- * 
+ *
  * @author Marco Boeck, Michael Knopf, Nils Woehler
- * 
+ *
  */
 public class OpenChartAction extends ResourceAction {
 
@@ -84,22 +84,22 @@ public class OpenChartAction extends ResourceAction {
 		JPanel outerPanel = (JPanel) cardPanel.getShownComponent();
 		for (Component innerComp : outerPanel.getComponents()) {
 			if (innerComp instanceof PlotterPanel) {
-				PlotterPanel plotterPanel = (PlotterPanel) outerPanel.getComponent(0);
+				PlotterPanel plotterPanel = (PlotterPanel) innerComp;
 				PlotterConfigurationModel settings = plotterPanel.getPlotterSettings();
 
 				// adjust settings
 				if (model instanceof NominalAttributeStatisticsModel) {
 					settings.setPlotter(PlotterConfigurationModel.BAR_CHART);
-					settings.setParameterAsString(PlotterConfigurationSettings.AXIS_PLOT_COLUMN, model.getAttribute()
-							.getName());
-					settings.setParameterAsString(PlotterConfigurationSettings.GROUP_BY_COLUMN, model.getAttribute()
-							.getName());
+					settings.setParameterAsString(PlotterConfigurationSettings.AXIS_PLOT_COLUMN,
+							model.getAttribute().getName());
+					settings.setParameterAsString(PlotterConfigurationSettings.GROUP_BY_COLUMN,
+							model.getAttribute().getName());
 				} else if (model instanceof NumericalAttributeStatisticsModel
 						|| model instanceof DateTimeAttributeStatisticsModel) {
 					settings.setPlotter(PlotterConfigurationModel.HISTOGRAM_PLOT);
 					settings.setParameterAsString(PlotterConfigurationSettings.NUMBER_OF_BINS, "10");
-					settings.setParameterAsString(PlotterConfigurationSettings.AXIS_PLOT_COLUMNS, model.getAttribute()
-							.getName());
+					settings.setParameterAsString(PlotterConfigurationSettings.AXIS_PLOT_COLUMNS,
+							model.getAttribute().getName());
 				}
 				break;
 			}

@@ -82,6 +82,16 @@
          for proper confidence values after applying the learned model on a classification data set.&lt;/p&gt;
       </help>
       <key>support_vector_machine_libsvm</key>
+      <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Regression</tag>
+         <tag>Model</tag>
+         <tag>SVM</tag>
+         <tag>Margin</tag>
+         <tag>Oneclass</tag>
+         <tag>One-class</tag>
+      </tags>
       <shortName>SVM</shortName>
    </operator>
    <operator>
@@ -94,6 +104,18 @@
          a random subset of attributes before it is applied. The size of the subset is defined by
          the parameter subset_ratio. &lt;/p&gt;</help>
       <key>random_tree</key>
+      <tags>
+         <tag>Id3</tag>
+         <tag>J48</tag>
+         <tag>J4.8</tag>
+         <tag>C45</tag>
+         <tag>C4.5</tag>
+         <tag>C50</tag>
+         <tag>C5.0</tag>
+         <tag>Cart</tag>
+         <tag>Chaid</tag>
+         <tag>Decision</tag>
+      </tags>
    </operator>
    <operator>
       <name>Numerical to Polynominal</name>
@@ -106,6 +128,16 @@
          different numerical values are used. Please use the available discretization operators
          then.</help>
       <key>numerical_to_polynominal</key>
+      <tags>
+         <tag>Continous</tag>
+         <tag>Categorical</tag>
+         <tag>Nominal</tag>
+         <tag>Polynominal</tag>
+         <tag>Ordinary</tag>
+         <tag>Types</tag>
+         <tag>Qualitative</tag>
+         <tag>Quantitative</tag>
+      </tags>
    </operator>
    <operator>
       <name>Loop Batches</name>
@@ -137,7 +169,7 @@
         <help>This operator will use the confidence values generated during model application to create new 
         attributes which contains a ranking of the most probable classes and their corresponding confidence values.&lt;br /&gt;
         The size of the ranking (i.e. number of classes stored per example) can be specified. Additionally, you can choose if
-        the old prediction and confidence attributes should be removed after the creation of the ranking attribtues.</help>
+        the old prediction and confidence attributes should be removed after the creation of the ranking attributes.</help>
         <key>generate_prediction_ranking</key>
    </operator>
    <operator>
@@ -249,6 +281,10 @@
     <operator>
         <name>Delay</name>
         <key>delay</key>
+        <tags>
+        	<tag>Pause</tag>
+        	<tag>Wait</tag>
+       	</tags>
         <synopsis>Delays process execution.</synopsis>
         <help>This operator delays the process execution by a fixed or random amount of time.</help>
     </operator>
@@ -311,6 +347,11 @@
             groups of the defined regular expression can be accessed with $1, $2,
             $3...&lt;/p&gt;</help>
     <key>rename_by_replacing</key>
+    <tags>
+         <tag>Names</tag>
+         <tag>Regex</tag>
+         <tag>Regular expressions</tag>
+    </tags>
   </operator>
     <operator>
         <name>Rename by Constructions</name>
@@ -383,6 +424,15 @@
             output of the last operator is used as the output of the operator
             chain.</help>
     <key>subprocess</key>
+    <tags>
+         <tag>Group</tag>
+         <tag>Sub-process</tag>
+         <tag>Routine</tag>
+         <tag>Function</tag>
+         <tag>Building</tag>
+         <tag>Block</tag>
+         <tag>Process</tag>
+    </tags>
   </operator>
     <operator>
         <name>Loop</name>
@@ -395,6 +445,10 @@
             the last operator in the last iteration will be the output of this
             operator.</help>
     <key>loop</key>
+    <tags>
+         <tag>Iterate</tag>
+         <tag>Iteration</tag>
+    </tags>
   </operator>
     <operator>
         <name>Drop Uncertain Predictions</name>
@@ -504,6 +558,13 @@
             merges all example sets by adding all examples of all table into a
             new set which is then returned.&lt;/p&gt;</help>
     <key>append</key>
+    <tags>
+         <tag>Add</tag>
+         <tag>Merge</tag>
+         <tag>Combine</tag>
+         <tag>Concatenate</tag>
+         <tag>Concatenation</tag>
+    </tags>
   </operator>
         <operator>
         <name>Filter Stopwords (English)</name>
@@ -532,6 +593,12 @@
             data. PCA on the other hand does not take into account any difference
             in class.&lt;/p&gt;</help>
     <key>linear_discriminant_analysis</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Combinations</tag>
+         <tag>Components</tag>
+    </tags>
     <shortName>LDA</shortName>
   </operator>
         <operator>
@@ -547,6 +614,16 @@
             these cases a simple sampling without stratification is performed.
         </help>
     <key>sample_stratified</key>
+    <tags>
+         <tag>Subsets</tag>
+         <tag>Random</tag>
+         <tag>Ratio</tag>
+         <tag>Stratified</tag>
+         <tag>Stratification</tag>
+         <tag>Bootstrap</tag>
+         <tag>Population</tag>
+         <tag>Downsample</tag>
+    </tags>
   </operator>
     <operator>
         <name>Sample (Bootstrapping)</name>
@@ -632,6 +709,13 @@
             nominal value is simply used as string value of the new attribute. If
             the value is missing, the new value will be missing.</help>
     <key>nominal_to_text</key>
+    <tags>
+         <tag>Categorical</tag>
+         <tag>Ordinal</tag>
+         <tag>Strings</tag>
+         <tag>Clob</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
         <operator>
         <name>Filter Examples</name>
@@ -665,6 +749,19 @@
             the parameter string must also be empty. This filter removes all
             examples with an unknown label value.&lt;/p&gt;</help>
     <key>filter_examples</key>
+    <tags>
+         <tag>Select</tag>
+         <tag>Keep</tag>
+         <tag>Remove</tag>
+         <tag>Drop</tag>
+         <tag>Delete</tag>
+         <tag>Rows</tag>
+         <tag>Cases</tag>
+         <tag>Instances</tag>
+         <tag>Lines</tag>
+         <tag>Observations</tag>
+         <tag>Filter Missing</tag>
+    </tags>
   </operator>
     <operator>
         <name>Linear Regression</name>
@@ -672,6 +769,18 @@
         <help>&lt;p&gt;This operator calculates a linear regression model. It
             uses the Akaike criterion for model selection.&lt;/p&gt;</help>
     <key>linear_regression</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Regression</tag>
+         <tag>Model</tag>
+         <tag>Least squares</tag>
+         <tag>Ordinary</tag>
+         <tag>Ridge</tag>
+         <tag>Ols</tag>
+         <tag>Glm</tag>
+         <tag>Generalized</tag>
+    </tags>
   </operator>
     <operator>
         <name>Seemingly Unrelated Regression</name>
@@ -713,6 +822,13 @@
             second class (usually positive for RapidMiner) is greater than the
             given threshold the prediction is set to this class.</help>
     <key>apply_threshold</key>
+    <tags>
+         <tag>Platt</tag>
+         <tag>Scoring</tag>
+         <tag>Scores</tag>
+         <tag>Confidences</tag>
+         <tag>Thresholds</tag>
+    </tags>
   </operator>
     <operator>
         <name>Split Data</name>
@@ -721,6 +837,17 @@
         <help>Divides a data set into the defined partitions and deliver the
             subsets.</help>
     <key>split_data</key>
+    <tags>
+         <tag>Divide</tag>
+         <tag>Separate</tag>
+         <tag>Part</tag>
+         <tag>Training</tag>
+         <tag>Testing</tag>
+         <tag>Samples</tag>
+         <tag>Subsets</tag>
+         <tag>Partitions</tag>
+         <tag>Sampling</tag>
+    </tags>
   </operator>
     <operator>
         <name>Unset Macro</name>
@@ -785,6 +912,11 @@
             mapping contains other values than the specified ones, the mapping is
             not corrected and the attribute is simply skipped.</help>
     <key>remap_binominals</key>
+    <tags>
+         <tag>Mapping</tag>
+         <tag>Positive</tag>
+         <tag>Negative</tag>
+    </tags>
   </operator>
     <operator>
         <name>Generate Extract</name>
@@ -832,6 +964,11 @@
     processes.
   </help>
     <key>recall</key>
+    <tags>
+         <tag>Remember</tag>
+         <tag>Cache</tag>
+         <tag>Load</tag>
+    </tags>
   </operator>
   <operator>
         <name>Recall from App</name>
@@ -961,6 +1098,17 @@
             example set already contains an id attribute, the old attribute will
             be removed before the new one is added.</help>
     <key>generate_id</key>
+    <tags>
+         <tag>Create</tag>
+         <tag>Id</tag>
+         <tag>Identifier</tag>
+         <tag>Index</tag>
+         <tag>Row no</tag>
+         <tag>Row number</tag>
+         <tag>unique</tag>
+         <tag>key</tag>
+         <tag>primary</tag>
+    </tags>
   </operator>
     <operator>
         <name>Compare ROCs</name>
@@ -975,6 +1123,16 @@
             predicted label of the given example set will be removed during the
             application of this operator.</help>
     <key>compare_rocs</key>
+    <tags>
+         <tag>Roc</tag>
+         <tag>Curves</tag>
+         <tag>Comparing</tag>
+         <tag>Comparisons</tag>
+         <tag>Validations</tag>
+         <tag>Evaluations</tag>
+         <tag>Performances</tag>
+         <tag>Sensitivity</tag>
+    </tags>
   </operator>
     <operator>
         <name>Split</name>
@@ -1070,6 +1228,20 @@
             instead of simply replacing the performance comparator.&lt;/p&gt;
         </help>
     <key>performance_binominal_classification</key>
+    <tags>
+         <tag>Roc</tag>
+         <tag>Accuracy</tag>
+         <tag>Errors</tag>
+         <tag>Precision</tag>
+         <tag>Recall</tag>
+         <tag>Auc</tag>
+         <tag>Lift</tag>
+         <tag>True</tag>
+         <tag>False</tag>
+         <tag>Positives</tag>
+         <tag>Negatives</tag>
+         <tag>Metrics</tag>
+    </tags>
     <shortName>Performance</shortName>
   </operator>
     
@@ -1108,6 +1280,22 @@
             contains example weights, these weights may be aggregated in each
             group to maintain the weightings among groups.&lt;/p&gt;</help>
     <key>pivot</key>
+    <tags>
+         <tag>Rotate</tag>
+         <tag>Rotations</tag>
+         <tag>Pivoting</tag>
+         <tag>Group</tag>
+         <tag>Grouping</tag>
+         <tag>Group by</tag>
+         <tag>Aggregate</tag>
+         <tag>Cross-table</tag>
+         <tag>Crosstable</tag>
+         <tag>Long</tag>
+         <tag>Wide</tag>
+         <tag>Transpose</tag>
+         <tag>Sum</tag>
+         <tag>Count</tag>
+    </tags>
   </operator>
     <operator>
         <name>MetaCost</name>
@@ -1141,6 +1329,14 @@
             used as real value of the new attribute. If the value is missing, the
             new value will be missing.</help>
     <key>numerical_to_real</key>
+    <tags>
+         <tag>Continous</tag>
+         <tag>Numbers</tag>
+         <tag>Integers</tag>
+         <tag>Reals</tag>
+         <tag>Types</tag>
+         <tag>Quantitative</tag>
+    </tags>
   </operator>
     <operator>
         <name>Guess Types</name>
@@ -1154,6 +1350,22 @@
             all attributes do not have to be transformed manually with operators
             like &lt;i&gt;Parse Numbers&lt;/i&gt;.</help>
     <key>guess_types</key>
+    <tags>
+         <tag>Automatic</tag>
+         <tag>Continous</tag>
+         <tag>Categorical</tag>
+         <tag>Nominal</tag>
+         <tag>Ordinary</tag>
+         <tag>Discrete</tag>
+         <tag>Binominal</tag>
+         <tag>Polynominal</tag>
+         <tag>Numerical</tag>
+         <tag>Real</tag>
+         <tag>Integer</tag>
+         <tag>Binary</tag>
+         <tag>Dual</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
     <operator>
         <name>Loop Attributes</name>
@@ -1172,6 +1384,10 @@
             are only applied for feature names matching the filter
             expression.&lt;/p&gt;</help>
     <key>loop_attributes</key>
+    <tags>
+         <tag>Iterate</tag>
+         <tag>Iteration</tag>
+    </tags>
   </operator>
     <operator>
         <name>Loop Examples</name>
@@ -1250,6 +1466,18 @@
             i.e. on mean 0 and variance 1. or by a proportional transformation as
             proportion of the total sum of the respective attribute.</help>
     <key>normalize</key>
+    <tags>
+         <tag>Normalization</tag>
+         <tag>Standardize</tag>
+         <tag>Standardization</tag>
+         <tag>Z-transformation</tag>
+         <tag>Z-Transformation</tag>
+         <tag>Scaling</tag>
+         <tag>Features</tag>
+         <tag>Attributes</tag>
+         <tag>Variables</tag>
+         <tag>Columns</tag>
+    </tags>
   </operator>
     <operator>
         <name>De-Normalize</name>
@@ -1268,6 +1496,13 @@
          Although renamed, an attribute keeps it's role. For example if you rename an attribute &quot;label&quot; of the role &lt;b&gt;label&lt;/b&gt; to &quot;color&quot;, the resulting attribute &quot;color&quot; will still have the role &lt;b&gt;label&lt;/b&gt;. For changing a role, see &lt;a href="rm://opdoc/set_role"&gt;Set Role&lt;/a&gt;.
          &lt;/p&gt;</help>
     <key>rename</key>
+    <tags>
+         <tag>Names</tag>
+         <tag>Columns</tag>
+         <tag>Attributes</tag>
+         <tag>Features</tag>
+         <tag>Variables</tag>
+    </tags>
   </operator>
     <operator>
         <name>LinearCombination</name>
@@ -1330,6 +1565,18 @@
             indicated by empty cells or by cells containing only
             &amp;quot;?&amp;quot;.&lt;/p&gt;</help>
     <key>read_excel</key>
+    <tags>
+         <tag>Load</tag>
+         <tag>Import</tag>
+         <tag>Read</tag>
+         <tag>Data</tag>
+         <tag>Files</tag>
+         <tag>Xls</tag>
+         <tag>Xlsx</tag>
+         <tag>Microsoft</tag>
+         <tag>Spreadsheets</tag>
+         <tag>Datasets</tag>
+    </tags>
   </operator>
   
   <operator>
@@ -1449,6 +1696,16 @@
   </operator>
    <operator>
       <key>optimize_selection_forward</key>
+      <tags>
+         <tag>Iterate</tag>
+         <tag>Iteration</tag>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+      </tags>
       <name>Forward Selection</name>
       <synopsis>A highly efficient implementation of the forward selection scheme.</synopsis>
       <help>&lt;p&gt;
@@ -1511,6 +1768,16 @@
             an operator or operator chain that can apply this model (usually a
             model applier)</help>
     <key>x_prediction</key>
+    <tags>
+         <tag>Cross-validations</tag>
+         <tag>Crossvalidations</tag>
+         <tag>Predictions</tag>
+         <tag>Validations</tag>
+         <tag>Scoring</tag>
+         <tag>Scores</tag>
+         <tag>Training</tag>
+         <tag>Testing</tag>
+    </tags>
   </operator>
     <operator>
         <name>Expectation Maximization Clustering</name>
@@ -1539,6 +1806,14 @@
             out a3 any longer.&lt;/p&gt; &lt;p&gt; The used correlation function
             is the Pearson correlation. &lt;/p&gt;</help>
     <key>remove_correlated_attributes</key>
+    <tags>
+         <tag>Filter</tag>
+         <tag>Keep</tag>
+         <tag>Remove</tag>
+         <tag>Drop</tag>
+         <tag>Delete</tag>
+         <tag>Correlations</tag>
+    </tags>
   </operator>
     <operator>
         <name>ValueSubgroupIterator</name>
@@ -1777,6 +2052,13 @@
             string value is simply used as nominal value of the new attribute. If
             the value is missing, the new value will be missing.</help>
     <key>text_to_nominal</key>
+    <tags>
+         <tag>Categorical</tag>
+         <tag>Ordinal</tag>
+         <tag>Strings</tag>
+         <tag>Clob</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
     <operator>
         <name>Subgroup Discovery (Meta)</name>
@@ -1821,6 +2103,19 @@
         <help>The given value will be replaced with Double.NaN throughout the specified subset,
         	so it will be treated as a missing value by subsequent operators.</help>
     <key>declare_missing_value</key>
+    <tags>
+         <tag>Nulls</tag>
+         <tag>Empty</tag>
+         <tag>Cleansing</tag>
+         <tag>Quality</tag>
+         <tag>Missings</tag>
+         <tag>Handle</tag>
+         <tag>Impute</tag>
+         <tag>Na</tag>
+         <tag>Nan</tag>
+         <tag>Fill na</tag>
+         <tag>Declare na</tag>
+    </tags>
   </operator>
     <operator>
         <name>Stem (Snowball)</name>
@@ -1864,6 +2159,20 @@
         <help>This operator represents an implementation of k-means. This
             operator will create a cluster attribute if not present yet.</help>
     <key>k_means</key>
+    <tags>
+         <tag>Unsupervised</tag>
+         <tag>Clustering</tag>
+         <tag>Segmentation</tag>
+         <tag>Grouping</tag>
+         <tag>Similarity</tag>
+         <tag>Similarities</tag>
+         <tag>Euclidean</tag>
+         <tag>Distances</tag>
+         <tag>Centroids</tag>
+         <tag>K Means</tag>
+         <tag>K means</tag>
+         <tag>Kmeans</tag>
+    </tags>
     <shortName>Clustering</shortName>
   </operator>
     <operator>
@@ -1904,6 +2213,20 @@
         <help>This operator represents an implementation of k-medoids. This
             operator will create a cluster attribute if not present yet.</help>
     <key>k_medoids</key>
+    <tags>
+         <tag>Unsupervised</tag>
+         <tag>Clustering</tag>
+         <tag>Segmentation</tag>
+         <tag>Grouping</tag>
+         <tag>Similarity</tag>
+         <tag>Similarities</tag>
+         <tag>Euclidean</tag>
+         <tag>Distances</tag>
+         <tag>Centroids</tag>
+         <tag>K Medoids</tag>
+         <tag>K medoids</tag>
+         <tag>Kmedoids</tag>
+    </tags>
     <shortName>Clustering</shortName>
   </operator>
     <operator>
@@ -1918,6 +2241,18 @@
     attributes are equal.
   </help>
     <key>remove_duplicates</key>
+    <tags>
+         <tag>Deduplication</tag>
+         <tag>Matches</tag>
+         <tag>Matching</tag>
+         <tag>Replicates</tag>
+         <tag>Copies</tag>
+         <tag>Cleansing</tag>
+         <tag>Quality</tag>
+         <tag>Distinct</tag>
+         <tag>Equal</tag>
+         <tag>Filter</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -1948,6 +2283,11 @@
         <synopsis>This operators multiplies its input object.</synopsis>
         <help>&lt;p&gt;This operator copies its input object to all connected output ports. As     more ports are connected, more copies are generated. Note that objects are     copied by reference, hence the underlying data of &lt;i&gt;ExampleSets&lt;/i&gt; is     never copied (unless using a &lt;i&gt;Materialize Data&lt;/i&gt; operator). Therefore,     copying objects is cheap. When copying &lt;i&gt;ExampleSets&lt;/i&gt; only references     to attributes are copied. When attributes are changed or added to one     example set, this change is invisible to the other copies. However, if &lt;i&gt;data&lt;/i&gt;     is modified in one thread of the process flow, it is also modified in the     other copies.&lt;/p&gt;</help>
     <key>multiply</key>
+    <tags>
+         <tag>Copy</tag>
+         <tag>Branch</tag>
+         <tag>Duplicate</tag>
+    </tags>
   </operator>
     <operator>
         <name>Additive Regression</name>
@@ -2015,6 +2355,17 @@
             Excel 95, 97, 2000, XP, 2003 and newer. Missing data values are
             indicated by empty cells.&lt;/p&gt;</help>
     <key>write_excel</key>
+    <tags>
+         <tag>Save</tag>
+         <tag>Export</tag>
+         <tag>Write</tag>
+         <tag>Datasets</tag>
+         <tag>Files</tag>
+         <tag>Xls</tag>
+         <tag>Xlsx</tag>
+         <tag>Microsoft</tag>
+         <tag>Spreadsheets</tag>
+    </tags>
   </operator>
     <operator>
         <name>ROCChart</name>
@@ -2049,6 +2400,16 @@
             antecedents is pruned with the pruning metric p/(p+n).&lt;/p&gt;
         </help>
     <key>rule_induction</key>
+    <tags>
+         <tag>Ripper</tag>
+         <tag>Version space</tag>
+         <tag>Cn2</tag>
+         <tag>Part</tag>
+         <tag>Ridor</tag>
+         <tag>Oner</tag>
+         <tag>Prism</tag>
+         <tag>Jrip</tag>
+    </tags>
   </operator>
     
     <operator>
@@ -2063,6 +2424,18 @@
             all wrongly classified data points, the weight vector is either
             increased or decreased by the corresponding example values.</help>
     <key>perceptron</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Regression</tag>
+         <tag>Deep</tag>
+         <tag>Backpropagation</tag>
+         <tag>Back-propagation</tag>
+         <tag>Perceptron</tag>
+         <tag>Network</tag>
+         <tag>Artificial</tag>
+         <tag>Anns</tag>
+    </tags>
   </operator>
        <operator>
         <name>Performance (Ranking)</name>
@@ -2146,6 +2519,13 @@
             instead of simply replacing the performance comparator.&lt;/p&gt;
         </help>
     <key>performance_regression</key>
+    <tags>
+         <tag>RMSE</tag>
+         <tag>Errors</tag>
+         <tag>Absolute</tag>
+         <tag>Relative</tag>
+         <tag>Squared</tag>
+    </tags>
     <shortName>Performance</shortName>
   </operator>
     <operator>
@@ -2165,6 +2545,24 @@
             and the numerical values are simply sorted into those bins. Skips all
             special attributes including the label.</help>
     <key>discretize_by_bins</key>
+    <tags>
+         <tag>Continous</tag>
+         <tag>Categorical</tag>
+         <tag>Nominal</tag>
+         <tag>Polynominal</tag>
+         <tag>Ordinary</tag>
+         <tag>Discrete</tag>
+         <tag>Discretization</tag>
+         <tag>Dichotomization</tag>
+         <tag>Dichotomy</tag>
+         <tag>Binning</tag>
+         <tag>Histogram</tag>
+         <tag>Types</tag>
+         <tag>Qualitative</tag>
+         <tag>Quantitative</tag>
+         <tag>Groups</tag>
+         <tag>Intervals</tag>
+    </tags>
     <shortName>Discretize</shortName>
   </operator>
     <operator>
@@ -2267,6 +2665,19 @@
          real numbers occur, it will be of type real. Columns containing values which can't be interpreted as numbers will be nominal, as long as they don't match the date and time pattern of the &lt;b&gt;date format&lt;/b&gt; parameter. If they do, this column of the csv file will be automatically parsed as date and the according attribute will be of type date.
          &lt;/p&gt;</help>
     <key>read_csv</key>
+    <tags>
+         <tag>Load</tag>
+         <tag>Import</tag>
+         <tag>Read</tag>
+         <tag>Data</tag>
+         <tag>Files</tag>
+         <tag>Text</tag>
+         <tag>Commas</tag>
+         <tag>Spreadsheet</tag>
+         <tag>Excel</tag>
+         <tag>Datasets</tag>
+         <tag>Tsv</tag>
+    </tags>
   </operator>
      
    <operator>
@@ -2352,6 +2763,16 @@
             simply be added. If they already exist they are simply skipped.
             &lt;/p&gt;</help>
     <key>join</key>
+    <tags>
+         <tag>Combine</tag>
+         <tag>Merge</tag>
+         <tag>Match</tag>
+         <tag>Left</tag>
+         <tag>Right</tag>
+         <tag>Outer</tag>
+         <tag>Inner</tag>
+         <tag>Cartesian</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -2457,6 +2878,12 @@
             in decreasing direction, depending on the setting of &lt;b&gt;sorting direction&lt;/b&gt;. &lt;/p&gt;
         </help>
     <key>sort</key>
+    <tags>
+         <tag>Rank</tag>
+         <tag>Order</tag>
+         <tag>Ascending</tag>
+         <tag>Descending</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -2480,6 +2907,14 @@
             0.0 is mapped to false and all other values are mapped to true.
         </help>
     <key>numerical_to_binominal</key>
+    <tags>
+         <tag>Binary</tag>
+         <tag>Binarizer</tag>
+         <tag>Dual</tag>
+         <tag>Categorical</tag>
+         <tag>Continous</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -2526,6 +2961,17 @@
             deviation can be accessed where applicable.&lt;/li&gt; &lt;/ul&gt;
         </help>
     <key>split_validation</key>
+    <tags>
+         <tag>Divide</tag>
+         <tag>Separate</tag>
+         <tag>Part</tag>
+         <tag>Training</tag>
+         <tag>Testing</tag>
+         <tag>Holdout</tag>
+         <tag>Partitions</tag>
+         <tag>Validations</tag>
+         <tag>Evaluations</tag>
+    </tags>
     <shortName>Validation</shortName>
   </operator>
     <operator>
@@ -2686,6 +3132,24 @@
             &lt;li&gt;&lt;em&gt;&quot;yyyy-MM-dd'T'HH:mm:ss.SSSZ&quot;&lt;/em&gt;:
             2001-07-04T12:08:56.235-0700&lt;/li&gt; &lt;/ul&gt;</help>
     <key>nominal_to_date</key>
+    <tags>
+         <tag>Dates</tag>
+         <tag>Times</tag>
+         <tag>Datetimes</tag>
+         <tag>Formats</tag>
+         <tag>Nominal</tag>
+         <tag>Categorical</tag>
+         <tag>Polynominal</tag>
+         <tag>Weeks</tag>
+         <tag>Days</tag>
+         <tag>Months</tag>
+         <tag>Years</tag>
+         <tag>Quarters</tag>
+         <tag>Hours</tag>
+         <tag>Minutes</tag>
+         <tag>Seconds</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
         <operator>
         <name>Aggregate</name>
@@ -2702,6 +3166,22 @@
             &lt;i&gt;ExampleFilter&lt;/i&gt; operator following this
             one.&lt;/p&gt;</help>
     <key>aggregate</key>
+    <tags>
+         <tag>Groupby</tag>
+         <tag>Group by</tag>
+         <tag>Grouping</tag>
+         <tag>Sum</tag>
+         <tag>Count</tag>
+         <tag>Min</tag>
+         <tag>Max</tag>
+         <tag>Average</tag>
+         <tag>Avg</tag>
+         <tag>Mean</tag>
+         <tag>Pivot</tag>
+         <tag>Cross-table</tag>
+         <tag>Crosstable</tag>
+         <tag>Distinct</tag>
+    </tags>
   </operator>
     <operator>
         <name>IOConsumer</name>
@@ -2727,8 +3207,8 @@
     
     <operator>
         <name>Read AML</name>
-        <synopsis>&lt;p&gt;This operator reads an example set from file. The operator can be     configured to read almost all line based file formats.&lt;/p&gt;</synopsis>
-        <help>&lt;p&gt;      This operator reads an example set from (a) file(s). Probably you can       use the default parameter values for the most file formats (including       the format produced by the ExampleSetWriter, CSV, ...). Please refer to       section &lt;i&gt;First steps/File formats&lt;/i&gt; for details on the attribute       description file set by the parameter &lt;var&gt;attributes&lt;/var&gt; used to       specify attribute types. You can use the wizard of this operator or the       tool Attribute Editor in order to create those meta data .aml files for       your datasets.    &lt;/p&gt;    &lt;p&gt;      This operator supports the reading of data from multiple source files.       Each attribute (including special attributes like labels, weights, ...)       might be read from another file. Please note that only the minimum       number of lines of all files will be read, i.e. if one of the data       source files has less lines than the others, only this number of       examples will be read.    &lt;/p&gt;    &lt;p&gt;      The split points can be defined with regular expressions (please refer       to one of the plenty tutorials available on the web for an       introduction). The default split parameter &amp;quot;,\s*|;\s*|\s+&amp;quot; should work       for most file formats. This regular expression describes the following       column separators    &lt;/p&gt;    &lt;ul&gt;      &lt;li&gt;        the character &amp;quot;,&amp;quot; followed by a whitespace of arbitrary length (also         no white space)      &lt;/li&gt;      &lt;li&gt;        the character &amp;quot;;&amp;quot; followed by a whitespace of arbitrary length (also         no white space)      &lt;/li&gt;      &lt;li&gt;        a whitespace of arbitrary length (min. 1)      &lt;/li&gt;    &lt;/ul&gt;    A logical XOR is defined by &amp;quot;|&amp;quot;. Other useful separators might be &amp;quot;\t&amp;quot; for     tabulars, &amp;quot; &amp;quot; for a single whitespace, and &amp;quot;\s&amp;quot; for any whitespace.&lt;/p&gt;&lt;p&gt;&lt;br&gt;    &lt;p&gt;      Quoting is also possible with &amp;quot;. You can escape quotes with a backslash,       i.e. \&amp;quot;. Please note that you can change these characters by adjusting       the corresponding settings.    &lt;/p&gt;    &lt;p&gt;      Additionally you can specify comment characters which can be used at       arbitrary locations of the data lines. Any content after the comment       character will be ignored. Unknown attribute values can be marked with       empty strings (if this is possible for your column separators) or by a       question mark (recommended).    &lt;/p&gt;</help>
+        <synopsis>&lt;p&gt;This operator reads an example set from file. The operator can be configured to read almost all line based file formats.&lt;/p&gt;</synopsis>
+        <help>&lt;p&gt;This operator reads an example set from (a) file(s). Probably you can use the default parameter values for the most file formats (including the format produced by the ExampleSetWriter, CSV, ...). Please refer to section &lt;i&gt;First steps/File formats&lt;/i&gt; for details on the attribute description file set by the parameter &lt;var&gt;attributes&lt;/var&gt; used to specify attribute types. You can use the wizard of this operator or the tool Attribute Editor in order to create those meta data .aml files for your datasets.&lt;/p&gt;&lt;p&gt; This operator supports the reading of data from multiple source files. Each attribute (including special attributes like labels, weights, ...) might be read from another file. Please note that only the minimum number of lines of all files will be read, i.e. if one of the data source files has less lines than the others, only this number of examples will be read. &lt;/p&gt; &lt;p&gt;The split points can be defined with regular expressions (please refer to one of the plenty tutorials available on the web for an introduction). The default split parameter &amp;quot;,\s*|;\s*|\s+&amp;quot; should work for most file formats. This regular expression describes the following       column separators &lt;/p&gt; &lt;ul&gt;&lt;li&gt; the character &amp;quot;,&amp;quot; followed by a whitespace of arbitrary length (also no white space) &lt;/li&gt; &lt;li&gt; the character &amp;quot;;&amp;quot; followed by a whitespace of arbitrary length (also no white space) &lt;/li&gt; &lt;li&gt; a whitespace of arbitrary length (min. 1) &lt;/li&gt; &lt;/ul&gt; A logical XOR is defined by &amp;quot;|&amp;quot;. Other useful separators might be &amp;quot;\t&amp;quot; for tabulars, &amp;quot; &amp;quot; for a single whitespace, and &amp;quot;\s&amp;quot; for any whitespace.&lt;/p&gt;&lt;p&gt;&lt;br&gt; &lt;p&gt; Quoting is also possible with &amp;quot;. You can escape quotes with a backslash, i.e. \&amp;quot;. Please note that you can change these characters by adjusting the corresponding settings. &lt;/p&gt; &lt;p&gt; Additionally you can specify comment characters which can be used at arbitrary locations of the data lines. Any content after the comment character will be ignored. Unknown attribute values can be marked with empty strings (if this is possible for your column separators) or by a question mark (recommended). &lt;/p&gt;</help>
     <key>read_aml</key>
   </operator>
     <operator>
@@ -2776,6 +3256,10 @@
             Processes/Parameter and performance analysis&lt;/i&gt; for an example
             application.</help>
     <key>log</key>
+    <tags>
+         <tag>Record</tag>
+         <tag>Measures</tag>
+    </tags>
   </operator>
     <operator>
         <name>Loop Values</name>
@@ -2795,6 +3279,10 @@
             &lt;p&gt;The current value of the loop can be accessed with the
             specified macro name.&lt;/p&gt;</help>
     <key>loop_values</key>
+    <tags>
+         <tag>Iterate</tag>
+         <tag>Iteration</tag>
+    </tags>
   </operator>
     <operator>
         <name>Numeric2Binominal</name>
@@ -2851,6 +3339,15 @@
             selected. This operator is also able to select the k attributes with
             the highest weight.</help>
     <key>select_by_weights</key>
+    <tags>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+         <tag>Thresholds</tag>
+    </tags>
   </operator>
     
     <operator>
@@ -2880,6 +3377,16 @@
         <synopsis>&lt;p&gt;Reads an object from the data repository.&lt;/p&gt;</synopsis>
         <help>&lt;p&gt;      This operator can be used to access the repositories introduced in       RapidMiner 5. It should replace all file access, since it provides full       meta data processing, which eases the usage of RapidMiner a lot. In       contrast to accessing a raw file, it will provide the complete meta data       of the data, so that all meta data transformations are possible.    &lt;/p&gt;    &lt;p&gt;      The single parameter &amp;quot;repository_entry&amp;quot; references an entry in the       repository which will be returned as the output of this operator.       Repository locations are resolved relative to the repository folder       containing the current process. Folders in the repository are separated       by a forward slash (/), a &amp;quot;..&amp;quot; references the parent folder. A leading       forward slash references the root folder of the repository containing       the current process. A leading double forward slash is interpreted as an       absolute path starting with the name of a repository.    &lt;/p&gt;    &lt;p&gt;      &lt;br&gt;          &lt;/p&gt;    &lt;ul&gt;      &lt;li&gt;        &amp;quot;MyData&amp;quot; looks up an entry &amp;quot;MyData&amp;quot; in the same folder as the current         process.      &lt;/li&gt;      &lt;li&gt;        &amp;quot;../input/MyData looks up an entry &amp;quot;MyData&amp;quot; located in a folder         &amp;quot;input&amp;quot; next to the folder containing the current process.      &lt;/li&gt;      &lt;li&gt;        &amp;quot;/data/Model&amp;quot; looks up an entry &amp;quot;Model&amp;quot; in a top-level folder &amp;quot;data&amp;quot;         in the repository holding the current process      &lt;/li&gt;      &lt;li&gt;        &amp;quot;//Samples/data/Iris&amp;quot; looks up the Iris data set in the &amp;quot;Samples&amp;quot;         repository.&lt;/p&gt;&lt;p&gt;&lt;br&gt;        &lt;p&gt;                  &lt;/p&gt;      &lt;/li&gt;    &lt;/ul&gt;</help>
     <key>retrieve</key>
+    <tags>
+         <tag>Load</tag>
+         <tag>Import</tag>
+         <tag>Read</tag>
+         <tag>Datasets</tag>
+         <tag>Examples</tag>
+         <tag>Example Set</tag>
+         <tag>Table</tag>
+         <tag>Repository</tag>
+    </tags>
   </operator>
     <operator>
         <name>Support Vector Machine</name>
@@ -2891,6 +3398,14 @@
             and provides a fast algorithm and good results for many learning
             tasks.</help>
     <key>support_vector_machine</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Regression</tag>
+         <tag>Model</tag>
+         <tag>SVM</tag>
+         <tag>Margin</tag>
+    </tags>
     <shortName>SVM</shortName>
   </operator>
    <operator>
@@ -2901,6 +3416,14 @@
             the dot (linear) kernel, but outputs a high performance model that only contains the 
             linear coefficient for faster model application.</help>
     <key>support_vector_machine_linear</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Regression</tag>
+         <tag>Model</tag>
+         <tag>SVM</tag>
+         <tag>Margin</tag>
+    </tags>
     <shortName>SVM (Linear)</shortName>
   </operator>
     <operator>
@@ -2910,6 +3433,11 @@
         <help>Adds a copy of a single attribute to the given example set.
         </help>
     <key>generate_copy</key>
+    <tags>
+         <tag>New</tag>
+         <tag>Create</tag>
+         <tag>Duplicate</tag>
+    </tags>
   </operator>
     <operator>
         <name>Weight by Component Model</name>
@@ -2926,12 +3454,29 @@
         <synopsis>&lt;p&gt;This operator allowes to select which attributes should be part of the     resulting &lt;i&gt;ExampleSet&lt;/i&gt;. Selection can be performed using several     conditions.&lt;/p&gt;</synopsis>
         <help>&lt;p&gt;      This operator selects which attributes of an &lt;i&gt;ExampleSet&lt;/i&gt; should be       kept and which are removed. Therefore, different filter types may be       selected in the parameter &lt;b&gt;attribute filter type&lt;/b&gt; and only       attributes fulfilling this condition type are selected. The rest will be       removed from the &lt;i&gt;ExampleSet.&lt;/i&gt; There's a global switch to invert       the outcome, so that all attributes which would have been originally       discarded will be kept and vice versa. To invert the decision, use the &lt;b&gt;invert       selection&lt;/b&gt; parameter.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      These types are available    &lt;/p&gt;    &lt;ul&gt;      &lt;li&gt;        &lt;b&gt;all:&lt;/b&gt; Will simply select each attribute      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;single:&lt;/b&gt; This will allow you to select a single attribute name.         It might be selected from the drop down box of parameter &lt;b&gt;attribute&lt;/b&gt;         if the meta data is known      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;subset:&lt;/b&gt; Let's you choose a number of attributes from a list.         This will not work if no meta data is present. Each known attribute is         shown in the list and might be selected.      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;regular_expression:&lt;/b&gt; This let's you specify a regular         expression. Each attribute whose name matches this expression will be         selected. Regular expressions are a very powerful tool but need a         detailed explanation to beginners. Please refer to one of the several         tutorials available on the internet for a more detailed description.      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;value_type:&lt;/b&gt; Select only attributes of a certain type. Please         mention that the types are hierarchical: For example are binominal         attributes nomina as well as polynominal.      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;block_type:&lt;/b&gt; Similar to value_type this let's you select the         attributes depending on their block type.      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;no_missing_values: &lt;/b&gt;Will select all attributes which don't         contain a missing value in any example.      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;numeric_value_filter: &lt;/b&gt;This will select the attributes by         testing if all their values of all examples match this condition or if         they aren't not numerical. The numeric condition might be specified by         typing a numerical condition. For example the parameter string &amp;quot;&amp;gt; 6&amp;quot;         will keep all nominal attributes and all numeric attributes having a         value of greater 6 in every example. A combination of conditions is         possible: &amp;quot;&amp;gt; 6 &amp;amp;&amp;amp; &amp;lt; 11&amp;quot; or &amp;quot;&amp;lt;= 5 || &amp;lt; 0&amp;quot;. But &amp;amp;&amp;amp; and || must not be         mixed.      &lt;/li&gt;    &lt;/ul&gt;</help>
     <key>select_attributes</key>
+    <tags>
+         <tag>Filter</tag>
+         <tag>Keep</tag>
+         <tag>Remove</tag>
+         <tag>Drop</tag>
+         <tag>Delete</tag>
+         <tag>Columns</tag>
+         <tag>Variables</tag>
+         <tag>Features</tag>
+         <tag>Feature Set</tag>
+    </tags>
   </operator>
       <operator>
         <name>Reorder Attributes</name>
         <synopsis></synopsis>
         <help></help>
     <key>order_attributes</key>
+    <tags>
+         <tag>Sort</tag>
+         <tag>Arrange</tag>
+         <tag>Ascending</tag>
+         <tag>Descending</tag>
+    </tags>
   </operator>
     <operator>
         <name>Copy File</name>
@@ -3040,6 +3585,14 @@
     completely different parts or loops of processes.
   </help>
     <key>remember</key>
+    <tags>
+         <tag>Store</tag>
+         <tag>Memorize</tag>
+         <tag>Recall</tag>
+         <tag>Save</tag>
+         <tag>Object</tag>
+         <tag>Cache</tag>
+    </tags>
   </operator>
   <operator>
         <name>Publish to App</name>
@@ -3263,6 +3816,15 @@
             attribute indicating true (outlier) and false (no outlier).&lt;/p&gt;
         </help>
     <key>detect_outlier_distances</key>
+    <tags>
+         <tag>Anomaly</tag>
+         <tag>Anomalies</tag>
+         <tag>Detection</tag>
+         <tag>Removal</tag>
+         <tag>Remove</tag>
+         <tag>Cleansing</tag>
+         <tag>Quality</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -3284,6 +3846,14 @@
             would have been splitted according to each of the given features).
         </help>
     <key>weight_by_information_gain_ratio</key>
+    <tags>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+    </tags>
   </operator>
     <operator>
         <name>Loop Labels</name>
@@ -3348,6 +3918,16 @@
     &lt;/ul&gt;
   </help>
     <key>branch</key>
+    <tags>
+         <tag>If</tag>
+         <tag>Then</tag>
+         <tag>Else</tag>
+         <tag>Conditional</tag>
+         <tag>Conditions</tag>
+         <tag>Fork</tag>
+         <tag>If-then-else</tag>
+         <tag>Case</tag>
+    </tags>
   </operator>
     <operator>
         <name>Tokenize</name>
@@ -3514,6 +4094,13 @@
         <help>This operator stores IOObjects at a location in a repository.
         </help>
     <key>store</key>
+    <tags>
+         <tag>Save</tag>
+         <tag>Export</tag>
+         <tag>Write</tag>
+         <tag>Datasets</tag>
+         <tag>Repository</tag>
+    </tags>
   </operator>
     <operator>
         <name>Weight by Gini Index</name>
@@ -3523,6 +4110,14 @@
             the Gini index of the class distribution, if the given example set
             would have been splitted according to the feature.</help>
     <key>weight_by_gini_index</key>
+    <tags>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+    </tags>
   </operator>
     <operator>
         <name>Weight by Tree Importance</name>
@@ -3600,6 +4195,22 @@
             also possible to extract the number which has passed by since
             1970-01-01 00:00.</help>
     <key>date_to_numerical</key>
+    <tags>
+         <tag>Dates</tag>
+         <tag>Times</tag>
+         <tag>Datetimes</tag>
+         <tag>Continous</tag>
+         <tag>Numbers</tag>
+         <tag>Weeks</tag>
+         <tag>Days</tag>
+         <tag>Months</tag>
+         <tag>Years</tag>
+         <tag>Quarters</tag>
+         <tag>Hours</tag>
+         <tag>Minutes</tag>
+         <tag>Seconds</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
     <operator>
         <name>Generate Team Profit Data</name>
@@ -3660,6 +4271,18 @@
 
         </help>
     <key>performance_classification</key>
+    <tags>
+         <tag>Accuracy</tag>
+         <tag>Errors</tag>
+         <tag>Precision</tag>
+         <tag>Recall</tag>
+         <tag>Kappa</tag>
+         <tag>Squared</tag>
+         <tag>Relative</tag>
+         <tag>Validations</tag>
+         <tag>Evaluations</tag>
+         <tag>Metrics</tag>
+    </tags>
     <shortName>Performance</shortName>
   </operator>
     <operator>
@@ -3671,6 +4294,16 @@
             contains 5000 examples and the sample ratio is set to 0.1, the result
             will have approximately 500 examples.</help>
     <key>sample</key>
+    <tags>
+         <tag>Subsets</tag>
+         <tag>Random</tag>
+         <tag>Ratio</tag>
+         <tag>Stratified</tag>
+         <tag>Stratification</tag>
+         <tag>Bootstrap</tag>
+         <tag>Population</tag>
+         <tag>Downsample</tag>
+    </tags>
   </operator>
     <operator>
         <name>Rename by Example Values</name>
@@ -3719,6 +4352,12 @@
         &lt;/p&gt;
         </help>
     <key>replace</key>
+    <tags>
+         <tag>Map</tag>
+         <tag>Change</tag>
+         <tag>Regex</tag>
+         <tag>Regular expressions</tag>
+    </tags>
   </operator>
     <operator>
         <name>Rainflow Matrix</name>
@@ -3744,6 +4383,15 @@
             numerical. Please use appropriate preprocessing operators in order to
             ensure this.</help>
     <key>weight_by_svm</key>
+    <tags>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+         <tag>Support vector machine</tag>
+    </tags>
   </operator>
     <operator>
         <name>Support Vector Clustering</name>
@@ -3763,6 +4411,20 @@
             methods which often can also easily be understood. This decision tree
             learner works similar to Quinlan's ID3.</help>
     <key>id3</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>J48</tag>
+         <tag>J4.8</tag>
+         <tag>C45</tag>
+         <tag>C4.5</tag>
+         <tag>C50</tag>
+         <tag>C5.0</tag>
+         <tag>Cart</tag>
+         <tag>Chaid</tag>
+         <tag>Decisiontree</tag>
+         <tag>Decision tree</tag>
+    </tags>
   </operator>
     <operator>
         <name>ANOVA Matrix</name>
@@ -3800,6 +4462,10 @@
             operator into an ExampleSet which can then be used by other
             operators.</help>
     <key>log_to_data</key>
+    <tags>
+         <tag>Record</tag>
+         <tag>Measures</tag>
+    </tags>
   </operator>
     <operator>
         <name>Numeric2Binary</name>
@@ -3901,6 +4567,18 @@
             &amp;quot;value&amp;quot; indicates that the user defined parameter
             should be used for the replacement.</help>
     <key>replace_missing_values</key>
+    <tags>
+         <tag>Nulls</tag>
+         <tag>Empty</tag>
+         <tag>Cleansing</tag>
+         <tag>Quality</tag>
+         <tag>Missings</tag>
+         <tag>Handle</tag>
+         <tag>Impute</tag>
+         <tag>Na</tag>
+         <tag>Nan</tag>
+         <tag>Fill na</tag>
+    </tags>
   </operator>
     <operator>
         <name>AddNominalValue</name>
@@ -3963,6 +4641,14 @@
     &lt;/p&gt;
   </help>
     <key>optimize_parameters_grid</key>
+    <tags>
+         <tag>Iterate</tag>
+         <tag>Settings</tag>
+         <tag>Grid</tag>
+         <tag>Search</tag>
+         <tag>Tune</tag>
+         <tag>Optimal</tag>
+    </tags>
   </operator>
     <operator>
         <name>Nominal to Binominal</name>
@@ -3978,6 +4664,16 @@
             of the values of each attribute is true for a specific example, the
             other values are false.</help>
     <key>nominal_to_binominal</key>
+    <tags>
+         <tag>Categorical</tag>
+         <tag>Polynominal</tag>
+         <tag>Ordinary</tag>
+         <tag>Dual</tag>
+         <tag>Dichotomization</tag>
+         <tag>Dichotomy</tag>
+         <tag>Dummy</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
     <operator>
         <name>Replace Infinite Values</name>
@@ -4127,6 +4823,14 @@
             into a collection (using a IOCollector) and store the collection
             using an IOStorage operator.</help>
     <key>loop_parameters</key>
+    <tags>
+         <tag>Iterate</tag>
+         <tag>Settings</tag>
+         <tag>Grid</tag>
+         <tag>Search</tag>
+         <tag>Tune</tag>
+         <tag>Optimal</tag>
+    </tags>
   </operator>
     <operator>
         <name>Extract Macro</name>
@@ -4162,6 +4866,11 @@
             macros.&lt;/p&gt;
         </help>
     <key>extract_macro</key>
+    <tags>
+         <tag>Process</tag>
+         <tag>Variable</tag>
+         <tag>Setting</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -4273,6 +4982,15 @@
             the information gain in class distribution, if exampleSet would be
             splitted after the feature.</help>
     <key>weight_by_information_gain</key>
+    <tags>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+         <tag>Entropy</tag>
+    </tags>
   </operator>
     <operator>
         <name>Parse Numbers</name>
@@ -4288,6 +5006,17 @@
             converted. Please use the operator &lt;i&gt;Guess Types&lt;/i&gt;
             in these cases.&lt;/p&gt;</help>
     <key>parse_numbers</key>
+    <tags>
+         <tag>Nominal to numerical</tag>
+         <tag>Parsing</tag>
+         <tag>Formats</tag>
+         <tag>Continous</tag>
+         <tag>Numbers</tag>
+         <tag>Quantitative</tag>
+         <tag>Integers</tag>
+         <tag>Reals</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
     <operator>
         <name>ExcelReader</name>
@@ -4333,6 +5062,24 @@
             If a '?' is given as class value the according numerical values are
             mapped to unknown values in the resulting attribute.</help>
     <key>discretize_by_user_specification</key>
+    <tags>
+         <tag>Continous</tag>
+         <tag>Categorical</tag>
+         <tag>Nominal</tag>
+         <tag>Polynominal</tag>
+         <tag>Ordinary</tag>
+         <tag>Discrete</tag>
+         <tag>Discretization</tag>
+         <tag>Dichotomization</tag>
+         <tag>Dichotomy</tag>
+         <tag>Binning</tag>
+         <tag>Histogram</tag>
+         <tag>Types</tag>
+         <tag>Qualitative</tag>
+         <tag>Quantitative</tag>
+         <tag>Groups</tag>
+         <tag>Intervals</tag>
+    </tags>
     <shortName>Discretize</shortName>
   </operator>
     <operator>
@@ -4386,6 +5133,16 @@
             &lt;code&gt;ModelApplier&lt;/code&gt; you can transform the features.
         </help>
     <key>principal_component_analysis</key>
+    <tags>
+         <tag>PCA</tag>
+         <tag>Components</tag>
+         <tag>Orthogonal</tag>
+         <tag>Eigenvalues</tag>
+         <tag>Decompositions</tag>
+         <tag>Singular</tag>
+         <tag>Reduction</tag>
+         <tag>Multicollinearity</tag>
+    </tags>
     <shortName>PCA</shortName>
   </operator>
     <operator>
@@ -4486,6 +5243,22 @@
             using a numeric index, then the names of the attributes representing
             the single time points are used as index attribute.</help>
     <key>de_pivot</key>
+    <tags>
+         <tag>Rotate</tag>
+         <tag>Rotations</tag>
+         <tag>Pivoting</tag>
+         <tag>Group</tag>
+         <tag>Grouping</tag>
+         <tag>Group by</tag>
+         <tag>Aggregate</tag>
+         <tag>Cross-table</tag>
+         <tag>Crosstable</tag>
+         <tag>Long</tag>
+         <tag>Wide</tag>
+         <tag>Transpose</tag>
+         <tag>Sum</tag>
+         <tag>Count</tag>
+    </tags>
   </operator>
     <operator>
         <name>Performance (Attribute Count)</name>
@@ -4545,6 +5318,12 @@
             * X2 ^ d2 + w3 * X3 ^ d3&lt;/code&gt;&lt;br /&gt; &lt;br /&gt; will
             be fitted to the training data.&lt;/p&gt;</help>
     <key>polynomial_regression</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Regression</tag>
+         <tag>Polynomials</tag>
+         <tag>Fitting</tag>
+    </tags>
   </operator>
     <operator>
         <name>Process Documents</name>
@@ -4573,6 +5352,21 @@
             measure.</synopsis>
         <help>A k nearest neighbor implementation.</help>
     <key>k_nn</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Model</tag>
+         <tag>Nearest</tag>
+         <tag>Neighbors</tag>
+         <tag>Neighbours</tag>
+         <tag>Knn</tag>
+         <tag>Instance-based</tag>
+         <tag>Instancebased</tag>
+         <tag>Similarity</tag>
+         <tag>Similarities</tag>
+         <tag>Euclidean</tag>
+         <tag>Distances</tag>
+    </tags>
   </operator>
     <operator>
         <name>Data to Similarity</name>
@@ -4581,6 +5375,14 @@
         <help>This class represents an operator that creates a similarity
             measure based on an ExampleSet.</help>
     <key>data_to_similarity</key>
+    <tags>
+         <tag>Similarity</tag>
+         <tag>Similarities</tag>
+         <tag>Euclidean</tag>
+         <tag>Distances</tag>
+         <tag>Cross-distances</tag>
+         <tag>Crossdistances</tag>
+    </tags>
   </operator>
     <operator>
         <name>Rescale Confidences</name>
@@ -4712,6 +5514,11 @@
             17+sin(%{macro1}*%{macro2})&lt;br/&gt; if (%macro1}&gt;5,
             %{macro2}*%{macro3}, -abs(%{macro4}))&lt;br/&gt; &lt;/p&gt;</help>
     <key>generate_macro</key>
+    <tags>
+         <tag>Process</tag>
+         <tag>Variable</tag>
+         <tag>Setting</tag>
+    </tags>
   </operator>
     <operator>
         <name>AdaBoost</name>
@@ -4721,9 +5528,16 @@
             available in RapidMiner, not only the ones which originally are part
             of the Weka package.</help>
     <key>adaboost</key>
+    <tags>
+         <tag>Boosting</tag>
+         <tag>Ensembles</tag>
+         <tag>Adaptive</tag>
+         <tag>Freund</tag>
+         <tag>Schapire</tag>
+    </tags>
   </operator>
     <operator>
-        <name>Logistic Regression</name>
+        <name>Logistic Regression (SVM)</name>
         <synopsis>MyKLRLearner provides an internal Java implementation of the
             myKLR by Stefan Rueping.</synopsis>
         <help>This is the Java implementation of &lt;em&gt;myKLR&lt;/em&gt; by
@@ -4731,6 +5545,17 @@
             logistic regression based on the algorithm of Keerthi/etal/2003 and
             the code of mySVM.</help>
     <key>logistic_regression</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Model</tag>
+         <tag>Glm</tag>
+         <tag>Generalized</tag>
+         <tag>Log-likelihood</tag>
+         <tag>Loglikelihood</tag>
+         <tag>Log-odds</tag>
+         <tag>Logodds</tag>
+    </tags>
   </operator>
     <operator>
         <name>Generate Data</name>
@@ -4747,12 +5572,26 @@
             x or positive y and negative z), sinus classification (positive for
             positive sinus values).</help>
     <key>generate_data</key>
+    <tags>
+         <tag>Create</tag>
+         <tag>Datasets</tag>
+         <tag>Samples</tag>
+         <tag>Examples</tag>
+         <tag>Example set</tag>
+    </tags>
   </operator>
   <operator>
   	<name>Generate Data by User Specification</name>
   	<synopsis>Generates an ExampleSet containing exactly one example. The attributes and their types and roles are derived from the expressions
   	given by the parameters.</synopsis>
   	<key>generate_data_user_specification</key>
+    <tags>
+         <tag>Create</tag>
+         <tag>Datasets</tag>
+         <tag>Samples</tag>
+         <tag>Examples</tag>
+         <tag>Example set</tag>
+    </tags>
   </operator>
     <operator>
         <name>Generate Aggregation</name>
@@ -4762,6 +5601,16 @@
             of several other attributes. As functions, several aggregation
             attributes are available.</help>
     <key>generate_aggregation</key>
+    <tags>
+         <tag>Aggregate</tag>
+         <tag>Sum</tag>
+         <tag>Count</tag>
+         <tag>Min</tag>
+         <tag>Max</tag>
+         <tag>Average</tag>
+         <tag>Avg</tag>
+         <tag>Mean</tag>
+    </tags>
   </operator>
     <operator>
         <name>Loop Data Fractions</name>
@@ -4923,6 +5772,17 @@
             densities.</synopsis>
         <help>Kernel Naive Bayes learner.</help>
     <key>naive_bayes_kernel</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Model</tag>
+         <tag>Distribution</tag>
+         <tag>Gaussian</tag>
+         <tag>Multinominal</tag>
+         <tag>Likelihoods</tag>
+         <tag>Probability</tag>
+         <tag>Probabilities</tag>
+    </tags>
   </operator>
     <operator>
         <name>Default Model</name>
@@ -4933,6 +5793,15 @@
             This learner can be used to compare the results of
             &amp;quot;real&amp;quot; learning schemes with guessing.</help>
     <key>default_model</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Regression</tag>
+         <tag>Lazy</tag>
+         <tag>Average</tag>
+         <tag>Mean</tag>
+         <tag>Mode</tag>
+    </tags>
   </operator>
     <operator>
         <name>Sample (Model-Based)</name>
@@ -4971,6 +5840,14 @@
             attribute combination and might therefore take some time for
             non-memory example tables.&lt;/p&gt;</help>
     <key>correlation_matrix</key>
+    <tags>
+         <tag>Relationships</tag>
+         <tag>Associations</tag>
+         <tag>Dependencies</tag>
+         <tag>Dependences</tag>
+         <tag>Pearson</tag>
+         <tag>Coefficients</tag>
+    </tags>
   </operator>
     <operator>
         <name>Optimize by Generation (Evolutionary Aggregation)</name>
@@ -5051,6 +5928,14 @@
             attribute and the weight for this attribute. It will have as many
             rows as are described by the give attribute weights.</help>
     <key>weights_to_data</key>
+    <tags>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+    </tags>
   </operator>
     <operator>
         <name>Single Rule Induction (Single Attribute)</name>
@@ -5267,6 +6152,10 @@
             applied on all attributes for which the name fulfills the pattern
             defined by the name expression.&lt;/p&gt;</help>
     <key>map</key>
+    <tags>
+         <tag>Replace</tag>
+         <tag>Change</tag>
+    </tags>
   </operator>
     <operator>
         <name>Performance</name>
@@ -5309,6 +6198,18 @@
             
             &lt;/p&gt;</help>
     <key>performance</key>
+    <tags>
+         <tag>Rmse</tag>
+         <tag>Accuracy</tag>
+         <tag>Errors</tag>
+         <tag>Precision</tag>
+         <tag>Recall</tag>
+         <tag>Roc</tag>
+         <tag>Auc</tag>
+         <tag>Validations</tag>
+         <tag>Evaluations</tag>
+         <tag>Metrics</tag>
+    </tags>
     <shortName>Performance</shortName>
   </operator>
     <operator>
@@ -5356,6 +6257,20 @@
             &lt;/li&gt;
             &lt;/ul&gt; </help>
     <key>remove_useless_attributes</key>
+    <tags>
+         <tag>Filter</tag>
+         <tag>Keep</tag>
+         <tag>Remove</tag>
+         <tag>Drop</tag>
+         <tag>Delete</tag>
+         <tag>Columns</tag>
+         <tag>Variables</tag>
+         <tag>Features</tag>
+         <tag>Feature Set</tag>
+         <tag>Constant</tag>
+         <tag>Deviation</tag>
+         <tag>Variance</tag>
+    </tags>
   </operator>
     <operator>
         <name>Filter Stopwords (German)</name>
@@ -5442,6 +6357,20 @@
             cluster model, providing distance information to plot as a dendogram.
         </help>
     <key>agglomerative_clustering</key>
+    <tags>
+         <tag>Unsupervised</tag>
+         <tag>Clustering</tag>
+         <tag>Segmentation</tag>
+         <tag>Grouping</tag>
+         <tag>Similarity</tag>
+         <tag>Similarities</tag>
+         <tag>Euclidean</tag>
+         <tag>Distances</tag>
+         <tag>Hierarchical</tag>
+         <tag>Bottom-up</tag>
+         <tag>Bottomup</tag>
+         <tag>Dendrogram</tag>
+    </tags>
     <shortName>Clustering</shortName>
   </operator>
     <operator>
@@ -5533,6 +6462,17 @@
             if (att1&gt;5, att2*att3,-abs(att1))&lt;br/&gt; &lt;/p&gt;
       </help>
     <key>generate_attributes</key>
+    <tags>
+         <tag>Calculate</tag>
+         <tag>Create</tag>
+         <tag>New</tag>
+         <tag>Extract</tag>
+         <tag>Expressions</tag>
+         <tag>Features</tag>
+         <tag>Variables</tag>
+         <tag>Columns</tag>
+         <tag>Functions</tag>
+    </tags>
   </operator>
     <operator>
         <name>IOMultiplier</name>
@@ -5605,6 +6545,13 @@
         <help>This operator finds the best threshold for crisp classifying
             based on user defined costs.</help>
     <key>find_threshold</key>
+    <tags>
+         <tag>Platt</tag>
+         <tag>Scoring</tag>
+         <tag>Scores</tag>
+         <tag>Confidences</tag>
+         <tag>Thresholds</tag>
+    </tags>
   </operator>
     <operator>
         <name>Impute Missing Values</name>
@@ -5625,6 +6572,18 @@
             under development and does not properly work in all cases. We do not
             recommend the usage of this operator in production systems.</help>
     <key>impute_missing_values</key>
+    <tags>
+         <tag>Nulls</tag>
+         <tag>Empty</tag>
+         <tag>Cleansing</tag>
+         <tag>Quality</tag>
+         <tag>Missings</tag>
+         <tag>Handle</tag>
+         <tag>Replace</tag>
+         <tag>Na</tag>
+         <tag>Nan</tag>
+         <tag>Fill na</tag>
+    </tags>
   </operator>
     <operator>
         <name>RVM</name>
@@ -5730,6 +6689,12 @@
             then merges both example sets and will deliver the resulting example
             set.</help>
     <key>union</key>
+    <tags>
+         <tag>Combine</tag>
+         <tag>Merge</tag>
+         <tag>Match</tag>
+         <tag>Append</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -5742,6 +6707,14 @@
             for each attribute of the input example set the value of the
             chi-squared statistic with respect to the class attribute.</help>
     <key>weight_by_chi_squared_statistic</key>
+    <tags>
+         <tag>Weighting</tag>
+         <tag>Importance</tag>
+         <tag>Influence</tag>
+         <tag>Significance</tag>
+         <tag>Factors</tag>
+         <tag>Relevance</tag>
+    </tags>
   </operator>
     <operator>
         <name>AbsoluteSplitChain</name>
@@ -5866,12 +6839,43 @@
             (including the borders). The other examples will be removed from the
             input example set.</help>
     <key>filter_example_range</key>
+    <tags>
+         <tag>Select</tag>
+         <tag>Keep</tag>
+         <tag>Remove</tag>
+         <tag>Drop</tag>
+         <tag>Delete</tag>
+         <tag>Rows</tag>
+         <tag>Cases</tag>
+         <tag>Instances</tag>
+         <tag>Lines</tag>
+         <tag>Observations</tag>
+         <tag>Sample</tag>
+         <tag>Sampling</tag>
+         <tag>Limits</tag>
+    </tags>
   </operator>
     <operator>
         <name>Set Role</name>
         <synopsis>&lt;p&gt;This operator can be used to change the attribute role (regular, special,     label, id...).&lt;/p&gt;</synopsis>
         <help>&lt;p&gt;      This operator can be used to change the role of an attribute of the       input &lt;i&gt;ExampleSet&lt;/i&gt;. If you want to change the attribute name you       should use the     &lt;/p&gt;    &lt;a href="rm://opdoc/rename"&gt;Rename&lt;/a&gt;  operator.    &lt;p&gt;      The target role indicates if the attribute is a regular attribute (used       by learning operators) or a special attribute (e.g. a label or id       attribute). The following target attribute types are possible:    &lt;/p&gt;    &lt;ul&gt;      &lt;li&gt;        &lt;b&gt;regular: &lt;/b&gt;only regular attributes are used as input variables         for learning tasks      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;id:&lt;/b&gt; the id attribute for the example set      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;label:&lt;/b&gt; target attribute for learning      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;prediction:&lt;/b&gt; predicted attribute, i.e. the predictions of a         learning scheme      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;cluster:&lt;/b&gt; indicates the membership to a cluster      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;weight: &lt;/b&gt;indicates the weight of the example      &lt;/li&gt;      &lt;li&gt;        &lt;b&gt;batch:&lt;/b&gt; indicates the membership to an example batch      &lt;/li&gt;    &lt;/ul&gt;    &lt;p&gt;      Users can also define own attribute types by simply using the desired       name.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      &lt;b&gt;Please be aware that roles have to be unique!&lt;/b&gt; Assigning a non       regular role the second time will cause the first attribute to be       dropped from the example set. If you want to keep this attribute, you       have to change it's role first.    &lt;/p&gt;</help>
     <key>set_role</key>
+    <tags>
+         <tag>Label</tag>
+         <tag>Target</tag>
+         <tag>Id</tag>
+         <tag>Class</tag>
+         <tag>Dependent</tag>
+         <tag>Independent</tag>
+         <tag>Special</tag>
+         <tag>Regular</tag>
+         <tag>Inputs</tag>
+         <tag>Columns</tag>
+         <tag>Attributes</tag>
+         <tag>Features</tag>
+         <tag>Variables</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
   <operator>
     <name>Move Repository Entry</name>
@@ -5972,6 +6976,21 @@
             finding all item sets with a support large than
             min_support.&lt;/p&gt;</help>
     <key>fp_growth</key>
+    <tags>
+         <tag>Associations</tag>
+         <tag>Market</tag>
+         <tag>Basket</tag>
+         <tag>Upselling</tag>
+         <tag>Up-selling</tag>
+         <tag>Crossselling</tag>
+         <tag>Cross-selling</tag>
+         <tag>Itemset</tag>
+         <tag>Item-set</tag>
+         <tag>Item set</tag>
+         <tag>Mining</tag>
+         <tag>Frequent</tag>
+         <tag>Patterns</tag>
+    </tags>
   </operator>
     <operator>
         <name>Optimize Weights (PSO)</name>
@@ -6001,6 +7020,24 @@
             those bins, so that all bins contain the same number of examples.
             Skips all special attributes including the label.</help>
     <key>discretize_by_size</key>
+    <tags>
+         <tag>Continous</tag>
+         <tag>Categorical</tag>
+         <tag>Nominal</tag>
+         <tag>Polynominal</tag>
+         <tag>Ordinary</tag>
+         <tag>Discrete</tag>
+         <tag>Discretization</tag>
+         <tag>Dichotomization</tag>
+         <tag>Dichotomy</tag>
+         <tag>Binning</tag>
+         <tag>Histogram</tag>
+         <tag>Types</tag>
+         <tag>Qualitative</tag>
+         <tag>Quantitative</tag>
+         <tag>Groups</tag>
+         <tag>Intervals</tag>
+    </tags>
     <shortName>Discretize</shortName>
   </operator>
     <operator>
@@ -6022,6 +7059,14 @@
             prediction or another data transformation model.</synopsis>
         <help>&lt;p&gt;      This operator applies a &lt;i&gt;Model&lt;/i&gt; to an &lt;i&gt;ExampleSet&lt;/i&gt;. &lt;i&gt;Models &lt;/i&gt;usually       contain information about the data they have been trained on. This       information can be used for predicting the value of a possibly unknown       label, reproduce some transformations as during training or performing       other changes. All needed parameters are stored within the model object.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      Please pay attention to the fact, that the application of &lt;i&gt;Models &lt;/i&gt;will       need the same attributes during application on an &lt;i&gt;ExampleSet &lt;/i&gt;that       where part of the &lt;i&gt;ExampleSet&lt;/i&gt; it was trained on. Some minor       changes like adding attributes might be possible, but might cause severe       calculation errors. Please make sure, that &lt;b&gt;the attributes' number,       order, type and role &lt;/b&gt;are consistent during training and application.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      If the model supports views, it is possible to create a view instead of       changing the underlying data. In order to advise the Apply Model       operator to do so, simply switch on the create view parameter. The       transformation that would be normaly performed directly on the data will       then be computed every time a value is requested and the result is       returned without changing the data. Please keep in mind, that not all       models support views.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      If you have to apply serveral models in a row, like for example when you       have to apply a few preprocessing models before applying a prediction       model, then you would like to group models. This is possible using the &lt;a href="rm://opdoc/group_models"&gt;Group       Models &lt;/a&gt;operator in a convenient way.    &lt;/p&gt;</help>
     <key>apply_model</key>
+    <tags>
+         <tag>Predict</tag>
+         <tag>Predictions</tag>
+         <tag>Forecasts</tag>
+         <tag>Scores</tag>
+         <tag>Scoring</tag>
+         <tag>Trained</tag>
+    </tags>
   </operator>
     <operator>
         <name>ExcelWriter</name>
@@ -6066,6 +7111,12 @@
             the given example set will be removed during the application of this
             operator.</help>
     <key>create_lift_chart</key>
+    <tags>
+         <tag>Roc</tag>
+         <tag>Marketing</tag>
+         <tag>Pareto</tag>
+         <tag>Direct</tag>
+    </tags>
   </operator>
     <operator>
         <name>Shuffle</name>
@@ -6167,6 +7218,21 @@
             result will be a set of frequent item sets which could be used as
             input for this operator.&lt;/p&gt;</help>
     <key>create_association_rules</key>
+    <tags>
+         <tag>Associations</tag>
+         <tag>Market</tag>
+         <tag>Basket</tag>
+         <tag>Upselling</tag>
+         <tag>Up-selling</tag>
+         <tag>Crossselling</tag>
+         <tag>Cross-selling</tag>
+         <tag>Itemset</tag>
+         <tag>Item-set</tag>
+         <tag>Item set</tag>
+         <tag>Mining</tag>
+         <tag>Frequent</tag>
+         <tag>Patterns</tag>
+    </tags>
   </operator>
     <operator>
         <name>Regularized Discriminant Analysis</name>
@@ -6185,6 +7251,14 @@
         <help>This operator provides the DBScan cluster algorithm. If no id
             attribute is present, the operator will create one.</help>
     <key>dbscan</key>
+    <tags>
+         <tag>Unsupervised</tag>
+         <tag>Clustering</tag>
+         <tag>Segmentation</tag>
+         <tag>Grouping</tag>
+         <tag>Density</tag>
+         <tag>Densities</tag>
+    </tags>
     <shortName>Clustering</shortName>
   </operator>
     <operator>
@@ -6285,6 +7359,19 @@
             appropriate values based on the ranking between the ordinal values
             may be included.</help>
     <key>nominal_to_numerical</key>
+    <tags>
+         <tag>Categorical</tag>
+         <tag>Ordinal</tag>
+         <tag>Qualitative</tag>
+         <tag>Quantitative</tag>
+         <tag>Dummy</tag>
+         <tag>Coding</tag>
+         <tag>One hot</tag>
+         <tag>Encoding</tag>
+         <tag>Index</tag>
+         <tag>Continous</tag>
+         <tag>Types</tag>
+    </tags>
   </operator>
 
     <operator>
@@ -6303,6 +7390,16 @@
         <help>A dimensionality reduction method based on Singular Value
             Decomposition. TODO: see super class</help>
     <key>singular_value_decomposition</key>
+    <tags>
+         <tag>PCA</tag>
+         <tag>Components</tag>
+         <tag>Orthogonal</tag>
+         <tag>Eigenvalues</tag>
+         <tag>Decompositions</tag>
+         <tag>Reduction</tag>
+         <tag>Multicollinearity</tag>
+         <tag>SVD</tag>
+    </tags>
     <shortName>SVD</shortName>
   </operator>
     <operator>
@@ -6331,6 +7428,19 @@
             describes a classification task and linear for numerical regression
             tasks.&lt;/p&gt;</help>
     <key>neural_net</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Regression</tag>
+         <tag>Model</tag>
+         <tag>Deep</tag>
+         <tag>Backpropagation</tag>
+         <tag>Back-propagation</tag>
+         <tag>Perceptron</tag>
+         <tag>Network</tag>
+         <tag>Artificial</tag>
+         <tag>Anns</tag>
+    </tags>
   </operator>
     <operator>
         <name>Loop Attribute Subsets</name>
@@ -6500,6 +7610,11 @@
             &lt;i&gt;FeatureIterator&lt;/i&gt; also add specific
             macros.&lt;/p&gt;</help>
     <key>set_macro</key>
+    <tags>
+         <tag>Process</tag>
+         <tag>Variable</tag>
+         <tag>Setting</tag>
+    </tags>
   </operator>
     <operator>
         <name>Naive Bayes</name>
@@ -6507,6 +7622,17 @@
             distributions.</synopsis>
         <help>Naive Bayes learner.</help>
     <key>naive_bayes</key>
+    <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Model</tag>
+         <tag>Distribution</tag>
+         <tag>Gaussian</tag>
+         <tag>Multinominal</tag>
+         <tag>Likelihoods</tag>
+         <tag>Probability</tag>
+         <tag>Probabilities</tag>
+    </tags>
   </operator>
     <operator>
         <name>Apply Cluster Model</name>
@@ -6562,6 +7688,15 @@
             available in RapidMiner, not only the ones which originally are part
             of the Weka package.</help>
     <key>bagging</key>
+    <tags>
+         <tag>Ensembles</tag>
+         <tag>Bootstrap</tag>
+         <tag>Aggregating</tag>
+         <tag>Breiman</tag>
+         <tag>Variance</tag>
+         <tag>Bias</tag>
+         <tag>Stability</tag>
+    </tags>
   </operator>
     <operator>
         <name>Handle Exception</name>
@@ -6698,6 +7833,18 @@
             estimate the performance of a learning operator.</synopsis>
         <help>&lt;p&gt;      &lt;code&gt;X-Validation&lt;/code&gt; performs a cross-validation process. The input &lt;i&gt;ExampleSet&lt;/i&gt;       &lt;i&gt;S&lt;/i&gt; is split up into &lt;var&gt;number of validations&lt;/var&gt; subsets &lt;i&gt;S_i&lt;/i&gt;.       The inner subprocesses are applied &lt;var&gt;number of validations&lt;/var&gt;       times using &lt;i&gt;S_i&lt;/i&gt; as the test set (input of the &lt;i&gt;Testing&lt;/i&gt;       subprocess) and &lt;i&gt;S \ S_i&lt;/i&gt; as training set (input of the &lt;i&gt;Training&lt;/i&gt;       subprocess).    &lt;/p&gt;    &lt;p&gt;      The &lt;i&gt;Training&lt;/i&gt; subprocess must return a model, which is usually       trained on the input &lt;i&gt;ExampleSet.&lt;/i&gt; The &lt;i&gt;Testing&lt;/i&gt; subprocess       must return a &lt;i&gt;PerformanceVector&lt;/i&gt;. This is usually generated by       applying the model and measuring it's performance. Additional objects       might be passed from the &lt;i&gt;Training&lt;/i&gt; to the &lt;i&gt;Testing&lt;/i&gt;       subprocess using the through ports. Please note that the performance calculated by this estimation scheme is only an estimation of the performance which would be achieved with the model built on the complete delivered data set instead of an exact calculation. Exactly this model, hence the one built on the complete input data, is delivered at the corresponding port in order to give convenient access to this model. &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      Like other validation schemes the RapidMiner cross validation can use       several types of sampling for building the subsets    &lt;/p&gt;    &lt;p&gt;      Linear sampling simply divides the example set into partitions without       changing the order of the examples. Shuffled sampling build random       subsets from the data. Stratifed sampling builds random subsets and       ensures that the class distribution in the subsets is the same as in the       whole example set. For having the random splits independent from the rest of the process, a local random seed might be used. See the parameters       for details.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      The cross validation operator provides several values which can be       logged by means of a     &lt;/p&gt;    &lt;a href="rm://opdoc/log"&gt;Log&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;    &lt;p&gt;      . Of course the number of the current iteration can be logged which       might be useful for ProcessLog operators wrapped inside a cross       validation. Beside that, all performance estimation operators of       RapidMiner provide access to the average values calculated during the       estimation. Since the operator cannot ensure the names of the delivered       criteria, the ProcessLog operator can access the values via the generic       value names:    &lt;/p&gt;    &lt;ul&gt;      &lt;li&gt;        performance: the value for the main criterion calculated by this         validation operator      &lt;/li&gt;      &lt;li&gt;        performance1: the value of the first criterion of the performance         vector calculated      &lt;/li&gt;      &lt;li&gt;        performance2: the value of the second criterion of the performance         vector calculated      &lt;/li&gt;      &lt;li&gt;        performance3: the value of the third criterion of the performance         vector calculated      &lt;/li&gt;      &lt;li&gt;        for the main criterion, also the variance and the standard deviation         can be accessed where applicable.      &lt;/li&gt;    &lt;/ul&gt;</help>
     <key>x_validation</key>
+    <tags>
+         <tag>Cross-Validations</tag>
+         <tag>Cross-validations</tag>
+         <tag>Folds</tag>
+         <tag>K-Folds</tag>
+         <tag>K-folds</tag>
+         <tag>Validations</tag>
+         <tag>Estimations</tag>
+         <tag>Evaluations</tag>
+         <tag>Performances</tag>
+         <tag>Splitting</tag>
+    </tags>
     <shortName>Validation</shortName>
   </operator>
     <operator>
@@ -6802,6 +7949,15 @@
             &amp;quot;;&amp;quot;. Missing data values are indicated by empty
             cells.&lt;/p&gt;</help>
     <key>write_csv</key>
+    <tags>
+         <tag>Save</tag>
+         <tag>Export</tag>
+         <tag>Write</tag>
+         <tag>Datasets</tag>
+         <tag>Files</tag>
+         <tag>Text</tag>
+         <tag>Commas</tag>
+    </tags>
   </operator>
     <operator>
         <name>Relevance Vector Machine</name>
@@ -6876,6 +8032,24 @@
             attributes's values are not unique, since the algorithm can not split
             between examples with same value.</help>
     <key>discretize_by_frequency</key>
+    <tags>
+         <tag>Continous</tag>
+         <tag>Categorical</tag>
+         <tag>Nominal</tag>
+         <tag>Polynominal</tag>
+         <tag>Ordinary</tag>
+         <tag>Discrete</tag>
+         <tag>Discretization</tag>
+         <tag>Dichotomization</tag>
+         <tag>Dichotomy</tag>
+         <tag>Binning</tag>
+         <tag>Histogram</tag>
+         <tag>Types</tag>
+         <tag>Qualitative</tag>
+         <tag>Quantitative</tag>
+         <tag>Groups</tag>
+         <tag>Intervals</tag>
+    </tags>
     <shortName>Discretize</shortName>
   </operator>
     <operator>
@@ -6909,6 +8083,19 @@
   <operator>
     <name>Decision Tree (Multiway)</name>
   <key>decision_tree_multiway</key>
+  <tags>
+       <tag>Supervised</tag>
+       <tag>Classification</tag>
+       <tag>Id3</tag>
+       <tag>J48</tag>
+       <tag>J4.8</tag>
+       <tag>C45</tag>
+       <tag>C4.5</tag>
+       <tag>C50</tag>
+       <tag>C5.0</tag>
+       <tag>Cart</tag>
+       <tag>Chaid</tag>
+  </tags>
   </operator>
   <operator>
     <name>Weight by Correlation</name>
@@ -6922,6 +8109,14 @@
       of the representation as 0 and 1, as do numerical ones.&lt;/p&gt;
     </help>
   <key>weight_by_correlation</key>
+  <tags>
+       <tag>Weighting</tag>
+       <tag>Importance</tag>
+       <tag>Influence</tag>
+       <tag>Significance</tag>
+       <tag>Factors</tag>
+       <tag>Relevance</tag>
+  </tags>
   </operator>  
 <operator>
     <key>loop_collection</key>
@@ -6952,10 +8147,21 @@
   </operator>
   <operator>
     <key>transpose</key>
+    <tags>
+         <tag>Rotate</tag>
+         <tag>Rotations</tag>
+         <tag>Transpositions</tag>
+         <tag>Pivoting</tag>
+         <tag>Long</tag>
+         <tag>Wide</tag>
+    </tags>
     <name>Transpose</name>
   </operator>
   <operator>
     <key>select</key>
+    <tags>
+         <tag>Collections</tag>
+    </tags>
     <name>Select</name>
   <synopsis>
     Selects a single entry from an object collection.
@@ -7380,6 +8586,20 @@
       <name>X-Means</name>
       <synopsis>Clustering using X-Means. This operator implements the algorithm publisehd by Dan Pelleg and Andrew Moore.</synopsis>
       <key>x_means</key>
+     <tags>
+         <tag>Unsupervised</tag>
+         <tag>Clustering</tag>
+         <tag>Segmentation</tag>
+         <tag>Grouping</tag>
+         <tag>Similarity</tag>
+         <tag>Similarities</tag>
+         <tag>Euclidean</tag>
+         <tag>Distances</tag>
+         <tag>Centroids</tag>
+         <tag>X Means</tag>
+         <tag>X means</tag>
+         <tag>Xmeans</tag>
+     </tags>
       <help>X-Means is a clustering algorithm which determines the correct number of centroids based on a heuristic. It begins with a minimum set of centroids and then iteratively exploits if using more centroids makes sense according to the data. If a cluster is split into two sub-clusters is determined by the Bayesian Information Criteria (BIC), balancing the trade-off between precision and model complexity. Original publication: "X-means: Extending K-means with Efficient Estimation of the Number of Clusters" by Dan Pelleg and Andrew Moore, Proceedings of the Seventeenth International Conference on Machine Learning, 2000.</help>
       <shortName>X-Means</shortName>
    </operator>
@@ -7467,10 +8687,34 @@ Thomas Breuel, Faisal Shafait. The Learning Workshop, Cliff Lodge, Snowbird, Uta
    <operator>
      <name>Decision Tree</name>
      <key>parallel_decision_tree</key>
+     <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Model</tag>
+         <tag>Id3</tag>
+         <tag>J48</tag>
+         <tag>J4.8</tag>
+         <tag>C45</tag>
+         <tag>C4.5</tag>
+         <tag>C50</tag>
+         <tag>C5.0</tag>
+         <tag>Cart</tag>
+         <tag>Chaid</tag>
+     </tags>
    </operator>
    
    <operator>
      <name>Random Forest</name>
      <key>parallel_random_forest</key>
+     <tags>
+         <tag>Supervised</tag>
+         <tag>Classification</tag>
+         <tag>Model</tag>
+         <tag>Ensembles</tag>
+         <tag>Decision</tag>
+         <tag>Trees</tag>
+         <tag>Breiman</tag>
+         <tag>Bagging</tag>
+     </tags>
    </operator>
 </operatorHelp>

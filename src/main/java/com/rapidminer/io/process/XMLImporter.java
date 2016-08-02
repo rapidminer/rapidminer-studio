@@ -512,6 +512,7 @@ public class XMLImporter {
 		String versionString = opElement.getAttribute("compatibility");
 
 		OperatorVersion[] incompatibleVersionChanges = operator.getIncompatibleVersionChanges();
+		assert incompatibleVersionChanges != null;
 
 		// sort to be sure to have an array of ascending order
 		Arrays.sort(incompatibleVersionChanges);
@@ -638,16 +639,17 @@ public class XMLImporter {
 							addMessage("The parameter '" + type.getKey() + "' is a " + type.getClass().getSimpleName()
 									+ ", but a list was found.");
 							type = null;
-						}
-						ListDescription listDescription = parseParameterList(inner, (ParameterTypeList) type);
-						final String listString = ParameterTypeList.transformList2String(listDescription.getList());
-						boolean knownType = operator.getParameters().setParameter(listDescription.getKey(), listString);
-						if (!knownType) {
-							if (relevantParameter(className, listDescription.getKey())) {
-								LogService.getRoot().log(Level.INFO,
-										"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown",
-										new Object[] { listDescription.getKey(), operator.getName(),
-												operator.getOperatorDescription().getName() });
+						} else {
+							ListDescription listDescription = parseParameterList(inner, (ParameterTypeList) type);
+							final String listString = ParameterTypeList.transformList2String(listDescription.getList());
+							boolean knownType = operator.getParameters().setParameter(listDescription.getKey(), listString);
+							if (!knownType) {
+								if (relevantParameter(className, listDescription.getKey())) {
+									LogService.getRoot().log(Level.INFO,
+											"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown",
+											new Object[] { listDescription.getKey(), operator.getName(),
+													operator.getOperatorDescription().getName() });
+								}
 							}
 						}
 					}

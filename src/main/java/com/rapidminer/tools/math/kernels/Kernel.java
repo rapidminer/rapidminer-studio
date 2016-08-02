@@ -18,6 +18,11 @@
  */
 package com.rapidminer.tools.math.kernels;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -30,17 +35,12 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-
 
 /**
  * Returns the distance of two examples. The method {@link #init(ExampleSet)} must be invoked before
  * the correct distances can be returned. Please note that subclasses must provide an empty
  * constructor to allow kernel creation via reflection (for reading kernels from disk).
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class Kernel implements Serializable {
@@ -195,52 +195,38 @@ public abstract class Kernel implements Serializable {
 			return new DotKernel();
 		} else if (kernelType == KERNEL_RADIAL) {
 			RBFKernel kernel = new RBFKernel();
-			if (handler != null) {
-				kernel.setGamma(handler.getParameterAsDouble(PARAMETER_KERNEL_GAMMA));
-			}
+			kernel.setGamma(handler.getParameterAsDouble(PARAMETER_KERNEL_GAMMA));
 			return kernel;
 		} else if (kernelType == KERNEL_POLYNOMIAL) {
 			PolynomialKernel kernel = new PolynomialKernel();
-			if (handler != null) {
-				kernel.setPolynomialParameters(handler.getParameterAsDouble(PARAMETER_KERNEL_DEGREE),
-						handler.getParameterAsDouble(PARAMETER_KERNEL_SHIFT));
-			}
+			kernel.setPolynomialParameters(handler.getParameterAsDouble(PARAMETER_KERNEL_DEGREE),
+					handler.getParameterAsDouble(PARAMETER_KERNEL_SHIFT));
 			return kernel;
 		} else if (kernelType == KERNEL_SIGMOID) {
 			SigmoidKernel kernel = new SigmoidKernel();
-			if (handler != null) {
-				kernel.setSigmoidParameters(handler.getParameterAsDouble(PARAMETER_KERNEL_A),
-						handler.getParameterAsDouble(PARAMETER_KERNEL_B));
-			}
+			kernel.setSigmoidParameters(handler.getParameterAsDouble(PARAMETER_KERNEL_A),
+					handler.getParameterAsDouble(PARAMETER_KERNEL_B));
 			return kernel;
 		} else if (kernelType == KERNEL_ANOVA) {
 			AnovaKernel kernel = new AnovaKernel();
-			if (handler != null) {
-				kernel.setGamma(handler.getParameterAsDouble(PARAMETER_KERNEL_GAMMA));
-				kernel.setDegree(handler.getParameterAsDouble(PARAMETER_KERNEL_DEGREE));
-			}
+			kernel.setGamma(handler.getParameterAsDouble(PARAMETER_KERNEL_GAMMA));
+			kernel.setDegree(handler.getParameterAsDouble(PARAMETER_KERNEL_DEGREE));
 			return kernel;
 		} else if (kernelType == KERNEL_EPANECHNIKOV) {
 			EpanechnikovKernel kernel = new EpanechnikovKernel();
-			if (handler != null) {
-				kernel.setSigma(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA1));
-				kernel.setDegree(handler.getParameterAsDouble(PARAMETER_KERNEL_DEGREE));
-			}
+			kernel.setSigma(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA1));
+			kernel.setDegree(handler.getParameterAsDouble(PARAMETER_KERNEL_DEGREE));
 			return kernel;
 		} else if (kernelType == KERNEL_GAUSSIAN_COMBINATION) {
 			GaussianCombinationKernel kernel = new GaussianCombinationKernel();
-			if (handler != null) {
-				kernel.setSigma1(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA1));
-				kernel.setSigma2(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA2));
-				kernel.setSigma3(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA3));
-			}
+			kernel.setSigma1(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA1));
+			kernel.setSigma2(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA2));
+			kernel.setSigma3(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA3));
 			return kernel;
 		} else if (kernelType == KERNEL_MULTIQUADRIC) {
 			MultiquadricKernel kernel = new MultiquadricKernel();
-			if (handler != null) {
-				kernel.setSigma(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA1));
-				kernel.setShift(handler.getParameterAsDouble(PARAMETER_KERNEL_SHIFT));
-			}
+			kernel.setSigma(handler.getParameterAsDouble(PARAMETER_KERNEL_SIGMA1));
+			kernel.setShift(handler.getParameterAsDouble(PARAMETER_KERNEL_SHIFT));
 			return kernel;
 		} else {
 			return null;

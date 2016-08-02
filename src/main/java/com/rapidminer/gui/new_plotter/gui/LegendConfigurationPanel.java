@@ -18,16 +18,6 @@
  */
 package com.rapidminer.gui.new_plotter.gui;
 
-import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration.LegendPosition;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -41,10 +31,20 @@ import javax.swing.JLabel;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration.LegendPosition;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.tools.I18N;
+
 
 /**
  * @author Nils Woehler, Marius Helf
- * 
+ *
  */
 public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 
@@ -88,7 +88,7 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 			JLabel legendPositionLabel = new ResourceLabel("plotter.configuration_dialog.legend_position");
 
 			legendPositionComboBox = new JComboBox(LegendPosition.values());
-			legendPositionLabel.setLabelFor(legendPositionLabel);
+			legendPositionLabel.setLabelFor(legendPositionComboBox);
 			legendPositionComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.legendposition"));
 			legendPositionComboBox.setSelectedIndex(0);
 			legendPositionComboBox.addPopupMenuListener(new PopupMenuListener() {
@@ -101,8 +101,8 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 
 				@Override
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-					getPlotConfiguration().getLegendConfiguration().setLegendPosition(
-							(LegendPosition) legendPositionComboBox.getSelectedItem());
+					getPlotConfiguration().getLegendConfiguration()
+							.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
 				}
 
 				@Override
@@ -128,7 +128,7 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 					createLegendFontDialog();
 				}
 			});
-			legendFontLabel.setLabelFor(legendFontLabel);
+			legendFontLabel.setLabelFor(legendFontChooserButton);
 
 			addTwoComponentRow(this, legendFontLabel, legendFontChooserButton);
 		}
@@ -138,17 +138,17 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 			legendFontColorLabel = new ResourceLabel(
 					"plotter.configuration_dialog.legend_color_dialog.select_legend_font_color");
 
-			legendFontColorChooserButton = new JButton(new ResourceAction(true,
-					"plotter.configuration_dialog.select_legend_font_color") {
+			legendFontColorChooserButton = new JButton(
+					new ResourceAction(true, "plotter.configuration_dialog.select_legend_font_color") {
 
-				private static final long serialVersionUID = 1L;
+						private static final long serialVersionUID = 1L;
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					createLegendFontColorDialog();
-				}
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							createLegendFontColorDialog();
+						}
 
-			});
+					});
 			legendFontColorLabel.setLabelFor(legendFontColorChooserButton);
 
 			addTwoComponentRow(this, legendFontColorLabel, legendFontColorChooserButton);
@@ -165,8 +165,8 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					getPlotConfiguration().getLegendConfiguration().setShowDimensionType(
-							showDimensionTypeCheckBox.isSelected());
+					getPlotConfiguration().getLegendConfiguration()
+							.setShowDimensionType(showDimensionTypeCheckBox.isSelected());
 				}
 			});
 
@@ -178,18 +178,18 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 			legendBackGroundColorLabel = new ResourceLabel(
 					"plotter.configuration_dialog.legend_color_dialog.select_legend_background_color");
 
-			legendBackgroundColorChooserButton = new JButton(new ResourceAction(true,
-					"plotter.configuration_dialog.select_legend_background_color") {
+			legendBackgroundColorChooserButton = new JButton(
+					new ResourceAction(true, "plotter.configuration_dialog.select_legend_background_color") {
 
-				private static final long serialVersionUID = 1L;
+						private static final long serialVersionUID = 1L;
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					createLegendBackgroundColorDialog();
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							createLegendBackgroundColorDialog();
 
-				}
+						}
 
-			});
+					});
 			legendBackGroundColorLabel.setLabelFor(legendBackgroundColorChooserButton);
 
 			addTwoComponentRow(this, legendBackGroundColorLabel, legendBackgroundColorChooserButton);
@@ -218,18 +218,18 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 			legendFrameColorLabel = new ResourceLabel(
 					"plotter.configuration_dialog.legend_color_dialog.select_legend_frame_color");
 
-			legendFrameColorChooserButton = new JButton(new ResourceAction(true,
-					"plotter.configuration_dialog.select_legend_frame_color") {
+			legendFrameColorChooserButton = new JButton(
+					new ResourceAction(true, "plotter.configuration_dialog.select_legend_frame_color") {
 
-				private static final long serialVersionUID = 1L;
+						private static final long serialVersionUID = 1L;
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					createLegendFrameColorDialog();
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							createLegendFrameColorDialog();
 
-				}
+						}
 
-			});
+					});
 			legendFrameColorLabel.setLabelFor(legendFrameColorChooserButton);
 
 			addTwoComponentRow(this, legendFrameColorLabel, legendFrameColorChooserButton);
@@ -245,7 +245,7 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 		Color newBackgroundColor = JColorChooser.showDialog(this,
 				I18N.getGUILabel("plotter.configuration_dialog.global_config_panel.legend_background_color_title.label"),
 				oldColor);
-		if (newBackgroundColor != null && !(newBackgroundColor.equals(oldColor))) {
+		if (newBackgroundColor != null && !newBackgroundColor.equals(oldColor)) {
 			getPlotConfiguration().getLegendConfiguration().setLegendBackgroundColor(newBackgroundColor);
 		}
 	}
@@ -255,11 +255,10 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 		if (oldColor == null) {
 			oldColor = LegendConfiguration.DEFAULT_LEGEND_FONT_COLOR;
 		}
-		Color newBackgroundColor = JColorChooser
-				.showDialog(this,
-						I18N.getGUILabel("plotter.configuration_dialog.global_config_panel.legend_font_color_title.label"),
-						oldColor);
-		if (newBackgroundColor != null && !(newBackgroundColor.equals(oldColor))) {
+		Color newBackgroundColor = JColorChooser.showDialog(this,
+				I18N.getGUILabel("plotter.configuration_dialog.global_config_panel.legend_font_color_title.label"),
+				oldColor);
+		if (newBackgroundColor != null && !newBackgroundColor.equals(oldColor)) {
 			getPlotConfiguration().getLegendConfiguration().setLegendFontColor(newBackgroundColor);
 		}
 	}
@@ -272,7 +271,7 @@ public class LegendConfigurationPanel extends AbstractConfigurationPanel {
 		Color newBackgroundColor = JColorChooser.showDialog(this,
 				I18N.getGUILabel("plotter.configuration_dialog.global_config_panel.legend_frame_color_title.label"),
 				oldColor);
-		if (newBackgroundColor != null && !(newBackgroundColor.equals(oldColor))) {
+		if (newBackgroundColor != null && !newBackgroundColor.equals(oldColor)) {
 			getPlotConfiguration().getLegendConfiguration().setLegendFrameColor(newBackgroundColor);
 		}
 	}

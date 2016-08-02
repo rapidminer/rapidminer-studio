@@ -18,9 +18,12 @@
  */
 package com.rapidminer.operator.features.transformation;
 
+import java.util.Arrays;
+
+
 /**
  * This class holds information about one eigenvector and eigenvalue.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class WeightVector implements ComponentVector {
@@ -55,17 +58,35 @@ public class WeightVector implements ComponentVector {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof WeightVector)) {
-			return false;
-		} else {
-			WeightVector ev = (WeightVector) o;
-			return (this.eigenvalue == ev.eigenvalue) && (this.weights == ev.weights);
-		}
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		long temp;
+		temp = Double.doubleToLongBits(eigenvalue);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + Arrays.hashCode(weights);
+		return result;
 	}
 
 	@Override
-	public int hashCode() {
-		return Double.valueOf(this.eigenvalue).hashCode() ^ this.weights.hashCode();
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		WeightVector other = (WeightVector) obj;
+		if (Double.doubleToLongBits(eigenvalue) != Double.doubleToLongBits(other.eigenvalue)) {
+			return false;
+		}
+		if (!Arrays.equals(weights, other.weights)) {
+			return false;
+		}
+		return true;
 	}
+
 }

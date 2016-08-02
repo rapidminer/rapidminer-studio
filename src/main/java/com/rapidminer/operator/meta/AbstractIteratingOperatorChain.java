@@ -127,5 +127,4 @@ public abstract class AbstractIteratingOperatorChain extends OperatorChain {
 
 		return types;
 	}
-
 }

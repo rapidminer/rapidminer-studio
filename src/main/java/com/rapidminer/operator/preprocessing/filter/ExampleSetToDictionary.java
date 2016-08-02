@@ -23,11 +23,14 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
@@ -66,6 +69,12 @@ public class ExampleSetToDictionary extends PreprocessingOperator {
 	private static final String PARAMETER_FIRST_MATCH_ONLY = "first_match_only";
 
 	private final InputPort dictionaryInput = getInputPorts().createPort("dictionary");
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public ExampleSetToDictionary(OperatorDescription description) {
 		super(description);
@@ -174,8 +183,24 @@ public class ExampleSetToDictionary extends PreprocessingOperator {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(),
 				ExampleSetToDictionary.class, attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

@@ -24,6 +24,7 @@ import Jama.Matrix;
 
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
@@ -77,6 +78,10 @@ public class QuadraticParameterOptimizationOperator extends GridSearchParameterO
 	@Override
 	public void doWork() throws OperatorException {
 		getParametersToOptimize();
+
+		if (numberOfCombinations <= 1) {
+			throw new UserError(this, 922);
+		}
 
 		int ifExceedsRegion = getParameterAsInt(PARAMETER_IF_EXCEEDS_REGION);
 		int ifExceedsRange = getParameterAsInt(PARAMETER_IF_EXCEEDS_RANGE);

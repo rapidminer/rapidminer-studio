@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Repeating sub-processes.">
+		<text>Looping and branching are very powerful concepts known in practically all
+		programming languages. RapidMiner offers dozens of operators for looping over examples,
+		attributes, or values of a specified attribute. In this tutorial, we will build a process which loops over the
+		three different passenger classes of the Titanic data and checks if the number of examples is
+		higher than a previously specified number. If this is the case, we sample down this subgroup to
+		this number, otherwise we will just keep all examples. Processes like this can, for
+		example, be used to balance classes in cases where a few very large classes dominate some minority
+		cases.</text>
+	</step>
+
+	<step name="Prepare the data and a macro.">
+		<tasks>
+			<task>
+				<activity>Drag</activity>
+				the
+				<file>Titanic</file>
+				data into the process.
+			</task>
+			<task>
+				<activity>Add</activity>
+				the operator
+				<op>Set Macro</op>
+				to the process and
+				<activity>connect it</activity>.
+			</task>
+			<task>
+				<activity>Use</activity>
+				<value>max size</value>
+				as
+				<param>macro</param>
+				and
+				<value>400</value>
+				as
+				<param>value</param>
+				in its
+				<ui>Parameters</ui>.
+			</task>
+		</tasks>
+
+		<info>
+			We will use
+			<value>400</value>
+			examples as maximum number for each of the three passenger classes later on.
+			By defining this with a macro at the start of the process, it is very easy to make changes
+			to
+			this setting later on.
+			This is especially useful if you use the value in multiple parts of the process, which we will!
+		</info>
+	</step>
+
+	<step name="Looping over attribute values.">
+		<info>
+			Let's loop over the three passenger classes and check for a condition for each of the
+			classes.
+			In our case, the condition is that the class should have less than
+			<value>max size</value>
+			examples.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Search</activity>
+				for the operator
+				<op>Loop Values</op>
+				and
+				<activity>drag it</activity>
+				into the process.
+				<activity>Connect it</activity>.
+			</task>
+			<task>
+				In its
+				<ui>Parameters</ui>, set
+				<param>attribute</param>
+				to
+				<value>Passenger Class</value>.
+			</task>
+		</tasks>
+	</step>
+
+	<step name="Inside the loop.">
+		<info>
+			Did you notice the small icon <icon>16/elements_tree.png</icon> in the bottom right corner of the operator
+			<op>Loop Values</op>? This
+			icon means that this operator can have other operators nested inside of it. 
+			Double-click the <op>Loop Values</op> operator to look inside of it.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Double-click</activity>
+				<op>Loop Values</op>.
+			</task>
+		</tasks>
+
+		<info>
+			Inside the loop you can define a sub-process to be executed for each
+			of
+			the three passenger classes we are looping over. Whenever you are in a nested sub-process,
+			you can
+			find the name of the sub-process in the top left corner. At the top of the Process panel you will also
+			find
+			a
+			path which you can use to navigate back up to the main process.
+		</info>
+	</step>
+
+	<step name="Keep only examples for the current class.">
+		<info>
+			The concept of nested operators allows for extremely
+			powerful processes. You will see this a lot in later processes when we validate models or
+			optimize their parameter settings. But for now, let's just define what is happening
+			inside of the
+			loop.
+		</info>
+
+		<tasks>
+			<task>
+				Make sure you are inside the <op>Loop</op> operator by <activity>double-clicking</activity> it, if you didn’t already.
+			</task>
+			<task>
+				Inside the
+				<op>Loop Values</op>
+				operator, do the following:
+			</task>
+			<task>
+				<activity>Add</activity>
+				the operator
+				<op>Filter Examples</op>.
+			</task>
+			<task>
+				<activity>Connect</activity>
+				the input of the filter with the port on the left of the sub-process.
+				This will allow the data set delivered to the Loop Operator to flow into the sub-process.
+			</task>
+			<task>
+				In the
+				<ui>Parameters</ui>
+				of
+				<op>Filter Examples</op>,
+				<activity>add a new filter</activity>
+				with the settings
+				<value>Passenger Class</value>,
+				<value>equals</value>, and
+				<value>%{loop_value}</value> .
+			</task>
+		</tasks>
+
+		<info>
+			The macro
+			<value>loop_value</value>
+			is a pre-defined macro of the operator
+			<op>Loop Values</op>
+			which
+			can be used inside of the operator. In each iteration, the macro is set to the current
+			attribute
+			value
+			of the loop. You can use this macro then in other operators like, for example,
+			<op>Filter Examples</op>.
+			We only keep those examples of the original example set which have attribute values of the
+			current
+			loop
+			iteration.
+		</info>
+	</step>
+
+	<step name="Branching the process based on a condition.">
+		<info>
+			Remember our task? We want to keep all examples of a subgroup if the number of
+			passengers
+			for the class is less than 400, but take a sample of the subgroup if the number of passengers is more than 400.
+			To do that we need to learn about <emph>branching</emph>.
+		</info>
+
+		<tasks>
+			<task>
+				Still inside
+				<op>Loop Values</op>,
+				<activity>add</activity>
+				the operator
+				<op>Branch</op>
+				to the sub-process.
+			</task>
+			<task>
+				<activity>Connect</activity>
+				the input of
+				<op>Branch</op>
+				with the output of the
+				<op>Filter</op>.
+			</task>
+			<task>
+				Also
+				<activity>connect</activity>
+				the first output port of
+				<op>Branch</op>
+				with the "out" port on the right of the
+				<op>Loop Values</op>
+				sub-process. This will allow us to use the results of the loop iterations in the main process.
+			</task>
+			<task>
+				<activity>Click</activity>
+				on the
+				<op>Branch</op>
+				operator to get its
+				<ui>Parameters</ui>.
+				<activity>Set</activity>
+				<param>condition type</param>
+				to
+				<value>max_examples</value>
+				and
+				<param>condition value</param>
+				to
+				<value>%{max size}</value> . This is the macro we have defined in the beginning.
+			</task>
+		</tasks>
+	</step>
+
+	<step name="Inside the Branch.">
+		<info>
+			Did you notice that the
+			<op>Branch</op>
+			operator has the same sub-process icon in the bottom right as <op>Loop Values</op> did?  In
+			this case, you can actually define
+			<emph>two</emph>
+			sub-processes, following an "if-then-else" logic: <emph>If</emph> the condition of the
+			<op>Branch</op>
+			operator is fulfilled, <emph>then</emph> the first subprocess is executed, <emph>else</emph> the second
+			sub-process is
+			executed.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Double-click</activity>
+				on
+				<op>Branch</op>
+				to jump inside the operator.
+			</task>
+		</tasks>
+	</step>
+
+	<step name="Defining the operations for both cases.">
+		<info>
+			You see two sub-processes named "Then" and "Else". If the size of the current subset is
+			less than the specified maximum size, we just keep the complete data. Otherwise we want to sample
+			it down to the maximum size.
+		</info>
+
+		<tasks>
+			<task>
+				In the "Then" sub-process on the left, just
+				<activity>connect</activity>
+				the first port on the left with the first port on the right.
+				That is right, we do
+				<emph>not</emph>
+				use any operators here.
+			</task>
+		</tasks>
+
+		<info>
+			We just want to keep the data as is, i.e. we do not do anything with the data and just
+			deliver it as result of the sub-process in this case.
+		</info>
+
+		<tasks>
+			<task>
+				In the "Else" sub-process on the right,
+				<activity>add</activity>
+				a
+				<op>Sample</op>
+				operator and
+				<activity>connect</activity>
+				its in- and output ports with the ports on the left and the right
+				of the sub-process.
+			</task>
+			<task>
+				Set the
+				<param>sample size</param>
+				parameter to
+				<value>%{max size}</value> .
+			</task>
+		</tasks>
+
+		<info>
+			If the example set for the passenger class in the current iteration of the loop is too
+			large, we
+			sample it down to the desired size and deliver the result as output of this sub-process.
+		</info>
+	</step>
+
+	<step name="Appending the three results.">
+		<tasks>
+			<task>
+				<activity>Navigate back</activity>
+				to the main process at the top of the
+				<ui>Process</ui>
+				panel.
+			</task>
+			<task>
+				<activity>Add</activity>
+				the operator
+				<op>Append</op>
+				to the process.
+			</task>
+			<task>
+				<activity>Connect</activity>
+				its input with the output of
+				<op>Loop Values</op>
+				and its output with the result port on the right.
+			</task>
+		</tasks>
+
+		<info>
+			Notice the doubled line between
+			<op>Loop Values</op>
+			and
+			<op>Append</op>. This means that the output of
+			<op>Loop Values</op>
+			is actually a collection of example sets instead of a single example set. The loop
+			will in fact
+			deliver one example set for each of the three passenger classes. This is why we added
+			the
+			<op>Append</op>
+			operator: it combines all three sets into one single set again.
+		</info>
+
+		<tasks>
+			<task>
+				<activity><icon>16/media_play.png</icon> Run</activity>
+				the process.
+			</task>
+		</tasks>
+
+		<info>
+			You should see that the total size of the data set has been reduced
+			and
+			none of the three passenger classes is larger than 400 cases (check out the
+			<ui>Statistics</ui>
+			tab).
+			If this is not the case, use breakpoints to find the cause and go through this
+			tutorial
+			again step by
+			step.
+		</info>
+	</step>
+
+	<step name="Congratulations!">
+		<text>Well done! This was certainly the most complex process you have built so far. It consists of
+		macros,
+		loops, multiple nested sub-processes, and uses collections of results. If you combine these
+		concepts with the hundreds of data transformation operations in RapidMiner, you can build
+		extremely powerful processes solving every data preparation problem you might encounter.
+		And, all of this, without writing a single line of code!</text>
+
+		<questions>
+			<question>
+				Place a breakpoint after <op>Loop Values</op> and re-run the process. Note the selector on the
+				left side in the results. You can use this to switch the view of the different elements of the
+				collection. Resume the process to see the appended data.
+			</question>
+			<question>
+				Also try a breakpoint inside of the loop after <op>Filter Examples</op>. You will see the
+				filtered result in each iteration when you run the process. You can resume it after 
+				inspecting the intermediate results and the execution continues with the next iteration of the loop. 
+				Remove all breakpoints after you no longer need them.
+			</question>
+			<question>
+				Change the process, so that only a maximum of <value>200</value> examples for each class is used.
+			</question>
+			<question>
+				Can you think of a process which first calculates the number of examples for all three
+				classes and finds the minimum number among those?  Then, sample down each group to this number 
+				so that all classes are equally frequent.
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

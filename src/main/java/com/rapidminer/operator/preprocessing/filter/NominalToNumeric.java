@@ -18,6 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.io.ObjectStreamException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -45,34 +55,26 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.container.Pair;
 import com.rapidminer.tools.math.container.Range;
 
-import java.io.ObjectStreamException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * This operator maps all non numeric attributes to real valued attributes. Nothing is done for
  * numeric attributes, binary attributes are mapped to 0 and 1.
- * 
+ *
  * For nominal attributes one of the following calculations will be done:
  * <ul>
  * <li>Dichotomization, i.e. dummy coding or effect coding: one new attribute for each but one value
  * of the nominal attribute. The new attribute which corresponds to the actual nominal value gets
- * value 1 and all other attributes gets value 0.</li>
- * If the nominal value is the one for which no attribute is being created, all other target
- * attributes are set to 0 (dummy coding) or -1 (effect coding).
+ * value 1 and all other attributes gets value 0.</li> If the nominal value is the one for which no
+ * attribute is being created, all other target attributes are set to 0 (dummy coding) or -1 (effect
+ * coding).
  * <li>Alternatively the values of nominal attributes can be seen as equally ranked, therefore the
  * nominal attribute will simply be turned into a real valued attribute, the old values results in
  * equidistant real values.</li>
  * </ul>
- * 
+ *
  * At this moment the same applies for ordinal attributes, in a future release more appropriate
  * values based on the ranking between the ordinal values may be included.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land, Marius Helf
  */
 public class NominalToNumeric extends PreprocessingOperator {
@@ -82,7 +84,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 	 * which now resides in its own file. This stub is necessary to be able to read models which
 	 * have been saved with an older version of RapidMiner, where the full class had been
 	 * implemented at this location. The class has been extracted in RM 5.1.009.
-	 * 
+	 *
 	 * @see com.rapidminer.operator.preprocessing.filter.NominalToNumericModel
 	 * @author Marius Helf
 	 */
@@ -126,6 +128,12 @@ public class NominalToNumeric extends PreprocessingOperator {
 	public static final int EQUAL_SIGN_NAMING_SCHEME = 1;
 
 	private static final OperatorVersion VERSION_5_2_8 = new OperatorVersion(5, 2, 8);
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public NominalToNumeric(OperatorDescription description) {
 		super(description);
@@ -216,7 +224,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 			}
 			// creating new attributes for nominal attributes
 			for (int currentValue = 0; currentValue < nominalAttribute.getMapping().size(); ++currentValue) {
-				if (!useComparisonGroups || (currentValue != comparisonGroupValue)) {
+				if (!useComparisonGroups || currentValue != comparisonGroupValue) {
 					attributeTo1ValueMap.put(
 							getTargetAttributeName(nominalAttribute.getName(),
 									nominalAttribute.getMapping().mapIndex(currentValue), useUnderscore),
@@ -251,8 +259,8 @@ public class NominalToNumeric extends PreprocessingOperator {
 		for (Attribute nominalAttribute : nominalAttributes) {
 			double comparisonGroup = sourceAttributeToComparisonGroupValueMap.get(nominalAttribute.getName());
 			for (int currentValue = 0; currentValue < nominalAttribute.getMapping().size(); ++currentValue) {
-				if ((codingType == DUMMY_CODING && !useComparisonGroups)
-						|| (currentValue != sourceAttributeToComparisonGroupValueMap.get(nominalAttribute.getName()))) {
+				if (codingType == DUMMY_CODING && !useComparisonGroups
+						|| currentValue != sourceAttributeToComparisonGroupValueMap.get(nominalAttribute.getName())) {
 					attributeToComparisonGroupValueMap.put(
 							getTargetAttributeName(nominalAttribute.getName(),
 									nominalAttribute.getMapping().mapIndex(currentValue), useUnderscore),
@@ -340,7 +348,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 					getParameterAsBoolean(PARAMETER_USE_UNDERSCORE_IN_NAME), sourceAttributeToComparisonGroupMap, null,
 					attributeToValuesMap, true, getParameterAsInt(PARAMETER_UNEXPECTED_VALUE_HANDLING));
 		} else {
-			assert (false); // unsupported coding
+			assert false; // unsupported coding
 			return null;
 		}
 	}
@@ -409,7 +417,18 @@ public class NominalToNumeric extends PreprocessingOperator {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return new OperatorVersion[] { VERSION_5_2_8 };
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(), new OperatorVersion[] {
+				VERSION_5_2_8, VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

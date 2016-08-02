@@ -98,9 +98,9 @@ public class BayBoostModel extends PredictionModel implements MetaModel {
 		} else if (name.equalsIgnoreCase(CONV_TO_CRISP)) {
 			this.threshold = Double.parseDouble(stringValue.trim());
 			return;
+		} else {
+			super.setParameter(name, value);
 		}
-
-		super.setParameter(name, value);
 	}
 
 	/**

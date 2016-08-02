@@ -19,7 +19,7 @@
 package com.rapidminer.operator.generator;
 
 /**
- * The label is positive if (att1*att1*att1*att1) > 100.
+ * The label is positive if att2 > att1 * att1.
  * 
  * @author Ingo Mierswa
  */

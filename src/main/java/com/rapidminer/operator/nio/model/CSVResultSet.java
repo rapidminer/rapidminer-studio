@@ -172,6 +172,7 @@ public class CSVResultSet implements DataResultSet {
 			columnNames = new String[0];
 			valueTypes = new int[0];
 		} else {
+			numColumns = next.length;
 			columnNames = new String[next.length];
 			for (int i = 0; i < next.length; i++) {
 				columnNames[i] = "att" + (i + 1);
@@ -315,7 +316,6 @@ public class CSVResultSet implements DataResultSet {
 				next = new String[] { line };
 			}
 		} while (true);
-		numColumns = Math.max(numColumns, next.length);
 	}
 
 	@Override
@@ -336,11 +336,7 @@ public class CSVResultSet implements DataResultSet {
 
 	@Override
 	public int getNumberOfColumns() {
-		if (current != null) {
-			return current.length;
-		} else {
-			return numColumns;
-		}
+		return numColumns;
 	}
 
 	@Override

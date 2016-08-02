@@ -19,8 +19,8 @@
 package com.rapidminer.operator.preprocessing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +92,7 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 	public static ExampleSet materializeExampleSet(ExampleSet exampleSet, int dataManagement) throws UndefinedParameterError {
 		// create new attributes and table
 		List<Attribute> attributes = new ArrayList<Attribute>(exampleSet.getAttributes().allSize());
-		Map<Attribute, String> specialAttributes = new HashMap<Attribute, String>();
+		Map<Attribute, String> specialAttributes = new LinkedHashMap<Attribute, String>();
 		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
 		while (a.hasNext()) {
 			AttributeRole role = a.next();

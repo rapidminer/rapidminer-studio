@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Export your data.">
+		<text>
+			So far, we have focused on manipulating data in RapidMiner, but you might be asking:
+			How do I actually get data <emph>out</emph> of RapidMiner?
+			Whether it be for collaboration, advanced analytics, or redundancy, exporting data is an essential task to be able to do. This tutorial will show how RapidMiner can easily export your data.
+		</text>
+	</step>
+
+	<step name="Write data to files.">
+		<tasks>
+			<task>
+				<activity>Drag</activity>
+				the
+				<file>Titanic</file>
+				data into the process.
+			</task>
+			<task>
+				<activity>Search</activity>
+				for the operator
+				<op>Write Excel</op>
+				and
+				<activity>drag it</activity>
+				into the process.
+			</task>
+			<task>
+				<activity>Connect</activity>
+				the operators.
+			</task>
+			<task>
+				In the
+				<ui>Parameters</ui>
+				of
+				<op>Write Excel</op>,
+				<activity>specify a file location</activity>
+				for the parameter
+				<param>excel file</param>.
+				Make sure that you have sufficient privileges to write to this location.
+			</task>
+		</tasks>
+
+		<info>
+			You can specify an arbitrary path for your Excel file. The operator will take the
+			<file>Titanic</file>
+			data and write the complete data set into this file. There are dozens of operators available for
+			different file formats, but also for writing into databases. You will also find operators to write
+			results back into
+			<emph>business applications</emph>;
+			for example, CRM or ERP systems. This type of connection to other business applications
+			is
+			extremely important. Whenever you trigger business actions by using predictive models, we say
+			that
+			you
+			<emph>operationalize</emph>
+			the model. This is the strongest way to create value out of models.
+		</info>
+
+		<info>
+			If you ever need more operators, for example, to write in different formats, try the link
+			<ui>Get More Operators</ui>
+			at the bottom of the
+			<ui>Operators</ui>
+			panel. It opens the
+			<emph>RapidMiner Marketplace</emph>
+			which offers extensions
+			delivering hundreds of additional operators.
+		</info>
+	</step>
+
+	<step name="Storing in the repository.">
+		<info>
+			Whenever possible, we highly recommend using the repository or databases, instead of files, 
+			since RapidMiner also stores meta data in the repository. This meta data is then used
+			during process design. For example, RapidMiner can use it to show the different attribute names
+			in selection dialogs. We have seen before that you can store data in the repository by importing
+			it.
+			Now, we will learn how to use an operator to store data, models, or other results into
+			your repository.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Add</activity>
+				the operator
+				<op>Store</op>
+				to the process and
+				<activity>connect it</activity>.
+			</task>
+			<task>
+				<activity>Define the parameter</activity>
+				<param>repository entry</param>
+				and pick a location in your
+				<folder>Local Repository</folder>.
+			</task>
+			<task>
+				<activity>Connect</activity>
+				the output of
+				<op>Store</op>
+				also with the "res" port on the right.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon> <activity>Run</activity>
+				the process.
+			</task>
+		</tasks>
+	</step>
+
+	<step name="Congratulations!">
+		<text>Fantastic! You should now check out the Excel file you have just written and the new repository
+		entry as well. This concludes our second set of tutorials. You should now be able to solve all
+		data processing tasks with RapidMiner. Of course, sometimes the solution can be difficult to find
+		but don't give up in those cases. You will find that you will get better and better over time and
+		get more familiar with the hundreds of operators which are now in your toolbox. In
+		case you ever
+		need support from us or our user community, visit our
+		<link url="http://rapidminer.com/support/">Support Page</link>
+		.</text>
+
+		<questions>
+			<question>
+				Replace the file writing with an operator to write a CSV file instead.
+			</question>
+			<question>
+				Do you actually need to connect the last operator with the result port on the right? What happens if you delete this connection and execute again? 
+				By the way, you can delete connections by selecting it and pressing the "Delete" key, right-clicking it and selecting the deletion from the menu, or pressing the 
+				"Alt" key while you click on one of the ports.
+			</question>
+		</questions>
+	</step>
+</steps>

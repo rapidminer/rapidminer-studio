@@ -18,6 +18,9 @@
  */
 package com.rapidminer.parameter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -44,15 +47,18 @@ public class ParameterTypeFile extends ParameterTypeString {
 	public ParameterTypeFile(Element element) throws XMLException {
 		super(element);
 
-		int counter = 0;
+		List<String> exts = new ArrayList<String>();
 		for (int i = 0; i < element.getChildNodes().getLength(); i++) {
 			Node extensionNode = element.getChildNodes().item(i);
 			if (extensionNode instanceof Element) {
 				Element extensionElement = (Element) extensionNode;
 				if (extensionElement.getNodeName().equals(ATTRIBUTE_EXTENSION_ELEMENT)) {
-					this.extensions[counter++] = extensionElement.getAttribute(ATTRIBUTE_EXTENSION_ATTRIBUTE);
+					exts.add(extensionElement.getAttribute(ATTRIBUTE_EXTENSION_ATTRIBUTE));
 				}
 			}
+		}
+		if (!exts.isEmpty()) {
+			extensions = exts.toArray(new String[exts.size()]);
 		}
 	}
 

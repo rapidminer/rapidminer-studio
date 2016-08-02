@@ -31,12 +31,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.rapidminer.Process;
 import com.rapidminer.ProcessListener;
-import com.rapidminer.RapidMiner;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
-import com.rapidminer.tools.ParameterService;
+import com.rapidminer.studio.internal.Resources;
 
 
 /**
@@ -77,7 +76,9 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		PASSIVE,
 		/** The worker pool is <strong>initialized and processing</strong> a submitted task. */
 		WORKING,
-		/** The worker pool is <strong>initialized and idling</strong>, no submissions are queued. */
+		/**
+		 * The worker pool is <strong>initialized and idling</strong>, no submissions are queued.
+		 */
 		IDLE;
 	};
 
@@ -107,25 +108,7 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		// remember process
 		this.process = process;
 
-		// look up parallelism level
-		String numberOfThreads = ParameterService
-				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
-
-		int userLevel = 0;
-		if (numberOfThreads != null) {
-			try {
-				userLevel = Integer.parseInt(numberOfThreads);
-			} catch (NumberFormatException e) {
-				// ignore and use default value
-			}
-		}
-
-		// zero is a placeholder for the default value
-		if (userLevel == 0) {
-			userLevel = Runtime.getRuntime().availableProcessors() - 1;
-		}
-
-		parallelismLevel = Math.min(Math.max(1, userLevel), FJPOOL_MAXIMAL_PARALLELISM);
+		parallelismLevel = Math.min(Math.max(1, Resources.getParallelismLevel()), FJPOOL_MAXIMAL_PARALLELISM);
 
 		// listen to process state changes to shutdown pool when necessary
 		process.getRootOperator().addProcessListener(new ProcessListener() {

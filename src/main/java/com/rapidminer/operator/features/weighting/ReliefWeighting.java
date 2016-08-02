@@ -106,6 +106,8 @@ public class ReliefWeighting extends AbstractWeighting {
 	private double[] differentLabelAndAttributesWeights;
 
 	private double[] classProbabilities;
+	
+	private static final int PROGRESS_UPDATE_STEPS = 1_000;
 
 	public ReliefWeighting(OperatorDescription description) {
 		super(description, true);
@@ -114,7 +116,7 @@ public class ReliefWeighting extends AbstractWeighting {
 	@Override
 	protected AttributeWeights calculateWeights(ExampleSet inputSet) throws OperatorException {
 		inputSet.recalculateAllAttributeStatistics();
-
+		
 		// checks
 		Attribute label = inputSet.getAttributes().getLabel();
 
@@ -150,7 +152,10 @@ public class ReliefWeighting extends AbstractWeighting {
 			((SplittedExampleSet) exampleSet).selectSingleSubset(0);
 		}
 
+		getProgress().setTotal(exampleSet.size());
+		int progressCounter = 0;
 		int exampleCounter = 0;
+		int attributeNumber = exampleSet.getAttributes().size();
 		for (Example example : exampleSet) {
 			Map<String, SortedSet<IndexDistance>> neighborSets = searchNeighbors(exampleSet, example, exampleCounter, label,
 					numberOfNeighbors);
@@ -160,8 +165,13 @@ public class ReliefWeighting extends AbstractWeighting {
 				updateWeightsRegression(neighborSets, exampleSet, example, weights, label, numberOfNeighbors);
 			}
 			exampleCounter++;
+			progressCounter += attributeNumber;
+			if(progressCounter > PROGRESS_UPDATE_STEPS){
+				progressCounter = 0;
+				getProgress().setCompleted(exampleCounter);
+			}
 		}
-
+		
 		// calculate final weights for regression
 		if (!label.isNominal()) {
 			int attributeCounter = 0;
@@ -174,7 +184,7 @@ public class ReliefWeighting extends AbstractWeighting {
 				attributeCounter++;
 			}
 		}
-
+		
 		return weights;
 	}
 

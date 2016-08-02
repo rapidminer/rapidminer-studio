@@ -30,6 +30,7 @@ import javax.swing.JSplitPane;
 import javax.swing.table.TableColumn;
 
 import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
 import com.rapidminer.gui.processeditor.results.ResultDisplayTools;
 import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -80,6 +81,7 @@ public class AssociationRuleTableViewer extends JPanel implements AssociationRul
 				table.setModel(model);
 				table.setRowHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
 				table.setRowHighlighting(true);
+				table.setAutoResizeMode(ExtendedJTable.AUTO_RESIZE_OFF);
 				JScrollPane tablePane = new ExtendedJScrollPane(table);
 				tablePane.setBorder(null);
 				tablePane.setBackground(Colors.WHITE);
@@ -90,6 +92,8 @@ public class AssociationRuleTableViewer extends JPanel implements AssociationRul
 				setColumnSizes();
 
 				splitPane.add(mainPanel, 1);
+				table.getTableHeader().setBackground(Colors.WHITE);
+				table.getTableHeader().putClientProperty(RapidLookTools.PROPERTY_TABLE_HEADER_BACKGROUND, Colors.WHITE);
 			}
 			filter.triggerFilter();
 
@@ -103,9 +107,9 @@ public class AssociationRuleTableViewer extends JPanel implements AssociationRul
 		TableColumn col = table.getColumnModel().getColumn(0);
 		col.setPreferredWidth(50);
 		col = table.getColumnModel().getColumn(1);
-		col.setPreferredWidth(600);
+		col.setPreferredWidth(300);
 		col = table.getColumnModel().getColumn(2);
-		col.setPreferredWidth(600);
+		col.setPreferredWidth(300);
 		col = table.getColumnModel().getColumn(3);
 		col.setPreferredWidth(100);
 		col = table.getColumnModel().getColumn(4);

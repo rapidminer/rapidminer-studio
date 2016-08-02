@@ -31,8 +31,8 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.som.KohonenNet;
 
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +40,7 @@ import java.util.Map;
 
 /**
  * The model for the SOM dimensionality reduction.
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class SOMDimensionalityReductionModel extends AbstractModel {
@@ -77,7 +77,7 @@ public class SOMDimensionalityReductionModel extends AbstractModel {
 
 		// copy special attributes
 		Iterator<AttributeRole> s = exampleSet.getAttributes().specialAttributes();
-		Map<Attribute, String> newSpecialAttributes = new HashMap<Attribute, String>();
+		Map<Attribute, String> newSpecialAttributes = new LinkedHashMap<Attribute, String>();
 		while (s.hasNext()) {
 			AttributeRole role = s.next();
 			Attribute specialAttribute = role.getAttribute();

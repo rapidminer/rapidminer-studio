@@ -37,7 +37,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * Abstract superclass of all operators modifying an example set, i.e. accepting an
  * {@link ExampleSet} as input and delivering an {@link ExampleSet} as output. The behavior is
  * delegated from the {@link #doWork()} method to {@link #apply(ExampleSet)}.
- * 
+ *
  * @author Simon Fischer
  */
 public abstract class AbstractExampleSetProcessing extends Operator {
@@ -75,7 +75,7 @@ public abstract class AbstractExampleSetProcessing extends Operator {
 	/**
 	 * Subclasses might override this method to define the meta data transformation performed by
 	 * this operator.
-	 * 
+	 *
 	 * @throws UndefinedParameterError
 	 */
 	protected MetaData modifyMetaData(ExampleSetMetaData metaData) throws UndefinedParameterError {
@@ -95,7 +95,7 @@ public abstract class AbstractExampleSetProcessing extends Operator {
 		ExampleSet inputExampleSet = exampleSetInput.getData(ExampleSet.class);
 		ExampleSet applySet = null;
 		// check for needed copy of original exampleset
-		if (originalOutput.isConnected() && writesIntoExistingData()) {
+		if (writesIntoExistingData()) {
 			int type = DataRowFactory.TYPE_DOUBLE_ARRAY;
 			if (inputExampleSet.getExampleTable() instanceof MemoryExampleTable) {
 				DataRowReader dataRowReader = inputExampleSet.getExampleTable().getDataRowReader();
@@ -130,7 +130,7 @@ public abstract class AbstractExampleSetProcessing extends Operator {
 	 * This method indicates whether the operator will perform a write operation on a cell in an
 	 * existing column of the example set's {@link ExampleTable}. If yes, the original example will
 	 * be completely copied in memory if the original port is used.
-	 * 
+	 *
 	 * <strong>Note: </strong> Subclasses must implement this method. The safe implementation would
 	 * be to return true, however, for backwards compatibility, the default implementation returns
 	 * false.
@@ -154,5 +154,15 @@ public abstract class AbstractExampleSetProcessing extends Operator {
 
 	public OutputPort getExampleSetOutputPort() {
 		return exampleSetOutput;
+	}
+
+	/**
+	 * Used for backward compatibility only.
+	 *
+	 * @since 7.2.0
+	 * @return
+	 */
+	public boolean isOriginalOutputConnected() {
+		return originalOutput.isConnected();
 	}
 }

@@ -18,16 +18,6 @@
  */
 package com.rapidminer.repository.local;
 
-import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.Entry;
-import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.MalformedRepositoryLocationException;
-import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryLocation;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.container.Pair;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,6 +30,16 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.swing.Action;
+
+import com.rapidminer.repository.DataEntry;
+import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -278,7 +278,7 @@ public abstract class SimpleEntry implements Entry {
 	}
 
 	@Override
-	public final boolean move(Folder newParent) throws RepositoryException {
+	public boolean move(Folder newParent) throws RepositoryException {
 		checkRename(newParent, getName());
 		handleMove(newParent, getName());
 		moveFile(getPropertiesFile(), ((SimpleFolder) newParent).getFile());
@@ -289,7 +289,7 @@ public abstract class SimpleEntry implements Entry {
 	}
 
 	@Override
-	public final boolean move(Folder newParent, String newName) throws RepositoryException {
+	public boolean move(Folder newParent, String newName) throws RepositoryException {
 		checkRename(newParent, newName);
 		handleMove(newParent, newName);
 		moveFile(getPropertiesFile(), ((SimpleFolder) newParent).getFile(), newName, PROPERTIES_SUFFIX);
@@ -302,7 +302,6 @@ public abstract class SimpleEntry implements Entry {
 
 		this.containingFolder = (SimpleFolder) newParent;
 		this.containingFolder.addChild(this);
-
 		return true;
 	}
 

@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.performance.cost;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.rapidminer.example.Attribute;
@@ -43,7 +44,7 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	private double totalExampleCount;
 	Attribute label;
 	Attribute predictedLabel;
-	private Map<String, Integer> classOrderMap = null;
+	private final Map<String, Integer> classOrderMap;
 
 	/**
 	 * Clone constructor
@@ -52,6 +53,7 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	 *            the object to be cloned from
 	 */
 	public ClassificationCostCriterion(ClassificationCostCriterion other) {
+		super(other);
 		this.exampleCount = other.exampleCount;
 		this.costs = other.costs;
 		if (other.label != null) {
@@ -66,7 +68,11 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 			this.predictedLabel = null;
 		}
 
-		this.classOrderMap.putAll(other.classOrderMap);
+		if (other.classOrderMap == null) {
+			this.classOrderMap = null;
+		} else {
+			this.classOrderMap = new HashMap<String, Integer>(other.classOrderMap);
+		}
 
 		if (other.costMatrix != null) {
 			this.costMatrix = new double[other.costMatrix.length][];

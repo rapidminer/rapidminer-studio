@@ -18,12 +18,18 @@
  */
 package com.rapidminer.operator.postprocessing;
 
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
 import com.rapidminer.operator.preprocessing.AbstractDataProcessing;
@@ -35,16 +41,13 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 
-import java.util.HashMap;
-import java.util.List;
-
 
 /**
  * This operator sets all predictions which do not have a higher confidence than the specified one
  * to &quot;unknown&quot; (missing value). This operator is a quite simple version of the
  * CostBasedThresholdLearner which might be useful in simple binominal classification settings
  * (although it does also work for polynominal classifications).
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SimpleUncertainPredictionsTransformation extends AbstractDataProcessing {
@@ -62,6 +65,12 @@ public class SimpleUncertainPredictionsTransformation extends AbstractDataProces
 	public static final String PARAMETER_MIN_CONFIDENCES = "min_confidences";
 
 	public static final String PARAMETER_CLASS_VALUE = "class";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public SimpleUncertainPredictionsTransformation(OperatorDescription description) {
 		super(description);
@@ -121,7 +130,12 @@ public class SimpleUncertainPredictionsTransformation extends AbstractDataProces
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
 	}
 
 	@Override
@@ -147,5 +161,11 @@ public class SimpleUncertainPredictionsTransformation extends AbstractDataProces
 				CLASS_HANDLING_UNBALANCED));
 		list.add(type);
 		return list;
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

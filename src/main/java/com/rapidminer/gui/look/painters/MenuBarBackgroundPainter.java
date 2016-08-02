@@ -19,19 +19,18 @@
 package com.rapidminer.gui.look.painters;
 
 import java.awt.Component;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 
-import javax.swing.plaf.ColorUIResource;
+import com.rapidminer.gui.look.Colors;
 
 
 /**
  * This is a cached painter for the menu bar backgrounds.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class MenuBarBackgroundPainter extends AbstractCachedPainter {
@@ -48,12 +47,9 @@ public class MenuBarBackgroundPainter extends AbstractCachedPainter {
 
 	@Override
 	protected void paintToImage(Component c, Graphics g, int w, int h, Object[] args) {
-		g.setColor(new ColorUIResource(252, 252, 252));
-		g.fillRect(0, 0, w, 3);
-
 		Graphics2D g2 = (Graphics2D) g;
-		g2.setPaint(new GradientPaint(0, 3, new ColorUIResource(252, 252, 252), 0, h - 3, new ColorUIResource(232, 232, 232)));
-		g2.fillRect(0, 3, w, h - 3);
+		g2.setColor(Colors.WHITE);
+		g2.fillRect(0, 0, w, h - 3);
 	}
 
 	@Override

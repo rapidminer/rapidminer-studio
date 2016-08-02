@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Macros as process variables.">
+		<text>In this tutorial, you will learn about another powerful RapidMiner concept: <emph>macros</emph>. 
+		Macros are like variables that you can use to dynamically store and load values in your process. In this tutorial, we will use macros to 
+		reduce the size of a data set by 50% using macros to calculate the new size.</text>
+	</step>
+
+	<step name="Prepare the data.">
+		<tasks>
+			<task>
+				<activity>Drag</activity>
+				the
+				<file>Titanic</file>
+				data into the process.
+			</task>
+			<task>
+				<activity>Search</activity>
+				for the operator
+				<op>Set Macro</op>
+				and
+				<activity>add it</activity>
+				to the process.
+			</task>
+			<task>
+				<activity>Connect</activity>
+				<op>Set Macro</op>
+				with
+				<op>Retrieve Titanic</op>.
+			</task>
+			<task>
+				<activity>Click</activity>
+				on
+				<op>Set Macro</op>
+				and make the following changes in its
+				<ui>Parameters</ui>:
+			</task>
+			<task>
+				<activity>Set</activity>
+				<param>macro</param>
+				to
+				<value>fraction</value>.
+			</task>
+			<task>
+				<activity>Set</activity>
+				<param>value</param>
+				to
+				<value>0.5</value> .
+			</task>
+		</tasks>
+
+		<info>
+			Macros can be used to store arbitrary alphanumeric values. Each macro has a name
+			and a
+			value.
+			<op>Set Macro</op>
+			is just one way to set a macro, you will see some other
+			ways later on.
+		</info>
+	</step>
+
+	<step name="Extracting a macro from data.">
+		<info>
+			With <op>Set Macro</op>, we created a macro and manually specified a value.
+			We can also create macros that take their value from another part of the process, such as the number of examples in a data set.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Add</activity>
+				the operator
+				<op>Extract Macro</op>
+				to the process and
+				<activity>connect it</activity>.
+			</task>
+			<task>
+				In its
+				<ui>Parameters</ui>,
+				<activity>set</activity>
+				<param>macro</param>
+				to
+				<value>size</value>.
+			</task>
+			<task>
+				Also
+				<activity>set</activity>
+				<param>macro type</param>
+				to
+				<value>number_of_examples</value>.
+			</task>
+		</tasks>
+	</step>
+
+	<step name="Calculating a new macro.">
+		<info>
+			You can generate macro values using arbitrary expressions in the same way you generated new columns with the operator
+			<op>Generate Attributes</op>. Here you will calculate a new example set size by
+			multiplying the fraction we have defined
+			before (<op>Set Macro</op>) with the old size (<op>Extract Macro</op>) and rounding the result to to the next integer.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Search</activity>
+				for the operator
+				<op>Generate Macro</op>
+				and
+				<activity>drag it</activity>
+				into the process.
+			</task>
+			<task>
+				<activity>Connect it</activity>.
+			</task>
+			<task>
+				In its
+				<ui>Parameters</ui>,
+				<activity>click</activity>
+				on
+				<param>function descriptions</param>.
+			</task>
+			<task>
+				<activity>Add a new entry</activity>
+				with
+				<value>new size</value>
+				as
+				<param>macro name</param>
+				and
+				<value>round(eval(%{size})*eval(%{fraction}))</value>
+				as
+				<param>function expression</param>.
+			</task>
+		</tasks>
+
+		<info>
+			Please note: When you define a macro, you can just use an arbitrary text as a name, e.g.
+			"macro
+			name". But when you
+			<emph>use</emph>
+			a macro in parameters of other operators,
+			you have to use the format
+			<value>%{macro name}</value>.
+		</info>
+
+		<info>
+			The function
+			<emph>eval</emph>
+			tells the expression parser of RapidMiner that the value
+			of the macro has to be evaluated. In this case, this transforms the two macros into numbers
+			which can actually be used in the multiplication (how would you multiply two texts?).
+			Using the
+			<emph>eval</emph>
+			function is often necessary if you want to use macros as part
+			of function expressions but you don't have to use it if you just use the macro as a
+			parameter value in other operators.
+		</info>
+	</step>
+
+	<step name="Sample the data.">
+		<tasks>
+			<task>
+				<activity>Drag</activity>
+				the operator
+				<op>Sample</op>
+				into the process and
+				<activity>connect it</activity>.
+			</task>
+			<task>
+				<activity>Set the parameter</activity>
+				<param>sample size</param>
+				to
+				<value>%{new size}</value> .
+			</task>
+			<task>
+				<activity>Connect</activity>
+				the output of
+				<op>Sample</op>
+				to the result port on the right.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon> <activity>Run</activity>
+				the process.
+			</task>
+		</tasks>
+
+		<info>
+			Please note again that you have to use the format
+			<value>%{new size}</value>
+			to access the
+			value of this macro in the parameter setting.
+		</info>
+	</step>
+
+	<step name="Congratulations!">
+		<text>Congratulations, you're becoming a macro ninja! Macros are commonly used to define key parameters (like for example the fraction you want to sample) in the beginning
+		of the process so you can easily change or reuse them.</text>
+
+		<questions>
+			<question>
+				Try to build samples of
+				<value>30%</value>
+				and
+				<value>80%</value>
+				of the original size.
+				What do you need to change? What are the resulting example set sizes?
+			</question>
+			<question>
+				Replace the input example set (
+				<file>Titanic</file>
+				) with
+				<file>Iris</file>
+				from the
+				<folder>Samples</folder>
+				repository. Do you need to change anything else or will the
+				process just execute fine? Try it!
+			</question>
+			<question>
+				Have a look into the
+				<ui>Parameters</ui>
+				of
+				<op>Sample</op>. Do you find a setting
+				which would allow you to create a 50% sample of the data without calculating the
+				size macro? Try to change the process but keep the
+				<value>fraction</value>
+				macro
+				and use it directly for setting the fraction in the
+				<op>Sample</op>
+				operator.
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

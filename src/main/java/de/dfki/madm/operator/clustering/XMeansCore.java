@@ -135,6 +135,8 @@ public class XMeansCore extends RMAbstractClusterer {
 		} else if (this.ClusteringAlgorithm.equals("KMeans")) {
 			KMean = new KMeans(description);
 			((KMeans) KMean).setPresetMeasure(measure);
+		} else {
+			throw new OperatorException("Unknown kmeans algorithm: " + ClusteringAlgorithm);
 		}
 
 		// Set Parameters for Clustering Algorithm

@@ -18,9 +18,6 @@
  */
 package com.rapidminer.operator.learner.associations;
 
-import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.tools.Tools;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -28,10 +25,13 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.tools.Tools;
+
 
 /**
  * A set of {@link AssociationRule}s which can be constructed from frequent item sets.
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class AssociationRules extends ResultObjectAdapter implements Iterable<AssociationRule> {
@@ -42,8 +42,26 @@ public class AssociationRules extends ResultObjectAdapter implements Iterable<As
 
 	private List<AssociationRule> associationRules = new ArrayList<AssociationRule>();
 
+	/**
+	 * Adds an AssociationRule
+	 * <p>
+	 * Call {@link sort()} after adding Rules for a sorted List
+	 * </p>
+	 *
+	 * @param rule
+	 */
 	public void addItemRule(AssociationRule rule) {
 		associationRules.add(rule);
+	}
+
+	/**
+	 * Sorts the associationRules into ascending order, according to the confidence.
+	 * <p>
+	 * Warning: Do not call while using {@link iterator()}
+	 * </p>
+	 */
+	public void sort() {
+		Collections.sort(associationRules);
 	}
 
 	public int getNumberOfRules() {
@@ -67,17 +85,27 @@ public class AssociationRules extends ResultObjectAdapter implements Iterable<As
 		return toString(MAXIMUM_NUMBER_OF_RULES_IN_OUTPUT);
 	}
 
+	/**
+	 * Returns a list of up to {@link MAXIMUM_NUMBER_OF_RULES_IN_OUTPUT} Asssociation Rules
+	 *
+	 */
 	@Override
 	public String toString() {
 		return toString(MAXIMUM_NUMBER_OF_RULES_IN_OUTPUT);
 	}
 
+	/**
+	 * Returns a list of {@link maxNumber} Association Rules
+	 *
+	 * @param maxNumber
+	 *            maximum number of printed Association Rules
+	 * @return Multiline formatted list of Association Rules
+	 */
 	public String toString(int maxNumber) {
-		Collections.sort(associationRules);
 		StringBuffer buffer = new StringBuffer("Association Rules" + Tools.getLineSeparator());
 		int counter = 0;
 		for (AssociationRule rule : associationRules) {
-			if ((maxNumber >= 0) && (counter > maxNumber)) {
+			if (maxNumber >= 0 && counter > maxNumber) {
 				buffer.append("... " + (associationRules.size() - maxNumber) + " other rules ...");
 				break;
 			}

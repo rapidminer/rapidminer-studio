@@ -23,7 +23,7 @@ import com.rapidminer.tools.Tools;
 
 /**
  * This class represents a gaussian normal distribution.
- * 
+ *
  * @author Tobias Malbrecht, Sebastian Land
  */
 public class EmpiricalNormalDistribution extends NormalDistribution implements EmpiricalDistribution,
@@ -44,8 +44,7 @@ public class EmpiricalNormalDistribution extends NormalDistribution implements E
 		sum = 0;
 		squaredSum = 0;
 		totalWeightSum = 0;
-		recentlyUpdated = true;
-		updateDistributionProperties();
+		recentlyUpdated = false;
 	}
 
 	@Override

@@ -140,7 +140,7 @@ public abstract class AbstractPerformanceEvaluator extends Operator implements C
 					if (type1 != type2) {
 						exampleSetInput.addError(new SimpleMetaDataError(Severity.ERROR, exampleSetInput,
 								"label_prediction_mismatch", new Object[] { Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(type1),
-								Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(type2) }));
+										Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(type2) }));
 					} else if (!canEvaluate(type1)) {
 						exampleSetInput.addError(new SimpleMetaDataError(Severity.ERROR, exampleSetInput,
 								"cannot_evaluate_label_type", new Object[] { Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(type1) }));
@@ -423,7 +423,7 @@ public abstract class AbstractPerformanceEvaluator extends Operator implements C
 				double minimum = testSet.getStatistics(weightAttribute, Statistics.MINIMUM);
 				if (Double.isNaN(minimum) || minimum < 0.0d) {
 					throw new UserError(evaluator, 138, new Object[] { weightAttribute.getName(), "positive values",
-					"negative for some examples" });
+							"negative for some examples" });
 				}
 			}
 		}
@@ -535,10 +535,12 @@ public abstract class AbstractPerformanceEvaluator extends Operator implements C
 		List<PerformanceCriterion> criteria = null;
 		try {
 			criteria = getCriteria();
-			for (PerformanceCriterion criterion : criteria) {
-				if (checkCriterionName(criterion.getName())) {
-					criterionChecked = true;
-					break;
+			if (criteria != null) {
+				for (PerformanceCriterion criterion : criteria) {
+					if (checkCriterionName(criterion.getName())) {
+						criterionChecked = true;
+						break;
+					}
 				}
 			}
 		} catch (UndefinedParameterError err) {

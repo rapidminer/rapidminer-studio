@@ -92,8 +92,11 @@ public final class ConnectionDrawUtils {
 			return null;
 		}
 
+		if (from == null) {
+			return null;
+		}
 		Port to = from.getDestination();
-		if (from == null || to == null) {
+		if (to == null) {
 			return null;
 		}
 		Point2D fromPoint = ProcessDrawUtils.createPortLocation(from, model);

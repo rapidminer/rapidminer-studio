@@ -59,7 +59,8 @@ public class SettingsPropertyPanel extends PropertyPanel {
 	private static final int SUBGROUP_TOP_MARGIN = 20;
 
 	private final Collection<ParameterType> shownParameterTypes;
-	private final Properties parameterValues;
+	private final Collection<ParameterType> allParameterTypes;
+	private final Properties allParameterValues;
 
 	private final String groupTitle;
 
@@ -75,26 +76,39 @@ public class SettingsPropertyPanel extends PropertyPanel {
 	/** Sub-group with the title of the tab should one be used one time */
 	private boolean subGroupTabNameUsed = false;
 
-	public SettingsPropertyPanel(String groupTitle, List<SettingsItem> itemSubGroups, List<SettingsItem> itemParameters) {
+	public SettingsPropertyPanel(String groupTitle, List<SettingsItem> itemSubGroups, List<SettingsItem> itemParameters,
+			String filter, Properties propertyCache) {
 		this.groupTitle = groupTitle;
 
 		// These data structures are used to provide overwritten PropertyPanel methods
 		shownParameterTypes = new LinkedList<>();
-		parameterValues = new Properties();
+		allParameterTypes = new LinkedList<>();
+		if (propertyCache != null) {
+			allParameterValues = propertyCache;
+		} else {
+			allParameterValues = new Properties();
+		}
 
 		// Add parameters of sub-groups first
 		for (SettingsItem subGroup : itemSubGroups) {
-
-			for (SettingsItem item : subGroup.getChildren(Type.PARAMETER)) {
+			for (SettingsItem item : subGroup.getChildren(Type.PARAMETER, filter)) {
 				shownParameterTypes.add(item.getParameterType());
-				parameterValues.put(item.getKey(), ParameterService.getParameterValue(item.getKey()));
+			}
+			for (SettingsItem item : subGroup.getChildren(Type.PARAMETER)) {
+				allParameterTypes.add(item.getParameterType());
+				if (propertyCache == null || !propertyCache.containsKey(item.getKey())) {
+					allParameterValues.put(item.getKey(), ParameterService.getParameterValue(item.getKey()));
+				}
 			}
 		}
 
 		// Add parameters without sub-group
 		for (SettingsItem item : itemParameters) {
+			allParameterTypes.add(item.getParameterType());
 			shownParameterTypes.add(item.getParameterType());
-			parameterValues.put(item.getKey(), ParameterService.getParameterValue(item.getKey()));
+			if (propertyCache == null || !propertyCache.containsKey(item.getKey())) {
+				allParameterValues.put(item.getKey(), ParameterService.getParameterValue(item.getKey()));
+			}
 		}
 
 		if (!itemSubGroups.isEmpty()) {
@@ -111,7 +125,7 @@ public class SettingsPropertyPanel extends PropertyPanel {
 
 	@Override
 	protected String getValue(ParameterType type) {
-		String value = parameterValues.getProperty(type.getKey());
+		String value = allParameterValues.getProperty(type.getKey());
 		if (value == null) {
 			return null;
 		} else {
@@ -121,7 +135,7 @@ public class SettingsPropertyPanel extends PropertyPanel {
 
 	@Override
 	protected void setValue(Operator operator, ParameterType type, String value) {
-		parameterValues.put(type.getKey(), value);
+		allParameterValues.put(type.getKey(), value);
 
 		if (!SettingsItems.INSTANCE.containsKey(type.getKey())) {
 			// Object is automatically added to an internal list
@@ -131,8 +145,8 @@ public class SettingsPropertyPanel extends PropertyPanel {
 
 	/** Applies the properties without saving them. */
 	public void applyProperties() {
-		for (ParameterType type : shownParameterTypes) {
-			String value = parameterValues.getProperty(type.getKey());
+		for (ParameterType type : allParameterTypes) {
+			String value = allParameterValues.getProperty(type.getKey());
 			ParameterService.setParameterValue(type, value);
 		}
 	}
@@ -270,8 +284,8 @@ public class SettingsPropertyPanel extends PropertyPanel {
 
 		JPanel contentsPanel = new JPanel();
 		contentsPanel.setOpaque(isOpaque());
-		contentsPanel.setPreferredSize(new Dimension((int) contentsPanel.getPreferredSize().getWidth(),
-				VALUE_CELL_EDITOR_HEIGHT));
+		contentsPanel.setPreferredSize(
+				new Dimension((int) contentsPanel.getPreferredSize().getWidth(), VALUE_CELL_EDITOR_HEIGHT));
 		JPanel parameterPanel = null;
 		if (editor.rendersLabel()) {
 			// Editor renders label for: Checkboxes
@@ -281,8 +295,8 @@ public class SettingsPropertyPanel extends PropertyPanel {
 			// Contents panel contains component
 
 			contentsPanel.setLayout(new BorderLayout());
-			contentsPanel.add(editorComponent, editorComponent instanceof JCheckBox ? BorderLayout.WEST
-					: BorderLayout.CENTER);
+			contentsPanel.add(editorComponent,
+					editorComponent instanceof JCheckBox ? BorderLayout.WEST : BorderLayout.CENTER);
 			parameterPanel.add(contentsPanel);
 
 			// Replace checkbox text
@@ -326,8 +340,7 @@ public class SettingsPropertyPanel extends PropertyPanel {
 		JPanel surroundingPanel = new JPanel(new BorderLayout());
 		surroundingPanel.add(parameterPanel, BorderLayout.CENTER);
 		addHelpLabel(type.getKey(), settingsItem.getTitle(), settingsItem.getDescription(), type.getRange(),
-				type.isOptional(),
-				surroundingPanel);
+				type.isOptional(), surroundingPanel);
 
 		containerPanel.add(surroundingPanel);
 		return containerPanel;

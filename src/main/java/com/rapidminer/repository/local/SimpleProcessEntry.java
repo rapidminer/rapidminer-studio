@@ -18,13 +18,15 @@
  */
 package com.rapidminer.repository.local;
 
+import java.io.File;
+import java.io.IOException;
+
+import com.rapidminer.RepositoryProcessLocation;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.Tools;
-
-import java.io.File;
-import java.io.IOException;
 
 
 /**
@@ -99,6 +101,36 @@ public class SimpleProcessEntry extends SimpleDataEntry implements ProcessEntry 
 	@Override
 	public long getDate() {
 		return getFile().lastModified();
+	}
+
+	@Override
+	public boolean rename(String newName) throws RepositoryException {
+		boolean shouldResetLocation = RapidMinerGUI.isMainFrameProcessLocation(getLocation());
+		super.rename(newName);
+		if (shouldResetLocation) {
+			RapidMinerGUI.resetProcessLocation(new RepositoryProcessLocation(getLocation()));
+		}
+		return true;
+	}
+
+	@Override
+	public boolean move(Folder newParent) throws RepositoryException {
+		boolean shouldResetLocation = RapidMinerGUI.isMainFrameProcessLocation(getLocation());
+		super.move(newParent);
+		if (shouldResetLocation) {
+			RapidMinerGUI.resetProcessLocation(new RepositoryProcessLocation(getLocation()));
+		}
+		return true;
+	}
+
+	@Override
+	public boolean move(Folder newParent, String newName) throws RepositoryException {
+		boolean shouldResetLocation = RapidMinerGUI.isMainFrameProcessLocation(getLocation());
+		super.move(newParent, newName);
+		if (shouldResetLocation) {
+			RapidMinerGUI.resetProcessLocation(new RepositoryProcessLocation(getLocation()));
+		}
+		return true;
 	}
 
 }

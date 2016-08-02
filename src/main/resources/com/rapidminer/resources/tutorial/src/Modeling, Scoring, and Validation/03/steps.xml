@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Splitting into training and testing data.">
+		<text>One of the most important questions you should ask after building a predictive model 
+		is "How well is this model going to perform"?  How can you tell if your model will work well
+		in the future for scenarios you may have never encountered before?
+		The way to do this properly is always the same: hold back some of your 
+		labeled data and <emph>don't</emph> use it for model building.  Since this 
+		data is still labeled, you now can compare the predictions with the actual outcomes 
+		and calculate how often the model was right on these cases.  This tutorial will show 
+		how we can perform this kind of validation.</text>
+		
+		<info>
+			Some people suggest that you can also calculate how often you are correct on the 
+			training data, but we 
+			think that using this <emph>training error</emph> is a terrible idea.  If you 
+			do this, you will end up with models that simply memorize the data and don't 
+			learn how to generalize their findings to new cases.  What is the value of a model 
+			which is 100% correct on your training data but fails on new data?
+		</info>
+	</step>
+
+
+
+	<step name="Split labeled data into two partitions.">
+		<tasks>
+			<task>
+				<activity>
+					Drag the
+					<file>Titanic Training</file>
+					data
+				</activity>
+				from the <folder>Samples</folder> repository into your process.
+			</task>
+			<task>
+				<activity>Add</activity> the operator 
+				<op>Split Data</op> to the process and <activity>connect it</activity>.
+			</task>
+			<task>
+				In its <ui>Parameters</ui>, look up <param>partitions</param> and 
+				<activity>click</activity> on <value>Edit Enumeration...</value>. 
+			</task>
+			<task>
+				<activity>Click</activity> on <ui>Add Entry</ui> twice.  <activity>Type</activity> 
+				0.7 into the first text box and 0.3 into the second.
+			</task>
+		</tasks>
+
+		<info>
+			<op>Split Data</op> takes an example set and divides it into the partitions you have defined. 
+			In this case, we will get two partitions with 70% of the data in one and 30% of the 
+			data in the other.  Both sets are still labeled.  The 70% partition will become our <emph>training set</emph> we build 
+			our model on. The remaining 30% will become our <emph>test set</emph> against which we can compare 
+			our model's predictions.  This 70/30-ratio between training and 
+			testing is actually quite a popular and effective value.
+		</info>
+	</step>
+
+
+	<step name="Train and apply the model.">
+		<tasks>
+			<task>
+				<activity>Add</activity> a <op>Decision Tree</op> to the process and 
+				<activity>connect it</activity> to the first output port of 
+				<op>Split Data</op>.
+			</task>
+			<task>
+				<activity>Add</activity> <op>Apply Model</op> to the process.
+			</task>
+			<task>
+				<activity>Connect</activity> the green model port from <op>Decision Tree</op> 
+				with the model input of <op>Apply Model</op>. 
+			</task>
+			<task>
+				Also, <activity>connect</activity> the second output port of <op>Split Data</op> 
+				to the example set input "unl" of <op>Apply Model</op>.
+			</task>
+		</tasks>
+
+		<info>If you would run the process now, you will get a result similar to the one 
+		in the tutorial about scoring. The 30% test data will have additional columns 
+		for the prediction of Survival together with confidence columns for the two 
+		possible classes "yes" and "no".  But in this case, the test data also comes 
+		with the label column containing the true values, which we can use 
+		to calculate the accuracy of our model by simply comparing the labels and the predictions.</info>
+	</step>
+
+
+	<step name="Calculate the accuracy of models.">
+		<tasks>
+			<task>
+				<activity>Add</activity> the operator <op>Performance</op> to the process.
+			</task>
+			<task>
+				<activity>Connect</activity> its "lab" input port with the "lab" output of <op>Apply Model</op>.
+			</task>
+			<task>
+				<activity>Connect</activity> both output ports of <op>Performance</op> with the result ports on the right.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon>
+				<activity>Run</activity>
+				the process and inspect the results.
+			</task>
+		</tasks>
+
+		<info>
+			The first result you see is the test set with the label and the predictions.  
+			The second result is the performance of the model on the test set.  
+			You can select the different performance measurements ("criterion") on the left side of the screen.  The <emph>accuracy</emph> 
+			is 77.82% and tells you how accurate the model is overall. The <emph>confusion matrix</emph>  
+			shows you the different kind of errors.  For example, 30 cases have been predicted "no" 
+			when they were actually "yes."  The accuracy is the sum of all the numbers on the diagonal divided by the sum of all 
+			numbers! The larger the numbers on the diagonal, the better the performance of our model.
+		</info>
+	</step>
+						
+
+	<step name="Congratulations!">
+		<text>Excellent, you have split your labeled data into two parts - one for training and one 
+		for testing your model - and used the <op>Performance</op> operator to calculate how well the model does.  
+		Work on the challenges below and proceed to the next tutorial.</text>
+
+		<questions>
+			<question>
+				Go back to the data view of the test data.  In the top right, you will find 
+				a filter.  Use the filter setting <value>wrong predictions</value> and note 
+				how the data itself changes, but also note now the number next to the selection box changes. 
+				How many examples have been in the test set in total? And, how many got a 
+				wrong classification?
+			</question>
+			<question>
+				Now look into the confusion matrix. How many examples have been classified 
+				wrongly in total? Does this number match the number you found above?
+			</question>
+			<question>
+				Place a breakpoint after <op>Split Data</op> and run the process again. 
+				How many example sets do you get? What are their sizes?
+			</question>
+			<question>
+				Replace the operator <op>Performance</op> with <op>Performance (Classification)</op>. 
+				In its <ui>Parameters</ui>, select <value>accuracy</value>, <value>classification error</value>, 
+				and <value>root mean squared error</value>.  What is your expectation for the classification 
+				error?  Execute again and validate this.
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

@@ -46,8 +46,8 @@ import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.math.MathFunctions;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +58,7 @@ import java.util.Map;
  * This operator fills gaps in the data based on the ID attribute of the data set. The ID attribute
  * must either have the value type &quot;integer&quot; or one of the data value types.
  * </p>
- * 
+ *
  * <p>
  * The operator performs the following steps:
  * </p>
@@ -69,12 +69,12 @@ import java.util.Map;
  * <li>All rows which would have an ID value which is a multiple of the GCD but are missing are
  * added to the data set</li>
  * </ol>
- * 
+ *
  * <p>
  * Please note that all values of attributes beside the ID attribute will have a missing value which
  * often must be replaced as a next step.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class FillDataGaps extends AbstractExampleSetProcessing {
@@ -223,7 +223,7 @@ public class FillDataGaps extends AbstractExampleSetProcessing {
 
 		// create table
 		List<Attribute> attributes = new ArrayList<Attribute>(sortedSet.getAttributes().allSize());
-		Map<Attribute, String> specialAttributes = new HashMap<Attribute, String>();
+		Map<Attribute, String> specialAttributes = new LinkedHashMap<Attribute, String>();
 		Iterator<AttributeRole> a = sortedSet.getAttributes().allAttributeRoles();
 		int idIndex = -1;
 		int index = 0;

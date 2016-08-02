@@ -45,6 +45,8 @@ import com.rapidminer.tools.math.MathFunctions;
  */
 public class CorrelationWeighting extends AbstractWeighting {
 
+	private static final int PROGRESS_UPDATE_STEPS = 200_000;
+	
 	public static final String PARAMETER_SQUARED_CORRELATION = "squared_correlation";
 
 	/**
@@ -62,9 +64,19 @@ public class CorrelationWeighting extends AbstractWeighting {
 		boolean useSquaredCorrelation = getParameterAsBoolean(PARAMETER_SQUARED_CORRELATION);
 
 		AttributeWeights weights = new AttributeWeights(exampleSet);
+		getProgress().setTotal(attributes.size());
+		int progressCounter = 0;
+		int exampleSetSize = exampleSet.size();
+		int exampleCounter = 0;
 		for (Attribute attribute : attributes) {
 			double correlation = MathFunctions.correlation(exampleSet, labelAttribute, attribute, useSquaredCorrelation);
 			weights.setWeight(attribute.getName(), Math.abs(correlation));
+			progressCounter++;
+			exampleCounter += exampleSetSize;
+			if(exampleCounter > PROGRESS_UPDATE_STEPS) {
+				exampleCounter = 0;
+				getProgress().setCompleted(progressCounter);
+			}
 		}
 
 		return weights;

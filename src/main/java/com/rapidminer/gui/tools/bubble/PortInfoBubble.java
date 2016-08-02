@@ -87,10 +87,12 @@ public class PortInfoBubble extends BubbleWindow {
 		private boolean hideOnDisable;
 		private boolean hideOnRun;
 		private boolean ensureVisible;
+		private boolean killOnPerspectiveChange;
 
 		public PortBubbleBuilder(final Window owner, final Port attachTo, final String i18nKey, final Object... arguments) {
 			super(owner, i18nKey, arguments);
 			this.attachTo = attachTo;
+			this.killOnPerspectiveChange = true;
 		}
 
 		/**
@@ -148,17 +150,30 @@ public class PortInfoBubble extends BubbleWindow {
 			return this;
 		}
 
+		/**
+		 * Sets whether the bubble should be automatically killed by switching perspective. Defaults
+		 * to {@code true}.
+		 *
+		 * @param killOnPerspectiveChange
+		 *            {@code true} if the bubble should be killed on perspective change;
+		 *            {@code false} otherwise
+		 * @return the builder instance
+		 */
+		public PortBubbleBuilder setKillOnPerspectiveChange(final boolean killOnPerspectiveChange) {
+			this.killOnPerspectiveChange = killOnPerspectiveChange;
+			return this;
+		}
+
 		@Override
 		public PortInfoBubble build() {
 			return new PortInfoBubble(owner, style, alignment, i18nKey, attachTo, componentsToAdd, hideOnConnection,
-					hideOnDisable, hideOnRun, ensureVisible, moveable, showCloseButton, arguments);
+					hideOnDisable, hideOnRun, ensureVisible, moveable, showCloseButton, killOnPerspectiveChange, arguments);
 		}
 
 		@Override
 		public PortBubbleBuilder getThis() {
 			return this;
 		}
-
 	}
 
 	private static final long serialVersionUID = 1L;
@@ -168,6 +183,7 @@ public class PortInfoBubble extends BubbleWindow {
 	private boolean hideOnConnection;
 	private boolean hideOnDisable;
 	private boolean hideOnRun;
+	private final boolean killOnPerspectiveChange;
 	private ProcessRendererView renderer = RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer();
 	private JViewport viewport = RapidMinerGUI.getMainFrame().getProcessPanel().getViewPort();
 	private ProcessRendererEventListener rendererModelListener;
@@ -207,12 +223,15 @@ public class PortInfoBubble extends BubbleWindow {
 	 * @param showCloseButton
 	 *            if {@code true} the user can close the bubble via an "x" button in the top right
 	 *            corner
+	 * @param killOnPerspectiveChange
+	 *            if {@code true} the bubble will be automatically killed if the perspective changes
 	 * @param arguments
 	 *            arguments to pass thought to the I18N Object
 	 */
 	private PortInfoBubble(Window owner, BubbleStyle style, AlignedSide preferredAlignment, String i18nKey, Port toAttach,
 			JComponent[] componentsToAdd, boolean hideOnConnection, boolean hideOnDisable, boolean hideOnRun,
-			boolean ensureVisible, boolean moveable, boolean showCloseButton, Object... arguments) {
+			boolean ensureVisible, boolean moveable, boolean showCloseButton, boolean killOnPerspectiveChange,
+			Object... arguments) {
 		super(owner, style, preferredAlignment, i18nKey, ProcessPanel.PROCESS_PANEL_DOCK_KEY, null, null, moveable,
 				showCloseButton, componentsToAdd, arguments);
 		if (toAttach == null) {
@@ -224,18 +243,30 @@ public class PortInfoBubble extends BubbleWindow {
 		this.hideOnConnection = hideOnConnection;
 		this.hideOnDisable = hideOnDisable;
 		this.hideOnRun = hideOnRun;
+		this.killOnPerspectiveChange = killOnPerspectiveChange;
 
 		// if we need to ensure that the bubble is visible:
 		if (ensureVisible) {
-			// switch to correct subprocess
-			if (!renderer.getModel().getDisplayedChain().equals(portChain)) {
+			OperatorChain portParent = portChain;
+			while (portParent.getParent() != null) {
+				portParent = portParent.getParent();
+			}
+			OperatorChain displayedParent = renderer.getModel().getDisplayedChain();
+			while (displayedParent.getParent() != null) {
+				displayedParent = displayedParent.getParent();
+			}
+			// switch to correct subprocess (if the bubble is part of a subprocess!)
+			// if it belongs to a different process, don't switch displayed process
+			boolean belongsToSameRoot = portParent == null || portParent.equals(displayedParent);
+			if (belongsToSameRoot && !renderer.getModel().getDisplayedChain().equals(portChain)) {
 				renderer.getModel().setDisplayedChain(portChain);
 				renderer.getModel().fireDisplayedChainChanged();
 			}
 			// switch to correct perspective
-			if (!RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective()
+			if (!RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName()
 					.equals(PerspectiveModel.DESIGN)) {
 				RapidMinerGUI.getMainFrame().getPerspectiveController().showPerspective(PerspectiveModel.DESIGN);
+				this.myPerspective = PerspectiveModel.DESIGN;
 			}
 			// make sure dockable is visible
 			DockingTools.openDockable(ProcessPanel.PROCESS_PANEL_DOCK_KEY, null, RelativeDockablePosition.TOP_CENTER);
@@ -409,6 +440,9 @@ public class PortInfoBubble extends BubbleWindow {
 
 	@Override
 	protected Point getObjectLocation() {
+		if (!viewport.isShowing()) {
+			return new Point(0, 0);
+		}
 		// get all necessary parameters
 		if (!getDockable().getComponent().isShowing()) {
 			return new Point(0, 0);
@@ -416,14 +450,14 @@ public class PortInfoBubble extends BubbleWindow {
 
 		Point portLoc = ProcessDrawUtils.createPortLocation(port, renderer.getModel());
 		if (portLoc == null) {
-			return null;
+			return new Point(0, 0);
 		}
 		portLoc.x = (int) (portLoc.x * renderer.getModel().getZoomFactor());
 		portLoc.y = (int) (portLoc.y * renderer.getModel().getZoomFactor());
 		portLoc = ProcessDrawUtils.convertToAbsoluteProcessPoint(portLoc,
 				renderer.getModel().getProcessIndex(port.getPorts().getOwner().getConnectionContext()), renderer.getModel());
 		if (portLoc == null) {
-			return null;
+			return new Point(0, 0);
 		}
 		portLoc.translate(-getObjectWidth() / 2, -getObjectHeight() / 2);
 
@@ -450,9 +484,11 @@ public class PortInfoBubble extends BubbleWindow {
 
 	@Override
 	protected void changeToAssistant(final AssistantType type) {
-		// no assistents, just kill bubble
-		killBubble(true);
-		return;
+		if (AssistantType.WRONG_PERSPECTIVE == type && !killOnPerspectiveChange) {
+			setVisible(false);
+		} else {
+			killBubble(true);
+		}
 	}
 
 	/**

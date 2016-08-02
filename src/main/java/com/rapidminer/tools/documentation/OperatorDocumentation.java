@@ -18,9 +18,8 @@
  */
 package com.rapidminer.tools.documentation;
 
-import com.rapidminer.Process;
-import com.rapidminer.io.process.XMLTools;
-
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,30 +27,30 @@ import java.util.List;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import com.rapidminer.Process;
+import com.rapidminer.io.process.XMLTools;
+
 
 /**
  * The operator documentation, currently consisting of a short synopsis, a long help text plus
  * examples. None of the getters returns null. If no long description is given, the synopsis will be
  * returned.
- * 
+ *
  * Setting properties of instances of this class will, as a side effect, also modify the original
  * DOM element used to create this instance, so the DOM is always in sync with the data.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class OperatorDocumentation {
 
-	/**
-     * 
-     */
 	private final OperatorDocBundle operatorDocBundle;
-	// private String key;
 	private String name;
 	private String shortName;
 	private String synopsis;
 	private String documentation;
 	private String deprecation;
+	private List<String> tags;
 	private final Element element;
 	private final List<ExampleProcess> exampleProcesses = new LinkedList<ExampleProcess>();
 
@@ -60,6 +59,7 @@ public class OperatorDocumentation {
 		this.documentation = this.synopsis = null;
 		this.element = null;
 		this.operatorDocBundle = null;
+		this.tags = new ArrayList<>();
 	}
 
 	OperatorDocumentation(OperatorDocBundle operatorDocBundle, Element element) {
@@ -69,6 +69,10 @@ public class OperatorDocumentation {
 		this.synopsis = XMLTools.getTagContents(element, "synopsis");
 		this.documentation = XMLTools.getTagContents(element, "help");
 		this.deprecation = XMLTools.getTagContents(element, "deprecation");
+		this.tags = new ArrayList<>();
+		for (Element tagsElement : XMLTools.getChildElements(element, "tags")) {
+			tags.addAll(Arrays.asList(XMLTools.getChildTagsContentAsStringArray(tagsElement, "tag")));
+		}
 		this.element = element;
 		if (synopsis == null) {
 			synopsis = "";
@@ -81,15 +85,6 @@ public class OperatorDocumentation {
 			exampleProcesses.add(new ExampleProcess((Element) exampleNodes.item(i)));
 		}
 	}
-
-	// /** @deprecated Remove after operator renaming. */
-	// @Deprecated
-	// public void setKey(String key) {
-	// this.operatorDocBundle.operatorKeyDescriptionMap.remove(this.key);
-	// this.key = key;
-	// XMLTools.setTagContents(element, "key", key);
-	// this.operatorDocBundle.operatorKeyDescriptionMap.put(key, this);
-	// }
 
 	public String getName() {
 		if (name != null) {
@@ -157,6 +152,26 @@ public class OperatorDocumentation {
 		this.deprecation = deprecation;
 		if (element != null) {
 			XMLTools.setTagContents(element, "deprecation", deprecation);
+		}
+	}
+
+	public List<String> getTags() {
+		return Collections.unmodifiableList(tags);
+	}
+
+	public void setTags(List<String> tags) {
+		this.tags = tags;
+		if (element != null) {
+			XMLTools.deleteTagContents(element, "tags");
+			if (tags != null && !tags.isEmpty()) {
+				Element tagsElement = element.getOwnerDocument().createElement("tags");
+				element.appendChild(tagsElement);
+				for (String tagValue : tags) {
+					Element tagElement = tagsElement.getOwnerDocument().createElement("tag");
+					tagsElement.appendChild(tagElement);
+					tagElement.appendChild(tagsElement.getOwnerDocument().createTextNode(tagValue));
+				}
+			}
 		}
 	}
 

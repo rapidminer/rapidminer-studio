@@ -29,7 +29,7 @@ import com.rapidminer.tools.math.container.Range;
 
 /**
  * Generator for an artificial audio data set (based on real-world data from drilling processes).
- * 
+ *
  * @author Sebastian Land
  */
 public class DrillerOscillationFunction implements TargetFunction {
@@ -61,6 +61,9 @@ public class DrillerOscillationFunction implements TargetFunction {
 
 	@Override
 	public double[] createArguments(int dimension, RandomGenerator random) throws FunctionException {
+		if (dimension < 3) {
+			throw new FunctionException("Driller oscillation function", "needs at least 3 attributes!");
+		}
 		if (skew == null) {
 			skew = new double[dimension - 1];
 			for (int i = 0; i < dimension - 1; i++) {
@@ -143,7 +146,17 @@ public class DrillerOscillationFunction implements TargetFunction {
 		ExampleSetMetaData emd = new ExampleSetMetaData();
 		for (int i = 1; i <= numberOfAttributes; i++) {
 			AttributeMetaData amd = new AttributeMetaData("att" + i, Ontology.REAL);
-			amd.setValueRange(new Range(-1d - GENERAL_NOISE, 1d + GENERAL_NOISE), SetRelation.EQUAL);
+			if (i == numberOfAttributes) {
+				amd.setValueRange(new Range(0, numberOfExamples), SetRelation.EQUAL);
+			} else if (i == 2) {
+				amd.setValueRange(new Range(0, Double.POSITIVE_INFINITY), SetRelation.SUBSET);
+			} else {
+				amd.setValueRange(new Range(-1d - GENERAL_NOISE, 1d + GENERAL_NOISE), SetRelation.EQUAL);
+			}
+			if (i < numberOfAttributes) {
+				amd.getNumberOfMissingValues().increaseByUnknownAmount();
+			}
+			emd.addAttribute(amd);
 		}
 		emd.setNumberOfExamples(numberOfExamples);
 		return emd;
@@ -151,7 +164,7 @@ public class DrillerOscillationFunction implements TargetFunction {
 
 	@Override
 	public int getMinNumberOfAttributes() {
-		return 1;
+		return 3;
 	}
 
 	@Override

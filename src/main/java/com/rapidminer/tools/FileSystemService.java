@@ -34,6 +34,13 @@ import java.util.logging.Level;
  */
 public class FileSystemService {
 
+	/** folder in which extensions have their workspace */
+	private static final String RAPIDMINER_EXTENSIONS_FOLDER = "extensions";
+	/** folder in which extensions get their own folder to work with files */
+	private static final String RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER = "workspace";
+	/** folder which can be used to share data between extensions */
+	private static final String RAPIDMINER_SHARED_DATA = "shared data";
+
 	public static final String RAPIDMINER_USER_FOLDER = ".RapidMiner";
 
 	/** Returns the main user configuration file. */
@@ -62,6 +69,10 @@ public class FileSystemService {
 	public static File getUserRapidMinerDir() {
 		File homeDir = new File(System.getProperty("user.home"));
 		File userHomeDir = new File(homeDir, RAPIDMINER_USER_FOLDER);
+		File extensionsWorkspaceRootFolder = new File(userHomeDir, RAPIDMINER_EXTENSIONS_FOLDER);
+		File extensionsWorkspaceFolder = new File(extensionsWorkspaceRootFolder, RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER);
+		File sharedDataDir = new File(userHomeDir, RAPIDMINER_SHARED_DATA);
+
 		if (!userHomeDir.exists()) {
 			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory", userHomeDir);
 			boolean result = userHomeDir.mkdir();
@@ -70,7 +81,53 @@ public class FileSystemService {
 						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", userHomeDir);
 			}
 		}
+		if (!extensionsWorkspaceRootFolder.exists()) {
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
+					extensionsWorkspaceRootFolder);
+			boolean result = extensionsWorkspaceRootFolder.mkdir();
+			if (!result) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.FileSystemService.creating_home_directory_error",
+						extensionsWorkspaceRootFolder);
+			}
+		}
+		if (!extensionsWorkspaceFolder.exists()) {
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
+					extensionsWorkspaceFolder);
+			boolean result = extensionsWorkspaceFolder.mkdir();
+			if (!result) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", extensionsWorkspaceFolder);
+			}
+		}
+		if (!sharedDataDir.exists()) {
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
+					sharedDataDir);
+			boolean result = sharedDataDir.mkdir();
+			if (!result) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", sharedDataDir);
+			}
+		}
 		return userHomeDir;
+	}
+
+	/**
+	 * Returns the folder for which an extension has read/write/delete permissions. The folder is
+	 * located in the {@link #getUserRapidMinerDir()} folder.
+	 *
+	 * @param extensionId
+	 *            the key of the extension, e.g. {@code rmx_myextension}
+	 * @return a file with the working directory for the given extension id, never {@code null}
+	 */
+	public static File getPluginRapidMinerDir(String extensionId) {
+		File userHomeDir = getUserRapidMinerDir();
+		File extensionFolder = new File(userHomeDir, "extensions/workspace/" + extensionId);
+		if (!extensionFolder.exists()) {
+			extensionFolder.mkdir();
+		}
+
+		return extensionFolder;
 	}
 
 	public static File getRapidMinerHome() throws IOException {

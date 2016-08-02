@@ -18,6 +18,15 @@
  */
 package com.rapidminer.operator.preprocessing.discretization;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -25,6 +34,7 @@ import com.rapidminer.example.Statistics;
 import com.rapidminer.example.set.SortedExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -41,13 +51,6 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
 
 /**
  * This operator discretizes all numeric attributes in the dataset into nominal attributes. This
@@ -58,7 +61,7 @@ import java.util.TreeSet;
  * attributes including the label. Note that it is possible to get bins with different numbers of
  * examples. This might occur, if the attributes's values are not unique, since the algorithm can
  * not split between examples with same value.
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class FrequencyDiscretization extends AbstractDiscretizationOperator {
@@ -82,6 +85,12 @@ public class FrequencyDiscretization extends AbstractDiscretizationOperator {
 	public static final String PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS = "automatic_number_of_digits";
 
 	public static final String PARAMETER_NUMBER_OF_DIGITS = "number_of_digits";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public FrequencyDiscretization(OperatorDescription description) {
 		super(description);
@@ -208,8 +217,24 @@ public class FrequencyDiscretization extends AbstractDiscretizationOperator {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(),
 				FrequencyDiscretization.class, attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

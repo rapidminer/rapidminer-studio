@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -68,14 +69,14 @@ import java.util.Set;
  * that case other preprocessing tools should be used which aggregates, joins, and merges tables
  * into one table which is then used by RapidMiner.
  * </p>
- * 
+ *
  * <p>
  * All input example sets must provide the same attribute signature. That means that all examples
  * sets must have the same number of (special) attributes and attribute names. If this is true this
  * operator simply merges all example sets by adding all examples of all table into a new set which
  * is then returned.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ExampleSetMerge extends Operator {
@@ -184,7 +185,7 @@ public class ExampleSetMerge extends Operator {
 		ExampleSet firstSet = allExampleSets.get(0);
 		List<Attribute> newAttributeList = new LinkedList<Attribute>();
 		HashMap<String, Attribute> newAttributeNameMap = new HashMap<String, Attribute>();
-		Map<Attribute, String> specialAttributesMap = new HashMap<Attribute, String>();
+		Map<Attribute, String> specialAttributesMap = new LinkedHashMap<Attribute, String>();
 		Iterator<AttributeRole> a = firstSet.getAttributes().allAttributeRoles();
 		while (a.hasNext()) {
 			AttributeRole role = a.next();
@@ -329,7 +330,7 @@ public class ExampleSetMerge extends Operator {
 	/**
 	 * Checks whether all attributes in set 1 occur in the others as well. Types are (deliberately)
 	 * not checked. Type check happens in {@link #merge(List)} itself.
-	 * 
+	 *
 	 * @throws on
 	 *             failed check
 	 */

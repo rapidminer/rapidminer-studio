@@ -186,7 +186,9 @@ public class NotificationPopup extends JWindow {
 			}
 
 		};
-
+		if (isOpacitySupported) {
+			NotificationPopup.this.setOpacity(alpha);
+		}
 		setLayout(new BorderLayout());
 		add(content, BorderLayout.CENTER);
 		pack();
@@ -417,5 +419,22 @@ public class NotificationPopup extends JWindow {
 		popup.setFocusableWindowState(true); // afterwards it should be focusable
 
 		return popup;
+	}
+
+	/**
+	 * Restarts the timer until fadeout if notification has not started to fade out.
+	 *
+	 * @return {@code true} if the restart was successful
+	 */
+	public boolean restartTimer() {
+		if (fadeInTimer.isRunning()) {
+			// fadeOutTimer not started yet
+			return true;
+		}
+		if (fadeOutTimer.isRunning() && alpha >= 1.0f) {
+			fadeOutTimer.restart();
+			return true;
+		}
+		return false;
 	}
 }

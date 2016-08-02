@@ -29,7 +29,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
-import java.net.URI;
 import java.util.LinkedList;
 
 import javax.swing.AbstractButton;
@@ -49,7 +48,6 @@ import com.rapidminer.gui.look.borders.RoundTitledBorder;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
-import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.parameter.OAuthMechanism;
@@ -440,10 +438,6 @@ public class OAuthDialog extends ButtonDialog {
 	 * @param urlString
 	 */
 	private void open(String urlString) {
-		try {
-			RMUrlHandler.browse(new URI(urlString));
-		} catch (Exception e) {
-			SwingTools.showSimpleErrorMessage("oauth_dialog.open_browser_fail", e.getMessage());
-		}
+		RMUrlHandler.openInBrowser(urlString);
 	}
 }

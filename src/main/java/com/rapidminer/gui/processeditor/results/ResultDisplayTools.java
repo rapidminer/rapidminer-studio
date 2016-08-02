@@ -20,9 +20,11 @@ package com.rapidminer.gui.processeditor.results;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -34,6 +36,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import com.rapidminer.core.license.ProductConstraintManager;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.set.MappedExampleSet;
 import com.rapidminer.gui.renderer.DefaultTextRenderer;
 import com.rapidminer.gui.renderer.Renderer;
 import com.rapidminer.gui.renderer.RendererService;
@@ -43,6 +48,9 @@ import com.rapidminer.gui.tools.components.ButtonBarCardPanel;
 import com.rapidminer.gui.tools.components.CardSelectionEvent;
 import com.rapidminer.gui.tools.components.CardSelectionListener;
 import com.rapidminer.gui.tools.components.ResourceCard;
+import com.rapidminer.license.LicenseConstants;
+import com.rapidminer.license.LicenseManagerRegistry;
+import com.rapidminer.license.violation.LicenseConstraintViolation;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ResultObject;
@@ -76,7 +84,7 @@ public class ResultDisplayTools {
 	 * In these cases the unnecessary additional panel is suppressed
 	 */
 	private static final Set<String> NO_CARD_KEYS = new HashSet<>(Arrays.asList(new String[] { "collection", "metamodel",
-			"delegation_model" }));
+	"delegation_model" }));
 
 	static {
 		defaultResultIcon = SwingTools.createIcon("16/" + DEFAULT_RESULT_ICON_NAME);
@@ -106,9 +114,9 @@ public class ResultDisplayTools {
 	 *            if <code>false</code> the cards on the left side of the visualization component
 	 *            will not be shown
 	 */
-	public static JPanel createVisualizationComponent(final IOObject resultObject, final IOContainer resultContainer,
+	public static JPanel createVisualizationComponent(IOObject result, final IOContainer resultContainer,
 			String usedResultName, final boolean showCards) {
-		final String resultName = RendererService.getName(resultObject.getClass());
+		final String resultName = RendererService.getName(result.getClass());
 		ButtonBarCardPanel visualisationComponent;
 		Collection<Renderer> renderers = RendererService.getRenderers(resultName);
 
@@ -120,6 +128,18 @@ public class ResultDisplayTools {
 		// constructing panel of renderers
 		visualisationComponent = new ButtonBarCardPanel(NO_CARD_KEYS, showCards);
 		final ButtonBarCardPanel cardPanel = visualisationComponent;
+		// check license limit for ExampleSet rows
+		final List<LicenseConstraintViolation<Integer, Integer>> violationList = new ArrayList<>();
+		if (result instanceof ExampleSet) {
+			LicenseConstraintViolation<Integer, Integer> violation = LicenseManagerRegistry.INSTANCE.get()
+					.checkConstraintViolation(ProductConstraintManager.INSTANCE.getProduct(),
+							LicenseConstants.DATA_ROW_CONSTRAINT, ((ExampleSet) result).size(), false);
+			if (violation != null) {
+				result = downsample((ExampleSet) result, violation.getConstraintValue());
+				violationList.add(violation);
+			}
+		}
+		final IOObject resultObject = result;
 		for (final Renderer renderer : renderers) {
 			String cardKey = toCardName(renderer.getName());
 			final ResourceCard card = new ResourceCard(cardKey, "result_view." + cardKey);
@@ -144,8 +164,9 @@ public class ResultDisplayTools {
 					public void run() {
 						getProgressListener().setTotal(100);
 						getProgressListener().setCompleted(1);
-						final Component rendererComponent = renderer
-								.getVisualizationComponent(resultObject, resultContainer);
+
+						final Component rendererComponent = renderer.getVisualizationComponent(resultObject,
+								resultContainer);
 						getProgressListener().setCompleted(60);
 
 						if (rendererComponent != null) {
@@ -163,6 +184,13 @@ public class ResultDisplayTools {
 									// renderer is finished, remove placeholder
 									inConstructionPanel.removeAll();
 
+									// add license information if necessary
+									if (!violationList.isEmpty()) {
+										JPanel warnPanel = new ResultLimitPanel(rendererComponent.getBackground(),
+												violationList.get(0));
+										inConstructionPanel.add(warnPanel, BorderLayout.NORTH);
+									}
+
 									// add real renderer
 									inConstructionPanel.add(rendererComponent, BorderLayout.CENTER);
 
@@ -179,13 +207,10 @@ public class ResultDisplayTools {
 				// start result calculation progress thread
 				resultThread.start();
 			} catch (Exception e) {
-				LogService
-						.getRoot()
-						.log(Level.WARNING,
-								I18N.getMessage(
-										LogService.getRoot().getResourceBundle(),
-										"com.rapidminer.gui.processeditor.results.ResultDisplayTools.error_creating_renderer",
-										e), e);
+				LogService.getRoot().log(Level.WARNING,
+						I18N.getMessage(LogService.getRoot().getResourceBundle(),
+								"com.rapidminer.gui.processeditor.results.ResultDisplayTools.error_creating_renderer", e),
+						e);
 				String errorMsg = I18N.getMessage(I18N.getErrorBundle(), "result_display.error_creating_renderer",
 						renderer.getName());
 				visualisationComponent.addCard(card, new JLabel(errorMsg));
@@ -216,6 +241,7 @@ public class ResultDisplayTools {
 		// result panel
 		final JPanel resultPanel = new JPanel(new BorderLayout());
 		resultPanel.putClientProperty("main.component", visualisationComponent);
+
 		resultPanel.add(visualisationComponent, BorderLayout.CENTER);
 
 		if (resultObject instanceof ResultObject) {
@@ -239,6 +265,18 @@ public class ResultDisplayTools {
 
 	public static ResultDisplay makeResultDisplay() {
 		return new DockableResultDisplay();
+	}
+
+	/**
+	 * Takes the first {@code #newSize} rows of the given example set and returns a new one with
+	 * only the first n rows
+	 */
+	private static ExampleSet downsample(ExampleSet exampleSet, int newSize) {
+		int[] mapping = new int[newSize];
+		for (int i = 0; i < newSize; i++) {
+			mapping[i] = i;
+		}
+		return new MappedExampleSet(exampleSet, mapping);
 	}
 
 }

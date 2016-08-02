@@ -32,10 +32,12 @@ import com.rapidminer.operator.learner.tree.criterions.Criterion;
 /**
  * This operator calculates the relevance of a feature by computing the an entropy value of the
  * class distribution, if the given example set would have been splitted according to the feature.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractEntropyWeighting extends AbstractWeighting {
+
+	private static final int PROGRESS_UPDATE_STEPS = 1_000_000;
 
 	public AbstractEntropyWeighting(OperatorDescription description) {
 		super(description, true);
@@ -54,6 +56,10 @@ public abstract class AbstractEntropyWeighting extends AbstractWeighting {
 		Criterion criterion = getEntropyCriterion();
 		NumericalSplitter splitter = new NumericalSplitter(criterion);
 		AttributeWeights weights = new AttributeWeights(exampleSet);
+		getProgress().setTotal(exampleSet.getAttributes().size());
+		int progressCounter = 0;
+		int exampleSetSize = exampleSet.size();
+		int currentAttribute = 0;
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			if (attribute.isNominal()) {
 				double weight = criterion.getNominalBenefit(exampleSet, attribute);
@@ -62,6 +68,12 @@ public abstract class AbstractEntropyWeighting extends AbstractWeighting {
 				double splitValue = splitter.getBestSplit(exampleSet, attribute);
 				double weight = criterion.getNumericalBenefit(exampleSet, attribute, splitValue);
 				weights.setWeight(attribute.getName(), weight);
+			}
+			currentAttribute++;
+			progressCounter+=exampleSetSize;
+			if (progressCounter > PROGRESS_UPDATE_STEPS) {
+				progressCounter = 0;
+				getProgress().setCompleted(currentAttribute);
 			}
 		}
 		return weights;

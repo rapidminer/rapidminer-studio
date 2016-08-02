@@ -19,7 +19,7 @@
 package com.rapidminer.operator.generator;
 
 /**
- * The label is att1*att1*att1 + att2*att2 + att1*att2 + att1/att2 - 1.0d/(att3*att3).
+ * The label is att1*att1*att1 + att2*att2 + att1*att2 + att1/abs(att3) - 1.0d/(att3*att3).
  * 
  * @author Ingo Mierswa
  */

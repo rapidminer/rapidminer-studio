@@ -49,12 +49,14 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ports.IncompatibleMDClassException;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.tools.OperatorCreationHook;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
+import com.rapidminer.tools.documentation.OperatorDocumentation;
 import com.rapidminer.tools.documentation.XMLOperatorDocBundle;
 import com.rapidminer.tools.plugin.Plugin;
 
@@ -171,9 +173,42 @@ public class OperatorService {
 		// loading operators from plugins
 		Plugin.registerAllPluginOperators();
 
+		// add parent folder as operator tag
+		addParentFolderOperatorTags();
+
 		LogService.getRoot().log(Level.FINE,
 				"com.rapidminer.tools.OperatorService.number_of_registered_operator_classes_and_descriptions",
 				new Object[] { REGISTERED_OPERATOR_CLASSES.size(), KEYS_TO_DESCRIPTIONS.size(), DEPRECATION_MAP.size() });
+	}
+
+	/**
+	 * Adds parent folder name of each operator to the operator tags.
+	 */
+	private static void addParentFolderOperatorTags() {
+		for (String operatorKey : getOperatorKeys()) {
+			OperatorDescription operatorDescription = getOperatorDescription(operatorKey);
+			if (operatorDescription == null) {
+				continue;
+			}
+			if (ProcessRootOperator.class.equals(operatorDescription.getOperatorClass())) {
+				// no tags for the root process
+				continue;
+			}
+			GroupTree subTree = groupTreeRoot.findGroup(operatorDescription.getGroup());
+			if (subTree == null) {
+				continue;
+			}
+			String groupName = subTree.getName();
+			if (groupName != null && !groupName.trim().isEmpty()) {
+				if (!operatorDescription.getTags().contains(groupName.trim())) {
+					OperatorDocumentation operatorDocumentation = operatorDescription.getOperatorDocumentation();
+					ArrayList<String> updatedTags = new ArrayList<>(operatorDocumentation.getTags().size() + 1);
+					updatedTags.addAll(operatorDocumentation.getTags());
+					updatedTags.add(groupName.trim());
+					operatorDocumentation.setTags(updatedTags);
+				}
+			}
+		}
 	}
 
 	/**
@@ -228,8 +263,11 @@ public class OperatorService {
 				return;
 			}
 			version = document.getDocumentElement().getAttribute("version");
-			if (version.startsWith("5.") || version.startsWith("6.")) {
+			if (version.startsWith("5.") || version.startsWith("6.") || version.startsWith("7.")) {
 				parseOperators(document, classLoader, provider);
+			} else {
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.tools.OperatorService.operator_description_file_wrong_version", name, version));
 			}
 		} catch (Exception e) {
 			LogService.getRoot().log(Level.SEVERE,
@@ -396,7 +434,9 @@ public class OperatorService {
 										"com.rapidminer.tools.OperatorService.creating_operators_from_factory",
 										factoryClassName);
 								try {
-									factory.registerOperators(classLoader, provider);
+									if (factory != null) {
+										factory.registerOperators(classLoader, provider);
+									}
 								} catch (Exception e) {
 									LogService.getRoot().log(Level.WARNING,
 											I18N.getMessage(LogService.getRoot().getResourceBundle(),
@@ -678,7 +718,7 @@ public class OperatorService {
 	/** Specifies a list of files to be loaded as operator descriptors. */
 	public static void setAdditionalOperatorDescriptors(String... files) {
 		if (files == null || files.length == 0) {
-			System.setProperty(RapidMiner.PROPERTY_RAPIDMINER_OPERATORS_ADDITIONAL, null);
+			System.clearProperty(RapidMiner.PROPERTY_RAPIDMINER_OPERATORS_ADDITIONAL);
 			return;
 		}
 		StringBuffer buf = new StringBuffer();

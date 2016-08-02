@@ -53,7 +53,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 
 	private int patchLevel;
 
-	private String classifier;
+	private final String classifier;
 
 	/**
 	 * Constructs a new VersionNumber object with the given versionString. The versionString should
@@ -100,6 +100,8 @@ public class VersionNumber implements Comparable<VersionNumber> {
 		}
 		if (classifierIndex >= 0) {
 			classifier = CLASSIFIER_TAG + version.substring(classifierIndex + 1, version.length());
+		} else {
+			classifier = null;
 		}
 	}
 
@@ -137,7 +139,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	 */
 	@Deprecated
 	public VersionNumber(int majorNumber, int minorNumber, int patchLevel, boolean alpha, int alphaNumber, boolean beta,
-	        int betaNumber) {
+			int betaNumber) {
 		this.majorNumber = majorNumber;
 		this.minorNumber = minorNumber;
 		this.patchLevel = patchLevel;
@@ -250,7 +252,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	@Override
 	public String toString() {
 		return majorNumber + "." + minorNumber + "." + "000".substring((patchLevel + "").length()) + patchLevel
-		        + (classifier != null ? classifier.toUpperCase(Locale.ENGLISH) : "");
+				+ (classifier != null ? classifier.toUpperCase(Locale.ENGLISH) : "");
 	}
 
 	/**
@@ -291,13 +293,17 @@ public class VersionNumber implements Comparable<VersionNumber> {
 
 	/**
 	 * @return <code>true</code> if the current version is a development build (i.e. it has a
-	 *         classifier named SNAPSHOT).
+	 *         classifier named SNAPSHOT or ALPHA or BETA or RC).
 	 */
-	public boolean isDevelopmentBuild() {
+	public final boolean isDevelopmentBuild() {
 		return isSnapshot() || isPreview(ALPHA_TAG) || isPreview(BETA_TAG) || isPreview(RELEASE_CANDIDATE);
 	}
 
-	private boolean isSnapshot() {
+	/**
+	 * @return {@code true} if the current version is a snapshot build (exactly if it has a
+	 *         classifier named SNAPSHOT).
+	 */
+	public final boolean isSnapshot() {
 		return classifier != null && classifier.equalsIgnoreCase(CLASSIFIER_TAG + SNAPSHOT);
 	}
 

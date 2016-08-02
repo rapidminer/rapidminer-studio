@@ -18,24 +18,25 @@
  */
 package com.rapidminer.parameter;
 
-import com.rapidminer.MacroHandler;
-import com.rapidminer.gui.wizards.ConfigurationListener;
-import com.rapidminer.gui.wizards.ConfigurationWizardCreator;
-import com.rapidminer.tools.LogService;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.rapidminer.MacroHandler;
+import com.rapidminer.gui.wizards.ConfigurationListener;
+import com.rapidminer.gui.wizards.ConfigurationWizardCreator;
+import com.rapidminer.tools.LogService;
+
 
 /**
  * This parameter type will lead to a GUI element which can be used as initialization for a sort of
  * operator configuration wizard.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ParameterTypeConfiguration extends ParameterType {
@@ -110,7 +111,9 @@ public class ParameterTypeConfiguration extends ParameterType {
 					creator = wizardCreatorClass.newInstance();
 				}
 			}
-			creator.setParameters(parameters);  // this is ensured to be non null
+			// this is ensured to be non null
+			Objects.requireNonNull(creator);
+			creator.setParameters(parameters);
 		} catch (InstantiationException e) {
 			// LogService.getGlobal().log("Problem during creation of wizard: " + e.getMessage(),
 			// LogService.WARNING);

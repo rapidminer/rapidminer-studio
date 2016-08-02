@@ -40,7 +40,6 @@ public class Borders {
 	public static Border COMBO_BOX_BORDER = new ComboBoxBorder();
 	public static Border TOOL_BAR_BORDER = new ToolBarBorder();
 	public static Border PROGRESS_BAR_BORDER = new ProgressBarBorder();
-	public static Border MENU_BAR_BORDER = new MenuBarBorder();
 	public static Border EMPTY_BORDER = new EmptyBorder();
 	public static Border EMPTY_BUTTON_BORDER = new EmptyButtonBorder();
 	public static Border POPUP_MENU_BORDER = new PopupMenuBorder();
@@ -50,6 +49,7 @@ public class Borders {
 	public static Border EMPTY_COMBO_BOX_BORDER = new EmptyComboBoxBorder();
 	public static Border CHECK_BOX_BORDER = new CheckBoxBorder();
 	public static Border COMBO_BOX_LIST_CELL_RENDERER_FOCUS_BORDER = new ComboBoxListCellRendererFocusBorder();
+	public static Border MENU_BAR_BORDER = new MenuBarBorder();
 
 	public static Border getCheckBoxBorder() {
 		return CHECK_BOX_BORDER;
@@ -83,6 +83,10 @@ public class Borders {
 		return INTERNAL_FRAME_BORDER;
 	}
 
+	public static Border getMenuBarBorder() {
+		return MENU_BAR_BORDER;
+	}
+
 	public static Border getComboBoxBorder() {
 		return COMBO_BOX_BORDER;
 	}
@@ -93,10 +97,6 @@ public class Borders {
 
 	public static Border getProgressBarBorder() {
 		return PROGRESS_BAR_BORDER;
-	}
-
-	public static Border getMenuBarBorder() {
-		return MENU_BAR_BORDER;
 	}
 
 	public static Border getEmptyBorder() {

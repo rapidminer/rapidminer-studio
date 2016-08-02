@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -41,14 +41,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.rapidminer.RapidMiner;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ParameterService;
-import com.rapidminer.tools.PlatformUtilities;
-import com.rapidminer.tools.update.internal.UpdateManager;
 
 
 /**
@@ -59,7 +55,20 @@ import com.rapidminer.tools.update.internal.UpdateManager;
 public class ManagedExtension {
 
 	/** Maps {@link ManagedExtension#getPackageId()} to the ManagedExtension itself. */
-	private static final Map<String, ManagedExtension> MANAGED_EXTENSIONS = new HashMap<>();
+	private static final Map<String, ManagedExtension> MANAGED_EXTENSIONS = new TreeMap<>((ext1, ext2) -> {
+		if (ext1 == null && ext2 == null) {
+			return 0;
+		}
+
+		if (ext1 == null) {
+			return 1;
+		}
+
+		if (ext2 == null) {
+			return -1;
+		}
+		return ext1.compareTo(ext2);
+	});
 
 	private final SortedSet<String> installedVersions = new TreeSet<>(new Comparator<String>() {
 
@@ -72,11 +81,9 @@ public class ManagedExtension {
 	private final String name;
 	private String selectedVersion;
 	private boolean active;
-	private boolean installedInHomeDir;
 	private final String license;
 
-	private ManagedExtension(Element element, boolean homeDir) {
-		this.installedInHomeDir = homeDir;
+	private ManagedExtension(Element element) {
 		this.packageID = XMLTools.getTagContents(element, "id");
 		this.name = XMLTools.getTagContents(element, "name");
 		this.license = XMLTools.getTagContents(element, "license");
@@ -94,7 +101,6 @@ public class ManagedExtension {
 		this.name = name;
 		this.license = license;
 		this.selectedVersion = null;
-		// installedVersions.add(version);
 		this.setActive(true);
 	}
 
@@ -115,11 +121,9 @@ public class ManagedExtension {
 	}
 
 	private File findFile(String version) {
-		for (File dir : getManagedExtensionsDirectories()) {
-			File file = new File(dir, packageID + "-" + version + ".jar");
-			if (file.exists()) {
-				return file;
-			}
+		File file = new File(getUserExtensionsDir(), packageID + "-" + version + ".jar");
+		if (file.exists()) {
+			return file;
 		}
 		return null;
 	}
@@ -154,24 +158,6 @@ public class ManagedExtension {
 		return selectedVersion;
 	}
 
-	private static File[] getManagedExtensionsDirectories() {
-		File local = getUserExtensionsDir();
-		try {
-			File global = getGlobalExtensionsDir();
-			return new File[] { global, local };
-		} catch (IOException e) {
-			LogService.getRoot().log(Level.WARNING,
-					"com.rapid_i.deployment.update.client.ManagedExtension.no_properties_set", new Object[] {
-							RapidMiner.PROPERTY_RAPIDMINER_INIT_PLUGINS, PlatformUtilities.PROPERTY_RAPIDMINER_HOME });
-
-			return new File[] { local };
-		}
-	}
-
-	private static File getGlobalExtensionsDir() throws IOException {
-		return new File(Plugin.getPluginLocation(), "managed");
-	}
-
 	public static File getUserExtensionsDir() {
 		return FileSystemService.getUserConfigFile("managed");
 	}
@@ -191,14 +177,12 @@ public class ManagedExtension {
 		return result;
 	}
 
-	private static Document toXML(boolean inHomeDir) throws ParserConfigurationException {
+	private static Document toXML() throws ParserConfigurationException {
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element root = doc.createElement("extensions");
 		doc.appendChild(root);
 		for (ManagedExtension ext : MANAGED_EXTENSIONS.values()) {
-			if (ext.installedInHomeDir == inHomeDir) {
-				root.appendChild(ext.toXML(doc));
-			}
+			root.appendChild(ext.toXML(doc));
 		}
 		return doc;
 	}
@@ -209,7 +193,7 @@ public class ManagedExtension {
 			if (!localDir.exists()) {
 				localDir.mkdirs();
 			}
-			XMLTools.stream(toXML(true), new File(localDir, "extensions.xml"), Charset.forName("UTF-8"));
+			XMLTools.stream(toXML(), new File(localDir, "extensions.xml"), Charset.forName("UTF-8"));
 		} catch (Exception e) {
 			LogService.getRoot().log(Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
@@ -227,7 +211,7 @@ public class ManagedExtension {
 		try {
 			File file = new File(getUserExtensionsDir(), "extensions.xml");
 			if (file.exists()) {
-				parse(XMLTools.parse(file), true);
+				parse(XMLTools.parse(file));
 			}
 		} catch (Exception e) {
 			LogService.getRoot().log(Level.WARNING,
@@ -238,10 +222,10 @@ public class ManagedExtension {
 		LogService.getRoot().log(Level.CONFIG, "com.rapid_i.deployment.update.client.ManagedExtension.read_extansion_state");
 	}
 
-	private static void parse(Document parse, boolean inHomeDir) {
+	private static void parse(Document parse) {
 		NodeList extensions = parse.getDocumentElement().getElementsByTagName("extension");
 		for (int i = 0; i < extensions.getLength(); i++) {
-			register(new ManagedExtension((Element) extensions.item(i), inHomeDir));
+			register(new ManagedExtension((Element) extensions.item(i)));
 		}
 	}
 
@@ -270,7 +254,6 @@ public class ManagedExtension {
 		ManagedExtension ext = MANAGED_EXTENSIONS.get(packageId);
 		if (ext == null) {
 			ext = new ManagedExtension(packageId, packageName, license);
-			ext.installedInHomeDir = isInstallToHome();
 			MANAGED_EXTENSIONS.put(packageId, ext);
 			saveConfiguration();
 		}
@@ -292,27 +275,7 @@ public class ManagedExtension {
 	}
 
 	public File getDestinationFile(String version) throws IOException {
-		if (installedInHomeDir) {
-			return new File(getUserExtensionsDir(), packageID + "-" + version + ".jar");
-		} else {
-			makeGlobalManagedExtensionsDir();
-			return new File(getGlobalExtensionsDir(), packageID + "-" + version + ".jar");
-		}
-	}
-
-	private static void makeGlobalManagedExtensionsDir() throws IOException {
-		File managedDir = getGlobalExtensionsDir();
-		if (!managedDir.exists()) {
-			if (!managedDir.mkdirs()) {
-				throw new IOException("Cannot create directory " + managedDir
-						+ ". Make sure you have administrator privileges or check property "
-						+ UpdateManager.PARAMETER_INSTALL_TO_HOME + " in the preferences.");
-			}
-		}
-	}
-
-	private static boolean isInstallToHome() {
-		return !"false".equals(ParameterService.getParameterValue(UpdateManager.PARAMETER_INSTALL_TO_HOME));
+		return new File(getUserExtensionsDir(), packageID + "-" + version + ".jar");
 	}
 
 	public static void init() {

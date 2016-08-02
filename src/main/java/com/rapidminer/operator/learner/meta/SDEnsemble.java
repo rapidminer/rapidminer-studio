@@ -140,17 +140,15 @@ public class SDEnsemble extends PredictionModel implements MetaModel {
 				this.predictionsFile = file;
 				return;
 			}
-		} else {
+		} else if (name.equalsIgnoreCase(MAX_MODEL_NUMBER)) {
 			try {
-				if (name.equalsIgnoreCase(MAX_MODEL_NUMBER)) {
 					this.maxModelNumber = Integer.parseInt((String) value);
 					return;
-				}
 			} catch (NumberFormatException e) {
 			}
+		} else {
+			super.setParameter(name, value);
 		}
-
-		super.setParameter(name, value);
 	}
 
 	/** @return the number of embedded models */

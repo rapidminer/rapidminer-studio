@@ -59,7 +59,7 @@
 		</xsl:choose>
 	</xsl:template>
 
-	<xsl:template match="task|question">
+	<xsl:template match="task|question|point">
 		<li><xsl:apply-templates/></li>
 	</xsl:template>
 

@@ -36,7 +36,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 /**
  * A combo box which can use a predefined preferred size. Can also show the full value as tool tip
  * in cases where the strings were too short.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ExtendedJComboBox extends JComboBox {
@@ -130,7 +130,7 @@ public class ExtendedJComboBox extends JComboBox {
 		this.minimumWidth = minimumWidth;
 		this.wide = wide;
 
-		model.addListDataListener(scrollToTopListener);
+		addScrollToTopListener();
 	}
 
 	public ExtendedJComboBox(int preferredWidth, int minimumWidth, boolean wide, String[] values) {
@@ -139,6 +139,7 @@ public class ExtendedJComboBox extends JComboBox {
 		this.minimumWidth = minimumWidth;
 		this.wide = wide;
 
+		addScrollToTopListener();
 		setRenderer(new ExtendedComboBoxRenderer());
 	}
 
@@ -149,7 +150,15 @@ public class ExtendedJComboBox extends JComboBox {
 	@Override
 	public void setModel(ComboBoxModel aModel) {
 		super.setModel(aModel);
-		aModel.addListDataListener(scrollToTopListener);
+		addScrollToTopListener();
+	}
+
+	private void addScrollToTopListener() {
+		// this condition is only here because of bad pattern of calling overridden method
+		// (setModel()) in super constructor (in which case, scrollToTopListener is uninitialized)
+		if (scrollToTopListener != null) {
+			getModel().addListDataListener(scrollToTopListener);
+		}
 	}
 
 	public boolean isScrollingToTopOnChange() {

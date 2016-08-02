@@ -28,6 +28,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 
@@ -45,7 +46,8 @@ import com.rapidminer.parameter.ParameterTypeString;
  */
 public class CorpusBasedFeatureWeighting extends AbstractWeighting {
 
-	/**
+	private static final int PROGRESS_UPDATE_STEPS = 200_000;
+	/* 
 	 * The parameter name for &quot;The target class for which to find characteristic feature
 	 * weights.&quot;
 	 */
@@ -81,13 +83,15 @@ public class CorpusBasedFeatureWeighting extends AbstractWeighting {
 		return attWeights;
 	}
 
-	private double[] generateWeightsForClass(ExampleSet es, String value) {
+	private double[] generateWeightsForClass(ExampleSet es, String value) throws ProcessStoppedException {
 		double[] result = new double[es.getAttributes().size()];
 		for (int i = 0; i < es.getAttributes().size(); i++) {
 			result[i] = 0.0;
 		}
 		Iterator<Example> er = es.iterator();
 		Attribute labelAttribute = es.getAttributes().getLabel();
+		int counter = 0;
+		getProgress().setTotal(es.size());
 		while (er.hasNext()) {
 			Example e = er.next();
 			if (e.getValueAsString(labelAttribute).equalsIgnoreCase(value)) {
@@ -96,6 +100,9 @@ public class CorpusBasedFeatureWeighting extends AbstractWeighting {
 					result[index] += e.getValue(attribute);
 					index++;
 				}
+			}
+			if(++counter % PROGRESS_UPDATE_STEPS == 0){
+				getProgress().setCompleted(counter);
 			}
 		}
 		return result;

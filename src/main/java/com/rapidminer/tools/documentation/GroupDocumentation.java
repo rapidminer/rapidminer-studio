@@ -18,17 +18,17 @@
  */
 package com.rapidminer.tools.documentation;
 
+import org.w3c.dom.Element;
+
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.tools.GroupTree;
-
-import org.w3c.dom.Element;
 
 
 /**
  * Documentation for a {@link GroupTree}.
- * 
+ *
  * @author Simon Fischer
- * */
+ */
 public class GroupDocumentation {
 
 	private final String key;
@@ -38,7 +38,7 @@ public class GroupDocumentation {
 	public GroupDocumentation(String key) {
 		this.key = key;
 		this.name = keyToUpperCase(key);
-		this.help = "The group " + name + "'.";
+		this.help = "The group '" + name + "'.";
 	}
 
 	public GroupDocumentation(String key, String name, String help) {
@@ -62,7 +62,7 @@ public class GroupDocumentation {
 	}
 
 	public String getHelp() {
-		return (help != null) ? help : "";
+		return help != null ? help : "";
 	}
 
 	@Override

@@ -23,18 +23,15 @@ import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 
+import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
@@ -57,8 +54,8 @@ import com.rapidminer.Process;
 import com.rapidminer.gui.actions.SaveAction;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.ProcessEditor;
-import com.rapidminer.gui.tools.ExtendedHTMLJEditorPane;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.FilterTextField;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.UpdateQueue;
@@ -66,7 +63,6 @@ import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.XMLException;
@@ -86,7 +82,7 @@ import com.vlsolutions.swing.docking.Dockable;
  */
 public class OperatorDocumentationBrowser extends JPanel implements Dockable, ProcessEditor {
 
-	final ExtendedHTMLJEditorPane editor = new ExtendedHTMLJEditorPane("text/html", "<html>-</html>");
+	final JEditorPane editor = new JEditorPane("text/html", "<html>-</html>");
 
 	private ExtendedJScrollPane scrollPane = new ExtendedJScrollPane();
 
@@ -104,8 +100,6 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 	private static final long serialVersionUID = 1L;
 
-	private static Map<URL, String> DOC_CACHE = new HashMap<>(100);
-
 	private UpdateQueue documentationUpdateQueue = new UpdateQueue("documentation_update_queue");
 
 	/**
@@ -115,7 +109,6 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		setLayout(new BorderLayout());
 
 		// Instantiate Editor and set Settings
-		editor.installDefaultStylesheet();
 		editor.addHyperlinkListener(new OperatorHelpLinkListener());
 		editor.setEditable(false);
 		HTMLEditorKit hed = new HTMLEditorKit();
@@ -151,9 +144,9 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	@Override
 	public void setSelection(List<Operator> selection) {
 		if (selection != null && !selection.isEmpty()) {
-			if (!selection.get(0).equals(displayedOperator) && !ignoreSelections) {
-				displayedOperator = selection.get(0);
-				assignDocumentation();
+			Operator operator = selection.get(0);
+			if (!operator.equals(displayedOperator) && !ignoreSelections) {
+				assignDocumentation(operator);
 			}
 		}
 	}
@@ -162,9 +155,10 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * This is called by the {@link #setSelection(List)} method. It creates an absolute path that
 	 * indicates the corresponding documentation XML file.
 	 */
-	private void assignDocumentation() {
-		URL resourceURL = getDocResourcePath(displayedOperator);
-		changeDocumentation(resourceURL);
+	private void assignDocumentation(Operator operator) {
+		URL resourceURL = getDocResourcePath(operator);
+		changeDocumentation(operator);
+		displayedOperator = operator;
 		currentResourceURL = resourceURL;
 	}
 
@@ -181,26 +175,6 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	@Override
 	public DockKey getDockKey() {
 		return DOCK_KEY;
-	}
-
-	/**
-	 * This is the method that actually gets the Content of this Dockable. The conversion takes
-	 * place in the class {@link OperatorDocToHtmlConverter}.
-	 *
-	 * @param xmlStream
-	 */
-	private String parseXmlAndReturnHtml(InputStream xmlStream) {
-		try {
-			return OperatorDocToHtmlConverter.convert(xmlStream, displayedOperator);
-		} catch (MalformedURLException e) {
-			LogService.getRoot().warning("Failed to load documentation. Reason: " + e.getLocalizedMessage());
-			return I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.error.operator_documentation_error.message",
-					e.getLocalizedMessage());
-		} catch (IOException e) {
-			LogService.getRoot().warning("Failed to load documentation. Reason: " + e.getLocalizedMessage());
-			return I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.error.operator_documentation_error.message",
-					e.getLocalizedMessage());
-		}
 	}
 
 	/**
@@ -297,6 +271,10 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 					String desc = e.getDescription();
 					desc = desc.substring(1);
 					editor.scrollToReference(desc);
+				} else if (e.getDescription().startsWith("tag:")) {
+					// filter tag in operator list
+					FilterTextField filterField = RapidMinerGUI.getMainFrame().getNewOperatorEditor().getNewOperatorGroupTree().getFilterField();
+					filterField.setFilterText(e.getDescription().substring(4));
 				} else {
 					// open url in default browser
 					Desktop desktop = Desktop.getDesktop();
@@ -327,46 +305,13 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * @param resourceURL
 	 *            url to the xml resource
 	 */
-	private void changeDocumentation(final URL resourceURL) {
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				editor.setText(
-						"<html><div style=\"height:100%;width:100%;text-align:center;vertical-align:middle;margin-top:50px;\"><img src=\"icon:///48/hourglass.png\"/></div></html>");
-			}
-		});
+	private void changeDocumentation(final Operator operator) {
 		documentationUpdateQueue.execute(new Runnable() {
 
 			@Override
 			public void run() {
-				InputStream xmlStream = null;
-				String html;
-				if (DOC_CACHE.containsKey(resourceURL)) {
-					html = DOC_CACHE.get(resourceURL);
-				} else {
-					try {
-						if (resourceURL != null) {
-							xmlStream = WebServiceTools.openStreamFromURL(resourceURL);
-						}
-					} catch (IOException e) {
-						// do nothing
-					} finally {
-						// parse XML from stream in any case. In case an IOException has been thrown
-						// the method call below will fall back to the online documentation
-						html = parseXmlAndReturnHtml(xmlStream);
-						html = html.replace(" xmlns:rmdoc=\"com.rapidminer.gui.OperatorDocumentationBrowser\"", " ");
-						if (xmlStream != null) {
-							DOC_CACHE.put(resourceURL, html);
-							try {
-								xmlStream.close();
-							} catch (IOException e) {
-								// do nothing
-							}
-						}
-					}
-				}
-				final String finalHtml = html;
+
+				final String finalHtml = OperatorDocLoader.getDocumentation(operator);
 				SwingUtilities.invokeLater(new Runnable() {
 
 					@Override
@@ -388,22 +333,28 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * @return the stylesheet
 	 */
 	private StyleSheet createStyleSheet(StyleSheet css) {
-		css.addRule("* {font-family: Open Sans; font-size: 10px;}");
+		css.addRule("body {font-family: Open Sans; font-size: 10px;}");
 		css.addRule("p {font-size:10px; font-family: Open Sans; margin-top: 0px; padding-top: 0px;}");
 		css.addRule("ul li {padding-bottom:1ex; font-family: Open Sans; font-size:10px; list-style-type: circle;}");
 		css.addRule("h2 {font-size:14px; font-family: Open Sans; margin-bottom: 0px; margin-top: 0px;}");
 		css.addRule("h4 {color: #000000; font-size:10px; font-family: Open Sans; font-weight: bold; margin-bottom: 5px;}");
 		css.addRule("h5 {color: #3399FF; font-size:11px; font-family: Open Sans;}");
 		css.addRule("h5 img {margin-right:8px; font-family: Open Sans;}");
+		css.addRule(
+				".parametersHeading {color: #000000; font-size:10px; font-family: Open Sans; font-weight: bold; margin-bottom: 0px;}");
+		css.addRule(".parametersTable {cellspacing: 0px; border: 0;}");
 		css.addRule(".typeIcon {height: 10px; width: 10px;}");
 		css.addRule("td {vertical-align: top; font-family: Open Sans;}");
 		css.addRule(".lilIcon {padding: 2px 4px 2px 0px;}");
 		css.addRule("td {font-size: 10px; font-family: Open Sans;}");
 		css.addRule(".packageName {color: #777777; font-size:10px; font-family: Open Sans; font-weight: normal;}");
 		css.addRule(".parameterDetails {color: #777777; font-size:9px; font-family: Open Sans;}");
-		css.addRule(".tutorialProcessLink {margin-top: 6px; margin-bottom: 5px}");
+		css.addRule(".parameterDetailsCell{margin-bottom: 4px; padding-bottom: 4px;}");
+		css.addRule(".tutorialProcessLink {margin-top: 6px; margin-bottom: 5px;}");
 		css.addRule("hr {border: 0;height: 1px;}");
 		css.addRule("a {color:" + SwingTools.getColorHexValue(Colors.LINKBUTTON_LOCAL) + "}");
+		css.addRule("table {align:left;}");
+		css.addRule(".tags {font-size: 9px; color: #777777;}");
 		return css;
 	}
 
@@ -416,8 +367,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		if (operator != null && !operator.getOperatorDescription().isDeprecated()
 				&& (this.displayedOperator == null || this.displayedOperator != null && !operator.getOperatorDescription()
 						.getName().equals(this.displayedOperator.getOperatorDescription().getName()))) {
-			this.displayedOperator = operator;
-			assignDocumentation();
+			assignDocumentation(operator);
 		}
 	}
 

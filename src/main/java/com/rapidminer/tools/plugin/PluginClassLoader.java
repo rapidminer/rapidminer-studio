@@ -20,6 +20,7 @@ package com.rapidminer.tools.plugin;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -37,6 +38,30 @@ import com.rapidminer.RapidMiner;
 public class PluginClassLoader extends URLClassLoader {
 
 	private ArrayList<Plugin> dependencies = new ArrayList<>();
+
+	private String pluginKey = null;
+
+	private volatile boolean ignoreDependencyClassloaders;
+
+	/**
+	 * @return {@code true} if the dependency classloaders are ignored by
+	 *         {@link #getResource(String)} and {@link #loadClass(String)}
+	 */
+	public boolean isIgnoreDependencyClassloaders() {
+		return ignoreDependencyClassloaders;
+	}
+
+	/**
+	 * Specifies if the dependency classloaders are ignored by {@link #getResource(String)} and
+	 * {@link #loadClass(String)}.
+	 *
+	 * @param ignoreDependencyClassloaders
+	 *            flag to ignore dependency classloaders when looking for resources or loading
+	 *            classes
+	 */
+	public void setIgnoreDependencyClassloaders(boolean ignoreDependencyClassloaders) {
+		this.ignoreDependencyClassloaders = ignoreDependencyClassloaders;
+	}
 
 	/**
 	 * This constructor is for plugins that only depend on the core.
@@ -89,7 +114,8 @@ public class PluginClassLoader extends URLClassLoader {
 			// ClassNotFoundException thrown if class not found
 			// from the urls registered nor the core class loader
 		}
-		if (clazz == null) {
+		// look into dependency classloaders if not found and we are allowed to do so
+		if (clazz == null && !ignoreDependencyClassloaders) {
 			for (Plugin plugin : dependencies) {
 				try {
 					return plugin.getClassLoader().loadClass(name, resolve);
@@ -115,10 +141,13 @@ public class PluginClassLoader extends URLClassLoader {
 	public URL getResource(String name) {
 		URL url = super.getResource(name);
 
-		for (Plugin dependency : dependencies) {
-			url = dependency.getClassLoader().getResource(name);
-			if (url != null) {
-				break;
+		// look into dependency classloaders if not found and we are allowed to do so
+		if (!ignoreDependencyClassloaders) {
+			for (Plugin dependency : dependencies) {
+				url = dependency.getClassLoader().getResource(name);
+				if (url != null) {
+					break;
+				}
 			}
 		}
 
@@ -131,6 +160,31 @@ public class PluginClassLoader extends URLClassLoader {
 	@Override
 	public String toString() {
 		return "PluginClassLoader (" + Arrays.asList(getURLs()) + ")";
+	}
+
+	/**
+	 * Returns the key of the plugin for this classloader. Can be {@code null} if it has not been
+	 * specified.
+	 *
+	 * @return the plugin key or {@code null}
+	 */
+	public String getPluginKey() {
+		return pluginKey;
+	}
+
+	/**
+	 * Set the key of the plugin for this classloader.
+	 *
+	 * @param pluginKey
+	 *            the key
+	 * @throws SecurityException
+	 *             if caller does not have {@link RuntimePermission} for {@code createClassLoader}
+	 */
+	public void setPluginKey(String pluginKey) {
+		if (System.getSecurityManager() != null) {
+			AccessController.checkPermission(new RuntimePermission("createClassLoader"));
+		}
+		this.pluginKey = pluginKey;
 	}
 
 	/**

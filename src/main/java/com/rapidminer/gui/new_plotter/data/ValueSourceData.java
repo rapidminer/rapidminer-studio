@@ -18,6 +18,15 @@
  */
 package com.rapidminer.gui.new_plotter.data;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.Vector;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.datatable.FilteredDataTable;
@@ -37,19 +46,10 @@ import com.rapidminer.gui.new_plotter.utility.ValueRange;
 import com.rapidminer.tools.container.Pair;
 import com.rapidminer.tools.math.function.aggregation.AggregationFunction;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Vector;
-
 
 /**
  * @author Marius Helf, Nils Woehler
- * 
+ *
  */
 public class ValueSourceData {
 
@@ -143,7 +143,7 @@ public class ValueSourceData {
 
 	/**
 	 * Recursive function which fills the groupCellToDataTableRowMap member variable.
-	 * 
+	 *
 	 * @param dimensionList
 	 *            The list of all dimensions by which a group cell is identified.
 	 * @param dimensionIdx
@@ -191,9 +191,7 @@ public class ValueSourceData {
 
 		int nextIdx = dimensionIdx + 1;
 		List<ValueRange> allValueGroups = null;
-		if (dimensionConfig != null) {
-			allValueGroups = dimensionConfigData.getGroupingModel();
-		}
+		allValueGroups = dimensionConfigData.getGroupingModel();
 
 		if (allValueGroups == null) {
 			// no grouping in current dimension -> continue without filtering
@@ -245,7 +243,7 @@ public class ValueSourceData {
 	/**
 	 * Fills cachedGroupCellToDataTableMap, i.e. a data structure which contains a (view on) a
 	 * DataTable for each group cell.
-	 * 
+	 *
 	 * This function is basically just a wrapper for the first call of the recursive
 	 * createGroupCellData() function.
 	 */
@@ -265,7 +263,7 @@ public class ValueSourceData {
 	 * Returns a list of GroupCellKeyAndData which contains contains data for each group cell. The
 	 * data in this list represents data series ready to be plotted, i.e. aggregated etc. It does
 	 * not contain data tables, but double[] arrays for each SeriesUsageType and each Dimension.
-	 * 
+	 *
 	 * Since the generation of this list is usually quite expensive, implementations are strongly
 	 * encouraged to provide a caching mechanism.
 	 */
@@ -290,7 +288,7 @@ public class ValueSourceData {
 
 	/**
 	 * Fills a data structure containing data for all group cells, indexed by group cell keys.
-	 * 
+	 *
 	 * @param dimensions
 	 *            all dimensions to be used, except X and Y dimension.
 	 * @param dimensionIdx
@@ -470,7 +468,7 @@ public class ValueSourceData {
 
 	/**
 	 * Returns values of utility series for upper or lower case.
-	 * 
+	 *
 	 * Returns null if {@link SeriesUsageType} UTILITY1 is not set or {@link IndicatorType} is NONE.
 	 * If {@link IndicatorType} is DIFFERENCE and secondary is <code>false</code> a List with NaNs
 	 * is returned.

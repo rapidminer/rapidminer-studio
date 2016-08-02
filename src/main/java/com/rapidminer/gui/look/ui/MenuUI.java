@@ -146,9 +146,6 @@ public class MenuUI extends BasicMenuUI {
 				} else if (buttonmodel.isRollover() && buttonmodel.isEnabled()) {
 					g.setColor(Colors.MENUBAR_BACKGROUND_HIGHLIGHT);
 					g.fillRect(0, 0, w, h);
-
-					g.setColor(Colors.MENU_ITEM_BACKGROUND);
-					g.drawRect(0, 0, w - 1, h - 1);
 				} else {
 					if (menuItem.getParent() instanceof JMenuBar) {
 						((MenuBarUI) ((JMenuBar) menuItem.getParent()).getUI()).update(g, menuItem);

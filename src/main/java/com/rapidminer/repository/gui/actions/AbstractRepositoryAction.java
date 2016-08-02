@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.gui.operatortree.actions.CutCopyPasteDeleteAction;
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
@@ -104,23 +105,51 @@ public abstract class AbstractRepositoryAction<T extends Entry> extends Resource
 		if (e.getActionCommand().equals(DeleteRepositoryEntryAction.I18N_KEY)
 				|| e.getActionCommand().equals(CutCopyPasteDeleteAction.DELETE_ACTION_COMMAND_KEY)) {
 			if (entries.size() == 1) {
-				if (SwingTools.showConfirmDialog("file_chooser.delete", ConfirmDialog.YES_NO_OPTION, entries.get(0)
-						.getName()) != ConfirmDialog.YES_OPTION) {
+				if (SwingTools.showConfirmDialog("file_chooser.delete", ConfirmDialog.YES_NO_OPTION,
+						entries.get(0).getName()) != ConfirmDialog.YES_OPTION) {
 					return;
 				}
 			} else {
-				if (SwingTools
-						.showConfirmDialog("file_chooser.delete_multiple", ConfirmDialog.YES_NO_OPTION, entries.size()) != ConfirmDialog.YES_OPTION) {
+				if (SwingTools.showConfirmDialog("file_chooser.delete_multiple", ConfirmDialog.YES_NO_OPTION,
+						entries.size()) != ConfirmDialog.YES_OPTION) {
 					return;
 				}
 			}
-		}
 
-		// Do not treat entries, whose are already included in selected folders
-		entries = removeIntersectedEntries(tree.getSelectedEntries());
+			final List<Entry> remainingEntries = removeIntersectedEntries(tree.getSelectedEntries());
+			ProgressThread progressThread = new ProgressThread(DeleteRepositoryEntryAction.I18N_KEY) {
 
-		for (Entry entry : entries) {
-			actionPerformed(requiredSelectionType.cast(entry));
+				/** Total progress of progress listener bar */
+				private int progressListenerCompleted = 0;
+
+				/** Step size for single entry operation */
+				private final int PROGRESS_LISTENER_SINGLE_STEP_SIZE = 1;
+
+				@Override
+				public void run() {
+
+					// Initialize progress listener
+					getProgressListener().setTotal(remainingEntries.size() * PROGRESS_LISTENER_SINGLE_STEP_SIZE);
+					getProgressListener().setCompleted(progressListenerCompleted);
+					for (Entry entry : remainingEntries) {
+						actionPerformed(requiredSelectionType.cast(entry));
+						progressListenerCompleted += PROGRESS_LISTENER_SINGLE_STEP_SIZE;
+						getProgressListener().setCompleted(progressListenerCompleted);
+					}
+					getProgressListener().complete();
+				}
+			};
+
+			progressThread.setShowDialogTimerDelay(200);
+			progressThread.setStartDialogShowTimer(true);
+			progressThread.start();
+
+		} else {
+			// Do not treat entries, whose are already included in selected folders
+			entries = removeIntersectedEntries(tree.getSelectedEntries());
+			for (Entry entry : entries) {
+				actionPerformed(requiredSelectionType.cast(entry));
+			}
 		}
 	}
 

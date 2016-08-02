@@ -4,9 +4,9 @@ buildscript {
 		maven { url 'https://maven.rapidminer.com/content/groups/public/' }
 	}
 	dependencies {
-		classpath 'com.rapidminer.gradle:java-basics:0.3.3'
+		classpath 'com.rapidminer.gradle:java-basics:0.4.0'
 		classpath 'com.rapidminer.gradle:java-publishing:0.2.0'
-		classpath 'com.rapidminer.gradle:java-signing:0.1.0'
+	 	classpath 'com.rapidminer.gradle:java-signing:0.1.0'
 	}
 }
 
@@ -26,7 +26,7 @@ dependencies {
 
 	// RapidMiner license framework for license management
 	compile 'com.rapidminer.license:rapidminer-license-api:3.1.0'
-	compile 'com.rapidminer.license:rapidminer-license-commons:3.1.0'
+	compile 'com.rapidminer.license:rapidminer-license-commons:3.2.0'
 
 	// RapidMiner API
 	compile 'com.rapidminer:rapidminer-api:0.2.0'
@@ -59,8 +59,8 @@ dependencies {
 	compile('net.sourceforge.jexcelapi:jxl:2.6.12') { exclude group: 'log4j', module: 'log4j' }
 
 	// Apache POI for  manipulating various file formats based upon Office Open XML standards (http://poi.apache.org/)
-	compile 'org.apache.poi:poi-ooxml:3.10-FINAL'
-	compile 'org.apache.poi:poi-scratchpad:3.10-FINAL'
+	compile 'org.apache.poi:poi-ooxml:3.13'
+	compile 'org.apache.poi:poi-scratchpad:3.13'
 
 	// JGoodies Looks for TODO (http://www.jgoodies.com/freeware/libraries/looks/)
 	compile 'com.jgoodies:looks:2.2.2'
@@ -109,7 +109,7 @@ dependencies {
 	compile 'org.antlr:antlr4-runtime:4.5'
  
 	// SLF4J API (http://www.slf4j.org) 
-	compile 'org.slf4j:slf4j-api:1.7.12'
+	compile 'org.slf4j:slf4j-api:1.7.13'
 	
 	// add testing suite
 	//TODO should be test compile but RapidMiner src/main contains code that references JUnit
@@ -126,9 +126,15 @@ dependencies {
 	
 	// Apache Tika for file MIME type detection (https://tika.apache.org/)
 	compile 'org.apache.tika:tika-core:1.11'
+	
+	// The xalan version used by the JRE for XML handling contains a bug which results in XSLT not working with an enabled SecurityManager
+	// Using this version manually to override the JRE fixes the problem. Otherwise all our operator documentation would not work at all 
+	compile 'xalan:xalan:2.7.2'
+	compile 'xalan:serializer:2.7.2'
 }
 
 task wrapper(type: Wrapper) { gradleVersion = '2.12' }
 
 apply from: 'gradle/wsimport.gradle'
 apply from: 'gradle/props.gradle'
+apply from: 'gradle/tutorial.gradle'

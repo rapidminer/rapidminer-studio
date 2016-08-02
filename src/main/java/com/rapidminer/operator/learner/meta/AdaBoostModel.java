@@ -77,8 +77,9 @@ public class AdaBoostModel extends PredictionModel implements MetaModel {
 				return;
 			} catch (NumberFormatException e) {
 			}
+		} else {
+			super.setParameter(name, value);
 		}
-		super.setParameter(name, value);
 	}
 
 	/**

@@ -19,6 +19,7 @@
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -30,13 +31,18 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessSetupError.Severity;
+import com.rapidminer.operator.SimpleProcessSetupError;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.error.AttributeNotFoundError;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.AttributeParameterPrecondition;
 import com.rapidminer.operator.ports.metadata.AttributeSetPrecondition;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SetRelation;
+import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -189,7 +195,9 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 
 	public Date2Nominal(OperatorDescription description) {
 		super(description);
-
+		getExampleSetInputPort().addPrecondition(
+				new AttributeParameterPrecondition(getExampleSetInputPort(), this, PARAMETER_ATTRIBUTE_NAME,
+						Ontology.DATE_TIME));
 		getExampleSetInputPort().addPrecondition(
 				new AttributeSetPrecondition(getExampleSetInputPort(), AttributeSetPrecondition.getAttributesByParameter(
 						this, PARAMETER_ATTRIBUTE_NAME)));
@@ -199,9 +207,9 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 	protected MetaData modifyMetaData(ExampleSetMetaData metaData) throws UndefinedParameterError {
 		AttributeMetaData amd = metaData.getAttributeByName(getParameterAsString(PARAMETER_ATTRIBUTE_NAME));
 		if (amd != null) {
-			AttributeMetaData newAmd = new AttributeMetaData(amd.getName(), amd.getValueType(), amd.getRole());
-			newAmd.setType(Ontology.NOMINAL);
-			newAmd.getMean().setUnkown();
+			AttributeMetaData newAttribute = new AttributeMetaData(amd.getName(), amd.getValueType(), amd.getRole());
+			newAttribute.setType(Ontology.NOMINAL);
+			newAttribute.getMean().setUnkown();
 			HashSet<String> valueSet = new HashSet<>();
 			if (amd.getValueRange() != null) {
 				String dateFormat = getParameterAsString(PARAMETER_DATE_FORMAT);
@@ -211,7 +219,15 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 					selectedLocale = availableLocales.get(getParameterAsInt(PARAMETER_LOCALE));
 				}
 
-				SimpleDateFormat parser = new SimpleDateFormat(dateFormat, selectedLocale);
+				SimpleDateFormat parser;
+				try {
+					parser = new SimpleDateFormat(dateFormat, selectedLocale);
+				} catch (IllegalArgumentException | NullPointerException e) {
+					addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(),
+							Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_DATE_FORMAT)),
+							"parameter_invalid_time_format", PARAMETER_DATE_FORMAT));
+					return metaData;
+				}
 
 				Date date = new Date((long) amd.getValueRange().getLower());
 				String newDateStr = parser.format(date);
@@ -222,13 +238,13 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 				valueSet.add(newDateStr);
 			}
 
-			newAmd.setValueSet(valueSet, SetRelation.SUPERSET);
+			newAttribute.setValueSet(valueSet, SetRelation.SUPERSET);
 			if (!getParameterAsBoolean(PARAMETER_KEEP_OLD_ATTRIBUTE)) {
 				metaData.removeAttribute(amd);
 			} else {
-				newAmd.setName(newAmd.getName() + ATTRIBUTE_NAME_POSTFIX);
+				newAttribute.setName(newAttribute.getName() + ATTRIBUTE_NAME_POSTFIX);
 			}
-			metaData.addAttribute(newAmd);
+			metaData.addAttribute(newAttribute);
 		}
 		return metaData;
 	}
@@ -241,6 +257,11 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 			throw new AttributeNotFoundError(this, PARAMETER_ATTRIBUTE_NAME, getParameterAsString(PARAMETER_ATTRIBUTE_NAME));
 		}
 
+		int valueType = dateAttribute.getValueType();
+		if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATE_TIME)) {
+			throw new UserError(this, 218, dateAttribute.getName(), Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType));
+		}
+
 		Attribute newAttribute = AttributeFactory.createAttribute(Ontology.NOMINAL);
 		exampleSet.getExampleTable().addAttribute(newAttribute);
 		exampleSet.getAttributes().addRegular(newAttribute);
@@ -251,8 +272,12 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 		if (localeIndex >= 0 && localeIndex < availableLocales.size()) {
 			selectedLocale = availableLocales.get(getParameterAsInt(PARAMETER_LOCALE));
 		}
-
-		SimpleDateFormat parser = new SimpleDateFormat(dateFormat, selectedLocale);
+		SimpleDateFormat parser;
+		try {
+			parser = new SimpleDateFormat(dateFormat, selectedLocale);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			throw new UserError(this, "invalid_date_format", dateFormat, e.getMessage());
+		}
 		parser.setTimeZone(Tools.getTimeZone(getParameterAsInt(PARAMETER_TIME_ZONE)));
 
 		for (Example example : exampleSet) {

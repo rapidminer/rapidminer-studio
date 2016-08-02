@@ -19,8 +19,11 @@
 package com.rapidminer.operator.generator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
@@ -31,6 +34,7 @@ import com.rapidminer.example.table.ListDataRowReader;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
@@ -45,6 +49,11 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
+import com.rapidminer.parameter.conditions.BelowOrEqualOperatorVersionCondition;
+import com.rapidminer.parameter.conditions.EqualStringCondition;
+import com.rapidminer.parameter.conditions.NonEqualStringCondition;
+import com.rapidminer.parameter.conditions.OrParameterCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
@@ -78,6 +87,12 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 	/** The parameter name for &quot;The maximum value for the attributes.&quot; */
 	public static final String PARAMETER_ATTRIBUTES_UPPER_BOUND = "attributes_upper_bound";
 
+	/** The parameter name for &quot;Standard deviation of the Gaussian distribution used for generating attributes.&quot; */
+	public static final String PARAMETER_ATTRIBUTES_GAUSSIAN_STDDEV = "gaussian_standard_deviation";
+	
+	/** The parameter name for &quot;The radius of the outermost ring cluster.&quot; */
+	public static final String PARAMETER_ATTRIBUTES_LARGEST_RADIUS = "largest_radius";
+
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
 
@@ -110,6 +125,19 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 			RingClusteringFunction.class, SpiralClusteringFunction.class, GaussianFunction.class,
 			GaussianMixtureFunction.class, DrillerOscillationFunction.class // timeseries
 	};
+
+	private static final String[] FUCTIONS_IGNORING_BOUND = new String[] { "transactions dataset", "spiral cluster",
+			"driller oscillation timeseries" };
+
+	private static final String[] FUNCTIONS_USING_GAUSSIAN_STDDEV = new String[] { "single gaussian cluster" };
+	private static final String[] FUNCTIONS_USING_LARGEST_RADIUS = new String[] { "three ring clusters" };
+
+	private static final String[] FUNCTIONS_USING_SINGLE_BOUND = (String[]) ArrayUtils.addAll(
+			FUNCTIONS_USING_GAUSSIAN_STDDEV, FUNCTIONS_USING_LARGEST_RADIUS);
+
+	protected static final double DEFAULT_SINGLE_BOUND = 10.0;
+			
+	public static final OperatorVersion VERSION_TARGET_PARAMETERS_CHANGED = new OperatorVersion(7, 1, 1);
 
 	public ExampleSetGenerator(OperatorDescription description) {
 		super(description);
@@ -203,17 +231,48 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 
 		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
 		int numberOfAttributes = getParameterAsInt(PARAMETER_NUMBER_OF_ATTRIBUTES);
-		double lower = getParameterAsDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND);
-		double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
-		if (upper < lower) {
-			throw new UserError(this, 226, lower, upper);
+
+		if (Arrays.asList(FUNCTIONS_USING_GAUSSIAN_STDDEV).contains(functionName)) {
+			setSingleArgumentBound(function, PARAMETER_ATTRIBUTES_GAUSSIAN_STDDEV);
+		} else if (Arrays.asList(FUNCTIONS_USING_LARGEST_RADIUS).contains(functionName)) {
+			setSingleArgumentBound(function, PARAMETER_ATTRIBUTES_LARGEST_RADIUS);
+		} else if (Arrays.asList(FUCTIONS_IGNORING_BOUND).contains(functionName)) {
+			// no bound
+		} else {
+			double lower = getParameterAsDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND);
+			double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
+			if (upper < lower) {
+				throw new UserError(this, 226, lower, upper);
+			}
+			function.setLowerArgumentBound(lower);
+			function.setUpperArgumentBound(upper);
 		}
-		function.setLowerArgumentBound(lower);
-		function.setUpperArgumentBound(upper);
+
 		function.setTotalNumberOfExamples(numberOfExamples);
 		function.setTotalNumberOfAttributes(numberOfAttributes);
 
 		return function;
+	}
+
+	/**
+	 * This function sets the single argument bound of the target function, using the parameter(s)
+	 * that is/are compatible with the current version.
+	 * 
+	 * @param function
+	 *            The target function.
+	 * @param targetParameter
+	 *            The new parameter substituting lower & upper bound parameters.
+	 * @throws UndefinedParameterError
+	 */
+	private void setSingleArgumentBound(TargetFunction function, String targetParameter) throws UndefinedParameterError {
+		if (getCompatibilityLevel().isAtMost(VERSION_TARGET_PARAMETERS_CHANGED)) {
+			double lower = getParameterAsDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND);
+			double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
+			double newParam = Math.max(Math.max(Math.abs(lower), Math.abs(upper)), DEFAULT_SINGLE_BOUND);
+			function.setLowerArgumentBound(newParam);
+		} else {
+			function.setLowerArgumentBound(getParameterAsDouble(targetParameter));
+		}
 	}
 
 	// ================================================================================
@@ -246,10 +305,38 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 		type.setExpert(false);
 		types.add(type);
 
-		types.add(new ParameterTypeDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND, "The minimum value for the attributes.",
-				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, -10));
-		types.add(new ParameterTypeDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND, "The maximum value for the attributes.",
-				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 10));
+		NonEqualStringCondition useTwoBounds = new NonEqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false,
+				(String[]) ArrayUtils.addAll(FUCTIONS_IGNORING_BOUND, FUNCTIONS_USING_SINGLE_BOUND));
+
+		type = new ParameterTypeDouble(
+				PARAMETER_ATTRIBUTES_LOWER_BOUND,
+				"The minimum value for the attributes. In case of target functions using Gaussian distribution, the attribute values may exceed this value.",
+				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, -10);
+		type.registerDependencyCondition(new OrParameterCondition(this, false, new BelowOrEqualOperatorVersionCondition(
+				this, VERSION_TARGET_PARAMETERS_CHANGED), useTwoBounds));
+		types.add(type);
+		type = new ParameterTypeDouble(
+				PARAMETER_ATTRIBUTES_UPPER_BOUND,
+				"The maximum value for the attributes. In case of target functions using Gaussian distribution, the attribute values may exceed this value.",
+				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 10);
+		type.registerDependencyCondition(new OrParameterCondition(this, false, new BelowOrEqualOperatorVersionCondition(
+				this, VERSION_TARGET_PARAMETERS_CHANGED), useTwoBounds));
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_ATTRIBUTES_GAUSSIAN_STDDEV,
+				"Standard deviation of the Gaussian distribution used for generating attributes.", Double.MIN_VALUE,
+				Double.POSITIVE_INFINITY, 10);
+		type.registerDependencyCondition(new AboveOperatorVersionCondition(this, VERSION_TARGET_PARAMETERS_CHANGED));
+		type.registerDependencyCondition(new EqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false,
+				FUNCTIONS_USING_GAUSSIAN_STDDEV));
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_ATTRIBUTES_LARGEST_RADIUS, "The radius of the outermost ring cluster.",
+				10.0, Double.POSITIVE_INFINITY, 10);
+		type.registerDependencyCondition(new AboveOperatorVersionCondition(this, VERSION_TARGET_PARAMETERS_CHANGED));
+		type.registerDependencyCondition(new EqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false,
+				FUNCTIONS_USING_LARGEST_RADIUS));
+		types.add(type);
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 
@@ -299,4 +386,8 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 		return errorCount;
 	}
 
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return new OperatorVersion[] { VERSION_TARGET_PARAMETERS_CHANGED };
+	}
 }

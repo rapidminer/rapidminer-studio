@@ -336,7 +336,8 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				dropEnds();
 				return result;
 			} else {
-				newOperators = Tools.cloneOperators(newOperators);
+				// paste an existing Operator
+				newOperators = Tools.cloneOperators(newOperators, true);
 				boolean result;
 				try {
 					result = dropNow(newOperators, null);

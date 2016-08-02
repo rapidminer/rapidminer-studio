@@ -18,6 +18,10 @@
  */
 package com.rapidminer.operator;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
@@ -32,28 +36,39 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeString;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * This operator applies a {@link Model} to an {@link ExampleSet}. All parameters of the training
  * process should be stored within the model. However, this operator is able to take any parameters
  * for the rare case that the particular model evaluates parameters during application. Models can
  * be read from a file by using a {@link com.rapidminer.extension.legacy.operator.io.ModelLoader}.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer
  */
 public class ModelApplier extends Operator {
 
-	/** The parameter name for &quot;value&quot; */
+	/** The parameter name for &quot;key&quot; */
 	public static final String PARAMETER_KEY = "key";
+
+	/** The parameter name for &quot;value&quot; */
+	public static final String PARAMETER_VALUE = "value";
 
 	/** The possible parameters used by the model during application time. */
 	public static final String PARAMETER_APPLICATION_PARAMETERS = "application_parameters";
 
 	/** Indicates if preprocessing models should create a view instead of changing the data. */
 	private static final String PARAMETER_CREATE_VIEW = "create_view";
+
+	/** Last version to silently log unsupported parameters. */
+	private static final OperatorVersion VERSION_ERROR_UNSUPPORTED_PARAMETER = new OperatorVersion(7, 1, 1);
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] changes = super.getIncompatibleVersionChanges();
+		changes = Arrays.copyOf(changes, changes.length + 1);
+		changes[changes.length - 1] = VERSION_ERROR_UNSUPPORTED_PARAMETER;
+		return changes;
+	}
 
 	private final InputPort modelInput = getInputPorts().createPort("model");
 	private final InputPort exampleSetInput = getInputPorts().createPort("unlabelled data");
@@ -62,8 +77,8 @@ public class ModelApplier extends Operator {
 
 	public ModelApplier(OperatorDescription description) {
 		super(description);
-		modelInput.addPrecondition(new SimplePrecondition(modelInput, new ModelMetaData(Model.class,
-				new ExampleSetMetaData())));
+		modelInput.addPrecondition(
+				new SimplePrecondition(modelInput, new ModelMetaData(Model.class, new ExampleSetMetaData())));
 		exampleSetInput.addPrecondition(new SimplePrecondition(exampleSetInput, new ExampleSetMetaData()));
 		getTransformer().addRule(new ModelApplicationRule(exampleSetInput, exampleSetOutput, modelInput, false));
 		getTransformer().addRule(new PassThroughRule(modelInput, modelOutput, false));
@@ -86,12 +101,30 @@ public class ModelApplier extends Operator {
 		Iterator<String[]> i = modelParameters.iterator();
 		while (i.hasNext()) {
 			String[] parameter = i.next();
-			model.setParameter(parameter[0], parameter[1]);
+			try {
+				model.setParameter(parameter[0], parameter[1]);
+			} catch (UnsupportedApplicationParameterError e) {
+				if (getCompatibilityLevel().isAtMost(VERSION_ERROR_UNSUPPORTED_PARAMETER)) {
+					log("The learned model does not support parameter");
+				} else {
+					e.setOperator(this);
+					throw e;
+				}
+			}
 		}
 
 		// handling PreprocessingModels: extra treatment for views
 		if (getParameterAsBoolean(PARAMETER_CREATE_VIEW)) {
-			model.setParameter(PreprocessingOperator.PARAMETER_CREATE_VIEW, true);
+			try {
+				model.setParameter(PreprocessingOperator.PARAMETER_CREATE_VIEW, true);
+			} catch (UnsupportedApplicationParameterError e) {
+				if (getCompatibilityLevel().isAtMost(VERSION_ERROR_UNSUPPORTED_PARAMETER)) {
+					log("The learned model does not have a view to create");
+				} else {
+					e.setOperator(this);
+					throw e;
+				}
+			}
 		}
 
 		log("Applying " + model.getClass().getName());
@@ -126,10 +159,10 @@ public class ModelApplier extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeList(PARAMETER_APPLICATION_PARAMETERS,
-				"Model parameters for application (usually not needed).", new ParameterTypeString("key",
-						"The model parameter key."), new ParameterTypeString(PARAMETER_KEY, "This key's value")));
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_CREATE_VIEW,
+				"Model parameters for application (usually not needed).",
+				new ParameterTypeString(PARAMETER_KEY, "The model parameter key."),
+				new ParameterTypeString(PARAMETER_VALUE, "This key's value")));
+		types.add(new ParameterTypeBoolean(PARAMETER_CREATE_VIEW,
 				"Indicates that models should create a new view on the data where possible. Then, instead of changing the data itself, the results are calculated on the fly if needed.",
 				false));
 		return types;

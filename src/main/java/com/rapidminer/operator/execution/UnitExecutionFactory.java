@@ -23,9 +23,9 @@ import com.rapidminer.operator.ExecutionUnit;
 
 /**
  * Creates instances of {@link UnitExecutor}s for {@link ExecutionUnit}s.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public abstract class UnitExecutionFactory {
 
@@ -35,10 +35,8 @@ public abstract class UnitExecutionFactory {
 		return instance;
 	}
 
-	protected static void setInstance(UnitExecutionFactory instance) {
-		UnitExecutionFactory.instance = instance;
+	public UnitExecutor getExecutor(ExecutionUnit unit) {
+		return instance.getExecutor(unit);
 	}
-
-	public abstract UnitExecutor getExecutor(ExecutionUnit unit);
 
 }

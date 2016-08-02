@@ -18,28 +18,27 @@
  */
 package com.rapidminer.operator.learner.associations.fpgrowth;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * A frequency stack based on a list implementation.
- * 
+ *
  * @author Sebastian Land
  */
 public class ListFrequencyStack implements FrequencyStack {
 
-	private LinkedList<Integer> list;
+	private List<Integer> list;
 
 	public ListFrequencyStack() {
-		list = new LinkedList<Integer>();
+		list = new ArrayList<Integer>();
 	}
 
 	@Override
 	public int getFrequency(int height) {
 		if (height >= list.size()) {
 			return 0;
-		} else if (height == list.size() - 1) {
-			return list.getLast();
 		} else {
 			return list.get(height);
 		}
@@ -50,19 +49,16 @@ public class ListFrequencyStack implements FrequencyStack {
 		if (stackHeight == list.size() - 1) {
 			// int newValue = value + list.pollLast(); // IM: pollLast only
 			// available in JDK 6
-			int newValue = value + list.removeLast();
-			list.addLast(newValue);
+			int newValue = value + list.remove(stackHeight);
+			list.add(newValue);
 		} else if (stackHeight == list.size()) {
-			list.addLast(value);
+			list.add(value);
 		}
 	}
 
 	@Override
 	public void popFrequency(int height) {
-		if (height == list.size() - 1) {
-			// list.pollLast(); // IM: pollLast only available in JDK 6
-			list.removeLast();
-		} else if (height < list.size() - 1) {
+		if (height <= list.size() - 1) {
 			list.remove(height);
 		}
 	}

@@ -313,6 +313,7 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 				"If checked, the loop will be aborted at last after a specified time.", false);
 		types.add(type);
 		type = new ParameterTypeInt(PARAMETER_TIMEOUT, "Timeout in minutes", 1, Integer.MAX_VALUE, 1);
+		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_LIMIT_TIME, true, true));
 		type.setExpert(true);
 		types.add(type);
 		type = new ParameterTypeBoolean(PARAMETER_CONDITION_BEFORE,

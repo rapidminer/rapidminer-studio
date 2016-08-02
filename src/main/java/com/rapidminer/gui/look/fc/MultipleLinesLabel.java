@@ -33,7 +33,7 @@ import javax.swing.UIManager;
 
 /**
  * A new swing component similar to a label but containing multiple lines.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class MultipleLinesLabel extends JComponent implements SwingConstants {
@@ -320,7 +320,7 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 	}
 
 	private void updateInfo() {
-		if ((this.text == null) || (this.text == "")) {
+		if (this.text == null || this.text.isEmpty()) {
 			return;
 		}
 		if (!this.needUpdate) {

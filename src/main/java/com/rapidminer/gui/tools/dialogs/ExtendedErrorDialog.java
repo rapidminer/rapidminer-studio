@@ -252,6 +252,7 @@ public class ExtendedErrorDialog extends ButtonDialog {
 		StackTraceList stl = new StackTraceList(error);
 		JScrollPane detailPane = new ExtendedJScrollPane(stl);
 		detailPane.setPreferredSize(new Dimension(getWidth(), 200));
+		detailPane.setBorder(null);
 		return detailPane;
 	}
 

@@ -18,9 +18,9 @@
  */
 package com.rapidminer.example;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -582,7 +582,7 @@ public class Tools {
 	 * Returns a new example set based on a fresh memory example table sampled from the given set.
 	 */
 	public static ExampleSet getLinearSubsetCopy(ExampleSet exampleSet, int size, int offset) {
-		Map<Attribute, String> specialMap = new HashMap<>();
+		Map<Attribute, String> specialMap = new LinkedHashMap<>();
 		List<Attribute> attributes = new LinkedList<>();
 		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
 		while (a.hasNext()) {
@@ -616,7 +616,7 @@ public class Tools {
 	public static ExampleSet getShuffledSubsetCopy(ExampleSet exampleSet, int size, RandomGenerator randomGenerator) {
 		int[] selectedIndices = OrderedSamplingWithoutReplacement
 				.getSampledIndices(randomGenerator, exampleSet.size(), size);
-		Map<Attribute, String> specialMap = new HashMap<>();
+		Map<Attribute, String> specialMap = new LinkedHashMap<>();
 		List<Attribute> attributes = new LinkedList<>();
 		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
 		while (a.hasNext()) {

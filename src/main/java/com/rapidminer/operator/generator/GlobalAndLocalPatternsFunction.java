@@ -18,11 +18,11 @@
  */
 package com.rapidminer.operator.generator;
 
-import com.rapidminer.tools.RandomGenerator;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.tools.RandomGenerator;
 
 
 /**
@@ -59,7 +59,7 @@ public class GlobalAndLocalPatternsFunction extends ClassificationFunction {
 	@Override
 	public double calculate(double[] att) throws FunctionException {
 		if (att.length != 2) {
-			throw new FunctionException("Global and Local Patterns Function", "needs exactly two attributes!");
+			throw new FunctionException("Global and Local Models Function", "needs exactly two attributes!");
 		}
 
 		Iterator p = positiveDots.iterator();

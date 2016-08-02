@@ -65,7 +65,7 @@ public class TransactionDatasetFunction implements TargetFunction {
 	@Override
 	public double calculate(double[] att) throws FunctionException {
 		if (att.length < 5) {
-			throw new FunctionException("Association function", "needs at least 5 attributes!");
+			throw new FunctionException("Transaction dataset function", "needs at least 5 attributes!");
 		}
 		return Double.NaN;
 	}
@@ -73,7 +73,7 @@ public class TransactionDatasetFunction implements TargetFunction {
 	@Override
 	public double[] createArguments(int number, RandomGenerator random) throws FunctionException {
 		if (number < 5) {
-			throw new FunctionException("Association function", "needs at least 5 attributes!");
+			throw new FunctionException("Transaction dataset function", "needs at least 5 attributes!");
 		}
 		double[] args = new double[number];
 		for (int i = 0; i < args.length; i++) {
@@ -97,6 +97,7 @@ public class TransactionDatasetFunction implements TargetFunction {
 		for (int i = 1; i <= numberOfAttributes; i++) {
 			AttributeMetaData amd = new AttributeMetaData("att" + i, Ontology.REAL);
 			amd.setValueRange(new Range(0, 1d), SetRelation.EQUAL);
+			emd.addAttribute(amd);
 		}
 		emd.setNumberOfExamples(numberOfExamples);
 		return emd;

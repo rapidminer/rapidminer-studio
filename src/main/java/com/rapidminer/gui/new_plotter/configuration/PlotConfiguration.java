@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.jfree.chart.plot.PlotOrientation;
@@ -406,7 +407,7 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 	 *            the title to set
 	 */
 	public void setTitleText(String title) {
-		if (title != this.titleText) {
+		if (!Objects.equals(this.titleText, title)) {
 			this.titleText = title;
 			fireTitleChanged();
 		}
@@ -810,7 +811,10 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 	private void informOfProcessingStatus(boolean started) {
 		// create a copy of listeners
 		List<WeakReference<PlotConfigurationProcessingListener>> processingListenerCopy = new LinkedList<WeakReference<PlotConfigurationProcessingListener>>();
-		processingListenerCopy.addAll(processingListeners);
+
+		synchronized (processingListeners) {
+			processingListenerCopy.addAll(processingListeners);
+		}
 
 		// iterate over all listeners
 		Iterator<WeakReference<PlotConfigurationProcessingListener>> defaultIt = processingListenerCopy.iterator();
@@ -1407,11 +1411,21 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 	}
 
 	public void addPlotConfigurationProcessingListener(PlotConfigurationProcessingListener l) {
-		processingListeners.add(new WeakReference<PlotConfigurationProcessingListener>(l));
+		synchronized (processingListeners) {
+			processingListeners.add(new WeakReference<PlotConfigurationProcessingListener>(l));
+		}
 	}
 
 	public void removePlotConfigurationProcessingListener(PlotConfigurationProcessingListener l) {
-		processingListeners.remove(l);
+		synchronized (processingListeners) {
+			Iterator<WeakReference<PlotConfigurationProcessingListener>> it = processingListeners.iterator();
+			while (it.hasNext()) {
+				WeakReference<PlotConfigurationProcessingListener> listenerRef = it.next();
+				if (l.equals(listenerRef.get())) {
+					it.remove();
+				}
+			}
+		}
 	}
 
 	public RangeAxisConfig getRangeAxisConfigById(int id) {

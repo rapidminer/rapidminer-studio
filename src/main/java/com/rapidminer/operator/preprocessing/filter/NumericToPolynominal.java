@@ -32,7 +32,7 @@ import com.rapidminer.tools.Tools;
  * value of the new attribute. If the value is missing, the new value will be missing. Please note
  * that this operator might drastically increase memory usage if many different numerical values are
  * used. Please use the available discretization operators then.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class NumericToPolynominal extends NumericToNominal {
@@ -46,7 +46,7 @@ public class NumericToPolynominal extends NumericToNominal {
 		if (Double.isNaN(value)) {
 			example.setValue(newAttribute, Double.NaN);
 		} else {
-			example.setValue(newAttribute, newAttribute.getMapping().mapString(Tools.formatIntegerIfPossible(value, -1)));
+			example.setValue(newAttribute, newAttribute.getMapping().mapString(Tools.formatIntegerIfPossible(value)));
 		}
 	}
 
@@ -57,7 +57,7 @@ public class NumericToPolynominal extends NumericToNominal {
 
 	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
-		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(),
-				NumericToPolynominal.class, null);
+		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), NumericToPolynominal.class,
+				null);
 	}
 }

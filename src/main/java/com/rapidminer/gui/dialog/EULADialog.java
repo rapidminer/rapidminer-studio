@@ -76,9 +76,9 @@ public class EULADialog extends ButtonDialog implements AdjustmentListener, Chan
 	private static final String DEFAULT_EULA = "EULA_EN.txt";
 
 	/**
-	 * Should be adjusten whenever the EULA is updated.
+	 * Should be adjusted whenever the EULA is updated.
 	 */
-	private static final String ACCEPT_PROPERTY = "rapidminer.eula.v4.accepted";
+	private static final String ACCEPT_PROPERTY = "rapidminer.eula.v5.accepted";
 
 	private final JButton acceptButton;
 	private final JCheckBox acceptCheckBox;

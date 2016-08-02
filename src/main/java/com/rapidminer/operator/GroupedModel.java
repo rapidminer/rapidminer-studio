@@ -140,7 +140,7 @@ public class GroupedModel extends AbstractModel implements Iterable<Model>, Meta
 			}
 		}
 		if (!ok) {
-			throw new UserError(null, 204, getName(), key);
+			throw new UnsupportedApplicationParameterError(null, getName(), key);
 		}
 	}
 

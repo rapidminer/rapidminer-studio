@@ -18,23 +18,13 @@
  */
 package com.rapidminer.gui.new_plotter.gui;
 
-import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
-import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.data.RangeAxisData;
-import com.rapidminer.gui.new_plotter.gui.treenodes.RangeAxisConfigTreeNode;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
-import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Objects;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -50,10 +40,21 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 
+import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
+import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.data.RangeAxisData;
+import com.rapidminer.gui.new_plotter.gui.treenodes.RangeAxisConfigTreeNode;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
+import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.tools.I18N;
+
 
 /**
  * @author Nils Woehler
- * 
+ *
  */
 public class RangeAxisConfigPanel extends AbstractConfigurationPanel implements TreeSelectionListener {
 
@@ -195,7 +196,7 @@ public class RangeAxisConfigPanel extends AbstractConfigurationPanel implements 
 								selectedRangeAxisConfig);
 						Double oldUpperBound = selectedRangeAxisData.getUpperViewBound();
 						Double newUpperBound = (Double) upperBoundSpinner.getValue();
-						if (oldUpperBound != newUpperBound) {
+						if (!Objects.equals(oldUpperBound, newUpperBound)) {
 							selectedRangeAxisConfig.setUpperViewBound(newUpperBound);
 						}
 					}
@@ -237,7 +238,7 @@ public class RangeAxisConfigPanel extends AbstractConfigurationPanel implements 
 								selectedRangeAxisConfig);
 						Double oldLowerBound = selectedRangeAxisData.getLowerViewBound();
 						Double newLowerBound = (Double) lowerBoundSpinner.getValue();
-						if (oldLowerBound != newLowerBound) {
+						if (!Objects.equals(oldLowerBound, newLowerBound)) {
 							selectedRangeAxisConfig.setLowerViewBound(newLowerBound);
 						}
 					}

@@ -18,12 +18,19 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -34,20 +41,22 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * Converts all real valued attributes to integer valued attributes. Each real value is simply
  * cutted (default) or rounded. If the value is missing, the new value will be missing.
- * 
+ *
  * @author Ingo Mierswa, Tobias Malbrecht
  */
 public class Real2Integer extends AbstractFilteredDataProcessing {
 
 	public static final String PARAMETER_ROUND = "round_values";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public Real2Integer(OperatorDescription description) {
 		super(description);
@@ -122,7 +131,12 @@ public class Real2Integer extends AbstractFilteredDataProcessing {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
 	}
 
 	@Override
@@ -130,4 +144,9 @@ public class Real2Integer extends AbstractFilteredDataProcessing {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), Real2Integer.class, null);
 	}
 
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+	}
 }

@@ -77,8 +77,6 @@ import javax.swing.plaf.ActionMapUIResource;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicFileChooserUI;
 
-import sun.awt.shell.ShellFolder;
-
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.borders.Borders;
 import com.rapidminer.gui.tools.ExtendedJToolBar;
@@ -91,6 +89,8 @@ import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.io.remote.RemoteFileSystemView;
 import com.rapidminer.tools.I18N;
+
+import sun.awt.shell.ShellFolder;
 
 
 /**
@@ -508,9 +508,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 			if (icon != null) {
 				return icon;
 			}
-			if (f != null) {
-				icon = getFileChooser().getFileSystemView().getSystemIcon(f);
-			}
+			icon = getFileChooser().getFileSystemView().getSystemIcon(f);
 			if (icon == null) {
 				icon = super.getIcon(f);
 			}
@@ -809,8 +807,8 @@ public class FileChooserUI extends BasicFileChooserUI {
 		upFolderButton.setRolloverEnabled(true);
 		upFolderButton.setIcon((Icon) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.SMALL_ICON));
 		upFolderButton.setToolTipText((String) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.SHORT_DESCRIPTION));
-		upFolderButton.getAccessibleContext()
-				.setAccessibleName((String) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.ACCELERATOR_KEY));
+		upFolderButton.getAccessibleContext().setAccessibleName(
+				(String) CHANGE_TO_PARENT_DIRECTORY.getValue(Action.ACCELERATOR_KEY));
 		upFolderButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 		upFolderButton.setAlignmentY(Component.CENTER_ALIGNMENT);
 		upFolderButton.setBackground((Color) UIManager.get("control"));
@@ -828,8 +826,8 @@ public class FileChooserUI extends BasicFileChooserUI {
 			this.bookmarksButton.setIcon((Icon) ADD_TO_BOOKMARKS_ACTION.getValue(Action.SMALL_ICON));
 			this.bookmarksButton.setFocusable(false);
 			this.bookmarksButton.setToolTipText((String) ADD_TO_BOOKMARKS_ACTION.getValue(Action.SHORT_DESCRIPTION));
-			this.bookmarksButton.getAccessibleContext()
-					.setAccessibleName((String) ADD_TO_BOOKMARKS_ACTION.getValue(Action.ACCELERATOR_KEY));
+			this.bookmarksButton.getAccessibleContext().setAccessibleName(
+					(String) ADD_TO_BOOKMARKS_ACTION.getValue(Action.ACCELERATOR_KEY));
 			this.bookmarksButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 			this.bookmarksButton.setAlignmentY(Component.CENTER_ALIGNMENT);
 			this.bookmarksButton.setBackground((Color) UIManager.get("control"));
@@ -1128,8 +1126,8 @@ public class FileChooserUI extends BasicFileChooserUI {
 	private void doSelectedFileChanged(PropertyChangeEvent e) {
 		File f = (File) e.getNewValue();
 		JFileChooser fc = getFileChooser();
-		if (f != null && (fc.isFileSelectionEnabled() && !f.isDirectory()
-				|| f.isDirectory() && fc.isDirectorySelectionEnabled())) {
+		if (f != null
+				&& (fc.isFileSelectionEnabled() && !f.isDirectory() || f.isDirectory() && fc.isDirectorySelectionEnabled())) {
 			setFileName(fileNameString(f));
 			setFileSelected();
 		}
@@ -1163,11 +1161,15 @@ public class FileChooserUI extends BasicFileChooserUI {
 			getChangeToParentDirectoryAction().setEnabled(!fsv.isRoot(currentDirectory));
 			getGoHomeAction().setEnabled(!userHomeDirectory.equals(currentDirectory));
 
-			if (fc.isDirectorySelectionEnabled() && !fc.isFileSelectionEnabled()) {
-				if (fsv.isFileSystem(currentDirectory)) {
-					setFileName(currentDirectory.getPath());
-				} else {
+			if (fc.isDirectorySelectionEnabled()) {
+				if (fc.isFileSelectionEnabled()) {
 					setFileName(null);
+				} else {
+					if (fsv.isFileSystem(currentDirectory)) {
+						setFileName(currentDirectory.getPath());
+					} else {
+						setFileName(null);
+					}
 				}
 				setFileSelected();
 			}

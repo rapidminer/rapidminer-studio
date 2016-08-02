@@ -18,9 +18,6 @@
  */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.tools.Ontology;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Clob;
@@ -30,10 +27,13 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 
+import com.rapidminer.example.Attribute;
+import com.rapidminer.tools.Ontology;
+
 
 /**
  * Reads datarows from a data base.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer
  */
 public class DatabaseDataRow extends DataRow {
@@ -177,9 +177,11 @@ public class DatabaseDataRow extends DataRow {
 								value = Double.NaN;
 							}
 						} finally {
-							try {
-								in.close();
-							} catch (IOException e) {
+							if (in != null) {
+								try {
+									in.close();
+								} catch (IOException e) {
+								}
 							}
 						}
 					} else {

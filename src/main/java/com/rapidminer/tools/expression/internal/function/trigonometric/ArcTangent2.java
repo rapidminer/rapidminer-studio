@@ -39,7 +39,7 @@ public class ArcTangent2 extends Abstract2DoubleInputFunction {
 
 	@Override
 	protected double compute(double value1, double value2) {
-		return Double.isNaN(value1) | Double.isNaN(value2) ? Double.NaN : Math.atan2(value1, value2);
+		return Double.isNaN(value1) || Double.isNaN(value2) ? Double.NaN : Math.atan2(value1, value2);
 	}
 
 	@Override

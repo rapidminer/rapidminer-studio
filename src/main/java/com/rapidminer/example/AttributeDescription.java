@@ -18,16 +18,16 @@
  */
 package com.rapidminer.example;
 
-import com.rapidminer.tools.Ontology;
-
 import java.io.Serializable;
+
+import com.rapidminer.tools.Ontology;
 
 
 /**
  * This class holds all basic information about an attribute. This is useful since a cloned
  * attribute can simply use the same reference to a description object wihtout the need of cloning
  * all information. This reduces the amount of used memory due to attribute clones.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class AttributeDescription implements Serializable {
@@ -121,10 +121,10 @@ public class AttributeDescription implements Serializable {
 			return false;
 		}
 		AttributeDescription a = (AttributeDescription) o;
-		if (!this.name.equals(a.getName())) {
+		if (this.index != a.getTableIndex()) {
 			return false;
 		}
-		if (this.index != a.getTableIndex()) {
+		if (!this.name.equals(a.getName())) {
 			return false;
 		}
 		return true;
@@ -132,6 +132,6 @@ public class AttributeDescription implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return name.hashCode() ^ Integer.valueOf(this.index).hashCode();
+		return name.hashCode() ^ this.index;
 	}
 }

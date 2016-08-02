@@ -41,12 +41,14 @@ import com.rapidminer.tools.math.ContingencyTableTools;
  * This operator calculates the relevance of an attribute by measuring the symmetrical uncertainty
  * with respect to the class. The formulaization for this is:
  * </p>
- * 
+ *
  * <code>relevance = 2 * (P(Class) - P(Class | Attribute)) / P(Class) + P(Attribute)</code>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SymmetricalUncertaintyOperator extends AbstractWeighting {
+
+	private static final int PROGRESS_UPDATE_STEPS = 1_000_000;
 
 	public SymmetricalUncertaintyOperator(OperatorDescription description) {
 		super(description, true);
@@ -72,11 +74,17 @@ public class SymmetricalUncertaintyOperator extends AbstractWeighting {
 		exampleSet = discretization.doWork(exampleSet);
 
 		// create and deliver weights
+		double totalProgress = exampleSet.getAttributes().size() * exampleSet.size();
+		long progressCounter = 0;
+		getProgress().setTotal(100);
 		AttributeWeights weights = new AttributeWeights(exampleSet);
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			double[][] counters = new double[attribute.getMapping().size()][label.getMapping().size()];
 			for (Example example : exampleSet) {
 				counters[(int) example.getValue(attribute)][(int) example.getLabel()]++;
+				if (++progressCounter % PROGRESS_UPDATE_STEPS == 0) {
+					getProgress().setCompleted((int) (100 * (progressCounter / totalProgress)));
+				}
 			}
 			double weight = ContingencyTableTools.symmetricalUncertainty(counters);
 			weights.setWeight(attribute.getName(), weight);
@@ -102,8 +110,7 @@ public class SymmetricalUncertaintyOperator extends AbstractWeighting {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeInt(
-				BinDiscretization.PARAMETER_NUMBER_OF_BINS,
+		types.add(new ParameterTypeInt(BinDiscretization.PARAMETER_NUMBER_OF_BINS,
 				"The number of bins used for discretization of numerical attributes before the chi squared test can be performed.",
 				2, Integer.MAX_VALUE, 10));
 		return types;

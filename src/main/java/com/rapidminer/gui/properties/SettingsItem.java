@@ -20,6 +20,7 @@ package com.rapidminer.gui.properties;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 
 import com.rapidminer.RapidMiner;
@@ -76,12 +77,12 @@ public class SettingsItem {
 	 */
 	public SettingsItem(String key, SettingsItem parent, Type type) {
 		if (key == null || key.isEmpty()) {
-			throw new IllegalArgumentException("Settings item has no Key."
-					+ (parent == null ? "" : " Parent: " + parent.toString()));
+			throw new IllegalArgumentException(
+					"Settings item has no Key." + (parent == null ? "" : " Parent: " + parent.toString()));
 		}
 		if (type == null) {
-			throw new IllegalArgumentException("Settings item has no type."
-					+ (parent == null ? "" : " Parent: " + parent.toString()));
+			throw new IllegalArgumentException(
+					"Settings item has no type." + (parent == null ? "" : " Parent: " + parent.toString()));
 		}
 
 		this.key = key;
@@ -111,13 +112,49 @@ public class SettingsItem {
 	 * Returns all children of the specified type.
 	 */
 	public List<SettingsItem> getChildren(Type type) {
+		return getChildren(type, null);
+	}
+
+	/**
+	 * Returns all children in regard of the specified type and filter.
+	 */
+	public List<SettingsItem> getChildren(Type type, String filter) {
 		List<SettingsItem> childs = new LinkedList<>();
 		for (SettingsItem child : children) {
-			if (child.type.equals(type)) {
+			if (child.type.equals(type) && isInFilter(child, filter)) {
 				childs.add(child);
 			}
 		}
 		return childs;
+	}
+
+	/**
+	 * Checks if the given child matches the filter.
+	 */
+	public boolean isInFilter(SettingsItem child, String filter) {
+		if (!child.type.equals(Type.PARAMETER)) {
+			return true;
+		}
+		if (filter != null && !filter.trim().isEmpty()) {
+			String trimmedFilter = filter.trim();
+			String[] filterTokens = trimmedFilter.split(" ");
+			for (String token : filterTokens) {
+				String unifiedToken = token.toLowerCase(Locale.ENGLISH);
+				if (!child.type.equals(Type.PARAMETER)) {
+					return true;
+				} else if (child.getKey().toLowerCase(Locale.ENGLISH).contains(unifiedToken)) {
+					return true;
+				} else if (child.getTitle() != null && child.getTitle().toLowerCase(Locale.ENGLISH).contains(unifiedToken)) {
+					return true;
+				} else if (child.getDescription() != null
+						&& child.getDescription().toLowerCase(Locale.ENGLISH).contains(unifiedToken)) {
+					return true;
+				}
+			}
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	/**

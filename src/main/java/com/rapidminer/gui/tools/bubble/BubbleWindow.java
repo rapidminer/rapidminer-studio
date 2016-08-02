@@ -493,7 +493,7 @@ public abstract class BubbleWindow extends JDialog {
 		/**
 		 * when the user is in the wrong perspective
 		 */
-		WRONG_PERSPECTIVE;
+		WRONG_PERSPECTIVE,
 	}
 
 	/**
@@ -603,7 +603,6 @@ public abstract class BubbleWindow extends JDialog {
 	private final BubbleStyle style;
 	private final AlignedSide preferredAlignment;
 	private final List<BubbleListener> listeners = new LinkedList<>();
-	private final String myPerspective;
 	private final DockingDesktop desktop = RapidMinerGUI.getMainFrame().getDockingDesktop();
 
 	private boolean built = false;
@@ -642,6 +641,12 @@ public abstract class BubbleWindow extends JDialog {
 
 	private volatile boolean killed = false;
 	private volatile int dockingCounter = 0;
+
+	/**
+	 * the origin perspective where this bubble lives. If initial construction takes place in a
+	 * different perspective than where the bubble should live, change this
+	 */
+	protected String myPerspective;
 
 	/**
 	 * creates a BubbleWindow-Object. To paint and repaint this BubbleWindow call paint(boolean
@@ -714,8 +719,7 @@ public abstract class BubbleWindow extends JDialog {
 
 		this.i18nKey = i18nKey;
 		this.arguments = arguments;
-		this.myPerspective = RapidMinerGUI.getMainFrame().getPerspectiveController().getModel()
-				.getSelectedPerspective().getName();
+		this.myPerspective = getCurrentPerspectiveName();
 		this.preferredAlignment = preferredAlignment;
 		this.moveable = moveable;
 		if (docKey != null) {
@@ -734,7 +738,7 @@ public abstract class BubbleWindow extends JDialog {
 		} else {
 			this.bodyFont = style.getBodyFont();
 		}
-
+		this.showCloseButton = showCloseButton;
 		if (componentsToAdd == null) {
 			componentsInBubble = new JComponent[] {};
 		} else {
@@ -1453,7 +1457,7 @@ public abstract class BubbleWindow extends JDialog {
 					}
 				}
 				if (event.getActionType() == DockingActionEvent.ACTION_CLOSE) {
-					if (desktop.getDockableState(dockable).isClosed()) {
+					if (desktop.getDockableState(dockable) == null || desktop.getDockableState(dockable).isClosed()) {
 						BubbleWindow.this.changeToAssistant(AssistantType.NOT_ON_SCREEN);
 					}
 				}
@@ -1623,8 +1627,8 @@ public abstract class BubbleWindow extends JDialog {
 
 	@Override
 	public void setVisible(boolean b) {
-		// don't show killed bubbles anymore
-		if (b && killed) {
+		// don't show killed bubbles or bubbles in wrong perspective
+		if (b && (killed || !isRightPerspective())) {
 			return;
 		}
 		super.setVisible(b);
@@ -2283,6 +2287,25 @@ public abstract class BubbleWindow extends JDialog {
 	 */
 	final BubbleStyle getStyle() {
 		return style;
+	}
+
+	/**
+	 * Checks if the current perspective matches {@link #myPerspective}.
+	 *
+	 * @return {@code true} if {@link #myPerspective} is equal to
+	 *         {@link #getCurrentPerspectiveName()}, otherwise {@code false}
+	 */
+	protected boolean isRightPerspective() {
+		return myPerspective.equals(getCurrentPerspectiveName());
+	}
+
+	/**
+	 * Getter for the current perspective name.
+	 *
+	 * @return The name of the current perspective.
+	 */
+	protected String getCurrentPerspectiveName() {
+		return RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName();
 	}
 
 }

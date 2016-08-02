@@ -37,6 +37,6 @@ public class Secant extends Abstract1DoubleInputFunction {
 
 	@Override
 	protected double compute(double value) {
-		return Double.isNaN(value) | value == Math.PI / 2 ? Double.NaN : 1.0 / Math.cos(value);
+		return Double.isNaN(value) || value == Math.PI / 2 ? Double.NaN : 1.0 / Math.cos(value);
 	}
 }

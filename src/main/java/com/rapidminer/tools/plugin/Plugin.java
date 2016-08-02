@@ -40,6 +40,8 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -50,6 +52,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -92,6 +96,7 @@ import com.rapidminer.tools.PlatformUtilities;
 import com.rapidminer.tools.ResourceSource;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -202,11 +207,96 @@ public class Plugin {
 
 	private Boolean useExtensionTreeRoot = null;
 
-	/** List of all plugins. */
-	private static final List<Plugin> ALL_PLUGINS = new LinkedList<>();
+	private static final Comparator<Plugin> PLUGIN_COMPARATOR = (p1, p2) -> {
+		if (p1 == null && p2 == null) {
+			return 0;
+		}
 
-	/** List of plugins that failed to load. */
+		if (p1 == null || p2 == null) {
+			return p1 == null ? 1 : -1;
+		}
+
+		if (p1.getName() == null && p2.getName() == null) {
+			return 0;
+		}
+
+		if (p1.getName() == null || p2.getName() == null) {
+			return p1.getName() == null ? 1 : -1;
+		}
+
+		// if both plugins have the same name then check the version
+		if (p1.getName().equals(p2.getName())) {
+			if (p1.getVersion() == null && p2.getVersion() == null) {
+				return 0;
+			}
+			if (p1.getVersion() == null || p2.getVersion() == null) {
+				return p1.getVersion() == null ? 1 : -1;
+			}
+
+			return p1.getVersion().compareTo(p2.getVersion());
+		}
+
+		return p1.getName().compareTo(p2.getName());
+	};
+
+	/** An ordered set of all plugins sorted lexically based on the plugin name. */
+	private static final Collection<Plugin> ALL_PLUGINS = new TreeSet<>(PLUGIN_COMPARATOR);
+
+	/** Set of plugins that failed to load. */
 	private static final Set<Plugin> INCOMPATIBLE_PLUGINS = new HashSet<>();
+
+	/**
+	 * The map of blacklisted plugins that should not be loaded. The key is the extension id. The
+	 * value can be {@code null} or a pair of version numbers. The pair of version numbers specifies
+	 * the range of forbidden version numbers [from - up to]. These version numbers can be
+	 * {@code null} indicating no upper or lower bound.
+	 */
+	private static final Map<String, Pair<VersionNumber, VersionNumber>> PLUGIN_BLACKLIST = new HashMap<>();
+
+	static {
+		// incompatible initialization code
+		PLUGIN_BLACKLIST.put("rmx_parallel", null);
+
+		// every version smaller or equal 7.1.1
+		final Pair<VersionNumber, VersionNumber> upToRm711 = new Pair<>(null, new VersionNumber(7, 1, 1));
+
+		// bundled extensions using the old license schema
+		PLUGIN_BLACKLIST.put("rmx_advanced_file_connectors", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_jdbc_connectors", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_legacy", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_productivity", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_remote_repository", upToRm711);
+
+		// packaged extensions using the old license schema
+		PLUGIN_BLACKLIST.put("rmx_data_editor", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_process_scheduling", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_social_media", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_cloud_connectivity", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_cloud_execution", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_operator_recommender", upToRm711);
+
+		// non-packaged extensions using the old license schema
+		PLUGIN_BLACKLIST.put("rmx_mozenda", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_nosql", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_pmml", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_qlik", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_solr", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_splunk", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_tableau_table_writer", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_text", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_web", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_r_scripting", upToRm711);
+		PLUGIN_BLACKLIST.put("rmx_python_scripting", upToRm711);
+	}
+
+	/** map of all plugin loading times */
+	private static final Map<String, Long> LOADING_TIMES = new ConcurrentHashMap<>();
+
+	/**
+	 * amount of time in ms a plugin has to load before its loading time will be displayed as
+	 * WARNING instead of INFO log level
+	 */
+	private static final int LOADING_THRESHOLD = 10_000;
 
 	/** Creates a new plugin based on the plugin .jar file. */
 	public Plugin(File file) throws IOException {
@@ -215,6 +305,7 @@ public class Plugin {
 		this.classLoader = makeInitialClassloader();
 		Tools.addResourceSource(new ResourceSource(this.classLoader));
 		fetchMetaData();
+		this.classLoader.setPluginKey(getExtensionId());
 
 		if (!RapidMiner.getExecutionMode().isHeadless()) {
 			RapidMiner.getSplashScreen().addExtension(this);
@@ -353,7 +444,7 @@ public class Plugin {
 	}
 
 	/** Checks the RapidMiner version and plugin dependencies. */
-	private boolean checkDependencies(Plugin plugin, List<Plugin> plugins) {
+	private boolean checkDependencies(Plugin plugin, Collection<Plugin> plugins) {
 		if (RapidMiner.getVersion().compareTo(getNecessaryRapidMinerVersion()) < 0) {
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.tools.plugin.Plugin.registring_operators_error_rm_version",
@@ -534,6 +625,8 @@ public class Plugin {
 	 * @throws PluginException
 	 */
 	public void registerDescriptions() throws PluginException {
+		// make sure to not accidentally find resources from dependencies
+		this.classLoader.setIgnoreDependencyClassloaders(true);
 
 		// registering parse rules
 		if (pluginParseRules != null) {
@@ -583,6 +676,8 @@ public class Plugin {
 				ProcessDrawUtils.registerAdditionalGroupColors(pluginGroupDescriptions, name, classLoader, this);
 			}
 		}
+
+		this.classLoader.setIgnoreDependencyClassloaders(false);
 	}
 
 	/** Creates the about box for this plugin. */
@@ -695,10 +790,11 @@ public class Plugin {
 	 * @param conflictingExtension
 	 *            the already registered extension with the same extension ID
 	 * @param plugins
-	 *            the list from which the conflicting extension should be removed if its version is
-	 *            lower than the version of the new extension
+	 *            the collection from which the conflicting extension should be removed if its
+	 *            version is lower than the version of the new extension
 	 */
-	private static void resolveVersionConflict(Plugin newExtension, Plugin conflictingExtension, List<Plugin> plugins) {
+	private static void resolveVersionConflict(Plugin newExtension, Plugin conflictingExtension,
+			Collection<Plugin> plugins) {
 
 		// keep extension with higher version number
 		VersionNumber newVersion = new VersionNumber(newExtension.getVersion());
@@ -724,6 +820,47 @@ public class Plugin {
 	}
 
 	/**
+	 * Checks if the version of the extension with id extensionId is blacklisted.
+	 *
+	 * @param extensionId
+	 *            the id of the extension to check
+	 * @param version
+	 *            the version to check
+	 * @return {@code true} if the extension version is blacklisted
+	 */
+	public static boolean isExtensionVersionBlacklisted(String extensionId, VersionNumber version) {
+		if (PLUGIN_BLACKLIST.containsKey(extensionId)) {
+			Pair<VersionNumber, VersionNumber> versionRange = PLUGIN_BLACKLIST.get(extensionId);
+			if (versionRange != null && (versionRange.getSecond() != null && version.isAbove(versionRange.getSecond())
+					|| versionRange.getFirst() != null && !version.isAtLeast(versionRange.getFirst()))) {
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Adds the amount of milliseconds elapsed since the given start time to the already logged
+	 * amount of time the specified extension took to load. Times can be accessed from the
+	 * {@link #LOADING_TIMES} map.
+	 *
+	 * @param id
+	 *            the id of the extension
+	 * @param start
+	 *            the starting time of this recording in milliseconds since 1970
+	 */
+	private static void recordLoadingTime(String id, long start) {
+		long end = System.currentTimeMillis();
+		Long time = LOADING_TIMES.get(id);
+		if (time == null) {
+			time = 0L;
+		}
+		time += end - start;
+		LOADING_TIMES.put(id, time);
+	}
+
+	/**
 	 * Finds all plugins in lib/plugins directory and initializes them.
 	 */
 	private static void registerAllPluginDescriptions() {
@@ -742,7 +879,9 @@ public class Plugin {
 			while (i.hasNext()) {
 				Plugin plugin = i.next();
 				try {
+					long start = System.currentTimeMillis();
 					plugin.registerDescriptions();
+					recordLoadingTime(plugin.getExtensionId(), start);
 				} catch (Exception e) {
 					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.tools.plugin.Plugin.plugin_initializing_error", e), e);
@@ -752,6 +891,64 @@ public class Plugin {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Removes the blacklisted plugins from the list of all plugins and adds them to the
+	 * incompatible plugins.
+	 */
+	private static void filterBlacklistedPlugins() {
+		Iterator<Plugin> i = ALL_PLUGINS.iterator();
+		while (i.hasNext()) {
+			Plugin plugin = i.next();
+			if (plugin.isIncompatible()) {
+				plugin.disabled = true;
+				i.remove();
+				INCOMPATIBLE_PLUGINS.add(plugin);
+			}
+		}
+	}
+
+	/**
+	 * Checks if the plugin is marked as incompatible by the {@link #PLUGIN_BLACKLIST}.
+	 *
+	 * @return whether the plugin is incompatible
+	 */
+	private final boolean isIncompatible() {
+		if (PLUGIN_BLACKLIST.containsKey(getExtensionId())) {
+			Pair<VersionNumber, VersionNumber> forbiddenRange = PLUGIN_BLACKLIST.get(getExtensionId());
+			if (forbiddenRange == null) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.plugin.Plugin.incompatible_extension",
+						new Object[] { getName() });
+				return true;
+			}
+			VersionNumber startVersion = forbiddenRange.getFirst();
+			VersionNumber endVersion = forbiddenRange.getSecond();
+			VersionNumber currentVersion = new VersionNumber(getVersion());
+			if ((startVersion != null && currentVersion.isAtLeast(startVersion) || startVersion == null)
+					&& (endVersion != null && currentVersion.isAtMost(endVersion) || endVersion == null)) {
+
+				if (startVersion != null && endVersion != null) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.tools.plugin.Plugin.incompatible_extension_version",
+							new Object[] { getName(), startVersion, endVersion, currentVersion });
+				} else if (startVersion != null) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.tools.plugin.Plugin.incompatible_extension_version_above",
+							new Object[] { getName(), startVersion, currentVersion });
+				} else if (endVersion != null) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.tools.plugin.Plugin.incompatible_extension_version_below",
+							new Object[] { getName(), endVersion, currentVersion });
+				} else {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.plugin.Plugin.incompatible_extension",
+							new Object[] { getName() });
+				}
+				return true;
+			}
+
+		}
+		return false;
 	}
 
 	/**
@@ -771,6 +968,7 @@ public class Plugin {
 			while (iterator.hasNext()) {
 				Plugin plugin = iterator.next();
 				boolean dependenciesMet = true;
+				long start = System.currentTimeMillis();
 				for (Dependency dependency : plugin.pluginDependencies) {
 					Plugin dependencyPlugin = getPluginByExtensionId(dependency.getPluginExtensionId());
 					if (dependencyPlugin == null) {
@@ -799,6 +997,7 @@ public class Plugin {
 					// more
 					found = true;
 				}
+				recordLoadingTime(plugin.getExtensionId(), start);
 			}
 
 		}
@@ -810,7 +1009,9 @@ public class Plugin {
 	 */
 	public static void registerAllPluginOperators() {
 		for (Plugin plugin : ALL_PLUGINS) {
+			long start = System.currentTimeMillis();
 			plugin.registerOperators();
+			recordLoadingTime(plugin.getExtensionId(), start);
 		}
 	}
 
@@ -819,8 +1020,8 @@ public class Plugin {
 		return MAJOR_CLASS_LOADER;
 	}
 
-	/** Returns the collection of all plugins. */
-	public static List<Plugin> getAllPlugins() {
+	/** Returns a sorted collection of all plugins. */
+	public static Collection<Plugin> getAllPlugins() {
 		return ALL_PLUGINS;
 	}
 
@@ -839,7 +1040,7 @@ public class Plugin {
 	}
 
 	/** Returns the plugin with the given extension id. */
-	private static Plugin getPluginByExtensionId(String name, List<Plugin> plugins) {
+	private static Plugin getPluginByExtensionId(String name, Collection<Plugin> plugins) {
 		Iterator<Plugin> i = plugins.iterator();
 		while (i.hasNext()) {
 			Plugin plugin = i.next();
@@ -884,10 +1085,12 @@ public class Plugin {
 		List<Plugin> plugins = new LinkedList<>(getAllPlugins());
 
 		for (Plugin plugin : plugins) {
+			long start = System.currentTimeMillis();
 			if (!plugin.callInitMethod(methodName, arguments, argumentValues, useOriginalJarClassLoader)) {
 				getAllPlugins().remove(plugin);
 				INCOMPATIBLE_PLUGINS.add(plugin);
 			}
+			recordLoadingTime(plugin.getExtensionId(), start);
 		}
 	}
 
@@ -964,6 +1167,9 @@ public class Plugin {
 
 		// lookup only once
 		if (useExtensionTreeRoot == null) {
+			// store old value and ensure that the dependency classloaders are not ignored
+			boolean oldValue = this.classLoader.isIgnoreDependencyClassloaders();
+			this.classLoader.setIgnoreDependencyClassloaders(false);
 			try {
 				Class<?> pluginInitator = Class.forName(pluginInitClassName, false, getClassLoader());
 				Method initGuiMethod = pluginInitator.getMethod("useExtensionTreeRoot", new Class[] {});
@@ -971,6 +1177,8 @@ public class Plugin {
 			} catch (Throwable e) {
 				useExtensionTreeRoot = Boolean.TRUE;
 			}
+			// restore setting for ignoring dependency classloaders
+			this.classLoader.setIgnoreDependencyClassloaders(oldValue);
 		}
 
 		// return cached value
@@ -1065,13 +1273,37 @@ public class Plugin {
 				}
 			}
 
-			registerAllPluginDescriptions();
+			filterBlacklistedPlugins();
 			finalizePluginLoading();
+			registerAllPluginDescriptions();
 			loadAllSettingsStructures();
 			initPlugins();
 			updateAllSettingsDescriptions();
 		} else {
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.plugin.Plugin.plugins_skipped");
+		}
+
+		// log extension loading times
+		List<Entry<String, Long>> sortedLoadingTimes = new LinkedList<>(LOADING_TIMES.entrySet());
+		// sort from fastest to slowest
+		Collections.sort(sortedLoadingTimes, new Comparator<Entry<String, Long>>() {
+
+			@Override
+			public int compare(Entry<String, Long> o1, Entry<String, Long> o2) {
+				return o1.getValue().compareTo(o2.getValue());
+			}
+		});
+		for (Entry<String, Long> entry : sortedLoadingTimes) {
+			Plugin plugin = getPluginByExtensionId(entry.getKey());
+			String name = plugin != null ? plugin.getName() : entry.getKey();
+			String value = String.valueOf(entry.getValue()) + "ms";
+			Level logLevel = Level.INFO;
+			if (entry.getValue() > LOADING_THRESHOLD) {
+				value = Tools.formatDuration(entry.getValue());
+				logLevel = Level.WARNING;
+			}
+			LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time",
+					new Object[] { name, value });
 		}
 	}
 
@@ -1124,7 +1356,9 @@ public class Plugin {
 		for (Iterator<Plugin> iterator = getAllPlugins().iterator(); iterator.hasNext();) {
 			Plugin plugin = iterator.next();
 			if (plugin != null && !plugin.disabled) {
+				long start = System.currentTimeMillis();
 				plugin.loadSettingsStructure();
+				recordLoadingTime(plugin.getExtensionId(), start);
 			}
 		}
 	}
@@ -1174,7 +1408,9 @@ public class Plugin {
 		for (Iterator<Plugin> iterator = getAllPlugins().iterator(); iterator.hasNext();) {
 			Plugin plugin = iterator.next();
 			if (plugin != null && !plugin.disabled) {
+				long start = System.currentTimeMillis();
 				plugin.updateSettingsDescriptions();
+				recordLoadingTime(plugin.getExtensionId(), start);
 			}
 		}
 	}

@@ -43,8 +43,8 @@ import com.rapidminer.license.location.LicenseLocation;
 import com.rapidminer.license.location.LicenseStoringException;
 import com.rapidminer.license.product.Constraint;
 import com.rapidminer.license.product.DefaultProduct;
+import com.rapidminer.license.product.NumericalConstraint;
 import com.rapidminer.license.product.Product;
-import com.rapidminer.license.product.StringCategoryConstraint;
 import com.rapidminer.license.utils.Pair;
 import com.rapidminer.license.violation.LicenseViolation;
 import com.rapidminer.operator.Operator;
@@ -73,22 +73,23 @@ public enum ProductConstraintManager {
 	/**
 	 * the signature for the RapidMiner Studio product used for verification of our default product
 	 */
-	private static final String RAPIDMINER_STUDIO_PRODUCT_SIGNATURE = "hDrRULoLLXGHbY//kyrUvuRy5pYg4Lg1rYukLP0t0OA51SVOc61DkJx+MlhxnAotg8Ss8IvrBKZ19L19g46V9SFbMe3wNmzFqgXC/cCPyiLi+FvVVFXKq0MfqY4pVOX+nBzU0kc8Y8tYoZJgK/WtGGdF1LMcSjpg1CO/o7bpFhxLAYFsX2gKJG5E+ullWxu1Gyg2EkqW80Qw4R0zJKjN+MzFtCfktp0g6X+C5sml3vsIlfeu0GPRgI+FHeezWpUci2ZZeQrtK1gfqJTF2G0x5b6cbw1EAXFgmhfkAkB5jt57odCpkmVp7pRWpJFXbC3WVJO2OMvsUoL8UBUqIYldXQ==";
+	private static final String RAPIDMINER_STUDIO_PRODUCT_SIGNATURE = "Rmfgu6rDLgqPCIBl/WzEWmVW4O8cPHF2yPMQvTTAWZGDIwhMadeRmMK6e3V/VW+VOrdKKPHCHB3PtzNQAVGWHrKsv3tmKivQGNIQOSG8192araFXSGHpapQhWFf+8gjsDlf1Dbbt2ZRSf/Gmiinb2JcoT6x+NQiZfkXUFVeOEGyAJLUufKCAdvTu2bzkbexdfcJAvTSzqn2VwgFThg4zRzLxoO2hElT6DHWmr3pi2iLnzVgcM0ifJYdTYsTnAk0fhSijpVv3jMbL81ehUh8iJSQlXoutVcxYFAviMhlBlKb/3dgLhBlG8F12epF20WNSyewCRM8ysANZbzP9qcOf+w==";
 
 	private static final Product DEFAULT_PRODUCT = new DefaultProduct(StudioLicenseConstants.PRODUCT_ID,
-	        StudioLicenseConstants.VERSION, false, RAPIDMINER_STUDIO_PRODUCT_SIGNATURE,
-	        LicenseConstants.CONNECTORS_CONSTRAINT, LicenseConstants.PRODUCTIVITY_CONSTRAINT,
-	        LicenseConstants.SERVER_EDITION_CONSTRAINT);
+			StudioLicenseConstants.VERSION, false, RAPIDMINER_STUDIO_PRODUCT_SIGNATURE, LicenseConstants.DATA_ROW_CONSTRAINT,
+			LicenseConstants.LOGICAL_PROCESSOR_CONSTRAINT, LicenseConstants.MEMORY_LIMIT_CONSTRAINT,
+			LicenseConstants.WEB_SERVICE_LIMIT_CONSTRAINT);
 
 	private static final Path MAIN_LICENSE_PATH = Paths
-	        .get(new File(FileSystemService.getUserRapidMinerDir(), LICENSES_FOLDER_NAME).toURI());
+			.get(new File(FileSystemService.getUserRapidMinerDir(), LICENSES_FOLDER_NAME).toURI());
 
 	/** The product that is used to retrieve RM licenses */
 	private Product registeredProduct;
 
-	private StringCategoryConstraint connectorsConstraint;
-	private StringCategoryConstraint productivityConstraint;
-	private StringCategoryConstraint serverEditionConstraint;
+	private NumericalConstraint logicalProcessorConstraint;
+	private NumericalConstraint dataRowConstraint;
+	private NumericalConstraint memoryLimitConstraint;
+	private NumericalConstraint webServiceLimitConstraint;
 
 	private AtomicBoolean initialized = new AtomicBoolean(false);
 
@@ -99,7 +100,7 @@ public enum ProductConstraintManager {
 	 * in {@link RMConstraints}.
 	 */
 	public synchronized void initialize(LicenseLocation licenseLocation, Product product)
-	        throws IllegalAccessException, AlreadyRegisteredException, LicenseLoadingException, InvalidProductException {
+			throws IllegalAccessException, AlreadyRegisteredException, LicenseLoadingException, InvalidProductException {
 		if (initialized.get()) {
 			throw new UnsupportedOperationException("Cannot initialize the ProductConstraintManager twice");
 		}
@@ -118,7 +119,7 @@ public enum ProductConstraintManager {
 				installationLicenseFolder = FileSystemService.getRapidMinerHome().toPath().resolve(LICENSES_FOLDER_NAME);
 			} catch (IOException e) {
 				LogService.getRoot()
-				        .info("com.rapidminer.license.ConstraintManager.cannot_use_installation_folder_licenses");
+						.info("com.rapidminer.license.ConstraintManager.cannot_use_installation_folder_licenses");
 			}
 			// Files.isDirectory follows symbolic links
 			if (installationLicenseFolder != null && Files.isDirectory(installationLicenseFolder)) {
@@ -137,14 +138,14 @@ public enum ProductConstraintManager {
 		// make sure that extensions CANNOT be used to init the RM Studio product constraints
 		if (product.isExtension()) {
 			throw new InvalidProductException("Cannot init RapidMiner Studio with extension product!",
-			        product.getProductId());
+					product.getProductId());
 		}
 
 		// make sure only core product ID is used
 		if (!product.getProductId().matches(Product.RM_REGEX)) {
 			throw new InvalidProductException(
-			        "Cannot init RapidMiner Studio. Only core product IDs (matching " + Product.RM_REGEX + ") are allowed!",
-			        product.getProductId());
+					"Cannot init RapidMiner Studio. Only core product IDs (matching " + Product.RM_REGEX + ") are allowed!",
+					product.getProductId());
 		}
 
 		// check if all default Studio constraint are defined for the product that should be
@@ -158,25 +159,28 @@ public enum ProductConstraintManager {
 			// check if product contains constraint
 			if (productConstraint == null) {
 				throw new RuntimeException(I18N.getMessage(LogService.getRoot().getResourceBundle(),
-				        "com.rapidminer.license.ConstraintManager.no_constraint_defined", rmConstr.getKey()));
+						"com.rapidminer.license.ConstraintManager.no_constraint_defined", rmConstr.getKey()));
 			}
 
 			// also check if constraint is of correct type
 			if (!productConstraint.getClass().isAssignableFrom(rmConstr.getClass())) {
 				throw new RuntimeException("Constraint with constraintId " + rmConstr.getKey()
-				        + " is of wrong type. Expected class: " + rmConstr.getClass());
+						+ " is of wrong type. Expected class: " + rmConstr.getClass());
 			}
 
 			// remember constraints in class variables
 			switch (constraintId) {
-				case LicenseConstants.PRODUCTIVITY_CONSTRAINT_ID:
-					productivityConstraint = (StringCategoryConstraint) productConstraint;
+				case LicenseConstants.DATA_ROW_CONSTRAINT_ID:
+					dataRowConstraint = (NumericalConstraint) productConstraint;
 					break;
-				case LicenseConstants.CONNECTORS_CONSTRAINT_ID:
-					connectorsConstraint = (StringCategoryConstraint) productConstraint;
+				case LicenseConstants.LOGICAL_PROCESSORS_CONSTRAINT_ID:
+					logicalProcessorConstraint = (NumericalConstraint) productConstraint;
 					break;
-				case LicenseConstants.SERVER_EDITION_CONSTRAINT_ID:
-					serverEditionConstraint = (StringCategoryConstraint) productConstraint;
+				case LicenseConstants.MEMORY_LIMIT_CONSTRAINT_ID:
+					memoryLimitConstraint = (NumericalConstraint) productConstraint;
+					break;
+				case LicenseConstants.WEB_SERVICE_LIMIT_CONSTRAINT_ID:
+					webServiceLimitConstraint = (NumericalConstraint) productConstraint;
 					break;
 				default:
 					throw new RuntimeException("Unknown constraint " + rmConstr.getKey());
@@ -262,7 +266,7 @@ public enum ProductConstraintManager {
 	 */
 	public boolean isTrialLicense() {
 		return StudioLicenseConstants.TRIAL_EDITION
-		        .equals(LicenseManagerRegistry.INSTANCE.get().getActiveLicense(getProduct()).getProductEdition());
+				.equals(LicenseManagerRegistry.INSTANCE.get().getActiveLicense(getProduct()).getProductEdition());
 	}
 
 	/**
@@ -283,7 +287,7 @@ public enum ProductConstraintManager {
 	public boolean isLicenseValid(String licenseText) {
 		Pair<Product, License> validateLicense = null;
 		try {
-			validateLicense = LicenseManagerRegistry.INSTANCE.get().validateLicense(null, licenseText);
+			validateLicense = validateLicense(licenseText);
 		} catch (LicenseValidationException | UnknownProductException e) {
 			return false;
 		}
@@ -301,7 +305,7 @@ public enum ProductConstraintManager {
 	 * @return the freshly installed license.
 	 */
 	public License installNewLicense(String licenseText)
-	        throws LicenseStoringException, UnknownProductException, LicenseValidationException {
+			throws LicenseStoringException, UnknownProductException, LicenseValidationException {
 		return LicenseManagerRegistry.INSTANCE.get().storeNewLicense(licenseText);
 	}
 
@@ -336,12 +340,13 @@ public enum ProductConstraintManager {
 	 * @throws UnknownProductException
 	 *             if the licenses belongs to an unknown product
 	 * @throws LicenseValidationException
-	 *             if something goes wrong during validation this exception it thrown. <br/>
+	 *             if something goes wrong during validation this exception is thrown. <br/>
 	 *             CAUTION: the returned license can still have an invalid license status even
 	 *             though no exception was thrown.
 	 */
 	public Pair<Product, License> validateLicense(String enteredLicenseKey)
-	        throws LicenseValidationException, UnknownProductException {
+			throws LicenseValidationException, UnknownProductException {
+		// LicenseManager accepts unknown(null) products
 		return LicenseManagerRegistry.INSTANCE.get().validateLicense(null, enteredLicenseKey);
 	}
 
@@ -360,34 +365,41 @@ public enum ProductConstraintManager {
 	}
 
 	/**
-	 * Checks if community license or a higher license is installed.
+	 * Checks if free license or a higher license is installed.
 	 *
-	 * @return {@code true} if at least a community license is installed
+	 * @return {@code true} if at least a free license is installed
 	 */
-	public boolean isCommunityFeatureAllowed() {
+	public boolean isFreeFeatureAllowed() {
 		return !LicenseManagerRegistry.INSTANCE.get().getActiveLicense(ProductConstraintManager.INSTANCE.getProduct())
-		        .isStarterLicense();
+				.isStarterLicense();
 	}
 
 	/**
-	 * @return the productivity constraint object
+	 * @return the data row constraint object
 	 */
-	public StringCategoryConstraint getProductivityConstraint() {
-		return productivityConstraint;
+	public NumericalConstraint getDataRowConstraint() {
+		return dataRowConstraint;
 	}
 
 	/**
-	 * @return the server edition constraint object
+	 * @return the logical processor constraint object
 	 */
-	public StringCategoryConstraint getServerEditionConstraint() {
-		return serverEditionConstraint;
+	public NumericalConstraint getLogicalProcessorConstraint() {
+		return logicalProcessorConstraint;
 	}
 
 	/**
-	 * @return the connector constraint object
+	 * @return the memory limit constraint object
 	 */
-	public StringCategoryConstraint getConnectorsConstraint() {
-		return connectorsConstraint;
+	public NumericalConstraint getMemoryLimitConstraint() {
+		return memoryLimitConstraint;
+	}
+
+	/**
+	 * @return the web service limit constraint object
+	 */
+	public NumericalConstraint getWebServiceLimitConstraint() {
+		return webServiceLimitConstraint;
 	}
 
 }

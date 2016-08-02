@@ -560,7 +560,7 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 
 			plot.setLabelFont(LABEL_FONT);
 			plot.setNoDataMessage("No data available");
-			plot.setCircular(false);
+			plot.setCircular(true);
 			plot.setLabelGap(0.02);
 			plot.setOutlinePaint(Color.WHITE);
 

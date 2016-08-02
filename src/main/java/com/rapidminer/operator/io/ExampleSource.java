@@ -35,10 +35,6 @@ import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.FileDataRowReader;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.gui.wizards.ExampleSourceConfigurationWizardCreator;
-import com.rapidminer.license.LicenseConstants;
-import com.rapidminer.license.annotation.LicenseConstraint;
-import com.rapidminer.license.product.ConnectorTypes;
-import com.rapidminer.license.product.Product;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
@@ -108,7 +104,6 @@ import com.rapidminer.tools.io.Encoding;
  *
  * @author Simon Fischer, Ingo Mierswa
  */
-@LicenseConstraint(productId = Product.RM_REGEX, constraintId = LicenseConstants.CONNECTORS_CONSTRAINT_ID, value = ConnectorTypes.ADVANCED_CONNECTORS)
 public class ExampleSource extends AbstractExampleSource {
 
 	/**
@@ -221,20 +216,22 @@ public class ExampleSource extends AbstractExampleSource {
 			if (getParameterAsBoolean(PARAMETER_USE_COMMENT_CHARACTERS)) {
 				commentCharacters = getParameterAsString(PARAMETER_COMMENT_CHARS).toCharArray();
 			}
-			reader = new FileDataRowReader(new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT),
-					getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0)),
+			reader = new FileDataRowReader(
+					new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT),
+							getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0)),
 					attributeDataSources.getDataSources(), getParameterAsDouble(PARAMETER_SAMPLE_RATIO),
 					getParameterAsInt(PARAMETER_SAMPLE_SIZE), getParameterAsString(PARAMETER_COLUMN_SEPARATORS),
-					commentCharacters, getParameterAsBoolean(PARAMETER_USE_QUOTES), getParameterAsString(
-							PARAMETER_QUOTE_CHARACTER).charAt(0), getParameterAsString(PARAMETER_QUOTING_ESCAPE_CHARACTER)
-							.charAt(0), getParameterAsBoolean(PARAMETER_TRIM_LINES),
-							getParameterAsBoolean(PARAMETER_SKIP_ERROR_LINES),
-							// only null if old version of description format: Then emulate old behavior
-							// using root operator
-							attributeDataSources.getEncoding() == null ? Encoding.getEncoding(this) : attributeDataSources
-									.getEncoding(), RandomGenerator.getRandomGenerator(
-											getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-											getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED)));
+					commentCharacters, getParameterAsBoolean(PARAMETER_USE_QUOTES),
+					getParameterAsString(PARAMETER_QUOTE_CHARACTER).charAt(0),
+					getParameterAsString(PARAMETER_QUOTING_ESCAPE_CHARACTER).charAt(0),
+					getParameterAsBoolean(PARAMETER_TRIM_LINES), getParameterAsBoolean(PARAMETER_SKIP_ERROR_LINES),
+					// only null if old version of description format: Then emulate old behavior
+					// using root operator
+					attributeDataSources.getEncoding() == null ? Encoding.getEncoding(this)
+							: attributeDataSources.getEncoding(),
+					RandomGenerator.getRandomGenerator(
+							getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
+							getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED)));
 		} catch (IOException e) {
 			throw new UserError(this, e, 302, new Object[] { attributeFile, e.getMessage() });
 		} catch (com.rapidminer.tools.XMLException e) {
@@ -264,8 +261,7 @@ public class ExampleSource extends AbstractExampleSource {
 		ParameterType type = new ParameterTypeConfiguration(ExampleSourceConfigurationWizardCreator.class, this);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeAttributeFile(
-				PARAMETER_ATTRIBUTES,
+		types.add(new ParameterTypeAttributeFile(PARAMETER_ATTRIBUTES,
 				"Filename for the xml attribute description file. This file also contains the names of the files to read the data from.",
 				false));
 		type = new ParameterTypeDouble(PARAMETER_SAMPLE_RATIO,
@@ -273,13 +269,14 @@ public class ExampleSource extends AbstractExampleSource {
 				1.0d);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeInt(
-				PARAMETER_SAMPLE_SIZE,
+		types.add(new ParameterTypeInt(PARAMETER_SAMPLE_SIZE,
 				"The exact number of samples which should be read (-1 = use sample ratio; if not -1, sample_ratio will not have any effect)",
 				-1, Integer.MAX_VALUE, -1));
-		types.add(new ParameterTypeBoolean(PARAMETER_PERMUTATE, "Indicates if the loaded data should be permutated.", false));
+		types.add(
+				new ParameterTypeBoolean(PARAMETER_PERMUTATE, "Indicates if the loaded data should be permutated.", false));
 
-		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
+		types.add(
+				new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
 
 		types.add(new ParameterTypeString(PARAMETER_COLUMN_SEPARATORS,
 				"Column separators for data files (regular expression)", ",\\s*|;\\s*|\\s+"));
@@ -302,13 +299,11 @@ public class ExampleSource extends AbstractExampleSource {
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_QUOTES, false, true));
 		types.add(type);
 
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_TRIM_LINES,
+		types.add(new ParameterTypeBoolean(PARAMETER_TRIM_LINES,
 				"Indicates if lines should be trimmed (empty spaces are removed at the beginning and the end) before the column split is performed.",
 				false));
 
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_SKIP_ERROR_LINES,
+		types.add(new ParameterTypeBoolean(PARAMETER_SKIP_ERROR_LINES,
 				"Indicates if lines which can not be read should be skipped instead of letting this operator fail its execution.",
 				false));
 

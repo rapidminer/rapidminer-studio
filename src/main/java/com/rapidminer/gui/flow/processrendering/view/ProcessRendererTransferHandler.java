@@ -92,7 +92,11 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 
 		// if we don't have a loc, we can use the mouse cursor
 		if (loc == null) {
-			loc = new Point(model.getCurrentMousePosition());
+			if (model.getCurrentMousePosition() != null) {
+				loc = new Point(model.getCurrentMousePosition());
+			} else {
+				loc = new Point(0, 0);
+			}
 		}
 
 		// determine process to drop to
@@ -202,7 +206,7 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 						} else {
 							Rectangle2D newAnchor = new Rectangle2D.Double(anchorRect.getMinX(),
 									anchorRect.getMinY()
-											+ opIndex * (ProcessDrawer.GRID_Y_OFFSET + ProcessDrawer.OPERATOR_MIN_HEIGHT),
+									+ opIndex * (ProcessDrawer.GRID_Y_OFFSET + ProcessDrawer.OPERATOR_MIN_HEIGHT),
 									anchorRect.getWidth(), anchorRect.getHeight());
 							model.setOperatorRect(op, newAnchor);
 							opIndex++;
@@ -252,7 +256,7 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 			}
 		} catch (RuntimeException e) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-					"com.rapidminer.gui.flow.ProcessRenderer.error_during_drop", e), e);
+							"com.rapidminer.gui.flow.ProcessRenderer.error_during_drop", e), e);
 			throw e;
 		}
 	}

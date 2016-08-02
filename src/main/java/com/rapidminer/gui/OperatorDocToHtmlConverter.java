@@ -20,16 +20,10 @@ package com.rapidminer.gui;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -37,18 +31,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.xml.sax.SAXException;
-
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
@@ -65,7 +53,6 @@ import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.documentation.ExampleProcess;
 
 
 /**
@@ -81,15 +68,21 @@ public class OperatorDocToHtmlConverter {
 	private static final byte[] XSLT_CONTENT;
 	private static final int MAX_CATEROGIES_DISPLAYED_IN_HELP = 10;
 
-	private static final String INTEGER_LABEL = I18N.getGUILabel("attribute_type.integer");
-	private static final String LONG_LABEL = I18N.getGUILabel("attribute_type.long");
-	private static final String REAL_LABEL = I18N.getGUILabel("attribute_type.real");
-	private static final String SELECTION_LABEL = I18N.getGUILabel("attribute_type.selection");
+	static final String INTEGER_LABEL = I18N.getGUILabel("attribute_type.integer");
+	static final String LONG_LABEL = I18N.getGUILabel("attribute_type.long");
+	static final String REAL_LABEL = I18N.getGUILabel("attribute_type.real");
+	static final String SELECTION_LABEL = I18N.getGUILabel("attribute_type.selection");
 	private static final String STRING_LABEL = I18N.getGUILabel("attribute_type.string");
 	private static final String LIST_LABEL = I18N.getGUILabel("attribute_type.list");
 	private static final String ENUMERATION_LABEL = I18N.getGUILabel("attribute_type.enumeration");
 	private static final String BOOLEAN_LABEL = I18N.getGUILabel("attribute_type.boolean");
 	private static final String OTHER_LABEL = I18N.getGUILabel("attribute_type.other");
+
+	/**
+	 * This icon will be shown as a replacement for operators without an icon. These are usually
+	 * deprecated operators.
+	 */
+	private static final String REPLACEMENT_FOR_OPERATORS_WITHOUT_ICON = "symbol_questionmark.png";
 
 	static {
 		byte[] content = new byte[0];
@@ -99,36 +92,6 @@ public class OperatorDocToHtmlConverter {
 			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.gui.OperatorDocToHtmlConverter.error_loading_xslt", e);
 		}
 		XSLT_CONTENT = content;
-	}
-
-	/**
-	 * Tries to convert the given XML file into an HTML file using the given XSLT stylesheet. If
-	 * this fails (probably because the given XML file doesn't exist),
-	 * {@link #createOfflineFallbackDocumentation(Operator)} will be used to generate a String from
-	 * the old local operator description resources.
-	 *
-	 * @param xmlStream
-	 * @param operator
-	 * @return
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 */
-	public static String convert(InputStream xmlStream, Operator operator) throws MalformedURLException, IOException {
-		if (operator == null) {
-			throw new IllegalArgumentException("operator must not be null!");
-		}
-		if (xmlStream == null) {
-			LogService.getRoot().finer("Failed to load documentation, using online fallback. Reason: xmlStream is null.");
-			return createFallbackDocumentation(operator);
-		}
-
-		Source xmlSource = new StreamSource(xmlStream);
-		try {
-			return applyXSLTTransformation(xmlSource);
-		} catch (TransformerException e) {
-			LogService.getRoot().log(Level.WARNING, "Failed to load documentation, using online fallback.", e);
-			return createFallbackDocumentation(operator);
-		}
 	}
 
 	/**
@@ -151,182 +114,6 @@ public class OperatorDocToHtmlConverter {
 	}
 
 	/**
-	 * This fallback method delivers an operator documentation. First it tries to load the
-	 * description from the Wiki and if that fails it will return the old offline operator
-	 * description.
-	 *
-	 * @param operator
-	 * @return
-	 */
-	private static String createFallbackDocumentation(Operator operator) {
-		try {
-			return createOnlineWikiFallbackDocumentation(operator);
-		} catch (Exception e) {
-			LogService.getRoot().finest(
-					"Failed to load online documentation, using offline fallback. Reason: " + e.getLocalizedMessage());
-			return createOfflineFallbackDocumentation(operator);
-		}
-	}
-
-	/**
-	 * This is the offline fallback method to create the HTML page from the old operator
-	 * description.
-	 *
-	 * @param operator
-	 * @return
-	 */
-	private static String createOfflineFallbackDocumentation(Operator operator) {
-
-		OperatorDescription descr = operator.getOperatorDescription();
-		StringBuilder buf = new StringBuilder("<html><head></head><body>");
-		String iconName = "icons/24/" + operator.getOperatorDescription().getIconName();
-		URL resource = Tools.getResource(iconName);
-		buf.append("<table> <tr> <td>	");
-		if (resource != null) {
-			buf.append("<img src=\"" + resource + "\"/> ");
-		} else {
-			buf.append("<img src\"" + SwingTools.getIconPath("48/information.png") + "\" class=\"HeadIcon\"/>");
-		}
-		buf.append("</td><td>");
-		buf.append("<h2>" + operator.getOperatorDescription().getName() + "</h2></td></tr></table><hr />");
-		buf.append("<h3>Synopsis</h3>");
-		buf.append("<p>" + descr.getShortDescription() + "</p>");
-		buf.append("<h3>Description</h3>");
-		buf.append("<p>" + descr.getLongDescriptionHTML() + "</p>");
-		buf.append("<h3>Input</h3>");
-		buf.append("<table cellspacing=7>");
-		for (InputPort port : operator.getInputPorts().getAllPorts()) {
-			buf.append("<tr>");
-			buf.append("<td>");
-			buf.append("<table>");
-			buf.append("<tr>");
-			buf.append("<td class=\"lilIcon\">");
-			// print port.getMetaData().toString()
-			Class<? extends IOObject> typeClass = null;
-			List<Precondition> preconditions = new LinkedList<Precondition>(port.getAllPreconditions());
-			for (Precondition precondition : preconditions) {
-				if (precondition.getDescription().contains("expects")) {
-					MetaData metaData = precondition.getExpectedMetaData();
-					typeClass = metaData.getObjectClass();
-				}
-			}
-			String imgSrc = getIconNameForType(typeClass);
-			buf.append("<img src=\"" + imgSrc + "\" class=\"typeIcon\" />");
-			buf.append("</td><td>");
-			buf.append("<b>" + port.getName() + "</b>");
-			if (typeClass != null) {
-				buf.append("<i> (" + port.getDescription() + ")</i>");
-			}
-			buf.append("</td");
-			buf.append("</tr>");
-			buf.append("</table>");
-			buf.append("</td");
-			buf.append("</tr>");
-
-		}
-		buf.append("</table>");
-
-		buf.append("<h3>Output</h3>");
-		buf.append("<table cellspacing=7>");
-		for (OutputPort port : operator.getOutputPorts().getAllPorts()) {
-			buf.append("<tr>");
-			buf.append("<td>");
-			buf.append("<table>");
-			buf.append("<tr>");
-			buf.append("<td class=\"lilIcon\">");
-
-			String imgSrc = SwingTools.getIconPath("24/plug.png");
-			buf.append("<img src=\"" + imgSrc + "\" class=\"typeIcon\" />");
-			buf.append("</td><td>");
-			buf.append("<b>" + port.getName() + "</b>");
-			if (!port.getDescription().equals("")) {
-				buf.append("<i> (" + port.getDescription() + ") </i>");
-			}
-			buf.append("</td>");
-			buf.append("</tr>");
-			buf.append("</table>");
-			buf.append("</td>");
-			buf.append("</tr>");
-
-		}
-		buf.append("</table>");
-
-		Parameters parameters = operator.getParameters();
-
-		Set<String> keys = parameters.getKeys();
-
-		if (keys.size() > 0) {
-			buf.append("<h3>Parameters</h3>");
-			buf.append("<table cellspacing=7>");
-			for (String key : keys) {
-				ParameterType type = operator.getParameterType(key);
-				buf.append("<tr>");
-				buf.append("<td>");
-				buf.append("<b>");
-				buf.append("<dt>");
-				buf.append(type.getKey().replace('_', ' '));
-				buf.append("</dt>");
-				buf.append("</b>");
-				if (type.isExpert()) {
-					buf.append(" (Expert) ");
-				}
-				buf.append("</td>");
-				buf.append("</tr>");
-				buf.append("<tr>");
-				buf.append("<td>");
-				buf.append(type.getDescription());
-				buf.append("<b> Range: </b>");
-				String range = type.getRange();
-				if (range.split("default:")[0] != null) {
-					range = range.split("default:")[0];
-				}
-				buf.append(range);
-				if (type.getDefaultValue() != null) {
-					buf.append("<b> Default: </b>");
-					buf.append(type.getDefaultValueAsString());
-				}
-				buf.append("</td>");
-				buf.append("</tr>");
-
-			}
-			buf.append("</table>");
-		}
-		if (operator.getOperatorDescription().getOperatorDocumentation().getExamples().size() > 0) {
-			if (operator.getOperatorDescription().getOperatorDocumentation().getExamples().size() == 1) {
-				buf.append("<h3>Turorial Process</h3>");
-				buf.append("<a href=\"l1\">ShowExampleProcess</a>");
-				buf.append(operator.getOperatorDescription().getOperatorDocumentation().getExamples().get(0).getComment());
-			}
-			if (operator.getOperatorDescription().getOperatorDocumentation().getExamples().size() > 1) {
-				buf.append("<h3>Turorial Processes</h3>");
-				int i = 0;
-				for (ExampleProcess example : operator.getOperatorDescription().getOperatorDocumentation().getExamples()) {
-
-					buf.append("<a href=\"l" + i + "\">ShowExampleProcess " + i + "</a>");
-					buf.append(example.getComment());
-				}
-			}
-		}
-		buf.append("</body></html>");
-		return buf.toString();
-	}
-
-	/**
-	 * This is the online fallback method to create the HTML page from the wiki description.
-	 *
-	 * @param operator
-	 * @return
-	 * @throws SAXException
-	 * @throws IOException
-	 * @throws ParserConfigurationException
-	 * @throws TransformerException
-	 */
-	private static String createOnlineWikiFallbackDocumentation(Operator operator)
-			throws SAXException, IOException, ParserConfigurationException, TransformerException {
-		return OperatorDocLoader.loadOperatorDocumentation(true, true, operator.getOperatorDescription());
-	}
-
-	/**
 	 * Replaces underscores in the given {@link String} with a blank.
 	 *
 	 * @param string
@@ -345,19 +132,37 @@ public class OperatorDocToHtmlConverter {
 	 */
 	@SuppressWarnings("unchecked")
 	public static String getTypeNameForType(String type) {
-		String typeName = null;
 		if (type == null || type.isEmpty()) {
-			typeName = "";
+			return "";
 		} else {
-			Class<? extends IOObject> typeClass;
 			try {
+				Class<? extends IOObject> typeClass;
 				typeClass = (Class<? extends IOObject>) Class.forName(type);
-
-				typeName = " (" + RendererService.getName(typeClass) + ")";
+				return getTypeNameForType(typeClass);
 			} catch (ClassNotFoundException e) {
-				LogService.getRoot().finer("Failed to lookup class '" + type + "'. Reason: " + e.getLocalizedMessage());
+				LogService.getRoot().log(Level.FINER,
+						"com.rapidminer.gui.OperatorDocToHtmlConverter.getTypeNameForTypeFromString",
+						new String[] { type, e.getLocalizedMessage() });
+				return "";
+			}
+		}
+	}
+
+	static String getTypeNameForType(Class<? extends IOObject> typeClass) {
+		String typeName;
+		if (typeClass != null) {
+			typeName = RendererService.getName(typeClass);
+			if (typeName != null && !typeName.isEmpty()) {
+				typeName = " (" + typeName + ")";
+			} else {
+				LogService.getRoot().log(Level.FINER,
+						"com.rapidminer.gui.OperatorDocToHtmlConverter.getTypeNameForTypeFromClass_no_name", typeClass);
 				typeName = "";
 			}
+		} else {
+			LogService.getRoot().log(Level.FINER,
+					"com.rapidminer.gui.OperatorDocToHtmlConverter.getTypeNameForTypeFromClass_null", typeClass);
+			typeName = "";
 		}
 		return typeName;
 	}
@@ -384,7 +189,13 @@ public class OperatorDocToHtmlConverter {
 			LogService.getRoot().finer("Tried to retrieve icon name for null operator with key " + operatorKey);
 			return null;
 		}
-		return SwingTools.getIconPath("24/" + operatorDescription.getIconName());
+		String iconName = operatorDescription.getIconName();
+		if (iconName != null) {
+			return SwingTools.getIconPath("24/" + iconName);
+		} else {
+			// Operator has no icon
+			return SwingTools.getIconPath("24/" + REPLACEMENT_FOR_OPERATORS_WITHOUT_ICON);
+		}
 	}
 
 	public static String getIconNameForOperatorSmall(String operatorKey) {
@@ -422,37 +233,11 @@ public class OperatorDocToHtmlConverter {
 		}
 		operatorDescription = OperatorService.getOperatorDescription(operatorKey);
 		if (operatorDescription == null) {
-			LogService.getRoot()
-			.log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator", operatorKey);
+			LogService.getRoot().log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator",
+					operatorKey);
 			return null;
 		}
 		return operatorDescription.getProviderName();
-	}
-
-	/**
-	 *
-	 * Searches for a class with the given name and returns the path of the resource.
-	 *
-	 * @param clazz
-	 *            the class as Class.
-	 * @return the path of the resource of the corresponding icon.
-	 */
-	private static String getIconNameForType(Class<? extends IOObject> clazz) {
-		String iconName;
-		String path = null;
-		Class<? extends IOObject> typeClass;
-		typeClass = clazz;
-		iconName = RendererService.getIconName(typeClass);
-		if (iconName == null) {
-			iconName = "plug.png";
-		}
-		try {
-			path = SwingTools.getIconPath("24/" + iconName);
-		} catch (Exception e) {
-			LogService.getRoot().finer("Error retrieving icon for type '" + clazz + "'! Reason: " + e.getLocalizedMessage());
-		}
-		return path;
-
 	}
 
 	/**
@@ -647,8 +432,8 @@ public class OperatorDocToHtmlConverter {
 			}
 			return "";
 		} catch (OperatorCreationException e) {
-			LogService.getRoot()
-			.log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator", operatorKey);
+			LogService.getRoot().log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator",
+					operatorKey);
 			return "";
 		}
 	}
@@ -695,8 +480,8 @@ public class OperatorDocToHtmlConverter {
 			}
 			return "";
 		} catch (OperatorCreationException e) {
-			LogService.getRoot()
-			.log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator", operatorKey);
+			LogService.getRoot().log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator",
+					operatorKey);
 			return "";
 		}
 	}
@@ -740,8 +525,8 @@ public class OperatorDocToHtmlConverter {
 			}
 			return false;
 		} catch (OperatorCreationException e) {
-			LogService.getRoot()
-			.log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator", operatorKey);
+			LogService.getRoot().log(Level.FINER, "com.rapidminer.gui.OperatorDocToHtmlConverter.null_operator",
+					operatorKey);
 			return false;
 		}
 	}
@@ -775,7 +560,37 @@ public class OperatorDocToHtmlConverter {
 
 		String path = SwingTools.getIconPath("24/" + iconName);
 		return path;
-
+	}
+	
+	public static String getTagHtmlForKey(String operatorKey) {
+		// operator keys in the documentation begin with "operator.", so remove that
+		int index = operatorKey.indexOf(".");
+		if (index != -1) {
+			operatorKey = operatorKey.substring(index + 1);
+		}
+		OperatorDescription operatorDescription = OperatorService.getOperatorDescription(operatorKey);
+		return getTagHtmlForDescription(operatorDescription);
 	}
 
+	static String getTagHtmlForDescription(OperatorDescription operatorDescription) {
+		if (operatorDescription != null) {
+			List<String> tags = operatorDescription.getTags();
+			if(tags != null && !tags.isEmpty()){
+				StringBuilder builder = new StringBuilder();
+				builder.append("<p class=\"tags\">Tags:");
+				for(int i=0; i<tags.size(); i++){
+					String tag = tags.get(i);
+					builder.append(" <a class=\"tags\" href=\"tag:" + tag + "\">" + tag + "</a>");
+					if(i != tags.size() - 1){
+						builder.append(",");
+					}
+				}
+				builder.append("</p>");
+				return builder.toString();
+			}
+		}
+		
+		// no tags found
+		return "";
+	}
 }

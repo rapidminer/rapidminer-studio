@@ -93,6 +93,12 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 	/** value types to choose from in {@link #PARAMETER_MODE} */
 	private static final String[] VALUE_TYPES = new String[] { NUMERIC, NOMINAL, EXPRESSION };
 
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
+
 	public DeclareMissingValueOperator(OperatorDescription description) {
 		super(description);
 	}
@@ -280,7 +286,12 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
 	}
 
 	@Override
@@ -293,8 +304,9 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		OperatorVersion[] incompatibleVersions = super.getIncompatibleVersionChanges();
 		OperatorVersion[] extendedIncompatibleVersions = Arrays
-				.copyOf(incompatibleVersions, incompatibleVersions.length + 1);
+				.copyOf(incompatibleVersions, incompatibleVersions.length + 2);
 		extendedIncompatibleVersions[incompatibleVersions.length] = VERSION_IGNORE_ATTRIBUTES_OF_WRONG_TYPE;
+		extendedIncompatibleVersions[incompatibleVersions.length + 1] = VERSION_MAY_WRITE_INTO_DATA;
 
 		return ExpressionParserUtils.addIncompatibleExpressionParserChange(extendedIncompatibleVersions);
 	}

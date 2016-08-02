@@ -18,13 +18,12 @@
  */
 package com.rapidminer.operator;
 
-import groovy.lang.GroovyShell;
-import groovy.lang.Script;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.codehaus.groovy.GroovyBugError;
 
 import com.rapidminer.operator.ports.InputPortExtender;
 import com.rapidminer.operator.ports.OutputPortExtender;
@@ -33,6 +32,10 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeText;
 import com.rapidminer.parameter.TextType;
 import com.rapidminer.tools.plugin.Plugin;
+
+import groovy.lang.GroovyCodeSource;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 
 
 /**
@@ -86,6 +89,8 @@ public class ScriptingOperator extends Operator {
 
 	public static final String PARAMETER_SCRIPT = "script";
 
+	public static final String GROOVY_DOMAIN = "/groovyscript";
+
 	public static final String PARAMETER_STANDARD_IMPORTS = "standard_imports";
 
 	public ScriptingOperator(OperatorDescription description) {
@@ -116,9 +121,18 @@ public class ScriptingOperator extends Operator {
 			List<IOObject> input = inExtender.getData(IOObject.class, false);
 			shell.setVariable("input", input);
 			shell.setVariable("operator", this);
+			GroovyCodeSource codeSource = new GroovyCodeSource(script, "customScript", GROOVY_DOMAIN);
 
-			Script parsedScript = shell.parse(script);
+			Script parsedScript = shell.parse(codeSource);
 			result = parsedScript.run();
+		} catch (SecurityException e) {
+			throw new UserError(this, e, "scriptingOperator_security", e.getMessage());
+		} catch (GroovyBugError e) {
+			if (e.getCause() instanceof SecurityException) {
+				throw new UserError(this, e.getCause(), "scriptingOperator_security", e.getCause().getMessage());
+			} else {
+				throw new UserError(this, e, 945, "Groovy", e);
+			}
 		} catch (Throwable e) {
 			throw new UserError(this, e, 945, "Groovy", e);
 		}

@@ -18,13 +18,13 @@
  */
 package com.rapidminer.operator.generator;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.HashSet;
-import java.util.Set;
 
 
 /**
@@ -96,7 +96,7 @@ public class SpiralClusteringFunction extends ClusterFunction {
 	@Override
 	public double[] createArguments(int number, RandomGenerator random) throws FunctionException {
 		if (number != 2) {
-			throw new FunctionException("Ring clustering function", "must have 2 attributes!");
+			throw new FunctionException("Spiral clustering function", "must have 2 attributes!");
 		}
 		double[] args = new double[number];
 

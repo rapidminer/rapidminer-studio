@@ -39,10 +39,12 @@ import com.rapidminer.tools.math.ContingencyTableTools;
 /**
  * This operator calculates the relevance of a feature by computing for each attribute of the input
  * example set the value of the chi-squared statistic with respect to the class attribute.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ChiSquaredWeighting extends AbstractWeighting {
+
+	private static final int PROGRESS_UPDATE_STEPS = 1_000_000;
 
 	public ChiSquaredWeighting(OperatorDescription description) {
 		super(description, true);
@@ -74,9 +76,8 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 		}
 
 		if (numberOfBins < maximumNumberOfNominalValues) {
-			getLogger().warning(
-					"Number of bins too small, was " + numberOfBins
-							+ ". Set to maximum number of occurring nominal values (" + maximumNumberOfNominalValues + ")");
+			getLogger().warning("Number of bins too small, was " + numberOfBins
+					+ ". Set to maximum number of occurring nominal values (" + maximumNumberOfNominalValues + ")");
 			numberOfBins = maximumNumberOfNominalValues;
 		}
 
@@ -85,7 +86,6 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 		Attribute weightAttribute = exampleSet.getAttributes().getWeight();
 
 		// count
-		int exampleCounter = 0;
 		double[] temporaryCounters = new double[label.getMapping().size()];
 		for (Example example : exampleSet) {
 			double weight = 1.0d;
@@ -94,7 +94,6 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 			}
 			int labelIndex = (int) example.getLabel();
 			temporaryCounters[labelIndex] += weight;
-			exampleCounter++;
 		}
 
 		for (int k = 0; k < counters.length; k++) {
@@ -104,6 +103,9 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 		}
 
 		// attribute counts
+		getProgress().setTotal(100);
+		long progressCounter = 0;
+		double totalProgress = exampleSet.size() * exampleSet.getAttributes().size();
 		for (Example example : exampleSet) {
 			int labelIndex = (int) example.getLabel();
 			double weight = 1.0d;
@@ -116,6 +118,9 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 				counters[attributeCounter][attributeIndex][labelIndex] += weight;
 				counters[attributeCounter][0][labelIndex] -= weight;
 				attributeCounter++;
+				if (++progressCounter % PROGRESS_UPDATE_STEPS == 0) {
+					getProgress().setCompleted((int) (100 * (progressCounter / totalProgress)));
+				}
 			}
 		}
 
@@ -123,8 +128,8 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 		AttributeWeights weights = new AttributeWeights(exampleSet);
 		int attributeCounter = 0;
 		for (Attribute attribute : exampleSet.getAttributes()) {
-			double weight = ContingencyTableTools.getChiSquaredStatistics(
-					ContingencyTableTools.deleteEmpty(counters[attributeCounter]), false);
+			double weight = ContingencyTableTools
+					.getChiSquaredStatistics(ContingencyTableTools.deleteEmpty(counters[attributeCounter]), false);
 			weights.setWeight(attribute.getName(), weight);
 			attributeCounter++;
 		}
@@ -135,8 +140,7 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeInt(
-				BinDiscretization.PARAMETER_NUMBER_OF_BINS,
+		types.add(new ParameterTypeInt(BinDiscretization.PARAMETER_NUMBER_OF_BINS,
 				"The number of bins used for discretization of numerical attributes before the chi squared test can be performed.",
 				2, Integer.MAX_VALUE, 10));
 		return types;

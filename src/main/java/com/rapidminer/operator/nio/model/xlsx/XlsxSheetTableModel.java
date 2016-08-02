@@ -83,7 +83,9 @@ public class XlsxSheetTableModel extends AbstractTableModel {
 				previewSize = Integer.MAX_VALUE;
 		}
 
-		progressListener.setCompleted(20);
+		if (progressListener != null) {
+			progressListener.setCompleted(20);
+		}
 
 		/*
 		 * Keep track of the row count ourselves so we can omit empty rows at the end of the Excel
@@ -96,7 +98,9 @@ public class XlsxSheetTableModel extends AbstractTableModel {
 			this.columnCount = xlsxResultSet.getNumberOfColumns();
 			this.sheetRowCount = initialCapacity;
 
-			progressListener.setCompleted(40);
+			if (progressListener != null) {
+				progressListener.setCompleted(40);
+			}
 
 			if (columnCount > 0) {
 

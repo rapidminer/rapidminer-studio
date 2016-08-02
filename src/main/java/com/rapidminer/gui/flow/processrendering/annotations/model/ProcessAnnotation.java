@@ -24,7 +24,7 @@ import com.rapidminer.gui.flow.processrendering.annotations.AnnotationDrawUtils;
 import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationColor;
 import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationStyle;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
-import com.rapidminer.io.process.GUIProcessXMLFilter;
+import com.rapidminer.io.process.ProcessLayoutXMLFilter;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 
@@ -122,18 +122,18 @@ public class ProcessAnnotation extends WorkflowAnnotation {
 	@Override
 	public ProcessAnnotation createProcessAnnotation(ExecutionUnit process) {
 		Rectangle2D frame = getLocation();
-		return new ProcessAnnotation(getComment(), getStyle().clone(), process, false, wasColored(), new Rectangle2D.Double(
-				frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
+		return new ProcessAnnotation(getComment(), getStyle().clone(), process, false, wasColored(),
+				new Rectangle2D.Double(frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
 	}
 
 	@Override
 	public OperatorAnnotation createOperatorAnnotation(Operator attachedTo) {
 		String comment = getComment();
-		int x = (int) GUIProcessXMLFilter.lookupOperatorRectangle(attachedTo).getCenterX()
+		int x = (int) ProcessLayoutXMLFilter.lookupOperatorRectangle(attachedTo).getCenterX()
 				- OperatorAnnotation.DEFAULT_WIDTH / 2;
-		int y = (int) GUIProcessXMLFilter.lookupOperatorRectangle(attachedTo).getMaxY() + OperatorAnnotation.Y_OFFSET;
-		int height = AnnotationDrawUtils.getContentHeight(
-				AnnotationDrawUtils.createStyledCommentString(comment, getStyle()), OperatorAnnotation.DEFAULT_WIDTH);
+		int y = (int) ProcessLayoutXMLFilter.lookupOperatorRectangle(attachedTo).getMaxY() + OperatorAnnotation.Y_OFFSET;
+		int height = AnnotationDrawUtils.getContentHeight(AnnotationDrawUtils.createStyledCommentString(comment, getStyle()),
+				OperatorAnnotation.DEFAULT_WIDTH);
 		boolean overflowing = false;
 		if (height > OperatorAnnotation.MAX_HEIGHT) {
 			height = OperatorAnnotation.MAX_HEIGHT;

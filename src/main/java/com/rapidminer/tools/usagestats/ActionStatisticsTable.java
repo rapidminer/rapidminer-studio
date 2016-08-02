@@ -18,8 +18,6 @@
  */
 package com.rapidminer.tools.usagestats;
 
-import com.rapidminer.tools.usagestats.ActionStatisticsCollector.Key;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,12 +27,14 @@ import java.util.Map;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector.Key;
+
 
 /**
  * Presents counts from an {@link ActionStatisticsCollector} as a {@link TableModel}.
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 class ActionStatisticsTable implements TableModel {
 
@@ -57,7 +57,7 @@ class ActionStatisticsTable implements TableModel {
 				if (comp != 0) {
 					return comp;
 				}
-				if (o1.getArg() == null & o2.getArg() == null) {
+				if (o1.getArg() == null && o2.getArg() == null) {
 					return 0;
 				} else if (o1.getArg() == null || o2.getArg() == null) {
 					return 0;

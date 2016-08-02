@@ -22,6 +22,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
@@ -29,6 +31,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.preprocessing.filter.NominalNumbers2Numerical;
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
@@ -58,6 +61,12 @@ public class GuessValueTypes extends AbstractDataProcessing {
 
 	private AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getExampleSetInputPort());
 
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
+
 	public GuessValueTypes(OperatorDescription description) {
 		super(description);
 	}
@@ -81,12 +90,22 @@ public class GuessValueTypes extends AbstractDataProcessing {
 			valueTypes[index++] = attribute.getValueType();
 		}
 
+		// init progress
+		getProgress().setTotal(100);
+		double totalProgress = exampleSet.size() * attributeSet.size();
+		long progressCounter = 0;
+
 		// guessing
 		int[] guessedValueTypes = new int[valueTypes.length];
 		int checkedCounter = 0;
 		for (Example example : exampleSet) {
 			index = 0;
 			for (Attribute attribute : attributeSet) {
+				// trigger progress
+				if (progressCounter++ % 500_000 == 0) {
+					getProgress().setCompleted((int) (50 * ((progressCounter - 1) / totalProgress)));
+				}
+
 				if (!attribute.isNominal() && !attribute.isNumerical()) {
 					continue;
 				}
@@ -122,6 +141,9 @@ public class GuessValueTypes extends AbstractDataProcessing {
 				break;
 			}
 		}
+
+		progressCounter = 0;
+		getProgress().setCompleted(50);
 
 		// the example set contains at least one example and the guessing was performed
 		if (exampleSet.size() > 0) {
@@ -169,6 +191,11 @@ public class GuessValueTypes extends AbstractDataProcessing {
 							e.setValue(newAttribute, Double.NaN);
 						}
 					}
+
+					// trigger progress
+					if (++progressCounter % 500_000 == 0) {
+						getProgress().setCompleted((int) (50 * (progressCounter / totalProgress) + 50));
+					}
 				}
 
 				// delete attribute and rename the new attribute (due to deletion and data scans: no
@@ -187,6 +214,9 @@ public class GuessValueTypes extends AbstractDataProcessing {
 					exampleSet.getAttributes().addRegular(role.getAttribute());
 				}
 			}
+
+			// trigger progress
+			getProgress().complete();
 		}
 
 		return exampleSet;
@@ -206,12 +236,23 @@ public class GuessValueTypes extends AbstractDataProcessing {
 	@Override
 	public boolean writesIntoExistingData() {
 		// TODO: Can be changed if attribute would not be removed from table.
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
 	}
 
 	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), GuessValueTypes.class,
 				attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

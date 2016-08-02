@@ -18,9 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -31,10 +38,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 
 /**
@@ -50,7 +53,7 @@ import java.util.List;
  * If an attribute's name appears in this list as a key, the value is used as the function name. If
  * the attribute's name is not in the list, the function specified by the <code>default</code>
  * parameter is used.
- * 
+ *
  * @author Simon Fischer, Ingo Mierswa
  */
 public class InfiniteValueReplenishment extends ValueReplenishment {
@@ -75,6 +78,12 @@ public class InfiniteValueReplenishment extends ValueReplenishment {
 
 	private static final String[] REP_NAMES = { "none", "zero", "max_byte", "max_int", "max_double", "missing", "value" };
 	private static final String[] WHAT_NAMES = { "positive_infinity", "negative_infinity" };
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public InfiniteValueReplenishment(OperatorDescription description) {
 		super(description);
@@ -121,7 +130,7 @@ public class InfiniteValueReplenishment extends ValueReplenishment {
 
 	/**
 	 * Replaces the values
-	 * 
+	 *
 	 * @throws UndefinedParameterError
 	 */
 	@Override
@@ -163,8 +172,24 @@ public class InfiniteValueReplenishment extends ValueReplenishment {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(),
 				InfiniteValueReplenishment.class, attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

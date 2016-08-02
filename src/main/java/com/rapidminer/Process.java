@@ -31,6 +31,7 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,6 +71,8 @@ import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UnknownParameterInformation;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.execution.FlowData;
+import com.rapidminer.operator.execution.ProcessFlowFilter;
 import com.rapidminer.operator.nio.file.RepositoryBlobObject;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
@@ -165,6 +168,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 	/** The listeners for breakpoints. */
 	private final List<BreakpointListener> breakpointListeners = new LinkedList<>();
+
+	/** The list of filters called between each operator */
+	private final List<ProcessFlowFilter> processFlowFilters = Collections
+			.synchronizedList(new LinkedList<ProcessFlowFilter>());
 
 	/** The listeners for logging (data tables). */
 	private final List<LoggingListener> loggingListeners = new LinkedList<>();
@@ -700,6 +707,108 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	}
 
 	// --------------------
+	// Filters between operators handling
+	// --------------------
+
+	/**
+	 * Add a new {@link ProcessFlowFilter} to this process. The filter will be called directly
+	 * before and after each operator. Refer to {@link ProcessFlowFilter} for more information.
+	 *
+	 * @param filter
+	 *            the filter instance to add
+	 */
+	public void addProcessFlowFilter(ProcessFlowFilter filter) {
+		if (filter == null) {
+			throw new IllegalArgumentException("filter must not be null!");
+		}
+		processFlowFilters.add(filter);
+	}
+
+	/**
+	 * Remove a {@link ProcessFlowFilter} from this process. Does nothing if the filter is unknown.
+	 *
+	 * @param filter
+	 *            the filter instance to remove
+	 */
+	public void removeProcessFlowFilter(ProcessFlowFilter filter) {
+		if (filter == null) {
+			throw new IllegalArgumentException("filter must not be null!");
+		}
+		processFlowFilters.remove(filter);
+	}
+
+	/**
+	 * Notifies all registered {@link ProcessFlowFilter}s that the next operator in the process is
+	 * about to be executed.
+	 *
+	 * @param previousOperator
+	 *            the previous operator; may be {@code null} for the first operator in a subprocess
+	 * @param nextOperator
+	 *            the next operator to be called, never {@code null}
+	 * @param input
+	 *            the list of all input data for the next operator. If {@code null}, an empty list
+	 *            will be used
+	 */
+	public void fireProcessFlowBeforeOperator(Operator previousOperator, Operator nextOperator, List<FlowData> input)
+			throws OperatorException {
+		if (nextOperator == null) {
+			throw new IllegalArgumentException("nextOperator must not be null!");
+		}
+		if (input == null) {
+			input = Collections.emptyList();
+		}
+		synchronized (processFlowFilters) {
+			for (ProcessFlowFilter filter : processFlowFilters) {
+				filter.preOperator(previousOperator, nextOperator, input);
+			}
+		}
+	}
+
+	/**
+	 * Notifies all registered {@link ProcessFlowFilter}s that an operator in the process has just
+	 * finished execution.
+	 *
+	 * @param previousOperator
+	 *            the operator which just finished, never {@code null}
+	 * @param nextOperator
+	 *            the next operator to be called; may be {@code null} if this was the last operator
+	 *            in a subprocess
+	 * @param output
+	 *            the list of all output data from the previous operator. If {@code null}, an empty
+	 *            list will be used
+	 */
+	public void fireProcessFlowAfterOperator(Operator previousOperator, Operator nextOperator, List<FlowData> output)
+			throws OperatorException {
+		if (previousOperator == null) {
+			throw new IllegalArgumentException("previousOperator must not be null!");
+		}
+		if (output == null) {
+			output = Collections.emptyList();
+		}
+		synchronized (processFlowFilters) {
+			for (ProcessFlowFilter filter : processFlowFilters) {
+				filter.postOperator(previousOperator, nextOperator, output);
+			}
+		}
+	}
+
+	/**
+	 * Copies the registered {@link ProcessFlowFilter}s of this process to the given process
+	 * instance.
+	 *
+	 * @param otherProcess
+	 *            the process who should get all process flow listeners which are registered to this
+	 *            process instance
+	 */
+	public void copyProcessFlowListenersToOtherProcess(Process otherProcess) {
+		synchronized (processFlowFilters) {
+			for (ProcessFlowFilter filter : processFlowFilters) {
+				otherProcess.addProcessFlowFilter(filter);
+			}
+		}
+	}
+
+	// --------------------
 	// Breakpoint Handling
 	// --------------------
 
@@ -843,8 +952,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 								port.deliver(new RepositoryBlobObject(loc));
 							}
 						} else {
-							getLogger().info(
-									"Cannot assigning " + loc + " to input port " + port.getSpec()
+							getLogger().info("Cannot assigning " + loc + " to input port " + port.getSpec()
 									+ ": Repository location does not reference an IOObject entry.");
 							throw new PortUserError(port, 312, loc, "Not an IOObject entry.");
 						}
@@ -1069,6 +1177,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 				rootOperator.deliverInput(Arrays.asList(input.getIOObjects()));
 			}
 			rootOperator.execute();
+			rootOperator.checkForStop();
 			if (storeOutput) {
 				saveResults();
 			}
@@ -1360,8 +1469,8 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	}
 
 	/** Resolves a repository location relative to {@link #getRepositoryLocation()}. */
-	public RepositoryLocation resolveRepositoryLocation(final String loc) throws UserError,
-			MalformedRepositoryLocationException {
+	public RepositoryLocation resolveRepositoryLocation(final String loc)
+			throws UserError, MalformedRepositoryLocationException {
 		if (RepositoryLocation.isAbsolute(loc)) {
 			RepositoryLocation repositoryLocation = new RepositoryLocation(loc);
 			repositoryLocation.setAccessor(getRepositoryAccessor());
@@ -1477,9 +1586,8 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		// keep process file version if same file, otherwise overwrite
 		if (this.processLocation != null && !this.processLocation.equals(processLocation)) {
 			this.isProcessConverted = false;
-			getLogger().info(
-					"Decoupling process from location " + this.processLocation + ". Process is now associated with file "
-							+ processLocation + ".");
+			getLogger().info("Decoupling process from location " + this.processLocation
+					+ ". Process is now associated with file " + processLocation + ".");
 		}
 		this.processLocation = processLocation;
 		fireUpdate();

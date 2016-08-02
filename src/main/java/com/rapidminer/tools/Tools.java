@@ -39,6 +39,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -95,6 +96,7 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.io.Encoding;
+import com.rapidminer.tools.parameter.ParameterChangeListener;
 import com.rapidminer.tools.plugin.Plugin;
 
 
@@ -113,12 +115,6 @@ public class Tools {
 
 	/** Number smaller than this value are considered as zero. */
 	private static final double IS_ZERO = 1E-6;
-
-	/**
-	 * Number of post-comma digits needed to distinguish between display of numbers as integers or
-	 * doubles.
-	 */
-	private static final double IS_DISPLAY_ZERO = 1E-8;
 
 	/** Used for formatting values in the {@link #formatTime(Date)} method. */
 	private static final TimeFormat DURATION_TIME_FORMAT = new TimeFormat();
@@ -166,7 +162,7 @@ public class Tools {
 	private static Locale FORMAT_LOCALE = Locale.US;
 
 	/** Used for formatting values in the {@link #formatNumber(double)} method. */
-	private static NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(FORMAT_LOCALE);
+	private static NumberFormat NUMBER_FORMAT;
 
 	/** Used for formatting values in the {@link #formatNumber(double)} method. */
 	private static NumberFormat INTEGER_FORMAT = NumberFormat.getIntegerInstance(FORMAT_LOCALE);
@@ -177,11 +173,20 @@ public class Tools {
 	/** Used for determining the symbols used in decimal formats. */
 	public static DecimalFormatSymbols FORMAT_SYMBOLS = new DecimalFormatSymbols(FORMAT_LOCALE);
 
+	/** this is close to the smallest machine epsilon where n + epsilon = n for double precision */
+	private static final double SMALLEST_MACHINE_EPSILON = 1.11E-16;
+
+	/** the double value below which numbers are displayed as integer */
+	private static double epsilonDisplayValue;
+
 	/** if a date should be created from NaN, this is returned */
 	private static final String MISSING_DATE = "Missing";
 
 	/** if a time should be created from NaN, this is returned */
 	private static final String MISSING_TIME = "Missing";
+
+	/** the current settings value of number of fraction digits shown */
+	private static int numberOfFractionDigits;
 
 	private static final LinkedList<ResourceSource> ALL_RESOURCE_SOURCES = new LinkedList<>();
 
@@ -189,6 +194,45 @@ public class Tools {
 
 	static {
 		ALL_RESOURCE_SOURCES.add(new ResourceSource(Tools.class.getClassLoader()));
+
+		// init parameters
+		int numberDigits = 3;
+		try {
+			String numberDigitsString = ParameterService
+					.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS);
+			numberDigits = Integer.parseInt(numberDigitsString);
+		} catch (NumberFormatException e) {
+		}
+		numberOfFractionDigits = numberDigits;
+		epsilonDisplayValue = Math.min(SMALLEST_MACHINE_EPSILON, 1.0 / Math.pow(10, numberOfFractionDigits));
+		NUMBER_FORMAT = new DecimalFormat(getDecimalFormatPattern(numberDigits),
+				DecimalFormatSymbols.getInstance(FORMAT_LOCALE));
+
+		// add listener to be notified of changes for static parameters
+		ParameterService.registerParameterChangeListener(new ParameterChangeListener() {
+
+			@Override
+			public void informParameterSaved() {
+				// ignore
+			}
+
+			@Override
+			public void informParameterChanged(String key, String value) {
+				if (RapidMiner.PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS.equals(key)) {
+					int numberDigits = 3;
+					try {
+						String numberDigitsString = ParameterService
+								.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS);
+						numberDigits = Integer.parseInt(numberDigitsString);
+					} catch (NumberFormatException e) {
+					}
+					numberOfFractionDigits = numberDigits;
+					epsilonDisplayValue = Math.min(SMALLEST_MACHINE_EPSILON, 1.0 / Math.pow(10, numberOfFractionDigits));
+					NUMBER_FORMAT = new DecimalFormat(getDecimalFormatPattern(numberDigits),
+							DecimalFormatSymbols.getInstance(FORMAT_LOCALE));
+				}
+			}
+		});
 	}
 
 	public static String[] availableTimeZoneNames;
@@ -206,7 +250,16 @@ public class Tools {
 
 	public static void setFormatLocale(Locale locale) {
 		FORMAT_LOCALE = locale;
-		NUMBER_FORMAT = NumberFormat.getInstance(locale);
+
+		int numberDigits = 3;
+		try {
+			String numberDigitsString = ParameterService
+					.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS);
+			numberDigits = Integer.parseInt(numberDigitsString);
+		} catch (NumberFormatException e) {
+		}
+		NUMBER_FORMAT = new DecimalFormat(getDecimalFormatPattern(numberDigits),
+				DecimalFormatSymbols.getInstance(FORMAT_LOCALE));
 		INTEGER_FORMAT = NumberFormat.getIntegerInstance(locale);
 		PERCENT_FORMAT = NumberFormat.getPercentInstance(locale);
 		FORMAT_SYMBOLS = new DecimalFormatSymbols(locale);
@@ -323,15 +376,8 @@ public class Tools {
 		if (Double.isNaN(value)) {
 			return "?";
 		}
-		int numberDigits = 3;
-		try {
-			String numberDigitsString = ParameterService
-					.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS);
-			numberDigits = Integer.parseInt(numberDigitsString);
-		} catch (NumberFormatException e) {
-		}
 		// TODO: read property for grouping characters
-		return formatNumber(value, numberDigits, false);
+		return formatNumber(value, numberOfFractionDigits, false);
 	}
 
 	/**
@@ -355,16 +401,10 @@ public class Tools {
 		}
 		int numberDigits = numberOfDigits;
 		if (numberDigits < 0) {
-			try {
-				String numberDigitsString = ParameterService
-						.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS);
-				numberDigits = Integer.parseInt(numberDigitsString);
-			} catch (NumberFormatException e) {
-				numberDigits = 3;
-			}
+			numberDigits = numberOfFractionDigits;
 		}
-		NUMBER_FORMAT.setMaximumFractionDigits(numberDigits);
 		NUMBER_FORMAT.setMinimumFractionDigits(numberDigits);
+		NUMBER_FORMAT.setMaximumFractionDigits(numberDigits);
 		NUMBER_FORMAT.setGroupingUsed(groupingCharacters);
 		return NUMBER_FORMAT.format(value);
 	}
@@ -374,15 +414,7 @@ public class Tools {
 	 * digits will be returned.
 	 */
 	public static String formatIntegerIfPossible(double value) {
-		int numberDigits = 3;
-		try {
-			String numberDigitsString = ParameterService
-					.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS);
-			numberDigits = Integer.parseInt(numberDigitsString);
-		} catch (NumberFormatException e) {
-		}
-		// TODO: read property for grouping characters
-		return formatIntegerIfPossible(value, numberDigits, false);
+		return formatIntegerIfPossible(value, numberOfFractionDigits);
 	}
 
 	/**
@@ -411,12 +443,12 @@ public class Tools {
 		}
 
 		long longValue = Math.round(value);
-		if (Math.abs(longValue - value) < IS_DISPLAY_ZERO) {
+		if (Math.abs(longValue - value) < epsilonDisplayValue) {
 			INTEGER_FORMAT.setGroupingUsed(groupingCharacter);
-			return INTEGER_FORMAT.format(longValue);
-		} else {
-			return formatNumber(value, numberOfDigits, groupingCharacter);
+			return INTEGER_FORMAT.format(value);
 		}
+
+		return formatNumber(value, numberOfDigits, groupingCharacter);
 	}
 
 	/** Format date as a short time string. */
@@ -702,12 +734,25 @@ public class Tools {
 	 * @return Cloned list of operators.
 	 */
 	public static List<Operator> cloneOperators(List<Operator> operators) {
+		return cloneOperators(operators, false);
+	}
+
+	/**
+	 * Clones a {@link List} of {@link Operator}s including connections.
+	 *
+	 * @param operators
+	 *            List of operators.
+	 * @param deepCopyErrorLists
+	 *            indicates if operators errorLists should be deep copied
+	 * @return Cloned list of operators.
+	 */
+	public static List<Operator> cloneOperators(List<Operator> operators, boolean deepCopyErrorLists) {
 		List<Operator> clonedOperators = new ArrayList<>(operators.size());
 		Map<Operator, Operator> originalToClone = new HashMap<>(operators.size());
 
 		for (Operator operator : operators) {
 			// clone operator
-			Operator clone = operator.cloneOperator(operator.getName(), false);
+			Operator clone = operator.cloneOperator(false, deepCopyErrorLists);
 			clonedOperators.add(clone);
 			// create mapping from original to cloned operator
 			originalToClone.put(operator, clone);
@@ -1034,7 +1079,7 @@ public class Tools {
 	 * Reads a text file into a single string. Process files created with RapidMiner 5.2.008 or
 	 * earlier will be read with the system encoding (for compatibility reasons); all other files
 	 * will be read with UTF-8 encoding.
-	 * */
+	 */
 	public static String readTextFile(File file) throws IOException {
 		FileInputStream inStream = new FileInputStream(file);
 
@@ -1714,10 +1759,9 @@ public class Tools {
 	 *
 	 * Example: seperatorPatern = ',' , quotingChar = '"' , escapeCahr = '\\'
 	 *
-	 * line = '"Charles says:
-	 * "Some people never go crazy, What truly horrible lives they must live"", 1968, "
-	 * US"' return = '"Charles says:
-	 * \"Some people never go crazy, What truly horrible lives they must live\"", "1968", "US"'
+	 * line = '"Charles says: "Some people never go crazy, What truly horrible lives they must live"
+	 * ", 1968, " US"' return = '"Charles says: \
+	 * "Some people never go crazy, What truly horrible lives they must live\"", "1968", "US"'
 	 */
 	public static String escapeQuoteCharsInQuotes(String line, Pattern separatorPattern, char quotingChar, char escapeChar,
 			boolean showWarning) {
@@ -2001,8 +2045,8 @@ public class Tools {
 					}
 				}
 				if (!found) {
-					throw new IllegalArgumentException("String '" + source + "' contains illegal escaped character '" + c
-							+ "'.");
+					throw new IllegalArgumentException(
+							"String '" + source + "' contains illegal escaped character '" + c + "'.");
 				}
 				// reset to regular mode
 				readEscape = false;
@@ -2242,4 +2286,16 @@ public class Tools {
 		}
 	}
 
+	private static String getDecimalFormatPattern(int fractionDigits) {
+		StringBuilder pattern = new StringBuilder();
+		pattern.append('0');
+		if (fractionDigits > 0) {
+			pattern.append('.');
+		}
+		for (int i = 0; i < fractionDigits; i++) {
+			pattern.append('0');
+		}
+
+		return pattern.toString();
+	}
 }

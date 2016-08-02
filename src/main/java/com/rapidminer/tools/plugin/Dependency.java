@@ -18,6 +18,7 @@
  */
 package com.rapidminer.tools.plugin;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -44,15 +45,14 @@ public class Dependency {
 	}
 
 	/**
-	 * Returns true if the list contains a extension with the desired name and version.
+	 * Returns true if the set contains a extension with the desired name and version.
 	 */
-	public boolean isFulfilled(List<Plugin> plugins) {
+	public boolean isFulfilled(Collection<Plugin> plugins) {
 		Iterator<Plugin> i = plugins.iterator();
 		while (i.hasNext()) {
 			Plugin plugin = i.next();
-			if (plugin.getExtensionId().equals(this.extensionId)
-					&& ManagedExtension.normalizeVersion(plugin.getVersion()).compareTo(
-							ManagedExtension.normalizeVersion(this.version)) >= 0) {
+			if (plugin.getExtensionId().equals(this.extensionId) && ManagedExtension.normalizeVersion(plugin.getVersion())
+					.compareTo(ManagedExtension.normalizeVersion(this.version)) >= 0) {
 				return true;
 			}
 		}
@@ -85,10 +85,8 @@ public class Dependency {
 				if (singleDependencies[i].trim().indexOf("[") >= 0) {
 					dependencyName = singleDependencies[i].trim().substring(0, singleDependencies[i].trim().indexOf("["))
 							.trim();
-					dependencyVersion = singleDependencies[i]
-							.trim()
-							.substring(singleDependencies[i].trim().indexOf("[") + 1,
-									singleDependencies[i].trim().indexOf("]")).trim();
+					dependencyVersion = singleDependencies[i].trim().substring(singleDependencies[i].trim().indexOf("[") + 1,
+							singleDependencies[i].trim().indexOf("]")).trim();
 				}
 				result.add(new Dependency(dependencyName, dependencyVersion));
 			}

@@ -38,7 +38,6 @@ import java.awt.font.GlyphVector;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -54,7 +53,6 @@ import javax.swing.KeyStroke;
 
 import com.rapidminer.gui.license.LicenseTools;
 import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.gui.tools.VersionNumber.VersionNumberExcpetion;
 import com.rapidminer.gui.tools.components.LinkRemoteButton;
@@ -361,11 +359,7 @@ public class AboutBox extends JDialog {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					try {
-						RMUrlHandler.browse(new URI(url));
-					} catch (Exception e1) {
-						SwingTools.showSimpleErrorMessage("cannot_open_browser", e1);
-					}
+					RMUrlHandler.openInBrowser(url);
 				}
 			}));
 		}

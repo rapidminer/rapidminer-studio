@@ -127,12 +127,6 @@ public class ProcessLocationValueCellEditor extends RepositoryLocationValueCellE
 		return surroundingPanel;
 	}
 
-	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-			int row, int column) {
-		return getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-	}
-
 	/**
 	 * Checks whether the provided repository location is valid and is a process.
 	 */

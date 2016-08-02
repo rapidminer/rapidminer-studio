@@ -34,7 +34,7 @@ import com.rapidminer.tools.math.kernels.Kernel;
 
 /**
  * This model is a separating hyperplane for two classes.
- * 
+ *
  * @author Sebastian Land
  */
 public class HyperplaneModel extends SimplePredictionModel {
@@ -124,8 +124,8 @@ public class HyperplaneModel extends SimplePredictionModel {
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		if (classPositive != null && classNegative != null) {
-			buffer.append("Hyperplane seperating " + classPositive + " and " + classNegative + "."
-					+ Tools.getLineSeparator());
+			buffer.append(
+					"Hyperplane seperating " + classPositive + " and " + classNegative + "." + Tools.getLineSeparator());
 		} else {
 			buffer.append("Hyperplane for linear regression." + Tools.getLineSeparator());
 		}
@@ -135,7 +135,7 @@ public class HyperplaneModel extends SimplePredictionModel {
 		buffer.append("Coefficients: " + Tools.getLineSeparator());
 		int counter = 0;
 		for (double value : coefficients) {
-			buffer.append("w(" + coefficientNames[counter] + ") = " + Tools.formatIntegerIfPossible(value, 3)
+			buffer.append("w(" + coefficientNames[counter] + ") = " + Tools.formatIntegerIfPossible(value)
 					+ Tools.getLineSeparator());
 			counter++;
 		}
@@ -144,7 +144,8 @@ public class HyperplaneModel extends SimplePredictionModel {
 	}
 
 	public DataTable createWeightsTable() {
-		SimpleDataTable weightTable = new SimpleDataTable("Hyperplane Model Weights", new String[] { "Attribute", "Weight" });
+		SimpleDataTable weightTable = new SimpleDataTable("Hyperplane Model Weights",
+				new String[] { "Attribute", "Weight" });
 		for (int j = 0; j < this.coefficientNames.length; j++) {
 			int nameIndex = weightTable.mapString(0, this.coefficientNames[j]);
 			weightTable.add(new SimpleDataTableRow(new double[] { nameIndex, this.coefficients[j] }));

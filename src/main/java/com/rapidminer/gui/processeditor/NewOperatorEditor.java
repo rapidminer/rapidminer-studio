@@ -18,31 +18,25 @@
  */
 package com.rapidminer.gui.processeditor;
 
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.dnd.DragListener;
-import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.tools.GroupTree;
-import com.vlsolutions.swing.docking.DockKey;
-import com.vlsolutions.swing.docking.Dockable;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Vector;
 
 import javax.swing.JPanel;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.TreePath;
+
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.dnd.DragListener;
+import com.rapidminer.gui.tools.ResourceDockKey;
+import com.vlsolutions.swing.docking.DockKey;
+import com.vlsolutions.swing.docking.Dockable;
 
 
 /**
  * This container contains all available operators in a grouped view (tree). From here the current
  * group can be selected which displays the operators of the group in an operator list on the left
  * side. From here, new operators can be dragged into the operator tree.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class NewOperatorEditor extends JPanel implements TreeSelectionListener, Dockable {
@@ -50,8 +44,6 @@ public class NewOperatorEditor extends JPanel implements TreeSelectionListener, 
 	private static final long serialVersionUID = -8910332473638172252L;
 
 	private final NewOperatorGroupTree newOperatorGroupTree;
-
-	// private final OperatorList operatorList;
 
 	public NewOperatorEditor() {
 		this(null);
@@ -73,28 +65,11 @@ public class NewOperatorEditor extends JPanel implements TreeSelectionListener, 
 		if (dragListener != null) {
 			newOperatorGroupTree.getOperatorTreeTransferhandler().addDragListener(dragListener);
 		}
-		// this.operatorList = new OperatorList();
 	}
 
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
-		TreePath path = e.getNewLeadSelectionPath();
-		if (path != null) {
-			if (path.getLastPathComponent() instanceof GroupTree) {
-				setOperatorList((GroupTree) path.getLastPathComponent());
-			}
-		}
-	}
-
-	public void setOperatorList(GroupTree selectedTree) {
-		Vector<OperatorDescription> descriptions = new Vector<OperatorDescription>();
-		if (selectedTree != null) {
-			Iterator<OperatorDescription> i = selectedTree.getOperatorDescriptions().iterator();
-			while (i.hasNext()) {
-				descriptions.add(i.next());
-			}
-			Collections.sort(descriptions);
-		}
+		// do nothing
 	}
 
 	public static final String NEW_OPERATOR_DOCK_KEY = "new_operator";
@@ -120,5 +95,9 @@ public class NewOperatorEditor extends JPanel implements TreeSelectionListener, 
 
 	public boolean shouldAutoConnectNewOperatorsOutputs() {
 		return newOperatorGroupTree.shouldAutoConnectNewOperatorsOutputs();
+	}
+	
+	public NewOperatorGroupTree getNewOperatorGroupTree() {
+		return newOperatorGroupTree;
 	}
 }

@@ -38,7 +38,7 @@ import java.util.Map;
  * map. The data is queried from an example table which contains the data (example sets actually are
  * only views on this table and does not keep any data). This simple example set implementation
  * usually is the basic example set of the multi-layered data view.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer Exp $
  */
 public class SimpleExampleSet extends AbstractExampleSet {
@@ -55,7 +55,7 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	 * Constructs a new SimpleExampleSet backed by the given example table. The example set
 	 * initially does not have any special attributes but all attributes from the given table will
 	 * be used as regular attributes.
-	 * 
+	 *
 	 * If you are constructing the example set from a {@link MemoryExampleTable}, you should use the
 	 * method {@link MemoryExampleTable#createExampleSet()} instead unless you are absolutely sure
 	 * what you are doing.
@@ -68,7 +68,7 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	 * Constructs a new SimpleExampleSet backed by the given example table. The example set
 	 * initially does not have any special attributes but all attributes from the given table will
 	 * be used as regular attributes.
-	 * 
+	 *
 	 * If you are constructing the example set from a {@link MemoryExampleTable}, you should use the
 	 * method {@link MemoryExampleTable#createExampleSet()} instead unless you are absolutely sure
 	 * what you are doing.
@@ -80,8 +80,9 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	/**
 	 * Constructs a new SimpleExampleSet backed by the given example table. All attributes in the
 	 * table apart from the special attributes become normal (regular) attributes. The special
-	 * attributes are specified by the given map.
-	 * 
+	 * attributes are specified by the given map. The ordering of the attributes is defined by the
+	 * iteration order of the map.
+	 *
 	 * If you are constructing the example set from a {@link MemoryExampleTable}, you should use the
 	 * method {@link MemoryExampleTable#createExampleSet(Map)} instead unless you are absolutely
 	 * sure what you are doing.
@@ -94,8 +95,8 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	 * Constructs a new SimpleExampleSet backed by the given example table. All attributes in the
 	 * table defined in the regular attribute list apart from those (also) defined the special
 	 * attributes become normal (regular) attributes. The special attributes are specified by the
-	 * given map.
-	 * 
+	 * given map. The ordering of the attributes is defined by the iteration order of the map.
+	 *
 	 * If you are constructing the example set from a {@link MemoryExampleTable}, you should use the
 	 * method {@link MemoryExampleTable#createExampleSet(Map)} instead unless you are absolutely
 	 * sure what you are doing.
@@ -132,7 +133,7 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	/**
 	 * Clone constructor. The example table is copied by reference, the attributes are copied by a
 	 * deep clone.
-	 * 
+	 *
 	 * Don't use this method directly but use the clone method instead.
 	 */
 	public SimpleExampleSet(SimpleExampleSet exampleSet) {

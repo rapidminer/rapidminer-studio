@@ -18,10 +18,6 @@
  */
 package com.rapidminer.operator.nio;
 
-import com.rapidminer.example.Attributes;
-import com.rapidminer.operator.nio.model.ColumnMetaData;
-import com.rapidminer.tools.Ontology;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -30,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.EventObject;
+import java.util.Objects;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -42,11 +39,15 @@ import javax.swing.event.EventListenerList;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
+import com.rapidminer.example.Attributes;
+import com.rapidminer.operator.nio.model.ColumnMetaData;
+import com.rapidminer.tools.Ontology;
+
 
 /**
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class MetaDataTableHeaderCellEditor extends JPanel implements TableCellEditor, TableCellRenderer {
 
@@ -210,7 +211,7 @@ public class MetaDataTableHeaderCellEditor extends JPanel implements TableCellEd
 		} else {
 			nameField.setBackground(this.getBackground());
 		}
-		if (value.getRole() != roleBox.getSelectedItem()) {
+		if (!Objects.equals(value.getRole(), (String) roleBox.getSelectedItem())) {
 			roleBox.setSelectedItem(value.getRole());
 		}
 		if (validator != null && validator.isDuplicateRoleColumn(column)) {

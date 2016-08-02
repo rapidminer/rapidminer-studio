@@ -23,7 +23,7 @@ import com.rapidminer.tools.math.distribution.EmpiricalNormalDistribution;
 
 /**
  * A normal kernel.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class NormalKernel extends EmpiricalNormalDistribution {
@@ -35,6 +35,7 @@ public class NormalKernel extends EmpiricalNormalDistribution {
 	public NormalKernel(double minimumBandwidth) {
 		super();
 		this.minimumBandwidth = minimumBandwidth;
+		standardDeviation = minimumBandwidth;
 	}
 
 	@Override

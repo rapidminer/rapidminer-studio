@@ -18,9 +18,17 @@
  */
 package com.rapidminer.operator.preprocessing.normalization;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -33,17 +41,12 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 
 /**
  * This operator performs a normalization. This can be done between a user defined minimum and
  * maximum value or by a z-transformation, i.e. on mean 0 and variance 1. or by a proportional
  * transformation as proportion of the total sum of the respective attribute.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land
  */
 public class Normalization extends PreprocessingOperator {
@@ -69,6 +72,12 @@ public class Normalization extends PreprocessingOperator {
 	public static final int METHOD_PROPORTION_TRANSFORMATION = 2;
 
 	public static final String PARAMETER_NORMALIZATION_METHOD = "method";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	/** Creates a new Normalization operator. */
 	public Normalization(OperatorDescription description) {
@@ -124,9 +133,25 @@ public class Normalization extends PreprocessingOperator {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), Normalization.class,
 				attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 
 	/**

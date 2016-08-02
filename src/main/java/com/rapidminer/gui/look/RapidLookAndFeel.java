@@ -624,9 +624,9 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				"ToolBar.border", Borders.getToolBarBorder(), "Spinner.border", Borders.getSpinnerBorder(),
 				"ComboBox.border", Borders.getComboBoxBorder(), "Button.border", Borders.getEmptyButtonBorder(),
 				"ToggleButton.border", Borders.getEmptyButtonBorder(), "ProgressBar.border", Borders.getProgressBarBorder(),
-				"PopupMenu.border", Borders.getPopupMenuBorder(), "MenuBar.border", Borders.getMenuBarBorder(),
-				"CheckBox.border", Borders.getCheckBoxBorder(), "RadioButton.border", Borders.getCheckBoxBorder(),
-				"ToolTip.border", Borders.getToolTipBorder(), "CheckBox.icon", IconFactory.getCheckBoxIcon(),
+				"PopupMenu.border", Borders.getPopupMenuBorder(), "CheckBox.border", Borders.getCheckBoxBorder(),
+				"RadioButton.border", Borders.getCheckBoxBorder(), "ToolTip.border", Borders.getToolTipBorder(),
+				"MenuBar.border", Borders.getMenuBarBorder(), "CheckBox.icon", IconFactory.getCheckBoxIcon(),
 				"RadioButton.icon", IconFactory.getRadioButtonIcon(), "ComboBox.focusCellHighlightBorder",
 				Borders.getComboBoxListCellRendererFocusBorder(), };
 		table.putDefaults(borderDefaults);

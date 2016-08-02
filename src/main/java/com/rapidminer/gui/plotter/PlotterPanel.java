@@ -174,6 +174,7 @@ public class PlotterPanel extends JPanel implements PrintableComponent {
 		plotterScrollPane.setBorder(null);
 
 		add(plotterScrollPane, BorderLayout.CENTER);
+		setBackground(Colors.WHITE);
 
 		JComponent plotterComponent = settings.getPlotter().getPlotter();
 		if (plotterComponent != null) {

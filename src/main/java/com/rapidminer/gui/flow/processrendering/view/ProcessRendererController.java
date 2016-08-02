@@ -1264,6 +1264,13 @@ public class ProcessRendererController {
 		double minWidth = ProcessDrawer.OPERATOR_WIDTH * 2;
 		double subprocessWidth = w + ProcessDrawer.GRID_X_OFFSET;
 		double subprocessHeight = h + ProcessDrawer.GRID_Y_OFFSET;
+
+		// consider zoom factor
+		if (model.getZoomFactor() < 1) {
+			subprocessWidth *= model.getZoomFactor();
+			subprocessHeight *= model.getZoomFactor();
+		}
+
 		double height = subprocessHeight;
 		double width = subprocessWidth > minWidth ? subprocessWidth : minWidth;
 

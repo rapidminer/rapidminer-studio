@@ -18,10 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing.discretization;
 
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
@@ -34,9 +40,6 @@ import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.HashMap;
-import java.util.List;
-
 
 /**
  * This operator discretizes all numeric attributes in the dataset into nominal attributes. This
@@ -45,7 +48,7 @@ import java.util.List;
  * including the label. In contrast to the usual simple binning performed by the
  * {@link BinDiscretization}, this operator bins the values into a predefined range (and not into
  * the range defined by the minimum and maximum values taken from the data).
- * 
+ *
  * @author Ingo Mierswa
  */
 public class MinMaxBinDiscretization extends AbstractDiscretizationOperator {
@@ -67,6 +70,12 @@ public class MinMaxBinDiscretization extends AbstractDiscretizationOperator {
 	public static final String PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS = "automatic_number_of_digits";
 
 	public static final String PARAMETER_NUMBER_OF_DIGITS = "number_of_digits";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public MinMaxBinDiscretization(OperatorDescription description) {
 		super(description);
@@ -149,8 +158,24 @@ public class MinMaxBinDiscretization extends AbstractDiscretizationOperator {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(),
 				MinMaxBinDiscretization.class, attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

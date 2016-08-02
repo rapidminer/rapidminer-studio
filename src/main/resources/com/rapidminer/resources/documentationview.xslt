@@ -17,28 +17,30 @@
 		
 	</xsl:template>
 	<xsl:template match="operator">
-			<table>
-				<tr>
-					<td>
-						<img>
-							<xsl:attribute name="src"><xsl:value-of select="rmdoc:getIconNameForOperator($operatorKey)" /></xsl:attribute>
-							<xsl:attribute name="class">HeadIcon</xsl:attribute>
-						</img>
-					
-					</td>
-					<td valign="middle" align="left">
-						<h2><xsl:value-of select="title" />
-							<xsl:if test="boolean(rmdoc:getPluginNameForOperator($operatorKey))">
-  								<span class="packageName"><br/><xsl:value-of select="rmdoc:getPluginNameForOperator($operatorKey)" /></span>
-							</xsl:if>
-						</h2>
-					</td>
-				</tr>
-			</table>
-			<div style="border-top: 1px solid #bbbbbb">
+		<table>
+			<tr>
+				<td>
+					<img>
+						<xsl:attribute name="src"><xsl:value-of select="rmdoc:getIconNameForOperator($operatorKey)" /></xsl:attribute>
+						<xsl:attribute name="class">HeadIcon</xsl:attribute>
+					</img>
+				
+				</td>
+				<td valign="middle" align="left">
+					<h2><xsl:value-of select="title" />
+						<xsl:if test="boolean(rmdoc:getPluginNameForOperator($operatorKey))">
+ 								<span class="packageName"><br/><xsl:value-of select="rmdoc:getPluginNameForOperator($operatorKey)" /></span>
+						</xsl:if>
+					</h2>
+				</td>
+			</tr>
+		</table>
+		<div style="border-top: 1px solid #bbbbbb">
+			<xsl:value-of select="rmdoc:getTagHtmlForKey($operatorKey)" disable-output-escaping="yes"/>
 			<xsl:apply-templates />
-			</div>
-		</xsl:template>
+		</div>
+	</xsl:template>
+	
 	<xsl:template match="synopsis">
 		<h4>Synopsis</h4>
 		<p>
@@ -51,7 +53,6 @@
 	<xsl:template match="text">
 		<h4>Description</h4>
 		<xsl:apply-templates />	
-		<br/>
 	</xsl:template>
 	<xsl:template match="paragraph">
 		<p>
@@ -109,7 +110,7 @@
 	
 	<xsl:template match="inputPorts">
 		<h4>Input</h4>
-	
+		
 		<table border="0" cellspacing="0">
 			<xsl:for-each select="port">
 				<tr>
@@ -182,12 +183,13 @@
 		</table>
 		<br/>
 	</xsl:template>
+	
 	<xsl:template match="parameters">
-		<h4>Parameters</h4>
-		<table border="0" cellspacing="0">
+		<h4 class="parametersHeading">Parameters</h4>
+		<table class="parametersTable">
 			<xsl:for-each select="parameter">
 				<tr>
-					<td width="75">
+					<td>
 						<b>
 							<xsl:value-of select="rmdoc:insertBlanks(@key)" />
 						</b>
@@ -209,17 +211,20 @@
 				<tr>
 					<td>
 						<xsl:apply-templates />
+					</td>
+				</tr>
+				<tr>
+					<td class="parameterDetailsCell">
 						<span class="parameterDetails">
-						
 						<xsl:variable name="parameterType">
 							<xsl:value-of select="rmdoc:getParameterType($operatorKey,@key)"></xsl:value-of>
 						</xsl:variable>
 						<xsl:choose>
 							<xsl:when test="@type != ''">
-								<br/><b>Type: </b> <i><xsl:value-of select="@type"></xsl:value-of></i>
+								<b>Type: </b> <i><xsl:value-of select="@type"></xsl:value-of></i>
 							</xsl:when>
 							<xsl:when test="$parameterType != ''">
-								<br/><b>Type: </b> <i><xsl:value-of select="$parameterType" /></i>
+								<b>Type: </b> <i><xsl:value-of select="$parameterType" /></i>
 							</xsl:when>
 						</xsl:choose>
 						
@@ -260,13 +265,12 @@
 								<br/><b>Default: </b> <i><xsl:value-of select="$parameterDefault" /></i>
 							</xsl:when>
 						</xsl:choose>
-						
+
 						</span>
 					</td>
 				</tr>
 			</xsl:for-each>
 		</table>
-		<br/>
 	</xsl:template>
 	
 	<xsl:template match="values">
@@ -284,8 +288,8 @@
 		<table>
 	 		<xsl:for-each select="li">
 		 		<tr>
-		 		<td valign="top" style="font-family: Ionicons; font-style: normal;">&#xf10a;</td>
-		 		<td><xsl:apply-templates/></td>
+		 			<td valign="top" style="font-family: Ionicons; font-style: normal;">&#xf10a;</td>
+		 			<td><xsl:apply-templates/></td>
 				</tr>
 			</xsl:for-each>
 		</table>

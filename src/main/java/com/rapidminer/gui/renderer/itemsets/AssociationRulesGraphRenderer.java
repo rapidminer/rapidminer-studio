@@ -18,6 +18,11 @@
  */
 package com.rapidminer.gui.renderer.itemsets;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import com.rapidminer.gui.graphs.AssociationRulesGraphCreator;
 import com.rapidminer.gui.graphs.GraphCreator;
 import com.rapidminer.gui.renderer.AbstractGraphRenderer;
@@ -25,15 +30,10 @@ import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.associations.AssociationRule;
 import com.rapidminer.operator.learner.associations.AssociationRules;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 
 /**
  * A renderer for the graph view of association rules.
- * 
+ *
  * @author Ingo Mierswa, Nils Woehler
  */
 public class AssociationRulesGraphRenderer extends AbstractGraphRenderer {
@@ -69,6 +69,7 @@ public class AssociationRulesGraphRenderer extends AbstractGraphRenderer {
 				}
 				rules = filteredRules;
 			}
+			rules.sort();
 			return new AssociationRulesGraphCreator(rules);
 
 		} else {

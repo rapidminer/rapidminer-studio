@@ -137,7 +137,6 @@ public class KNNLearner extends AbstractLearner {
 			case POLYNOMINAL_LABEL:
 			case BINOMINAL_LABEL:
 			case NUMERICAL_LABEL:
-			case WEIGHTED_EXAMPLES:
 			case MISSING_VALUES:
 				return true;
 			default:

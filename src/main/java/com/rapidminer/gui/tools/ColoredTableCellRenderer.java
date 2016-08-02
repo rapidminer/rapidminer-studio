@@ -77,8 +77,8 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 	}
 
 	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-			int row, int column) {
+	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row,
+			int column) {
 
 		// prepare text
 		String text = null;
@@ -109,7 +109,7 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 					if (cutOnFirstLineBreak) {
 						int indexOfLineBreak = text.indexOf("\n");
 						if (indexOfLineBreak > 0) {
-							text = text.substring(0, indexOfLineBreak - 1);
+							text = text.substring(0, indexOfLineBreak);
 						}
 					}
 					// cutting on maximal length
@@ -124,8 +124,8 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 		}
 
 		// use java renderer to draw text
-		JLabel l = (JLabel) defaultCellRenderer
-				.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
+		JLabel l = (JLabel) defaultCellRenderer.getTableCellRendererComponent(table, text, isSelected, hasFocus, row,
+				column);
 		l.setBorder(CELL_BORDER);
 
 		// highlight hovered row?

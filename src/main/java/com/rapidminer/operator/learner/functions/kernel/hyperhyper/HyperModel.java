@@ -73,7 +73,7 @@ public class HyperModel extends PredictionModel {
 		result.append("Support Vector 1:" + Tools.getLineSeparator());
 		for (int i = 0; i < this.coefficientNames.length; i++) {
 			result.append(coefficientNames[i]).append(" = ").append(Tools.formatNumber(this.x1[i]))
-					.append(Tools.getLineSeparator());
+			.append(Tools.getLineSeparator());
 		}
 		result.append(Tools.getLineSeparator()).append("Support Vector 2:").append(Tools.getLineSeparator());
 		for (int i = 0; i < this.coefficientNames.length; i++) {
@@ -81,12 +81,12 @@ public class HyperModel extends PredictionModel {
 		}
 
 		result.append(Tools.getLineSeparator()).append("Bias (offset): ").append(Tools.formatNumber(this.bias))
-				.append(Tools.getLineSeparators(2));
+		.append(Tools.getLineSeparators(2));
 
 		result.append("Coefficients:").append(Tools.getLineSeparator());
 		for (int j = 0; j < w.length; j++) {
 			result.append("w(").append(this.coefficientNames[j]).append(") = ").append(Tools.formatNumber(this.w[j]))
-					.append(Tools.getLineSeparator());
+			.append(Tools.getLineSeparator());
 		}
 		return result.toString();
 	}
@@ -103,7 +103,7 @@ public class HyperModel extends PredictionModel {
 		Iterator<Attribute> applyIt = exampleSet.getAttributes().iterator();
 		while (trainingIt.hasNext() && applyIt.hasNext()) {
 			if (!trainingIt.next().getName().equals(applyIt.next().getName())) {
-				new UserError(getOperator(), 959, "Hyper Hyper");
+				throw new UserError(getOperator(), 959, "Hyper Hyper");
 			}
 		}
 

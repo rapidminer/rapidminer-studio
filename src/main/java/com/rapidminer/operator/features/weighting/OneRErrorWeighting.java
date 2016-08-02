@@ -43,6 +43,8 @@ import com.rapidminer.tools.OperatorService;
  */
 public class OneRErrorWeighting extends AbstractWeighting {
 
+	private static final int PROGRESS_UPDATE_STEPS = 500;
+	
 	public OneRErrorWeighting(OperatorDescription description) {
 		super(description, true);
 	}
@@ -69,8 +71,12 @@ public class OneRErrorWeighting extends AbstractWeighting {
 			throw new UserError(this, 904, "performance evaluation operator", e.getMessage());
 		}
 
-		boolean[] mask = new boolean[exampleSet.getAttributes().size()];
+		int attributesSize = exampleSet.getAttributes().size();
+		boolean[] mask = new boolean[attributesSize];
 		int i = 0;
+		int progressCounter = 0;
+		int exampleSetSize = exampleSet.size();
+		getProgress().setTotal(100);
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			mask[i] = true;
 			if (i > 0) {
@@ -79,14 +85,32 @@ public class OneRErrorWeighting extends AbstractWeighting {
 			ExampleSet singleAttributeSet = new AttributeSelectionExampleSet(exampleSet, mask);
 			// calculating model
 			Model model = learner.doWork(singleAttributeSet);
+			progressCounter += exampleSetSize;
+			if (progressCounter > PROGRESS_UPDATE_STEPS) {
+				progressCounter = 0;
+				getProgress().setCompleted((int) (100*(i+0.33F)/attributesSize));
+			}
+			
 			// applying model
 			singleAttributeSet = model.apply(singleAttributeSet);
+			progressCounter += exampleSetSize;
+			if (progressCounter > PROGRESS_UPDATE_STEPS) {
+				progressCounter = 0;
+				getProgress().setCompleted((int) (100*(i+0.67F)/attributesSize));
+			}
+			
 			// applying performance evaluator
 			PerformanceVector performance = performanceEvaluator.doWork(singleAttributeSet);
 			double weight = performance.getCriterion(0).getAverage();
 
 			weights.setWeight(attribute.getName(), weight);
 			i++;
+			
+			progressCounter += exampleSetSize;
+			if (progressCounter > PROGRESS_UPDATE_STEPS) {
+				progressCounter = 0;
+				getProgress().setCompleted((int) (100F*i/attributesSize));
+			}
 		}
 		return weights;
 	}

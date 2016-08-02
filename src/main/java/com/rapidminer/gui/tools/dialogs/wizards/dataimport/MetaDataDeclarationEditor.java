@@ -62,7 +62,7 @@ import javax.swing.table.TableCellEditor;
 /**
  * An editor to declare meta data information (attributes, value types, roles, ...) in a importing
  * wizard
- * 
+ *
  * @author Tobias Malbrecht
  * @author Sebastian Loh (22.04.2010)
  */
@@ -113,7 +113,7 @@ public class MetaDataDeclarationEditor extends JPanel {
 	// private boolean lock = false;
 
 	/**
-	 * 
+	 *
 	 */
 	public MetaDataDeclarationEditor(AbstractDataReader reader, final boolean showMetaDataEditor) {
 		super(new BorderLayout());
@@ -227,13 +227,13 @@ public class MetaDataDeclarationEditor extends JPanel {
 
 	/*
 	 * =========================
-	 * 
+	 *
 	 * BEGIN PRIVATE CLASSES:
-	 * 
+	 *
 	 * ValueTypeTable ValueTypeModle ValueTypeCellEditor CheckBoxCellEditor
-	 * 
+	 *
 	 * DataTable DataModle DataCellEditor
-	 * 
+	 *
 	 * ========================
 	 */
 
@@ -403,10 +403,10 @@ public class MetaDataDeclarationEditor extends JPanel {
 
 	/**
 	 * @author Sebastian Loh (23.04.2010)
-	 * 
+	 *
 	 *         The table model for the fixed table that contains only the table header (attribute
 	 *         names) and the attributes value type.
-	 * 
+	 *
 	 */
 	private class MetaDataModel extends AbstractTableModel {
 
@@ -790,14 +790,19 @@ public class MetaDataDeclarationEditor extends JPanel {
 			}
 			int attributeType = reader.getAttributeColumn(column - 1).getValueType();
 
-			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attributeType, Ontology.DATE_TIME)
-					|| Ontology.ATTRIBUTE_VALUE_TYPE.isA(attributeType, Ontology.DATE_TIME)
-					|| Ontology.ATTRIBUTE_VALUE_TYPE.isA(attributeType, Ontology.TIME)) {
-				try {
-					return Tools.formatDateTime((Date) values[column]);
-				} catch (ClassCastException e) {
-					// do nothing, just return default value
+			try {
+				if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attributeType, Ontology.DATE)) {
+					return Tools.formatDate((Date) values[column]);
 				}
+				if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attributeType, Ontology.TIME)) {
+					return Tools.formatTime((Date) values[column]);
+				}
+				if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attributeType, Ontology.DATE_TIME)) {
+					return Tools.formatDateTime((Date) values[column]);
+				}
+				return Tools.formatDateTime((Date) values[column]);
+			} catch (ClassCastException e) {
+				// do nothing, just return default value
 			}
 			// default value
 			return values[column].toString();
@@ -806,7 +811,7 @@ public class MetaDataDeclarationEditor extends JPanel {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#finalize()
 	 */
 	@Override

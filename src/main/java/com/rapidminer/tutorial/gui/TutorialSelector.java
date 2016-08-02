@@ -250,8 +250,8 @@ public class TutorialSelector extends AbstractObservable<Tutorial> {
 	 */
 	private void closeAllTutorialBrowsers() {
 		DockableState state = DockingTools.getDockableState(TutorialBrowser.TUTORIAL_BROWSER_DOCK_KEY);
-		Dockable browser = state.getDockable();
 		if (state != null) {
+			Dockable browser = state.getDockable();
 			mainFrame.getDockingDesktop().close(browser);
 			mainFrame.getPerspectiveController().removeFromInvisiblePerspectives(browser);
 		}

@@ -211,7 +211,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	@Deprecated
 	public OperatorDescription(final ClassLoader classLoader, final String key, final String name, final String className,
 			final String group, final String iconName, final String deprecationInfo, final Plugin provider)
-					throws ClassNotFoundException {
+			throws ClassNotFoundException {
 		this(classLoader, key, name, className, null, null, group, iconName, deprecationInfo, provider);
 	}
 
@@ -268,6 +268,10 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 
 	public String getShortName() {
 		return getOperatorDocumentation().getShortName();
+	}
+
+	public List<String> getTags() {
+		return getOperatorDocumentation().getTags();
 	}
 
 	public Class<? extends Operator> getOperatorClass() {

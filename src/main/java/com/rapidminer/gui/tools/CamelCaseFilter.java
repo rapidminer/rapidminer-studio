@@ -44,9 +44,9 @@ public class CamelCaseFilter {
 
 			caseSensitive = Character.isUpperCase(filterString.charAt(0)) ? true : false;
 			if (caseSensitive) {
-				this.filterString = filterString;
+				this.filterString = filterString.trim();
 			} else {
-				this.filterString = filterString.toLowerCase();
+				this.filterString = filterString.trim().toLowerCase();
 			}
 			StringBuilder regexp = new StringBuilder();
 			// regexp.append(".*"); //use if camel case should not start with first word

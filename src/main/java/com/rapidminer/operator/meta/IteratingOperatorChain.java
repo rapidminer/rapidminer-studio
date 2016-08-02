@@ -47,23 +47,26 @@ public class IteratingOperatorChain extends AbstractIteratingOperatorChain {
 	/** The parameter name for &quot;Timeout in minutes (-1: no timeout)&quot; */
 	public static final String PARAMETER_TIMEOUT = "timeout";
 
+	private long stoptime;
+
 	public IteratingOperatorChain(OperatorDescription description) {
 		super(description);
 	}
 
 	@Override
 	public void doWork() throws OperatorException {
+		stoptime = Long.MAX_VALUE;
+		if (getParameterAsBoolean(PARAMETER_LIMIT_TIME)) {
+			stoptime = System.currentTimeMillis() + 60L * 1000 * getParameterAsInt(PARAMETER_TIMEOUT);
+		}
 		getProgress().setTotal(getParameterAsInt(PARAMETER_ITERATIONS));
 		super.doWork();
 	}
 
 	@Override
 	boolean shouldStop(IOContainer unused) throws OperatorException {
-		int timeOut = getParameterAsInt(PARAMETER_TIMEOUT);
-		long stoptime = Long.MAX_VALUE;
 		if (getParameterAsBoolean(PARAMETER_LIMIT_TIME)) {
-			stoptime = System.currentTimeMillis() + 60L * 1000 * timeOut;
-			if (stoptime >= 0 && System.currentTimeMillis() > stoptime) {
+			if (System.currentTimeMillis() > stoptime) {
 				getLogger().info("Timeout reached");
 				return true;
 			}

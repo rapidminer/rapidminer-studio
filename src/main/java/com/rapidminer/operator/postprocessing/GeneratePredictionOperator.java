@@ -36,15 +36,15 @@ import com.rapidminer.tools.container.Tupel;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 
 /**
  * Generates predictions from confidence attributes.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class GeneratePredictionOperator extends AbstractExampleSetProcessing {
@@ -60,7 +60,7 @@ public class GeneratePredictionOperator extends AbstractExampleSetProcessing {
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		// searching confidence attributes
-		Map<Attribute, String> confidenceAttributes = new HashMap<Attribute, String>();
+		Map<Attribute, String> confidenceAttributes = new LinkedHashMap<Attribute, String>();
 		for (Iterator<AttributeRole> iterator = exampleSet.getAttributes().specialAttributes(); iterator.hasNext();) {
 			AttributeRole role = iterator.next();
 			if (role.getSpecialName().matches(Attributes.CONFIDENCE_NAME + "_.*")) {

@@ -18,17 +18,41 @@
  */
 package com.rapidminer.gui.properties;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Properties;
 
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import org.jdesktop.swingx.prompt.PromptSupport;
 
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.TextFieldWithAction;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
@@ -51,8 +75,8 @@ import com.rapidminer.tools.ParameterService;
  * file <i>Settings.properties</i>. Configure the structure of your properties by editing the
  * resource file <i>settings.xml</i>. This affects the order and sub-groups. Extensions can use the
  * resource files <i>SettingsMYEXT.properties</i> and <i>settingsMYEXT.xml</i>. This is documented
- * in <i>How to extend RapidMiner</i>, available at <a
- * href="http://rapidminer.com/documentation/">http://rapidminer.com/documentation/</a>
+ * in <i>How to extend RapidMiner</i>, available at
+ * <a href="http://rapidminer.com/documentation/">http://rapidminer.com/documentation/</a>
  * </p>
  *
  * @author Ingo Mierswa, Adrian Wilke
@@ -61,7 +85,40 @@ public class SettingsDialog extends ButtonDialog {
 
 	private static final long serialVersionUID = 6665295638614289994L;
 
+	/**
+	 * the delay before filtering is started after the user finished typing in milliseconds:
+	 * {@value}
+	 */
+	private static final int FILTER_TIMER_DELAY = 500;
+
+	/** the identifier of the search focus action */
+	private static final String ACTION_NAME_SEARCH = "focusSearchField";
+
+	/**
+	 * icon used in the {@link TextFieldWithAction} when the filter remove action is hovered
+	 */
+	private final ImageIcon CLEAR_FILTER_HOVERED_ICON = SwingTools.createIcon("16/x-mark_orange.png");
+
+	/**
+	 * the main container which contains the {@link #tabs} or the {@link #noMatchingSettingsLabel}.
+	 */
+	private JPanel container;
+
+	/**
+	 * the displayed tabs which includes the settings
+	 */
 	private SettingsTabs tabs;
+
+	/**
+	 * cache for the displayed properties
+	 */
+	private Properties propertyCache = new Properties();
+
+	/**
+	 * this label will be shown if no matching settings could be found
+	 */
+	private JLabel noMatchingSettingsLabel = new JLabel(I18N.getGUILabel("settings.no_matching_settings"),
+			SwingConstants.CENTER);
 
 	/**
 	 * Sets up the related {@link SettingsTabs} and buttons.
@@ -81,13 +138,10 @@ public class SettingsDialog extends ButtonDialog {
 	public SettingsDialog(String initialSelectedTab) {
 		super(ApplicationFrame.getApplicationFrame(), "settings", ModalityType.APPLICATION_MODAL, new Object[] {});
 
-		// Create tabs
-		tabs = new SettingsTabs(this);
-
-		// Select tab, if known
-		if (initialSelectedTab != null) {
-			tabs.selectTab(initialSelectedTab);
-		}
+		// main component container
+		container = new JPanel(new BorderLayout());
+		container.add(createSearchPanel(), BorderLayout.NORTH);
+		container.add(createTabs(initialSelectedTab, null));
 
 		// Create buttons
 		Collection<AbstractButton> buttons = new LinkedList<>();
@@ -98,6 +152,7 @@ public class SettingsDialog extends ButtonDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
+					updateFilter(null);
 					tabs.save();
 					setConfirmed(true);
 					dispose();
@@ -108,7 +163,132 @@ public class SettingsDialog extends ButtonDialog {
 		}));
 		buttons.add(makeCancelButton());
 
-		layoutDefault(tabs, NORMAL_EXTENDED, buttons);
+		layoutDefault(container, NORMAL_EXTENDED, buttons);
+	}
+
+	/**
+	 * Creates the settings tabs in regard to the filter.
+	 */
+	private JComponent createTabs(String initialSelectedTab, String filter) {
+		// Create tabs
+		tabs = new SettingsTabs(this, filter, propertyCache);
+
+		// Select tab, if known
+		if (initialSelectedTab != null) {
+			tabs.selectTab(initialSelectedTab);
+		}
+
+		if (tabs.getTabCount() == 0) {
+			return noMatchingSettingsLabel;
+		} else {
+			return tabs;
+		}
+	}
+
+	/**
+	 * Creates the search panel.
+	 */
+	private JPanel createSearchPanel() {
+		JPanel searchPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.weightx = 1;
+		gbc.insets = new Insets(0, 5, 5, 0);
+		searchPanel.add(Box.createHorizontalGlue(), gbc);
+
+		gbc.gridx += 1;
+		gbc.weightx = 0;
+		JLabel filterLabel = new JLabel(I18N.getGUILabel("settings.filter"));
+		searchPanel.add(filterLabel, gbc);
+
+		final JTextField filterNameField = new JTextField(10);
+		filterNameField.setMinimumSize(new Dimension(300, 15));
+		filterNameField.setPreferredSize(new Dimension(300, 15));
+
+		final ResourceAction filterAction = new ResourceAction(true, "settings.filter") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				updateFilter(filterNameField.getText());
+			}
+
+		};
+		final DocumentListener filterListener = new DocumentListener() {
+
+			private Timer updateTimer;
+
+			{
+				updateTimer = new Timer(FILTER_TIMER_DELAY, filterAction);
+				updateTimer.setRepeats(false);
+			}
+
+			@Override
+			public void removeUpdate(final DocumentEvent e) {
+				updateTimer.restart();
+			}
+
+			@Override
+			public void insertUpdate(final DocumentEvent e) {
+				updateTimer.restart();
+			}
+
+			@Override
+			public void changedUpdate(final DocumentEvent e) {
+				updateTimer.restart();
+			}
+		};
+		filterNameField.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.settings.filter_field.tip"));
+		filterNameField.addActionListener(filterAction);
+		filterNameField.getDocument().addDocumentListener(filterListener);
+		filterNameField.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), ACTION_NAME_SEARCH);
+		filterNameField.getActionMap().put(ACTION_NAME_SEARCH, new AbstractAction() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				filterNameField.requestFocusInWindow();
+			}
+		});
+		PromptSupport.setPrompt(I18N.getMessage(I18N.getGUIBundle(), "gui.label.settings.filter_field.prompt"),
+				filterNameField);
+		PromptSupport.setFontStyle(Font.ITALIC, filterNameField);
+
+		ResourceAction deleteFilterAction = new ResourceAction(true, "settings.filter_delete") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				// immediately show the filter update by calling the update filter method
+				// prevent duplicate updates by removing and re-adding the corresponding listener
+				filterNameField.getDocument().removeDocumentListener(filterListener);
+				filterNameField.setText("");
+				updateFilter(null);
+				filterNameField.getDocument().addDocumentListener(filterListener);
+			}
+		};
+		TextFieldWithAction searchField = new TextFieldWithAction(filterNameField, deleteFilterAction,
+				CLEAR_FILTER_HOVERED_ICON);
+		searchField.setMinimumSize(new Dimension(140, 20));
+		searchField.setPreferredSize(new Dimension(140, 20));
+
+		gbc.gridx += 1;
+		searchPanel.add(searchField, gbc);
+		return searchPanel;
+	}
+
+	private void updateFilter(String filter) {
+		container.remove(tabs);
+		container.remove(noMatchingSettingsLabel);
+		container.add(createTabs(null, filter), BorderLayout.CENTER);
+		container.revalidate();
+		container.repaint();
 	}
 
 	@Override
@@ -117,30 +297,10 @@ public class SettingsDialog extends ButtonDialog {
 	}
 
 	@Override
-	protected void close() {
-		resetItemStatus();
-		super.close();
-	}
-
-	@Override
-	protected void cancel() {
-		resetItemStatus();
-		super.cancel();
-	}
-
-	@Override
-	protected void ok() {
-		resetItemStatus();
-		super.ok();
-	}
-
-	/**
-	 * Remove the used flag to prevent broken settings dialog after second opening.
-	 */
-	private void resetItemStatus() {
-		for (String key : SettingsItems.INSTANCE.getKeys()) {
-			SettingsItems.INSTANCE.get(key).setUsedInDialog(false);
+	public void setVisible(boolean b) {
+		if (tabs != null) {
+			tabs.requestFocusInWindow();
 		}
+		super.setVisible(b);
 	}
-
 }

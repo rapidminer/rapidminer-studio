@@ -161,7 +161,7 @@ public class SortedExampleSet extends AbstractExampleSet {
 				} else if (sortingAttribute.isNumerical()) {
 					Double firstDouble = o1.getKeyAsDouble();
 					Double secondDouble = o2.getKeyAsDouble();
-					if (firstDouble == secondDouble || firstDouble == null) {
+					if (firstDouble == null || firstDouble.equals(secondDouble)) {
 						return 0;
 					} else {
 						return firstDouble.compareTo(secondDouble);
@@ -169,7 +169,7 @@ public class SortedExampleSet extends AbstractExampleSet {
 				} else if (sortingAttribute.isNominal()) {
 					String firstString = o1.getKeyAsString();
 					String secondString = o2.getKeyAsString();
-					if (firstString == secondString || firstString == null) {
+					if (firstString == null || firstString.equals(secondString)) {
 						return 0;
 					} else {
 						return firstString.compareTo(secondString);

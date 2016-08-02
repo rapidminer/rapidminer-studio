@@ -903,6 +903,9 @@ public class ProcessGUITools {
 		});
 		bubbleDelegator.setBubbleWindow(userErrorBubble);
 
+		if (error.getErrorName() != null && !error.getErrorName().trim().isEmpty()) {
+			userErrorBubble.setHeadline(error.getErrorName());
+		}
 		userErrorBubble.setVisible(true);
 		return userErrorBubble;
 	}
@@ -983,6 +986,9 @@ public class ProcessGUITools {
 		});
 		bubbleDelegator.setBubbleWindow(userErrorBubble);
 
+		if (error.getErrorName() != null && !error.getErrorName().trim().isEmpty()) {
+			userErrorBubble.setHeadline(error.getErrorName());
+		}
 		userErrorBubble.setVisible(true);
 		return userErrorBubble;
 	}
@@ -1042,6 +1048,9 @@ public class ProcessGUITools {
 		});
 		bubbleDelegator.setBubbleWindow(portErrorBubble);
 
+		if (error.getErrorName() != null && !error.getErrorName().trim().isEmpty()) {
+			portErrorBubble.setHeadline(error.getErrorName());
+		}
 		portErrorBubble.setVisible(true);
 		return portErrorBubble;
 	}

@@ -227,7 +227,7 @@ public class SelectionDialog extends ButtonDialog {
 		BoxLayout panelLayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
 		panel.setLayout(panelLayout);
 		panel.add(selectionPanel);
-		if (optionsToSelect != null && !optionsToSelect.isEmpty() && optionsToCheck != null || !optionsToCheck.isEmpty()) {
+		if (optionsToSelect != null && !optionsToSelect.isEmpty() && optionsToCheck != null && !optionsToCheck.isEmpty()) {
 			panel.add(Box.createRigidArea(new Dimension(0, GAP_BETWEEN_SELECTIONS)));
 		}
 		panel.add(checkboxPanel);

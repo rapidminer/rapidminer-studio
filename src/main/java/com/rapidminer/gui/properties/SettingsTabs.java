@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
@@ -109,6 +110,20 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	 *            The containing dialog. Is used to create {@link ToolTipWindow}s for tabs.
 	 */
 	public SettingsTabs(SettingsDialog settingsDialog) {
+		this(settingsDialog, null, null);
+	}
+
+	/**
+	 * Creates necessary {@link SettingsItem}s and related tabs for the settings.
+	 *
+	 * @param settingsDialog
+	 *            The containing dialog. Is used to create {@link ToolTipWindow}s for tabs.
+	 * @param filter
+	 *            Used to filter the setting parameters
+	 * @param cache
+	 *            which should be used to retrieve the values
+	 */
+	public SettingsTabs(SettingsDialog settingsDialog, String filter, Properties propertyCache) {
 		this.settingsDialog = settingsDialog;
 
 		setTabPlacement(JTabbedPane.LEFT);
@@ -159,11 +174,25 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 			Collections.sort(groups, SETTINGS_ITEM_COMPARATOR);
 		}
 		for (SettingsItem group : groups) {
-			List<SettingsItem> subGroups = group.getChildren(Type.SUB_GROUP);
-			List<SettingsItem> parameters = group.getChildren(Type.PARAMETER);
-			createTab(group.getKey(), group.getTitle(), group.getDescription(), subGroups, parameters);
+			List<SettingsItem> subGroups = group.getChildren(Type.SUB_GROUP, filter);
+			List<SettingsItem> parameters = group.getChildren(Type.PARAMETER, filter);
+			boolean isSubGroupsEmpty = true;
+			for (SettingsItem subGroup : subGroups) {
+				if (!subGroup.getChildren(Type.PARAMETER, filter).isEmpty()) {
+					isSubGroupsEmpty = false;
+					break;
+				}
+			}
+			if (parameters.size() > 0 || !isSubGroupsEmpty) {
+				createTab(group.getKey(), group.getTitle(), group.getDescription(), subGroups, parameters, filter,
+						propertyCache);
+			}
 		}
 
+		// Remove the used flag to prevent broken settings dialog after second opening.
+		for (String key : SettingsItems.INSTANCE.getKeys()) {
+			SettingsItems.INSTANCE.get(key).setUsedInDialog(false);
+		}
 	}
 
 	/**
@@ -182,7 +211,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	 * Creates a tab
 	 */
 	private void createTab(String groupKey, String groupTitle, String groupDescription, List<SettingsItem> subGroups,
-			List<SettingsItem> parameters) {
+			List<SettingsItem> parameters, String filter, Properties propertyCache) {
 
 		JPanel containerPanel = new JPanel();
 		containerPanel.setLayout(new BoxLayout(containerPanel, BoxLayout.PAGE_AXIS));
@@ -206,7 +235,8 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 		}
 		containerPanel.add(descriptionPanel);
 
-		final SettingsPropertyPanel table = new SettingsPropertyPanel(groupTitle, subGroups, parameters);
+		final SettingsPropertyPanel table = new SettingsPropertyPanel(groupTitle, subGroups, parameters, filter,
+				propertyCache);
 
 		new ToolTipWindow(settingsDialog, new TipProvider() {
 

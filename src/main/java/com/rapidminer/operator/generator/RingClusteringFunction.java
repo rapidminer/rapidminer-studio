@@ -18,13 +18,18 @@
  */
 package com.rapidminer.operator.generator;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.RandomGenerator;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
+import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.SetRelation;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.math.container.Range;
 
 
 /**
@@ -34,7 +39,7 @@ import java.util.Set;
  */
 public class RingClusteringFunction extends ClusterFunction {
 
-	private double bound = 10.0d;
+	private double bound = ExampleSetGenerator.DEFAULT_SINGLE_BOUND;
 
 	private Attribute label = AttributeFactory.createAttribute("label", Ontology.NOMINAL);
 
@@ -55,12 +60,13 @@ public class RingClusteringFunction extends ClusterFunction {
 	/** Since circles are used the upper and lower bounds must be the same. */
 	@Override
 	public void setLowerArgumentBound(double lower) {
-		this.bound = Math.max(this.bound, Math.abs(lower));
+		this.bound = lower;
 	}
 
 	@Override
 	public void setUpperArgumentBound(double upper) {
-		this.bound = Math.max(this.bound, Math.abs(upper));
+		// not used
+		this.bound = upper;
 	}
 
 	@Override
@@ -142,5 +148,23 @@ public class RingClusteringFunction extends ClusterFunction {
 	@Override
 	public int getMaxNumberOfAttributes() {
 		return 2;
+	}
+
+	@Override
+	public ExampleSetMetaData getGeneratedMetaData() {
+		ExampleSetMetaData emd = new ExampleSetMetaData();
+		// label
+		AttributeMetaData amd = new AttributeMetaData("label", Ontology.NOMINAL, Attributes.LABEL_NAME);
+		amd.setValueSet(getClusterSet(), SetRelation.EQUAL);
+		emd.addAttribute(amd);
+
+		// attributes
+		for (int i = 0; i < numberOfAttributes; i++) {
+			amd = new AttributeMetaData("att" + (i + 1), Ontology.REAL);
+			amd.setValueRange(new Range(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY), SetRelation.SUBSET);
+			emd.addAttribute(amd);
+		}
+		emd.setNumberOfExamples(numberOfExamples);
+		return emd;
 	}
 }

@@ -18,6 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
@@ -37,16 +47,6 @@ import com.rapidminer.parameter.conditions.ParameterCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
 
 /**
  * Replaces missing values in examples. If a value is missing, it is replaced by one of the
@@ -60,7 +60,7 @@ import java.util.Set;
  * replacement type zero the first nominal value defined for this attribute is used. The
  * replenishment &quot;value&quot; indicates that the user defined parameter should be used for the
  * replacement.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer, Marius Helf
  */
 public class MissingValueReplenishment extends ValueReplenishment {
@@ -84,23 +84,30 @@ public class MissingValueReplenishment extends ValueReplenishment {
 
 	public static final OperatorVersion VERSION_BEFORE_ROUND_ON_INTEGER_ATTRIBUTES = new OperatorVersion(5, 2, 0);
 
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
+
 	public MissingValueReplenishment(OperatorDescription description) {
 		super(description);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.rapidminer.operator.Operator#getIncompatibleVersionChanges()
 	 */
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		OperatorVersion[] oldIncompatibleVersionChanges = super.getIncompatibleVersionChanges();
-		OperatorVersion[] newIncompatibleVersionChanges = new OperatorVersion[oldIncompatibleVersionChanges.length + 1];
+		OperatorVersion[] newIncompatibleVersionChanges = new OperatorVersion[oldIncompatibleVersionChanges.length + 2];
 		for (int i = 0; i < oldIncompatibleVersionChanges.length; ++i) {
 			newIncompatibleVersionChanges[i] = oldIncompatibleVersionChanges[i];
 		}
-		newIncompatibleVersionChanges[newIncompatibleVersionChanges.length - 1] = VERSION_BEFORE_ROUND_ON_INTEGER_ATTRIBUTES;
+		newIncompatibleVersionChanges[newIncompatibleVersionChanges.length - 2] = VERSION_BEFORE_ROUND_ON_INTEGER_ATTRIBUTES;
+		newIncompatibleVersionChanges[newIncompatibleVersionChanges.length - 1] = VERSION_MAY_WRITE_INTO_DATA;
 		return newIncompatibleVersionChanges;
 	}
 
@@ -314,6 +321,16 @@ public class MissingValueReplenishment extends ValueReplenishment {
 		});
 		types.add(type);
 		return types;
+	}
+
+	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
 	}
 
 	@Override

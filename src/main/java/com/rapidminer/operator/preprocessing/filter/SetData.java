@@ -20,12 +20,15 @@ package com.rapidminer.operator.preprocessing.filter;
 
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
@@ -65,6 +68,12 @@ public class SetData extends AbstractDataProcessing {
 	public static final String PARAMETER_VALUE = "value";
 
 	public static final String PARAMETER_ADDITIONAL_VALUES = "additional_values";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public SetData(OperatorDescription description) {
 		super(description);
@@ -117,7 +126,7 @@ public class SetData extends AbstractDataProcessing {
 		int exampleIndex = getParameterAsInt(PARAMETER_EXAMPLE_INDEX);
 		if (exampleIndex == 0) {
 			throw new UserError(this, 207, new Object[] { "0", PARAMETER_EXAMPLE_INDEX,
-			"only positive or negative indices are allowed" });
+					"only positive or negative indices are allowed" });
 		}
 		if (getParameterAsBoolean(PARAMETER_COUNT_BACKWARDS)) {
 			exampleIndex = exampleSet.size() - exampleIndex;
@@ -186,17 +195,28 @@ public class SetData extends AbstractDataProcessing {
 				"This list allows to set additional values of the addressed example.", new ParameterTypeAttribute(
 						PARAMETER_ATTRIBUTE_NAME, "The name of the attribute for which the value should be set.",
 						getExampleSetInputPort(), true), new ParameterTypeString(PARAMETER_VALUE,
-								"The value which should be set.", true, false), false));
+						"The value which should be set.", true, false), false));
 		return types;
 	}
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
 	}
 
 	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), SetData.class, null);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

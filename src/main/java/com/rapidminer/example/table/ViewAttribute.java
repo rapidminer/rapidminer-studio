@@ -30,7 +30,7 @@ import com.rapidminer.tools.Ontology;
 
 /**
  * A view attribute is based on a ViewModel (Preprocessing Model) and applies the model on the fly.
- * 
+ *
  * @author Sebastian Land
  */
 public class ViewAttribute extends AbstractAttribute {
@@ -119,7 +119,7 @@ public class ViewAttribute extends AbstractAttribute {
 					case NumericalAttribute.UNLIMITED_NUMBER_OF_DIGITS:
 						return Double.toString(value);
 					case NumericalAttribute.DEFAULT_NUMBER_OF_DIGITS:
-						return com.rapidminer.tools.Tools.formatIntegerIfPossible(value, -1);
+						return com.rapidminer.tools.Tools.formatIntegerIfPossible(value);
 					default:
 						return com.rapidminer.tools.Tools.formatIntegerIfPossible(value, numberOfDigits);
 				}

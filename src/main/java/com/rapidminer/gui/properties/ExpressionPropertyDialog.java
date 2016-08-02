@@ -734,7 +734,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		functionsC.gridx = 0;
 		functionsC.anchor = GridBagConstraints.NORTHWEST;
 		functionPanel
-		.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Functions</font></b></html>"), functionsC);
+				.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Functions</font></b></html>"), functionsC);
 
 		functionsC.insets = new Insets(0, 0, STD_INSET_GBC, STD_INSET_GBC);
 		functionsC.gridx += 1;
@@ -1286,7 +1286,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 				if (filteredModel.get(ExampleResolver.KEY_ATTRIBUTES) != null
 						&& filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES) != null
 						&& filteredModel.get(ExampleResolver.KEY_ATTRIBUTES).size()
-						+ filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).size() <= MAX_NMBR_INPUTS_SHOWN) {
+								+ filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).size() <= MAX_NMBR_INPUTS_SHOWN) {
 
 					inputCategoryTaskPanes.get(ExampleResolver.KEY_ATTRIBUTES).setCollapsed(false);
 					inputCategoryTaskPanes.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).setCollapsed(false);
@@ -1441,7 +1441,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		}
 		String errorMessage = splittedMessage.length > 1 ? splittedMessage[1] : "\n";
 		if (splittedMessage.length > 2) {
-			errorMessage += splittedMessage.length > 2 ? "\n" + splittedMessage[2] : "";
+			errorMessage += "\n" + splittedMessage[2];
 		}
 		validationTextArea.setText(errorMessage);
 	}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
+<operatorHelp lang="en_EN">
+   <operator>
+      <key>operator_two_tags</key>
+      <name>Operator with two Tag</name>
+      <tags>
+      	<tag>First Tag</tag>
+      	<tag>Second Tag</tag>
+      </tags>
+   </operator>
+</operatorHelp>

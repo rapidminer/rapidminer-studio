@@ -58,6 +58,22 @@ public class PortUserError extends UserError {
 	}
 
 	/**
+	 * Creates a new user error for a port.
+	 *
+	 * @param operator
+	 *            The {@link Port} which caused the error.
+	 * @param errorId
+	 *            The error id referring to a message in the file
+	 *            <code>UserErrorMessages.properties</code>
+	 * @param arguments
+	 *            Arguments for the short or long message.
+	 */
+	public PortUserError(Port port, String errorId, Object... arguments) {
+		super(port.getPorts().getOwner().getOperator(), errorId, arguments);
+		this.port = port;
+	}
+
+	/**
 	 * @return the port which caused the error.
 	 */
 	public Port getPort() {
@@ -66,7 +82,7 @@ public class PortUserError extends UserError {
 
 	/**
 	 * Sets the expected data type.
-	 * 
+	 *
 	 * @param expectedType
 	 *            the type
 	 */
@@ -83,7 +99,7 @@ public class PortUserError extends UserError {
 
 	/**
 	 * Sets the actual delivered data type.
-	 * 
+	 *
 	 * @param actualType
 	 *            the type
 	 */

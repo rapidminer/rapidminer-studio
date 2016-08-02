@@ -69,7 +69,7 @@ public class DynamicIconUrlStreamHandler extends URLStreamHandler {
 	 * the identifier of the quota bar icon (always one color only: green (0-70%), orange (70-90%),
 	 * red (90-100%)
 	 */
-	public static final String IDENTIFIER_QUOTA_UNI = "quota";
+	public static final String IDENTIFIER_QUOTA_UNI = "quota_uni";
 
 	/** mapping between identifiers and the dynicon implementations */
 	private static final Map<String, DynamicIcon> mapping = new HashMap<>();
@@ -128,7 +128,7 @@ public class DynamicIconUrlStreamHandler extends URLStreamHandler {
 				float percentageFloat = percentage / 100f;
 				if (percentage < 70) {
 					green = 0.75f;
-				} else if (percentage >= 70) {
+				} else if (percentage >= 70 && percentage < 90) {
 					red = 1.0f;
 					green = 1.0f - 2 * (percentageFloat - 0.5f);
 				} else if (percentage >= 90) {

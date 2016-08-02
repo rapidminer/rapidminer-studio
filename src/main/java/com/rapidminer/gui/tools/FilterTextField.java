@@ -178,5 +178,10 @@ public class FilterTextField extends JTextField {
 		this.defaultFilterText = text;
 		PromptSupport.setPrompt(text, this);
 	}
+	
+	public void setFilterText(String filterText) {
+		setText(filterText);
+		updateFilter(null);
+	}
 
 }

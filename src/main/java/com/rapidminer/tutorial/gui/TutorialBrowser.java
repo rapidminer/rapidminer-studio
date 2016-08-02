@@ -365,11 +365,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 					} else {
 						ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
 								"tutorial_browser", "open_remote_url");
-						try {
-							RMUrlHandler.browse(e.getURL().toURI());
-						} catch (Exception e1) {
-							SwingTools.showSimpleErrorMessage("cannot_open_browser_url", e1, e.getDescription());
-						}
+						RMUrlHandler.openInBrowser(e.getURL());
 					}
 				}
 			}

@@ -18,6 +18,54 @@
  */
 package com.rapidminer.gui.new_plotter.engine.jfreechart;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.lang.ref.WeakReference;
+import java.text.DateFormat;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.Vector;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.LegendItemCollection;
+import org.jfree.chart.LegendItemSource;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.block.BlockBorder;
+import org.jfree.chart.block.ColumnArrangement;
+import org.jfree.chart.block.FlowArrangement;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.Crosshair;
+import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.general.Dataset;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.ui.HorizontalAlignment;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.VerticalAlignment;
+
 import com.rapidminer.gui.new_plotter.ChartPlottimeException;
 import com.rapidminer.gui.new_plotter.ConfigurationChangeResponse;
 import com.rapidminer.gui.new_plotter.MasterOfDesaster;
@@ -73,65 +121,17 @@ import com.rapidminer.gui.plotter.NullCoordinateTransformation;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.I18N;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Point;
-import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.lang.ref.WeakReference;
-import java.text.DateFormat;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.Vector;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.LegendItemCollection;
-import org.jfree.chart.LegendItemSource;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.DateAxis;
-import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.block.BlockBorder;
-import org.jfree.chart.block.ColumnArrangement;
-import org.jfree.chart.block.FlowArrangement;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.Crosshair;
-import org.jfree.chart.plot.Plot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.category.CategoryItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.title.LegendTitle;
-import org.jfree.chart.title.TextTitle;
-import org.jfree.data.category.CategoryDataset;
-import org.jfree.data.general.Dataset;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.ui.HorizontalAlignment;
-import org.jfree.ui.RectangleEdge;
-import org.jfree.ui.VerticalAlignment;
-
 
 /**
  * This class creates a JFreeChart from a PlotConfiguration.
- * 
+ *
  * Using the listener mechanism, the chart is updated or recreated each time the plot configuration
  * changes.
- * 
+ *
  * Classes implementing the interface {@link JFreeChartPlotEngineListener} can register at the
  * Plotter2D via addListener() and will be informed when the chart has changed.
- * 
- * 
+ *
+ *
  * Dataset and Renderer Chart: Series type categorical grouped stacking error bars Renderer Dataset
  * Plot Constraints L - irrelevant n/a - XYLineAndShapeRenderer XYDataset, e.g. DefaultXYDataset
  * XYPlot L - irrelevant n/a bars XYErrorRenderer IntervalXYDataset XYPlot L - irrelevant n/a band
@@ -159,10 +159,10 @@ import org.jfree.ui.VerticalAlignment;
  * CategoryDataset, e.g. DefaultCategoryDataset CategoryPlot A X irrelevant percentage -
  * StackedAreaRenderer CategoryDataset, e.g. DefaultCategoryDataset CategoryPlot A irrelevant
  * irrelevant irrelevant != none not supported by JFreeChart n/a n/a
- * 
+ *
  * Series types: L -> Lines and Shapes B -> Bar A -> Area
- * 
- * 
+ *
+ *
  * @author Marius Helf, Nils Woehler
  */
 public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListener, PlotConfigurationProcessingListener,
@@ -301,7 +301,7 @@ public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListen
 	 * Trigger an update of the {@link JFreeChart} that is stored in the {@link ChartPanel}. The
 	 * update is performed by using a {@link SwingWorker} thread. First the new Chart is created and
 	 * afterwards the new chart is stored in the {@link ChartPanel}.
-	 * 
+	 *
 	 * @param informPlotConfigWhenDone
 	 *            should inform the {@link PlotConfiguration} that the worker thread is done?
 	 */
@@ -877,7 +877,7 @@ public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListen
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	private void checkWarnings() {
 		plotInstance.getMasterOfDesaster().clearWarnings();
@@ -899,10 +899,10 @@ public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListen
 
 	/**
 	 * Creates an appropriate JFreeChart {@link Dataset} for valueSource and adds it to plot.
-	 * 
+	 *
 	 * @param rangeAxisIdx
 	 *            The index of the range axis in the {@link XYPlot}
-	 * 
+	 *
 	 * @return The index of the newly added dataset in the plot.
 	 */
 	private void addDataAndRendererToXYPlot(ValueSource valueSource, XYPlot plot, int rangeAxisIdx)
@@ -1064,7 +1064,7 @@ public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListen
 	}
 
 	/**
-	 * 
+	 *
 	 * @param dataForAllGroupCells
 	 * @param rangeAxisIdx
 	 */
@@ -1347,7 +1347,7 @@ public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListen
 	/**
 	 * Sets the plot configuration and adapts all subscriptions of this Plotter2D to event
 	 * providers.
-	 * 
+	 *
 	 * @param plotInstance
 	 *            The new PlotConfiguration. null not allowed.
 	 */
@@ -1513,8 +1513,8 @@ public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListen
 				int rangeAxisCount = xyPlot.getRangeAxisCount();
 				for (int i = 0; i < rangeAxisCount; ++i) {
 					ValueAxis valueAxis = xyPlot.getRangeAxis(i);
-					valueAxis.setAxisLinePaint(lineColor);
 					if (valueAxis != null) {
+						valueAxis.setAxisLinePaint(lineColor);
 						ChartAxisFactory.formatAxis(plotInstance.getCurrentPlotConfigurationClone(), valueAxis);
 					}
 				}
@@ -1690,7 +1690,7 @@ public class JFreeChartPlotEngine implements PlotEngine, PlotConfigurationListen
 
 	/**
 	 * Creates the legend items for this {@link JFreeChartPlotEngine}.
-	 * 
+	 *
 	 * @see org.jfree.chart.LegendItemSource#getLegendItems()
 	 */
 	@Override

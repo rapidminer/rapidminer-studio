@@ -69,6 +69,7 @@ public class OperatorInfoPanel extends JPanel {
 						Level.WARNING,
 						I18N.getMessage(LogService.getRoot().getResourceBundle(),
 								"com.rapidminer.gui.dialog.OperatorInfoPanel.creating_operator_error", e.getMessage()), e);
+				throw new RuntimeException(e);
 			}
 
 			setLayout(new BorderLayout());

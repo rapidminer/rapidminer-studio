@@ -18,10 +18,6 @@
  */
 package com.rapidminer.io.process;
 
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.XMLException;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -73,10 +69,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.XMLException;
+
 
 /**
  * This class offers several convenience methods for treating XML documents-
- * 
+ *
  * @author Sebastian Land, Simon Fischer
  */
 public class XMLTools {
@@ -95,10 +94,10 @@ public class XMLTools {
 
 	/**
 	 * Creates a new {@link DocumentBuilder} instance.
-	 * 
+	 *
 	 * Needed because DocumentBuilder is not thread-safe and crashes when different threads try to
 	 * parse at the same time.
-	 * 
+	 *
 	 * @return
 	 * @throws IOException
 	 *             if it fails to create a {@link DocumentBuilder}
@@ -260,15 +259,15 @@ public class XMLTools {
 			try {
 				tf.setAttribute("indent-number", Integer.valueOf(2));
 			} catch (IllegalArgumentException e) {
-				// LogService.getRoot().log(Level.WARNING,
-				// "XML transformer does not support indentation: " + e);
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.io.process.XMLTools.xml_transformer_does_not_support_identation", e));
+				// ignore, may not be supported by implementation
 			}
 			transformer = tf.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			try {
+				transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+			} catch (IllegalArgumentException e) {
+				// ignore, may not be supported by implementation
+			}
 			if (outputProperties != null) {
 				transformer.setOutputProperties(outputProperties);
 			}
@@ -312,11 +311,11 @@ public class XMLTools {
 
 	/**
 	 * For a tag <parent> <tagName>content</tagName> <something>else</something> ... </parent>
-	 * 
+	 *
 	 * returns "content". This will return the content of the first occurring child element with
 	 * name tagName. If no such tag exists and {@link XMLException} is thrown if
 	 * throwExceptionOnError is true. Otherwise null is returned.
-	 * */
+	 */
 	public static String getTagContents(Element parent, String tagName, boolean throwExceptionOnError) throws XMLException {
 		NodeList nodeList = parent.getChildNodes();
 		for (int i = 0; i < nodeList.getLength(); i++) {
@@ -471,7 +470,7 @@ public class XMLTools {
 	 */
 	public static void deleteTagContents(Element parentElement, String name) {
 		NodeList children = parentElement.getElementsByTagName(name);
-		for (int i = 0; i < children.getLength(); i++) {
+		for (int i = children.getLength() - 1; i >= 0; i--) {
 			Element child = (Element) children.item(i);
 			parentElement.removeChild(child);
 		}
@@ -605,7 +604,7 @@ public class XMLTools {
 	/**
 	 * This is the same as {@link #getChildElement(Element, String, boolean)}, but its always
 	 * obligatory to have the child element.
-	 * 
+	 *
 	 * @throws XMLException
 	 */
 	public static Element getUniqueChildElement(Element father, String tagName) throws XMLException {
@@ -687,7 +686,7 @@ public class XMLTools {
 
 	/**
 	 * Returns the contents of the inner tags with the given name as int array.
-	 * 
+	 *
 	 * @throws XMLException
 	 */
 	public static int[] getChildTagsContentAsIntArray(Element father, String childElementName) throws XMLException {

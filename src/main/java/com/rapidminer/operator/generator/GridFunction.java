@@ -56,9 +56,6 @@ public class GridFunction extends RegressionFunction {
 
 	@Override
 	public double[] createArguments(int number, RandomGenerator random) throws FunctionException {
-		if (number <= 0) {
-			throw new FunctionException("Grid function", "must have at least one attribute!");
-		}
 		double[] args = new double[number];
 		for (int i = 0; i < args.length; i++) {
 			args[i] = getLowerArgumentBound() + (dimDistance / 2.0d) + counter[i] * dimDistance;

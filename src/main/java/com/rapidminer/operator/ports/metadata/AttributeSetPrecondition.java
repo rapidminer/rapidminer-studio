@@ -18,6 +18,10 @@
  */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ports.InputPort;
@@ -27,22 +31,18 @@ import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 
 /**
  * This precondition might be used to ensure that a number of attributes is contained in the
  * exampleSet at the given port. If the attribute(s) are not contained, only a warning will be
  * given. Since this Precondition does not register errors beside the warning, it might be used in
  * addition to the ExampleSetPrecondition.
- * 
+ *
  * An implementation of the AttributeNameProvider might be used to provide the names of attribute
  * unknown during creation time.
- * 
+ *
  * @author Sebastian Land
- * 
+ *
  */
 public class AttributeSetPrecondition extends AbstractPrecondition {
 
@@ -166,8 +166,8 @@ public class AttributeSetPrecondition extends AbstractPrecondition {
 
 	private void checkAttributeNames(String[] requiredNames, ExampleSetMetaData emd) {
 		for (String attributeName : requiredNames) {
-			if (!attributeName.contains("%{")) {
-				if (attributeName != null && attributeName.length() > 0) {
+			if (attributeName != null && attributeName.length() > 0) {
+				if (!attributeName.contains("%{")) {
 					MetaDataInfo attInfo = emd.containsAttributeName(attributeName);
 					if (attInfo == MetaDataInfo.NO) {
 						QuickFix fix = null;

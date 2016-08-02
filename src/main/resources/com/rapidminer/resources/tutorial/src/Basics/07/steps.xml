@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="What to predict?">
+		<text>To learn about building predictive models, let's go back to the Titanic data from earlier.  This data is somewhat simpler and does not need a lot of preparation, but we still need to specify which column we want to predict!</text>
+	</step>
+	<step name="Add product details to transactions.">
+		<tasks>
+			<task><activity>Drag the <file>Titanic</file> data</activity> into the process.</task>
+			<task><activity>Now, hover the mouse over the output port</activity> of the <op>Retrieve</op> operator and wait for a small window to pop up and display some meta data about the Titanic dataset. Some of the information you know from the <ui>Statistics</ui> tab.</task>
+			<task>Note the two columns <ui>Role</ui> and <ui>Type</ui> in the table at the bottom.</task>
+		</tasks>
+		<info>Each attribute has a <emph>type</emph> which defines the possible values for the column  (for example, if values can be nominal or numerical).</info>
+		<info>The <emph>role</emph> of an attribute describes how the column is used by machine learning operators. Attributes without any role (also called "regular" attributes) are used as input for training while <emph>id</emph> attributes are usually ignored by modeling algorithms because they are only used as unique identifiers of observations of data.</info>
+	</step>
+	<step name="Define attribute types and roles.">
+		<tasks>
+			<task><activity>Add a <op>Discretize by Binning</op></activity> operator and <activity>connect it</activity>. In its <ui>Parameters</ui>:</task>
+			<task><activity>Set the <param>attribute filter type</param> to <value>single</value></activity> (i.e. you only work on one of the attributes).</task>
+			<task><activity>Set <param>attribute</param> to <value>Age</value></activity>.</task>
+			<task><activity>Set <param>number of bins</param> to <value>3</value>.</activity></task>
+		</tasks>
+		<info>"Binning" is a common technique to transform the type from <value>numerical</value> to <value>polynominal</value> (a nominal with more than 2 values). Here, we create three "bins" covering the complete range of values.  The operator then replaces the original numerical value with the name of the bin the value belongs to.</info>
+	</step>
+	<step name="Define which column to predict.">
+		<info>In RapidMiner, we call the column which should be predicted <emph>label</emph>.  It is sometimes also known as <emph>target</emph> or <emph>class</emph>.</info>
+		<tasks>
+			<task><activity>Add the <op>Set Role</op></activity> operator and <activity>connect it</activity>.</task>
+			<task>In <ui>Parameters</ui>, <activity>for <param>attribute name</param> <value>Survived</value>, change <param>target role</param> to <value>label</value>.</activity></task>
+			<task><icon>16/media_play.png</icon><activity>Run the process</activity> and inspect the results.</task>
+		</tasks>
+		<info>Look at the <ui>Statistics</ui> tab in the <ui>Results</ui> view. Note that the role of <emph>Survived</emph> has changed to <value>label</value>. The attribute <value>Age</value> also has a new type now: the numerical values for <value>Age</value> have been replaced by new names.</info>
+	</step>
+	<step name="Congratulations!">
+		<text>Great work!  Setting an attribute role is useful for many things (e.g. for identifying ID-like attributes or example weights), but the most frequent use is to define the label, i.e. which attribute should be predicted based on the other attributes.</text>
+		<questions>
+			<question>Look at the Age column in the results again. What are the numerical borders for the three bins you have created?</question>
+			<question>Change the process so that Age <emph>and</emph> Passenger Fare are discretized into <emph>5</emph> bins.</question>
+			<question>What other roles besides ID and label are available in the Set Role operator?</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

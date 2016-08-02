@@ -18,9 +18,10 @@
  */
 package com.rapidminer.example;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,21 +33,24 @@ import java.util.NoSuchElementException;
  * based on a linked list of {@link com.rapidminer.example.AttributeRole}s and simply delivers the
  * same {@link com.rapidminer.example.AttributeRoleIterator} which might skip either regular or
  * special attributes.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land
  */
 public class SimpleAttributes extends AbstractAttributes {
 
 	private static final long serialVersionUID = 6388263725741578818L;
 
-	private List<AttributeRole> attributes = new LinkedList<>();
+	private final List<AttributeRole> attributes;
 
 	private transient Map<String, AttributeRole> nameToAttributeRoleMap = new HashMap<>();
 	private transient Map<String, AttributeRole> specialNameToAttributeRoleMap = new HashMap<>();
 
-	public SimpleAttributes() {}
+	public SimpleAttributes() {
+		this.attributes = Collections.synchronizedList(new ArrayList<AttributeRole>());
+	}
 
 	private SimpleAttributes(SimpleAttributes attributes) {
+		this.attributes = Collections.synchronizedList(new ArrayList<AttributeRole>(attributes.allSize()));
 		for (AttributeRole role : attributes.attributes) {
 			register((AttributeRole) role.clone(), false);
 		}
@@ -137,7 +141,7 @@ public class SimpleAttributes extends AbstractAttributes {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param onlyMap
 	 *            if true, removes the attribute only from the maps, but not from the list. this is
 	 *            useful for the iterator, which has already removed the attribute from the list.
@@ -163,8 +167,8 @@ public class SimpleAttributes extends AbstractAttributes {
 		if (attributeRole.getSpecialName() != null) {
 			AttributeRole role = specialNameToAttributeRoleMap.get(attributeRole.getSpecialName());
 			if (role == null) {
-				throw new NoSuchElementException("Cannot rename attribute role. No such attribute role: "
-						+ attributeRole.getSpecialName());
+				throw new NoSuchElementException(
+						"Cannot rename attribute role. No such attribute role: " + attributeRole.getSpecialName());
 			}
 			if (role != attributeRole) {
 				throw new RuntimeException("Broken attribute role map.");

@@ -44,7 +44,7 @@ import javax.swing.SwingUtilities;
 
 /**
  * A popup object in form of a rounded rectangle.
- * 
+ *
  * @author Ingo Mierswa
  */
 public final class RoundedRectanglePopup extends Popup {
@@ -124,12 +124,13 @@ public final class RoundedRectanglePopup extends Popup {
 		if (mac) {
 			((JComponent) contents).setBorder(Borders.getPopupMenuBorder());
 		} else if (((JComponent) contents).getBorder() instanceof DummyBorder) {
-			if (!((owner instanceof JMenu) && ((JMenu) owner).isTopLevelMenu())
-					&& !((owner.getParent() != null) && (owner.getParent() instanceof javax.swing.JToolBar))
-					&& !((owner != null) && (owner instanceof javax.swing.JComboBox))) {
-				((JComponent) contents).setBorder(Borders.getShadowedPopupMenuBorder());
-			} else {
+			if ((owner != null) //
+					&& (((owner instanceof JMenu) && ((JMenu) owner).isTopLevelMenu()) //
+					|| ((owner.getParent() != null) && (owner.getParent() instanceof javax.swing.JToolBar)) //
+					|| (owner instanceof javax.swing.JComboBox))) {
 				((JComponent) contents).setBorder(Borders.getPopupBorder());
+			} else {
+				((JComponent) contents).setBorder(Borders.getShadowedPopupMenuBorder());
 			}
 		}
 	}

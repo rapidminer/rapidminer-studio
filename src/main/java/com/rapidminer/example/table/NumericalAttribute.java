@@ -28,7 +28,7 @@ import com.rapidminer.tools.Ontology;
 /**
  * This class holds all information on a single numerical attribute. In addition to the information
  * of the superclass this is some statistics data like minimum, maximum and average of the values.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class NumericalAttribute extends AbstractAttribute {
@@ -54,7 +54,7 @@ public class NumericalAttribute extends AbstractAttribute {
 	/**
 	 * Creates a simple attribute which is not part of a series and does not provide a unit string.
 	 */
-	/* pp */NumericalAttribute(String name, int valueType) {
+	/* pp */ NumericalAttribute(String name, int valueType) {
 		super(name, valueType);
 		registerStatistics(new NumericalStatistics());
 		registerStatistics(new WeightedNumericalStatistics());
@@ -111,7 +111,7 @@ public class NumericalAttribute extends AbstractAttribute {
 				case UNLIMITED_NUMBER_OF_DIGITS:
 					return Double.toString(value);
 				case DEFAULT_NUMBER_OF_DIGITS:
-					return com.rapidminer.tools.Tools.formatIntegerIfPossible(value, -1);
+					return com.rapidminer.tools.Tools.formatIntegerIfPossible(value);
 				default:
 					return com.rapidminer.tools.Tools.formatIntegerIfPossible(value, numberOfDigits);
 			}

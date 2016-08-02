@@ -32,10 +32,6 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DoubleArrayDataRow;
 import com.rapidminer.example.table.MemoryExampleTable;
-import com.rapidminer.license.LicenseConstants;
-import com.rapidminer.license.annotation.LicenseConstraint;
-import com.rapidminer.license.product.ConnectorTypes;
-import com.rapidminer.license.product.Product;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -76,7 +72,6 @@ import com.rapidminer.tools.io.Encoding;
  * @rapidminer.index url
  * @author Ingo Mierswa
  */
-@LicenseConstraint(productId = Product.RM_REGEX, constraintId = LicenseConstants.CONNECTORS_CONSTRAINT_ID, value = ConnectorTypes.ADVANCED_CONNECTORS)
 public class URLExampleSource extends AbstractExampleSource {
 
 	public static final String PARAMETER_URL = "url";
@@ -214,12 +209,12 @@ public class URLExampleSource extends AbstractExampleSource {
 		type.setExpert(false);
 		types.add(type);
 
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_SKIP_ERROR_LINES,
+		types.add(new ParameterTypeBoolean(PARAMETER_SKIP_ERROR_LINES,
 				"Indicates if lines which can not be read should be skipped instead of letting this operator fail its execution.",
 				false));
 
-		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
+		types.add(
+				new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
 		types.addAll(super.getParameterTypes());
 		return types;
 	}

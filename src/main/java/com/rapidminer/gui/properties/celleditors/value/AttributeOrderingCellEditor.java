@@ -18,14 +18,6 @@
  */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.gui.properties.AttributeOrderingDialog;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.preprocessing.filter.attributes.AttributeOrderingOperator;
-import com.rapidminer.parameter.ParameterTypeAttributeOrderingRules;
-import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.Tools;
-
 import java.awt.Component;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -36,10 +28,18 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JTable;
 
+import com.rapidminer.gui.properties.AttributeOrderingDialog;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.preprocessing.filter.attributes.AttributeOrderingOperator;
+import com.rapidminer.parameter.ParameterTypeAttributeOrderingRules;
+import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.Tools;
+
 
 /**
  * The cell editor for {@link ParameterTypeAttributeOrderingRules}.
- * 
+ *
  * @author Nils Woehler
  */
 public class AttributeOrderingCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
@@ -61,12 +61,13 @@ public class AttributeOrderingCellEditor extends AbstractCellEditor implements P
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if (operator == null) {
+					return;
+				}
 				LinkedList<String> preSelectedAttributeNames = new LinkedList<String>();
 				String combinedNames = null;
 				try {
-					if (operator != null) {
 						combinedNames = operator.getParameter(type.getKey());
-					}
 				} catch (UndefinedParameterError er) {
 				}
 				if (combinedNames != null) {

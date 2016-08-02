@@ -18,10 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -37,9 +43,6 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.Collection;
-import java.util.List;
-
 
 /**
  * This operator adds random attributes and white noise to the data. New random attributes are
@@ -53,7 +56,7 @@ import java.util.List;
  * noise without using the attribute value range. Using the parameter list it is possible to set
  * different noise levels for different attributes. However, it is not possible to add noise to
  * nominal attributes.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class NoiseOperator extends PreprocessingOperator {
@@ -81,6 +84,12 @@ public class NoiseOperator extends PreprocessingOperator {
 	 * attribute&quot;
 	 */
 	public static final String PARAMETER_LINEAR_FACTOR = "linear_factor";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public NoiseOperator(OperatorDescription description) {
 		super(description);
@@ -185,8 +194,24 @@ public class NoiseOperator extends PreprocessingOperator {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), NoiseOperator.class,
 				attributeSelector);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

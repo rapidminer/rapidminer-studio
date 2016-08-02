@@ -68,10 +68,6 @@ public class AbstractLinkButton extends ExtendedHTMLJEditorPane {
 		super("text/html", makeHTML(action));
 		this.action = action;
 
-		if (action == null) {
-			throw new IllegalArgumentException("action must not be null!");
-		}
-
 		installDefaultStylesheet();
 		setEditable(false);
 		setOpaque(false);
@@ -141,6 +137,10 @@ public class AbstractLinkButton extends ExtendedHTMLJEditorPane {
 	 * @return
 	 */
 	private static String makeHTML(final Action action) {
+		if (action == null) {
+			throw new IllegalArgumentException("action must not be null!");
+		}
+
 		String name = (String) action.getValue(Action.NAME);
 		if (name == null || name.trim().isEmpty()) {
 			return "";

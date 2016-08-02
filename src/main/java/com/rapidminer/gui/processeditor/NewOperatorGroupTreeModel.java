@@ -19,6 +19,7 @@
 package com.rapidminer.gui.processeditor;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -47,6 +48,12 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  */
 public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceListener {
 
+	/** Regular expression used as delimiter for search terms. */
+	private static final String SEARCH_TERM_DELIMITER = "\\s+";
+
+	/** Consider only the first {@value} search terms. */
+	private static final int MAX_SEARCH_TERMS = 5;
+
 	/** Compares operator descriptions based on their usage statistics. */
 	private static final class UsageStatsComparator implements Comparator<OperatorDescription>, Serializable {
 
@@ -54,12 +61,10 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 
 		@Override
 		public int compare(OperatorDescription op1, OperatorDescription op2) {
-			int usageCount1 = (int) ActionStatisticsCollector.getInstance().getCount(
-					ActionStatisticsCollector.TYPE_OPERATOR, op1.getKey(),
-					ActionStatisticsCollector.OPERATOR_EVENT_EXECUTION);
-			int usageCount2 = (int) ActionStatisticsCollector.getInstance().getCount(
-					ActionStatisticsCollector.TYPE_OPERATOR, op2.getKey(),
-					ActionStatisticsCollector.OPERATOR_EVENT_EXECUTION);
+			int usageCount1 = (int) ActionStatisticsCollector.getInstance().getCount(ActionStatisticsCollector.TYPE_OPERATOR,
+					op1.getKey(), ActionStatisticsCollector.OPERATOR_EVENT_EXECUTION);
+			int usageCount2 = (int) ActionStatisticsCollector.getInstance().getCount(ActionStatisticsCollector.TYPE_OPERATOR,
+					op2.getKey(), ActionStatisticsCollector.OPERATOR_EVENT_EXECUTION);
 			return usageCount2 - usageCount1;
 		}
 	}
@@ -173,16 +178,16 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 	}
 
 	private void fireTreeChanged(Object source, TreePath path) {
-		Iterator i = treeModelListeners.iterator();
+		Iterator<TreeModelListener> i = treeModelListeners.iterator();
 		while (i.hasNext()) {
-			((TreeModelListener) i.next()).treeStructureChanged(new TreeModelEvent(source, path));
+			i.next().treeStructureChanged(new TreeModelEvent(source, path));
 		}
 	}
 
 	private void fireCompleteTreeChanged(Object source) {
-		Iterator i = treeModelListeners.iterator();
+		Iterator<TreeModelListener> i = treeModelListeners.iterator();
 		while (i.hasNext()) {
-			((TreeModelListener) i.next()).treeStructureChanged(new TreeModelEvent(this, new TreePath(getRoot())));
+			i.next().treeStructureChanged(new TreeModelEvent(this, new TreePath(getRoot())));
 		}
 	}
 
@@ -199,8 +204,14 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 		}
 		List<TreePath> expandedPaths = new LinkedList<>();
 		if (filter != null && filter.trim().length() > 0) {
-			CamelCaseFilter ccFilter = new CamelCaseFilter(filter);
-			removeFilteredInstances(ccFilter, filteredTree, expandedPaths, new TreePath(getRoot()));
+			String[] terms = filter.trim().split(SEARCH_TERM_DELIMITER, MAX_SEARCH_TERMS);
+			if (terms.length > 1) {
+				Arrays.setAll(terms, i -> terms[i].toLowerCase());
+				removeFilteredInstances(terms, filteredTree, expandedPaths, new TreePath(getRoot()));
+			} else {
+				CamelCaseFilter ccFilter = new CamelCaseFilter(filter);
+				removeFilteredInstances(ccFilter, filteredTree, expandedPaths, new TreePath(getRoot()));
+			}
 		}
 		if (filterDeprecated) {
 			removeDeprecated(filteredTree);
@@ -311,15 +322,21 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 		while (o.hasNext()) {
 			OperatorDescription description = o.next();
 			boolean matches = filter.matches(description.getName()) || filter.matches(description.getShortName());
+			if (!matches) {
+				for (String tag : description.getTags()) {
+					matches = filter.matches(tag);
+					if (matches) {
+						break;
+					}
+				}
+			}
 			if (!filterDeprecated) {
 				for (String replaces : description.getReplacedKeys()) {
 					matches |= filter.matches(replaces);
 				}
 			}
-			if (!matches) {
-				if (!groupMatches) {
+			if (!matches && !groupMatches) {
 					o.remove();
-				}
 			} else {
 				hits++;
 			}
@@ -336,6 +353,98 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 			this.sortByUsage = sort;
 			updateTree();
 		}
+	}
+
+	private int removeFilteredInstances(String[] terms, GroupTree filteredTree, List<TreePath> expandedPaths,
+			TreePath path) {
+		int hits = 0;
+
+		Iterator<? extends GroupTree> g = filteredTree.getSubGroups().iterator();
+		while (g.hasNext()) {
+			GroupTree child = g.next();
+			String lowerCaseName = child.getName().toLowerCase();
+			boolean matches = true;
+			for (String term : terms) {
+				if (!lowerCaseName.contains(term)) {
+					matches = false;
+					break;
+				}
+			}
+
+			if (matches) {
+				expandedPaths.add(path);
+			}
+
+			hits += removeFilteredInstances(terms, child, expandedPaths, path.pathByAddingChild(child));
+			if (child.getAllOperatorDescriptions().size() == 0 && !matches) {
+				g.remove();
+			}
+		}
+
+		// remove non matching operator descriptions if the group does not match, keep all in
+		// matching group, count hits even if matching
+		boolean groupMatches = true;
+		String lowerCaseName = filteredTree.getName().toLowerCase();
+		for (String term : terms) {
+			if (!lowerCaseName.contains(term)) {
+				groupMatches = false;
+				break;
+			}
+		}
+
+		Iterator<OperatorDescription> o = filteredTree.getOperatorDescriptions().iterator();
+		while (o.hasNext()) {
+			OperatorDescription description = o.next();
+
+			boolean matches = true;
+			for (String term : terms) {
+				// check names
+				if (description.getName().toLowerCase().contains(term)) {
+					continue;
+				}
+				if (description.getShortName().toLowerCase().contains(term)) {
+					continue;
+				}
+				// check tags
+				boolean foundTag = false;
+				for (String tag : description.getTags()) {
+					if (tag.toLowerCase().contains(term)) {
+						foundTag = true;
+						break;
+					}
+				}
+				if (foundTag) {
+					continue;
+				}
+				// replaced keys
+				boolean foundReplacedKey = false;
+				if (!filterDeprecated) {
+					for (String replaces : description.getReplacedKeys()) {
+						replaces.toLowerCase().contains(term);
+						foundReplacedKey = true;
+						break;
+					}
+				}
+				if (foundReplacedKey) {
+					continue;
+				}
+				// term not found
+				matches = false;
+				break;
+			}
+
+			if (!matches && !groupMatches) {
+				o.remove();
+			} else {
+				hits++;
+			}
+		}
+
+		if (hits > 0) {
+			expandedPaths.add(path);
+		}
+
+		return hits;
 	}
 
 	@Override

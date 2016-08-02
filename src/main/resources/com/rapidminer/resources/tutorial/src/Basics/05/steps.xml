@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Say hello to two new data sets...">
+		<text>Let's take a break from the Titanic and learn about some other frequently used tasks in data preparation, specifically merging and grouping data together. We will deal with two data sets: one containing the products sold by an organization and one with the transactions (information about which customer purchased which product). After combining these sets, we can answer questions about the most frequently purchased product or who is your most loyal customer.  Let's get started...</text>
+	</step>
+	<step name="Get data into the workflow.">
+		<tasks>
+			<task><activity>Expand the <folder>Samples</folder> repository</activity> in the <ui>Repository</ui> panel. Next, expand the <folder>data</folder> folder within the samples repository to retrieve the <file>Products</file> and <file>Transactions</file> data.</task>
+			<task><activity>Drag the <file>Products</file> data and the <file>Transactions</file> data</activity> from the <folder>Samples - Data</folder> folder into the <ui>Process</ui> panel.</task>
+		</tasks>
+		<info>Remember, RapidMiner transforms the data into <op>Retrieve Products</op> and <op>Retrieve Transactions</op> operators when it enters the process, but doesn't load the data until you execute the process.</info>
+	</step>
+	<step name="Join the data.">
+		<tasks>
+			<task><activity>Search</activity> for the <op>Join</op> operator in the search box at the top of the <ui>Operator</ui> panel. <activity>Drag <op>Join</op></activity> into the <ui>Process</ui> panel.</task>
+			<task><activity>Connect</activity> the output port of <op>Retrieve Products</op> to an input port of <op>Join</op> (it doesn't matter which one).</task>
+			<task><activity>Connect</activity> <op>Retrieve Transactions</op> to the other <op>Join</op> input port.</task>
+			<task><activity>Click on <op>Join</op></activity> to select it. In the <ui>Parameters</ui> panel, <activity>de-select <param>use id attribute as key</param></activity>. The <param>key attributes</param> field appears.</task>
+			<task><activity>Click <param>Edit List</param>.</activity> Select <value>Product ID</value> for the left and right key attributes. Then, <activity>click <param>Apply</param></activity>.</task>
+		</tasks>
+		<info>Remember to <emph>ALWAYS</emph> connect the operators before you start changing their parameters.  You can only select the <value>Product ID</value> from the list after the connection was made since otherwise the operator would not know what data is available.</info>
+		<info>The result of the <op>Join</op> will be a table showing each transaction and its product details. The two ID columns you defined as key attributes for the join define the mapping between the rows of the two original tables.</info>
+	</step>  
+	<step name="Group the data to count product purchases.">
+		<tasks>
+			<task><activity>Drag the <op>Aggregate</op></activity> operator into the process. <activity>Connect</activity> it to the output of <op>Join</op>.</task> 
+			<task><activity>Click <op>Aggregate</op></activity> to select. Make the following changes in the <ui>Parameters</ui> panel:</task>
+			<task><activity>Click on <param>group by attributes</param>.</activity> Then, <activity>select the <value>Product ID</value></activity> by moving it to the right. <activity>Click <param>Apply</param></activity>.</task>
+			<task><activity>Click on <param>aggregation attributes</param>.</activity></task>
+			<task><activity>Select <value>Customer ID</value></activity> in the left box and set <param>function</param> to <value>count</value> in the right box.</task>
+			<task>Stay in this dialog and <activity>add another entry <value>Product Name</value> with <param>function</param> set to <value>mode</value></activity>. <activity>Click <param>Apply</param></activity>.</task>
+		</tasks>
+		<info><op>Aggregate</op> performs a "group-by-function" that you may know from databases. Next to joins and filters, the aggregate function is one of the most important operators for data blending. In this case, it groups the data by product, counts the number of purchases for each product, and uses the product name for describing this product. The result is a table of all products with the following attributes: product ID, product name, and the number of customers that have purchased the product.</info>
+	</step>  
+	<step name="Execute the process.">
+		<tasks>
+			<task><activity>Connect <op>Aggregate</op></activity> to the result port on the right.</task>
+			<task><activity>Press <icon>16/media_play.png</icon> <ui>Run</ui></activity> to execute the process.</task>
+		</tasks>
+		<info>In the <op>Results</op> view, click on column headers to sort the column data to ascending or descending order.</info>
+	</step> 
+	<step name="Congratulations!">
+		<text>Great, you just made your first steps for data blending with RapidMiner! Before you move on to the next tutorial, try to answer the questions below:</text>
+		<questions>
+			<question>Which product has been most often sold?  And which product was sold only 5 times?</question>
+			<question>Can you find out in the <ui>Statistics</ui> tab what the average number of transactions was? Can you also see the visual distribution of values in this tab?</question>
+			<question>The <value>count</value> function counts the number of transactions for each product, but each product can also be purchased multiple times in each transaction.  Can you change the parameters of <op>Aggregate</op> so that the total sum for each product is calculated?  Which products have been sold more than 65 times?</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

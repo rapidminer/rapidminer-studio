@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator.preprocessing.join;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -36,9 +39,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * This operator performs a set minus on two example sets, i.e. the resulting example set contains
@@ -47,7 +47,7 @@ import java.util.List;
  * it must be the last example set which has been added. As compared to SQL, both example sets need
  * have neither the same number of columns nor the same data types. The operation does only depend
  * on the ID columns of the example sets.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class ExampleSetMinus extends AbstractDataProcessing {
@@ -83,24 +83,24 @@ public class ExampleSetMinus extends AbstractDataProcessing {
 		Attribute subtrahendId = subtrahendSet.getAttributes().getId();
 
 		// sanity checks
-		if ((minuendId == null) || (subtrahendId == null)) {
+		if (minuendId == null || subtrahendId == null) {
 			throw new UserError(this, 129);
 		}
 		if (minuendId.getValueType() != subtrahendId.getValueType()) {
-			throw new UserError(this, 120, new Object[] { subtrahendId.getName(),
-					Ontology.VALUE_TYPE_NAMES[subtrahendId.getValueType()],
-					Ontology.VALUE_TYPE_NAMES[minuendId.getValueType()] });
+			throw new UserError(this, 120,
+					new Object[] { subtrahendId.getName(), Ontology.VALUE_TYPE_NAMES[subtrahendId.getValueType()],
+							Ontology.VALUE_TYPE_NAMES[minuendId.getValueType()] });
 		}
 
-		List<Integer> indices = new LinkedList<>();
+		List<Integer> indices = new ArrayList<>();
 		{
 			int i = 0;
 			for (Example example : minuendSet) {
 				double id = example.getValue(minuendId);
 				Example subtrahendExample = null;
 				if (minuendId.isNominal()) {
-					subtrahendExample = subtrahendSet.getExampleFromId(subtrahendId.getMapping().getIndex(
-							minuendId.getMapping().mapIndex((int) id)));
+					subtrahendExample = subtrahendSet
+							.getExampleFromId(subtrahendId.getMapping().getIndex(minuendId.getMapping().mapIndex((int) id)));
 				} else {
 					subtrahendExample = subtrahendSet.getExampleFromId(id);
 				}

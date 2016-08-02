@@ -20,6 +20,7 @@ package com.rapidminer.gui.processeditor.results;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -31,6 +32,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.CloseAllResultsAction;
@@ -39,6 +41,12 @@ import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.license.ConstraintNotRestrictedException;
+import com.rapidminer.license.LicenseConstants;
+import com.rapidminer.license.LicenseEvent;
+import com.rapidminer.license.LicenseEvent.LicenseEventType;
+import com.rapidminer.license.LicenseManagerListener;
+import com.rapidminer.license.LicenseManagerRegistry;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ResultObject;
@@ -68,6 +76,7 @@ public class ResultTab extends JPanel implements Dockable {
 	private final DockKey dockKey;
 	private final String id;
 	private ResultObject resultObject = null;
+	private LicenseManagerListener licenseListener;
 
 	public ResultTab(String id) {
 		setLayout(new BorderLayout());
@@ -90,6 +99,53 @@ public class ResultTab extends JPanel implements Dockable {
 		this.dockKey.setActionCustomizer(customizer);
 		label = makeStandbyLabel();
 		add(label, BorderLayout.CENTER);
+
+		addLicenseLimitListener();
+
+	}
+
+	/**
+	 * Adds a license listener that updates all {@ResultLimitPanel}s which might be contained in
+	 * subcomponents.
+	 */
+	private void addLicenseLimitListener() {
+		licenseListener = new LicenseManagerListener() {
+
+			@Override
+			public <S, C> void handleLicenseEvent(LicenseEvent<S, C> event) {
+				if (event.getType() == LicenseEventType.ACTIVE_LICENSE_CHANGED) {
+					Integer licenseLimit;
+					try {
+						licenseLimit = LicenseManagerRegistry.INSTANCE.get().getConstraintValue(
+								ProductConstraintManager.INSTANCE.getProduct(), LicenseConstants.DATA_ROW_CONSTRAINT);
+					} catch (ConstraintNotRestrictedException e) {
+						licenseLimit = null;
+					}
+
+					if (component != null) {
+						searchAllChildren(component, licenseLimit);
+					}
+				}
+			}
+
+			/**
+			 * Go recursively through all components in search of {@link ResultLimitPanel}s which
+			 * need to update their text.
+			 */
+			private void searchAllChildren(Container component, Integer licenseLimit) {
+				for (Component child : component.getComponents()) {
+					if (child instanceof ResultLimitPanel) {
+						SwingTools.invokeLater(() -> {
+							((ResultLimitPanel) child).licenseUpdated(licenseLimit);
+						});
+					} else if (child instanceof Container) {
+						searchAllChildren((Container) child, licenseLimit);
+					}
+				}
+			}
+
+		};
+		LicenseManagerRegistry.INSTANCE.get().registerLicenseManagerListener(licenseListener);
 	}
 
 	/**
@@ -205,6 +261,7 @@ public class ResultTab extends JPanel implements Dockable {
 			component = null;
 			resultObject = null;
 		}
+		LicenseManagerRegistry.INSTANCE.get().removeLicenseManagerListener(licenseListener);
 	}
 
 	/**

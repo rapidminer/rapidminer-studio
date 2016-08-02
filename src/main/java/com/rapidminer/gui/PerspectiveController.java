@@ -114,19 +114,19 @@ public class PerspectiveController {
 	 *            the perspective which should be shown.
 	 */
 	public void showPerspective(final Perspective perspective) {
-		Perspective oldPerspective = model.getSelectedPerspective();
-		if (oldPerspective == perspective) {
-			return;
-		}
-		model.setSelectedPerspective(perspective);
-		if (oldPerspective != null) {
-			oldPerspective.store(context);
-			ActionStatisticsCollector.getInstance().stopTimer(ActionStatisticsCollector.TYPE_PERSPECTIVE,
-					oldPerspective.getName(), null);
-		}
-		perspective.apply(context);
-		getRestoreDefaultAction().setEnabled(!perspective.isUserDefined());
 		if (perspective != null) {
+			Perspective oldPerspective = model.getSelectedPerspective();
+			if (oldPerspective == perspective) {
+				return;
+			}
+			model.setSelectedPerspective(perspective);
+			if (oldPerspective != null) {
+				oldPerspective.store(context);
+				ActionStatisticsCollector.getInstance().stopTimer(ActionStatisticsCollector.TYPE_PERSPECTIVE,
+						oldPerspective.getName(), null);
+			}
+			perspective.apply(context);
+			getRestoreDefaultAction().setEnabled(!perspective.isUserDefined());
 			ActionStatisticsCollector.getInstance().startTimer(ActionStatisticsCollector.TYPE_PERSPECTIVE,
 					perspective.getName(), null);
 			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PERSPECTIVE, perspective.getName(),

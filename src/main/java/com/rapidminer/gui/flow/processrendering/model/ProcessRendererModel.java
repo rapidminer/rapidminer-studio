@@ -32,6 +32,7 @@ import java.util.WeakHashMap;
 
 import javax.swing.event.EventListenerList;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.annotations.model.OperatorAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.ProcessAnnotation;
@@ -48,7 +49,10 @@ import com.rapidminer.gui.flow.processrendering.event.ProcessRendererModelEvent.
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent.OperatorEvent;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
+import com.rapidminer.io.process.AnnotationProcessXMLFilter;
+import com.rapidminer.io.process.BackgroundImageProcessXMLFilter;
 import com.rapidminer.io.process.GUIProcessXMLFilter;
+import com.rapidminer.io.process.ProcessLayoutXMLFilter;
 import com.rapidminer.io.process.ProcessXMLFilterRegistry;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
@@ -172,7 +176,9 @@ public final class ProcessRendererModel {
 
 	// initialize the filter responsible for reading/writing operator coordinates from/to XML
 	static {
-		ProcessXMLFilterRegistry.registerFilter(new GUIProcessXMLFilter());
+		if (!RapidMiner.getExecutionMode().isHeadless()) {
+			ProcessXMLFilterRegistry.registerFilter(new GUIProcessXMLFilter());
+		}
 	}
 
 	public ProcessRendererModel() {
@@ -821,7 +827,7 @@ public final class ProcessRendererModel {
 	 *         the {@link ProcessRendererView}.
 	 */
 	public Rectangle2D getOperatorRect(Operator op) {
-		return GUIProcessXMLFilter.lookupOperatorRectangle(op);
+		return ProcessLayoutXMLFilter.lookupOperatorRectangle(op);
 	}
 
 	/**
@@ -832,7 +838,7 @@ public final class ProcessRendererModel {
 	 * @return the container. Can be {@code null} if no annotations exist for this operator
 	 */
 	public WorkflowAnnotations getOperatorAnnotations(Operator op) {
-		return GUIProcessXMLFilter.lookupOperatorAnnotations(op);
+		return AnnotationProcessXMLFilter.lookupOperatorAnnotations(op);
 	}
 
 	/**
@@ -842,7 +848,7 @@ public final class ProcessRendererModel {
 	 *            the annotation to remove
 	 */
 	public void removeOperatorAnnotation(OperatorAnnotation anno) {
-		GUIProcessXMLFilter.removeOperatorAnnotation(anno);
+		AnnotationProcessXMLFilter.removeOperatorAnnotation(anno);
 	}
 
 	/**
@@ -852,7 +858,7 @@ public final class ProcessRendererModel {
 	 *            the annotation to add
 	 */
 	public void addOperatorAnnotation(OperatorAnnotation anno) {
-		GUIProcessXMLFilter.addOperatorAnnotation(anno);
+		AnnotationProcessXMLFilter.addOperatorAnnotation(anno);
 	}
 
 	/**
@@ -863,7 +869,7 @@ public final class ProcessRendererModel {
 	 * @return the container. Can be {@code null} if no annotations exist for this process
 	 */
 	public WorkflowAnnotations getProcessAnnotations(ExecutionUnit process) {
-		return GUIProcessXMLFilter.lookupProcessAnnotations(process);
+		return AnnotationProcessXMLFilter.lookupProcessAnnotations(process);
 	}
 
 	/**
@@ -873,7 +879,7 @@ public final class ProcessRendererModel {
 	 *            the annotation to remove
 	 */
 	public void removeProcessAnnotation(ProcessAnnotation anno) {
-		GUIProcessXMLFilter.removeProcessAnnotation(anno);
+		AnnotationProcessXMLFilter.removeProcessAnnotation(anno);
 	}
 
 	/**
@@ -883,7 +889,7 @@ public final class ProcessRendererModel {
 	 *            the annotation to add
 	 */
 	public void addProcessAnnotation(ProcessAnnotation anno) {
-		GUIProcessXMLFilter.addProcessAnnotation(anno);
+		AnnotationProcessXMLFilter.addProcessAnnotation(anno);
 	}
 
 	/**
@@ -894,7 +900,7 @@ public final class ProcessRendererModel {
 	 * @return the background image. Can be {@code null} if none is set for this process
 	 */
 	public ProcessBackgroundImage getBackgroundImage(ExecutionUnit process) {
-		return GUIProcessXMLFilter.lookupBackgroundImage(process);
+		return BackgroundImageProcessXMLFilter.lookupBackgroundImage(process);
 	}
 
 	/**
@@ -904,7 +910,7 @@ public final class ProcessRendererModel {
 	 *            the process for which to remove the background image
 	 */
 	public void removeBackgroundImage(ExecutionUnit process) {
-		GUIProcessXMLFilter.removeBackgroundImage(process);
+		BackgroundImageProcessXMLFilter.removeBackgroundImage(process);
 	}
 
 	/**
@@ -914,7 +920,7 @@ public final class ProcessRendererModel {
 	 *            the image to add
 	 */
 	public void setBackgroundImage(ProcessBackgroundImage image) {
-		GUIProcessXMLFilter.setBackgroundImage(image);
+		BackgroundImageProcessXMLFilter.setBackgroundImage(image);
 	}
 
 	/**
@@ -963,7 +969,7 @@ public final class ProcessRendererModel {
 			rect.setRect(rect.getX(), rect.getY(), rect.getWidth(), height);
 		}
 
-		GUIProcessXMLFilter.setOperatorRectangle(op, rect);
+		ProcessLayoutXMLFilter.setOperatorRectangle(op, rect);
 	}
 
 	/**
@@ -974,7 +980,7 @@ public final class ProcessRendererModel {
 	 * @return the additional spacing before this port
 	 */
 	public int getPortSpacing(Port port) {
-		return GUIProcessXMLFilter.lookupPortSpacing(port);
+		return ProcessLayoutXMLFilter.lookupPortSpacing(port);
 	}
 
 	/**
@@ -989,7 +995,7 @@ public final class ProcessRendererModel {
 		if (port == null) {
 			throw new IllegalArgumentException("port must not be null!");
 		}
-		GUIProcessXMLFilter.setPortSpacing(port, spacing);
+		ProcessLayoutXMLFilter.setPortSpacing(port, spacing);
 	}
 
 	/**
@@ -1002,7 +1008,7 @@ public final class ProcessRendererModel {
 		if (port == null) {
 			throw new IllegalArgumentException("port must not be null!");
 		}
-		GUIProcessXMLFilter.resetPortSpacing(port);
+		ProcessLayoutXMLFilter.resetPortSpacing(port);
 	}
 
 	/**

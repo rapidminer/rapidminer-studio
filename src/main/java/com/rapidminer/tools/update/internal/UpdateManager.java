@@ -41,7 +41,6 @@ public interface UpdateManager {
 
 	public static final String PARAMETER_UPDATE_INCREMENTALLY = "rapidminer.update.incremental";
 	public static final String PARAMETER_UPDATE_URL = "rapidminer.update.url";
-	public static final String PARAMETER_INSTALL_TO_HOME = "rapidminer.update.to_home";
 	public static final String UPDATESERVICE_URL = "https://marketplace.rapidminer.com/UpdateServer";
 	public static final String OLD_UPDATESERVICE_URL = "http://marketplace.rapid-i.com:80/UpdateServer";
 	public static final String PACKAGEID_RAPIDMINER = "rapidminer-studio-6";

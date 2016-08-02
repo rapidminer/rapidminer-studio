@@ -84,11 +84,22 @@ public class StrictDecimalFormat extends DecimalFormat {
 		Number result = parse(source, parsePosition);
 
 		/**
-		 * throw an error if a parse error has occured somewhere in the source string, not only at
+		 * throw an error if a parse error has occurred somewhere in the source string, not only at
 		 * the beginning as in {@link NumberFormat}
 		 */
 		if (parsePosition.getIndex() < source.length()) {
-			throw new ParseException("Unparseable number: \"" + source + "\"", parsePosition.getIndex());
+			// try also with lowercase "e" as the exponent symbol (generally, lowercase version of
+			// the exponent separator)
+			String exponentSeparator = getDecimalFormatSymbols().getExponentSeparator();
+			if (source.contains(exponentSeparator.toLowerCase())) {
+				parsePosition.setIndex(0);
+				result = parse(source.replace(exponentSeparator.toLowerCase(), exponentSeparator), parsePosition);
+				if (parsePosition.getIndex() < source.length()) {
+					throw new ParseException("Unparseable number: \"" + source + "\"", parsePosition.getIndex());
+				}
+			} else {
+				throw new ParseException("Unparseable number: \"" + source + "\"", parsePosition.getIndex());
+			}
 		}
 		return result;
 	}
@@ -154,5 +165,4 @@ public class StrictDecimalFormat extends DecimalFormat {
 		types.add(type);
 		return types;
 	}
-
 }

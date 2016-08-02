@@ -18,11 +18,17 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -35,16 +41,13 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * This operator generates TF-IDF values from the input data. The input example set must contain
  * either simple counts, which will be normalized during calculation of the term frequency TF, or it
  * already contains the calculated term frequency values (in this case no normalization will be
  * done).
- * 
+ *
  * @author Ingo Mierswa
  */
 public class TFIDFFilter extends AbstractDataProcessing {
@@ -54,6 +57,12 @@ public class TFIDFFilter extends AbstractDataProcessing {
 	 * done if input data is given as simple occurence counts).&quot;
 	 */
 	public static final String PARAMETER_CALCULATE_TERM_FREQUENCIES = "calculate_term_frequencies";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public TFIDFFilter(OperatorDescription description) {
 		super(description);
@@ -150,7 +159,12 @@ public class TFIDFFilter extends AbstractDataProcessing {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return true;
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return true;
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected();
+		}
 	}
 
 	@Override
@@ -158,4 +172,9 @@ public class TFIDFFilter extends AbstractDataProcessing {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), TFIDFFilter.class, null);
 	}
 
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+	}
 }

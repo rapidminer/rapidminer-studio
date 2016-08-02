@@ -51,7 +51,7 @@ import java.util.List;
  * R.-E. Fan, K.-W. Chang, C.-J. Hsieh, X.-R. Wang, and C.-J. Lin. Although the result is similar to
  * those delivered by classical SVM or logistic regression implementations, this linear classifier
  * is able to work on data set with millions of examples and attributes.
- * 
+ *
  * @rapidminer.index SVM
  * @author Ingo Mierswa
  */
@@ -129,7 +129,7 @@ public class FastLargeMargin extends AbstractLearner {
 
 	/**
 	 * Creates a support vector problem for the LibSVM.
-	 * 
+	 *
 	 * @throws UserError
 	 */
 	private Problem getProblem(ExampleSet exampleSet) throws UserError {
@@ -154,12 +154,21 @@ public class FastLargeMargin extends AbstractLearner {
 
 		int firstIndex = label.getMapping().getNegativeIndex();
 
+		boolean class0 = false, class1 = false;
 		while (i.hasNext()) {
 			Example e = i.next();
 			problem.x[j] = makeNodes(e, ripper, useBias);
 			problem.y[j] = (int) e.getValue(label) == firstIndex ? 0 : 1;
+			if (problem.y[j] == 0) {
+				class0 = true;
+			} else {
+				class1 = true;
+			}
 			nodeCount += problem.x[j].length;
 			j++;
+		}
+		if (!(class0 && class1)) {
+			throw new UserError(this, 503, this.getName());
 		}
 		log("Created " + nodeCount + " nodes for " + j + " examples.");
 		return problem;

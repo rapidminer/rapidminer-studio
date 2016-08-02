@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -34,7 +36,8 @@ import javax.swing.event.HyperlinkListener;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.SettingsAction;
-import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.dialog.BrowserUnavailableDialogFactory;
+import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 
@@ -94,11 +97,7 @@ public class RMUrlHandler {
 			}
 			return true; // we didn't make it, but no one else can, so we return true.
 		} else if (url.startsWith("http://") || url.startsWith("https://")) {
-			try {
-				browse(new URI(url));
-			} catch (Exception e) {
-				SwingTools.showSimpleErrorMessage("cannot_open_browser", e);
-			}
+			openInBrowser(url);
 			return true;
 		} else {
 			return false;
@@ -113,7 +112,10 @@ public class RMUrlHandler {
 	 * On systems where Desktop.getDesktop().browse() does not work for http://, creates an HTML
 	 * page which redirects to the given URI and calls Desktop.browse() with this file through the
 	 * file:// url which seems to work better, at least for KDE.
+	 *
+	 * @deprecated Replaced by {@link #openInBrowser(URI)}
 	 */
+	@Deprecated
 	public static void browse(URI uri) throws IOException {
 		if (Desktop.isDesktopSupported()) {
 			try {
@@ -132,12 +134,102 @@ public class RMUrlHandler {
 				}
 				Desktop.getDesktop().browse(tempFile.toURI());
 			} catch (UnsupportedOperationException e1) {
-				throw new IOException(e1);
+				showBrowserUnavailableMessage(uri.toString());
 			}
 		} else {
-			LOGGER.log(Level.SEVERE, "Failed to open web page in browser, browsing is not supported on this platform.");
-			SwingTools.showVerySimpleErrorMessage("url_handler.unsupported", uri.toString());
+			showBrowserUnavailableMessage(uri.toString());
 		}
+
+	}
+
+	/**
+	 * Tries to open an URL in the system browser
+	 * <p>
+	 * Fallback: Shows the URL in a dialog
+	 * </p>
+	 *
+	 * @param uri
+	 */
+	public static void openInBrowser(URL url) {
+		try {
+			URI uri = url.toURI();
+			openInBrowser(uri);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException("Invalid URL: " + url.toString(), e);
+		}
+	}
+
+	/**
+	 * Tries to open an URI String in the system browser
+	 * <p>
+	 * Fallback: Shows the URI String in a dialog
+	 * </p>
+	 *
+	 * @param uri
+	 */
+	public static void openInBrowser(String uriString) {
+		try {
+			URI uri = new URI(uriString);
+			openInBrowser(uri);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException("Invalid URI String: " + uriString, e);
+		}
+	}
+
+	/**
+	 * Tries to open an URI in the system browser
+	 * <p>
+	 * Fallback: Shows the URI String in a dialog
+	 * </p>
+	 */
+	public static void openInBrowser(URI uri) {
+		if (Desktop.isDesktopSupported()) {
+			try {
+				Desktop.getDesktop().browse(uri);
+			} catch (IOException e) {
+				openInBrowserWithTempFile(uri);
+			}
+		} else {
+			showBrowserUnavailableMessage(uri.toString());
+		}
+
+	}
+
+	/**
+	 * Browse the uri using a local temp file
+	 * <p>
+	 * On systems where Desktop.getDesktop().browse() does not work for http://, creates an HTML
+	 * page which redirects to the given URI and calls Desktop.browse() with this file through the
+	 * file:// url which seems to work better, at least for KDE.
+	 * </p>
+	 *
+	 * @param uri
+	 */
+	private static void openInBrowserWithTempFile(URI uri) {
+		try {
+			File tempFile = File.createTempFile("rmredirect", ".html");
+			tempFile.deleteOnExit();
+			try (FileWriter out = new FileWriter(tempFile)) {
+				out.write(String.format(
+						"<!DOCTYPE html>\n"
+								+ "<html><meta http-equiv=\"refresh\" content=\"0; URL=%s\"><body>You are redirected to %s</body></html>",
+						uri.toString(), uri.toString()));
+				Desktop.getDesktop().browse(tempFile.toURI());
+			}
+		} catch (IOException e) {
+			showBrowserUnavailableMessage(uri.toString());
+		}
+	}
+
+	/**
+	 * Displays the uri in a {@link ButtonDialog}
+	 *
+	 * @param uri
+	 */
+	private static void showBrowserUnavailableMessage(String uri) {
+		ButtonDialog dialog = BrowserUnavailableDialogFactory.createNewDialog(uri);
+		dialog.setVisible(true);
+		LOGGER.log(Level.SEVERE, "Failed to open web page in browser, browsing is not supported on this platform.");
 
 	}
 }

@@ -18,8 +18,6 @@
  */
 package com.rapidminer.gui.look.ui;
 
-import com.rapidminer.gui.look.painters.CachedPainter;
-
 import java.awt.Color;
 import java.awt.Graphics;
 
@@ -27,10 +25,12 @@ import javax.swing.JComponent;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicMenuBarUI;
 
+import com.rapidminer.gui.look.painters.CachedPainter;
+
 
 /**
  * The UI for menu bars.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class MenuBarUI extends BasicMenuBarUI {

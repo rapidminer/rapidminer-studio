@@ -497,7 +497,7 @@ public class Item extends JComponent implements Comparable, MouseListener {
 		this.response = SwingTools.showInputDialog("file_chooser.rename", this.fileName, (isDirectory() ? "directory"
 				: "file") + " " + this.fileName);
 		try {
-			if (this.response.equals("") || this.response == null) {
+			if (this.response == null || this.response.equals("")) {
 				SwingTools.showVerySimpleErrorMessage("file_chooser.rename.invalid");
 			} else {
 				if (this.file.renameTo(new File(this.file.getParentFile(), this.response))) {

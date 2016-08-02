@@ -18,8 +18,6 @@
  */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.gui.plotter.PlotterConfigurationModel;
-
 import java.awt.Font;
 
 import org.jfree.chart.ChartFactory;
@@ -27,10 +25,12 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.PieDataset;
 
+import com.rapidminer.gui.plotter.PlotterConfigurationModel;
+
 
 /**
  * A simple 2D ring chart plotter.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class RingChartPlotter extends AbstractPieChartPlotter {
@@ -54,7 +54,7 @@ public class RingChartPlotter extends AbstractPieChartPlotter {
 		plot.setSectionOutlinesVisible(false);
 		plot.setLabelFont(new Font("SansSerif", Font.PLAIN, 11));
 		plot.setNoDataMessage("No data available");
-		plot.setCircular(false);
+		plot.setCircular(true);
 		plot.setLabelGap(0.02);
 
 		return chart;

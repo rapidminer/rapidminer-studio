@@ -18,9 +18,19 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -32,13 +42,6 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
 
 /**
  * This operator maps the values of all nominal values to binary attributes. For example, if a
@@ -47,7 +50,7 @@ import java.util.TreeSet;
  * attributes &quot;costs = low&quot;, &quot;costs = moderate&quot;, and &quot;costs = high&quot;.
  * Only one of the values of each attribute is true for a specific example, the other values are
  * false.
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class NominalToBinominal extends PreprocessingOperator {
@@ -55,6 +58,12 @@ public class NominalToBinominal extends PreprocessingOperator {
 	public static final String PARAMETER_USE_UNDERSCORE_IN_NAME = "use_underscore_in_name";
 
 	public static final String PARAMETER_TRANSFORM_BINOIMINAL = "transform_binominal";
+
+	/**
+	 * Incompatible version, old version writes into the exampleset, if original output port is not
+	 * connected.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	public NominalToBinominal(OperatorDescription description) {
 		super(description);
@@ -120,9 +129,24 @@ public class NominalToBinominal extends PreprocessingOperator {
 	}
 
 	@Override
+	public boolean writesIntoExistingData() {
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			return super.writesIntoExistingData();
+		} else {
+			// old version: true only if original output port is connected
+			return isOriginalOutputConnected() && super.writesIntoExistingData();
+		}
+	}
+
+	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), NominalToBinominal.class,
 				attributeSelector);
 	}
 
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+	}
 }

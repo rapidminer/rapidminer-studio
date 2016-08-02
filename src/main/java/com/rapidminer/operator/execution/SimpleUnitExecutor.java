@@ -18,21 +18,27 @@
  */
 package com.rapidminer.operator.execution;
 
-import com.rapidminer.operator.ExecutionUnit;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorException;
-
 import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.rapidminer.Process;
+import com.rapidminer.operator.ExecutionUnit;
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.OutputPort;
 
 
 /**
  * Executes an {@link ExecutionUnit} by invoking the operators in their (presorted) ordering.
  * Instances of this class can be shared.
- * 
- * @author Simon Fischer
- * 
+ *
+ * @author Simon Fischer, Marco Boeck
+ *
  */
 public class SimpleUnitExecutor implements UnitExecutor {
 
@@ -43,12 +49,52 @@ public class SimpleUnitExecutor implements UnitExecutor {
 			logger.fine("Executing subprocess " + unit.getEnclosingOperator().getName() + "." + unit.getName()
 					+ ". Execution order is: " + unit.getOperators());
 		}
+		Process process = unit.getEnclosingOperator().getProcess();
 		Enumeration<Operator> opEnum = unit.getOperatorEnumeration();
-		while (opEnum.hasMoreElements()) {
-			// for (Operator operator : unit.getOperators()) {
-			Operator operator = opEnum.nextElement();
+		Operator lastOperator = null;
+		Operator operator = opEnum.hasMoreElements() ? opEnum.nextElement() : null;
+		while (operator != null) {
+
+			// fire event that we are about to start the next operator
+			if (process != null) {
+				// gather input data for connected ports
+				List<FlowData> input = new LinkedList<>();
+				if (operator.getInputPorts() != null) {
+					for (InputPort inputPort : operator.getInputPorts().getAllPorts()) {
+						if (inputPort.isConnected()) {
+							IOObject data = inputPort.getAnyDataOrNull();
+							if (data != null) {
+								input.add(new FlowData(data, inputPort));
+							}
+						}
+					}
+				}
+				process.fireProcessFlowBeforeOperator(lastOperator, operator, input);
+			}
+
+			// execute the operator
 			operator.execute();
 			operator.freeMemory();
+
+			lastOperator = operator;
+			operator = opEnum.hasMoreElements() ? opEnum.nextElement() : null;
+
+			// fire event that we finished last operator
+			if (process != null) {
+				// gather output data for connected ports
+				List<FlowData> output = new LinkedList<>();
+				if (lastOperator.getOutputPorts() != null) {
+					for (OutputPort outputPort : lastOperator.getOutputPorts().getAllPorts()) {
+						if (outputPort.isConnected()) {
+							IOObject data = outputPort.getAnyDataOrNull();
+							if (data != null) {
+								output.add(new FlowData(data, outputPort));
+							}
+						}
+					}
+				}
+				process.fireProcessFlowAfterOperator(lastOperator, operator, output);
+			}
 		}
 
 	}

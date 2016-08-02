@@ -27,6 +27,7 @@ import javax.swing.text.html.HTMLDocument;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationStyle;
 import com.rapidminer.tools.SystemInfoUtilities;
@@ -143,8 +144,8 @@ public final class AnnotationDrawUtils {
 	 * @throws BadLocationException
 	 * @throws IOException
 	 */
-	public static String getPlaintextFromEditor(final JEditorPane editor, final boolean onlySelected) throws IOException,
-			BadLocationException {
+	public static String getPlaintextFromEditor(final JEditorPane editor, final boolean onlySelected)
+			throws IOException, BadLocationException {
 		if (editor == null) {
 			throw new IllegalArgumentException("editor must not be null!");
 		}
@@ -180,6 +181,10 @@ public final class AnnotationDrawUtils {
 	public static int getContentHeight(final String comment, final int width) {
 		if (comment == null) {
 			throw new IllegalArgumentException("comment must not be null!");
+		}
+		// do not create Swing components for headless mode
+		if (RapidMiner.getExecutionMode().isHeadless()) {
+			return 0;
 		}
 		JEditorPane dummyEditorPane = new JEditorPane("text/html", "");
 		dummyEditorPane.setText(comment);

@@ -19,6 +19,7 @@
 package com.rapidminer.studio.internal;
 
 import com.rapidminer.Process;
+import com.rapidminer.RapidMiner;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserData;
@@ -73,15 +74,46 @@ public class Resources {
 		}
 		Operator root = operator.getRoot();
 		if (root.getUserData(USER_DATA_KEY) != null) {
+			// the configured / allowed parallelism level might have changed since the creation of
+			// the existing context
 			ContextUserData data = (ContextUserData) root.getUserData(USER_DATA_KEY);
-			return data.getContext();
-		} else {
-			Process process = operator.getProcess();
-			StudioConcurrencyContext context = new StudioConcurrencyContext(process);
-			ContextUserData data = new ContextUserData(context);
-			root.setUserData(USER_DATA_KEY, data);
-			return context;
+			ConcurrencyContext context = data.getContext();
+			if (context.getParallelism() == getParallelismLevel()) {
+				return context;
+			}
 		}
+		Process process = operator.getProcess();
+		StudioConcurrencyContext context = new StudioConcurrencyContext(process);
+		ContextUserData data = new ContextUserData(context);
+		root.setUserData(USER_DATA_KEY, data);
+		return context;
+	}
+
+	/**
+	 * Returns the maximum number of cores to be used for concurrent computations. This number is
+	 * always at least one and either bound by a license limit or by the user's configuration.
+	 *
+	 * @return the maximum parallelism level
+	 */
+	public static int getParallelismLevel() {
+		String numberOfThreads = ParameterServiceRegistry.INSTANCE
+				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
+
+		int userLevel = 0;
+
+		if (numberOfThreads != null) {
+			try {
+				userLevel = Integer.parseInt(numberOfThreads);
+			} catch (NumberFormatException e) {
+				// ignore and use default value
+			}
+		}
+
+		if (userLevel <= 0) {
+			userLevel = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+		}
+
+		return userLevel;
 	}
 
 }

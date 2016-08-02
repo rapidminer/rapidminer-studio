@@ -94,7 +94,7 @@ public abstract class AbstractModel extends ResultObjectAdapter implements Model
 	 */
 	@Override
 	public void setParameter(String key, Object value) throws OperatorException {
-		log("The learned model does not support parameter");
+		throw new UnsupportedApplicationParameterError(null, getName(), key);
 	}
 
 	/**

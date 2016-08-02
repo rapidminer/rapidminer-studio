@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="ROC curves as visual performance measure.">
+		<text>The Receiver Operating Characteristics (ROC) curve shows how well a binary 
+		machine learning model works. It shows the True Positive Rate (TPR) against the 
+		False Positive Rate (FPR) for different confidence thresholds of the model (learn more 
+		<link url="https://en.wikipedia.org/wiki/Receiver_operating_characteristic">here</link>). 
+		The result is a line which is a straight diagonal if the model is merely guessing, 
+		and a curve moving more and more towards the top left corner the better the model gets. 
+		This tutorial will show you how to create ROC curves for multiple models and how to 
+		visually compare them to quickly identify which is the best.</text>
+		
+		<info>
+			<emph>ROC curves</emph> are a well known way to visualize the performance of 
+			models. Don't worry if you do not know the math behind them: Just remember 
+			that the curves of better models move to the top left.  A perfect model 
+			produces a line that goes straight up (vertically) and then straight to the right (horizontally).
+		</info>
+	</step>
+
+
+
+	<step name="Load the data.">
+		<tasks>
+			<task>
+				<activity>
+					Drag the
+					<file>Titanic Training</file>
+					data
+				</activity>
+				into your process.
+			</task>
+			<task>
+				<activity>Add</activity> the operator 
+				<op>Compare ROCs</op> to the process and <activity>connect it</activity>.
+			</task>
+		</tasks>
+
+		<info>
+			<op>Compare ROCs</op> is another nested operator.  You can place an arbitrary number 
+			of models inside of this operator to produce a single graph with one ROC curve for each model.
+		</info>
+	</step>
+
+
+	<step name="Train and apply the model.">
+		<tasks>
+			<task>
+				<activity>Double-click</activity> on <op>Compare ROCs</op>. 
+				The <ui>Process</ui> now shows the sub-processes also named <ui>Compare ROCs</ui>.
+			</task>
+			<task>
+				<activity>Add</activity> three operators to the sub-process: <op>Decision Tree</op>, 
+				<op>Naive Bayes</op>, and <op>Rule Induction</op>.
+			</task>
+			<task>
+				<activity>Connect</activity> the input port of each learning operator with one of the training 
+				data ports on the left.  Each time you connect one, a new port will appear.
+			</task>
+			<task>
+				<activity>Connect</activity> output ports of the learning operators with the model ports 
+				on the right.
+			</task>
+		</tasks>
+
+		<info>
+			<op>Compare ROCs</op> actually performs a cross validation on the input data with each of the 
+			defined models. You can even change the number of folds in the operator parameters.  
+			Remember that more folds take more time.  3 to 10 folds are typically good values for 
+			this parameter.
+		</info>
+	</step>
+
+
+	<step name="Connect to result ports and run process.">
+		<tasks>
+			<task>
+				Go back to the main process by clicking on <icon>16/nav_up.png</icon> in the top left corner 
+				of the <ui>Process</ui> panel or by clicking on the "Process" link.
+			</task>
+			<task>
+				<activity>Connect</activity> the "roc" port of <op>Compare ROCs</op> with the process result 
+				on the right.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon>
+				<activity>Run</activity>
+				the process and inspect the results.
+			</task>
+		</tasks>
+
+		<info>
+			The chart shows all three models curving towards the top-left corner, so we know they are all
+			more effective than random guessing. 
+			In this case, Naïve-Bayes is the farthest away from the top-left corner, meaning it performs worst in this case. 
+			However, a model's performance might be totally different for a different data set!
+		</info>
+	</step>
+				
+
+	<step name="Congratulations!">
+		<text>You've finished this chapter of tutorials, awesome! We've shown you some of the most
+		important techniques for building models, using models to score new example sets,
+		and validating the accuracy of those. Scoring is very easy - 
+		where the same operator <op>Apply Model</op> is used for all model types.  We have seen 
+		multiple ways for validating models, but keep in mind that a cross validation, while a 
+		bit more expensive in terms of runtime, delivers the best estimation for prediction accuracy.</text> 
+
+		<questions>
+			<question>
+				Change the <param>number of folds</param> from 10 to 5 and run the process again.  
+				Does this change the order of models in terms of quality?
+			</question>
+			<question>
+				What do you think is the meaning of the transparent regions around each ROC curve?
+			</question>
+			<question>
+				A good way to transform the visual form of the curve into a single value is to 
+				calculate the size of the Area Under the Curve (AUC). You will see this value 
+				also in several places in RapidMiner. What is the area under the curve (AUC) for 
+				a perfect classifier? What is the AUC for a classifier which is just doing a random 
+				guessing?
+			</question>
+		</questions>
+	</step>
+</steps>

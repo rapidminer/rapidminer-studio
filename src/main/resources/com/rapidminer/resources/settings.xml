@@ -87,7 +87,6 @@
 			<property key="rapidminer.gui.undolist.size" />
 			<property key="rapidminer.gui.log_level" />
 			<property key="rapidminer.gui.transfer_usagestats" />
-			<property key="rapidminer.gui.run_process_on_rapidanalytics_now" />
 			<property key="rapidminer.gui.resolve_relative_repository_locations" />
 		</group>
 		<group key="rapidminer.preferences.subgroup.gui.plotter">

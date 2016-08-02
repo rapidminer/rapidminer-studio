@@ -20,6 +20,7 @@ package com.rapidminer.core.license;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.rapidminer.license.AlreadyRegisteredException;
 import com.rapidminer.license.ConstraintNotRestrictedException;
@@ -55,10 +56,10 @@ public class OpenSourceLicenseManager implements LicenseManager {
 
 	@Override
 	public void registerProduct(Product newProduct)
-	        throws AlreadyRegisteredException, LicenseLoadingException, InvalidProductException {
+			throws AlreadyRegisteredException, LicenseLoadingException, InvalidProductException {
 		if (!StudioLicenseConstants.PRODUCT_ID.equals(newProduct.getProductId())) {
 			throw new InvalidProductException("LicenseManager does not allow to register products.",
-			        newProduct.getProductId());
+					newProduct.getProductId());
 		}
 	}
 
@@ -69,20 +70,20 @@ public class OpenSourceLicenseManager implements LicenseManager {
 
 	@Override
 	public <S, C> LicenseConstraintViolation<S, C> checkConstraintViolation(Product product, Constraint<S, C> constraint,
-	        C checkedValue, boolean informListeners) {
+			C checkedValue, boolean informListeners) {
 		return checkConstraintViolation(product, constraint, checkedValue, null, informListeners);
 	}
 
 	@Override
 	public <S, C> LicenseConstraintViolation<S, C> checkConstraintViolation(Product product, Constraint<S, C> constraint,
-	        C checkedValue, String i18nKey, boolean informListeners) {
+			C checkedValue, String i18nKey, boolean informListeners) {
 		if (StudioLicenseConstants.PRODUCT_ID.equals(product.getProductId())) {
 			return null; // ignore
 		} else {
 			// all other products are not allowed to be used
 			try {
 				return new LicenseConstraintViolation<S, C>(null, constraint, getConstraintValue(product, constraint), null,
-				        i18nKey);
+						i18nKey);
 			} catch (ConstraintNotRestrictedException e) {
 				// cannot happen
 				return null;
@@ -102,13 +103,18 @@ public class OpenSourceLicenseManager implements LicenseManager {
 
 	@Override
 	public <S, C> S getConstraintValue(Product product, Constraint<S, C> constraint)
-	        throws ConstraintNotRestrictedException {
+			throws ConstraintNotRestrictedException {
 		return constraint.getDefaultValue();
 	}
 
 	@Override
 	public List<License> getLicenses(Product product) {
 		return Collections.singletonList(license);
+	}
+
+	@Override
+	public License getUpcomingLicense(License license) throws UnknownProductException {
+		return null;
 	}
 
 	@Override
@@ -128,7 +134,8 @@ public class OpenSourceLicenseManager implements LicenseManager {
 
 	@Override
 	public Pair<Product, License> validateLicense(Product product, String licenseText)
-	        throws UnknownProductException, LicenseValidationException {
+			throws UnknownProductException, LicenseValidationException {
+		Objects.requireNonNull(product);
 		if (StudioLicenseConstants.PRODUCT_ID.equals(product.getProductId())) {
 			return new Pair<Product, License>(product, license);
 		} else {
@@ -139,7 +146,7 @@ public class OpenSourceLicenseManager implements LicenseManager {
 
 	@Override
 	public License storeNewLicense(String licenseText)
-	        throws LicenseStoringException, UnknownProductException, LicenseValidationException {
+			throws LicenseStoringException, UnknownProductException, LicenseValidationException {
 		throw new LicenseValidationException("Storing of licenses not supported by this LicenseManager.", null);
 	}
 
@@ -162,5 +169,4 @@ public class OpenSourceLicenseManager implements LicenseManager {
 	public List<License> getAllActiveLicenses() {
 		return Collections.singletonList(license);
 	}
-
 }
