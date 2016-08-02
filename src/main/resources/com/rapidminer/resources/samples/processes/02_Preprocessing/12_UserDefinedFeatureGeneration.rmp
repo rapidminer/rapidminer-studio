@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Polynomial"/>
+      </operator>
+      <operator activated="true" class="generate_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Generation" width="90" x="179" y="30">
+        <list key="function_descriptions">
+          <parameter key="sum" value="a1+a2"/>
+          <parameter key="product" value="a3*a4"/>
+          <parameter key="nested" value="(a1 + a3) * a4"/>
+        </list>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Generation" to_port="example set input"/>
+      <connect from_op="Generation" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="107" resized="true" width="375" x="37" y="123">This process loads numerical data from file and generates some attributes with the feature generation operator. The parameter list &amp;quot;functions&amp;quot; of the generation operator must be edited in order to define the functions which should be generated.</description>
+    </process>
+  </operator>
+</process>

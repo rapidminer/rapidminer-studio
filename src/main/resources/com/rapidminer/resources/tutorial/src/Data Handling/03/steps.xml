@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Rotating from long to wide table formats.">
+		<text>In this tutorial, you will learn about another common data blending technique, namely the
+		<emph>Pivoting</emph>
+		of data. You might be familiar with the concept of Pivoting from BI tools or Excel: 
+		rotate the data from a long table format (one attribute with a lot of examples) into a wide table format (lots of attributes with a single example). 
+		This transformation is especially useful after an aggregation since
+		the
+		aggregated information is always stored in a long format. Machine learning models, however,
+		need
+		the data to be stored in
+		a wide column format so you will encounter this preprocessing step
+		frequently
+		before you start with the actual modeling.</text>
+	</step>
+
+	<step name="Prepare the data.">
+		<info>
+			Let’s start by creating a table that shows how many passengers were in each class, broken down by gender.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Drag</activity>
+				the
+				<file>Titanic</file>
+				data into the process.
+			</task>
+			<task>
+				<acticity>Add</acticity>
+				the operator
+				<op>Aggregate</op>
+				and
+				<activity>connect it</activity>.
+			</task>
+			<task>
+				In its
+				<ui>Parameters</ui>,
+				<activity>select</activity>
+				<value>Passenger Class</value>
+				and
+				<value>Sex</value>
+				as
+				<param>group by attributes</param>.
+			</task>
+			<task>
+				Also use
+				<value>Passenger Class</value>
+				with function
+				<value>count</value>
+				as a new
+				entry for
+				<param>aggregation attributes</param>.
+			</task>
+		</tasks>
+
+		<info>
+			The result will be a table with three columns:
+			<value>Passenger Class</value>,
+			<value>Sex</value>, and the count for each of
+			those combinations. The first row is
+			<value>First</value>,
+			<value>Female</value>
+			with a count of
+			<value>144</value>, the second row is
+			<value>First</value>,
+			<value>Male</value>
+			with a count of
+			<value>179</value>
+			and so on. All combinations of the passenger class and the gender
+			are represented as rows which is
+			why we call this a
+			<emph>long</emph>
+			table format.
+		</info>
+	</step>
+
+	<step name="Pivot the data.">
+		<info>
+			Let’s transform the long table format into a wide format that will make the number of males and females in each class a bit clearer.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Search</activity>
+				for the operator
+				<op>Pivot</op>,
+				<activity>add it</activity>,
+				and
+				<activity>connect it</activity>
+				to
+				<op>Aggregate</op>.
+			</task>
+			<task>
+				<activity>Select</activity>
+				the operator to see its
+				<ui>Parameters</ui>.
+				<activity>Use</activity>
+				<value>Sex</value>
+				as the
+				<param>group attribute</param>.
+			</task>
+			<task>
+				<activity>Use</activity>
+				<value>Passenger Class</value>
+				as
+				<param>index attribute</param>.
+			</task>
+		</tasks>
+
+		<info>
+			The resulting data set has four columns and two rows. Each row represents one of the values from the <value>Sex</value> column 
+			(the <param>group attributes</param> parameter). The three different
+			values of the
+			<param>index attribute</param>
+			(
+			<value>passenger class</value>
+			) become the three new columns. The actual values in the table are representing the
+			counts
+			from the aggregation for the combination of the group (gender) with the index value (or
+			subgroup), which is the passenger class in our case. For example, we will get 144 females who
+			booked first
+			class.
+		</info>
+	</step>
+
+	<step name="Renaming attributes with regular expressions.">
+		<info>
+			The names of the new columns reflect how they were created, but this is not always the easiest to read. You could use the
+			operator
+			<op>Rename</op>
+			for manually renaming the three attributes to something nicer, like "Passenger
+			Class First".
+			<op>Rename</op>
+			is the way to go if you only have few attributes which should be renamed,
+			but we will take a more
+			advanced approach which would allow you to
+			rename hundreds of
+			attributes at a time.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Search</activity>
+				for the operator
+				<op>Rename by Replacing</op>,
+				<activity>add it</activity>, and
+				<activity>connect it</activity>
+				to
+				<op>Pivot</op>.
+			</task>
+			<task>
+				Also
+				<activity>connect the operator</activity>
+				to the result port on the right.
+			</task>
+			<task>
+				<activity>Copy</activity> <value>count\((.*)\)_(.*)</value>   
+				into the <param>replace what</param> parameter field. 
+				Make sure that you get all the parentheses right!
+			</task>
+			<task>
+				<activity>Copy</activity>
+				<value>$1 $2</value>
+				into the
+				<param>replace by</param> parameter.
+			</task>
+		</tasks>
+
+		<info>
+			You might already be familiar with <emph>regular expressions</emph> (this is the name for the strange
+			parameters we have used for the renaming). They are a powerful tool and can be
+			found in many
+			different places in RapidMiner. The expression you have used for <param>replace what</param>
+			means that you look for something between <value>count(</value> and <value>)_</value> and then something else after the
+			underscore. Those two elements are identified later by the round brackets.  Each time you use round brackets, you define 
+			a new so-called <emph>capturing group</emph> which you can refer to in the definition of the replacement.
+			Since the round brackets have a special meaning here, we need to quote the brackets in the name itself with a
+			backslash. Finally, we can use the capturing groups in the <param>replace by</param>
+			parameter with the dollar sign and the number identifying the group. <value>$1</value> is for
+			the content of the first group, which always happens to be "Passenger Class", and <value>$2</value> is 
+			for identifying the second group.  Those are the three different classes "First", "Second", and "Third".
+		</info>
+	</step>
+
+	<step name="Run the process.">
+		<tasks>
+			<task>
+				<activity><icon>16/media_play.png</icon> Run</activity> the process.
+			</task>
+		</tasks>
+
+		<info>
+			Your data set should now have column names that look like <emph>Passenger Class First</emph>.
+		</info>
+	</step>
+
+	<step name="Congratulations!">
+		<text>You rotated an aggregated data set from a long to a wide table format - good job! <op>Pivot</op> can be difficult to configure sometimes.  
+		Just keep in mind that the <param>groups</param> parameter will end up in the rows with one row per group while the values of the <param>index attribute</param> 
+		parameter will define the new columns.</text>
+
+		<questions>
+			<question>
+				Add a breakpoint after "Aggregate". Run the process and check out the long table format. How many rows does it have? 
+				Resume the process and compare the long format to wide format.  Don't forget to remove the breakpoint if you no longer need it.
+			</question>
+			<question>
+				Can you change the process so that the column names will be changed to "First Passenger Class", 
+				"Second Passenger Class", and "Third Passenger Class"?
+			</question>
+			<question>
+				Can you also change them to just say "First Class", "Second Class", and "Third Class"?
+			</question>
+			<question>
+				Change the Pivot so that the gender is transformed into new columns and the class is defining three groups of data.
+				How many columns and rows are you getting now?
+			</question>
+			<question>
+				Try to adapt the renaming so that it just uses the gender as column names after the new Pivoting.
+			</question>
+		</questions>
+		
+		<info>
+			Don't worry if you had trouble with challenges 2, 3, or 5. Regular expressions can be difficult at first but 
+			they are definitely worth learning. Maybe a book can help you or you will find a lot of training resources 
+			<link url="http://www.ocpsoft.org/opensource/guide-to-regular-expressions-in-java-part-1/">online</link>
+			.
+		</info>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

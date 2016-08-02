@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="polynomial classification"/>
+        <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="10"/>
+      </operator>
+      <operator activated="true" class="weight_by_chi_squared_statistic" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ChiSquaredWeighting" width="90" x="179" y="30">
+        <parameter key="normalize_weights" value="true"/>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="ChiSquaredWeighting" to_port="example set"/>
+      <connect from_op="ChiSquaredWeighting" from_port="weights" to_port="result 1"/>
+      <connect from_op="ChiSquaredWeighting" from_port="example set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="102" resized="false" width="400" x="40" y="130">The most simple way to determine attribute weights is to use one of the attribute weighting schemes provided by RapidMiner. Please note that not all weighting schemes can be used for all data sets, some rely on specific conditions as a classification label or numerical feature values.</description>
+    </process>
+  </operator>
+</process>

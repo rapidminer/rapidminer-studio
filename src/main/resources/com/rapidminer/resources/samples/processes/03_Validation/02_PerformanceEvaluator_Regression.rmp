@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Polynomial"/>
+      </operator>
+      <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="JMySVMLearner" width="90" x="180" y="30">
+        <parameter key="kernel_type" value="polynomial"/>
+        <parameter key="kernel_degree" value="3.0"/>
+        <parameter key="C" value="1.0"/>
+        <parameter key="convergence_epsilon" value="0.0010"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="315" y="30">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RegressionPerformance" width="90" x="638" y="30">
+        <parameter key="absolute_error" value="true"/>
+        <parameter key="relative_error_lenient" value="true"/>
+        <parameter key="normalized_absolute_error" value="true"/>
+        <parameter key="root_relative_squared_error" value="true"/>
+        <parameter key="squared_error" value="true"/>
+        <parameter key="correlation" value="true"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="JMySVMLearner" to_port="training set"/>
+      <connect from_op="JMySVMLearner" from_port="model" to_op="ModelApplier" to_port="model"/>
+      <connect from_op="JMySVMLearner" from_port="exampleSet" to_op="ModelApplier" to_port="unlabelled data"/>
+      <connect from_op="ModelApplier" from_port="labelled data" to_op="RegressionPerformance" to_port="labelled data"/>
+      <connect from_op="RegressionPerformance" from_port="performance" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="257" resized="true" width="380" x="42" y="160">This process introduces another very important operator for almost all RapidMiner processes: the PerformanceEvaluator operator. &lt;br/&gt;&lt;br/&gt;This operator expects an input example set with both a true and a predicted label attribute. The PerformanceEvaluator calculates one or more performance measures (performance criteria) and delivers them as PerformanceVector. &lt;br/&gt;&lt;br/&gt;Such a performance vector can be used as estimation of a learner prediction accuracy (int this process it simply calculates the training error which usually isn't a good idea) or as fitness for an outer optimization scheme.</description>
+    </process>
+  </operator>
+</process>

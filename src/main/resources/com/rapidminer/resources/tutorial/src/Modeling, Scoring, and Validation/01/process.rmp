@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.6.000">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.6.000" expanded="true" name="Process">
+    <process expanded="true">
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+	  <background height="-1" location="//Samples/Tutorials/Modeling, Scoring, and Validation/01/tutorial1" width="-1" x="26" y="47"/>
+    </process>
+  </operator>
+</process>

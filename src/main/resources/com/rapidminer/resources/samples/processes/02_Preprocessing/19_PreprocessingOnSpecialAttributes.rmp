@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum"/>
+      </operator>
+      <operator activated="true" class="work_on_subset" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DiscretizationOnSpecialAttributes" width="90" x="179" y="30">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="attribute" value="att1"/>
+        <parameter key="regular_expression" value=".*"/>
+        <parameter key="include_special_attributes" value="true"/>
+        <parameter key="remove_roles" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="discretize_by_frequency" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="FrequencyDiscretization" width="90" x="45" y="30">
+            <parameter key="attribute" value="att1"/>
+            <parameter key="number_of_bins" value="3"/>
+          </operator>
+          <connect from_port="exampleSet" to_op="FrequencyDiscretization" to_port="example set input"/>
+          <connect from_op="FrequencyDiscretization" from_port="example set output" to_port="example set"/>
+          <portSpacing port="source_exampleSet" spacing="0"/>
+          <portSpacing port="sink_example set" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="DiscretizationOnSpecialAttributes" to_port="example set"/>
+      <connect from_op="DiscretizationOnSpecialAttributes" from_port="example set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="232" resized="true" width="423" x="35" y="119">The operator AttributeSubsetPreprocessing is a very powerful extension to the preprocessing operators of RapidMiner. It can be used to perform one or several inner preprocessing operators only on a subset of features (previous process setup).&lt;br/&gt;&lt;br/&gt;In this setup, all attributes are processed including the special attribute &amp;quot;label&amp;quot;. The regular expression for the attribute name is set to &amp;quot;.*&amp;quot; indicating that arbitrary attribute names will match. Since the parameter &amp;quot;process_special_attributes&amp;quot; is also activated, the inner discretization operator will also be applied to the special attribute label transforming the regression task into a classification task on nominal attributes.</description>
+    </process>
+  </operator>
+</process>

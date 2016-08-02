@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="TrainingSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="checkerboard classification"/>
+        <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="LibSVMLearner" width="90" x="180" y="30">
+        <parameter key="gamma" value="0.01"/>
+        <parameter key="epsilon" value="0.0010"/>
+        <list key="class_weights"/>
+      </operator>
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="GridSetGenerator" width="90" x="315" y="30">
+        <parameter key="target_function" value="grid function"/>
+        <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="557" y="30">
+        <list key="application_parameters"/>
+      </operator>
+      <connect from_op="TrainingSetGenerator" from_port="output" to_op="LibSVMLearner" to_port="training set"/>
+      <connect from_op="LibSVMLearner" from_port="model" to_op="ModelApplier" to_port="model"/>
+      <connect from_op="GridSetGenerator" from_port="output" to_op="ModelApplier" to_port="unlabelled data"/>
+      <connect from_op="ModelApplier" from_port="labelled data" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="120" resized="false" width="400" x="40" y="140">For classification models like SVM, the model can be visualized by creating a grid data set and applying the model to this data. The resulting example set contains new special attributes for the confidence values which can be plotted for the selected dimensions. This &amp;quot;workaround&amp;quot; can be used in all cases where the model itself is not able to create a proper visualization.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Sonar"/>
+      </operator>
+      <operator activated="true" class="principal_component_analysis" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="PCA" width="90" x="180" y="30"/>
+      <operator activated="true" class="weight_by_component_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ComponentWeights" width="90" x="313" y="30">
+        <parameter key="normalize_weights" value="true"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="PCA" to_port="example set input"/>
+      <connect from_op="PCA" from_port="original" to_op="ComponentWeights" to_port="example set"/>
+      <connect from_op="PCA" from_port="preprocessing model" to_op="ComponentWeights" to_port="model"/>
+      <connect from_op="ComponentWeights" from_port="weights" to_port="result 1"/>
+      <connect from_op="ComponentWeights" from_port="example set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="84" resized="false" width="400" x="40" y="150">Similar to the GHA and weights process this process creates weights from the input PCA model. These weights can be used for feature selection or just as an indicator for the relevance of each feature.</description>
+    </process>
+  </operator>
+</process>

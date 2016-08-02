@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Importing Data into RapidMiner.">
+		<text>Getting your data into RapidMiner is often the first task you will need to complete your analysis.  In this tutorial, you will learn how to import files into the central storage of RapidMiner, called the Repository.  We will continue to use data describing the Titanic accident, but this time it will be imported from an Excel file.</text>
+		<info>We will now go through the most important steps of building analytical processes starting with data import.  In later tutorials, we will cover data preparation and modeling.  We also will discuss some of the steps you saw so far in more detail.</info>
+	</step>
+	<step name="Download your data.">
+		<tasks>
+			<task><activity>Download</activity> this <link url="http://www.rapidminer.com/titanic/">Excel file</link> to your computer.</task>
+			<task>To import the downloaded data into RapidMiner, <activity>click <icon>16/add.png</icon> <ui>Add Data</ui></activity> in the <ui>Repository</ui> panel and follow the steps in the wizard.</task>
+			<task>When you complete the import, <activity>store the data</activity> as <file>Titanic</file> in your <folder>Local Repository</folder>.</task>
+		</tasks>
+		<info>The <ui>Repository</ui> panel, in the upper left corner by default, is the place to store all your data, processes, and results. You should always import data into the repository, especially when it comes from files like XLS or CSV. This will simplify the design of analytical processes a lot since RapidMiner's repository stores describing meta data together with the data.</info>
+	</step>
+	<step name="Add data to the process.">
+		<tasks>
+			<task>Click the <ui>Design</ui> tab to return to the <ui>Process</ui> panel.</task>
+			<task><activity>Drag the imported <file>Titanic</file> data</activity> from the <ui>Repository</ui> panel into the <ui>Process</ui> panel.</task>
+		</tasks>
+		<info>When you drag data from the repository into the process, it transforms into a data-loading operator (in this case, <op>Retrieve Titanic</op>). Data is not actually loaded (or delivered at the round output ports of each operator) until you run the process.</info>
+	</step>
+	<step name="Create a connection to view results.">
+		<tasks>
+			<task>Connect the output port of <op>Retrieve Titanic</op> with the result port ("res") on the right side of the <ui>Process</ui> panel.</task>
+			<task>Make the connection either by <activity>dragging a line</activity> between the ports, or by first <activity>clicking</activity> on one port and then on the other port.</task>
+		</tasks>
+		<info>Only data which is delivered to one of the result ports on the right can be seen after the execution of the process. If your process does not have at least one connection to a result port, you won't see any results when you execute it!</info>
+	</step>	
+	<step name="Execute the process.">
+		<tasks>
+			<task><activity>Press <icon>16/media_play.png</icon> <ui>Run</ui> (top left)</activity> to execute the process.</task>
+		</tasks>
+		<info>Once run, you automatically switch to the <ui>Results</ui> view where your results are displayed. Remember?  Those are operator outputs you connected with one of the result ports on the right side of the <ui>Process</ui> panel.  At any time, click the <ui>Design</ui> tab to return to the <ui>Process</ui> panel.</info>
+	</step>
+	<step name="Congratulations!">
+		<text>You just have imported your first data set! From now on, each tutorial includes some additional questions - to further improve your skills - take a look at the challenges below!</text>
+		<questions>
+			<question>You can see the data in the results.  Can you find out how missing values are shown?</question>
+			<question>The <ui>Statistics</ui> tab shows summaries of the data in the columns.  How many people did travel in First class?  And how many people did <emph>not</emph> survive the Titanic accident?</question>
+			<question>Play around with some of the <ui>Charts</ui> if you like. Can you see some interesting patterns?</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

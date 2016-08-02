@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
+      </operator>
+      <operator activated="true" class="replace_missing_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="MissingValueReplenishment" width="90" x="179" y="30">
+        <list key="columns"/>
+      </operator>
+      <operator activated="true" class="adaboost" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AdaBoost" width="90" x="313" y="30">
+        <process expanded="true">
+          <operator activated="true" class="decision_stump" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionStump" width="90" x="502" y="30"/>
+          <connect from_port="training set" to_op="DecisionStump" to_port="training set"/>
+          <connect from_op="DecisionStump" from_port="model" to_port="model"/>
+          <portSpacing port="source_training set" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="MissingValueReplenishment" to_port="example set input"/>
+      <connect from_op="MissingValueReplenishment" from_port="example set output" to_op="AdaBoost" to_port="training set"/>
+      <connect from_op="AdaBoost" from_port="model" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="102" resized="false" width="400" x="40" y="150">In this process the boosting method AdaBoost is used together with a decision tree stump learner. Since the data set contains missing values, we have to apply a preprocessing operator which replaces these missing values by the average of the non-missing values in the corresponding columns.</description>
+    </process>
+  </operator>
+</process>

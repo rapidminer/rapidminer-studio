@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Working with Attributes.">
+		<text>You are almost ready to build your first predictive model in RapidMiner! But first, we need to deal with two very important operations for transforming your data sets into a format more suitable for learning. The beginning of this process is the same as the previous one; this is a great opportunity for you to implement what you have learned so far. We will then create a new data column and remove some unused/unnecessary columns from the data.</text>
+	</step>
+	<step name="Add product details to transactions.">
+		<tasks>
+			<task><activity>Drag the <file>Transactions</file> and <file>Products</file></activity> datasets into the <ui>Process</ui>.</task>
+			<task><activity>Add a <op>Join</op></activity> operator.</task>
+			<task><activity>Connect</activity> all operators.</task>
+			<task><activity>Specify the columns to use in the <ui>Parameters</ui></activity> for <op>Join</op>. That is, de-select <param>use id attributes as key</param>, click <param>Edit List</param>, and use <value>Product ID</value> for the left and right key attributes.</task>
+		</tasks>
+		<info>The resulting example set contains all transactions with product details for each transaction.</info>
+	</step>	
+	<step name="Define a new attribute.">
+		<info>The term <emph>attribute</emph> is RapidMiner lingo for "column." In machine learning, each row of a data set is an <emph>example</emph> for a specific situation and the <emph>attributes</emph> (columns) are the properties that describe the situation.</info>
+		<tasks>
+			<task><activity>Add the <op>Generate Attributes</op></activity> operator.</task>
+			<task><activity>Connect</activity> the operator with <op>Join</op>.</task>
+			<task><activity>Click <param>Edit List</param></activity> in the <ui>Parameters</ui> for <op>Generate Attributes</op> to define the new attribute (column). A dialog will pop up.</task>
+			<task>In the left column of the dialog, <activity>enter <value>Total</value></activity> for the <param>attribute name</param>.</task>
+			<task>In the right column, <activity>type <value>Amount*Price</value></activity> for the <param>function expression</param>.</task> 
+		</tasks>
+		<info>You can also click on the calculator to create the expression using the <ui>Expression Editor</ui>.  You should try this now - this is much easier than typing complex expressions into the text field!</info>
+	</step>
+	<step name="Remove unnecessary attributes.">
+		<info>The resulting data set contains, for each transaction, the total sum paid (i.e. number of items sold multiplied by the price for each item).</info>		
+		<tasks>
+			<task><activity>Add the <op>Select Attributes</op></activity> operator to the process and <activity>connect it</activity>. Make the following changes in <ui>Parameters</ui>:</task>
+			<task>Set <param>attribute filter type</param> to <value>subset</value>. In general, this means that the operator will be applied only to those attributes (columns) you specify. Here this allows you to choose a subset of columns to keep in the data - all other columns will be removed.</task>
+			<task><activity>Click <param>Select Attributes</param>.</activity></task>
+			<task><activity>In the resulting dialog, <activity>select the <value>Customer ID</value>, <value>Product Name</value>, and <value>Total</value></activity> attributes.</activity>  If the list is empty, you forgot to connect the operator first...</task>
+			<task><icon>16/media_play.png</icon><activity><ui>Run</ui> the process.</activity></task> 
+		</tasks>
+		<info>Don't forget to connect the output of the last operator to the result port! Your result shows, for each customer, the total spent on each product they purchased. Attributes (columns) not identified in <op>Select Attributes</op> are removed.</info>
+	</step>
+	<step name="Congratulations!">
+		<text>You are becoming a master of data blending! You have seen now some of the most important operators for data preprocessing: Join, Aggregate, Filter, Sort, Generate Attributes, and Select Attributes. RapidMiner has a lot more operators, but those six will be used most frequently.</text>
+		<questions>
+			<question>From the <ui>Results</ui> view, can you find out the customer ID of the customer who paid most for a single product?  How much did they pay?  Remember that you can sort data by clicking on a column header.</question>
+			<question>Can you answer the same question by using an operator instead?</question>
+			<question>How would you describe the form of the distribution chart for the new Total attribute?  You can find this in the <ui>Statistics</ui> tab or try to create a chart for this attribute.</question>
+			<question>Can you change the process so that it also calculates a new attribute <value>Squared</value> which is the squared amount for each transaction? What else do you need to change so that you see this new column after process execution?</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>
