@@ -734,25 +734,12 @@ public class Tools {
 	 * @return Cloned list of operators.
 	 */
 	public static List<Operator> cloneOperators(List<Operator> operators) {
-		return cloneOperators(operators, false);
-	}
-
-	/**
-	 * Clones a {@link List} of {@link Operator}s including connections.
-	 *
-	 * @param operators
-	 *            List of operators.
-	 * @param deepCopyErrorLists
-	 *            indicates if operators errorLists should be deep copied
-	 * @return Cloned list of operators.
-	 */
-	public static List<Operator> cloneOperators(List<Operator> operators, boolean deepCopyErrorLists) {
 		List<Operator> clonedOperators = new ArrayList<>(operators.size());
 		Map<Operator, Operator> originalToClone = new HashMap<>(operators.size());
 
 		for (Operator operator : operators) {
 			// clone operator
-			Operator clone = operator.cloneOperator(false, deepCopyErrorLists);
+			Operator clone = operator.cloneOperator(operator.getName(), false);
 			clonedOperators.add(clone);
 			// create mapping from original to cloned operator
 			originalToClone.put(operator, clone);

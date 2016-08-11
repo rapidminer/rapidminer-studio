@@ -657,28 +657,13 @@ public abstract class Operator extends AbstractObservable<Operator>
 	/**
 	 * Performs a deep clone on the most parts of this operator. The breakpointThread is empty (as
 	 * it is in initialization). The parent will be clone in the method of OperatorChain overwriting
-	 * this one. The in- and output containers and the error list are only cloned by reference
-	 * copying. Use this method only if you are sure what you are doing.
+	 * this one. The in- and output containers are only cloned by reference copying. Use this method
+	 * only if you are sure what you are doing.
 	 *
 	 * @param name
-	 *            This parameter is not used at all.
+	 *            This parameter is not longer used.
 	 */
 	public Operator cloneOperator(String name, boolean forParallelExecution) {
-		return cloneOperator(forParallelExecution, false);
-	}
-
-	/**
-	 * Performs a deep clone on the most parts of this operator. The breakpointThread is empty (as
-	 * it is in initialization). The parent will be clone in the method of OperatorChain overwriting
-	 * this one. By default the in- and output containers and the error list are only cloned by
-	 * reference copying. Use this method only if you are sure what you are doing.
-	 *
-	 * @param forParallelExecution
-	 *            Clone applyCount by reference
-	 * @param deepCopyErrorList
-	 *            indicates if errorList should be deep copied
-	 */
-	public Operator cloneOperator(boolean forParallelExecution, boolean deepCopyErrorList) {
 		Operator clone = null;
 		try {
 			clone = operatorDescription.createOperatorInstance();
@@ -715,11 +700,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 		clone.loopStartTime = loopStartTime;
 		clone.getParameters().copyFrom(this.getParameters());
 		clone.compatibilityLevel = compatibilityLevel;
-		if (deepCopyErrorList) {
-			clone.errorList.addAll(errorList); // value
-		} else {
-			clone.errorList = errorList; // reference
-		}
+		clone.errorList.addAll(errorList);
 		return clone;
 	}
 
@@ -2399,10 +2380,9 @@ public abstract class Operator extends AbstractObservable<Operator>
 	}
 
 	/**
-	 * Returns if this operator should currently show progress animation.
-	 * This method can be overridden to provide unique animation display criteria.
-	 * By default it checks if the operator is running.
-	 * Please note that
+	 * Returns if this operator should currently show progress animation. This method can be
+	 * overridden to provide unique animation display criteria. By default it checks if the operator
+	 * is running. Please note that
 	 * {@link com.rapidminer.gui.animation.OperatorAnimationProcessListener#processFinishedOperator}
 	 * also depends on this method.
 	 */

@@ -14,3 +14,4 @@ config/checkstyle/checkstyle.xsl
 config/pmd/*
 .idea/
 *.iml
+**/*.tutorial

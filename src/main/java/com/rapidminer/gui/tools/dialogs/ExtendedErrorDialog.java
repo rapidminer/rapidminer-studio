@@ -61,6 +61,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.RMUrlHandler;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XmlRpcHandler;
 
@@ -284,6 +285,7 @@ public class ExtendedErrorDialog extends ButtonDialog {
 	 *            The error occurred
 	 * @return
 	 */
+	@SuppressWarnings("unused") // Contains Bugzilla code for later usage
 	private Collection<AbstractButton> getButtons(boolean hasError, boolean isBug, final JComponent detailedPane,
 			final Throwable error) {
 		Collection<AbstractButton> buttons = new LinkedList<>();
@@ -319,7 +321,37 @@ public class ExtendedErrorDialog extends ButtonDialog {
 			buttons.add(showDetailsButton);
 
 		}
-		if (isBug) {
+
+		/*
+		 * Disable the Bugzilla functionality
+		 */
+		boolean useBugzilla = false;
+
+		/*
+		 * Link to the RapidMiner community, can be removed when JIRA issue collection is ready
+		 */
+		if (!useBugzilla && isBug) {
+			sendReport = new JButton(new ResourceAction("report_bug") {
+
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					RMUrlHandler.openInBrowser(I18N.getMessage(I18N.getGUIBundle(), "gui.action.report_bug.url"));
+				}
+			});
+			// don't show "Report Bug" button if this dialog is shown when RM is only embedded
+			if (!RapidMiner.getExecutionMode().equals(ExecutionMode.EMBEDDED_WITH_UI)) {
+				buttons.add(sendReport);
+			}
+		}
+
+		/*
+		 * Unused old bugzilla code, should be replaced with JIRA issue collector
+		 * https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/
+		 * jira-rest-api-example-create-issue
+		 */
+		if (useBugzilla && isBug) {
 			sendReport = new JButton(new ResourceAction("send_bugreport") {
 
 				private static final long serialVersionUID = 1L;

@@ -287,6 +287,12 @@ public class Plugin {
 		PLUGIN_BLACKLIST.put("rmx_web", upToRm711);
 		PLUGIN_BLACKLIST.put("rmx_r_scripting", upToRm711);
 		PLUGIN_BLACKLIST.put("rmx_python_scripting", upToRm711);
+
+		// RapidLabs / 3rd party extensions causing problems since Studio 7.2
+		PLUGIN_BLACKLIST.put("rmx_rapidprom", new Pair<>(null, new VersionNumber(3, 0, 7)));
+		// yes the rmx_rmx_ prefix is correct...
+		PLUGIN_BLACKLIST.put("rmx_rmx_toolkit", new Pair<>(null, new VersionNumber(1, 0, 0)));
+		PLUGIN_BLACKLIST.put("rmx_ida", new Pair<>(null, new VersionNumber(5, 1, 0)));
 	}
 
 	/** map of all plugin loading times */

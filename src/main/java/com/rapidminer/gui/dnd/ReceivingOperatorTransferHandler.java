@@ -141,7 +141,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 					.log(Level.WARNING,
 							I18N.getMessage(LogService.getRoot().getResourceBundle(),
 									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_while_accepting_drop"),
-					e1);
+							e1);
 			dropEnds();
 			return false;
 		}
@@ -337,7 +337,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				return result;
 			} else {
 				// paste an existing Operator
-				newOperators = Tools.cloneOperators(newOperators, true);
+				newOperators = Tools.cloneOperators(newOperators);
 				boolean result;
 				try {
 					result = dropNow(newOperators, null);

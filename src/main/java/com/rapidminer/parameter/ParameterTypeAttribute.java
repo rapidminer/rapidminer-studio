@@ -18,6 +18,11 @@
  */
 package com.rapidminer.parameter;
 
+import java.util.Collections;
+import java.util.Vector;
+
+import org.w3c.dom.Element;
+
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.MetaDataChangeListener;
@@ -28,21 +33,54 @@ import com.rapidminer.operator.ports.metadata.ModelMetaData;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.XMLException;
 
-import java.util.Collections;
-import java.util.Vector;
-
-import org.w3c.dom.Element;
-
 
 /**
  * This attribute type supports the user by let him select an attribute name from a combo box of
  * known attribute names. For long lists, auto completion and filtering of the drop down menu eases
  * the handling. For knowing attribute names before process execution a valid meta data
  * transformation must be performed. Otherwise the user might type in the name, instead of choosing.
- * 
+ *
  * @author Sebastian Land
  */
 public class ParameterTypeAttribute extends ParameterTypeString {
+
+	/**
+	 * A {@link MetaDataProvider} which provides metadata by querying the provided input port.
+	 * It is used by the Web Client to retrieve input port data for attribute parameters.
+	 *
+	 */
+	public static final class InputPortMetaDataProvider implements MetaDataProvider {
+
+		private final InputPort inPort;
+
+		private InputPortMetaDataProvider(InputPort inPort) {
+			this.inPort = inPort;
+		}
+
+		@Override
+		public MetaData getMetaData() {
+			if (inPort != null) {
+				return inPort.getMetaData();
+			} else {
+				return null;
+			}
+		}
+
+		@Override
+		public void addMetaDataChangeListener(MetaDataChangeListener l) {
+			inPort.registerMetaDataChangeListener(l);
+		}
+
+		@Override
+		public void removeMetaDataChangeListener(MetaDataChangeListener l) {
+			inPort.removeMetaDataChangeListener(l);
+
+		}
+
+		public InputPort getInputPort() {
+			return inPort;
+		}
+	}
 
 	private static final long serialVersionUID = -4177652183651031337L;
 
@@ -89,30 +127,15 @@ public class ParameterTypeAttribute extends ParameterTypeString {
 
 	public ParameterTypeAttribute(final String key, String description, final InputPort inPort, boolean optional,
 			int... valueTypes) {
-		this(key, description, new MetaDataProvider() {
-
-			@Override
-			public MetaData getMetaData() {
-				if (inPort != null) {
-					return inPort.getMetaData();
-				} else {
-					return null;
-				}
-			}
-
-			@Override
-			public void addMetaDataChangeListener(MetaDataChangeListener l) {
-				inPort.registerMetaDataChangeListener(l);
-			}
-
-			@Override
-			public void removeMetaDataChangeListener(MetaDataChangeListener l) {
-				inPort.removeMetaDataChangeListener(l);
-
-			}
-		}, optional, valueTypes);
+		this(key, description, new InputPortMetaDataProvider(inPort), optional, valueTypes);
 	}
 
+	/**
+	 * @deprecated use
+	 *             {@link ParameterTypeAttribute#ParameterTypeAttribute(String, String, InputPort, boolean, boolean, int...)}
+	 *             instead
+	 */
+	@Deprecated
 	public ParameterTypeAttribute(final String key, String description, MetaDataProvider metaDataProvider, boolean optional,
 			int... valueTypes) {
 		super(key, description, optional);

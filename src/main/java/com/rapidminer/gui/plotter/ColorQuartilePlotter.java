@@ -41,7 +41,7 @@ import java.util.logging.Level;
 
 /**
  * This plotter can be used to create colorized quartile plots for one of the columns.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ColorQuartilePlotter extends PlotterAdapter {
@@ -143,7 +143,7 @@ public class ColorQuartilePlotter extends PlotterAdapter {
 		this.globalMax = Double.NEGATIVE_INFINITY;
 
 		if (columnIndex != -1) {
-			if (colorIndex != -1) {
+			if (colorIndex != -1 && dataTable.isNominal(colorIndex)) {
 				// create value map
 				Map<Double, List<Double>> valueMap = new TreeMap<Double, List<Double>>();
 				synchronized (dataTable) {
@@ -197,8 +197,8 @@ public class ColorQuartilePlotter extends PlotterAdapter {
 						LogService
 								.getRoot()
 								.log(Level.WARNING,
-										"com.rapidminer.gui.plotter.ColorQuartilePlotter.quartile_creating_colorized_quartile_error",
-										new Object[] { valueMap.size(), maxClassesProperty });
+								"com.rapidminer.gui.plotter.ColorQuartilePlotter.quartile_creating_colorized_quartile_error",
+								new Object[] { valueMap.size(), maxClassesProperty });
 					}
 				}
 			} else {
@@ -225,7 +225,7 @@ public class ColorQuartilePlotter extends PlotterAdapter {
 	}
 
 	public void paintQuartiles(Graphics2D g, int pixWidth, int pixHeight) {
-		prepareData();
+			prepareData();
 
 		if (allQuartiles.size() == 0) {
 			return;

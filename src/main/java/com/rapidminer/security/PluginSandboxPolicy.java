@@ -293,6 +293,7 @@ public final class PluginSandboxPolicy extends Policy {
 		permissions.add(new RuntimePermission("accessClassInPackage.sun.*"));
 
 		permissions.add(new RuntimePermission("accessDeclaredMembers"));
+		permissions.add(new RuntimePermission("getenv.*"));
 		permissions.add(new RuntimePermission("getFileSystemAttributes"));
 		permissions.add(new RuntimePermission("readFileDescriptor"));
 		permissions.add(new RuntimePermission("writeFileDescriptor"));
