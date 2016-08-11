@@ -1,0 +1,917 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>RapidMiner GUI Manual</TITLE>
+<META NAME="description" CONTENT="RapidMiner GUI Manual">
+<META NAME="keywords" CONTENT="RapidMinerGUIManual">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="RapidMinerGUIManual.css">
+
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<IMG WIDTH="81" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next_inactive" SRC="nx_grp_g.png"> 
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_g.png"> 
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev_g.png">   
+<BR>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<P>
+<H1 ALIGN="CENTER">The R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> GUI Manual</H1>
+<DIV>
+
+</DIV>
+
+<P>
+
+<H3>Abstract:</H3>
+<DIV>
+This document describes the usage of the graphical user
+interface (GUI) of the data mining software package R<SMALL>APID</SMALL>M<SMALL>INER</SMALL>. Since the
+interface was intended to ease the usage of R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> avoiding handling of XML
+configuration files, there should be almost nothing to
+explain. Hence this document describes the very basic ideas of R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> and their
+representations in the GUI. We suggest that you first make the online tutorial 
+and read this document. After that, you will find it much easier to read the R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> 
+Tutorial and skip a lot of its contents.</DIV>
+<P>
+
+<P>
+<BR>
+
+<H2><A NAME="SECTION00010000000000000000">
+Contents</A>
+</H2>
+<!--Table of Contents-->
+
+<UL>
+<LI><A NAME="tex2html40"
+  HREF="RapidMinerGUIManual.html#SECTION00020000000000000000">General Information</A>
+<LI><A NAME="tex2html41"
+  HREF="RapidMinerGUIManual.html#SECTION00030000000000000000">Setting up a Process</A>
+<UL>
+<LI><A NAME="tex2html42"
+  HREF="RapidMinerGUIManual.html#SECTION00031000000000000000">The online tutorial</A>
+<LI><A NAME="tex2html43"
+  HREF="RapidMinerGUIManual.html#SECTION00032000000000000000">The Wizard</A>
+<LI><A NAME="tex2html44"
+  HREF="RapidMinerGUIManual.html#SECTION00033000000000000000">Operator Configuration Wizards</A>
+<LI><A NAME="tex2html45"
+  HREF="RapidMinerGUIManual.html#SECTION00034000000000000000">The tree view and other process views</A>
+<LI><A NAME="tex2html46"
+  HREF="RapidMinerGUIManual.html#SECTION00035000000000000000">Creating, deleting, moving and replacing operators</A>
+<LI><A NAME="tex2html47"
+  HREF="RapidMinerGUIManual.html#SECTION00036000000000000000">Operator info</A>
+<LI><A NAME="tex2html48"
+  HREF="RapidMinerGUIManual.html#SECTION00037000000000000000">The attribute editor</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html49"
+  HREF="RapidMinerGUIManual.html#SECTION00040000000000000000">Validating your process definition</A>
+<LI><A NAME="tex2html50"
+  HREF="RapidMinerGUIManual.html#SECTION00050000000000000000">Running your process</A>
+<LI><A NAME="tex2html51"
+  HREF="RapidMinerGUIManual.html#SECTION00060000000000000000">Evaluating the results</A>
+<UL>
+<LI><A NAME="tex2html52"
+  HREF="RapidMinerGUIManual.html#SECTION00061000000000000000">Plotter</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html53"
+  HREF="RapidMinerGUIManual.html#SECTION00070000000000000000">Settings</A>
+</UL>
+<!--End of Table of Contents-->
+<P>
+
+<H1><A NAME="SECTION00020000000000000000">
+General Information</A>
+</H1>
+
+<P>
+Although the R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> tutorial and this GUI manual contain a huge amount
+of information about R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> and all of its parts, it is often very
+convenient to get the desired information during work. Therefore, we 
+added an online help function to almost all parts of R<SMALL>APID</SMALL>M<SMALL>INER</SMALL>. Each
+parameter, operator and GUI item displays information as tool tip text,
+which appears after holding the mouse cursor a few moments above the
+object at hand.
+
+<P>
+
+<H1><A NAME="SECTION00030000000000000000">
+Setting up a Process</A>
+</H1>
+
+<P>
+When R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> starts up, it presents you a welcome screen that lets
+you choose between five possibilities
+
+<UL>
+<LI>Start with a blank process setup
+</LI>
+<LI>Open one of the recently used process definitions
+</LI>
+<LI>Open an existing process definition
+</LI>
+<LI>Start the Process Creation Wizard
+</LI>
+<LI>Start the R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> online tutorial
+</LI>
+</UL>
+
+<P>
+
+<H2><A NAME="SECTION00031000000000000000">
+The online tutorial</A>
+</H2>
+
+<P>
+When you start R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> the first time, you should probably make the online
+tutorial. It explains the main concepts, the GUI usage and shows
+many of the operators provided by R<SMALL>APID</SMALL>M<SMALL>INER</SMALL>.
+
+<P>
+
+<H2><A NAME="SECTION00032000000000000000">
+The Wizard</A>
+</H2>
+
+<P>
+We assume that you have chosen to start the Wizard (figure
+<A HREF="#fig:wizard_template">1</A>). The Wizard is also available from the
+<I>File</I> menu. The Wizard guides you during the process of
+creating a new process. You start by selecting a template
+process from a list. This template serves as a kind of skeleton for
+your process.
+
+<DIV ALIGN="CENTER"><A NAME="fig:wizard_template"></A><A NAME="33"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 1:</STRONG>
+The R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> Process Creation Wizard is a simple way to create basic process definitions.</CAPTION>
+<TR><TD><img src="screenshot_template_valid.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+Processes in R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> are made up from a set of nested operators. An
+operator consumes a set of input objects and produces some output
+objects. These objects can be data files, models, performance criteria,
+and more. Simple operators like learners consume an example set and
+produce a model that can be used by an applier for
+prediction. Moreover, some operators can have inner operators. For example, a
+<I>k</I>-fold cross-validation splits up an example set into training set
+and test set and applies its inner operators, which are a learner and
+an applier. Each time a disjoint test set is used.
+
+<P>
+If you click on the radio button next to the "SVM with XValidation"
+template, the structure of the sample process is depicted on the
+right. You see an operator chain consisting of an
+<I>ExampleSource</I> that reads data from a file. This data is
+then passed to the cross-validation, which itself has inner operators,
+in this case learner and applier for a support vector machine
+(SVM). See the R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> Tutorial for more information on SVMs and the
+individual operators.
+
+<P>
+Now that you have chosen the template, click on <I>next</I>. In
+this step you can enter some of the most important parameters (figure
+<A HREF="#fig:wizard_parameter_editing">2</A>). In case of a cross-validation
+this is e.g. the number of validations.
+
+<DIV ALIGN="CENTER"><A NAME="fig:wizard_parameter_editing"></A><A NAME="41"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 2:</STRONG>
+The parameter editing step of the Wizard.</CAPTION>
+<TR><TD><img src="screenshot_template_edit_parameter.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+A lot of process setups in R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> need a data file as input which is known in supervised 
+learning as an example set. The example sets have to be in a special format and require
+that the attributes are described in a seperate XML file. In other words, the file in special 
+format is the set of examples where each example is a vector and the XML file describes the 
+semantics of every value in the vector. 
+
+<P>
+In order to create such an XML file now, you can press the small
+<TT>Edit</TT> button next to an attribute description file
+property. The dialog popping up is described in section
+<A HREF="#sec:attribute_editor">2.7</A> and is called Attribute Editor. The files
+generated with help of the Attribute Editor can also be used as input
+for the ExampleSource operator, which is the standard data input
+operator for R<SMALL>APID</SMALL>M<SMALL>INER</SMALL>.
+
+<P>
+
+<H2><A NAME="SECTION00033000000000000000">
+Operator Configuration Wizards</A>
+</H2>
+
+<P>
+An even more convenient way of loading almost arbitrary data files into R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> 
+and to define attribute description files for your data, is to use the Example 
+Source configuration wizard. Just press the <I>Start Configuration Wizard...</I> 
+button at the top of the parameter table of the operator. Configuration wizards are 
+also available for other operators which are hard to define, e.g. for the DatabaseExampleSource
+operator.
+
+<P>
+
+<H2><A NAME="SECTION00034000000000000000">
+The tree view and other process views</A>
+</H2>
+
+<P>
+As operators can have inner operators and each operator except the
+root operator is enclosed within another operator, the natural
+representation of an process is a tree. If you have used the
+Wizard, you see your process definition on the left side. If you did not use the Wizard
+you see an empty process consisting only of an empty operator
+chain. Figure <A HREF="#fig:main_experiment_view">3</A> shows this main
+process view which is called ``tree view''.
+
+<DIV ALIGN="CENTER"><A NAME="fig:main_experiment_view"></A><A NAME="52"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 3:</STRONG>
+Main tree view of the process editor window.</CAPTION>
+<TR><TD><img src="main_experiment_view.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+By clicking on the <I>XML</I> tab you see the XML configuration
+file that describes your process (figure
+<A HREF="#fig:wizard_xml_editing">4</A>). If you like you can always edit it by
+hand using your favorite text editor. For more information about the
+XML configuration files see the R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> Tutorial.
+You can specify HTML comments to each operator in the <I>Comment</I> tab which are
+saved in the XML files. If you specify a comment for the root operator
+of the process, this comment is displayed in a dialog each time the
+process setup was loaded.
+Selecting the 
+<I>Box View</I> from the View menu shows a nicer box representation of your
+process you already know from the Wizard. You can use this view for
+printing.
+
+<DIV ALIGN="CENTER"><A NAME="fig:wizard_xml_editing"></A><A NAME="61"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 4:</STRONG>
+The R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> XML configuration editor </CAPTION>
+<TR><TD><img src="screenshot_xml_edit.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<H3><A NAME="SECTION00034100000000000000">
+Editing parameters</A>
+</H3>
+
+<P>
+To the right of the tree you see a table with two columns labeled ``Key''
+and ``Value''. Depending on the selected operator you can enter the
+parameters of this operator. Mandatory parameters are shown in bold
+face. Some of the parameters may have a default value, which will be
+used if no other value was specified. If the entered value
+is out of range, it will be corrected automatically. Some
+parameters accept only numbers, others let you select from a list of
+values. For file parameters, the file name can be entered into the text
+field or the file is selected by means of a file chooser dialog, that
+pops up when pressing the <I>[...]</I> button. All file names
+can be defined relatively against the location of the process definition
+file. Of course this only works after the process was saved.
+
+<P>
+
+<H4><A NAME="SECTION00034110000000000000">
+Tip:</A>
+</H4> Keep the mouse cursor a few moments above a
+parameter. Useful information about the parameter will be displayed
+as tool tip text.
+
+<P>
+
+<H2><A NAME="SECTION00035000000000000000">
+Creating, deleting, moving and replacing operators</A>
+</H2>
+
+<P>
+If you started with a blank process setup or you want to modify an
+process created by the Wizard, the thing you probably want to do is
+create a new operator. 
+
+<P>
+Since this feature seemed most important to us
+it is accessible from many places: from the <I>Edit</I> menu,
+the icon bar below the menu bar, the "New Operator" tab, the context
+menu popping up whenever you right-click on an operator of the tree,
+or simply by pressing <TT>[Ctrl-I]</TT>. Figure <A HREF="#fig:operator_new">5</A>
+shows the icon for operator adding.
+
+<DIV ALIGN="CENTER"><A NAME="fig:operator_new"></A><A NAME="73"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 5:</STRONG>
+The new operator icon.</CAPTION>
+<TR><TD><img src="new_operator.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+Whichever way you choose to activate this function, it
+will pop up an operator browser that lets you choose the operator type
+(select a group or input or output types first if you want to decrease
+the number of possible selections). This browser displays all
+available information about the currently selected operator. You
+should name the operator before you add it into your
+process. You can always rename an operator by pressing <TT>[F2]</TT> or
+triple clicking it in the tree view. Figure
+<A HREF="#fig:operator_selection">6</A> shows the operator browser. 
+
+<DIV ALIGN="CENTER"><A NAME="fig:operator_selection"></A><A NAME="80"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 6:</STRONG>
+The Operator Browser for information and operator adding.</CAPTION>
+<TR><TD><img src="operator_selection.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+Another way to add an operator is to right click on the parent
+operator and select the operator from the <I>New operator</I>
+submenu. Adding operators directly from the context menu is a very
+fast way of process design. Both ways of adding are only possible
+if an operator chain is selected, i.e. an operator which can have
+children.
+
+<P>
+
+<H4><A NAME="SECTION00035010000000000000">
+Tip:</A>
+</H4> Keep the mouse cursor a few moments above an
+operator in the submenus. Useful information about the operator will
+be appear as tool tip text.
+
+<P>
+
+<P>
+<BR>
+
+<P>
+You can replace an operator by selecting the new operator from the
+submenu <I>Replace operator</I> of the context menu. This is
+similar to adding a new operator from the context menu instead of
+using the operator browser. When you replace an operator chain 
+the inner operators will remain. Therefore, operator chains containing
+any children can only be replaced by other operator chains.
+
+<P>
+
+<P>
+<BR>
+
+<P>
+Removing the operator is even easier. Just press
+<TT>[Delete]</TT> or select the corresponding menu item from the context
+menu or the <I>Edit</I> menu. Figure <A HREF="#fig:operator_delete">10</A>
+shows the icon for operator deleting.
+
+<DIV ALIGN="CENTER"><A NAME="fig:operator_delete"></A><A NAME="91"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 7:</STRONG>
+The remove operator icon.</CAPTION>
+<TR><TD><img src="delete_operator.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+You can use the ``Drag &amp; Drop'' functionality
+to move an operator up or down within the tree.
+
+<P>
+
+<H2><A NAME="SECTION00036000000000000000">
+Operator info</A>
+</H2>
+
+<P>
+Pressing <TT>[F1]</TT> brings up a dialog with useful information about
+the currently selected operator. This option is also available from
+the context menu of each operator or the <I>Tools</I> menu. This
+operator info dialog displays:
+
+<UL>
+<LI>a short description
+</LI>
+<LI>which input the operator demands
+</LI>
+<LI>which output the operator delivers
+</LI>
+<LI>the minimum number of inner operators, if the selected operator
+  can have children
+</LI>
+<LI>the maximum number of inner operators, if the selected operator
+  can have children
+</LI>
+<LI>errors in process setup (if errors exist)
+</LI>
+<LI>a description or comment text field
+</LI>
+</UL>
+
+<P>
+
+<H2><A NAME="SECTION00037000000000000000"></A>
+<A NAME="sec:attribute_editor"></A>
+<BR>
+The attribute editor
+</H2>
+
+<P>
+Example sets or instance sets in R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> are described by using a separate XML
+document. This attribute description file contains information about
+the type of data and its source. Data sets can be distributed over
+several files. This may be particularly useful if the label is stored
+within a file of its own. The R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> Tutorial will give help in case you
+want to edit this file yourself.
+
+<P>
+The GUI displays a small <I>Edit</I> button next to an attribute
+description file property (e.g. the parameter <I>attributes</I> of an
+<I>ExampleSource</I>) in the property editor. A dialog called
+Attribute Editor will pop up containing a table with one column for
+each attribute (figure <A HREF="#fig:attribute_editor">9</A>). If the property
+does not yet reference a proper attribute description file, the dialog
+will be empty. If you want to follow the instructions below, which describe 
+how to create the XML description file, you can clear the table by clicking on
+the corresponding button above the table, or selecting "Clear" from the "Table" menu, 
+to start from scratch.
+
+<DIV ALIGN="CENTER"><A NAME="fig:attribute_editor"></A><A NAME="107"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 8:</STRONG>
+The clear button.</CAPTION>
+<TR><TD><img src="clear_button.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:attribute_editor"></A><A NAME="112"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 9:</STRONG>
+The Attribute Editor dialog for data loading and attribute
+  description file creation.</CAPTION>
+<TR><TD><img src="attribute_editor.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+Assume, you have a data file containing 50 rows of whitespace or comma
+separated attribute values, five each  row. Click on load data to open
+that file. After that you should see five columns with some headers each
+and the data in the table cells. Question marks (``?'') indicate missing
+values. The following enumeration explains the meanings of the table headers:
+
+<OL>
+<LI>The first header row contains the source file and column index. This
+  is not editable but just for your information.
+</LI>
+<LI>The second row shows the name of each column. You can edit the name by
+  clicking into the text field.
+</LI>
+<LI>The third row indicates, what the data is used for. For example, it can
+  be an ordinary attribute, a label for classification or
+  regression tasks, or a weight that can be used with certain
+  algorithms. There can be at most one label and one weight attribute.
+</LI>
+<LI>The fourth row is the value type. Most interesting are
+  the choices <I>real</I> / <I>integer</I> and <I>nominal</I>. R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> 
+  should have automatically detected these correctly.
+</LI>
+<LI>The last header row is the block type. Most interesting are
+  <I>single_value</I> (default) and <I>value_series</I>. For some
+  processes, value series are treated in a special way. Do not forget
+  to assign <I>value_series_start</I> and <I>value_series_end</I> to
+  the first and last column respectively.
+</LI>
+</OL>
+You can change the values according to your needs and load an
+arbitrary number of data files. Finally click on <I>Save
+attribute description file</I>, which you can find in the file menu,
+to write the XML file to disk, or just click on the "Save" button.
+
+<DIV ALIGN="CENTER"><A NAME="fig:operator_delete"></A><A NAME="127"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 10:</STRONG>
+The button for saving an attribute description file.</CAPTION>
+<TR><TD><img src="save_button.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<H4><A NAME="SECTION00037010000000000000">
+Tip:</A>
+</H4>
+If you do not want to use this R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> standard data format, you can use
+one of the provided special format operators which can read Arff
+files, comma separated value files (csv), bibtex files, dBase files,
+C4.5 files, and more.
+
+<P>
+
+<H4><A NAME="SECTION00037020000000000000">
+Tip:</A>
+</H4>
+An even more convenient way of loading almost arbitrary data files into R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> 
+and to define attribute description files for your data is to use the Example 
+Source configuration wizard. Just press the <I>Start Configuration Wizard...</I> 
+button at the top of the parameter table of the operator. Configuration wizards are 
+also available for other operators which are hard to define, e.g. for the DatabaseExampleSource
+operator. The wizards are self explaining, just follow the steps and read the instructions.
+
+<P>
+
+<H1><A NAME="SECTION00040000000000000000">
+Validating your process definition</A>
+</H1>
+
+<P>
+Before you run your process you should validate it.
+You can click on
+<I>Validate Process</I> in order
+to check if all operators are nested correctly, provided with their
+necessary input and 
+mandatory properties are set (figure
+<A HREF="#fig:validate_experiment_button">11</A>). Although this might be useful,
+you do not need to do it manually, since these checks are performed
+automatically before the process is started. 
+
+<DIV ALIGN="CENTER"><A NAME="fig:validate_experiment_button"></A><A NAME="138"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 11:</STRONG>
+The validate process icon.</CAPTION>
+<TR><TD><img src="validate_button.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+The result of the validation including all error messages is printed into the 
+message viewer at the bottom of the main frame.
+Additionally, they are indicated by an
+exclamation mark next to the operator in the tree view. An example is
+shown in figure <A HREF="#fig:error_message">12</A>. You can display these
+messages and more information about the operator by 
+pressing <TT>[F1]</TT> or selecting the <I>Operator info</I> menu item
+from the context menu or from the <I>Tools</I> menu.
+
+<DIV ALIGN="CENTER"><A NAME="fig:error_message"></A><A NAME="147"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 12:</STRONG>
+Error Messages in the Message Viewer (lower part)
+  highlighting the errors in the process.</CAPTION>
+<TR><TD><img src="error_message.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+Process validation is very important in order to create proper process definitions
+and can help to understand the concepts of R<SMALL>APID</SMALL>M<SMALL>INER</SMALL>. We therefore recommend to use
+process validation as often as possible, at least once before you start
+your process. Together with the breakpoints from the operator context menu,
+it is usually much easier to design new or complex processes.
+
+<P>
+
+<H1><A NAME="SECTION00050000000000000000">
+Running your process</A>
+</H1>
+
+<P>
+Running your process is quite easy. Select <I>Run</I>
+from the <I>Process</I> menu or click the corresponding
+play button, which is shown in figure <A HREF="#fig:play_button">13</A>.
+
+<DIV ALIGN="CENTER"><A NAME="fig:play_button"></A><A NAME="156"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 13:</STRONG>
+The process run icon.</CAPTION>
+<TR><TD><img src="play_button.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+You may follow the progress of your process by observing the output
+which is displayed in the Message Viewer. Note, that in GUI mode, the
+output does not need to be written to a log file. If you did not
+specify a log file, you can always save the message viewer contents to
+a file by selecting the corresponding menu item in the Message
+Viewer's context menu. You can also perform a search in the Message
+Viewer. This option is also accessible from the context menu of the
+viewer.
+
+<P>
+
+<H4><A NAME="SECTION00050010000000000000">
+Tip:</A>
+</H4>
+The amount of logging messages can be defined by the parameter
+<I>log_verbosity</I> of the Process operator (the root of the
+process tree). This operator also provides other parameters useful
+for the complete process.
+
+<P>
+
+<H1><A NAME="SECTION00060000000000000000">
+Evaluating the results</A>
+</H1>
+
+<P>
+When your process is finished, the results will be automatically presented,
+i.e. all output returned by the outermost operator. This can
+be performance statistics, a decision tree or anything else. R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> 
+automatically selects the <I>Results Mode</I>.
+You can switch between the <I>Edit Mode</I> and the <I>Results Mode</I>
+by clicking on the two buttons in the top right corner, or by selecting the mode
+in the View menu. Pressing the hotkey <TT>[F9]</TT> is another possibility to toggle
+between both modes.
+
+<P>
+When your process was conducted successfully, the view
+automatically switches to the <I>Results Mode</I>. As far as your
+process chain produces an output, this mode shows you a
+visualization or a text describing the output. Figure
+<A HREF="#fig:screenshot_tree">14</A> shows a decision tree learned from the golf
+data set.
+
+<DIV ALIGN="CENTER"><A NAME="fig:screenshot_tree"></A><A NAME="170"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 14:</STRONG>
+A decision tree as result of a learning process.</CAPTION>
+<TR><TD><img src="decision_tree.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+At any time you can stop or pause (and resume) the process using
+the appropriate buttons or menu items in the <I>Process</I>
+menu. In any case the operator currently being executed will finish
+its execution in the background. Since this might take some time (e.g. if the current
+operator was a learner) this might lead to a delay for the actual process
+termination. Please be patient. You can, however, directly start and perform changes to
+the current process setup and even restart the process.
+
+<P>
+If you want to observe your process closely, you can set
+breakpoints before and after every operator (via the operator context
+menu). In that case, each time a breakpoint is reached, intermediate
+results are presented similar to the dialog popping up at the end of
+the process.
+You can see a plot of the memory usage and the progress bar.
+
+<P>
+
+<H2><A NAME="SECTION00061000000000000000">
+Plotter</A>
+</H2>
+
+<P>
+In case you used the <I>ProcessLog</I> operator, you
+also find the produced plots as shown in figure
+<A HREF="#fig:screenshot_plot">15</A>. The results can be viewed online during the
+run of a process. On the left hand side you can select the
+value that is assigned to the x-axis and one or more of the values
+that should be plotted on the y-axis. The example shows a plot of the
+absolute error depending on the SVM parameter <I>C</I> and <I>degree</I>. 
+
+<P>
+Additionally, the standard scatter plotter can use three dimensions. There are two 3D
+plot modes integrated in R<SMALL>APID</SMALL>M<SMALL>INER</SMALL>. The first one (3D (color) scatter plot)
+produces 3D plots, which can be rotated by dragging the 
+mouse over the plot. The second 3D plot mode of R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> is the 2D
+color plot mode. The first two dimensions build an 2D layer and the
+third dimension is mapped on different colors or alternatively different
+sizes. Other plotters exist
+for scatter plots or histograms. Table <A HREF="#tab:plotters_overview">1</A> gives an
+overview over all existing plotters.
+
+<P>
+There exist several objects which can also be plotted, e.g. Example sets
+have a meta data view, a data view, and a plot view. In plot view some
+features can be selected to build the dimensions of a plot. Figure
+<A HREF="#fig:plot_iris">16</A> gives an example for the plot view of the well
+known Iris dataset.
+
+<P>
+<BR><P></P>
+<DIV ALIGN="CENTER"><A NAME="185"></A>
+<TABLE>
+<CAPTION><STRONG>Table 1:</STRONG>
+A collection of all R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> plotters.</CAPTION>
+<TR><TD>  <TABLE CELLPADDING=3 BORDER="1">
+<TR><TH ALIGN="LEFT"><B>Plotter</B></TH>
+<TH ALIGN="LEFT"><B>Description</B></TH>
+</TR>
+<TR><TD ALIGN="LEFT">Scatter</TD>
+<TD ALIGN="LEFT">A 2D scatter plot which is also capable of plotting lines</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">and a third dimension by colorizing the third dimension</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Scatter Matrix</TD>
+<TD ALIGN="LEFT">A matrix plot of scatter plotters</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Scatter 3D</TD>
+<TD ALIGN="LEFT">A 3D scatter plot</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Scatter 3D Color</TD>
+<TD ALIGN="LEFT">A 3D scatter plot colorizing a 4th dimension</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Bubble</TD>
+<TD ALIGN="LEFT">A 2D plot using the size of each bubble to represent </TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">a third dimension</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Parallel</TD>
+<TD ALIGN="LEFT">Each dimension is plotted on parallel coordinates</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Survey</TD>
+<TD ALIGN="LEFT">A survey plot plotting sorted histograms in parallel</TD>
+</TR>
+<TR><TD ALIGN="LEFT">SOM</TD>
+<TD ALIGN="LEFT">A Self-Organizing Map plot using a Kohonen net for</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">dimensionality reduction</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Density</TD>
+<TD ALIGN="LEFT">A 2D plotter using two dimensions as axis, one dimension</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">as density color, and one dimension for point colors</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Pie</TD>
+<TD ALIGN="LEFT"> A 2D pie chart (allows group by aggregation average)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Pie 3D</TD>
+<TD ALIGN="LEFT">A 3D pie chart, like 2D but with depth and transparency</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Ring</TD>
+<TD ALIGN="LEFT">A ring plot, like the 2D pie chart</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Andrews Curves</TD>
+<TD ALIGN="LEFT">Parallel coordinates after a sort of Fourier transform</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Histrogram</TD>
+<TD ALIGN="LEFT">A histogram plot for one of the dimensions</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Histrogram Color</TD>
+<TD ALIGN="LEFT">A histogram plot for one of the dimensions where the</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">values are binned according to another dimension</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Histrogram Matrix</TD>
+<TD ALIGN="LEFT">A histogram plot for all dimensions</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Histrogram Color Matrix</TD>
+<TD ALIGN="LEFT">A color histogram plot for all dimensions binned</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">by one (nominal) dimension beforehand</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Quartile</TD>
+<TD ALIGN="LEFT">A quartile plot (aka box plot) for one of the dimensions</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Quartile Color</TD>
+<TD ALIGN="LEFT">A quartile plot for one of the dimensions where the</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">values are binned according to another dimension</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Quartile Color Matrix</TD>
+<TD ALIGN="LEFT">A color quartile plot for all dimensions binned</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">by one (nominal) dimension beforehand</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Sticks</TD>
+<TD ALIGN="LEFT">A stick plot, similar to the bars plot</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Sticks 3D</TD>
+<TD ALIGN="LEFT">A 3D stick plot</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Bars</TD>
+<TD ALIGN="LEFT">A 2D bar chart (allows group by aggregation average)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Bars 3D</TD>
+<TD ALIGN="LEFT">A 3D bar chart, like 2D but with depth</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Box</TD>
+<TD ALIGN="LEFT">A 2D scatter plot where another dimension can define a</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">box around the points (often used for variance)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Box 3D</TD>
+<TD ALIGN="LEFT">A 3D scatter plot where another dimension can define a</TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">box around the points (often used for variance)</TD>
+</TR>
+<TR><TD ALIGN="LEFT">RadViz</TD>
+<TD ALIGN="LEFT">A plotter with radial visualisation anchors</TD>
+</TR>
+<TR><TD ALIGN="LEFT">GridViz</TD>
+<TD ALIGN="LEFT">A plotter with grid visualisation anchors</TD>
+</TR>
+<TR><TD ALIGN="LEFT">Surface 3D</TD>
+<TD ALIGN="LEFT">A 3D surface plot (only available for less data points)</TD>
+</TR>
+</TABLE>
+  
+  <A NAME="tab:plotters_overview"></A></TD></TR>
+</TABLE>
+</DIV><P></P>
+<BR>
+
+<P>
+
+<H3><A NAME="SECTION00061100000000000000">
+Zooming</A>
+</H3>
+
+<P>
+Drag a rectangle to zoom into the selected range. Right click sets the
+view back to maximal range. This type of zooming is only supported for the 2D
+scatter plots. For some of the other plotters zooming might be implemented
+during a slider in the options pane on the left or even by simply turning the
+mouse wheel.
+
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:screenshot_plot"></A><A NAME="191"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 15:</STRONG>
+A plot of a parameter optimization run.</CAPTION>
+<TR><TD><img src="screenshot_plot.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:plot_iris"></A><A NAME="196"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Figure 16:</STRONG>
+A plot of the well known Iris example set</CAPTION>
+<TR><TD><img src="plot_iris.png"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<H1><A NAME="SECTION00070000000000000000">
+Settings</A>
+</H1>
+
+<P>
+You can open a dialog for global settings (Preferences) from the <I>Tools</I>
+menu.
+These settings specify the behavior of R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> for different tasks, 
+e.g. if the system should beep at the end of an process or how many 
+examples (data points) are displayed in the result viewer. The settings 
+dialog allows to set all global properties described in the R<SMALL>APID</SMALL>M<SMALL>INER</SMALL> 
+tutorial, including the path to the executables of external programs. 
+You can apply the changed settings only for the current session or 
+save them for future sessions.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<IMG WIDTH="81" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next_inactive" SRC="nx_grp_g.png"> 
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_g.png"> 
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev_g.png">   
+<BR>
+<!--End of Navigation Panel-->
+<ADDRESS>
+request@rapid-i.com
+</ADDRESS>
+</BODY>
+</HTML>

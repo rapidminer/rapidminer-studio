@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="sum"/>
+        <parameter key="number_examples" value="60"/>
+        <parameter key="number_of_attributes" value="3"/>
+      </operator>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+        <parameter key="random_attributes" value="3"/>
+        <list key="noise"/>
+      </operator>
+      <operator activated="true" class="wrapper_x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="WrapperXValidation" width="90" x="313" y="30">
+        <parameter key="sampling_type" value="shuffled sampling"/>
+        <process expanded="true">
+          <operator activated="true" class="optimize_selection" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="FeatureSelection" width="90" x="45" y="30">
+            <process expanded="true">
+              <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="130" name="FSXValidation" width="90" x="45" y="30">
+                <parameter key="sampling_type" value="shuffled sampling"/>
+                <process expanded="true">
+                  <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSLearner">
+                    <parameter key="convergence_epsilon" value="0.0010"/>
+                  </operator>
+                  <connect from_port="training" to_op="FSLearner" to_port="training set"/>
+                  <connect from_op="FSLearner" from_port="model" to_port="model"/>
+                  <connect from_op="FSLearner" from_port="weights" to_port="through 1"/>
+                  <portSpacing port="source_training" spacing="0"/>
+                  <portSpacing port="sink_model" spacing="0"/>
+                  <portSpacing port="sink_through 1" spacing="0"/>
+                  <portSpacing port="sink_through 2" spacing="0"/>
+                </process>
+                <process expanded="true">
+                  <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSModelApplier">
+                    <list key="application_parameters"/>
+                  </operator>
+                  <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSEvaluation">
+                    <parameter key="root_mean_squared_error" value="false"/>
+                    <parameter key="squared_error" value="true"/>
+                  </operator>
+                  <operator activated="true" class="performance_min_max" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSMinMaxWrapper">
+                    <parameter key="minimum_weight" value="0.5"/>
+                  </operator>
+                  <connect from_port="model" to_op="FSModelApplier" to_port="model"/>
+                  <connect from_port="test set" to_op="FSModelApplier" to_port="unlabelled data"/>
+                  <connect from_port="through 1" to_port="averagable 2"/>
+                  <connect from_op="FSModelApplier" from_port="labelled data" to_op="FSEvaluation" to_port="labelled data"/>
+                  <connect from_op="FSEvaluation" from_port="performance" to_op="FSMinMaxWrapper" to_port="performance vector"/>
+                  <connect from_op="FSMinMaxWrapper" from_port="performance vector" to_port="averagable 1"/>
+                  <portSpacing port="source_model" spacing="0"/>
+                  <portSpacing port="source_test set" spacing="0"/>
+                  <portSpacing port="source_through 1" spacing="0"/>
+                  <portSpacing port="source_through 2" spacing="0"/>
+                  <portSpacing port="sink_averagable 1" spacing="0"/>
+                  <portSpacing port="sink_averagable 2" spacing="0"/>
+                  <portSpacing port="sink_averagable 3" spacing="0"/>
+                </process>
+              </operator>
+              <connect from_port="example set" to_op="FSXValidation" to_port="training"/>
+              <connect from_op="FSXValidation" from_port="averagable 1" to_port="performance"/>
+              <portSpacing port="source_example set" spacing="0"/>
+              <portSpacing port="source_through 1" spacing="0"/>
+              <portSpacing port="sink_performance" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="weighting set source" to_op="FeatureSelection" to_port="example set in"/>
+          <connect from_op="FeatureSelection" from_port="weights" to_port="attribute weights sink"/>
+          <portSpacing port="source_weighting set source" spacing="0"/>
+          <portSpacing port="sink_attribute weights sink" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="Learner" width="90" x="45" y="30">
+            <parameter key="convergence_epsilon" value="0.0010"/>
+          </operator>
+          <connect from_port="train set source" to_op="Learner" to_port="training set"/>
+          <connect from_op="Learner" from_port="model" to_port="model sink"/>
+          <portSpacing port="source_train set source" spacing="0"/>
+          <portSpacing port="sink_model sink" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="WrapperEvaluation" width="90" x="158" y="30">
+            <parameter key="root_mean_squared_error" value="false"/>
+            <parameter key="squared_error" value="true"/>
+          </operator>
+          <connect from_port="test set source" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_port="model source" to_op="ModelApplier" to_port="model"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="WrapperEvaluation" to_port="labelled data"/>
+          <connect from_op="WrapperEvaluation" from_port="performance" to_port="performance vector sink"/>
+          <portSpacing port="source_test set source" spacing="0"/>
+          <portSpacing port="source_model source" spacing="0"/>
+          <portSpacing port="sink_performance vector sink" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_op="WrapperXValidation" to_port="example set in"/>
+      <connect from_op="WrapperXValidation" from_port="performance vector out" to_port="result 1"/>
+      <connect from_op="WrapperXValidation" from_port="attribute weights out" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="328" resized="true" width="924" x="33" y="137">Just as for learning, it is also possible that overfitting occurs during preprocessing. In order to estimate the generalization performance of a preprocessing method RapidMiner supports several validation operators for preprocessing steps. The basic idea is the same as for all other validation operators with a slight difference: the first inner operator must produce a transformed example set, the second must produce a model from this transformed data set and the third operator must produce a performance vector of this model on a hold-out test set transformed in the same way. &lt;br/&gt;&lt;br/&gt;This is a more complex process which demonstrates RapidMiner's capability to build processes from already known building blocks. In this process a special variant of a cross validation operator is used to estimate the performance of a feature space transformation, i.e. the simple feature forward selection in this case. &lt;br/&gt;&lt;br/&gt;The complete feature selection block is now the first inner operator of a WrapperXValidation which like normal crossvalidation uses a subset for feature space transformation (selection here) and learning based on the determined feature set. A second applier chain is used to estimate the performance on a test set which was not used for learning and feature selection. The estimated performance and an attribute weights vector is returned as result. &lt;br/&gt;&lt;br/&gt;Please note the MinMaxWrapper after the inner performance evaluator. This operator encapsulate the given performance criteria in such a way that no longer only average values but also minimum values are calculated during cross validation. Arbitrarily weighted linear combinations of the minimum and the normal average leads to far better generalization capabilities. Just change the weighting parameter to 0.0 or disable the operator in the context menu or delete it from the process to see the effect. The performance decreases rapidly when only the average performance is used as selection criterion.</description>
+    </process>
+  </operator>
+</process>

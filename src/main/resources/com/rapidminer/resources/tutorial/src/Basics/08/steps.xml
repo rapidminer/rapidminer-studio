@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Build a survival prediction model.">
+		<text>With the preprocessing operators we have discussed so far you can blend and prepare most data sets for building a predictive model.  In this tutorial, we will use one of the most widely used machine learning methods, namely a <emph>Decision Tree</emph>, to predict who will survive the Titanic accident.  Of course, there is nothing you can do about this now, AFTER the ship sunk, but you can still use this model for similar situations and make predictions then. Should you really buy a third class ticket when traveling with your family? The model will show!</text>
+	</step>
+	<step name="Retrieve the Titanic data.">
+		<tasks>
+			<task><activity>Drag the <file>Titanic</file> data</activity> into your process.</task>
+			<task><activity>Add <op>Set Role</op></activity>, <activity>connect it</activity>, and <activity>configure it</activity> as you did in the previous tutorial.  Change the role of the attribute <value>Survived</value> to <value>label</value>.</task>
+		</tasks>
+		<info>Remember that the attribute with role <value>label</value> is the one you want to predict. It is important to set the label, because there are machine learning methods, like the decision tree algorithm, that use existing data with known label values (a training set) to find hidden patterns. It then creates predictions from those patterns and applies them to new data without known labels (the testing set).</info>
+	</step>
+	<step name="Remove unnecessary attributes.">
+		<tasks>
+			<task><activity>Add <op>Select Attributes</op></activity> to the process and connect it.</task>
+			<task><activity>Set <param>attribute filter type</param> to <value>subset</value></activity> and <activity>click <param>Select Attributes</param>.</activity></task>
+			<task>In the resulting dialog, <activity>select</activity> the <value>Survived</value>, <value>Sex</value>, <value>Passenger Class</value>, <value>Passenger Fare</value>, and the <value>No of...</value> parents, children, siblings, and spouses.</task>
+		</tasks>
+		<info>You removed (didn't select) <value>Life Boat</value> because passengers who made it on a life boat are likely survivors.  Adding this information would lead to trivial models practically only depending on this piece of information.  The real question is actually: who made it to a life boat in the first place? <value>Name</value> and <value>ticket number</value> are different kinds of ID, so you left them out as well.</info>
+	</step>
+	<step name="Build a decision tree model.">
+		<tasks>
+			<task><activity>Drag in the <op>Decision Tree</op></activity> operator, <activity>connect the input</activity>, and <activity>connect the "mod" output port</activity> to the results port.</task>
+		</tasks>
+		<info>Note that the <emph>data</emph> connections are blue while the <emph>model</emph> connections are green. This helps to easily find and verify the correct connection ports.</info>
+		<tasks>
+			<task><icon>16/media_play.png</icon><activity>Run</activity> the process.</task>
+			<task><activity>Inspect</activity> the decision tree model.</task>
+		</tasks>
+		<info>It is interesting to see that for women, family size matters more than passenger class. This behavioral pattern could not be detected for men. In general, men had a lower likelihood to survive ("women and children first!").</info>
+	</step>
+	<step name="Congratulations!">
+		<text>You've finished the First Tutorial Chapter! You learned how to use the most common data preprocessing operators and even built your first predictive model in RapidMiner. This is an exciting moment - celebrate!</text>
+		<text>Before you celebrate too much, try some of the following challenges:</text>
+		<questions>
+			<question>Can you find out how to restrict the depth of the decision tree, i.e. reduce its complexity?  Why could this be a good idea?</question>
+			<question>Limit the depth of the decision tree to <value>4</value>.  Use the parameter setting you found above.</question>
+			<question>Re-execute the process and look at the reduced tree.  It should only have a depth of 4 now. The width of each colored bar in the tree represents how many passengers fall into this bucket.  Can you figure out who was the largest group of survivors and hence has the highest likelihood to survive?</question>
+			<question>What would you say was the rough probability for survival for this group?  How does this compare to the survival probability for men?</question>
+		</questions>
+	</step>
+</steps>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" breakpoints="after" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="gaussian mixture clusters"/>
+        <parameter key="number_examples" value="500"/>
+        <parameter key="number_of_attributes" value="3"/>
+      </operator>
+      <operator activated="true" class="self_organizing_map" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="SOMDimensionalityReduction" width="90" x="246" y="30"/>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="SOMDimensionalityReduction" to_port="example set input"/>
+      <connect from_op="SOMDimensionalityReduction" from_port="example set output" to_port="result 1"/>
+      <connect from_op="SOMDimensionalityReduction" from_port="original" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="272" resized="true" width="424" x="41" y="138">A very powerful visualisation technique are Self-Organizing Maps (SOM, also known as Kohonen nets). A SOM reduces the dimensionality on two dimensions and consists of a nice and intuitive representation of the training point distances. &lt;br/&gt;&lt;br/&gt;After a set of gaussian mixture clusters consisting of 500 data points was created, these points can be visualized by several data plotters, including one for SOMs. You can adjust the net size and the number of training iterations until they fit your requirements. Please note that calculating a SOM might take some time. &lt;br/&gt;&lt;br/&gt;In addition to the mere visualization there also exist a SOM dimensionality reduction operator which can be used to transform high-dimensional data sets into low dimensions.</description>
+    </process>
+  </operator>
+</process>

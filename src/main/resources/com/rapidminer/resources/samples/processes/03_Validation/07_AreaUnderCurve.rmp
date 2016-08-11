@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="random_seed" value="2000"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="random dots classification"/>
+        <parameter key="number_examples" value="500"/>
+        <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="0.0"/>
+        <parameter key="attributes_upper_bound" value="25.0"/>
+      </operator>
+      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XVal" width="90" x="180" y="30">
+        <parameter key="number_of_validations" value="5"/>
+        <process expanded="true">
+          <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LibSVMLearner">
+            <parameter key="gamma" value="1.0"/>
+            <parameter key="epsilon" value="0.0010"/>
+            <list key="class_weights"/>
+          </operator>
+          <connect from_port="training" to_op="LibSVMLearner" to_port="training set"/>
+          <connect from_op="LibSVMLearner" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance_binominal_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinominalClassificationPerformance">
+            <parameter key="AUC" value="true"/>
+          </operator>
+          <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+          <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="BinominalClassificationPerformance" to_port="labelled data"/>
+          <connect from_op="BinominalClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="XVal" to_port="training"/>
+      <connect from_op="XVal" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="214" resized="true" width="452" x="32" y="156">In this process we calculate a widely used performance criterion: the area under a ROC curve (AUC). RapidMiner allows the calculation of this AUC criterion for all binary classification tasks and learners. Just select AUC like all other performance criteria as a parameter of the PerformanceEvaluator operator. &lt;br/&gt;&lt;br/&gt;You can actually display a ROC curve by using a ThresholdFinder which makes use of the soft predictions (confidence values) instead of crisp classifications. A ThresholdFinder can be used to determine the best threshold with respect to class weights. Please check out the process CostSensitiveLearningAndROCPlot.xml for further details.</description>
+    </process>
+  </operator>
+</process>

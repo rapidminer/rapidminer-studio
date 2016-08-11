@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Welcome to RapidMiner.">
+		<text>RapidMiner Studio has a lot of features to offer. In the next few minutes, you will learn how you can use RapidMiner Studio to perform basic data science techniques, such as: accessing data, transforming data, and building statistical models. We will use data describing the Titanic passengers.</text>
+		<info>Each tutorial is broken into several steps to teach you the basics of RapidMiner Studio. Each step lists specific actions to perform, plus an explanation of why those actions matter. Notice the dotted-line preview in the <ui>Process</ui> Panel; this shows you the process you will be building in that tutorial.</info>
+	</step>
+	<step name="Retrieve data.">
+	<text>Let's start by retrieving some data about the Titanic passengers.</text>
+		<tasks>
+			<task><activity>Find</activity> the <ui>Repository</ui> panel on the left of the screen.</task>
+			<task><activity>Open</activity> the folders <folder>Samples</folder>, and then <folder>data</folder>.</task>
+			<task><activity>Drag</activity> the <file>Titanic Training</file> dataset and <activity>drop</activity> it in the <ui>Process</ui> panel in the middle of the screen.</task>
+		</tasks>
+		<info>Good job! You have just added your first operator to RapidMiner Studio, namely the <op>Retrieve</op> Operator. Operators perform actions: in this case, it retrieves data from the <ui>Repository</ui>. Now let’s see what you can do with it!</info>
+	</step>
+	<step name="Building your first process.">
+	<text>As a RapidMiner analyst, you create processes by adding and connecting operators. Operators are connected together via their Ports:</text>
+		<tasks>
+			<task>Connect the output port ("out") of <op>Retrieve Titanic Training</op> with the result port ("res") on the right side of the <ui>Process</ui> panel.</task>
+			<task>Make the connection either by <activity>dragging a line</activity> between the ports, or by first <activity>clicking</activity> on one port and then on the other port.</task>
+		</tasks>
+		<info>Excellent! You have built your first process in RapidMiner Studio. We can now look at the output of the Retrieve operator. Whenever you want to see the output of an operator, make sure it is connected to the 'res' port.</info>
+	</step>
+	<step name="Running processes.">
+		<text>After we have connected the elements of our process, we can hit the 'Run' button to view the output.</text>
+		<tasks>
+			<task><activity>Click <icon>16/media_play.png</icon> <ui>Run</ui> (top left)</activity> to execute the process.</task>
+		</tasks>
+		<info>Nice! You have run your first process in RapidMiner Studio. When you click "Run", the operators in your process will perform their actions. 
+		RapidMiner executes the process and shows the data connected to the result port. In the center of the <ui>Results</ui> view, you can see our raw data about the Titanic passengers such as their family size or their age. On the <ui>Statistics</ui> tab we get a statistics summary, which provides useful information; for example, 349 passengers survived the Titanic accident.</info>
+	</step>	
+	<step name="Congratulations - Halfway there!">
+		<text>Well done - you just mastered your first tutorial! To quickly review:
+			<point>Operators perform individual actions.</point>
+			<point>You can connect operators together to build a Process.</point>
+			<point>To see the output of an operator, connect it to the 'res' port.</point>
+			<point>Running the process performs all operators and automatically shows the results.</point>
+		</text>
+		<info>To become a true master move on to the next tutorial below.</info>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

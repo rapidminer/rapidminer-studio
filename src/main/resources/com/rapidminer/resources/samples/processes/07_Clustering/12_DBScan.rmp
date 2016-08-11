@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="three ring clusters"/>
+        <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-25.0"/>
+        <parameter key="attributes_upper_bound" value="25.0"/>
+      </operator>
+      <operator activated="true" class="normalize" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Normalization" width="90" x="180" y="30"/>
+      <operator activated="true" class="dbscan" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DBScanClustering" width="90" x="313" y="30">
+        <parameter key="epsilon" value="0.5"/>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="Normalization" to_port="example set input"/>
+      <connect from_op="Normalization" from_port="example set output" to_op="DBScanClustering" to_port="example set"/>
+      <connect from_op="DBScanClustering" from_port="cluster model" to_port="result 1"/>
+      <connect from_op="DBScanClustering" from_port="clustered set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="RepositorySource" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Golf"/>
+      </operator>
+      <operator activated="true" class="work_on_subset" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NormalizationOnTemperature" width="90" x="180" y="30">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="attribute" value="Outlook"/>
+        <parameter key="regular_expression" value="Temperature"/>
+        <parameter key="remove_roles" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="normalize" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Normalization" width="90" x="45" y="30">
+            <parameter key="attribute" value="Temperature"/>
+          </operator>
+          <connect from_port="exampleSet" to_op="Normalization" to_port="example set input"/>
+          <connect from_op="Normalization" from_port="example set output" to_port="example set"/>
+          <portSpacing port="source_exampleSet" spacing="0"/>
+          <portSpacing port="sink_example set" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="work_on_subset" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DiscretizationOnHumidity" width="90" x="313" y="30">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="attribute" value="Temperature"/>
+        <parameter key="regular_expression" value="Humidity"/>
+        <parameter key="remove_roles" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="discretize_by_frequency" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="FrequencyDiscretization" width="90" x="45" y="30">
+            <parameter key="attribute" value="Humidity"/>
+            <parameter key="number_of_bins" value="3"/>
+          </operator>
+          <connect from_port="exampleSet" to_op="FrequencyDiscretization" to_port="example set input"/>
+          <connect from_op="FrequencyDiscretization" from_port="example set output" to_port="example set"/>
+          <portSpacing port="source_exampleSet" spacing="0"/>
+          <portSpacing port="sink_example set" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="RepositorySource" from_port="output" to_op="NormalizationOnTemperature" to_port="example set"/>
+      <connect from_op="NormalizationOnTemperature" from_port="example set" to_op="DiscretizationOnHumidity" to_port="example set"/>
+      <connect from_op="DiscretizationOnHumidity" from_port="example set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="223" resized="true" width="420" x="36" y="121">The operator AttributeSubsetPreprocessing is a very powerful extension to the preprocessing operators of RapidMiner. It can be used to perform one or several inner preprocessing operators only on a subset of features.&lt;br/&gt;&lt;br/&gt;In this setup, the attribute &amp;quot;Temperature&amp;quot; is normalized (but not the other numerical attribute Humidity) and the attribute &amp;quot;Humidity&amp;quot; is discretized (but not the other numerical attribute Temperature). The operator can also be used in order to perform a certain preprocessing also on special attributes like the label. For this, you have to activate the parameter &amp;quot;process_special_attributes&amp;quot;.</description>
+    </process>
+  </operator>
+</process>
