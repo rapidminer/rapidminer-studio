@@ -37,6 +37,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -238,6 +239,13 @@ public class Plugin {
 
 		return p1.getName().compareTo(p2.getName());
 	};
+
+	/**
+	 * An ordered collection of plugins sorted by the dependency order. IMPORTANT: This collection
+	 * does not respect failures during initialization, so it might contain more plugins than
+	 * {@link #ALL_PLUGINS}.
+	 */
+	private static final Collection<Plugin> PLUGIN_INITIALIZATION_ORDER = new ArrayList<>();
 
 	/** An ordered set of all plugins sorted lexically based on the plugin name. */
 	private static final Collection<Plugin> ALL_PLUGINS = new TreeSet<>(PLUGIN_COMPARATOR);
@@ -1002,6 +1010,9 @@ public class Plugin {
 					// then we have one more extension that is initialized, next round might find
 					// more
 					found = true;
+
+					// remember the initialization order globally
+					PLUGIN_INITIALIZATION_ORDER.add(plugin);
 				}
 				recordLoadingTime(plugin.getExtensionId(), start);
 			}
@@ -1088,9 +1099,18 @@ public class Plugin {
 
 	private static void callPluginInitMethods(String methodName, Class<?>[] arguments, Object[] argumentValues,
 			boolean useOriginalJarClassLoader) {
-		List<Plugin> plugins = new LinkedList<>(getAllPlugins());
+		for (Plugin plugin : PLUGIN_INITIALIZATION_ORDER) {
+			if (!ALL_PLUGINS.contains(plugin)) {
+				// plugin may be removed in the meantime,
+				// so skip the initialization
+				continue;
+			}
+			if (!plugin.checkDependencies(plugin, ALL_PLUGINS)) {
+				getAllPlugins().remove(plugin);
+				INCOMPATIBLE_PLUGINS.add(plugin);
+				continue;
+			}
 
-		for (Plugin plugin : plugins) {
 			long start = System.currentTimeMillis();
 			if (!plugin.callInitMethod(methodName, arguments, argumentValues, useOriginalJarClassLoader)) {
 				getAllPlugins().remove(plugin);

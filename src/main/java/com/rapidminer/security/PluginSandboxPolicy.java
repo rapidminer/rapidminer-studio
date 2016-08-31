@@ -45,6 +45,9 @@ import com.rapidminer.tools.plugin.PluginClassLoader;
  */
 public final class PluginSandboxPolicy extends Policy {
 
+	/** Internal permission for {@link RuntimePermission}s */
+	public static final String RAPIDMINER_INTERNAL_PERMISSION = "accessClassInPackage.rapidminer.internal";
+
 	/** The key pair algorithm for our signed extensions */
 	private static final String KEY_ALGORITHM = "RSA";
 
@@ -54,8 +57,19 @@ public final class PluginSandboxPolicy extends Policy {
 			+ "anxWScOfVW6yDxEjgEHJvMiMzZkGNklYC3ULBCkHfIrih5hO83k5FileuUWDNO4BrLrawmjo9AmYksPVOMmd4/DtDpnehpLy0hQtjBJsz61h"
 			+ "AGVDnPGpvbsW0rjFAjE4fR5+4RwUNo+SsD/44Jc8bui5seVH5vZuTj02XokybGR4BikrqvJZ4rHe4OGowl8uIr9sEN/+0eIJXQIDAQAB";
 
+	/**
+	 * the system property which can be set to {@code true} to enforce plugin sandboxing even on
+	 * SNAPSHOT versions
+	 */
+	private static final String PROPERTY_SECURITY_ENFORCED = "com.rapidminer.security.enforce";
+
 	/** Our public key used to verify the certificates */
 	private static PublicKey key;
+
+	/**
+	 * if {@code true}, plugin sandboxing is enforced even on SNAPSHOT versions
+	 */
+	private static volatile Boolean enforced;
 
 	static {
 		try {
@@ -125,7 +139,8 @@ public final class PluginSandboxPolicy extends Policy {
 			return true;
 		}
 		// special case for SNAPSHOT version: grant all permissions for all extensions
-		if (RapidMiner.getVersion().isSnapshot()) {
+		// unless security is enforced via system property
+		if (RapidMiner.getVersion().isSnapshot() && !isSecurityEnforced()) {
 			return false;
 		}
 		if (domain.getCodeSource().getCertificates() == null) {
@@ -200,11 +215,12 @@ public final class PluginSandboxPolicy extends Policy {
 			@Override
 			public Void run() {
 				String userHome = System.getProperty("user.home");
-				String tempDir = System.getProperty("java.io.tempdir");
+				String tmpDir = System.getProperty("java.io.tmpdir");
 				String pluginKey = loader.getPluginKey();
 
 				// delete access to the general temp directory
-				permissions.add(new FilePermission(tempDir + "/-", "read, write, delete"));
+				permissions.add(new FilePermission(tmpDir, "read, write"));
+				permissions.add(new FilePermission(tmpDir + "/-", "read, write, delete"));
 
 				// extensions can only delete files in their own subfolder of the
 				// .RapidMiner/extensions/workspace folder
@@ -324,5 +340,32 @@ public final class PluginSandboxPolicy extends Policy {
 		if (!verified) {
 			throw lastException;
 		}
+	}
+
+	/**
+	 * Checks whether the system property {@value #PROPERTY_SECURITY_ENFORCED} is set to
+	 * {@code true}. This property is used to enable the full plugin sandbox security even on
+	 * SNAPSHOT versions.
+	 *
+	 * @return {@code true} if the system property is set to 'true', {@code false} otherwise
+	 */
+	private static boolean isSecurityEnforced() {
+		// no need to synchronize, if this is entered multiple times it's fine
+		if (enforced == null) {
+			enforced = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
+
+				@Override
+				public Boolean run() {
+					return Boolean.parseBoolean(System.getProperty(PROPERTY_SECURITY_ENFORCED));
+				}
+			});
+
+			if (enforced) {
+				LogService.getRoot().log(Level.INFO,
+						"Plugin sandboxing enforced via '" + PROPERTY_SECURITY_ENFORCED + "' property.");
+			}
+		}
+
+		return enforced;
 	}
 }

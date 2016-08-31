@@ -86,6 +86,7 @@ import com.rapidminer.repository.RepositoryAccessor;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.studio.internal.ProcessFlowFilterRegistry;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.LoggingHandler;
@@ -713,6 +714,9 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	/**
 	 * Add a new {@link ProcessFlowFilter} to this process. The filter will be called directly
 	 * before and after each operator. Refer to {@link ProcessFlowFilter} for more information.
+	 * <p>
+	 * If the given filter instance is already registered, it will not be added a second time.
+	 * </p>
 	 *
 	 * @param filter
 	 *            the filter instance to add
@@ -721,7 +725,9 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		if (filter == null) {
 			throw new IllegalArgumentException("filter must not be null!");
 		}
-		processFlowFilters.add(filter);
+		if (!processFlowFilters.contains(filter)) {
+			processFlowFilters.add(filter);
+		}
 	}
 
 	/**
@@ -801,6 +807,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	 *            process instance
 	 */
 	public void copyProcessFlowListenersToOtherProcess(Process otherProcess) {
+		if (otherProcess == null) {
+			throw new IllegalArgumentException("otherProcess must not be null!");
+		}
+
 		synchronized (processFlowFilters) {
 			for (ProcessFlowFilter filter : processFlowFilters) {
 				otherProcess.addProcessFlowFilter(filter);
@@ -1097,6 +1107,12 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	 */
 	public final IOContainer run(final IOContainer input, int logVerbosity, final Map<String, String> macroMap,
 			final boolean storeOutput) throws OperatorException {
+		// make sure the process flow filter is registered
+		ProcessFlowFilter filter = ProcessFlowFilterRegistry.INSTANCE.getProcessFlowFilter();
+		if (filter != null) {
+			addProcessFlowFilter(filter);
+		}
+
 		// make sure licensing constraints are not violated
 		// iterate over all operators in the process
 		for (Operator op : rootOperator.getAllInnerOperators()) {

@@ -20,58 +20,53 @@ package com.rapidminer.studio.internal;
 
 import java.security.AccessController;
 
+import com.rapidminer.operator.execution.ProcessFlowFilter;
 import com.rapidminer.security.PluginSandboxPolicy;
-import com.rapidminer.tools.ParameterService;
 
 
 /**
- * Registry for a {@link ParameterServiceProvider}.
+ * Registry for a {@link ProcessFlowFilter}.
  *
  * @author Marcel Michel
- * @since 7.2.0
+ * @since 7.2.2
  */
-public enum ParameterServiceRegistry {
+public enum ProcessFlowFilterRegistry {
 
 	INSTANCE;
 
-	private ParameterServiceProvider provider;
+	private ProcessFlowFilter filter;
 
 	/**
-	 * Registers the provider.
+	 * Registers the filter.
 	 *
 	 * Note: Only one registration is allowed. All following request will result in an
 	 * {@link IllegalStateException}.
 	 *
-	 * @param provider
-	 *            the provider to register
+	 * @param filter
+	 *            the filter to register
 	 * @throws SecurityException
 	 *             if caller does not have {@link RuntimePermission} for
 	 *             {@code accessClassInPackage.rapidminer.internal}
 	 */
-	public void register(ParameterServiceProvider provider) {
+	public void register(ProcessFlowFilter filter) {
 		if (System.getSecurityManager() != null) {
 			AccessController.checkPermission(new RuntimePermission(PluginSandboxPolicy.RAPIDMINER_INTERNAL_PERMISSION));
 		}
-		if (provider == null) {
-			throw new IllegalArgumentException("Provider cannot be null");
+		if (filter == null) {
+			throw new IllegalArgumentException("Filter cannot be null");
 		}
-		if (this.provider != null) {
-			throw new IllegalStateException("Provider already defined");
+		if (this.filter != null) {
+			throw new IllegalStateException("Filter already defined");
 		}
-		this.provider = provider;
+		this.filter = filter;
 	}
 
 	/**
-	 * If a {@link #provider} is defined it will query the registered provider. Otherwise the
-	 * {@link ParameterService} will be used.
+	 * Getter for the registered {@link ProcessFlowFilter}.
 	 *
-	 * @return The value of the given parameter or {@code null} if this parameter is unknown.
+	 * @return The the registered filter or {@code null}
 	 */
-	public String getParameterValue(String key) {
-		if (provider == null) {
-			return ParameterService.getParameterValue(key);
-		} else {
-			return provider.getParameterValue(key);
-		}
+	public ProcessFlowFilter getProcessFlowFilter() {
+		return filter;
 	}
 }

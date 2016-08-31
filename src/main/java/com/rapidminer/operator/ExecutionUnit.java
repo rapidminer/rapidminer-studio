@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator;
 
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,6 +42,7 @@ import java.util.logging.Level;
 
 import com.rapidminer.Process;
 import com.rapidminer.operator.execution.UnitExecutionFactory;
+import com.rapidminer.operator.execution.UnitExecutor;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.InputPorts;
 import com.rapidminer.operator.ports.OutputPort;
@@ -795,7 +799,25 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	/** Executes the inner operators. */
 	public void execute() throws OperatorException {
-		UnitExecutionFactory.getInstance().getExecutor(this).execute(this);
+		UnitExecutor executor = UnitExecutionFactory.getInstance().getExecutor(this);
+		// check only the callstack of nested operators, otherwise execution units of
+		// unsigned extensions might not be able to execute trusted operators
+		try {
+			AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
+
+				@Override
+				public Void run() throws OperatorException {
+
+					executor.execute(ExecutionUnit.this);
+					return null;
+				}
+			});
+		} catch (PrivilegedActionException e) {
+			// e.getException() should be an instance of OperatorException,
+			// as only checked exceptions will be wrapped in a
+			// PrivilegedActionException.
+			throw (OperatorException) e.getException();
+		}
 	}
 
 	/** Frees memory used by inner sinks. */
