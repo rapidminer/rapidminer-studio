@@ -813,10 +813,16 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 				}
 			});
 		} catch (PrivilegedActionException e) {
-			// e.getException() should be an instance of OperatorException,
+			// e.getException() can either be an instance of OperatorException,
+			// or an unsafe Exception,
 			// as only checked exceptions will be wrapped in a
 			// PrivilegedActionException.
-			throw (OperatorException) e.getException();
+			if (e.getException() instanceof OperatorException) {
+				throw (OperatorException) e.getException();
+			} else {
+				// Wrap unsafe Exceptions
+				throw new OperatorException(e.getException().getMessage(), e.getException());
+			}
 		}
 	}
 

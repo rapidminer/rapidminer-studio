@@ -1,34 +1,6 @@
-/**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
  *
- * Complete list of developers available at our web site:
- *
- * http://rapidminer.com
- *
- * This program is free software: you can redistribute it and/or modify it under the terms of the
- * GNU Affero General Public License as published by the Free Software Foundation, either version 3
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along with this program.
- * If not, see http://www.gnu.org/licenses/.
- */
-package com.rapidminer.gui.security;
-
-import java.util.LinkedList;
-
-import javax.swing.table.AbstractTableModel;
-
-
-/**
- * A table model wrapped around a {@link Wallet} used by the {@link PasswordManager} to edit user
- * credentials.
- * 
  * @author Miguel Buescher
- * 
+ *
  */
 public class CredentialsTableModel extends AbstractTableModel {
 
@@ -59,6 +31,9 @@ public class CredentialsTableModel extends AbstractTableModel {
 	@SuppressWarnings("deprecation")
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		this.listOfWalletKeys = getWallet().getKeys();
+		if (rowIndex >= listOfWalletKeys.size()) {
+			return null;
+		}
 		// uses list of keys directly which may or may not contain ID attribute, therefore this call
 		// is correct
 		UserCredential userCredential = getWallet().getEntry(listOfWalletKeys.get(rowIndex));
@@ -132,7 +107,7 @@ public class CredentialsTableModel extends AbstractTableModel {
 		// uses list of keys directly which may or may not contain ID attribute, therefore this call
 		// is correct
 		getWallet().removeEntry(listOfWalletKeys.get(index));
-		fireTableStructureChanged();
+		fireTableDataChanged();
 	}
 
 	@Override

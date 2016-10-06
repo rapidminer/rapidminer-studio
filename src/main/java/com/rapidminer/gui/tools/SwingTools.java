@@ -549,13 +549,14 @@ public class SwingTools {
 				return ICON_CACHE.get(imageName);
 			}
 
-			// For compatibility reasons, return an uninitialized icon or null whenever the image
-			// name points to a folder. Uninitialized image icons take zero space, whereas a scaled
-			// image icon will always claim its given size (regardless of whether the image could
-			// be loaded).
+			// Whenever the image name points to a folder, return null
+			// Before 7.2.3 this would return an uninitialized icon but that causes Swing NPEs
 			int indexOfLastSlash = imageName.lastIndexOf("/");
-			if (indexOfLastSlash == imageName.length() - 1) {
-				return usePlaceholder ? new ImageIcon() : null;
+			if (indexOfLastSlash != -1 && indexOfLastSlash == imageName.length() - 1) {
+				// we cannot return an uninitialized icon here. This would cause an NPE inside Swing
+				// internals (disabled icon painting code)
+				// therefore, always return null regardless of whether the user wants a placeholder
+				return null;
 			}
 
 			// Try to load high-resolution icon (if appropriate)

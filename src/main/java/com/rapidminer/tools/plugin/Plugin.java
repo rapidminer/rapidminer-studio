@@ -1321,15 +1321,20 @@ public class Plugin {
 		});
 		for (Entry<String, Long> entry : sortedLoadingTimes) {
 			Plugin plugin = getPluginByExtensionId(entry.getKey());
-			String name = plugin != null ? plugin.getName() : entry.getKey();
 			String value = String.valueOf(entry.getValue()) + "ms";
 			Level logLevel = Level.INFO;
 			if (entry.getValue() > LOADING_THRESHOLD) {
 				value = Tools.formatDuration(entry.getValue());
 				logLevel = Level.WARNING;
 			}
-			LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time",
-					new Object[] { name, value });
+
+			if (plugin != null) {
+				LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time",
+						new Object[] { plugin.getName(), value });
+			} else {
+				LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time_failure",
+						new Object[] { entry.getKey(), value });
+			}
 		}
 	}
 

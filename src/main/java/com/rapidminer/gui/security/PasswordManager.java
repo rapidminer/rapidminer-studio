@@ -20,6 +20,8 @@ package com.rapidminer.gui.security;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.swing.Action;
 import javax.swing.DefaultRowSorter;
@@ -94,9 +96,14 @@ public class PasswordManager extends ButtonDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int[] rows = table.getSelectedRows();
-				for (int i = 0; i <= rows.length - 1; i++) {
-					credentialsModel.removeRow(rows[i]);
+				int[] selectedTableRows = table.getSelectedRows();
+				ArrayList<Integer> modelRows = new ArrayList<>(selectedTableRows.length);
+				for (int i = 0; i <= selectedTableRows.length - 1; i++) {
+					modelRows.add(table.getRowSorter().convertRowIndexToModel(selectedTableRows[i]));
+				}
+				Collections.sort(modelRows);
+				for (int i = modelRows.size() - 1; i >= 0; i--) {
+					credentialsModel.removeRow(modelRows.get(i));
 				}
 			}
 		};
@@ -105,8 +112,7 @@ public class PasswordManager extends ButtonDialog {
 		showPasswordsButton = new JButton(showPasswordsAction);
 		showpasswordPanel.add(makeButtonPanel(showPasswordsButton));
 		buttonPanel.add(showpasswordPanel, BorderLayout.WEST);
-		buttonPanel
-		.add(makeButtonPanel(new JButton(removePasswordAction), makeOkButton("password_manager_save"),
+		buttonPanel.add(makeButtonPanel(new JButton(removePasswordAction), makeOkButton("password_manager_save"),
 				makeCancelButton()), BorderLayout.EAST);
 		layoutDefault(main, buttonPanel, LARGE);
 	}

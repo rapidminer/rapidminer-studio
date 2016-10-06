@@ -21,6 +21,7 @@ package com.rapidminer.tools.math.som;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
 import com.rapidminer.operator.Operator;
@@ -46,7 +47,7 @@ public class KohonenNet implements Serializable {
 
 	private int trainingSteps = 80;
 
-	private ArrayList<ProgressListener> progressListener = new ArrayList<>();
+	private List<ProgressListener> progressListener = new ArrayList<>();
 
 	private KohonenNode[] nodes;
 
@@ -334,7 +335,9 @@ public class KohonenNet implements Serializable {
 	}
 
 	public void informProgressExit() {
-		Iterator<ProgressListener> iterator = progressListener.iterator();
+		// we need to make a copy of the list, because progressFinsihed
+		// may remove the listener from the progressListener list
+		Iterator<ProgressListener> iterator = new ArrayList<>(progressListener).iterator();
 		while (iterator.hasNext()) {
 			iterator.next().progressFinished();
 		}

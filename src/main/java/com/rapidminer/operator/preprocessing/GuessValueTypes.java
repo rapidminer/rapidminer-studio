@@ -95,8 +95,8 @@ public class GuessValueTypes extends AbstractDataProcessing {
 		double totalProgress = exampleSet.size() * attributeSet.size();
 		long progressCounter = 0;
 
-		// guessing
-		int[] guessedValueTypes = new int[valueTypes.length];
+		// guessed value types
+		int[] guessedValueTypes = new int[size];
 		int checkedCounter = 0;
 		for (Example example : exampleSet) {
 			index = 0;
@@ -139,6 +139,13 @@ public class GuessValueTypes extends AbstractDataProcessing {
 			}
 			if (checkedCounter >= guessedValueTypes.length) {
 				break;
+			}
+		}
+
+		// if we could not guess any type, use the default one
+		for (int i = 0; i < size; i++) {
+			if (guessedValueTypes[i] == 0) {
+				guessedValueTypes[i] = valueTypes[i];
 			}
 		}
 
@@ -226,8 +233,8 @@ public class GuessValueTypes extends AbstractDataProcessing {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.addAll(attributeSelector.getParameterTypes());
-		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.",
-				".", false));
+		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", ".",
+				false));
 		types.add(new ParameterTypeString(PARAMETER_NUMBER_GROUPING_CHARACTER,
 				"Character that is used as the number grouping character, i.e. for groups of thousands.", true));
 		return types;

@@ -727,11 +727,22 @@
         <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
         <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
     </ioobject>
+    
     <ioobject
         name="Formula"
         class="com.rapidminer.operator.visualization.FormulaExtractor$FormulaResult"
         reportable="true"
         icon="formula.png">
+        <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+    
+     <ioobject
+        name="SOM Model"
+        class="com.rapidminer.operator.visualization.SOMModelVisualization$SOMModelVisualizationResult"
+        reportable="true"
+        icon="symbol_percent.png">
+        <renderer>com.rapidminer.gui.renderer.visualization.SOMModelVisualizationRenderer</renderer>
         <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
         <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
     </ioobject>

@@ -31,7 +31,7 @@ import com.rapidminer.operator.ports.OutputPort;
 /**
  * This class provides an operator for the visualization of arbitrary models with help of the
  * dimensionality reduction via a SOM of both the data set and the given model.
- * 
+ *
  * @author Sebastian Land
  */
 public class SOMModelVisualization extends Operator {
@@ -51,6 +51,11 @@ public class SOMModelVisualization extends Operator {
 		@Override
 		public String getName() {
 			return "ModelVisualization";
+		}
+
+		@Override
+		public String toString() {
+			return "The model visualized via a SOM plot.";
 		}
 
 		public ExampleSet getExampleSet() {

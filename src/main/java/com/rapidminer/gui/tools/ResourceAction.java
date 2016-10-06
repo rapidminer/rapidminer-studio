@@ -139,8 +139,8 @@ public abstract class ResourceAction extends ConditionalAction {
 	 * @param i18nArgs
 	 */
 	public ResourceAction(int iconSize, String i18nKey, IconType iconType, Object... i18nArgs) {
-		super(i18nArgs == null || i18nArgs.length == 0 ? getMessage(i18nKey + ".label") : MessageFormat.format(
-				getMessage(i18nKey + ".label"), i18nArgs));
+		super(i18nArgs == null || i18nArgs.length == 0 ? getMessage(i18nKey + ".label")
+				: MessageFormat.format(getMessage(i18nKey + ".label"), i18nArgs));
 		putValue(ACTION_COMMAND_KEY, i18nKey);
 		this.key = i18nKey;
 		String mne = getMessageOrNull(i18nKey + ".mne");
@@ -174,10 +174,11 @@ public abstract class ResourceAction extends ConditionalAction {
 				tipBuilder.append(")");
 				tip = tipBuilder.toString();
 			}
-			putValue(SHORT_DESCRIPTION, i18nArgs == null || i18nArgs.length == 0 ? tip : MessageFormat.format(tip, i18nArgs));
+			putValue(SHORT_DESCRIPTION,
+					i18nArgs == null || i18nArgs.length == 0 ? tip : MessageFormat.format(tip, i18nArgs));
 		}
 		this.iconName = getMessageOrNull(i18nKey + ".icon");
-		if (getIconName() != null) {
+		if (getIconName() != null && !getIconName().trim().isEmpty()) {
 			ImageIcon small = null;
 			ImageIcon large = null;
 			if (iconType == IconType.FLAT) {
