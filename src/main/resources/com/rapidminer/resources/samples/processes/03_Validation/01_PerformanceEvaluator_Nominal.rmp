@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
+      </operator>
+      <operator activated="true" class="replace_missing_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="MissingValueReplenishment" width="90" x="180" y="30">
+        <list key="columns"/>
+      </operator>
+      <operator activated="true" class="decision_stump" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionStump" width="90" x="315" y="30">
+        <parameter key="criterion" value="information_gain"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="450" y="30">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ClassificationPerformance" width="90" x="706" y="30">
+        <parameter key="classification_error" value="true"/>
+        <parameter key="root_mean_squared_error" value="true"/>
+        <list key="class_weights"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="MissingValueReplenishment" to_port="example set input"/>
+      <connect from_op="MissingValueReplenishment" from_port="example set output" to_op="DecisionStump" to_port="training set"/>
+      <connect from_op="DecisionStump" from_port="model" to_op="ModelApplier" to_port="model"/>
+      <connect from_op="DecisionStump" from_port="exampleSet" to_op="ModelApplier" to_port="unlabelled data"/>
+      <connect from_op="ModelApplier" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
+      <connect from_op="ClassificationPerformance" from_port="performance" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="345" resized="true" width="469" x="29" y="138">This process introduces another very important operator for almost all RapidMiner processes: the PerformanceEvaluator operator.&lt;br/&gt;&lt;br/&gt;This operator expects an input example set with both a true and a predicted label attribute. The ClassificationPerformance calculates one or more performance measures (performance criteria) and delivers them as PerformanceVector. &lt;br/&gt;&lt;br/&gt;Such a performance vector can be used as estimation of a learner prediction accuracy (in this process it simply calculates the training error which usually isn't a good idea) or as fitness for an outer optimization scheme. &lt;br/&gt;&lt;br/&gt;Please note that RapidMiner provides a huge set of performance criteria which are suitable for classification tasks. Beside the well-known classification criteria like accuracy or precision all regression criteria like RMS can also be calculated for classification tasks. In this case the difference between 1 and the confidence for the desired true label value is used as example deviation.</description>
+    </process>
+  </operator>
+</process>

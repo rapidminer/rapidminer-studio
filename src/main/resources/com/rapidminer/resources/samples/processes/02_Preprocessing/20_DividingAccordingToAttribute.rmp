@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="RepositorySource" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Golf"/>
+      </operator>
+      <operator activated="true" class="subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="SplittingChain" width="90" x="179" y="30">
+        <process expanded="true">
+          <operator activated="true" class="multiply" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="IOMultiplier" width="90" x="45" y="30"/>
+          <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FirstFilter" width="90" x="246" y="30">
+            <parameter key="parameter_string" value="Wind=true"/>
+            <parameter key="condition_class" value="attribute_value_filter"/>
+            <list key="filters_list"/>
+          </operator>
+          <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="SecondFilter" width="90" x="246" y="120">
+            <parameter key="parameter_string" value="Wind=false"/>
+            <parameter key="condition_class" value="attribute_value_filter"/>
+            <list key="filters_list"/>
+          </operator>
+          <connect from_port="in 1" to_op="IOMultiplier" to_port="input"/>
+          <connect from_op="IOMultiplier" from_port="output 1" to_op="FirstFilter" to_port="example set input"/>
+          <connect from_op="IOMultiplier" from_port="output 2" to_op="SecondFilter" to_port="example set input"/>
+          <connect from_op="FirstFilter" from_port="example set output" to_port="out 1"/>
+          <connect from_op="SecondFilter" from_port="example set output" to_port="out 2"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="72"/>
+          <portSpacing port="sink_out 3" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="RepositorySource" from_port="output" to_op="SplittingChain" to_port="in 1"/>
+      <connect from_op="SplittingChain" from_port="out 1" to_port="result 1"/>
+      <connect from_op="SplittingChain" from_port="out 2" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+    </process>
+  </operator>
+</process>

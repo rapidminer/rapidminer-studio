@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="warning"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="180" y="30">
+        <parameter key="k" value="3"/>
+      </operator>
+      <operator activated="true" class="cluster_distance_performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Evaluation" width="90" x="313" y="30"/>
+      <operator activated="true" class="singular_value_decomposition" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="SVDReduction" width="90" x="447" y="120">
+        <parameter key="dimensions" value="2"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="KMeans" to_port="example set"/>
+      <connect from_op="KMeans" from_port="cluster model" to_op="Evaluation" to_port="cluster model"/>
+      <connect from_op="KMeans" from_port="clustered set" to_op="Evaluation" to_port="example set"/>
+      <connect from_op="Evaluation" from_port="performance" to_port="result 1"/>
+      <connect from_op="Evaluation" from_port="example set" to_op="SVDReduction" to_port="example set input"/>
+      <connect from_op="SVDReduction" from_port="example set output" to_port="result 2"/>
+      <connect from_op="SVDReduction" from_port="preprocessing model" to_port="result 3"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="72"/>
+      <portSpacing port="sink_result 3" spacing="18"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+    </process>
+  </operator>
+</process>

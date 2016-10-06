@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Build prediction models.">
+		<text>So far, you have seen the most important data handling steps and how to combine them to flexible processes.
+		Now, we will focus on how to build predictive models, use them to score new data points, and validate 
+		how well those models will work for those new situations.</text>
+		
+		<info>
+			<emph>Predictive Modeling</emph> is a set of machine learning techniques which 
+			search for patterns in big data sets and use those patterns to create 
+			predictions for new situations. Those predictions can be categorical (this is 
+			called <emph>classification learning</emph>) or numerical (<emph>regression 
+			learning</emph>). Those type of models are also an excellent choice if you 
+			want to understand more about the underlying processes leading to certain 
+			outcomes.
+		</info>
+		
+		<text>In this tutorial, we will be creating three different classification models for our Titanic data: 
+		a <emph>decision tree</emph>, a <emph>set of rules</emph>, and a <emph>Bayes model</emph>.
+		Let's explore those models and see if we can find out more about the accident and better 
+		understand who had the best chance to survive.</text>
+		
+		<info>
+			This is the third set of RapidMiner tutorials. We will be reusing concepts learned in earlier tutorials, so make sure you have completed them before proceeding. Have fun!
+		</info>
+	</step>
+
+
+
+	<step name="Retrieve the Titanic Training data.">
+		<tasks>
+			<task>
+				<activity>
+					Drag the
+					<file>Titanic Training</file>
+					data
+				</activity>
+				from the <folder>Samples</folder> repository into your process.
+			</task>
+		</tasks>
+
+		<info>
+			We have already prepared the <file>Titanic Training</file> data set for training models: It has no missing values and the label has already been 
+			defined. Remember that the <value>label</value>
+			is the attribute you want to predict (in this case, <emph>survived</emph>). 
+			You need <emph>training data</emph> with
+			known labels as input for this kind of machine learning method. 
+			This is also why we call this type of method <emph>supervised learning</emph>.
+		</info>
+	</step>
+
+
+	<step name="Build three different models.">
+		<tasks>
+			<task>
+				<activity>
+					Drag in the
+					<op>Decision Tree</op>
+				</activity>
+				operator and <activity>connect it</activity> to the "out" port of <op>Retrieve Titanic Training</op>.
+			</task>
+			<task>
+				<activity>
+					Drag in the
+					<op>Naive Bayes</op>
+				</activity>
+				operator and <activity>connect</activity> its example set input port with the "exa" 
+				output of the <op>Decision Tree</op>.
+			</task>
+			<task>
+				<activity>
+					Drag in the
+					<op>Rule Induction</op>
+				</activity>
+				operator and <activity>connect</activity> its example set input port with the "exa" 
+				output of <op>Naive Bayes</op>.
+			</task>
+			<task>
+			<activity>Connect the "mod" ports</activity> of the modeling operators to the "res" results port on the right, then 
+				<icon>16/media_play.png</icon>
+				<activity>run</activity>
+				the process.
+			</task>
+			<task>
+				<activity>Inspect</activity>
+				the three different models.
+			</task>
+		</tasks>
+
+		<info>The decision tree clearly shows that family size matters more than passenger class for women. This
+			behavioral pattern could not be detected for men. In general, men had a lower likelihood
+			to survive ("women and children first").  The easiest way to see this is in the <ui>Chart</ui> 
+			visualization of the Naive Bayes model.  Although usually not the most accurate type of models, in general,
+			the rule set is an easy to read format which can be useful when you want to interpret 
+			the models.</info>
+	</step>
+
+
+	<step name="Congratulations!">
+		<text>See how easy it is to create different models in RapidMiner? 
+		In the next tutorials, you will learn how to use models for scoring, i.e. 
+		predicting the outcome of new data points.  We will also discuss ways to measure how 
+		accurate these models' predictions are.  Work on the challenges below before heading to the next tutorial.</text>
+
+		<questions>
+			<question>Look into the charts of the Simple Distribution model which is the output 
+			of Naive Bayes.  Select the different attributes and inspect the charts.  Why do 
+			some of them show bars and some show lines?</question>
+			<question>Which attribute would you say shows the strongest differences between 
+			survivors and non-survivors?
+			</question>
+			<question>Compare this finding with the top attribute in the decision tree and 
+			the first attribute which is used in the rule set.  Are those the same?  What does 
+			this tell you?
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

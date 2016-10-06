@@ -1,0 +1,17 @@
+bin/
+target/
+build/
+.gradle/
+.settings/
+*.classpath
+*.project
+lib/
+**/test-processes/**/*.properties
+*.checkstyle
+config/checkstyle/checkstyle.xml
+config/checkstyle/checkstyle.xsl
+*.pmd
+config/pmd/*
+.idea/
+*.iml
+**/*.tutorial

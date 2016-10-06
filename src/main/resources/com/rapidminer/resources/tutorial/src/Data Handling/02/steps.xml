@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Identify anomalies and outliers in your data.">
+		<text>Another important step of data cleansing is to identify unusual cases and remove them from the
+		data set. In some situations, the outliers themselves might be the most interesting cases 
+		(detecting fraudulent credit card transactions, for example), but in most cases outliers are simply the result of an incorrect measurement and should be removed from the data set. 
+		This is exactly what we will
+		do in this
+		tutorial.</text>
+	</step>
+
+	<step name="Prepare the data.">
+		<tasks>
+			<task>
+				<activity>Drag</activity>
+				the
+				<file>Titanic</file>
+				data into the process.
+			</task>
+			<task>
+				<acticity>Add</acticity>
+				the operator
+				<op>Select Attributes</op>
+				and
+				<activity>connect it</activity>.
+			</task>
+			<task>
+				<activity>Change</activity>
+				the
+				<ui>Parameters</ui>
+				so that you
+				<activity>
+					remove
+					<value>Cabin</value>,
+					<value>Life Boat</value>,
+					<value>Name</value>, and
+					<value>Ticket Number</value>
+				</activity>.
+			</task>
+		</tasks>
+
+		<info>
+			The result will be a data set only containing those columns we believe will contribute well to our
+			outlier detection.
+			We will use a distance-based outlier detection algorithm which calculates the
+			<emph>Euclidean distance</emph>
+			between the data points and marks those points which are farthest away from
+			other data points as
+			outliers. The Euclidean distance uses the distances between two data points for each individual attribute.
+			Think about it: what is the effect on the distance if the attributes have different value ranges
+			(one attribute between 0 and 5 and another attribute between 1 and 1000)? Attributes with
+			larger values will contribute
+			much more than those with smaller values. For this reason we should
+			ensure that all attributes are
+			using similar value
+			ranges. This transformation is called
+			<emph>Normalization</emph>.
+		</info>
+	</step>
+
+	<step name="Normalize the attribute value ranges.">
+		<tasks>
+			<task>
+				<activity>Add</activity>
+				the operator
+				<op>Normalize</op>
+				and
+				<activity>connect it</activity>.
+			</task>
+		</tasks>
+
+		<info>
+			In general, you should
+			<emph>always</emph>
+			normalize your data before you apply distance-based
+			algorithms like outlier detection or k-Means
+			clustering. Using the default parameters, the
+			<op>Normalize</op>
+			operator will perform a
+			<emph>z-Transformation</emph>
+			(also known as Standardization)
+			which results in a mean value of 0 and a standard deviation of 1
+			for each attribute. In other words, all of the attributes are on the same scale 
+			after normalization and can be compared with one another.
+		</info>
+	</step>
+
+	<step name="Detect outliers.">
+		<tasks>
+			<task>
+				<activity>Search</activity>
+				for the operator <op>Detect Outlier (Distances)</op>,
+				<activity>add it</activity>, and
+				<activity>connect it</activity>
+				to
+				<op>Normalize</op>.
+			</task>
+		</tasks>
+
+		<info>
+			This operator will identify the 10 examples which are farthest away from all others and mark
+			them
+			as outliers. It creates a new column named
+			<value>outlier</value>
+			with
+			<value>true</value>
+			as the value for the outliers and
+			<value>false</value>
+			for all other examples.
+		</info>
+	</step>
+
+	<step name="Remove outliers from example set.">
+		<tasks>
+			<task>
+				<activity>Add</activity>
+				<op>Filter Examples</op>
+				to the process and
+				<activity>connect</activity>
+				it to the previous operator and also to
+				the result port on the right.
+			</task>
+			<task>
+				In its Parameters,
+				<activity>add a new filter</activity>
+				with
+				<value>Outlier</value>,
+				<value>equals</value>, and
+				<value>false</value>
+				as values.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon> <activity>Run</activity>
+				the process.
+			</task>
+		</tasks>
+
+		<info>
+			The process might run for some time but will switch to the Results view automatically when
+			it is finished. You will notice that the result is a data set with 1299 examples - the 10
+			outliers have successfully been removed.
+		</info>
+	</step>
+
+	<step name="Use breakpoints to see intermediate results.">
+		<tasks>
+			<task>
+				<activity>Go back</activity>
+				to the
+				<ui>Design</ui>
+				view.
+			</task>
+			<task>
+				<activity>Right-click</activity>
+				on
+				<op>Detect Outlier (Distances)</op>
+				and
+				<activity>select</activity>
+				<value>Breakpoint after</value>
+				in the menu.
+				Note that a small icon appears at the bottom of the operator after you added the breakpoint.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon> <activity>Run</activity>
+				the process again.
+			</task>
+		</tasks>
+
+		<info>
+			The process is paused at the breakpoint and the intermediate results are shown. 
+			This makes breakpoints a useful tool for debugging your process! All 1309 examples
+			are still in the data set at this point of the process. <emph>Click the <icon>16/media_end.png</icon> <ui>Resume</ui> icon in the toolbar to continue</emph> 
+			the process and see the final result.
+		</info>
+	</step>
+
+	<step name="Congratulations!">
+		<text>Awesome, you found 10 outliers in your data and sucessfully removed them! This cleansing step can often improve the quality of your models. As usual, try the 
+		challenges below and move on to the next tutorial:</text>
+		
+		<questions>
+			<question>
+				How would you change the process so it finds 20 outliers instead of 10?
+			</question>
+			<question>
+				How can you change the process to only show outliers instead of removing them?
+			</question>
+			<question>
+				 Replace the outlier detection operator with <op>Detect Outlier (LOF)</op> 
+				 and add a <emph>breakpoint</emph> after this operator before you execute. 
+				 What is the difference to before?
+			</question>
+			<question>
+				How do you now need to change the filter to only keep the top outliers?
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

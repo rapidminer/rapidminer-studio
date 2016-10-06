@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Build prediction models.">
+		<text>The previous tutorial demonstrated how predictive modeling can reveal insights about your data. 
+		You might not have been able to see the effect of gender or family size on survival by just looking at the data alone. 
+		This tutorial will now show how we can use these insights to predict future outcomes. 
+		More specifically, we will use the Naïve Bayes method to predict the "Survived" class (yes / no) of each passenger and find their respective confidences. </text>
+		
+		<info>
+			Using a model to generate predictions for new data points is called <emph>Scoring</emph>. 
+		</info>
+	</step>
+
+
+
+	<step name="Train the model.">
+		<tasks>
+			<task>
+				<activity>
+					Drag the
+					<file>Titanic Training</file>
+					data
+				</activity>
+				from the <folder>Samples</folder> repository into your process.
+			</task>
+			<task>
+				<activity>Add</activity> a <op>Naive Bayes</op> operator and <activity>connect it</activity>.
+			</task>
+		</tasks>
+
+		<info>
+			So far, this process simply builds a Naïve Bayes model, as we have seen before. Next, we need to use an operator called <op>Apply Model</op> that will create predictions for a new, unlabeled data set.
+		</info>
+	</step>
+
+
+	<step name="Apply Model.">
+		<tasks>
+			<task>
+				Search for the operator <op>Apply Model</op> and 
+				<activity>drag it</activity> into the process.
+			</task>
+			<task>
+				<activity>
+					Drag the
+					<file>Titanic Unlabeled</file>
+					data
+				</activity>
+				from the <folder>Samples</folder> repository into your process.
+			</task>
+			<task>
+				<activity>Connect</activity> the "mod" output port (green) of  
+				<op>Naive Bayes</op> to the green input port of <op>Apply Model</op>.
+			</task>
+			<task>
+				Also, <activity>connect</activity> the unlabeled data with the 
+				"unl" input put (blue) of <op>Apply Model</op>.
+			</task>
+			<task>
+				Finally, <activity>connect</activity> the blue example set output of <op>Apply Model</op> 
+				with the "res" result port on the right side of the <ui>Process</ui> panel.
+			</task>
+		</tasks>
+
+		<info>You might be wondering what the "unl" and "lab" ports mean on the <op>Apply Model</op> operator. The operator takes <emph>unlabeled</emph> data as an input, applies the model you connected to the "mod" port, and outputs a data set with a label: the predictions made by the model.</info>
+		<info>
+As we learn about more advanced operators in RapidMiner, the function of their ports becomes more important. If you are ever curious about what a port does, just hover your mouse over it to see its full name.
+</info>
+
+	</step>
+
+
+	<step name="Run process and inspect results.">
+		<tasks>
+			<task>
+				<icon>16/media_play.png</icon>
+				<activity>Run</activity>
+				the process.
+			</task>
+			<task>
+				<activity>Inspect</activity>
+				the results.
+			</task>
+		</tasks>
+
+		<info>
+			The result is the original unlabeled data with a column for the 
+			predicted class (yes / no) of "Survived" and two additional columns for the confidences of the 
+			two different classes (yes / no) of "Survived".  For example, the first row of the data the prediction 
+			is "yes" with 98.7% confidence and "no" with 1,3% confidence.
+		</info>
+	</step>
+						
+
+	<step name="Congratulations!">
+		<text>Good job! Scoring data with a predictive model is a simple task with the 
+		<op>Apply Model</op> operator. Just remember to make sure that the format of the unlabeled data 
+		is the same as the format of the data used for training.  Use the same attributes, 
+		and if possible, the same value ranges.  While some models are robust enough to handle 
+		significant data changes, others might fail more easily.</text>
+
+		<questions>
+			<question>
+				Sort the data set so that it shows the cases with the highest probability of 
+				survival. What percentage of the top 10 people with the highest probability 
+				to survive is female?
+			</question>
+			<question>
+				Replace the Naive Bayes operator with a Decision Tree. How does this effect 
+				the confidences of the predictions? Can you imagine why?
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

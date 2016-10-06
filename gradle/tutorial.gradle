@@ -1,0 +1,21 @@
+apply plugin: 'java'
+
+def tutorialSrc = file('src/main/resources/com/rapidminer/resources/tutorial/src').absolutePath
+// Generate .tutorial files task
+task buildTutorials << {
+    new File(tutorialSrc).eachDir {
+        ant.zip(destfile: tutorialSrc+'/../'+it.name+'.tutorial', basedir: it.path){
+        }
+    }
+}
+buildTutorials.group = 'build'
+buildTutorials.description = 'Assembles tutorial archives.'
+
+//Run buildTutorials before the jar task
+jar.dependsOn(buildTutorials)
+
+//Exclude tutorial source files from build
+sourceSets.main.resources{
+    exclude 'com/rapidminer/resources/tutorial/src/**'
+    exclude 'com/rapidminer/resources/tutorial/src'
+}

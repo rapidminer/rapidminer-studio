@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Polynomial"/>
+      </operator>
+      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="179" y="30">
+        <parameter key="attribute" value="a1"/>
+        <parameter key="random_attributes" value="3"/>
+        <list key="noise"/>
+        <parameter key="offset" value="5.0"/>
+        <parameter key="linear_factor" value="2.0"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
+      <connect from_op="NoiseGenerator" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="159" resized="true" width="409" x="39" y="136">The NoiseOperator can be used to add controlled noise or noisy feature to your data set. That is especially useful in order to estimate the performance of a feature preprocessing or the robustness of a specific learner.&lt;br/&gt;&lt;br/&gt;RapidMiner Studio also provides many other preprocessing operators including a TFIDF filter, obfuscating, value series handling and more.</description>
+    </process>
+  </operator>
+</process>

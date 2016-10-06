@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+        <parameter key="target_function" value="random dots classification"/>
+        <parameter key="number_examples" value="200"/>
+        <parameter key="number_of_attributes" value="2"/>
+      </operator>
+      <operator activated="true" class="sample_stratified" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="StratifiedSampling" width="90" x="179" y="30">
+        <parameter key="sample_ratio" value="0.2"/>
+      </operator>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="StratifiedSampling" to_port="example set input"/>
+      <connect from_op="StratifiedSampling" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="76" resized="true" width="232" x="42" y="125">Stratified sampling samples examples with the same class distribution as the original data set.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Let's do some data science.">
+		<text>In the last tutorial, we imported a dataset and ran a process. We found out that 349 passengers survived the Titanic accident.  Let's build a Process to see if those survivors have something in common or not.</text>
+	</step>
+	<step name="Retrieve the Titanic Training data.">
+		<text>Load the Titanic Training data.</text>
+		<tasks>
+			<task><activity>Drag the <file>Titanic Training</file> data</activity> from the <folder>Samples</folder> repository into the <ui>Process</ui> panel.</task>
+		</tasks>
+		<info>You have defined the first operation of your process.  Now we will learn how easy it is to build a machine learning model on this data.</info>
+	</step>
+	<step name="Build a decision tree.">
+		<text>Decision Trees are a popular statistical modeling technique that finds hidden patterns in the data. Let’s build one!</text>
+		<tasks>
+			<task><activity>Find</activity> the <ui>Operators</ui> panel on the left.</task>
+			<task><activity>Open</activity> the folder <folder>Modeling</folder>, <folder>Predictive</folder>, and finally <folder>Trees</folder>.</task>
+			<task><activity>Drag in the <op>Decision Tree</op></activity> operator and drop it after <op>Retrieve Titanic Training</op>.</task> 
+		</tasks>
+		<info>Good, we now have the operator in the process but we still need to connect the two operations and define what we want to see as output before we can run it.</info>
+	</step>  
+	<step name="Connect &amp; execute.">
+	<text>The <op>Decision Tree</op> operator will build a Decision Tree for us based on our Titanic Training data. We still need to connect these operators together to build a Process, though:</text>
+		<tasks>
+			<task><activity>Connect</activity> the output port ("out") of <op>Retrieve Titanic Training</op> with the input port ("tra" for "training") of <op>Decision Tree</op>. You can click on the ports, or you can drag on them!</task>
+			<task><activity>Connect</activity> the first output ("mod") of the <op>Decision Tree</op> with the result port ("res") on the right side of the <ui>Process panel</ui>.</task>
+			<task><activity>Press the <icon>16/media_play.png</icon> Run</activity> button in the toolbar to execute the process.</task>
+		</tasks>
+		<info>Great job!  Your process should now be complete and deliver a decision tree model, which explains to you what most of the survivors and most of the victims had in common.</info>
+	</step>  	
+	<step name="Congratulations!">
+		<text>Great - you just have built your first machine learning model.  This was not hard, was it?  You now know how to load data, add a machine learning model to the process, and execute both steps.</text>
+		<info>From our resulting decision-tree, we can clearly see that survival was not coincidental at all.  In fact, it tells us that as a female passenger, with a small family, you were really lucky - at least if you were holding an expensive ticket!</info>
+		<text>These tutorials have only shown you the tip of the iceberg of what you can do with RapidMiner. To keep learning and become a RapidMiner Master, click the link below to start the next tutorial.</text>
+		<text>Welcome again to RapidMiner!</text>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

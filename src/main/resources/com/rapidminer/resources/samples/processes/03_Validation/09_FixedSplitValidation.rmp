@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.4.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+        <parameter key="repository_entry" value="../../data/Iris"/>
+      </operator>
+      <operator activated="true" class="split_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="Validation" width="90" x="179" y="30">
+        <parameter key="split" value="absolute"/>
+        <process expanded="true">
+          <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="45" y="30"/>
+          <connect from_port="training" to_op="NearestNeighbors" to_port="training set"/>
+          <connect from_op="NearestNeighbors" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="238" y="30"/>
+          <connect from_port="model" to_op="Test" to_port="model"/>
+          <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
+          <connect from_op="Test" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+          <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Validation" to_port="training"/>
+      <connect from_op="Validation" from_port="averagable 1" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="90" resized="true" width="400" x="35" y="154">The FixedSplitValidation uses a fixed number of examples for either the training or the test set. This might be useful if both the training and the test data are given in the same data file and the split point is known beforehand.</description>
+    </process>
+  </operator>
+</process>

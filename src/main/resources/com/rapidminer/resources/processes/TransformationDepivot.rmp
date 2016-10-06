@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="5.2.001">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="5.2.001" expanded="true" name="Process">
+    <process expanded="true" height="639" width="705">
+      <operator activated="true" class="select_attributes" compatibility="5.2.001" expanded="true" height="76" name="Select Attributes" width="90" x="45" y="165">
+        <parameter key="attribute_filter_type" value="value_type"/>
+        <parameter key="value_type" value="date_time"/>
+        <parameter key="invert_selection" value="true"/>
+        <parameter key="include_special_attributes" value="true"/>
+      </operator>
+      <operator activated="true" class="nominal_to_numerical" compatibility="5.2.001" expanded="true" height="94" name="Nominal to Numerical" width="90" x="179" y="210">
+        <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="regular_expression" value="TO_REPLACE_WITH_NOM_TO_NUM_ATTRIBUTE_LIST"/>
+        <parameter key="invert_selection" value="INVERT_NOM_TO_NUM_SELECTION"/>
+        <parameter key="include_special_attributes" value="true"/>
+        <list key="comparison_groups"/>
+      </operator>
+      <operator activated="true" class="numerical_to_real" compatibility="5.2.001" expanded="true" height="76" name="Numerical to Real" width="90" x="180" y="30"/>
+      <operator activated="true" class="generate_id" compatibility="5.2.001" expanded="true" height="76" name="Generate ID" width="90" x="315" y="30">
+        <parameter key="create_nominal_ids" value="true"/>
+      </operator>
+      <operator activated="true" class="de_pivot" compatibility="5.2.001" expanded="true" height="76" name="De-Pivot" width="90" x="450" y="30">
+        <list key="attribute_name">
+          <parameter key="value" value="TO_REPLACE_WITH_DEPIVOT_ATTRIBUTE_LIST"/>
+        </list>
+        <parameter key="index_attribute" value="attribute"/>
+        <parameter key="create_nominal_index" value="true"/>
+      </operator>
+      <operator activated="true" class="nominal_to_numerical" compatibility="5.2.001" expanded="true" height="94" name="Nominal to Numerical (2)" width="90" x="585" y="30">
+        <parameter key="attribute_filter_type" value="single"/>
+        <parameter key="attribute" value="id"/>
+        <parameter key="include_special_attributes" value="true"/>
+        <list key="comparison_groups"/>
+      </operator>
+      <connect from_port="input 1" to_op="Select Attributes" to_port="example set input"/>
+      <connect from_op="Select Attributes" from_port="example set output" to_op="Nominal to Numerical" to_port="example set input"/>
+      <connect from_op="Nominal to Numerical" from_port="example set output" to_op="Numerical to Real" to_port="example set input"/>
+      <connect from_op="Numerical to Real" from_port="example set output" to_op="Generate ID" to_port="example set input"/>
+      <connect from_op="Generate ID" from_port="example set output" to_op="De-Pivot" to_port="example set input"/>
+      <connect from_op="De-Pivot" from_port="example set output" to_op="Nominal to Numerical (2)" to_port="example set input"/>
+      <connect from_op="Nominal to Numerical (2)" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="source_input 2" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+    </process>
+  </operator>
+</process>

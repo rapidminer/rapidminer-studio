@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Find out the highest fare paid by women.">
+		<text>In the last tutorial, we learned how to import data into the RapidMiner repository, which is the central storage for all your data, models, and processes. In this tutorial, we will apply a filter to the Titanic data to only look at female passengers. Then, we can easily sort the data to find the highest ticket fares paid by women. You can then apply your new skills to answer the same question for men.  Do you expect a difference for the passenger fare?</text>
+	</step>
+	<step name="Get data into the workflow.">
+		<tasks>
+			<task><activity>Drag the <file>Titanic</file> data</activity> from the <folder>Samples</folder> repository into the <ui>Process</ui>.</task>
+		</tasks>
+		<info>In RapidMiner, rows are called <emph>examples</emph> and data tables are called <emph>example sets</emph>. You'll find these terms throughout RapidMiner, so it is worth learning them right away.</info>
+ 		<info>There are many ways to find the highest fare paid for women. In this tutorial, you will remove men from the table or "filter examples out of the example set."</info>
+	</step>
+	<step name="Set up filtering.">
+		<info>Only examples (rows) that meet the defined filter criteria - in this case women - stay in the example set. All other examples are removed.</info>
+		<tasks>
+			<task><activity>Search</activity> for the <op>Filter Examples</op> operator using the search box at the top of the <ui>Operator</ui> panel. <activity>Drag <op>Filter Examples</op></activity> into the <ui>Process</ui> panel.</task>
+			<task><activity>Connect</activity> the output port of <op>Retrieve Titanic</op> with the input port of <op>Filter Examples</op>.</task>
+			<task><activity>Click <op>Filter Examples</op></activity> to select it, then <activity>click <param>Add Filters</param></activity> in the <ui>Parameters</ui> panel to define a filter.</task> 
+			<task>Select <value>Sex</value> on the left, <value>equals</value> in the middle, and type <value>Female</value> in the box on the right. Instead of typing, you can click on the magic wand and select <value>Female</value> from the list.</task>
+		</tasks>
+		<info>Whenever you add an operator to your process, you should immediately connect it. Remember that data flows between operators, so an operator's connection can influence its parameters. For example: How could the <op>Filter</op> operator "know" about the column <value>Sex</value>, if it is not connected to the data source?</info>
+	</step>  
+	<step name="Sort to show the highest fares first.">
+		<tasks>
+			<task>Search for and then <activity>drag the <op>Sort</op> operator</activity> into the <ui>Process</ui>.</task>
+			<task><activity>Connect</activity> the output of <op>Filter</op> with the input of <op>Sort</op>.</task>
+			<task><activity>Click on <op>Sort</op></activity> to select it. <activity>Make the following changes</activity> in the <ui>Parameters</ui> panel:</task>
+			<task>Set <param>attribute name</param> to <value>Passenger Fare</value>.</task>
+			<task>Change <param>sorting direction</param> to <value>decreasing</value>.</task>
+			<task>Connect the <op>Sort</op> output port to the result port on the right of the <op>Process</op> panel.</task>
+			<task><icon>16/media_play.png</icon><activity>Run the process</activity> and inspect the result.</task>
+		</tasks>
+		<info>Most operators have settings which define how the operators are working. You can find those on the right side of the <ui>Parameters</ui> panel, after you have selected an operator with a click.</info>
+	</step>  	
+	<step name="Congratulations!">
+		<text>Well done! You can now see the highest fare paid for a woman on the Titanic: it's the first value in the column <value>Passenger Fare</value>.</text>
+		<questions>
+			<question>Can you change the process to see the highest fare paid by a man?  Is it different than the highest fare paid by a woman?</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

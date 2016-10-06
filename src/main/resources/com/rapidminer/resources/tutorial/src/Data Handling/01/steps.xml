@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Learn more about advanced data handling.">
+		<text>Data preprocessing is probably where you spend most of your time as an analyst.
+		There are two general groups of data handling: blending and cleansing. 
+		This and the next tutorial will discuss some of the most important operations for data cleansing.</text>
+		
+		<info>
+			<emph>Blending</emph> is about transforming a data set from one state to another 
+			or combining multiple data sets.
+			<emph>Cleansing</emph> is about improving the data so that modeling will deliver better results.
+		</info>
+		
+		<text>Let's look at the
+		<file>Titanic</file>
+		data again. You might remember from
+		before that it contains some
+		missing values depicted by question
+		marks in the data. You can also see
+		the number of missing values for
+		each attribute in the
+		<ui>Statistics</ui>
+		view. Missing values are a problem
+		for many data preprocessing or
+		modeling operations. This tutorial
+		will show you
+		the most common approaches for removing or replacing missing values.</text>
+
+		<info>
+			This is the second set of RapidMiner tutorials. Make sure you you've completed the first set
+			before clicking next!
+		</info>
+	</step>
+
+	<step name="Prepare the data.">
+		<tasks>
+			<task>
+				<activity>Drag</activity>
+				the
+				<file>Titanic</file>
+				data into the process.
+			</task>
+			<task>
+				<activity>Hover your mouse pointer</activity>
+				over the output port and wait for the tooltip to show the meta data.
+			</task>
+			<task>
+				<activity>Press F3</activity>
+				while the tooltip is shown. It is now transformed into a window and
+				you can scroll down to see
+				the information about all the columns.
+			</task>
+			<task>
+				Check for columns with missing values.
+			</task>
+		</tasks>
+
+		<info>
+			There are five attributes with missing values: Age, Passenger
+			Fare, Cabin, Port of
+			Embarkation, and Life Boat. Cabin and Life Boat
+			have the most missing values, so let's deal with them first.
+		</info>
+	</step>
+
+	<step name="Remove attributes with too many missings.">
+		<tasks>
+			<task>
+				<activity>Add</activity>
+				a new operator
+				<op>Select Attributes</op>.
+			</task>
+			<task>
+				<activity>Connect</activity>
+				the new operator to the
+				<op>Retrieve</op>
+				operator and the output to the result port "res" on the right.
+			</task>
+			<task>
+				In Parameters,
+				<activity>change</activity>
+				the
+				<param>attribute filter type</param>
+				to
+				<value>Subset</value>
+				and select all attributes but
+				<value>Cabin</value>
+				and
+				<value>Life Boat</value>. This means that those
+				two will be removed by the operator.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon> <activity>Run</activity>
+				the process.
+			</task>
+			<task>
+				Click on the
+				<ui>Statistics</ui>
+				tab and check which attributes with missing values are still left.
+			</task>
+		</tasks>
+		<info>
+			We removed
+			<value>Cabin</value>
+			because almost all values in this column were missing and the
+			remaining values probably didn't contain a lot of useful information. We removed
+			<value>Life Boat</value>
+			for
+			similar reasons and because this attribute is strongly correlated to the label. The attribute
+			<value>Age</value>
+			also has a significant number of missing values, but we will handle this using a different method next.
+		</info>
+	</step>
+
+	<step name="Replace missing values.">
+		<tasks>
+			<task>
+				<activity>Search</activity>
+				for the operator
+				<op>Replace Missing Values</op>
+				and
+				<activity>add it</activity>
+				to the process. You can drop it on the connection line
+				between
+				<op>Select Attributes</op>
+				and the result port (move the mouse pointer until
+				the connection is highlighted before you drop
+				the new operator). This way you do not
+				need to manually reconnect the operators.
+			</task>
+			<task>
+				In the Parameters of this operator,
+				<activity>use</activity>
+				<value>single</value>
+				for the
+				<param>attribute filter type</param>
+				and
+				<activity>select</activity>
+				<value>Age</value>
+				for
+				<param>attribute</param>.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon> <activity>Run</activity>
+				the process again.
+			</task>
+		</tasks>
+
+		<info>
+			Dropping operators on connection lines often saves you the manual work of creating
+			the
+			connections yourself. Don't worry if you did not hit the connection line with your first try -
+			just re-connect the operators manually in this case.
+		</info>
+
+		<info>
+			You will see in the
+			<ui>Statistics</ui>
+			tab that only a few examples with missing values are left. When we ran this process, the missing values for
+			<value>Age</value> were replaced with the average value of <value>Age</value> - this is a common technique for 
+			handling a lot of missing values for an attribute. Because there are only a few missing values left,
+			we can safely filter these examples out of the data set.
+		</info>
+	</step>
+
+	<step name="Remove examples with missing values.">
+		<info>
+			You have used the
+			<op>Filter Examples</op>
+			operator already before, but this time we will use some
+			advanced settings to remove examples that
+			have missing values for their attributes.
+		</info>
+
+		<tasks>
+			<task>
+				<activity>Search</activity>
+				for
+				<op>Filter Examples</op>
+				and
+				<activity>drop it</activity>
+				again
+				on the connection line to the result port. In case you miss the connection, you can of
+				course always manually connect the operator instead.
+			</task>
+			<task>
+				Note the
+				<ui>link</ui>
+				at the bottom of the
+				<ui>Parameters</ui>
+				panel which shows/hides advanced parameters
+				<activity>Click</activity>
+				on
+				<ui>Show advanced parameters</ui>
+				to display all operator parameters.
+			</task>
+			<task>
+				New parameters should appear.
+				<activity>Set</activity>
+				the
+				<param>condition class</param>
+				to
+				<value>no_missing_attributes</value>.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon> <activity>Run</activity>
+				the process again.
+			</task>
+		</tasks>
+	</step>
+
+	<step name="Congratulations!">
+		<text>Great, you successfully handled missing values using three different approaches:
+		Removing columns with missing values, replacing missing values with other values, and removing examples
+		with missing values. Try solving the challenges below before you start the next tutorial:</text>
+
+		<questions>
+			<question>
+				Check the
+				<ui>Statistics</ui>
+				tab - does it still show missing values for any of the columns?
+			</question>
+			<question>
+				Why is it not a good idea to just filter out the examples right away instead of removing attributes
+				and replacing the missings in
+				<value>Age</value>?
+			</question>
+			<question>
+				Right-click on
+				<op>Select Attributes</op>
+				and
+				<emph>disable</emph>
+				the operator. Do the same with
+				<op>Replace Missing Values</op>. What do you expect if you re-run the process now? Try it!
+			</question>
+			<question>
+				How many examples are left in the data set now?
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>
