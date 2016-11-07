@@ -1,29 +1,60 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="TrainingSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="TrainingSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="checkerboard classification"/>
         <parameter key="number_examples" value="1000"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="LibSVMLearner" width="90" x="180" y="30">
+      <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="LibSVMLearner" width="90" x="179" y="34">
+        <parameter key="svm_type" value="C-SVC"/>
+        <parameter key="kernel_type" value="rbf"/>
+        <parameter key="degree" value="3"/>
         <parameter key="gamma" value="0.01"/>
+        <parameter key="coef0" value="0.0"/>
+        <parameter key="C" value="0.0"/>
+        <parameter key="nu" value="0.5"/>
+        <parameter key="cache_size" value="80"/>
         <parameter key="epsilon" value="0.0010"/>
+        <parameter key="p" value="0.1"/>
         <list key="class_weights"/>
+        <parameter key="shrinking" value="true"/>
+        <parameter key="calculate_confidences" value="false"/>
+        <parameter key="confidence_for_multiclass" value="true"/>
       </operator>
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="GridSetGenerator" width="90" x="315" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="GridSetGenerator" width="90" x="313" y="85">
         <parameter key="target_function" value="grid function"/>
         <parameter key="number_examples" value="1000"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="557" y="30">
+      <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="514" y="34">
         <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
       </operator>
       <connect from_op="TrainingSetGenerator" from_port="output" to_op="LibSVMLearner" to_port="training set"/>
       <connect from_op="LibSVMLearner" from_port="model" to_op="ModelApplier" to_port="model"/>
@@ -32,7 +63,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="120" resized="false" width="400" x="40" y="140">For classification models like SVM, the model can be visualized by creating a grid data set and applying the model to this data. The resulting example set contains new special attributes for the confidence values which can be plotted for the selected dimensions. This &amp;quot;workaround&amp;quot; can be used in all cases where the model itself is not able to create a proper visualization.</description>
+      <description align="left" color="yellow" colored="false" height="120" resized="false" width="400" x="40" y="166">For classification models like SVM, the model can be visualized by creating a grid data set and applying the model to this data. The resulting example set contains new special attributes for the confidence values which can be plotted for the selected dimensions. This &amp;quot;workaround&amp;quot; can be used in all cases where the model itself is not able to create a proper visualization.</description>
     </process>
   </operator>
 </process>

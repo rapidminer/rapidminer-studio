@@ -1,28 +1,57 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="112" y="210">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="112" y="238">
         <parameter key="target_function" value="sum classification"/>
         <parameter key="number_examples" value="10"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator (2)" width="90" x="45" y="120">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator (2)" width="90" x="45" y="136">
         <parameter key="target_function" value="sum classification"/>
         <parameter key="number_examples" value="5"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator (3)" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator (3)" width="90" x="45" y="34">
         <parameter key="target_function" value="sum classification"/>
         <parameter key="number_examples" value="2"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="append" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="ExampleSetMerge" width="90" x="246" y="30"/>
+      <operator activated="true" class="append" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="ExampleSetMerge" width="90" x="246" y="34">
+        <parameter key="datamanagement" value="double_array"/>
+        <parameter key="merge_type" value="all"/>
+      </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="ExampleSetMerge" to_port="example set 3"/>
       <connect from_op="ExampleSetGenerator (2)" from_port="output" to_op="ExampleSetMerge" to_port="example set 2"/>
       <connect from_op="ExampleSetGenerator (3)" from_port="output" to_op="ExampleSetMerge" to_port="example set 1"/>

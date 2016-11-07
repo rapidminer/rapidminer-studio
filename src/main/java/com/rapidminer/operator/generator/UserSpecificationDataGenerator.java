@@ -23,8 +23,7 @@ import java.util.List;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
@@ -83,7 +82,7 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 	private static final String REGULAR_NAME = "regular";
 
 	private static final String[] TARGET_ROLES = new String[] { REGULAR_NAME, Attributes.ID_NAME, Attributes.LABEL_NAME,
-		Attributes.PREDICTION_NAME, Attributes.CLUSTER_NAME, Attributes.WEIGHT_NAME, Attributes.BATCH_NAME };
+			Attributes.PREDICTION_NAME, Attributes.CLUSTER_NAME, Attributes.WEIGHT_NAME, Attributes.BATCH_NAME };
 
 	public UserSpecificationDataGenerator(OperatorDescription description) {
 		super(description);
@@ -162,10 +161,7 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 
 	@Override
 	public ExampleSet createExampleSet() throws OperatorException {
-		MemoryExampleTable table = new MemoryExampleTable();
-		table.addDataRow(new DoubleArrayDataRow(new double[0]));
-
-		ExampleSet exampleSet = table.createExampleSet();
+		ExampleSet exampleSet = ExampleSets.from().withBlankSize(1).build();
 		List<String[]> paramValues = getParameterList(PARAMETER_VALUES);
 
 		// init operator progress
@@ -237,7 +233,7 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 		types.add(new ParameterTypeList(PARAMETER_ROLES, "This parameter defines additional attribute role combinations.",
 				new ParameterTypeString(PARAMETER_NAME, "The name of the attribute whose role should be changed.", false,
 						false), new ParameterTypeStringCategory(PARAMETER_TARGET_ROLE,
-								"The target role of the attribute (only changed if parameter change_attribute_type is true).",
+						"The target role of the attribute (only changed if parameter change_attribute_type is true).",
 								TARGET_ROLES, TARGET_ROLES[0]), false));
 		return types;
 	}

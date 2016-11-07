@@ -25,6 +25,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 
 
 /**
@@ -40,6 +41,8 @@ public abstract class SimplePredictionModel extends PredictionModel {
 	 *
 	 */
 	private static final long serialVersionUID = 6275902545494306001L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 1000;
 
 	/**
 	 * @deprecated Since RapidMiner Studio 6.0.009. Please use the new Constructor
@@ -78,9 +81,19 @@ public abstract class SimplePredictionModel extends PredictionModel {
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
 		Iterator<Example> r = exampleSet.iterator();
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+
 		while (r.hasNext()) {
 			Example example = r.next();
 			example.setValue(predictedLabel, predict(example));
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
+			}
 		}
 		return exampleSet;
 	}

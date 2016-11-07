@@ -1,19 +1,34 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="polynomial classification"/>
         <parameter key="number_examples" value="1000"/>
         <parameter key="number_of_attributes" value="10"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="weight_by_chi_squared_statistic" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ChiSquaredWeighting" width="90" x="179" y="30">
+      <operator activated="true" class="weight_by_chi_squared_statistic" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ChiSquaredWeighting" width="90" x="179" y="34">
         <parameter key="normalize_weights" value="true"/>
+        <parameter key="sort_weights" value="true"/>
+        <parameter key="sort_direction" value="ascending"/>
+        <parameter key="number_of_bins" value="10"/>
       </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="ChiSquaredWeighting" to_port="example set"/>
       <connect from_op="ChiSquaredWeighting" from_port="weights" to_port="result 1"/>

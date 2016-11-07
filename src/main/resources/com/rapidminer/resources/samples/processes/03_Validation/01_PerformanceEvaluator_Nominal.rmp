@@ -1,27 +1,71 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
       </operator>
-      <operator activated="true" class="replace_missing_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="MissingValueReplenishment" width="90" x="180" y="30">
+      <operator activated="true" class="replace_missing_values" compatibility="7.1.001" expanded="true" height="103" name="MissingValueReplenishment" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="default" value="average"/>
         <list key="columns"/>
       </operator>
-      <operator activated="true" class="decision_stump" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionStump" width="90" x="315" y="30">
+      <operator activated="true" class="decision_stump" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DecisionStump" width="90" x="313" y="34">
         <parameter key="criterion" value="information_gain"/>
+        <parameter key="minimal_leaf_size" value="1"/>
       </operator>
-      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="450" y="30">
+      <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="447" y="34">
         <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
       </operator>
-      <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ClassificationPerformance" width="90" x="706" y="30">
+      <operator activated="true" class="performance_classification" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ClassificationPerformance" width="90" x="581" y="34">
+        <parameter key="main_criterion" value="first"/>
+        <parameter key="accuracy" value="true"/>
         <parameter key="classification_error" value="true"/>
+        <parameter key="kappa" value="false"/>
+        <parameter key="weighted_mean_recall" value="false"/>
+        <parameter key="weighted_mean_precision" value="false"/>
+        <parameter key="spearman_rho" value="false"/>
+        <parameter key="kendall_tau" value="false"/>
+        <parameter key="absolute_error" value="false"/>
+        <parameter key="relative_error" value="false"/>
+        <parameter key="relative_error_lenient" value="false"/>
+        <parameter key="relative_error_strict" value="false"/>
+        <parameter key="normalized_absolute_error" value="false"/>
         <parameter key="root_mean_squared_error" value="true"/>
+        <parameter key="root_relative_squared_error" value="false"/>
+        <parameter key="squared_error" value="false"/>
+        <parameter key="correlation" value="false"/>
+        <parameter key="squared_correlation" value="false"/>
+        <parameter key="cross-entropy" value="false"/>
+        <parameter key="margin" value="false"/>
+        <parameter key="soft_margin_loss" value="false"/>
+        <parameter key="logistic_loss" value="false"/>
+        <parameter key="skip_undefined_labels" value="true"/>
+        <parameter key="use_example_weights" value="true"/>
         <list key="class_weights"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="MissingValueReplenishment" to_port="example set input"/>
@@ -33,7 +77,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="345" resized="true" width="469" x="29" y="138">This process introduces another very important operator for almost all RapidMiner processes: the PerformanceEvaluator operator.&lt;br/&gt;&lt;br/&gt;This operator expects an input example set with both a true and a predicted label attribute. The ClassificationPerformance calculates one or more performance measures (performance criteria) and delivers them as PerformanceVector. &lt;br/&gt;&lt;br/&gt;Such a performance vector can be used as estimation of a learner prediction accuracy (in this process it simply calculates the training error which usually isn't a good idea) or as fitness for an outer optimization scheme. &lt;br/&gt;&lt;br/&gt;Please note that RapidMiner provides a huge set of performance criteria which are suitable for classification tasks. Beside the well-known classification criteria like accuracy or precision all regression criteria like RMS can also be calculated for classification tasks. In this case the difference between 1 and the confidence for the desired true label value is used as example deviation.</description>
+      <description align="left" color="yellow" colored="false" height="345" resized="true" width="469" x="43" y="150">This process introduces another very important operator for almost all RapidMiner processes: the PerformanceEvaluator operator.&lt;br/&gt;&lt;br/&gt;This operator expects an input example set with both a true and a predicted label attribute. The ClassificationPerformance calculates one or more performance measures (performance criteria) and delivers them as PerformanceVector. &lt;br/&gt;&lt;br/&gt;Such a performance vector can be used as estimation of a learner prediction accuracy (in this process it simply calculates the training error which usually isn't a good idea) or as fitness for an outer optimization scheme. &lt;br/&gt;&lt;br/&gt;Please note that RapidMiner provides a huge set of performance criteria which are suitable for classification tasks. Beside the well-known classification criteria like accuracy or precision all regression criteria like RMS can also be calculated for classification tasks. In this case the difference between 1 and the confidence for the desired true label value is used as example deviation.</description>
     </process>
   </operator>
 </process>

@@ -94,6 +94,7 @@ public class ModelApplier extends Operator {
 		Model model = modelInput.getData(Model.class);
 		if (AbstractModel.class.isAssignableFrom(model.getClass())) {
 			((AbstractModel) model).setOperator(this);
+			((AbstractModel) model).setShowProgress(true);
 		}
 
 		log("Set parameters for " + model.getClass().getName());
@@ -140,6 +141,7 @@ public class ModelApplier extends Operator {
 
 		if (AbstractModel.class.isAssignableFrom(model.getClass())) {
 			((AbstractModel) model).setOperator(null);
+			((AbstractModel) model).setShowProgress(false);
 		}
 
 		exampleSetOutput.deliver(result);

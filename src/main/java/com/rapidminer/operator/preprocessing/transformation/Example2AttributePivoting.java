@@ -29,7 +29,8 @@ import com.rapidminer.example.set.SortedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
@@ -257,7 +258,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 		}
 		getProgress().setCompleted(40);
 
-		MemoryExampleTable table = new MemoryExampleTable(newAttributes);
+		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
 		AggregationFunction aggregationFunction = null;
 		if (newWeightAttribute != null && considerWeights) {
 			try {
@@ -295,7 +296,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 								e.getMessage());
 					}
 				}
-				table.addDataRow(dataRow);
+				builder.addDataRow(dataRow);
 				dataRow = dataRowFactory.create(newAttributes.size());
 				for (Attribute newAttribute : newAttributes) {
 					dataRow.set(newAttribute, Double.NaN);
@@ -342,11 +343,11 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 		if (exampleSet.size() > 0) {
 			// if the original example set has size = 0 we would create a size = 1 new example set
 			// without the size check here
-			table.addDataRow(dataRow);
+			builder.addDataRow(dataRow);
 		}
 
 		// create and deliver example set
-		ExampleSet result = table.createExampleSet();
+		ExampleSet result = builder.build();
 		if (newWeightAttribute != null) {
 			result.getAttributes().setWeight(newWeightAttribute);
 		}

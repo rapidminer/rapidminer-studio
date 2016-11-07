@@ -18,12 +18,12 @@
  */
 package com.rapidminer.example;
 
-import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.operator.ResultObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+
+import com.rapidminer.example.table.ExampleTable;
+import com.rapidminer.operator.ResultObject;
 
 
 /**
@@ -31,10 +31,13 @@ import java.nio.charset.Charset;
  * only views on an example table (for example for sampling or feature selection purposes). It
  * should be possible to create a layered view on the data, hence the name multi-layered data view.
  * ExampleSet implementation should support this view concept.
- * 
+ *
  * @author Ingo Mierswa
  */
 public interface ExampleSet extends ResultObject, Cloneable, Iterable<Example> {
+
+	/** necessary since default method was added */
+	static final long serialVersionUID = 4100925167567270064L;
 
 	// ------------- Misc -----------------------------
 
@@ -50,6 +53,18 @@ public interface ExampleSet extends ResultObject, Cloneable, Iterable<Example> {
 	 */
 	@Override
 	public int hashCode();
+
+	/**
+	 * Frees unused resources, if supported by the implementation. Does nothing by default.
+	 *
+	 * Should only be used on freshly {@link #clone}ed {@link ExampleSet}s to ensure that the
+	 * cleaned up resources are not requested afterwards.
+	 *
+	 * @since 7.3
+	 */
+	public default void cleanup() {
+		// does nothing by default
+	}
 
 	// -------------------- attributes --------------------
 
@@ -113,7 +128,7 @@ public interface ExampleSet extends ResultObject, Cloneable, Iterable<Example> {
 
 	/**
 	 * Writes the data and the attribute description to a sparse data file.
-	 * 
+	 *
 	 * @param dataFile
 	 *            the file to write the data to
 	 * @param format
@@ -127,7 +142,7 @@ public interface ExampleSet extends ResultObject, Cloneable, Iterable<Example> {
 	/**
 	 * Writes the attribute meta descriptions for a sparse data file into a file. The data file is
 	 * used in order to determine the relative file positions and is not allowed to be null.
-	 * 
+	 *
 	 * @param format
 	 *            specified by {@link com.rapidminer.operator.io.SparseFormatExampleSource}
 	 */

@@ -61,7 +61,8 @@ import com.rapidminer.tools.parameter.WindowsExeParameterWriter;
  * inside this directory will be loaded.</li>
  * <li>if the property is not set, the environment variable <code>RAPIDMINER_CONFIG_DIR</code> will
  * be evaluated in the same way.</li>
- * <li>the file rapidminer-studio-settings.cfg in the user's .Rapidminer directory will be loaded.</li>
+ * <li>the file rapidminer-studio-settings.cfg in the user's .Rapidminer directory will be
+ * loaded.</li>
  * <li>the file rapidminer-studio-settings.cfg in the user's home directory will be loaded.</li>
  * <li>the file denoted by the System property <code>rapidminer.rcfile</code> will be loaded if
  * defined.</li>
@@ -184,10 +185,8 @@ public class ParameterService {
 		try {
 			informListenerOfChange(key, value);
 		} catch (Throwable e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.tools.ParameterService.listener_error", e));
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.tools.ParameterService.listener_error", e));
 		}
 	}
 
@@ -396,25 +395,18 @@ public class ParameterService {
 			out = new BufferedOutputStream(new FileOutputStream(configFile));
 			properties.store(out, "");
 		} catch (FileNotFoundException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.tools.ParameterService.writing_user_properties_error", e.getMessage()), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.tools.ParameterService.writing_user_properties_error", e.getMessage()), e);
 		} catch (IOException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.tools.ParameterService.writing_user_properties_error", e.getMessage()), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.tools.ParameterService.writing_user_properties_error", e.getMessage()), e);
 		} finally {
 			if (out != null) {
 				try {
 					out.close();
 				} catch (IOException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
-							I18N.getMessage(LogService.getRoot().getResourceBundle(),
-									"com.rapidminer.tools.ParameterService.closing_user_properties_file_error",
-									e.getMessage()), e);
+					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.tools.ParameterService.closing_user_properties_file_error", e.getMessage()), e);
 				}
 			}
 		}
@@ -518,10 +510,8 @@ public class ParameterService {
 			out = new BufferedOutputStream(new FileOutputStream(file));
 			properties.store(out, "");
 		} catch (IOException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.tools.ParameterService.writing_user_properties_error", e.getMessage()), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.tools.ParameterService.writing_user_properties_error", e.getMessage()), e);
 		} finally {
 			if (out != null) {
 				try {

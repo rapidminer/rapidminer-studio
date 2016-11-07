@@ -18,14 +18,17 @@
  */
 package com.rapidminer.operator.similarity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -44,9 +47,6 @@ import com.rapidminer.tools.math.container.Range;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
 import com.rapidminer.tools.math.similarity.DistanceMeasures;
 import com.rapidminer.tools.metadata.MetaDataTools;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -67,7 +67,7 @@ import java.util.List;
  * id1 sim sim sim...<br />
  * ... <br />
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class Similarity2ExampleSet extends Operator {
@@ -185,7 +185,7 @@ public class Similarity2ExampleSet extends Operator {
 			Attribute similarityAttribute = AttributeFactory.createAttribute(name, Ontology.REAL);
 			attributes.add(similarityAttribute);
 
-			MemoryExampleTable table = new MemoryExampleTable(attributes);
+			ExampleSetBuilder builder = ExampleSets.from(attributes);
 
 			int i = 0;
 			for (Example example : exampleSet) {
@@ -207,14 +207,14 @@ public class Similarity2ExampleSet extends Operator {
 						} else {
 							data[2] = measure.calculateSimilarity(example, compExample);
 						}
-						table.addDataRow(new DoubleArrayDataRow(data));
+						builder.addRow(data);
 					}
 					j++;
 				}
 				i++;
 			}
 
-			result = table.createExampleSet();
+			result = builder.build();
 
 		} else {
 			int numberOfExamples = exampleSet.size();
@@ -232,7 +232,7 @@ public class Similarity2ExampleSet extends Operator {
 				attributes.add(attribute);
 			}
 
-			MemoryExampleTable table = new MemoryExampleTable(attributes);
+			ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(exampleSet.size());
 
 			for (Example example : exampleSet) {
 				double[] data = new double[numberOfExamples + 1];
@@ -249,10 +249,10 @@ public class Similarity2ExampleSet extends Operator {
 						data[index++] = measure.calculateSimilarity(example, compExample);
 					}
 				}
-				table.addDataRow(new DoubleArrayDataRow(data));
+				builder.addRow(data);
 			}
 
-			result = table.createExampleSet(null, null, newIdAttribute);
+			result = builder.withRole(newIdAttribute, Attributes.ID_NAME).build();
 		}
 
 		exampleSetOutput.deliver(result);

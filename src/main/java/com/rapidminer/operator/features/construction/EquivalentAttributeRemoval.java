@@ -30,13 +30,10 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
-import com.rapidminer.example.set.SimpleExampleSet;
-import com.rapidminer.example.table.AbstractExampleTable;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.DataRowReader;
 import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.tools.RandomGenerator;
@@ -55,8 +52,8 @@ import com.rapidminer.tools.expression.internal.ExpressionParserUtils;
  *
  * The values of the attributes are sampled in the range of the minimum and maximum values of the
  * attribute. This ensures equivalency or at least very similar values for the definition range in
- * question. Therefore a {@link MemoryExampleTable} is constructed and filled with random values.
- * Then a {@link ExpressionParser} is used to construct the attributes values.
+ * question. Therefore a {@link ExampleTable} is constructed and filled with random values. Then a
+ * {@link ExpressionParser} is used to construct the attributes values.
  *
  * @author Ingo Mierswa ingomierswa Exp $
  */
@@ -116,12 +113,11 @@ public class EquivalentAttributeRemoval extends ExampleSetBasedIndividualOperato
 				if (att1.getConstruction().equals(att2.getConstruction())) {
 					removeMap.put(att2.getName(), att2);
 				} else {
-					AbstractExampleTable exampleTable = new MemoryExampleTable(simpleAttributesList, new DataRowFactory(
-							DataRowFactory.TYPE_DOUBLE_ARRAY, '.'), numberOfSamples);
-
 					// create data set and attributes to check
-					fillTableWithRandomValues(exampleTable, exampleSet, random);
-					ExampleSet randomSet = new SimpleExampleSet(exampleTable, simpleAttributesList);
+					ExampleSet randomSet = ExampleSets.from(simpleAttributesList)//
+							.withBlankSize(numberOfSamples)//
+							.build();
+					fillTableWithRandomValues(randomSet.getExampleTable(), exampleSet, random);
 					try {
 
 						ExampleResolver resolver = new ExampleResolver(exampleSet);
@@ -153,7 +149,7 @@ public class EquivalentAttributeRemoval extends ExampleSetBasedIndividualOperato
 					} catch (ExpressionException e) {
 						exampleSet.getLog().logWarning(
 								"Cannot generate test attribute: " + e.getShortMessage()
-										+ ". We just keep both attributes for sure...");
+								+ ". We just keep both attributes for sure...");
 					}
 				}
 			}
@@ -190,11 +186,11 @@ public class EquivalentAttributeRemoval extends ExampleSetBasedIndividualOperato
 	}
 
 	/**
-	 * After creation of a new MemoryExampleTable with given size all values are Double.NaN. Use
-	 * this method to fill the table with random values in the range specified by minimum and
-	 * maximum values of the attributes. Please note that the attributes in the example table must
-	 * already have proper minimum and maximum values. This works only for numerical attribute.
-	 * Nominal attribute values will be set to 0.
+	 * After creation of a new ExampleTable with given size all values are 0. Use this method to
+	 * fill the table with random values in the range specified by minimum and maximum values of the
+	 * attributes. Please note that the attributes in the example table must already have proper
+	 * minimum and maximum values. This works only for numerical attribute. Nominal attribute values
+	 * will be set to 0.
 	 */
 	private static void fillTableWithRandomValues(ExampleTable exampleTable, ExampleSet baseSet, RandomGenerator random) {
 		DataRowReader reader = exampleTable.getDataRowReader();

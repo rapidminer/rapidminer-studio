@@ -1,24 +1,34 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
       </operator>
-      <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ExampleFilter" width="90" x="179" y="30">
+      <operator activated="true" class="filter_examples" compatibility="6.4.000" expanded="true" height="103" name="ExampleFilter" width="90" x="179" y="34">
+        <parameter key="parameter_expression" value=""/>
+        <parameter key="condition_class" value="custom_filters"/>
+        <parameter key="invert_filter" value="false"/>
         <list key="filters_list"/>
+        <parameter key="filters_logic_and" value="true"/>
+        <parameter key="filters_check_metadata" value="true"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="ExampleFilter" to_port="example set input"/>
       <connect from_op="ExampleFilter" from_port="example set output" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="125" resized="true" width="586" x="32" y="136">This process loads a data set containing missing values. The following operator is the ExampleFilter operator which is able to filter out examples fulfilling a given condition. In this case, only examples without missing values should be kept.&lt;br&gt;&lt;br&gt;Most of the time, custom_filters will be used as condition class. You can then use a comfortable GUI to determine the filters.</description>
+      <description align="left" color="yellow" colored="false" height="125" resized="true" width="586" x="43" y="151">This process loads a data set containing missing values. The following operator is the ExampleFilter operator which is able to filter out examples fulfilling a given condition. In this case, only examples without missing values should be kept.&lt;br&gt;&lt;br&gt;Most of the time, custom_filters will be used as condition class. You can then use a comfortable GUI to determine the filters.</description>
     </process>
   </operator>
 </process>

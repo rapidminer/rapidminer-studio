@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator.preprocessing;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.NonSpecialAttributesExampleSet;
 import com.rapidminer.operator.AbstractModel;
@@ -35,15 +38,12 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.container.Pair;
 
-import java.util.Collection;
-import java.util.List;
-
 
 /**
  * Superclass for all preprocessing operators. Classes which extend this class must implement the
  * method {@link #createPreprocessingModel(ExampleSet)} . This method can also be returned by this
  * operator and will be combined with other models.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class PreprocessingOperator extends AbstractDataProcessing {
@@ -78,7 +78,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 	 * {@link AttributeSubsetSelector} and passes them to
 	 * {@link #modifyAttributeMetaData(ExampleSetMetaData, AttributeMetaData)} and replaces them
 	 * accordingly.
-	 * 
+	 *
 	 * @throws UndefinedParameterError
 	 */
 	@Override
@@ -118,7 +118,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 
 	/**
 	 * This method allows subclasses to easily get a collection of the affected attributes.
-	 * 
+	 *
 	 * @throws UndefinedParameterError
 	 * @throws UserError
 	 */
@@ -128,15 +128,17 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 
 	@Override
 	public final ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
-		ExampleSet workingSet = (isSupportingAttributeRoles()) ? getSelectedAttributes(exampleSet)
+		ExampleSet workingSet = isSupportingAttributeRoles() ? getSelectedAttributes(exampleSet)
 				: new NonSpecialAttributesExampleSet(getSelectedAttributes(exampleSet));
 
 		AbstractModel model = createPreprocessingModel(workingSet);
 		model.setParameter(PARAMETER_CREATE_VIEW, getParameterAsBoolean(PARAMETER_CREATE_VIEW));
 		if (getExampleSetOutputPort().isConnected()) {
 			model.setOperator(this);
+			model.setShowProgress(true);
 			exampleSet = model.apply(exampleSet);
 			model.setOperator(null);
+			model.setShowProgress(false);
 		}
 
 		modelOutput.deliver(model);
@@ -148,7 +150,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 	 * this operator when it is created anonymously.
 	 */
 	public ExampleSet doWork(ExampleSet exampleSet) throws OperatorException {
-		ExampleSet workingSet = (isSupportingAttributeRoles()) ? getSelectedAttributes(exampleSet)
+		ExampleSet workingSet = isSupportingAttributeRoles() ? getSelectedAttributes(exampleSet)
 				: new NonSpecialAttributesExampleSet(getSelectedAttributes(exampleSet));
 
 		AbstractModel model = createPreprocessingModel(workingSet);
@@ -182,7 +184,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 	 * Defines the value types of the attributes which are processed or affected by this operator.
 	 * Has to be overridden to restrict the attributes which can be chosen by an
 	 * {@link AttributeSubsetSelector}.
-	 * 
+	 *
 	 * @return array of value types
 	 */
 	protected abstract int[] getFilterValueTypes();
@@ -216,7 +218,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 
 	/**
 	 * Subclasses might overwrite this in order to hide the create_view parameter
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isSupportingView() {

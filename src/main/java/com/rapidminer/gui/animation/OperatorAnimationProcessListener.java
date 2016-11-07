@@ -21,6 +21,7 @@ package com.rapidminer.gui.animation;
 import com.rapidminer.Process;
 import com.rapidminer.gui.GeneralProcessListener;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.operator.Operator;
 
 
@@ -73,6 +74,9 @@ public class OperatorAnimationProcessListener extends GeneralProcessListener {
 		// need to stop the timer here since only processEnded tells if every operator is done
 		timerListener.stopTimer();
 		process.removeProcessStateListener(timerListener);
+
+		// needed to remove the OperatorAnimation when the process ended via checkForStop
+		RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer().getModel().fireMiscChanged();
 	}
 
 }

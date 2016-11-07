@@ -20,8 +20,6 @@ package com.rapidminer.operator.features.transformation;
 
 import java.util.Iterator;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.Example;
@@ -29,9 +27,12 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.AbstractModel;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
+
+import Jama.Matrix;
 
 
 /**
@@ -48,6 +49,19 @@ import com.rapidminer.tools.Tools;
 public class FastICAModel extends AbstractModel implements ComponentWeightsCreatable {
 
 	private static final long serialVersionUID = -6380202686511014212L;
+
+	private static final int PROGRESS_UPDATE_STEPS_1 = 100;
+	private static final int PROGRESS_UPDATE_STEPS_2 = 10000;
+	private static final int PROGRESS_UPDATE_STEPS_3 = 500;
+
+	/**
+	 * The progress of this operator is split into 5 part-progresses. These values define how many
+	 * percent are completed after part-progress 1, part-progress 2, etc.
+	 */
+	private static final int INTERMEDIATE_PROGRESS_1 = 20;
+	private static final int INTERMEDIATE_PROGRESS_2 = 40;
+	private static final int INTERMEDIATE_PROGRESS_3 = 60;
+	private static final int INTERMEDIATE_PROGRESS_4 = 80;
 
 	private double[] means;
 
@@ -89,10 +103,22 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 			throw new UserError(null, 133, means.length, numberOfAttributes);
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+		int progressCounter = 0;
+
 		// all attributes numerical
 		for (Attribute attribute : testSet.getAttributes()) {
 			if (!attribute.isNumerical()) {
 				throw new UserError(null, 104, new Object[] { "FastICA", attribute.getName() });
+			}
+			if (progress != null && ++progressCounter % PROGRESS_UPDATE_STEPS_1 == 0) {
+				progress.setCompleted(
+						(int) ((double) INTERMEDIATE_PROGRESS_1 * progressCounter / testSet.getAttributes().size()));
 			}
 		}
 
@@ -108,6 +134,15 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 				data[sample][d] = example.getValue(attribute) - means[d];
 				d++;
 			}
+			if (progress != null && sample % PROGRESS_UPDATE_STEPS_2 == 0) {
+				progress.setCompleted(
+						(int) (((double) INTERMEDIATE_PROGRESS_2 - INTERMEDIATE_PROGRESS_1) * sample / numberOfSamples
+								+ INTERMEDIATE_PROGRESS_1));
+			}
+		}
+
+		if (progress != null) {
+			progress.setCompleted(INTERMEDIATE_PROGRESS_2);
 		}
 
 		// row normalization
@@ -141,11 +176,20 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 			testSet.getAttributes().clearRegular();
 		}
 
+		if (progress != null) {
+			progress.setCompleted(INTERMEDIATE_PROGRESS_3);
+		}
+
 		Attribute[] icAttributes = new Attribute[numberOfComponents];
 		for (int i = 0; i < numberOfComponents; i++) {
 			icAttributes[i] = AttributeFactory.createAttribute("ic_" + (i + 1), Ontology.REAL);
 			testSet.getExampleTable().addAttribute(icAttributes[i]);
 			testSet.getAttributes().addRegular(icAttributes[i]);
+			if (progress != null && i % PROGRESS_UPDATE_STEPS_1 == 0) {
+				progress.setCompleted(
+						(int) (((double) INTERMEDIATE_PROGRESS_4 - INTERMEDIATE_PROGRESS_3) * i / numberOfComponents
+								+ INTERMEDIATE_PROGRESS_3));
+			}
 		}
 
 		double[][] finaldata = S.getArray();
@@ -155,7 +199,10 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 			for (int d = 0; d < numberOfComponents; d++) {
 				example.setValue(icAttributes[d], finaldata[sample][d]);
 			}
-
+			if (progress != null && sample % PROGRESS_UPDATE_STEPS_3 == 0) {
+				progress.setCompleted(
+						(int) ((100.0 - INTERMEDIATE_PROGRESS_4) * sample / testSet.size() + INTERMEDIATE_PROGRESS_4));
+			}
 		}
 
 		return testSet;

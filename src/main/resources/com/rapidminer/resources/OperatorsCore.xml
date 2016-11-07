@@ -56,6 +56,24 @@
 				<class>com.rapidminer.operator.learner.tree.RandomForestLearner
 				</class>
 			</operator>
+			<operator>
+				<deprecatedSince>7.3</deprecatedSince>
+				<key>x_prediction</key>
+				<class>com.rapidminer.operator.meta.XVPrediction</class>
+				<replaces>XVPrediction</replaces>
+			</operator>
+			<operator>
+				<deprecatedSince>7.3</deprecatedSince>
+				<key>x_validation</key>
+				<class>com.rapidminer.operator.validation.XValidation</class>
+				<replaces>XValidation</replaces>
+			</operator>
+			<operator>
+				<deprecatedSince>7.3</deprecatedSince>
+				<key>batch_x_validation</key>
+				<class>com.rapidminer.operator.validation.BatchXValidation</class>
+				<replaces>BatchXValidation</replaces>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -861,46 +879,54 @@
 						<class>com.rapidminer.operator.learner.tree.ParallelDecisionTreeLearner
 						</class>
 						<replaces>DecisionTree</replaces>
+						<priority>100</priority>
 					</operator>
 					<operator>
 						<key>decision_tree_multiway</key>
 						<class>com.rapidminer.operator.learner.tree.MultiwayDecisionTree
 						</class>
 						<replaces>MultiwayDecisionTree</replaces>
+						<priority>30</priority>
 					</operator>
 					<operator>
 						<key>decision_tree_weight_based</key>
 						<class>com.rapidminer.operator.learner.tree.RelevanceTreeLearner
 						</class>
 						<replaces>RelevanceTree</replaces>
+						<priority>20</priority>
 					</operator>
 					<operator>
 						<key>id3</key>
 						<class>com.rapidminer.operator.learner.tree.ID3Learner</class>
 						<replaces>ID3</replaces>
+						<priority>50</priority>
 					</operator>
 					<operator>
 						<key>chaid</key>
 						<class>com.rapidminer.operator.learner.tree.CHAIDLearner</class>
 						<replaces>CHAID</replaces>
+						<priority>60</priority>
 					</operator>
 					<operator>
 						<key>decision_stump</key>
 						<class>com.rapidminer.operator.learner.tree.DecisionStumpLearner
 						</class>
 						<replaces>DecisionStump</replaces>
+						<priority>40</priority>
 					</operator>
 					<operator>
 						<key>random_tree</key>
 						<class>com.rapidminer.operator.learner.tree.RandomTreeLearner
 						</class>
 						<replaces>RandomTree</replaces>
+						<priority>10</priority>
 					</operator>
 					<operator>
 						<key>parallel_random_forest</key>
 						<class>com.rapidminer.operator.learner.tree.ParallelRandomForestLearner
 						</class>
 						<replaces>RandomForest</replaces>
+						<priority>90</priority>
 					</operator>
 				</group>
 				<group key="rules">
@@ -1659,11 +1685,6 @@
 				<icon>lightbulb_on.png</icon>
 				<replaces>ModelApplier</replaces>
 			</operator>
-			<operator>
-				<key>x_prediction</key>
-				<class>com.rapidminer.operator.meta.XVPrediction</class>
-				<replaces>XVPrediction</replaces>
-			</operator>
 		</group>
 		<group key="validation">
 			<icon>symbol_percent.png</icon>
@@ -1823,20 +1844,10 @@
 				<replaces>SimpleValidation</replaces>
 			</operator>
 			<operator>
-				<key>x_validation</key>
-				<class>com.rapidminer.operator.validation.XValidation</class>
-				<replaces>XValidation</replaces>
-			</operator>
-			<operator>
 				<key>bootstrapping_validation</key>
 				<class>com.rapidminer.operator.validation.BootstrappingValidation
 				</class>
 				<replaces>BootstrappingValidation</replaces>
-			</operator>
-			<operator>
-				<key>batch_x_validation</key>
-				<class>com.rapidminer.operator.validation.BatchXValidation</class>
-				<replaces>BatchXValidation</replaces>
 			</operator>
 			<operator>
 				<key>wrapper_split_validation</key>

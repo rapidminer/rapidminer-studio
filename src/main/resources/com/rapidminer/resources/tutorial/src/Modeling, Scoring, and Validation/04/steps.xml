@@ -32,12 +32,12 @@
 			</task>
 			<task>
 				<activity>Add</activity> the operator 
-				<op>X-Validation</op> to the process and <activity>connect it</activity>.
+				<op>Cross Validation</op> to the process and <activity>connect it</activity>.
 			</task>
 		</tasks>
 
 		<info>
-			<op>X-Validation</op> is the name of the operator performing the cross validation and
+			<op>Cross Validation</op> is the name of the operator performing the cross validation and
 			it needs a labeled input example set.  By default this splits the data into 10 different parts, so we 
 			call this a 10-fold cross validation.  You can of course change the number of folds in the <ui>Parameters</ui> panel.
 		</info>
@@ -46,15 +46,15 @@
 
 	<step name="Train and apply the model.">
 		<info>
-			Note the small icon in the bottom right corner of <op>X-Validation</op>. 
+			Note the small icon in the bottom right corner of <op>Cross Validation</op>. 
 			Recall that this means the operator can have other operators nested in it. 
-			In fact, <op>X-Validation</op> has two sub-processes, one for training 
+			In fact, <op>Cross Validation</op> has two sub-processes, one for training 
 			the model and one for testing it. Double-click on the operator to view its sub-processes.
 		</info>
 		
 		<tasks>
 			<task>
-				<activity>Double-click</activity> the <op>X-Validation</op> operator. 
+				<activity>Double-click</activity> the <op>Cross Validation</op> operator. 
 				The <ui>Process</ui> panel now shows two sub-processes named 
 				<ui>Training</ui> and <ui>Testing</ui>.
 			</task>
@@ -82,7 +82,7 @@
 
 		<info>
 			Every performance delivered at the "ave" port on the right will be averaged together and delivered to the "ave" output port 
-			of the <op>X-Validation</op> operator.  Also, note that you can fully control what happens inside of 
+			of the <op>Cross Validation</op> operator.  Also, note that you can fully control what happens inside of 
 			the cross-validation.  This allows you to take into account the effects of preprocessing 
 			like normalization or feature selection, which can have a significant impact on the performance of the model.
 		</info>
@@ -133,7 +133,7 @@
 		
 		<tasks>
 			<task>
-				<activity>Select</activity> the <op>X-Validation</op> operator by clicking on it.
+				<activity>Select</activity> the <op>Cross Validation</op> operator by clicking on it.
 			</task>
 			<task>
 				<activity>Look</activity> at the <ui>Parameters</ui> panel.  You will notice that some parameters 
@@ -169,7 +169,7 @@
 	<step name="Congratulations!">
 		<text>Well done, you have learned how to properly validate supervised machine learning 
 		models! The fact that you used <emph>all</emph> of your data for testing makes cross-validation 
-		a much stronger method than a single split-validation. The modular design of the <op>X-Validation</op> 
+		a much stronger method than a single split-validation. The modular design of the <op>Cross Validation</op> 
 		operator also allows you to nest preprocessing operators inside of it, leading to even better estimations!
 		Unfortunately, this will come with a resource cost: if you do a 10-fold cross validation, you need to train
 		10 models. This adds extra number-crunching to your process and can increase the required execution time.</text>
@@ -181,7 +181,7 @@
 			</question>
 			<question>
 				Change the process so that you get a 2-fold cross validation. Use breakpoints 
-				inside the X-Validation to find out how large the training and the test sets 
+				inside the Cross Validation to find out how large the training and the test sets 
 				are now. What is your expectation?
 			</question>
 			<question>

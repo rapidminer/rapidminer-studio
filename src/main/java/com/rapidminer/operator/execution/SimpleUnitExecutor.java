@@ -64,6 +64,7 @@ public class SimpleUnitExecutor implements UnitExecutor {
 						if (inputPort.isConnected()) {
 							IOObject data = inputPort.getAnyDataOrNull();
 							if (data != null) {
+								data = FlowCleaner.INSTANCE.checkCleanup(data, inputPort);
 								input.add(new FlowData(data, inputPort));
 							}
 						}

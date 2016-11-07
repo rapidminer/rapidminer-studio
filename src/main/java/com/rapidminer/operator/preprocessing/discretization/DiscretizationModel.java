@@ -18,6 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing.discretization;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
@@ -30,31 +40,24 @@ import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.table.PolynominalMapping;
 import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.Tupel;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 
 /**
  * The generic discretization model.
- * 
+ *
  * @author Sebastian Land
  */
 public class DiscretizationModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = -8732346419946567062L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 100;
 
 	private Map<String, SortedSet<Tupel<Double, String>>> rangesMap;
 
@@ -104,7 +107,15 @@ public class DiscretizationModel extends PreprocessingModel {
 		}
 		Set<Entry<Attribute, Attribute>> replacements = replacementMap.entrySet();
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+
 		// creating mapping and adding to table and exampleSet
+		int progressCounter = 0;
 		for (Entry<Attribute, Attribute> replacement : replacements) {
 			SortedSet<Tupel<Double, String>> ranges = rangesMap.get(replacement.getKey().getName());
 			Attribute newAttribute = replacement.getValue();
@@ -115,9 +126,13 @@ public class DiscretizationModel extends PreprocessingModel {
 					newAttribute.getMapping().mapString(rangePair.getSecond());
 				}
 			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) (50.0 * progressCounter / replacements.size()));
+			}
 		}
 
 		// copying data
+		progressCounter = 0;
 		for (Example example : exampleSet) {
 			for (Entry<Attribute, Attribute> replacement : replacements) {
 				Attribute originalAttribute = replacement.getKey();
@@ -138,6 +153,9 @@ public class DiscretizationModel extends PreprocessingModel {
 						example.setValue(newAttribute, Double.NaN);
 					}
 				}
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) (50.0 * progressCounter / exampleSet.size() + 50));
 			}
 		}
 
@@ -239,11 +257,11 @@ public class DiscretizationModel extends PreprocessingModel {
 			String usedRangeName = null;
 			switch (rangeNameType) {
 				case RANGE_NAME_LONG:
-					usedRangeName = (rangeBaseName + i) + " [" + Tools.formatIntegerIfPossible(lastLimit) + " - "
+					usedRangeName = rangeBaseName + i + " [" + Tools.formatIntegerIfPossible(lastLimit) + " - "
 							+ Tools.formatIntegerIfPossible(rangeValue) + "]";
 					break;
 				case RANGE_NAME_SHORT:
-					usedRangeName = (rangeBaseName + i);
+					usedRangeName = rangeBaseName + i;
 					break;
 				case RANGE_NAME_INTERVAL:
 					usedRangeName = "[" + Tools.formatNumber(lastLimit, numberOfDigits) + " - "
@@ -305,8 +323,8 @@ public class DiscretizationModel extends PreprocessingModel {
 						mapping.mapString(rangePair.getSecond());
 					}
 					// giving new attributes old name: connection to rangesMap
-					attributes.addRegular(new ViewAttribute(this, attribute, attribute.getName(), Ontology.POLYNOMINAL,
-							mapping));
+					attributes.addRegular(
+							new ViewAttribute(this, attribute, attribute.getName(), Ontology.POLYNOMINAL, mapping));
 				}
 			}
 		}

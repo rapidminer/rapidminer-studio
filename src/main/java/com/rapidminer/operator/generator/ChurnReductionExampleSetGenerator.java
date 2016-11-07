@@ -25,8 +25,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -84,7 +84,7 @@ public class ChurnReductionExampleSetGenerator extends AbstractExampleSource {
 		int terminateValue = label.getMapping().mapString("terminate");
 		attributes.add(label);
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -107,14 +107,14 @@ public class ChurnReductionExampleSetGenerator extends AbstractExampleSource {
 			} else if (values[4] == 5) { // this cannot happen (5 is no valid value idx). Remove?
 				values[LABEL_ATTR_IDX] = terminateValue;
 			}
-			table.addDataRow(new DoubleArrayDataRow(values));
+			builder.addRow(values);
 
 			getProgress().step();
 		}
 		getProgress().complete();
 
 		// create example set and return it
-		return table.createExampleSet(label);
+		return builder.withRole(label, Attributes.LABEL_NAME).build();
 	}
 
 	@Override

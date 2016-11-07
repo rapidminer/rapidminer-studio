@@ -27,6 +27,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -92,12 +93,20 @@ public class BaggingModel extends PredictionModel implements MetaModel {
 			}
 
 			reader = origExampleSet.iterator();
+			OperatorProgress progress = null;
+			if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+				progress = getOperator().getProgress();
+				progress.setTotal(this.getNumberOfModels());
+			}
 			for (int modelNr = 0; modelNr < this.getNumberOfModels(); modelNr++) {
 				Model model = this.getModel(modelNr);
 				ExampleSet exampleSet = (ExampleSet) origExampleSet.clone();
 				exampleSet = model.apply(exampleSet);
 				updateEstimates(exampleSet, modelNr, specialAttributes);
 				PredictionModel.removePredictedLabel(exampleSet);
+				if (progress != null) {
+					progress.step();
+				}
 			}
 
 			// Turn prediction weights into confidences and a crisp prediction:
@@ -113,6 +122,11 @@ public class BaggingModel extends PredictionModel implements MetaModel {
 		} else {
 			// numerical prediction
 			double[] predictionSums = new double[origExampleSet.size()];
+			OperatorProgress progress = null;
+			if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+				progress = getOperator().getProgress();
+				progress.setTotal(this.getNumberOfModels());
+			}
 			for (Model model : models) {
 				ExampleSet resultSet = model.apply((ExampleSet) origExampleSet.clone());
 				int index = 0;
@@ -121,6 +135,9 @@ public class BaggingModel extends PredictionModel implements MetaModel {
 					predictionSums[index++] += example.getValue(innerPredictedLabel);
 				}
 				PredictionModel.removePredictedLabel(resultSet);
+				if (progress != null) {
+					progress.step();
+				}
 			}
 
 			int index = 0;

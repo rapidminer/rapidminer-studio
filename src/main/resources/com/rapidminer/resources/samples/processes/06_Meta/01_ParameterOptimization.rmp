@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="-1"/>
     <parameter key="send_mail" value="never"/>
@@ -13,26 +12,26 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="optimize_parameters_grid" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ParameterOptimization" width="90" x="179" y="30">
+      <operator activated="true" class="optimize_parameters_grid" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="ParameterOptimization" width="90" x="179" y="34">
         <list key="parameters">
           <parameter key="Training.C" value="50,100,150,200,250"/>
           <parameter key="Training.degree" value="1,2,3,4,5"/>
         </list>
         <parameter key="error_handling" value="fail on error"/>
         <process expanded="true">
-          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="Validation" width="90" x="45" y="30">
-            <parameter key="create_complete_model" value="false"/>
-            <parameter key="average_performances_only" value="true"/>
+          <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="45" y="34">
+            <parameter key="enable_parallel_execution" value="true"/>
             <parameter key="leave_one_out" value="false"/>
-            <parameter key="number_of_validations" value="10"/>
+            <parameter key="number_of_folds" value="10"/>
             <parameter key="sampling_type" value="shuffled sampling"/>
             <parameter key="use_local_random_seed" value="false"/>
             <parameter key="local_random_seed" value="1992"/>
+            <parameter key="materialize_data" value="true"/>
             <process expanded="true">
-              <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Training">
+              <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Training" width="90" x="45" y="34">
                 <parameter key="svm_type" value="epsilon-SVR"/>
                 <parameter key="kernel_type" value="poly"/>
                 <parameter key="degree" value="3"/>
@@ -48,18 +47,18 @@
                 <parameter key="calculate_confidences" value="false"/>
                 <parameter key="confidence_for_multiclass" value="true"/>
               </operator>
-              <connect from_port="training" to_op="Training" to_port="training set"/>
+              <connect from_port="training set" to_op="Training" to_port="training set"/>
               <connect from_op="Training" from_port="model" to_port="model"/>
-              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="source_training set" spacing="0"/>
               <portSpacing port="sink_model" spacing="0"/>
               <portSpacing port="sink_through 1" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Test">
+              <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Test" width="90" x="45" y="34">
                 <list key="application_parameters"/>
                 <parameter key="create_view" value="false"/>
               </operator>
-              <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Evaluation">
+              <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Evaluation" width="90" x="179" y="34">
                 <parameter key="main_criterion" value="first"/>
                 <parameter key="root_mean_squared_error" value="true"/>
                 <parameter key="absolute_error" value="true"/>
@@ -80,15 +79,16 @@
               <connect from_port="model" to_op="Test" to_port="model"/>
               <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
               <connect from_op="Test" from_port="labelled data" to_op="Evaluation" to_port="labelled data"/>
-              <connect from_op="Evaluation" from_port="performance" to_port="averagable 1"/>
+              <connect from_op="Evaluation" from_port="performance" to_port="performance 1"/>
               <portSpacing port="source_model" spacing="0"/>
               <portSpacing port="source_test set" spacing="0"/>
               <portSpacing port="source_through 1" spacing="0"/>
-              <portSpacing port="sink_averagable 1" spacing="0"/>
-              <portSpacing port="sink_averagable 2" spacing="0"/>
+              <portSpacing port="sink_test set results" spacing="0"/>
+              <portSpacing port="sink_performance 1" spacing="0"/>
+              <portSpacing port="sink_performance 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Log" width="90" x="425" y="48">
+          <operator activated="true" class="log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Log" width="90" x="246" y="34">
             <parameter key="filename" value="paraopt.log"/>
             <list key="log">
               <parameter key="C" value="operator.Training.parameter.C"/>
@@ -99,8 +99,8 @@
             <parameter key="sorting_k" value="100"/>
             <parameter key="persistent" value="false"/>
           </operator>
-          <connect from_port="input 1" to_op="Validation" to_port="training"/>
-          <connect from_op="Validation" from_port="averagable 1" to_op="Log" to_port="through 1"/>
+          <connect from_port="input 1" to_op="Cross Validation" to_port="example set"/>
+          <connect from_op="Cross Validation" from_port="performance 1" to_op="Log" to_port="through 1"/>
           <connect from_op="Log" from_port="through 1" to_port="performance"/>
           <portSpacing port="source_input 1" spacing="0"/>
           <portSpacing port="source_input 2" spacing="0"/>
@@ -108,13 +108,13 @@
           <portSpacing port="sink_result 1" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="set_parameters" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ParameterSetter" width="90" x="648" y="210">
+      <operator activated="true" class="set_parameters" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ParameterSetter" width="90" x="648" y="238">
         <list key="name_map"/>
       </operator>
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve (2)" width="90" x="510" y="75">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve (2)" width="90" x="514" y="85">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Training (2)" width="90" x="648" y="75">
+      <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Training (2)" width="90" x="648" y="85">
         <parameter key="svm_type" value="epsilon-SVR"/>
         <parameter key="kernel_type" value="poly"/>
         <parameter key="degree" value="3"/>
@@ -139,8 +139,8 @@
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="183" resized="true" width="403" x="40" y="160">&lt;table&gt; &lt;tr&gt; &lt;td&gt; Often the different operators have many parameters and it is not clear which parameter values are best for the learning task at hand. The parameter optimization operator helps to find an optimal parameter set for the used operators. &lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt; The inner crossvalidation estimates the performance for each parameter set. In this process two parameters of the SVM are tuned. &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</description>
-      <description align="left" color="yellow" colored="false" height="92" resized="true" width="335" x="510" y="320">The optimal parameter set found in the optimization operator was directed to the parameter setter operator. The parameter setter uses the parameter set for the LibSVM learning scheme.</description>
+      <description align="left" color="yellow" colored="false" height="183" resized="true" width="403" x="40" y="166">&lt;table&gt; &lt;tr&gt; &lt;td&gt; Often the different operators have many parameters and it is not clear which parameter values are best for the learning task at hand. The parameter optimization operator helps to find an optimal parameter set for the used operators. &lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt; The inner crossvalidation estimates the performance for each parameter set. In this process two parameters of the SVM are tuned. &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</description>
+      <description align="left" color="yellow" colored="false" height="92" resized="true" width="335" x="510" y="337">The optimal parameter set found in the optimization operator was directed to the parameter setter operator. The parameter setter uses the parameter set for the LibSVM learning scheme.</description>
     </process>
   </operator>
 </process>

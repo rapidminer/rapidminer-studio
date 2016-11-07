@@ -25,7 +25,8 @@ import com.rapidminer.operator.ProcessStoppedException;
 
 /**
  * Unchecked variant of a {@link ProcessStoppedException}. May be thrown by
- * {@link ConcurrencyContext#checkStatus()} if the corresponding process should stop.
+ * {@link ConcurrencyContext#checkStatus()} or other places, that only allow to throw unchecked
+ * exceptions, if the corresponding process should stop.
  *
  * @author Michael Knopf
  * @since 6.2.0

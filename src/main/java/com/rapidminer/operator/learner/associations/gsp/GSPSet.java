@@ -27,7 +27,7 @@ import java.util.TreeSet;
 
 /**
  * @author Sebastian Land
- * 
+ *
  */
 public class GSPSet extends ResultObjectAdapter {
 
@@ -56,23 +56,11 @@ public class GSPSet extends ResultObjectAdapter {
 	}
 
 	public Sequence[] getSequenceArray() {
-		Sequence[] sequences = new Sequence[this.sequences.size()];
-		int i = 0;
-		for (Tupel<Sequence, Double> tupel : this.sequences) {
-			sequences[i] = tupel.getFirst();
-			i++;
-		}
-		return sequences;
+		return sequences.stream().map(Tupel::getFirst).toArray(Sequence[]::new);
 	}
 
 	public double[] getSupportArray() {
-		double[] supports = new double[sequences.size()];
-		int i = 0;
-		for (Tupel<Sequence, Double> tupel : sequences) {
-			supports[i] = tupel.getSecond();
-			i++;
-		}
-		return supports;
+		return sequences.stream().mapToDouble(Tupel::getSecond).toArray();
 	}
 
 	@Override

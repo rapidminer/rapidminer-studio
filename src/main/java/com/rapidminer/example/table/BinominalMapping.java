@@ -18,18 +18,18 @@
  */
 package com.rapidminer.example.table;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.example.AttributeTypeException;
 import com.rapidminer.example.Example;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
  * This is an efficient implementation of a {@link NominalMapping} which can be used for binominal
  * attributes, i.e. for attributes with only two different values.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class BinominalMapping implements NominalMapping {
@@ -67,7 +67,7 @@ public class BinominalMapping implements NominalMapping {
 	}
 
 	/** Clone constructor. */
-	/* pp */BinominalMapping(NominalMapping mapping) {
+	/* pp */ BinominalMapping(NominalMapping mapping) {
 		if (mapping.size() > 0) {
 			firstValue = mapping.mapIndex(0);
 		}
@@ -108,12 +108,10 @@ public class BinominalMapping implements NominalMapping {
 		if (index < 0) {
 			// if string is not found, set it
 			if (firstValue == null) {
-				firstValue = new String(str);  // we copy the string if the underlying char array
-												// value is larger than needed
+				firstValue = str;
 				return FIRST_VALUE_INDEX;
 			} else if (secondValue == null) {
-				secondValue = new String(str);  // we copy the string if the underlying char array
-												// value is larger than needed
+				secondValue = str;
 				return SECOND_VALUE_INDEX;
 			} else {
 				throw new AttributeTypeException(
@@ -153,8 +151,8 @@ public class BinominalMapping implements NominalMapping {
 			case SECOND_VALUE_INDEX:
 				return secondValue;
 			default:
-				throw new AttributeTypeException("Cannot map index of binary attribute to nominal value: index " + index
-						+ " is out of bounds!");
+				throw new AttributeTypeException(
+						"Cannot map index of binary attribute to nominal value: index " + index + " is out of bounds!");
 		}
 	}
 
@@ -205,11 +203,11 @@ public class BinominalMapping implements NominalMapping {
 	@Override
 	public List<String> getValues() {
 		if (firstValue == null) {
-			return new LinkedList<String>();
+			return Collections.emptyList();
 		} else if (secondValue == null) {
-			return Arrays.asList(new String[] { firstValue });
+			return Arrays.asList(firstValue);
 		} else {
-			return Arrays.asList(new String[] { firstValue, secondValue });
+			return Arrays.asList(firstValue, secondValue);
 		}
 	}
 

@@ -22,9 +22,9 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -92,17 +92,16 @@ public class ExtractClusterPrototypes extends Operator {
 		Attribute clusterAttribute = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
 		attributes[attributes.length - 1] = clusterAttribute;
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(model.getNumberOfClusters());
 		for (int i = 0; i < model.getNumberOfClusters(); i++) {
 			double[] data = new double[attributeNames.length + 1];
 			System.arraycopy(model.getCentroidCoordinates(i), 0, data, 0, attributeNames.length);
 			data[attributeNames.length] = clusterAttribute.getMapping().mapString("cluster_" + i);
-			table.addDataRow(new DoubleArrayDataRow(data));
+			builder.addRow(data);
 			getProgress().step();
 		}
 
-		ExampleSet resultSet = table.createExampleSet();
-		resultSet.getAttributes().setSpecialAttribute(clusterAttribute, Attributes.CLUSTER_NAME);
+		ExampleSet resultSet = builder.withRole(clusterAttribute, Attributes.CLUSTER_NAME).build();
 
 		getProgress().complete();
 

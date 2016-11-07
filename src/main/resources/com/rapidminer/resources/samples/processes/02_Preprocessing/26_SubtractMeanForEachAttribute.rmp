@@ -1,35 +1,80 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="sum"/>
+        <parameter key="number_examples" value="100"/>
+        <parameter key="number_of_attributes" value="5"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="-1"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="loop_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FeatureIterator" width="90" x="179" y="30">
+      <operator activated="true" class="loop_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FeatureIterator" width="90" x="179" y="34">
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
         <parameter key="iteration_macro" value="loop_feature"/>
         <process expanded="true">
-          <operator activated="true" class="aggregate" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Aggregation" width="90" x="45" y="30">
+          <operator activated="true" class="aggregate" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Aggregation" width="90" x="45" y="34">
+            <parameter key="use_default_aggregation" value="false"/>
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="default_aggregation_function" value="average"/>
             <list key="aggregation_attributes">
               <parameter key="%{loop_feature}" value="average"/>
             </list>
+            <parameter key="group_by_attributes" value=""/>
+            <parameter key="count_all_combinations" value="false"/>
+            <parameter key="only_distinct" value="false"/>
+            <parameter key="ignore_missings" value="true"/>
           </operator>
-          <operator activated="true" class="extract_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="DataMacroDefinition" width="90" x="246" y="30">
+          <operator activated="true" class="extract_macro" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="DataMacroDefinition" width="90" x="246" y="34">
             <parameter key="macro" value="current_average"/>
             <parameter key="macro_type" value="data_value"/>
+            <parameter key="statistics" value="average"/>
             <parameter key="attribute_name" value="average(%{loop_feature})"/>
             <parameter key="example_index" value="1"/>
             <list key="additional_macros"/>
           </operator>
-          <operator activated="true" class="generate_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeConstruction" width="90" x="246" y="120">
+          <operator activated="true" class="generate_attributes" compatibility="6.4.000" expanded="true" height="82" name="AttributeConstruction" width="90" x="246" y="136">
             <list key="function_descriptions">
               <parameter key="norm_%{loop_feature}" value="%{loop_feature} - %{current_average}"/>
             </list>
+            <parameter key="keep_all" value="true"/>
           </operator>
           <connect from_port="example set" to_op="Aggregation" to_port="example set input"/>
           <connect from_op="Aggregation" from_port="example set output" to_op="DataMacroDefinition" to_port="example set"/>

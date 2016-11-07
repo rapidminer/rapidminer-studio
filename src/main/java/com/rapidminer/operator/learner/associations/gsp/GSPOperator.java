@@ -220,7 +220,7 @@ public class GSPOperator extends Operator {
 		}
 
 		// find frequent items: Items are frequent if occur in enough sequences
-		int minFrequency = (int) Math.floor(numberOfSequences * minSupport);
+		int minFrequency = Math.max(1, (int) Math.floor(numberOfSequences * minSupport));
 		LinkedHashSet<Item> frequentItems = findFrequentItems(dataSequences, items, minFrequency);
 
 		// remove infrequent items from sequences
@@ -268,7 +268,7 @@ public class GSPOperator extends Operator {
 			for (i = 0; i < supportCounter.length; i++) {
 				Sequence currentSequence = iterator.next();
 				double support = supportCounter[i] / numberOfSequences;
-				if (support >= minSupport) {
+				if (support != 0.0d && support >= minSupport) {
 					model.addSequence(currentSequence, support);
 				} else {
 					iterator.remove();
@@ -453,7 +453,7 @@ public class GSPOperator extends Operator {
 
 		LinkedHashSet<Item> frequentItems = new LinkedHashSet<>();
 		for (int i = 0; i < items.length; i++) {
-			if (itemCounters[i] > minFrequency) {
+			if (itemCounters[i] >= minFrequency) {
 				frequentItems.add(items[i]);
 			}
 		}

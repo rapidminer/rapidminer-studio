@@ -57,6 +57,8 @@ public abstract class ResourceAction extends ConditionalAction {
 
 	private final String iconName;
 
+	private final IconType iconType;
+
 	/**
 	 * Specifies the style of the icon.
 	 */
@@ -143,6 +145,7 @@ public abstract class ResourceAction extends ConditionalAction {
 				: MessageFormat.format(getMessage(i18nKey + ".label"), i18nArgs));
 		putValue(ACTION_COMMAND_KEY, i18nKey);
 		this.key = i18nKey;
+		this.iconType = iconType;
 		String mne = getMessageOrNull(i18nKey + ".mne");
 		if (mne != null && mne.length() > 0) {
 			String name = (String) getValue(NAME);
@@ -189,7 +192,7 @@ public abstract class ResourceAction extends ConditionalAction {
 				small = SwingTools.createIcon("16/" + getIconName(), iconType == IconType.MONO);
 			}
 			if (large == null) {
-				large = SwingTools.createIcon(iconSize + "/" + getIconName());
+				large = SwingTools.createIcon(iconSize + "/" + getIconName(), iconType == IconType.MONO);
 			}
 			putValue(LARGE_ICON_KEY, iconSize == 16 ? small != null ? small : large : large);
 			putValue(SMALL_ICON, small != null ? small : large);
@@ -293,6 +296,10 @@ public abstract class ResourceAction extends ConditionalAction {
 
 	public String getIconName() {
 		return iconName;
+	}
+
+	public IconType getIconType() {
+		return iconType;
 	}
 
 	private static String getMessage(String key) {

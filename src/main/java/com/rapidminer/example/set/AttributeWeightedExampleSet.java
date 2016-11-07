@@ -38,7 +38,7 @@ import java.util.Random;
 /**
  * An implementation of ExampleSet that allows the weighting of the attributes. Weights can be
  * queried by the method {@link #getWeight(Attribute)}.
- * 
+ *
  * @author Ingo Mierswa ingomierswa Exp $
  */
 public class AttributeWeightedExampleSet extends AbstractExampleSet {
@@ -293,11 +293,16 @@ public class AttributeWeightedExampleSet extends AbstractExampleSet {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.rapidminer.operator.ResultObjectAdapter#getAnnotations()
 	 */
 	@Override
 	public Annotations getAnnotations() {
 		return parent.getAnnotations();
+	}
+
+	@Override
+	public void cleanup() {
+		parent.cleanup();
 	}
 }

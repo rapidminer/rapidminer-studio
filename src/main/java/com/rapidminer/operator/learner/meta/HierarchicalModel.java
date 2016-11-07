@@ -116,6 +116,9 @@ public class HierarchicalModel extends PredictionModel implements MetaModel {
 		this.root = root;
 	}
 
+	/**
+	 * Progress not implemented, because class is deprecated
+	 */
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
 		ExampleSet eSet = (ExampleSet) exampleSet.clone();

@@ -1,18 +1,36 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
       </operator>
-      <operator activated="true" class="replace_missing_values" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Preprocessing" width="90" x="180" y="30">
+      <operator activated="true" class="replace_missing_values" compatibility="7.1.001" expanded="true" height="103" name="Preprocessing" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
         <parameter key="attribute" value="shift-differential"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
         <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="default" value="average"/>
         <list key="columns">
           <parameter key="wage-inc-1st" value="minimum"/>
           <parameter key="wage-inc-3rd" value="maximum"/>
@@ -23,7 +41,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="195" resized="true" width="526" x="38" y="133">Usually much time of data mining is spent to preprocess the data. RapidMiner offers several operators to read your data from many different sources and also operators to process your data and ease learning.&lt;br/&gt;&lt;br/&gt;In many applications the data contains missing values. One of the available preprocessing operators replaces them with the average / min / max of the attribute. Other operators can also handle infinite values.&lt;br/&gt;&lt;br&gt;This process will replace the missing values of the column wage-inc-1st with the minimum value of this column and thewage-inc-3rd with the maximum value.</description>
+      <description align="left" color="yellow" colored="false" height="195" resized="true" width="526" x="43" y="149">Usually much time of data mining is spent to preprocess the data. RapidMiner offers several operators to read your data from many different sources and also operators to process your data and ease learning.&lt;br/&gt;&lt;br/&gt;In many applications the data contains missing values. One of the available preprocessing operators replaces them with the average / min / max of the attribute. Other operators can also handle infinite values.&lt;br/&gt;&lt;br&gt;This process will replace the missing values of the column wage-inc-1st with the minimum value of this column and thewage-inc-3rd with the maximum value.</description>
     </process>
   </operator>
 </process>

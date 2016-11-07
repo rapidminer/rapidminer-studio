@@ -1,28 +1,66 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="1969"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="optimize_by_generation_yagga" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="YAGGA" width="90" x="180" y="30">
+      <operator activated="true" class="optimize_by_generation_yagga" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="YAGGA" width="90" x="179" y="34">
+        <parameter key="limit_max_total_number_of_attributes" value="false"/>
+        <parameter key="max_total_number_of_attributes" value="1"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="show_stop_dialog" value="false"/>
+        <parameter key="maximal_fitness" value="Infinity"/>
         <parameter key="population_size" value="100"/>
         <parameter key="maximum_number_of_generations" value="10"/>
         <parameter key="use_plus" value="false"/>
+        <parameter key="use_diff" value="false"/>
+        <parameter key="use_mult" value="true"/>
+        <parameter key="use_div" value="false"/>
         <parameter key="reciprocal_value" value="false"/>
+        <parameter key="use_early_stopping" value="false"/>
+        <parameter key="generations_without_improval" value="2"/>
         <parameter key="tournament_size" value="0.8"/>
+        <parameter key="start_temperature" value="1.0"/>
+        <parameter key="dynamic_selection_pressure" value="true"/>
         <parameter key="keep_best_individual" value="true"/>
+        <parameter key="p_initialize" value="0.5"/>
+        <parameter key="p_crossover" value="0.5"/>
+        <parameter key="crossover_type" value="uniform"/>
+        <parameter key="use_heuristic_mutation_probability" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="split_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="SimpleValidation" width="90" x="45" y="30">
+          <operator activated="true" class="split_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="SimpleValidation" width="90" x="45" y="34">
+            <parameter key="create_complete_model" value="false"/>
+            <parameter key="split" value="relative"/>
+            <parameter key="split_ratio" value="0.7"/>
+            <parameter key="training_set_size" value="100"/>
+            <parameter key="test_set_size" value="-1"/>
+            <parameter key="sampling_type" value="shuffled sampling"/>
+            <parameter key="use_local_random_seed" value="false"/>
             <parameter key="local_random_seed" value="10"/>
             <process expanded="true">
-              <operator activated="true" class="linear_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LinearRegression"/>
+              <operator activated="true" class="linear_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="LinearRegression" width="90" x="45" y="34">
+                <parameter key="feature_selection" value="M5 prime"/>
+                <parameter key="alpha" value="0.05"/>
+                <parameter key="max_iterations" value="10"/>
+                <parameter key="forward_alpha" value="0.05"/>
+                <parameter key="backward_alpha" value="0.05"/>
+                <parameter key="eliminate_colinear_features" value="true"/>
+                <parameter key="min_tolerance" value="0.05"/>
+                <parameter key="use_bias" value="true"/>
+                <parameter key="ridge" value="1.0E-8"/>
+              </operator>
               <connect from_port="training" to_op="LinearRegression" to_port="training set"/>
               <connect from_op="LinearRegression" from_port="model" to_port="model"/>
               <portSpacing port="source_training" spacing="0"/>
@@ -30,12 +68,27 @@
               <portSpacing port="sink_through 1" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Applier">
+              <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Applier" width="90" x="45" y="34">
                 <list key="application_parameters"/>
+                <parameter key="create_view" value="false"/>
               </operator>
-              <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="RegressionPerformance">
+              <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="RegressionPerformance" width="90" x="179" y="34">
+                <parameter key="main_criterion" value="first"/>
                 <parameter key="root_mean_squared_error" value="false"/>
+                <parameter key="absolute_error" value="false"/>
+                <parameter key="relative_error" value="false"/>
+                <parameter key="relative_error_lenient" value="false"/>
+                <parameter key="relative_error_strict" value="false"/>
+                <parameter key="normalized_absolute_error" value="false"/>
                 <parameter key="root_relative_squared_error" value="true"/>
+                <parameter key="squared_error" value="false"/>
+                <parameter key="correlation" value="false"/>
+                <parameter key="squared_correlation" value="false"/>
+                <parameter key="prediction_average" value="false"/>
+                <parameter key="spearman_rho" value="false"/>
+                <parameter key="kendall_tau" value="false"/>
+                <parameter key="skip_undefined_labels" value="true"/>
+                <parameter key="use_example_weights" value="true"/>
               </operator>
               <connect from_port="model" to_op="Applier" to_port="model"/>
               <connect from_port="test set" to_op="Applier" to_port="unlabelled data"/>
@@ -48,12 +101,15 @@
               <portSpacing port="sink_averagable 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="425" y="48">
+          <operator activated="true" class="log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ProcessLog" width="90" x="246" y="34">
             <list key="log">
               <parameter key="generation" value="operator.YAGGA.value.generation"/>
               <parameter key="performance" value="operator.YAGGA.value.performance"/>
               <parameter key="best" value="operator.YAGGA.value.best"/>
             </list>
+            <parameter key="sorting_type" value="none"/>
+            <parameter key="sorting_k" value="100"/>
+            <parameter key="persistent" value="false"/>
           </operator>
           <connect from_port="example set source" to_op="SimpleValidation" to_port="training"/>
           <connect from_op="SimpleValidation" from_port="averagable 1" to_op="ProcessLog" to_port="through 1"/>
@@ -62,11 +118,13 @@
           <portSpacing port="sink_performance sink" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="write_constructions" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="AttributeConstructionsWriter" width="90" x="380" y="30">
+      <operator activated="true" class="legacy:write_constructions" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="AttributeConstructionsWriter" width="90" x="380" y="34">
         <parameter key="attribute_constructions_file" value="yagga.att"/>
+        <parameter key="encoding" value="SYSTEM"/>
       </operator>
-      <operator activated="true" class="write_weights" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="AttributeWeightsWriter" width="90" x="380" y="120">
+      <operator activated="true" class="legacy:write_weights" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="AttributeWeightsWriter" width="90" x="380" y="136">
         <parameter key="attribute_weights_file" value="yagga.wgt"/>
+        <parameter key="encoding" value="SYSTEM"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="YAGGA" to_port="example set in"/>
       <connect from_op="YAGGA" from_port="example set out" to_op="AttributeConstructionsWriter" to_port="input"/>
@@ -79,7 +137,7 @@
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
       <portSpacing port="sink_result 4" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="236" resized="true" width="797" x="28" y="209">Sometimes the selection of features alone is insufficient. In these cases other transformations of the feature space must be performed. The generation of new attributes from the given attributes extends the feature space. Maybe a hypothesis can be easily found in the extended feature space. &lt;br/&gt;&lt;br/&gt;YAGGA (Yet Another Generating Genetic Algorithm) is a hybrid feature selection / generation wrapper. The performance estimation is done with an inner cross validation building block. Of course other ways of performance estimation are also possible. The probability for feature generation depends on the probability for feature removal. This ensures that the average length of feature sets remains until shorter or longer feature sets prove to be better. &lt;br/&gt;&lt;br/&gt;When YAGGA finished the transformation, new features were constructed. In many cases this optimal feature set should be used on other data, too. Therefore the optimal attribute set is written into a file. In the next example we will see how these files can be used to transform new data into the optimal learning representation.</description>
+      <description align="left" color="yellow" colored="false" height="236" resized="true" width="797" x="29" y="221">Sometimes the selection of features alone is insufficient. In these cases other transformations of the feature space must be performed. The generation of new attributes from the given attributes extends the feature space. Maybe a hypothesis can be easily found in the extended feature space. &lt;br/&gt;&lt;br/&gt;YAGGA (Yet Another Generating Genetic Algorithm) is a hybrid feature selection / generation wrapper. The performance estimation is done with an inner cross validation building block. Of course other ways of performance estimation are also possible. The probability for feature generation depends on the probability for feature removal. This ensures that the average length of feature sets remains until shorter or longer feature sets prove to be better. &lt;br/&gt;&lt;br/&gt;When YAGGA finished the transformation, new features were constructed. In many cases this optimal feature set should be used on other data, too. Therefore the optimal attribute set is written into a file. In the next example we will see how these files can be used to transform new data into the optimal learning representation.</description>
     </process>
   </operator>
 </process>

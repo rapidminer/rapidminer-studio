@@ -29,6 +29,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Tools;
 
@@ -51,6 +52,8 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 	private static final int EXHAUSTIVE_CODE = 2;
 
 	private static final int RANDOM_CODE = 3;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 1000;
 
 	private final Model[] models;
 
@@ -98,8 +101,10 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 		ExampleSet exampleSet = (ExampleSet) originalExampleSet.clone();
 		int numberOfClasses = getLabel().getMapping().getValues().size();
 
-		// Hash maps are used for addressing particular class values using indices without relying
-		// upon a consistent index distribution of the corresponding substructure.
+		// Hash maps are used for addressing particular class values using
+		// indices without relying
+		// upon a consistent index distribution of the corresponding
+		// substructure.
 		int currentNumber = 0;
 		HashMap<Integer, Integer> classIndexMap = new HashMap<Integer, Integer>(numberOfClasses);
 		for (String currentClass : getLabel().getMapping().getValues()) {
@@ -110,7 +115,8 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 
 		double[][] confidenceMatrix = new double[exampleSet.size()][getNumberOfModels()];
 
-		// 1. Iterate over all models and all examples for every model to receive all confidence
+		// 1. Iterate over all models and all examples for every model to
+		// receive all confidence
 		// values.
 		for (int k = 0; k < confidenceMatrix[0].length; k++) {
 
@@ -141,7 +147,14 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 		Iterator<Example> reader = originalExampleSet.iterator();
 		int counter = 0;
 
-		// 2. Iterate again over all examples to compute a prediction and a confidence distribution
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(originalExampleSet.size());
+		}
+
+		// 2. Iterate again over all examples to compute a prediction and a
+		// confidence distribution
 		// for
 		// all examples depending on the results of step 1.
 		while (reader.hasNext()) {
@@ -163,11 +176,14 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 			example.setPredictedLabel(classIndexMap.get(bestIndex));
 
 			for (int i = 0; i < numberOfClasses; i++) {
-				example.setConfidence(getLabel().getMapping().mapIndex(classIndexMap.get(i)), confidenceMatrix[counter][i]
-						/ confidenceSum);
+				example.setConfidence(getLabel().getMapping().mapIndex(classIndexMap.get(i)),
+						confidenceMatrix[counter][i] / confidenceSum);
 			}
 
 			counter++;
+			if (progress != null && counter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(counter);
+			}
 		}
 	}
 
@@ -185,8 +201,10 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 		ExampleSet exampleSet = (ExampleSet) originalExampleSet.clone();
 		int numberOfClasses = codeMatrix.length;
 
-		// Hash maps are used for addressing particular class values using indices without relying
-		// upon a consistent index distribution of the corresponding substructure.
+		// Hash maps are used for addressing particular class values using
+		// indices without relying
+		// upon a consistent index distribution of the corresponding
+		// substructure.
 		int currentNumber = 0;
 		HashMap<Integer, String> classIndexMap = new HashMap<Integer, String>(numberOfClasses);
 		for (String currentClass : getLabel().getMapping().getValues()) {
@@ -195,7 +213,8 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 			currentNumber++;
 		}
 
-		// 1. Transform the code words from true/false to 1.0/0.0 for an easier application.
+		// 1. Transform the code words from true/false to 1.0/0.0 for an easier
+		// application.
 		double[][] codeWords = new double[codeMatrix.length][codeMatrix[0].length];
 		for (int i = 0; i < codeMatrix.length; i++) {
 			for (int j = 0; j < codeMatrix[0].length; j++) {
@@ -207,7 +226,8 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 		String currentLabel;
 		double currentConfidence;
 
-		// 2. Iterate over all models and all examples for every model to receive all confidence
+		// 2. Iterate over all models and all examples for every model to
+		// receive all confidence
 		// values.
 		for (int k = 0; k < confidenceMatrix[0].length; k++) {
 
@@ -233,7 +253,14 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 		Iterator<Example> reader = originalExampleSet.iterator();
 		int counter = 0;
 
-		// 3. Iterate again over all examples to compute a prediction and a confidence distribution
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(originalExampleSet.size());
+		}
+
+		// 3. Iterate again over all examples to compute a prediction and a
+		// confidence distribution
 		// for
 		// all examples depending on the results of step 2.
 		while (reader.hasNext()) {
@@ -260,6 +287,9 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 				example.setConfidence(classIndexMap.get(i), (numberOfFunctions - confidenceVector[i]) / numberOfFunctions);
 			}
 			counter++;
+			if (progress != null && counter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(counter);
+			}
 		}
 	}
 
@@ -311,7 +341,8 @@ public class Binary2MultiClassModel extends PredictionModel implements MetaModel
 	@Override
 	public List<String> getModelNames() {
 		List<String> names = new LinkedList<String>();
-		// determine the model labels (special names for 1vs1 and 1vsall, increasing numbers for
+		// determine the model labels (special names for 1vs1 and 1vsall,
+		// increasing numbers for
 		// ecoc models)
 		if (classificationType >= 2) {
 			for (int index = 1; index <= models.length; index++) {

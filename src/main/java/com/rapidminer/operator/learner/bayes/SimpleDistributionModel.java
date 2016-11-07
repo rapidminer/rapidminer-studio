@@ -66,6 +66,8 @@ public class SimpleDistributionModel extends DistributionModel {
 	public static final int INDEX_STANDARD_DEVIATION = 1;
 
 	public static final int INDEX_LOG_FACTOR = 2;
+	
+	private static final int OPERATOR_PROGRESS_STEPS = 200;
 
 	/** The number of classes. */
 	private int numberOfClasses;
@@ -435,7 +437,14 @@ public class SimpleDistributionModel extends DistributionModel {
 	}
 
 	@Override
-	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws ProcessStoppedException {
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+		
 		if (modelRecentlyUpdated) {
 			updateDistributionProperties();
 		}
@@ -499,6 +508,11 @@ public class SimpleDistributionModel extends DistributionModel {
 				for (int i = 0; i < numberOfClasses; i++) {
 					example.setConfidence(classValues[i], probabilities[i] / probabilitySum);
 				}
+			}
+
+			// trigger progress
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

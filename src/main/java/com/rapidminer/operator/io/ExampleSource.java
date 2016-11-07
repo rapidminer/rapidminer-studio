@@ -103,7 +103,9 @@ import com.rapidminer.tools.io.Encoding;
  * </p>
  *
  * @author Simon Fischer, Ingo Mierswa
+ * @deprecated since 7.3, only used by deprecated operator
  */
+@Deprecated
 public class ExampleSource extends AbstractExampleSource {
 
 	/**

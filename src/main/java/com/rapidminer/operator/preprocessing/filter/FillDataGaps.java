@@ -18,13 +18,20 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.AbstractExampleSetProcessing;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
@@ -44,13 +51,6 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.math.MathFunctions;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -239,7 +239,7 @@ public class FillDataGaps extends AbstractExampleSetProcessing {
 			}
 			index++;
 		}
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(sortedSet.size() + missingValues.size());
 
 		// copy data
 		for (Example example : sortedSet) {
@@ -249,7 +249,7 @@ public class FillDataGaps extends AbstractExampleSetProcessing {
 			while (i.hasNext()) {
 				data[index++] = example.getValue(i.next());
 			}
-			table.addDataRow(new DoubleArrayDataRow(data));
+			builder.addRow(data);
 		}
 
 		// create missing rows
@@ -259,11 +259,11 @@ public class FillDataGaps extends AbstractExampleSetProcessing {
 				data[d] = Double.NaN;
 			}
 			data[idIndex] = missingValue;
-			table.addDataRow(new DoubleArrayDataRow(data));
+			builder.addRow(data);
 		}
 
 		// create final example set
-		ExampleSet resultSet = table.createExampleSet(specialAttributes);
+		ExampleSet resultSet = builder.withRoles(specialAttributes).build();
 
 		// sort final result
 		resultSet = sorting.apply(resultSet);

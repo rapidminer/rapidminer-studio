@@ -91,9 +91,10 @@ public class GSSModel extends PredictionModel {
 		}
 	}
 
-	/** Iterates over all examples and applies the model to them. */
+	/** Iterates over all examples and applies the model to them.
+	 *  Progress not implemented, because class is deprecated */
 	@Override
-	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {		
 		Iterator<Example> reader = exampleSet.iterator();
 		int bestPrediction;
 		int worstPrediction;

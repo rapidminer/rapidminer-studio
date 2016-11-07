@@ -18,6 +18,15 @@
  */
 package com.rapidminer.operator.ports.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ports.InputPort;
@@ -33,22 +42,13 @@ import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-
 
 /**
  * @author Simon Fischer
  */
 public abstract class AbstractPorts<T extends Port> extends AbstractObservable<Port> implements Ports<T> {
 
-	private final List<T> portList = new ArrayList<>();
+	private final List<T> portList = Collections.synchronizedList(new ArrayList<>());
 	private final Map<String, T> portMap = new HashMap<>();
 	private String[] portNames;
 	private boolean portNamesValid = false;
@@ -71,8 +71,10 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 		if (!portNamesValid) {
 			portNames = new String[portList.size()];
 			int i = 0;
-			for (Port port : portList) {
-				portNames[i++] = port.getName();
+			synchronized (portList) {
+				for (Port port : portList) {
+					portNames[i++] = port.getName();
+				}
 			}
 			portNamesValid = true;
 		}
@@ -83,7 +85,7 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 		if (portMap.containsKey(port.getName())) {
 			throw new PortException("Port name already used: " + port.getName());
 		}
-		assert (port.getPorts() == this);
+		assert port.getPorts() == this;
 		portList.add(port);
 		portMap.put(port.getName(), port);
 		portNamesValid = false;
@@ -93,7 +95,7 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 
 	@Override
 	public void removePort(T port) throws PortException {
-		if (!portList.contains(port) || (port.getPorts() != this)) {
+		if (!portList.contains(port) || port.getPorts() != this) {
 			throw new PortException("Cannot remove " + port + ".");
 		} else {
 			if (port.isConnected()) {
@@ -141,7 +143,8 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 				for (PortExtender extender : portExtenders) {
 					String prefix = extender.getNamePrefix();
 					if (name.startsWith(prefix)) {
-						// LogService.getRoot().fine("Found extender with prefix '"+prefix+"'. Trying to extend.");
+						// LogService.getRoot().fine("Found extender with prefix '"+prefix+"'.
+						// Trying to extend.");
 						LogService.getRoot().log(Level.FINE,
 								"com.rapidminer.operator.ports.impl.AbstractPorts.found_extender", prefix);
 						try {
@@ -149,12 +152,14 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 							extender.ensureMinimumNumberOfPorts(index); // numbering starts at 1
 							T secondTry = portMap.get(name);
 							if (secondTry == null) {
-								// LogService.getRoot().warning("Port extender "+prefix+" did not extend to size "+index+".");
+								// LogService.getRoot().warning("Port extender "+prefix+" did not
+								// extend to size "+index+".");
 								LogService.getRoot().log(Level.WARNING,
 										"com.rapidminer.operator.ports.impl.AbstractPorts.port_extender_did_not_extend",
 										new Object[] { prefix, index });
 							} else {
-								// LogService.getRoot().fine("Port was created. Ports are now: "+getAllPorts());
+								// LogService.getRoot().fine("Port was created. Ports are now:
+								// "+getAllPorts());
 								LogService.getRoot().log(Level.FINE,
 										"com.rapidminer.operator.ports.impl.AbstractPorts.ports_created", getAllPorts());
 							}
@@ -162,8 +167,7 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 						} catch (NumberFormatException e) {
 							// LogService.getRoot().log(Level.WARNING,
 							// "Cannot extend "+prefix+": "+e, e);
-							LogService.getRoot().log(
-									Level.WARNING,
+							LogService.getRoot().log(Level.WARNING,
 									I18N.getMessage(LogService.getRoot().getResourceBundle(),
 											"com.rapidminer.operator.ports.impl.AbstractPorts.extending_error", prefix, e),
 									e);
@@ -185,17 +189,21 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 
 	@Override
 	public List<T> getAllPorts() {
-		return Collections.unmodifiableList(portList);
+		synchronized (portList) {
+			return Collections.unmodifiableList(new ArrayList<>(portList));
+		}
 	}
 
 	@Override
 	public String getMetaDataDescription() {
 		StringBuilder b = new StringBuilder();
-		for (Port port : portList) {
-			b.append(port.getName());
-			b.append(": ");
-			b.append(port.getMetaData());
-			b.append("; ");
+		synchronized (portList) {
+			for (Port port : portList) {
+				b.append(port.getName());
+				b.append(": ");
+				b.append(port.getMetaData());
+				b.append("; ");
+			}
 		}
 		return b.toString();
 	}

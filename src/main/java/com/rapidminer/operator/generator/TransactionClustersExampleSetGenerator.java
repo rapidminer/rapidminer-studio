@@ -25,8 +25,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -91,7 +91,8 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 		Attribute amount = AttributeFactory.createAttribute("Amount", Ontology.INTEGER);
 		attributes.add(amount);
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes)
+				.withExpectedSize(Math.max(numberOfTransactions, numberOfCustomers));
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -134,7 +135,7 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 
 			values[2] = Math.round(Math.max(1, random.nextGaussian() * itemProb * maxItems[clusterIndex]));
 
-			table.addDataRow(new DoubleArrayDataRow(values));
+			builder.addRow(values);
 
 			getProgress().step();
 		}
@@ -165,13 +166,13 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 
 			values[2] = Math.round(Math.max(1, random.nextGaussian() * itemProb * maxItems[clusterIndex]));
 
-			table.addDataRow(new DoubleArrayDataRow(values));
+			builder.addRow(values);
 
 			getProgress().step();
 		}
 		getProgress().complete();
 
-		return table.createExampleSet(null, null, id);
+		return builder.withRole(id, Attributes.ID_NAME).build();
 	}
 
 	@Override

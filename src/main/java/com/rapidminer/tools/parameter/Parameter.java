@@ -25,7 +25,7 @@ import com.rapidminer.parameter.ParameterType;
  * Value and Definition of a Parameter. Two types of parameters can be defined: Implicit ones and
  * Defined ones. The defined one have a type definition, while the implicit ones only have a key and
  * value. Only defined parameters can be edited using the GUI and will be saved in the config files.
- * 
+ *
  * @author Sebastian Land
  */
 public class Parameter {
@@ -44,10 +44,10 @@ public class Parameter {
 
 	/**
 	 * This creates a new defined Parameter with a default scope and an undefined value.
-	 * 
+	 *
 	 * The group of the Parameter is set automatically by the second segment of the dot separated
 	 * key. For setting the group explicitly, please use {@link #Parameter(ParameterType, String)}.
-	 * 
+	 *
 	 * @param type
 	 */
 	public Parameter(ParameterType type) {

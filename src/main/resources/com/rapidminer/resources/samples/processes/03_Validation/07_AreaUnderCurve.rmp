@@ -1,58 +1,109 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2000"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="random dots classification"/>
         <parameter key="number_examples" value="500"/>
         <parameter key="number_of_attributes" value="2"/>
         <parameter key="attributes_lower_bound" value="0.0"/>
         <parameter key="attributes_upper_bound" value="25.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XVal" width="90" x="180" y="30">
-        <parameter key="number_of_validations" value="5"/>
+      <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="179" y="34">
+        <parameter key="enable_parallel_execution" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="10"/>
+        <parameter key="sampling_type" value="automatic"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="materialize_data" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LibSVMLearner">
+          <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="LibSVMLearner" width="90" x="45" y="34">
+            <parameter key="svm_type" value="C-SVC"/>
+            <parameter key="kernel_type" value="rbf"/>
+            <parameter key="degree" value="3"/>
             <parameter key="gamma" value="1.0"/>
+            <parameter key="coef0" value="0.0"/>
+            <parameter key="C" value="0.0"/>
+            <parameter key="nu" value="0.5"/>
+            <parameter key="cache_size" value="80"/>
             <parameter key="epsilon" value="0.0010"/>
+            <parameter key="p" value="0.1"/>
             <list key="class_weights"/>
+            <parameter key="shrinking" value="true"/>
+            <parameter key="calculate_confidences" value="false"/>
+            <parameter key="confidence_for_multiclass" value="true"/>
           </operator>
-          <connect from_port="training" to_op="LibSVMLearner" to_port="training set"/>
+          <connect from_port="training set" to_op="LibSVMLearner" to_port="training set"/>
           <connect from_op="LibSVMLearner" from_port="model" to_port="model"/>
-          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="source_training set" spacing="0"/>
           <portSpacing port="sink_model" spacing="0"/>
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance_binominal_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinominalClassificationPerformance">
+          <operator activated="true" class="performance_binominal_classification" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="BinominalClassificationPerformance" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="first"/>
+            <parameter key="accuracy" value="true"/>
+            <parameter key="classification_error" value="false"/>
+            <parameter key="kappa" value="false"/>
+            <parameter key="AUC (optimistic)" value="false"/>
             <parameter key="AUC" value="true"/>
+            <parameter key="AUC (pessimistic)" value="false"/>
+            <parameter key="precision" value="false"/>
+            <parameter key="recall" value="false"/>
+            <parameter key="lift" value="false"/>
+            <parameter key="fallout" value="false"/>
+            <parameter key="f_measure" value="false"/>
+            <parameter key="false_positive" value="false"/>
+            <parameter key="false_negative" value="false"/>
+            <parameter key="true_positive" value="false"/>
+            <parameter key="true_negative" value="false"/>
+            <parameter key="sensitivity" value="false"/>
+            <parameter key="specificity" value="false"/>
+            <parameter key="youden" value="false"/>
+            <parameter key="positive_predictive_value" value="false"/>
+            <parameter key="negative_predictive_value" value="false"/>
+            <parameter key="psep" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="true"/>
           </operator>
           <connect from_port="model" to_op="ModelApplier" to_port="model"/>
           <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
           <connect from_op="ModelApplier" from_port="labelled data" to_op="BinominalClassificationPerformance" to_port="labelled data"/>
-          <connect from_op="BinominalClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+          <connect from_op="BinominalClassificationPerformance" from_port="performance" to_port="performance 1"/>
           <portSpacing port="source_model" spacing="0"/>
           <portSpacing port="source_test set" spacing="0"/>
           <portSpacing port="source_through 1" spacing="0"/>
-          <portSpacing port="sink_averagable 1" spacing="0"/>
-          <portSpacing port="sink_averagable 2" spacing="0"/>
+          <portSpacing port="sink_test set results" spacing="0"/>
+          <portSpacing port="sink_performance 1" spacing="0"/>
+          <portSpacing port="sink_performance 2" spacing="0"/>
         </process>
       </operator>
-      <connect from_op="ExampleSetGenerator" from_port="output" to_op="XVal" to_port="training"/>
-      <connect from_op="XVal" from_port="averagable 1" to_port="result 1"/>
+      <connect from_op="ExampleSetGenerator" from_port="output" to_op="Cross Validation" to_port="example set"/>
+      <connect from_op="Cross Validation" from_port="performance 1" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="214" resized="true" width="452" x="32" y="156">In this process we calculate a widely used performance criterion: the area under a ROC curve (AUC). RapidMiner allows the calculation of this AUC criterion for all binary classification tasks and learners. Just select AUC like all other performance criteria as a parameter of the PerformanceEvaluator operator. &lt;br/&gt;&lt;br/&gt;You can actually display a ROC curve by using a ThresholdFinder which makes use of the soft predictions (confidence values) instead of crisp classifications. A ThresholdFinder can be used to determine the best threshold with respect to class weights. Please check out the process CostSensitiveLearningAndROCPlot.xml for further details.</description>
+      <description align="left" color="yellow" colored="false" height="214" resized="true" width="452" x="37" y="195">In this process we calculate a widely used performance criterion: the area under a ROC curve (AUC). RapidMiner allows the calculation of this AUC criterion for all binary classification tasks and learners. Just select AUC like all other performance criteria as a parameter of the PerformanceEvaluator operator. &lt;br/&gt;&lt;br/&gt;You can actually display a ROC curve by using a ThresholdFinder which makes use of the soft predictions (confidence values) instead of crisp classifications. A ThresholdFinder can be used to determine the best threshold with respect to class weights. Please check out the process CostSensitiveLearningAndROCPlot.xml for further details.</description>
     </process>
   </operator>
 </process>

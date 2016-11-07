@@ -1,25 +1,34 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="warning"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Sonar"/>
       </operator>
-      <operator activated="true" class="remove_correlated_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RemoveCorrelatedFeatures" width="90" x="179" y="30">
+      <operator activated="true" class="remove_correlated_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="RemoveCorrelatedFeatures" width="90" x="179" y="34">
         <parameter key="correlation" value="0.5"/>
+        <parameter key="filter_relation" value="greater"/>
+        <parameter key="attribute_order" value="original"/>
+        <parameter key="use_absolute_correlation" value="true"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="RemoveCorrelatedFeatures" to_port="example set input"/>
       <connect from_op="RemoveCorrelatedFeatures" from_port="example set output" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="66" resized="false" width="400" x="40" y="120">RemoveCorrelatedFeatures is one of the very simple feature preprocessing operators. It simply removes such attributes highly correlated to other features.</description>
+      <description align="left" color="yellow" colored="false" height="66" resized="false" width="400" x="40" y="130">RemoveCorrelatedFeatures is one of the very simple feature preprocessing operators. It simply removes such attributes highly correlated to other features.</description>
     </process>
   </operator>
 </process>

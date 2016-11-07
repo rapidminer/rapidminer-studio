@@ -1,28 +1,38 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="40" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="neural_net" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Neural Net" width="90" x="179" y="30">
+      <operator activated="true" class="neural_net" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Neural Net" width="90" x="179" y="34">
         <list key="hidden_layers"/>
         <parameter key="training_cycles" value="2000"/>
         <parameter key="learning_rate" value="0.1"/>
         <parameter key="momentum" value="0.01"/>
+        <parameter key="decay" value="false"/>
+        <parameter key="shuffle" value="true"/>
+        <parameter key="normalize" value="true"/>
         <parameter key="error_epsilon" value="0.01"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="Neural Net" to_port="training set"/>
       <connect from_op="Neural Net" from_port="model" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="186" resized="true" width="434" x="32" y="123">This learner creates a neural network allowing numerical predictions for the loaded data set. RapidMiner provides an operator NeuralNet which can be used to learn such a network. Please check the parameters of this operator for further information.&lt;br&gt;&lt;br&gt;After this process is finished the model is shown which represents the learned neural network. The connections between nodes are painted darker if the connection weight is high. You can click on a node in this visualization in order to see the actual weights.</description>
+      <description align="left" color="yellow" colored="false" height="186" resized="true" width="434" x="43" y="127">This learner creates a neural network allowing numerical predictions for the loaded data set. RapidMiner provides an operator NeuralNet which can be used to learn such a network. Please check the parameters of this operator for further information.&lt;br&gt;&lt;br&gt;After this process is finished the model is shown which represents the learned neural network. The connections between nodes are painted darker if the connection weight is high. You can click on a node in this visualization in order to see the actual weights.</description>
     </process>
   </operator>
 </process>

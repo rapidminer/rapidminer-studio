@@ -1,31 +1,64 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="polynomial"/>
         <parameter key="number_examples" value="200"/>
         <parameter key="number_of_attributes" value="3"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="-1"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="normalize" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Normalization" width="90" x="180" y="30"/>
-      <operator activated="true" class="polynomial_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="PolynomialRegression" width="90" x="315" y="30">
+      <operator activated="true" class="normalize" compatibility="7.1.001" expanded="true" height="103" name="Normalization" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="method" value="Z-transformation"/>
+        <parameter key="min" value="0.0"/>
+        <parameter key="max" value="1.0"/>
+      </operator>
+      <operator activated="true" class="polynomial_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="PolynomialRegression" width="90" x="313" y="34">
         <parameter key="max_iterations" value="20000"/>
         <parameter key="replication_factor" value="2"/>
         <parameter key="max_degree" value="3"/>
         <parameter key="min_coefficient" value="-500.0"/>
         <parameter key="max_coefficient" value="500.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="-1"/>
       </operator>
-      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Apply Model" width="90" x="450" y="30">
+      <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Apply Model" width="90" x="447" y="34">
         <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
       </operator>
-      <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="782" y="30"/>
+      <operator activated="true" class="performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="782" y="34">
+        <parameter key="use_example_weights" value="true"/>
+      </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="Normalization" to_port="example set input"/>
       <connect from_op="Normalization" from_port="example set output" to_op="PolynomialRegression" to_port="training set"/>
       <connect from_op="PolynomialRegression" from_port="model" to_op="Apply Model" to_port="model"/>

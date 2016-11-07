@@ -168,16 +168,15 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	private final List<UnknownParameterInformation> unknownParameterInformation = new LinkedList<>();
 
 	/** The listeners for breakpoints. */
-	private final List<BreakpointListener> breakpointListeners = new LinkedList<>();
+	private final List<BreakpointListener> breakpointListeners = Collections.synchronizedList(new LinkedList<>());
 
 	/** The list of filters called between each operator */
-	private final List<ProcessFlowFilter> processFlowFilters = Collections
-			.synchronizedList(new LinkedList<ProcessFlowFilter>());
+	private final List<ProcessFlowFilter> processFlowFilters = Collections.synchronizedList(new LinkedList<>());
 
 	/** The listeners for logging (data tables). */
-	private final List<LoggingListener> loggingListeners = new LinkedList<>();
+	private final List<LoggingListener> loggingListeners = Collections.synchronizedList(new LinkedList<>());
 
-	private final List<ProcessStateListener> processStateListeners = new LinkedList<>();
+	private final List<ProcessStateListener> processStateListeners = Collections.synchronizedList(new LinkedList<>());
 
 	/** The macro handler can be used to replace (user defined) macro strings. */
 	private final MacroHandler macroHandler = new MacroHandler(this);
@@ -398,7 +397,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		if (stateBefore == newState) {
 			return;
 		}
-		List<ProcessStateListener> listeners = new LinkedList<>(processStateListeners);
+		List<ProcessStateListener> listeners;
+		synchronized (processStateListeners) {
+			listeners = new LinkedList<>(processStateListeners);
+		}
 		for (ProcessStateListener listener : listeners) {
 			switch (newState) {
 				case PROCESS_STATE_PAUSED:
@@ -518,8 +520,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	 */
 	public void addDataTable(final DataTable table) {
 		dataTableMap.put(table.getName(), table);
-		for (LoggingListener listener : loggingListeners) {
-			listener.addDataTable(table);
+		synchronized (loggingListeners) {
+			for (LoggingListener listener : loggingListeners) {
+				listener.addDataTable(table);
+			}
 		}
 	}
 
@@ -537,9 +541,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	public void deleteDataTable(final String name) {
 		if (dataTableExists(name)) {
 			DataTable table = dataTableMap.remove(name);
-
-			for (LoggingListener listener : loggingListeners) {
-				listener.removeDataTable(table);
+			synchronized (loggingListeners) {
+				for (LoggingListener listener : loggingListeners) {
+					listener.removeDataTable(table);
+				}
 			}
 		}
 	}
@@ -834,14 +839,19 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 	/** Fires the event that the process was paused. */
 	private void fireBreakpointEvent(final Operator operator, final IOContainer ioContainer, final int location) {
-		for (BreakpointListener l : breakpointListeners) {
-			l.breakpointReached(this, operator, ioContainer, location);
+		synchronized (breakpointListeners) {
+			for (BreakpointListener l : breakpointListeners) {
+				l.breakpointReached(this, operator, ioContainer, location);
+			}
 		}
 	}
 
 	/** Fires the event that the process was resumed. */
 	public void fireResumeEvent() {
-		LinkedList<BreakpointListener> l = new LinkedList<>(breakpointListeners);
+		LinkedList<BreakpointListener> l;
+		synchronized (breakpointListeners) {
+			l = new LinkedList<>(breakpointListeners);
+		}
 		for (BreakpointListener listener : l) {
 			listener.resume();
 		}
@@ -1109,7 +1119,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 			final boolean storeOutput) throws OperatorException {
 		// make sure the process flow filter is registered
 		ProcessFlowFilter filter = ProcessFlowFilterRegistry.INSTANCE.getProcessFlowFilter();
-		if (filter != null) {
+		if (filter != null && !processFlowFilters.contains(filter)) {
 			addProcessFlowFilter(filter);
 		}
 

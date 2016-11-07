@@ -69,6 +69,20 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 		}
 	}
 
+	private static final class OperatorPriorityComparator implements Comparator<OperatorDescription> {
+
+		@Override
+		public int compare(OperatorDescription o1, OperatorDescription o2) {
+			try {
+				return Math.negateExact(Integer.compare(o1.getPriority(), o2.getPriority()));
+			} catch (ArithmeticException e) {
+				// no logging for idiotic error
+				return 0;
+			}
+		}
+
+	}
+
 	private final GroupTree completeTree;
 
 	private GroupTree displayedTree;
@@ -81,6 +95,11 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 	private final List<TreeModelListener> treeModelListeners = new LinkedList<>();
 
 	private boolean sortByUsage = false;
+
+	/** sorts by <priority> key of operators */
+	private Comparator<OperatorDescription> priorityComparator = new OperatorPriorityComparator();
+	/** sorts by local usage count of operators */
+	private Comparator<OperatorDescription> usageComparator = new UsageStatsComparator();
 
 	public NewOperatorGroupTreeModel() {
 		this.completeTree = OperatorService.getGroups();
@@ -217,9 +236,12 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 			removeDeprecated(filteredTree);
 		}
 		this.displayedTree = filteredTree;
+		filteredTree.sort(priorityComparator);
+
 		if (sortByUsage) {
-			filteredTree.sort(new UsageStatsComparator());
+			filteredTree.sort(usageComparator);
 		}
+
 		fireCompleteTreeChanged(this);
 		return expandedPaths;
 	}
@@ -336,7 +358,7 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 				}
 			}
 			if (!matches && !groupMatches) {
-					o.remove();
+				o.remove();
 			} else {
 				hits++;
 			}

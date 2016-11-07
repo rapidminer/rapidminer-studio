@@ -78,6 +78,17 @@ public abstract class AbstractExampleTable implements ExampleTable {
 		addAttributes(attributes);
 	}
 
+	/**
+	 * Clone constructor.
+	 * 
+	 * @param other
+	 *            the table to clone
+	 */
+	protected AbstractExampleTable(AbstractExampleTable other) {
+		this.attributes = new ArrayList<>(other.attributes);
+		this.unusedColumnList = new LinkedList<>(other.unusedColumnList);
+	}
+
 	// ------------------------------------------------------------
 
 	/** Returns a new array containing all {@link Attribute}s. */

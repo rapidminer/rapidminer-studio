@@ -77,9 +77,10 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * applicable.</li>
  * </ul>
  *
- * @rapidminer.index cross-validation
  * @author Ingo Mierswa
+ * @deprecated use the {@link #CrossValidationOperator} from the concurrency extension instead.
  */
+@Deprecated
 public class BatchXValidation extends ValidationChain {
 
 	/**

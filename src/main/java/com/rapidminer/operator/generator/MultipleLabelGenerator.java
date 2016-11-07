@@ -27,10 +27,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.ListDataRowReader;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -136,7 +134,7 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 			label3.getMapping().mapString("negative");
 		}
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -144,7 +142,6 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 		// init operator progress
 		getProgress().setTotal(numberOfExamples);
 
-		List<DataRow> data = new LinkedList<DataRow>();
 		for (int n = 0; n < numberOfExamples; n++) {
 			double[] features = new double[NUMBER_OF_ATTRIBUTES];
 			for (int i = 0; i < features.length; i++) {
@@ -158,27 +155,24 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 				example[example.length - 2] = 2 * example[0] + example[3];
 				example[example.length - 1] = example[3] * example[3];
 			} else {
-				example[example.length - 3] = example[0] + example[1] + example[2] > 0 ? label1.getMapping().mapString(
-						"positive") : label1.getMapping().mapString("negative");
+				example[example.length - 3] = example[0] + example[1] + example[2] > 0
+						? label1.getMapping().mapString("positive") : label1.getMapping().mapString("negative");
 				example[example.length - 2] = 2 * example[0] + example[3] > 0 ? label1.getMapping().mapString("positive")
 						: label1.getMapping().mapString("negative");
-				example[example.length - 1] = example[3] * example[3] - example[2] * example[2] > 0 ? label1.getMapping()
-						.mapString("positive") : label1.getMapping().mapString("negative");
+				example[example.length - 1] = example[3] * example[3] - example[2] * example[2] > 0
+						? label1.getMapping().mapString("positive") : label1.getMapping().mapString("negative");
 			}
-			data.add(new DoubleArrayDataRow(example));
+			builder.addRow(example);
 
 			getProgress().step();
 		}
-
-		// fill table with data
-		table.readExamples(new ListDataRowReader(data.iterator()));
 
 		// create example set and return it
 		Map<Attribute, String> specialMap = new LinkedHashMap<Attribute, String>();
 		specialMap.put(label1, Attributes.LABEL_NAME + 1);
 		specialMap.put(label2, Attributes.LABEL_NAME + 2);
 		specialMap.put(label3, Attributes.LABEL_NAME + 3);
-		ExampleSet result = table.createExampleSet(specialMap);
+		ExampleSet result = builder.withRoles(specialMap).build();
 
 		getProgress().complete();
 

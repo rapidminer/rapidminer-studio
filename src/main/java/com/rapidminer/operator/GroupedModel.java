@@ -18,19 +18,25 @@
  */
 package com.rapidminer.operator;
 
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.operator.learner.meta.MetaModel;
-import com.rapidminer.tools.Tools;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.learner.meta.MetaModel;
+import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observable;
+import com.rapidminer.tools.Observer;
+import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.Tools;
 
 
 /**
  * This model is a container for all models which should be applied in a sequence.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class GroupedModel extends AbstractModel implements Iterable<Model>, MetaModel {
@@ -47,8 +53,53 @@ public class GroupedModel extends AbstractModel implements Iterable<Model>, Meta
 	/** Applies all models. */
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+		int modelCounter = 0;
+
 		for (Model model : models) {
+			// add observer to observe the progress of the model
+			Operator dummy = null;
+			if (progress != null) {
+				try {
+					dummy = OperatorService.createOperator("dummy");
+				} catch (OperatorCreationException e) {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.operator.GroupedModel.couldnt_create_operator");
+				}
+				if (dummy != null && model instanceof AbstractModel) {
+					final OperatorProgress finalProgress = progress;
+					final int finalModelCounter = modelCounter;
+					((AbstractModel) model).setOperator(dummy);
+					((AbstractModel) model).setShowProgress(true);
+					OperatorProgress internalProgress = dummy.getProgress();
+					internalProgress.setCheckForStop(false);
+					internalProgress.addObserver(new Observer<OperatorProgress>() {
+
+						@Override
+						public void update(Observable<OperatorProgress> observable, OperatorProgress arg) {
+							try {
+								finalProgress.setCompleted((int) ((double) arg.getProgress() / getNumberOfModels()
+										+ 100.0 * finalModelCounter / getNumberOfModels()));
+							} catch (ProcessStoppedException e) {
+								throw new ProcessStoppedRuntimeException();
+							}
+						}
+					}, false);
+				}
+			}
+
 			exampleSet = model.apply(exampleSet);
+
+			if (progress != null) {
+				if (dummy != null && model instanceof AbstractModel) {
+					((AbstractModel) model).setShowProgress(false);
+					((AbstractModel) model).setOperator(null);
+				}
+				progress.setCompleted((int) (100.0 * ++modelCounter / getNumberOfModels()));
+			}
 		}
 		return exampleSet;
 	}
@@ -111,7 +162,9 @@ public class GroupedModel extends AbstractModel implements Iterable<Model>, Meta
 		return models.get(index);
 	}
 
-	/** Returns the first model in this container with the desired class. A cast is not necessary. */
+	/**
+	 * Returns the first model in this container with the desired class. A cast is not necessary.
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Model> T getModel(Class<T> desiredClass) {
 		Iterator<Model> i = models.iterator();
@@ -161,7 +214,7 @@ public class GroupedModel extends AbstractModel implements Iterable<Model>, Meta
 	public String toResultString() {
 		StringBuffer result = new StringBuffer();
 		for (int i = 0; i < getNumberOfModels(); i++) {
-			result.append((i + 1) + ". " + getModel(i).toResultString() + Tools.getLineSeparator());
+			result.append(i + 1 + ". " + getModel(i).toResultString() + Tools.getLineSeparator());
 		}
 		return result.toString();
 	}

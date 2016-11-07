@@ -541,7 +541,7 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		}
 		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_OPERATOR_SEARCH, event, searchText);
 	}
-	
+
 	public FilterTextField getFilterField() {
 		return filterField;
 	}

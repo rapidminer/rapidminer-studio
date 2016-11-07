@@ -28,6 +28,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Tools;
 
@@ -67,6 +68,11 @@ public class AdditiveRegressionModel extends PredictionModel implements MetaMode
 		PredictionModel.removePredictedLabel(exampleSet);
 
 		// apply all models to the example set sum up the predictions
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(residualModels.length);
+		}
 		for (int i = 0; i < residualModels.length; i++) {
 			exampleSet = residualModels[i].apply(exampleSet);
 			e = exampleSet.iterator();
@@ -75,6 +81,9 @@ public class AdditiveRegressionModel extends PredictionModel implements MetaMode
 				predictions[counter++] += shrinkage * e.next().getPredictedLabel();
 			}
 			PredictionModel.removePredictedLabel(exampleSet);
+			if (progress != null) {
+				progress.step();
+			}
 		}
 
 		// set final predictions

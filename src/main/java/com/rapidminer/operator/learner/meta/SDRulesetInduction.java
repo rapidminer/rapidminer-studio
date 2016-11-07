@@ -355,9 +355,9 @@ public class SDRulesetInduction extends OperatorChain {
 		if (roc_filter) {
 			StringBuffer message = new StringBuffer("The convex hull in ROC space contains the following points (TPr/FPr):"
 					+ Tools.getLineSeparator());
-			Iterator it = rocCurve.iterator();
+			Iterator<double[]> it = rocCurve.iterator();
 			while (it.hasNext()) {
-				double[] tpfp = (double[]) it.next();
+				double[] tpfp = it.next();
 				message.append("(" + tpfp[0] + ", " + tpfp[1] + ") ");
 			}
 			log(message.toString());
@@ -388,11 +388,11 @@ public class SDRulesetInduction extends OperatorChain {
 			return false;
 		}
 
-		ListIterator iter = rocCurve.listIterator();
+		ListIterator<double[]> iter = rocCurve.listIterator();
 		double slope = Double.POSITIVE_INFINITY;
 		boolean fprGreater = true;
 		while (fprGreater) {
-			double[] current = (double[]) (iter.next());
+			double[] current = iter.next();
 			fprGreater = (fpr > current[1]);
 
 			if (fprGreater) {

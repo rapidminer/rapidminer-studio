@@ -31,7 +31,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -136,7 +136,7 @@ public abstract class AbstractExampleSetJoin extends Operator {
 		return joinOutput;
 	}
 
-	protected abstract MemoryExampleTable joinData(ExampleSet es1, ExampleSet es2,
+	protected abstract ExampleSetBuilder joinData(ExampleSet es1, ExampleSet es2,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList) throws OperatorException;
 
 	protected abstract boolean isIdNeeded();
@@ -195,11 +195,11 @@ public abstract class AbstractExampleSetJoin extends Operator {
 				Attribute cloneAttribute = (Attribute) attribute.clone();
 				if (containsAttribute(unionAttributeList, attribute)) { // in list...
 					if (!getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES)) { // ... but
-																						// should
-																						// not be
-																						// removed
-																						// -->
-																						// rename
+																						 // should
+																						 // not be
+																						 // removed
+																						 // -->
+																						 // rename
 						originalAttributeSources.add(new AttributeSource(AttributeSource.SECOND_SOURCE, attribute));
 						cloneAttribute.setName(cloneAttribute.getName() + "_from_ES2");
 						if (containsAttribute(unionAttributeList, cloneAttribute)) {
@@ -254,7 +254,7 @@ public abstract class AbstractExampleSetJoin extends Operator {
 			Attribute specialAttribute = role.getAttribute();
 			if (!usedSpecialAttributes.contains(specialName)
 					&& !excludedAttributes.contains(new Pair(AttributeSource.SECOND_SOURCE, specialAttribute))) { // not
-																													// there
+																													 // there
 				Attribute specialAttributeClone = (Attribute) specialAttribute.clone();
 				boolean addToUnionList = true;
 				for (Attribute unionAttribute : unionAttributeList) {
@@ -278,10 +278,10 @@ public abstract class AbstractExampleSetJoin extends Operator {
 		}
 
 		// join data
-		MemoryExampleTable unionTable = joinData(es1, es2, originalAttributeSources, unionAttributeList);
+		ExampleSetBuilder unionBuilder = joinData(es1, es2, originalAttributeSources, unionAttributeList);
 
 		// create new example set
-		ExampleSet result = unionTable.createExampleSet(unionSpecialAttributes);
+		ExampleSet result = unionBuilder.withRoles(unionSpecialAttributes).build();
 		result.getAnnotations().addAll(es1.getAnnotations());
 		joinOutput.deliver(result);
 	}
@@ -348,11 +348,11 @@ public abstract class AbstractExampleSetJoin extends Operator {
 				AttributeMetaData cloneAttribute = attributeMD.clone();
 				if (containsAttributeMD(unionAttributeList, attributeMD)) { // in list...
 					if (!getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES)) { // ... but
-																						// should
-																						// not be
-																						// removed
-																						// -->
-																						// rename
+																						 // should
+																						 // not be
+																						 // removed
+																						 // -->
+																						 // rename
 						if (attributeMD.isSpecial() && unionSpecialRoleList.contains(attributeMD.getRole())) {
 							// this special attribute's role already exists
 							rightInput.addError(new SimpleMetaDataError(Severity.WARNING, rightInput,

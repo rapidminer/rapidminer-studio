@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator.clustering;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -28,25 +31,32 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.AbstractModel;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 
 /**
  * This class is the standard flat cluster model, using the example ids to remember which examples
  * were assigned to which cluster. This information is stored within the single clusters. Since
  * this, the id attribute needs to be unchanged when cluster model is applied onto an example set.
- * 
+ *
  * @author Sebastian Land
  */
 public class ClusterModel extends AbstractModel implements ClusterModelInterface {
 
+	private static final long serialVersionUID = 3780908886210272852L;
+
 	public static final int UNASSIGNABLE = -1;
 
-	private static final long serialVersionUID = 3780908886210272852L;
+	private static final int OPERATOR_PROGRESS_STEPS = 50000;
+
+	/**
+	 * The progress of this operator is split into 3 part-progresses. These values define how many
+	 * percent are completed after part-progress 1 and part-progress 2.
+	 */
+	private static final int INTERMEDIATE_PROGRESS_1 = 10;
+	private static final int INTERMEDIATE_PROGRESS_2 = 30;
 
 	private boolean isAddingAsLabel;
 	private boolean isRemovingUnknown;
@@ -65,6 +75,13 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
+
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+
 		Attributes attributes = exampleSet.getAttributes();
 
 		// additional checks
@@ -82,8 +99,17 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 			attributes.setLabel(targetAttribute);
 		}
 
+		if (progress != null) {
+			progress.setCompleted(INTERMEDIATE_PROGRESS_1);
+		}
+
 		// setting values
 		int[] clusterIndices = getClusterAssignments(exampleSet);
+
+		if (progress != null) {
+			progress.setCompleted(INTERMEDIATE_PROGRESS_2);
+		}
+
 		int i = 0;
 		for (Example example : exampleSet) {
 			if (clusterIndices[i] != ClusterModel.UNASSIGNABLE) {
@@ -92,11 +118,16 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 				example.setValue(targetAttribute, Double.NaN);
 			}
 			i++;
+
+			if (progress != null && i % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(
+						(int) ((100.0 - INTERMEDIATE_PROGRESS_2) * i / exampleSet.size() + INTERMEDIATE_PROGRESS_2));
+			}
 		}
 		// removing unknown examples if desired
 		if (isRemovingUnknown) {
-			exampleSet = new ConditionedExampleSet(exampleSet, new NoMissingAttributeValueCondition(exampleSet,
-					targetAttribute.getName()));
+			exampleSet = new ConditionedExampleSet(exampleSet,
+					new NoMissingAttributeValueCondition(exampleSet, targetAttribute.getName()));
 		}
 
 		return exampleSet;
@@ -117,7 +148,7 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 	/**
 	 * This method returns whether examples which can't be assigned should be removed from the
 	 * resulting example set.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isRemovingUnknownAssignments() {

@@ -27,18 +27,19 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.SparseFormatDataRowReader;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.att.AttributeSet;
 
 
 /**
  * Tests all formats of the {@link SparseFormatDataRowReader}
- * 
+ *
  * @author Simon Fischer, Ingo Mierswa
  */
 public class SparseReaderTest {
@@ -46,7 +47,7 @@ public class SparseReaderTest {
 	private static final String[] ATTRIBUTE_STRINGS = { "5:3.0 2:8.0", "1:cat 3:2.5 4:1.5e-1", "5:1.0", "1:dog 4:7.3e1" };
 
 	private static final String[] LABEL = { "yes", "no", "no", "yes" };
-	
+
 	public void readerTest(int format, Reader input, Reader labelInput) throws Exception {
 		AttributeSet attributeSet = new AttributeSet();
 		Attribute att1 = ExampleTestTools.attributeDogCatMouse();
@@ -55,21 +56,21 @@ public class SparseReaderTest {
 		Attribute att4 = ExampleTestTools.attributeReal(3);
 		Attribute att5 = ExampleTestTools.attributeReal(4);
 		Attribute att6 = ExampleTestTools.attributeYesNo();
-			
+
 		attributeSet.addAttribute(att1);
 		attributeSet.addAttribute(att2);
 		attributeSet.addAttribute(att3);
 		attributeSet.addAttribute(att4);
 		attributeSet.addAttribute(att5);
 		attributeSet.setSpecialAttribute("label", att6);
-		
+
 		java.util.Map<String, String> prefixMap = new java.util.HashMap<String, String>();
 		prefixMap.put("l", "label");
-		SparseFormatDataRowReader reader = new SparseFormatDataRowReader(new DataRowFactory(DataRowFactory.TYPE_SPARSE_MAP, '.'), 
-				format, prefixMap, attributeSet, input, labelInput, -1, false, '"');
-		MemoryExampleTable table = new MemoryExampleTable(attributeSet.getAllAttributes());
-		table.readExamples(reader);
-		ExampleSet exampleSet = table.createExampleSet(attributeSet);
+		SparseFormatDataRowReader reader = new SparseFormatDataRowReader(
+				new DataRowFactory(DataRowFactory.TYPE_SPARSE_MAP, '.'), format, prefixMap, attributeSet, input, labelInput,
+				-1, false, '"');
+		ExampleSet exampleSet = ExampleSets.from(attributeSet.getAllAttributes()).withDataRowReader(reader)
+				.withRole(att6, Attributes.LABEL_NAME).build();
 		Iterator<Example> r = exampleSet.iterator();
 		Example e = r.next();
 		assertEquals("example 1, column 1", "dog", e.getValueAsString(att1));

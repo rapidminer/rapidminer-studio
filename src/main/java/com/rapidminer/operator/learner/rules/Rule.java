@@ -37,7 +37,7 @@ import com.rapidminer.operator.learner.tree.SplitCondition;
  * condition1 and condition2 ... and conditionN then labelname = labelValue" It provides a test
  * method, to test if examples belong to the labelValue of this rule. The rule is build
  * incrementally, SplitConditions may be added by addTerm
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class Rule implements Serializable {
@@ -163,7 +163,7 @@ public class Rule implements Serializable {
 
 	/**
 	 * This method adds a condition to the conjunction in the rule's head
-	 * 
+	 *
 	 * @param condition
 	 *            This condition is added
 	 */
@@ -196,7 +196,7 @@ public class Rule implements Serializable {
 			}
 			counter++;
 		}
-		SplittedExampleSet result = new SplittedExampleSet(exampleSet, new Partition(partition, 2));
+		SplittedExampleSet result = new SplittedExampleSet(exampleSet, new Partition(partition, 2), true);
 		result.selectSingleSubset(1);
 		return result;
 	}
@@ -210,7 +210,7 @@ public class Rule implements Serializable {
 			}
 			counter++;
 		}
-		SplittedExampleSet result = new SplittedExampleSet(exampleSet, new Partition(partition, 2));
+		SplittedExampleSet result = new SplittedExampleSet(exampleSet, new Partition(partition, 2), true);
 		result.selectSingleSubset(0);
 		return result;
 	}

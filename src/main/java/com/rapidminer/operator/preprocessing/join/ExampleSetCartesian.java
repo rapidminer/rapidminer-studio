@@ -24,8 +24,8 @@ import java.util.List;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
@@ -69,11 +69,16 @@ public class ExampleSetCartesian extends AbstractExampleSetJoin {
 	 * @throws OperatorException
 	 */
 	@Override
-	protected MemoryExampleTable joinData(ExampleSet es1, ExampleSet es2, List<AttributeSource> originalAttributeSources,
+	protected ExampleSetBuilder joinData(ExampleSet es1, ExampleSet es2, List<AttributeSource> originalAttributeSources,
 			List<Attribute> unionAttributeList) throws OperatorException {
-		MemoryExampleTable unionTable = new MemoryExampleTable(unionAttributeList);
+		ExampleSetBuilder builder = ExampleSets.from(unionAttributeList);
 		Iterator<Example> reader = es1.iterator();
 		long total = (long) es1.size() * es2.size();
+		if (total < Integer.MAX_VALUE) {
+			builder.withExpectedSize((int) total);
+		} else {
+			builder.withExpectedSize(Integer.MAX_VALUE);
+		}
 		long progressCounter = 0;
 		getProgress().setTotal(100);
 		while (reader.hasNext()) {
@@ -94,14 +99,14 @@ public class ExampleSetCartesian extends AbstractExampleSetJoin {
 					index++;
 				}
 
-				unionTable.addDataRow(new DoubleArrayDataRow(unionDataRow));
+				builder.addRow(unionDataRow);
 				if (++progressCounter % 1000 == 0) {
 					getProgress().setCompleted((int) (100 * progressCounter / total));
 				}
 			}
 		}
 
-		return unionTable;
+		return builder;
 	}
 
 	@Override

@@ -19,6 +19,8 @@
 package com.rapidminer.repository.gui;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +44,7 @@ import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryListener;
 import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Observable;
@@ -51,10 +54,17 @@ import com.rapidminer.tools.Observer;
 /**
  * Model representing {@link Entry}s as a tree.
  *
- * @author Simon Fischer
+ * @author Simon Fischer , Denis Schernov
  *
  */
 public class RepositoryTreeModel implements TreeModel {
+
+	// Since we want the repository entries to be sorted alphanumeric we have to manipulate the
+	// methods getChild and getChildIndex. If we wouldn't cache the sorted entries we would have to
+	// sort the entries every time one of these methods is called.
+	// We're using a HashMap to cache the location of folders as keys while storing their subfolders
+	// and entries as their values in a sorted list.
+	private final HashMap<Object, List<Object>> sortedRepositoryEntriesHashMap = new HashMap<Object, List<Object>>();
 
 	private static final String PENDING_FOLDER_NAME = "Pending...";
 
@@ -78,21 +88,39 @@ public class RepositoryTreeModel implements TreeModel {
 		}
 
 		@Override
-		public void entryAdded(final Entry newEntry, Folder parent) {
+		public void entryAdded(final Entry newEntry, final Folder parent) {
+
+			// If there is already a sorted list of the entries of the parentfolder, the key and the
+			// list will be deleted so it will be recached with the new entry in the
+			// updateCachedRepositoryEntries method.
+			if (sortedRepositoryEntriesHashMap.containsKey(parent.getLocation())) {
+				sortedRepositoryEntriesHashMap.remove(parent.getLocation());
+			}
+
+			// fire event
+			final TreeModelEvent e = makeChangeEvent(newEntry);
+
 			SwingTools.invokeAndWait(new Runnable() {
 
 				@Override
 				public void run() {
-					final TreeModelEvent e = makeChangeEvent(newEntry);
 					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 						l.treeNodesInserted(e);
 					}
 				}
+
 			});
 		}
 
 		@Override
 		public void entryRemoved(final Entry removedEntry, final Folder parent, final int index) {
+
+			// If there is already a sorted list of the entries of the parentfolder, the key and the
+			// list will be deleted so it will be recached without the deleted entry in the
+			// updateCachedRepositoryEntries method.
+			if (sortedRepositoryEntriesHashMap.containsKey(parent.getLocation())) {
+				sortedRepositoryEntriesHashMap.remove(parent.getLocation());
+			}
 
 			// Save path of parent
 			final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
@@ -100,47 +128,81 @@ public class RepositoryTreeModel implements TreeModel {
 			treeUtil.saveSelectionPath(parentPath);
 
 			// Fire event
+			final TreeModelEvent p = makeChangeEvent(removedEntry);
 			final TreeModelEvent e = new TreeModelEvent(RepositoryTreeModel.this, parentPath, new int[] { index },
 					new Object[] { removedEntry });
+
 			SwingTools.invokeAndWait(new Runnable() {
 
 				@Override
 				public void run() {
 					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 						l.treeNodesRemoved(e);
+						l.treeStructureChanged(p);
 					}
-
 				}
 			});
 
-			// Restore path of parent
+			// Restore selected path / expansion state of parent
 			SwingUtilities.invokeLater(new Runnable() {
 
 				@Override
 				public void run() {
 					treeUtil.restoreSelectionPaths(parentTree);
 				}
+
 			});
 		}
 
 		@Override
 		public void entryChanged(final Entry entry) {
+
+			// If there is already a sorted list of the entries of the parentfolder, the key and the
+			// list will be deleted so it will be recached with the changed entry in the
+			// updateCachedRepositoryEntries method.
+			Folder parent = entry.getContainingFolder();
+			if (parent != null) {
+				if (sortedRepositoryEntriesHashMap.containsKey(parent.getLocation())) {
+					sortedRepositoryEntriesHashMap.remove(parent.getLocation());
+				}
+			}
+
+			// fire event
+			final TreeModelEvent p = entry != null ? makeChangeEvent(entry) : null;
 			final TreeModelEvent e = makeChangeEvent(entry);
+
+			final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
+			if (parentTree != null) {
+				treeUtil.saveExpansionState(parentTree);
+			}
+
 			SwingTools.invokeAndWait(new Runnable() {
 
 				@Override
 				public void run() {
 					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 						l.treeNodesChanged(e);
+						if (p != null) {
+							l.treeStructureChanged(p);
+						}
 					}
 				}
 			});
+			if (parentTree != null) {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						treeUtil.restoreExpansionState(parentTree);
+					}
+				});
+			}
 		}
 
 		@Override
 		public void folderRefreshed(final Folder folder) {
-			final TreeModelEvent e = makeChangeEvent(folder);
 			final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
+			final TreeModelEvent e = makeChangeEvent(folder);
 			SwingTools.invokeAndWait(new Runnable() {
 
 				@Override
@@ -151,9 +213,9 @@ public class RepositoryTreeModel implements TreeModel {
 					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 						l.treeStructureChanged(e);
 					}
-					treeUtil.locateExpandedEntries();					
+					treeUtil.locateExpandedEntries();
 				}
-				
+
 			});
 			if (parentTree != null) {
 				SwingUtilities.invokeLater(new Runnable() {
@@ -189,10 +251,8 @@ public class RepositoryTreeModel implements TreeModel {
 			@Override
 			public void update(Observable<Repository> observable, Repository arg) {
 				for (Repository repository : root.getRepositories()) {
-					// if (onlyWritableRepositories) {
 					repository.removeRepositoryListener(repositoryListener);
 					repository.addRepositoryListener(repositoryListener);
-					// }
 				}
 				final TreeModelEvent e = new TreeModelEvent(this, new TreePath(root));
 
@@ -257,6 +317,18 @@ public class RepositoryTreeModel implements TreeModel {
 		parentTree = tree;
 	}
 
+	/**
+	 * Returns the Object which is contained by the parent and has the wanted index while the child
+	 * will be determinate by a sorted list of the children of the parent. If there is no data known
+	 * an empty string will be returned and if the folder is blocking the data for now
+	 * PENDING_FOLDER_NAME will be returned.
+	 *
+	 * @param parent
+	 *            The parent {@link Repository}, {@link Folder}, {@link Entry} etc. of the child.
+	 * @param index
+	 *            Refers to the index of the child you want to get.
+	 * @return The child with the parent at the index.
+	 */
 	@Override
 	public Object getChild(Object parent, int index) {
 		if (parent instanceof RepositoryManager) {
@@ -271,15 +343,25 @@ public class RepositoryTreeModel implements TreeModel {
 				return PENDING_FOLDER_NAME;
 			} else {
 				try {
+					if (!sortedRepositoryEntriesHashMap.keySet().contains(parent)) {
+						updateCachedRepositoryEntries(folder);
+					}
 					int numFolders = folder.getSubfolders().size();
 					if (index < numFolders) {
-						return folder.getSubfolders().get(index);
+						if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())
+								|| sortedRepositoryEntriesHashMap.get(folder.getLocation()).size() <= index) {
+							updateCachedRepositoryEntries(folder);
+						}
+						return sortedRepositoryEntriesHashMap.get(folder.getLocation()).get(index);
 					} else if (onlyFolders) {
 						return null;
 					} else {
-						List<DataEntry> dataEntries = folder.getDataEntries();
-						if (dataEntries.size() > index - numFolders) {
-							return dataEntries.get(index - numFolders);
+						if (folder.getDataEntries().size() > index - numFolders) {
+							if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())
+									|| sortedRepositoryEntriesHashMap.get(folder.getLocation()).size() <= index) {
+								updateCachedRepositoryEntries(folder);
+							}
+							return sortedRepositoryEntriesHashMap.get(folder.getLocation()).get(index);
 						} else {
 							// In this case and at this state, no data entry is known.
 							// Returning null would cause a NPE.
@@ -288,11 +370,11 @@ public class RepositoryTreeModel implements TreeModel {
 						}
 					}
 				} catch (RepositoryException e) {
-					LogService.getRoot().log(
-							Level.WARNING,
+					LogService.getRoot().log(Level.WARNING,
 							I18N.getMessage(LogService.getRoot().getResourceBundle(),
 									"com.rapidminer.repository.gui.RepositoryTreeModel.getting_children_of_folder_error",
-									folder.getName(), e), e);
+									folder.getName(), e),
+							e);
 					return null;
 				}
 			}
@@ -396,13 +478,11 @@ public class RepositoryTreeModel implements TreeModel {
 						return folder.getSubfolders().size() + folder.getDataEntries().size();
 					}
 				} catch (RepositoryException e) {
-					LogService
-							.getRoot()
-							.log(Level.WARNING,
-									I18N.getMessage(
-											LogService.getRoot().getResourceBundle(),
-											"com.rapidminer.repository.gui.RepositoryTreeModel.getting_children_count_of_folder_error",
-											folder.getName(), e), e);
+					LogService.getRoot().log(Level.WARNING,
+							I18N.getMessage(LogService.getRoot().getResourceBundle(),
+									"com.rapidminer.repository.gui.RepositoryTreeModel.getting_children_count_of_folder_error",
+									folder.getName(), e),
+							e);
 					return 0;
 				}
 			}
@@ -411,6 +491,15 @@ public class RepositoryTreeModel implements TreeModel {
 		}
 	}
 
+	/**
+	 * This method will return the index of the child which is contained by parent.
+	 *
+	 * @param parent
+	 *            Parent object (directory) of the child
+	 * @param child
+	 *            Child object which index will be returned
+	 * @return The index of the child which is in the parent directory.
+	 */
 	@Override
 	public int getIndexOfChild(Object parent, Object child) {
 		if (parent instanceof RepositoryManager) {
@@ -425,24 +514,51 @@ public class RepositoryTreeModel implements TreeModel {
 			}
 			Folder folder = (Folder) parent;
 			try {
-				if (child instanceof Folder) {
-					return folder.getSubfolders().indexOf(child);
-				} else if (child instanceof Entry && !onlyFolders) {
-					return folder.getDataEntries().indexOf(child) + folder.getSubfolders().size();
+				if (!sortedRepositoryEntriesHashMap.keySet().contains(parent)) {
+					updateCachedRepositoryEntries(folder);
+				}
+				if (child instanceof Folder || child instanceof Entry) {
+					if (folder.getSubfolders().contains(child) || folder.getDataEntries().contains(child)) {
+						if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())
+								|| !sortedRepositoryEntriesHashMap.get(folder.getLocation()).contains(child)) {
+							updateCachedRepositoryEntries(folder);
+						}
+						return sortedRepositoryEntriesHashMap.get(folder.getLocation()).indexOf(child);
+					}
 				} else {
 					return -1;
 				}
 			} catch (RepositoryException e) {
-				LogService.getRoot().log(
-						Level.WARNING,
+				LogService.getRoot().log(Level.WARNING,
 						I18N.getMessage(LogService.getRoot().getResourceBundle(),
 								"com.rapidminer.repository.gui.RepositoryTreeModel.getting_child_index_of_folder_error",
-								folder.getName(), e), e);
+								folder.getName(), e),
+						e);
 				return -1;
 			}
 		} else {
 			return -1;
 		}
+		return 0;
+	}
+
+	/**
+	 * This method will update the cached HashMap depending on the key which is the parameter parent
+	 * more specifically its path.
+	 *
+	 * @param parent
+	 *            determinate which part of the cached HashMap has to be updated
+	 * @throws RepositoryException
+	 */
+	private void updateCachedRepositoryEntries(Folder parent) throws RepositoryException {
+		sortedRepositoryEntriesHashMap.remove(parent.getLocation());
+		List<Folder> sortedFolders = new LinkedList<Folder>(parent.getSubfolders());
+		List<DataEntry> sortedEntries = new LinkedList<DataEntry>(parent.getDataEntries());
+		Collections.sort(sortedFolders, RepositoryTools.ENTRY_COMPARATOR);
+		Collections.sort(sortedEntries, RepositoryTools.ENTRY_COMPARATOR);
+		List<Object> newList = new LinkedList<Object>(sortedFolders);
+		newList.addAll(sortedEntries);
+		sortedRepositoryEntriesHashMap.put(parent.getLocation(), newList);
 	}
 
 	@Override

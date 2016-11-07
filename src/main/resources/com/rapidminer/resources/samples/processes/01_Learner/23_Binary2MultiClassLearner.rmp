@@ -1,21 +1,61 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Iris"/>
       </operator>
-      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="180" y="30">
+      <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="179" y="34">
+        <parameter key="enable_parallel_execution" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="10"/>
+        <parameter key="sampling_type" value="automatic"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="materialize_data" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="polynomial_by_binomial_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Binary2MultiClassLearner">
+          <operator activated="true" class="polynomial_by_binomial_classification" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Binary2MultiClassLearner" width="90" x="45" y="34">
+            <parameter key="classification_strategies" value="1 against all"/>
+            <parameter key="random_code_multiplicator" value="2.0"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
             <process expanded="true">
-              <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" name="JMySVMLearner">
+              <operator activated="true" class="support_vector_machine" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="JMySVMLearner" width="90" x="436" y="34">
+                <parameter key="kernel_type" value="dot"/>
+                <parameter key="kernel_gamma" value="1.0"/>
+                <parameter key="kernel_sigma1" value="1.0"/>
+                <parameter key="kernel_sigma2" value="0.0"/>
+                <parameter key="kernel_sigma3" value="2.0"/>
+                <parameter key="kernel_shift" value="1.0"/>
+                <parameter key="kernel_degree" value="2.0"/>
+                <parameter key="kernel_a" value="1.0"/>
+                <parameter key="kernel_b" value="0.0"/>
+                <parameter key="kernel_cache" value="200"/>
+                <parameter key="C" value="0.0"/>
                 <parameter key="convergence_epsilon" value="0.0010"/>
+                <parameter key="max_iterations" value="100000"/>
+                <parameter key="scale" value="true"/>
+                <parameter key="calculate_weights" value="true"/>
+                <parameter key="return_optimization_performance" value="true"/>
+                <parameter key="L_pos" value="1.0"/>
+                <parameter key="L_neg" value="1.0"/>
+                <parameter key="epsilon" value="0.0"/>
+                <parameter key="epsilon_plus" value="0.0"/>
+                <parameter key="epsilon_minus" value="0.0"/>
+                <parameter key="balance_cost" value="false"/>
+                <parameter key="quadratic_loss_pos" value="false"/>
+                <parameter key="quadratic_loss_neg" value="false"/>
+                <parameter key="estimate_performance" value="false"/>
               </operator>
               <connect from_port="training set" to_op="JMySVMLearner" to_port="training set"/>
               <connect from_op="JMySVMLearner" from_port="model" to_port="model"/>
@@ -23,38 +63,62 @@
               <portSpacing port="sink_model" spacing="0"/>
             </process>
           </operator>
-          <connect from_port="training" to_op="Binary2MultiClassLearner" to_port="training set"/>
+          <connect from_port="training set" to_op="Binary2MultiClassLearner" to_port="training set"/>
           <connect from_op="Binary2MultiClassLearner" from_port="model" to_port="model"/>
-          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="source_training set" spacing="0"/>
           <portSpacing port="sink_model" spacing="0"/>
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ClassificationPerformance">
+          <operator activated="true" class="performance_classification" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ClassificationPerformance" width="90" x="261" y="34">
+            <parameter key="main_criterion" value="first"/>
             <parameter key="accuracy" value="false"/>
             <parameter key="classification_error" value="true"/>
+            <parameter key="kappa" value="false"/>
+            <parameter key="weighted_mean_recall" value="false"/>
+            <parameter key="weighted_mean_precision" value="false"/>
+            <parameter key="spearman_rho" value="false"/>
+            <parameter key="kendall_tau" value="false"/>
+            <parameter key="absolute_error" value="false"/>
+            <parameter key="relative_error" value="false"/>
+            <parameter key="relative_error_lenient" value="false"/>
+            <parameter key="relative_error_strict" value="false"/>
+            <parameter key="normalized_absolute_error" value="false"/>
+            <parameter key="root_mean_squared_error" value="false"/>
+            <parameter key="root_relative_squared_error" value="false"/>
+            <parameter key="squared_error" value="false"/>
+            <parameter key="correlation" value="false"/>
+            <parameter key="squared_correlation" value="false"/>
+            <parameter key="cross-entropy" value="false"/>
+            <parameter key="margin" value="false"/>
+            <parameter key="soft_margin_loss" value="false"/>
+            <parameter key="logistic_loss" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="true"/>
             <list key="class_weights"/>
           </operator>
           <connect from_port="model" to_op="ModelApplier" to_port="model"/>
           <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
           <connect from_op="ModelApplier" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
-          <connect from_op="ClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+          <connect from_op="ClassificationPerformance" from_port="performance" to_port="performance 1"/>
           <portSpacing port="source_model" spacing="0"/>
           <portSpacing port="source_test set" spacing="0"/>
           <portSpacing port="source_through 1" spacing="0"/>
-          <portSpacing port="sink_averagable 1" spacing="0"/>
-          <portSpacing port="sink_averagable 2" spacing="0"/>
+          <portSpacing port="sink_test set results" spacing="0"/>
+          <portSpacing port="sink_performance 1" spacing="0"/>
+          <portSpacing port="sink_performance 2" spacing="0"/>
         </process>
       </operator>
-      <connect from_op="Retrieve" from_port="output" to_op="XValidation" to_port="training"/>
-      <connect from_op="XValidation" from_port="averagable 1" to_port="result 1"/>
+      <connect from_op="Retrieve" from_port="output" to_op="Cross Validation" to_port="example set"/>
+      <connect from_op="Cross Validation" from_port="performance 1" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="91" resized="true" width="379" x="34" y="158">The meta learning schemes used in this setup is a binary to multi class converter. This allows the learning of model for polynominal data sets (i.e. for data sets with more than two classes) by learners supporting only binominal classes.</description>
+      <description align="left" color="yellow" colored="false" height="91" resized="true" width="379" x="38" y="206">The meta learning schemes used in this setup is a binary to multi class converter. This allows the learning of model for polynominal data sets (i.e. for data sets with more than two classes) by learners supporting only binominal classes.</description>
     </process>
   </operator>
 </process>

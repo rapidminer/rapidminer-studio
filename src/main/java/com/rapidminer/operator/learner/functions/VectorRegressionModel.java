@@ -18,8 +18,6 @@
  */
 package com.rapidminer.operator.learner.functions;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -27,9 +25,12 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
+
+import Jama.Matrix;
 
 
 /**
@@ -40,6 +41,8 @@ import com.rapidminer.tools.Tools;
 public class VectorRegressionModel extends PredictionModel {
 
 	private static final long serialVersionUID = 8381268071090932037L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 1000;
 
 	private String[] labelNames;
 
@@ -78,6 +81,14 @@ public class VectorRegressionModel extends PredictionModel {
 			usedAttributes[i] = attributes.get(attributeNames[i]);
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+
 		// now calculate predicted value
 		for (Example example : exampleSet) {
 			for (int i = 0; i < predictedLabels.length; i++) {
@@ -92,6 +103,11 @@ public class VectorRegressionModel extends PredictionModel {
 					}
 				}
 				example.setValue(predictedLabels[i], predictedLabel);
+			}
+
+			// trigger progress
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

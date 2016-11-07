@@ -25,9 +25,9 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
 import com.rapidminer.example.table.DoubleSparseArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -129,7 +129,7 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 		label.getMapping().mapString("positive");
 		label.getMapping().mapString("negative");
 		attributes.add(label);
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -151,7 +151,7 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 					dataRow.set(label, label.getMapping().mapString("negative"));
 				}
 				dataRow.trim();
-				table.addDataRow(dataRow);
+				builder.addDataRow(dataRow);
 			} else {
 				double[] dataRow = new double[numberOfAttributes + 1];
 				for (int i = 0; i < numberOfAttributes; i++) {
@@ -167,12 +167,12 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 				} else {
 					dataRow[dataRow.length - 1] = label.getMapping().mapString("negative");
 				}
-				table.addDataRow(new DoubleArrayDataRow(dataRow));
+				builder.addRow(dataRow);
 			}
 		}
 
 		// create example set and return it
-		ExampleSet result = table.createExampleSet(label);
+		ExampleSet result = builder.withRole(label, Attributes.LABEL_NAME).build();
 
 		getProgress().complete();
 

@@ -33,8 +33,8 @@ import org.junit.Test;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.expression.ExampleResolver;
 import com.rapidminer.tools.expression.Expression;
@@ -60,11 +60,11 @@ public class AnltrParserIfTest extends AntlrParserTest {
 		attributes.add(AttributeFactory.createAttribute("Test", Ontology.INTEGER));
 		attributes.add(AttributeFactory.createAttribute("TestDate", Ontology.DATE_TIME));
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes);
 		double[] data = { 1, sometime };
-		table.addDataRow(new DoubleArrayDataRow(data));
+		builder.addRow(data);
 
-		return table.createExampleSet();
+		return builder.build();
 	}
 
 	@Test

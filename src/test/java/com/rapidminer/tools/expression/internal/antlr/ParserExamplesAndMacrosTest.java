@@ -35,9 +35,9 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.PolynominalMapping;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.expression.ExampleResolver;
 import com.rapidminer.tools.expression.Expression;
@@ -91,15 +91,15 @@ public class ParserExamplesAndMacrosTest {
 		attributes.add(AttributeFactory.createAttribute("date", Ontology.DATE));
 		attributes.add(AttributeFactory.createAttribute("t[i]m\\e", Ontology.TIME));
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes);
 		double[] data = { 0, 1.5, 123142311234.0, 5, 1123424, 142313411234.0, 1423411234.0 };
-		table.addDataRow(new DoubleArrayDataRow(data));
+		builder.addRow(data);
 		data = new double[] { 1, 0.1234123134, 123142313411234.0, 11.25, 11.123, 1423131234.0, 1423434.0 };
-		table.addDataRow(new DoubleArrayDataRow(data));
+		builder.addRow(data);
 		data = new double[] { Double.NaN, Double.NaN, Double.NaN, 0.13445e-12, Double.NaN, Double.NaN, Double.NaN };
-		table.addDataRow(new DoubleArrayDataRow(data));
+		builder.addRow(data);
 
-		return table.createExampleSet();
+		return builder.build();
 	}
 
 	private Expression getExpressionWithExamplesAndMacros(String expression) throws ExpressionException {

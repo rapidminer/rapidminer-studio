@@ -33,9 +33,9 @@ import com.rapidminer.MacroHandler;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.PolynominalMapping;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.expression.ExampleResolver;
 import com.rapidminer.tools.expression.Expression;
@@ -256,13 +256,13 @@ public class AntlrParserEvalTest extends AntlrParserTest {
 		attributes.add(AttributeFactory.createAttribute("numerical", Ontology.NUMERICAL));
 		attributes.add(AttributeFactory.createAttribute("integer", Ontology.INTEGER));
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes);
 		double[] data = { 0, 1.5, 5 };
-		table.addDataRow(new DoubleArrayDataRow(data));
+		builder.addRow(data);
 		data = new double[] { 1, 3.0, Double.NaN };
-		table.addDataRow(new DoubleArrayDataRow(data));
+		builder.addRow(data);
 
-		return table.createExampleSet();
+		return builder.build();
 	}
 
 	@Test

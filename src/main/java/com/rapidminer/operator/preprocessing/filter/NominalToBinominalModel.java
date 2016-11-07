@@ -35,6 +35,7 @@ import com.rapidminer.example.table.BinominalMapping;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -53,6 +54,8 @@ import com.rapidminer.tools.Tools;
 public class NominalToBinominalModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = 2882937201039541604L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 1_000_000;
 
 	private final Set<String> dichotomizationAttributeNames;
 	private final Set<String> changeTypeAttributeNames;
@@ -144,8 +147,10 @@ public class NominalToBinominalModel extends PreprocessingModel {
 		int progressCompletedCounter = 0;
 		long workloadForEachLoop = dichotomizationMap.size() + changeTypeMap.size();
 		long progressTriggerCounter = 0;
-		if (getOperator() != null) {
-			getOperator().getProgress().setTotal(exampleSet.size());
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
 		}
 
 		// fill new attributes with values
@@ -164,9 +169,9 @@ public class NominalToBinominalModel extends PreprocessingModel {
 
 			// trigger progress
 			++progressCompletedCounter;
-			if (getOperator() != null && ++progressTriggerCounter * workloadForEachLoop > 1000000L) {
+			if (progress != null && ++progressTriggerCounter * workloadForEachLoop > OPERATOR_PROGRESS_STEPS) {
 				progressTriggerCounter = 0;
-				getOperator().getProgress().setCompleted(progressCompletedCounter);
+				progress.setCompleted(progressCompletedCounter);
 			}
 		}
 

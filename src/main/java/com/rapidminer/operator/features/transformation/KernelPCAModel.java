@@ -20,8 +20,6 @@ package com.rapidminer.operator.features.transformation;
 
 import java.util.ArrayList;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -29,9 +27,12 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.AbstractModel;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.kernels.Kernel;
+
+import Jama.Matrix;
 
 
 /**
@@ -42,6 +43,12 @@ import com.rapidminer.tools.math.kernels.Kernel;
 public class KernelPCAModel extends AbstractModel {
 
 	private static final long serialVersionUID = -6699248775014738833L;
+
+	private static final int OPERATOR_PROGRESS_STEPS_1 = 100;
+
+	private static final int OPERATOR_PROGRESS_STEPS_2 = 10;
+
+	private static final int INTERMEDIATE_PROGRESS = 20;
 
 	private Matrix eigenVectors;
 
@@ -78,16 +85,27 @@ public class KernelPCAModel extends AbstractModel {
 
 		checkNames(attributes);
 
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+
 		log("Adding new the derived features...");
 		Attribute[] pcatts = new Attribute[exampleValues.size()];
 		for (int i = 0; i < exampleValues.size(); i++) {
 			pcatts[i] = AttributeFactory.createAttribute("kpc_" + (i + 1), Ontology.REAL);
 			exampleSet.getExampleTable().addAttribute(pcatts[i]);
 			exampleSet.getAttributes().addRegular(pcatts[i]);
+			if (progress != null && i % OPERATOR_PROGRESS_STEPS_1 == 0) {
+				progress.setCompleted((int) ((double) INTERMEDIATE_PROGRESS * i / exampleValues.size()));
+			}
 		}
 		log("Calculating new features");
 
 		Matrix distanceValues = new Matrix(1, exampleValues.size());
+
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			int i = 0;
 			for (double[] trainValue : exampleValues) {
@@ -96,6 +114,10 @@ public class KernelPCAModel extends AbstractModel {
 			Matrix resultValues = eigenVectors.times(distanceValues.transpose());
 			for (int j = 0; j < exampleValues.size(); j++) {
 				example.setValue(pcatts[j], resultValues.get(j, 0));
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS_2 == 0) {
+				progress.setCompleted((int) ((100.0 - INTERMEDIATE_PROGRESS) * progressCounter / exampleSet.size()
+						+ INTERMEDIATE_PROGRESS));
 			}
 		}
 

@@ -37,8 +37,8 @@ import com.rapidminer.example.AttributeTypeException;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -1174,7 +1174,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		}
 
 		// list of double arrays which holds the read values fpr each line
-		List<double[]> dataRows = new LinkedList<double[]>();
+		List<double[]> dataRows = new ArrayList<double[]>();
 
 		int lineCount = 0; // debugging purpose
 		while (set.next() && (limitOfReadLines == -1 || limitOfReadLines > lineCount)) {
@@ -1198,7 +1198,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		// The attributes might have changed during the loop above
 		// (Only if this is instance of CSVDataReader, see generateRow() ).
 		// This happens if a line is read that has more columns then expected.
-		MemoryExampleTable table = new MemoryExampleTable(activeAttributes);
+		ExampleSetBuilder builder = ExampleSets.from(activeAttributes).withExpectedSize(dataRows.size());
 
 		Iterator<double[]> rowIt = dataRows.iterator();
 		double[] row = null;
@@ -1215,13 +1215,13 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 					}
 					row = values;
 				}
-				table.addDataRow(new DoubleArrayDataRow(row));
+				builder.addRow(row);
 
 				// check for abort of the process
 				checkForStop();
 			}
 
-			ExampleSet exampleSet = table.createExampleSet();
+			ExampleSet exampleSet = builder.build();
 
 			// set special attributes
 			for (AttributeColumn column : getActiveAttributeColumns()) {

@@ -70,7 +70,9 @@ public class DataRowFactory {
 
 	public static final int TYPE_SPARSE_MAP = 14;
 
-	public static final int LAST_TYPE_INDEX = 14;
+	public static final int TYPE_COLUMN_VIEW = 15;
+
+	public static final int LAST_TYPE_INDEX = 15;
 
 	public static final int TYPE_SPECIAL = -1;
 
@@ -81,7 +83,7 @@ public class DataRowFactory {
 	 * TYPE_INT_ARRAY, TYPE_SHORT_ARRAY, TYPE_BYTE_ARRAY, TYPE_BOOLEAN_ARRAY,
 	 * TYPE_DOUBLE_SPARSE_ARRAY, TYPE_FLOAT_SPARSE_ARRAY, TYPE_LONG_SPARSE_ARRAY,
 	 * TYPE_INT_SPARSE_ARRAY, TYPE_SHORT_SPARSE_ARRAY, TYPE_BYTE_SPARSE_ARRAY,
-	 * TYPE_BOOLEAN_SPARSE_ARRAY, or TYPE_SPARSE_MAP.
+	 * TYPE_BOOLEAN_SPARSE_ARRAY, TYPE_SPARSE_MAP or TYPE_COLUMN_VIEW.
 	 */
 	private int type;
 
@@ -93,7 +95,8 @@ public class DataRowFactory {
 	 *            must be one out of TYPE_DOUBLE_ARRAY, TYPE_FLOAT_ARRAY, TYPE_LONG_ARRAY,
 	 *            TYPE_INT_ARRAY, TYPE_SHORT_ARRAY, TYPE_BYTE_ARRAY, TYPE_BOOLEAN_ARRAY,
 	 *            TYPE_DOUBLE_SPARSE_ARRAY, TYPE_FLOAT_SPARSE_ARRAY, TYPE_SHORT_SPARSE_ARRAY,
-	 *            TYPE_BYTE_SPARSE_ARRAY, TYPE_BOOLEAN_SPARSE_ARRAY, or TYPE_SPARSE_MAP.
+	 *            TYPE_BYTE_SPARSE_ARRAY, TYPE_BOOLEAN_SPARSE_ARRAY, TYPE_SPARSE_MAP or
+	 *            TYPE_COLUMN_VIEW.
 	 * @deprecated Please do not use this constructor any longer. Use the constructor
 	 *             {@link #DataRowFactory(int, char)} instead.
 	 */
@@ -108,7 +111,7 @@ public class DataRowFactory {
 	 *            TYPE_INT_ARRAY, TYPE_SHORT_ARRAY, TYPE_BYTE_ARRAY, TYPE_BOOLEAN_ARRAY,
 	 *            TYPE_DOUBLE_SPARSE_ARRAY, TYPE_FLOAT_SPARSE_ARRAY, TYPE_LONG_SPARSE_ARRAY,
 	 *            TYPE_INT_SPARSE_ARRAY, TYPE_SHORT_SPARSE_ARRAY, TYPE_BYTE_SPARSE_ARRAY,
-	 *            TYPE_BOOLEAN_SPARSE_ARRAY, or TYPE_SPARSE_MAP.
+	 *            TYPE_BOOLEAN_SPARSE_ARRAY, TYPE_SPARSE_MAP or TYPE_COLUMN_VIEW.
 	 * @param decimalPointCharacter
 	 *            the letter for decimal points, usually '.'
 	 */
@@ -125,6 +128,7 @@ public class DataRowFactory {
 		DataRow row = null;
 		switch (type) {
 			case TYPE_DOUBLE_ARRAY:
+			case TYPE_COLUMN_VIEW:
 				row = new DoubleArrayDataRow(new double[size]);
 				break;
 			case TYPE_FLOAT_ARRAY:

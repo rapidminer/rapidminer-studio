@@ -1,21 +1,37 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Golf"/>
       </operator>
-      <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="180" y="30"/>
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve (2)" width="90" x="313" y="75">
+      <operator activated="true" class="parallel_decision_tree" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DecisionTree" width="90" x="179" y="34">
+        <parameter key="criterion" value="gain_ratio"/>
+        <parameter key="maximal_depth" value="20"/>
+        <parameter key="apply_pruning" value="true"/>
+        <parameter key="confidence" value="0.25"/>
+        <parameter key="apply_prepruning" value="true"/>
+        <parameter key="minimal_gain" value="0.1"/>
+        <parameter key="minimal_leaf_size" value="2"/>
+        <parameter key="minimal_size_for_split" value="4"/>
+        <parameter key="number_of_prepruning_alternatives" value="3"/>
+      </operator>
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve (2)" width="90" x="313" y="85">
         <parameter key="repository_entry" value="../../data/Golf-Testset"/>
       </operator>
-      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Apply Model" width="90" x="447" y="30">
+      <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Apply Model" width="90" x="447" y="34">
         <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="DecisionTree" to_port="training set"/>
       <connect from_op="DecisionTree" from_port="model" to_op="Apply Model" to_port="model"/>
@@ -24,7 +40,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="175" resized="true" width="400" x="40" y="150">&lt;table&gt; &lt;tr&gt; &lt;td&gt; The Apply Model operator is one of the most important RapidMiner operators. It can be used to apply a previously learned model to (unseen) data. &lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt; In this process we first load some training data and learn a decision tree model. This model is then applied to the test data set with help of the apply model operator. You can add a breakpoint after the learner operator (from the context menu) in order to inspect the learned model. &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</description>
+      <description align="left" color="yellow" colored="false" height="175" resized="true" width="400" x="40" y="165">&lt;table&gt; &lt;tr&gt; &lt;td&gt; The Apply Model operator is one of the most important RapidMiner operators. It can be used to apply a previously learned model to (unseen) data. &lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt; In this process we first load some training data and learn a decision tree model. This model is then applied to the test data set with help of the apply model operator. You can add a breakpoint after the learner operator (from the context menu) in order to inspect the learned model. &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</description>
     </process>
   </operator>
 </process>

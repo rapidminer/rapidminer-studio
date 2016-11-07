@@ -54,9 +54,9 @@ public abstract class PreprocessingModel extends AbstractModel implements ViewMo
 	protected PreprocessingModel(ExampleSet exampleSet) {
 		super(exampleSet);
 	}
-
+	
 	/**
-	 * Applies the model by changing the underlying data
+	 * Applies the model by changing the underlying data.
 	 */
 	public abstract ExampleSet applyOnData(ExampleSet exampleSet) throws OperatorException;
 

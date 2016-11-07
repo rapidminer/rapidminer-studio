@@ -1,31 +1,67 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="warning"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Iris"/>
       </operator>
-      <operator activated="true" class="loop_parameters" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ParameterIteration" width="90" x="180" y="30">
+      <operator activated="true" class="loop_parameters" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ParameterIteration" width="90" x="179" y="34">
         <list key="parameters">
           <parameter key="KMeans.k" value="2,3,4,5,6,7,8,9,10,11,13"/>
         </list>
+        <parameter key="error_handling" value="fail on error"/>
+        <parameter key="synchronize" value="false"/>
         <process expanded="true">
-          <operator activated="true" class="k_means" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="KMeans" width="90" x="45" y="30">
+          <operator activated="true" class="k_means" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="KMeans" width="90" x="45" y="34">
+            <parameter key="add_cluster_attribute" value="true"/>
+            <parameter key="add_as_label" value="false"/>
+            <parameter key="remove_unlabeled" value="false"/>
             <parameter key="k" value="13"/>
+            <parameter key="max_runs" value="10"/>
+            <parameter key="determine_good_start_values" value="false"/>
+            <parameter key="measure_types" value="BregmanDivergences"/>
+            <parameter key="mixed_measure" value="MixedEuclideanDistance"/>
+            <parameter key="nominal_measure" value="NominalDistance"/>
+            <parameter key="numerical_measure" value="EuclideanDistance"/>
+            <parameter key="divergence" value="SquaredEuclideanDistance"/>
+            <parameter key="kernel_type" value="radial"/>
+            <parameter key="kernel_gamma" value="1.0"/>
+            <parameter key="kernel_sigma1" value="1.0"/>
+            <parameter key="kernel_sigma2" value="0.0"/>
+            <parameter key="kernel_sigma3" value="2.0"/>
+            <parameter key="kernel_degree" value="3.0"/>
+            <parameter key="kernel_shift" value="1.0"/>
+            <parameter key="kernel_a" value="1.0"/>
+            <parameter key="kernel_b" value="0.0"/>
+            <parameter key="max_optimization_steps" value="100"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
           </operator>
-          <operator activated="true" class="cluster_distance_performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Evaluation" width="90" x="179" y="30"/>
-          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ProcessLog" width="90" x="380" y="30">
+          <operator activated="true" class="cluster_distance_performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="Evaluation" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="Avg. within centroid distance"/>
+            <parameter key="main_criterion_only" value="false"/>
+            <parameter key="normalize" value="false"/>
+            <parameter key="maximize" value="false"/>
+          </operator>
+          <operator activated="true" class="log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="ProcessLog" width="90" x="313" y="34">
             <list key="log">
               <parameter key="k" value="operator.KMeans.parameter.k"/>
               <parameter key="DB" value="operator.Evaluation.value.DaviesBouldin"/>
               <parameter key="W" value="operator.Evaluation.value.avg_within_distance"/>
             </list>
+            <parameter key="sorting_type" value="none"/>
+            <parameter key="sorting_k" value="100"/>
+            <parameter key="persistent" value="false"/>
           </operator>
           <connect from_port="input 1" to_op="KMeans" to_port="example set"/>
           <connect from_op="KMeans" from_port="cluster model" to_op="Evaluation" to_port="cluster model"/>

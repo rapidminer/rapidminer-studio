@@ -69,6 +69,8 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	private static final ImageIcon UNSUPPORTED_ICON_LARGE = SwingTools
 			.createIcon("48/" + I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
 
+	private static final int DEFAULT_PRIORITY = 0;
+
 	public static final String EXTENSIONS_GROUP_IDENTIFIER = "extensions";
 
 	private final String key;
@@ -80,6 +82,8 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	private ImageIcon[] icons;
 
 	private String fullyQualifiedGroupKey;
+
+	private int priority = DEFAULT_PRIORITY;;
 
 	/**
 	 * @deprecated Only used for Weka
@@ -120,6 +124,15 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 		this.isSupportedByLicense = null;
 
 		key = XMLTools.getTagContents(element, "key", true);
+
+		String priorityString = XMLTools.getTagContents(element, "priority");
+		if (priorityString != null) {
+			try {
+				this.priority = Integer.valueOf(priorityString);
+			} catch (NumberFormatException e) {
+				this.priority = DEFAULT_PRIORITY;
+			}
+		}
 
 		Class<?> generatedClass = Class.forName(XMLTools.getTagContents(element, "class", true).trim(), true, classLoader);
 		this.clazz = (Class<? extends Operator>) generatedClass;
@@ -211,7 +224,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	@Deprecated
 	public OperatorDescription(final ClassLoader classLoader, final String key, final String name, final String className,
 			final String group, final String iconName, final String deprecationInfo, final Plugin provider)
-			throws ClassNotFoundException {
+					throws ClassNotFoundException {
 		this(classLoader, key, name, className, null, null, group, iconName, deprecationInfo, provider);
 	}
 
@@ -318,6 +331,17 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 
 	public ImageIcon getIcon() {
 		return getIcons()[1];
+	}
+
+	/**
+	 * The priority of the operator, defined in the operatorsXYZ.xml via the {@code <priority>} tag.
+	 * A higher value means the operator is sorted higher in the operator tree.<br/>
+	 * If no priority is defined, it will default to {@code 0}.
+	 *
+	 * @return
+	 */
+	public int getPriority() {
+		return priority;
 	}
 
 	public ImageIcon getSmallIcon() {

@@ -1,28 +1,62 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="-1"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="sum classification"/>
         <parameter key="number_examples" value="200"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="JMySVMLearner" width="90" x="179" y="30">
+      <operator activated="true" class="support_vector_machine" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="JMySVMLearner" width="90" x="179" y="34">
+        <parameter key="kernel_type" value="dot"/>
+        <parameter key="kernel_gamma" value="1.0"/>
+        <parameter key="kernel_sigma1" value="1.0"/>
+        <parameter key="kernel_sigma2" value="0.0"/>
+        <parameter key="kernel_sigma3" value="2.0"/>
+        <parameter key="kernel_shift" value="1.0"/>
+        <parameter key="kernel_degree" value="2.0"/>
+        <parameter key="kernel_a" value="1.0"/>
+        <parameter key="kernel_b" value="0.0"/>
+        <parameter key="kernel_cache" value="200"/>
         <parameter key="C" value="10.0"/>
         <parameter key="convergence_epsilon" value="0.0010"/>
+        <parameter key="max_iterations" value="100000"/>
+        <parameter key="scale" value="true"/>
+        <parameter key="calculate_weights" value="true"/>
+        <parameter key="return_optimization_performance" value="true"/>
+        <parameter key="L_pos" value="1.0"/>
+        <parameter key="L_neg" value="1.0"/>
+        <parameter key="epsilon" value="0.0"/>
+        <parameter key="epsilon_plus" value="0.0"/>
+        <parameter key="epsilon_minus" value="0.0"/>
+        <parameter key="balance_cost" value="false"/>
+        <parameter key="quadratic_loss_pos" value="false"/>
+        <parameter key="quadratic_loss_neg" value="false"/>
+        <parameter key="estimate_performance" value="false"/>
       </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="JMySVMLearner" to_port="training set"/>
       <connect from_op="JMySVMLearner" from_port="model" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="414" resized="true" width="482" x="31" y="153">This process demonstrates the visualization possibilities for Support Vector Machines (SVM) and other kernel based large margin models. The result of this process will be an SVM model for which you can change to a chart view. Several dimensions are provided for plotting purposes including the training set labels, the alpha values (Lagrange multiplier), the information if a training example is a support vector, the function values (predictions) for the training examples and of course the attribute values for all training examples. This data together with the powerful RapidMiner plotting mechanism allows for different types of SVM visualizations. Just try some of them. &lt;br/&gt;&lt;br/&gt;We suggest that you at least try to plot the &amp;quot;function values&amp;quot; against the &amp;quot;alpha&amp;quot; values in a usual scatter plot. This might give you a good hint if the used kernel function is appropriate for your data set. The same applies for the quartile plots of the function values and the alphas colorized by the label. &lt;br/&gt;&lt;br/&gt;An often desired feature is a colorized density plot of the function values. You can achieve this in the plot view of SVM models by changing the plotter to &amp;quot;Density&amp;quot;, selecting two attributes for the x- and y-axis, e.g. &amp;quot;attribute1&amp;quot; and &amp;quot;attribute2&amp;quot; in this example, and setting the &amp;quot;Density Color&amp;quot; to the column &amp;quot;function value&amp;quot;. This will lead to the desired density plot. If you set the &amp;quot;Point Color&amp;quot; to &amp;quot;support vector&amp;quot; or &amp;quot;alpha&amp;quot;, you will also get insight in which points are support vectors.</description>
+      <description align="left" color="yellow" colored="false" height="414" resized="true" width="482" x="31" y="170">This process demonstrates the visualization possibilities for Support Vector Machines (SVM) and other kernel based large margin models. The result of this process will be an SVM model for which you can change to a chart view. Several dimensions are provided for plotting purposes including the training set labels, the alpha values (Lagrange multiplier), the information if a training example is a support vector, the function values (predictions) for the training examples and of course the attribute values for all training examples. This data together with the powerful RapidMiner plotting mechanism allows for different types of SVM visualizations. Just try some of them. &lt;br/&gt;&lt;br/&gt;We suggest that you at least try to plot the &amp;quot;function values&amp;quot; against the &amp;quot;alpha&amp;quot; values in a usual scatter plot. This might give you a good hint if the used kernel function is appropriate for your data set. The same applies for the quartile plots of the function values and the alphas colorized by the label. &lt;br/&gt;&lt;br/&gt;An often desired feature is a colorized density plot of the function values. You can achieve this in the plot view of SVM models by changing the plotter to &amp;quot;Density&amp;quot;, selecting two attributes for the x- and y-axis, e.g. &amp;quot;attribute1&amp;quot; and &amp;quot;attribute2&amp;quot; in this example, and setting the &amp;quot;Density Color&amp;quot; to the column &amp;quot;function value&amp;quot;. This will lead to the desired density plot. If you set the &amp;quot;Point Color&amp;quot; to &amp;quot;support vector&amp;quot; or &amp;quot;alpha&amp;quot;, you will also get insight in which points are support vectors.</description>
     </process>
   </operator>
 </process>

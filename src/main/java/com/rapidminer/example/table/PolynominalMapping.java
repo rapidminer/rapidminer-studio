@@ -63,7 +63,7 @@ public class PolynominalMapping implements NominalMapping {
 		}
 	}
 
-	/* pp */PolynominalMapping(NominalMapping mapping) {
+	/* pp */ PolynominalMapping(NominalMapping mapping) {
 		this.symbolToIndexMap.clear();
 		this.indexToSymbolMap.clear();
 		for (int i = 0; i < mapping.size(); i++) {
@@ -105,9 +105,6 @@ public class PolynominalMapping implements NominalMapping {
 		int index = getIndex(str);
 		// if string is not yet in the map, add it
 		if (index < 0) {
-			// new string -> insert
-			str = new String(str);  // we copy the name if the underlying char array value is larger
-			// than needed
 			indexToSymbolMap.add(str);
 			index = indexToSymbolMap.size() - 1;
 			symbolToIndexMap.put(str, index);
@@ -137,8 +134,8 @@ public class PolynominalMapping implements NominalMapping {
 	@Override
 	public String mapIndex(int index) {
 		if (index < 0 || index >= indexToSymbolMap.size()) {
-			throw new AttributeTypeException("Cannot map index of nominal attribute to nominal value: index " + index
-					+ " is out of bounds!");
+			throw new AttributeTypeException(
+					"Cannot map index of nominal attribute to nominal value: index " + index + " is out of bounds!");
 		}
 		return indexToSymbolMap.get(index);
 	}

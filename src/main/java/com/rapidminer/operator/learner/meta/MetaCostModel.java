@@ -31,6 +31,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -45,6 +46,8 @@ import com.rapidminer.tools.Tools;
 public class MetaCostModel extends PredictionModel implements MetaModel {
 
 	private static final long serialVersionUID = -7378871544357578954L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
 
 	private Model[] models;
 
@@ -86,6 +89,13 @@ public class MetaCostModel extends PredictionModel implements MetaModel {
 			currentNumber++;
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+
 		// 1. Iterate over all models and all examples for every model to receive all confidence
 		// values.
 		for (int k = 0; k < getNumberOfModels(); k++) {
@@ -106,6 +116,10 @@ public class MetaCostModel extends PredictionModel implements MetaModel {
 				counter++;
 			}
 			PredictionModel.removePredictedLabel(exampleSet);
+
+			if (progress != null) {
+				progress.setCompleted((int) (80.0 * k / getNumberOfModels()));
+			}
 		}
 
 		// 2. Iterate again over all examples to compute a prediction and a confidence distribution
@@ -142,6 +156,10 @@ public class MetaCostModel extends PredictionModel implements MetaModel {
 				example.setConfidence(classIndexMap.get(i), confidences[counter][i]);
 			}
 			counter++;
+
+			if (progress != null && counter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) (20.0 * counter / originalExampleSet.size()) + 80);
+			}
 		}
 		return originalExampleSet;
 	}

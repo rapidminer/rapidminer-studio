@@ -1,27 +1,38 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Iris"/>
       </operator>
-      <operator activated="true" class="sample" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Sampling" width="90" x="179" y="30">
+      <operator activated="true" class="sample" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Sampling" width="90" x="179" y="34">
+        <parameter key="sample" value="absolute"/>
+        <parameter key="balance_data" value="false"/>
+        <parameter key="sample_size" value="100"/>
         <parameter key="sample_ratio" value="0.2"/>
+        <parameter key="sample_probability" value="0.1"/>
         <list key="sample_size_per_class"/>
         <list key="sample_ratio_per_class"/>
         <list key="sample_probability_per_class"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="Sampling" to_port="example set input"/>
       <connect from_op="Sampling" from_port="example set output" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="92" resized="true" width="362" x="38" y="123">The Sampling operator draws a random sample from the input example set. Please note that the order of operators might be important, e.g. if both sampling and normalization are applied.</description>
+      <description align="left" color="yellow" colored="false" height="92" resized="true" width="362" x="43" y="129">The Sampling operator draws a random sample from the input example set. Please note that the order of operators might be important, e.g. if both sampling and normalization are applied.</description>
     </process>
   </operator>
 </process>

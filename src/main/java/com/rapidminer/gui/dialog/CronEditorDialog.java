@@ -35,6 +35,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
@@ -124,6 +125,9 @@ public class CronEditorDialog extends ButtonDialog {
 	private JSpinner spinnerYearStart;
 	private JSpinner spinnerYearRepeat;
 
+	// warning label
+	private JLabel warningLabel;
+
 	private static final long serialVersionUID = 837836954191730785L;
 
 	public CronEditorDialog(Operator operator, ParameterTypeCronExpression type) {
@@ -149,29 +153,32 @@ public class CronEditorDialog extends ButtonDialog {
 	 * Creates the GUI.
 	 */
 	private void setupGUI() {
+		warningLabel = new JLabel(I18N.getGUILabel("cron_editor.high_frequency"),
+				SwingTools.createIcon(I18N.getGUILabel("cron_editor.high_frequency.icon")), JLabel.RIGHT);
+
 		// setup GUI
 		setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 
 		// seconds section
 		JPanel panelSec = new JPanel();
-		panelSec.setBorder(BorderFactory.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.panel_sec.label")));
+		panelSec.setBorder(BorderFactory
+				.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.panel_sec.label")));
 		panelSec.setLayout(new GridBagLayout());
 
 		spinnerSecStart = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
-		spinnerSecStart.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_sec_once_spinner.tip"));
+		spinnerSecStart
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_once_spinner.tip"));
 		spinnerSecRepeat = new JSpinner(new SpinnerNumberModel(1, 1, 60, 1));
-		spinnerSecRepeat.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_sec_repeat_spinner.tip"));
+		spinnerSecRepeat
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_repeat_spinner.tip"));
 
-		radioButtonSecOnce = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_sec_once.label"));
-		radioButtonSecEvery = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_sec_every.label"));
-		checkBoxSecRepeat = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_sec_repeat.label"));
+		radioButtonSecOnce = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_once.label"));
+		radioButtonSecEvery = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_every.label"));
+		checkBoxSecRepeat = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_repeat.label"));
 		ButtonGroup secButtonGroup = new ButtonGroup();
 		secButtonGroup.add(radioButtonSecOnce);
 		secButtonGroup.add(radioButtonSecEvery);
@@ -183,9 +190,12 @@ public class CronEditorDialog extends ButtonDialog {
 				spinnerSecStart.setEnabled(true);
 				spinnerSecRepeat.setEnabled(checkBoxSecRepeat.isSelected());
 				checkBoxSecRepeat.setEnabled(true);
+
+				warningLabel.setVisible(false);
 			}
 		});
 		radioButtonSecOnce.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_once.tip"));
+		radioButtonSecOnce.doClick();
 		radioButtonSecEvery.addActionListener(new ActionListener() {
 
 			@Override
@@ -193,11 +203,12 @@ public class CronEditorDialog extends ButtonDialog {
 				spinnerSecStart.setEnabled(false);
 				spinnerSecRepeat.setEnabled(false);
 				checkBoxSecRepeat.setEnabled(false);
+				warningLabel.setVisible(true);
 			}
 		});
 		radioButtonSecEvery
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_every.tip"));
-		radioButtonSecEvery.doClick();
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_sec_every.tip"));
+
 		checkBoxSecRepeat.addActionListener(new ActionListener() {
 
 			@Override
@@ -234,23 +245,23 @@ public class CronEditorDialog extends ButtonDialog {
 
 		// minutes section
 		JPanel panelMin = new JPanel();
-		panelMin.setBorder(BorderFactory.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.panel_min.label")));
+		panelMin.setBorder(BorderFactory
+				.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.panel_min.label")));
 		panelMin.setLayout(new GridBagLayout());
 
 		spinnerMinStart = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
-		spinnerMinStart.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_min_once_spinner.tip"));
+		spinnerMinStart
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_once_spinner.tip"));
 		spinnerMinRepeat = new JSpinner(new SpinnerNumberModel(1, 1, 60, 1));
-		spinnerMinRepeat.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_min_repeat_spinner.tip"));
+		spinnerMinRepeat
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_repeat_spinner.tip"));
 
-		radioButtonMinOnce = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_min_once.label"));
-		radioButtonMinEvery = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_min_every.label"));
-		checkBoxMinRepeat = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_min_repeat.label"));
+		radioButtonMinOnce = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_once.label"));
+		radioButtonMinEvery = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_every.label"));
+		checkBoxMinRepeat = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_repeat.label"));
 		ButtonGroup minButtonGroup = new ButtonGroup();
 		minButtonGroup.add(radioButtonMinOnce);
 		minButtonGroup.add(radioButtonMinEvery);
@@ -265,6 +276,7 @@ public class CronEditorDialog extends ButtonDialog {
 			}
 		});
 		radioButtonMinOnce.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_once.tip"));
+		radioButtonMinOnce.doClick();
 		radioButtonMinEvery.addActionListener(new ActionListener() {
 
 			@Override
@@ -275,8 +287,8 @@ public class CronEditorDialog extends ButtonDialog {
 			}
 		});
 		radioButtonMinEvery
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_every.tip"));
-		radioButtonMinEvery.doClick();
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_min_every.tip"));
+
 		checkBoxMinRepeat.addActionListener(new ActionListener() {
 
 			@Override
@@ -312,23 +324,23 @@ public class CronEditorDialog extends ButtonDialog {
 
 		// hours section
 		JPanel panelHour = new JPanel();
-		panelHour.setBorder(BorderFactory.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.panel_hour.label")));
+		panelHour.setBorder(BorderFactory
+				.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.panel_hour.label")));
 		panelHour.setLayout(new GridBagLayout());
 
 		spinnerHourStart = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));
-		spinnerHourStart.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_hour_once_spinner.tip"));
+		spinnerHourStart
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_once_spinner.tip"));
 		spinnerHourRepeat = new JSpinner(new SpinnerNumberModel(1, 1, 24, 1));
-		spinnerHourRepeat.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_hour_repeat_spinner.tip"));
+		spinnerHourRepeat
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_repeat_spinner.tip"));
 
-		radioButtonHourOnce = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_hour_once.label"));
-		radioButtonHourEvery = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_hour_every.label"));
-		checkBoxHourRepeat = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_hour_repeat.label"));
+		radioButtonHourOnce = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_once.label"));
+		radioButtonHourEvery = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_every.label"));
+		checkBoxHourRepeat = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_repeat.label"));
 		ButtonGroup hourButtonGroup = new ButtonGroup();
 		hourButtonGroup.add(radioButtonHourOnce);
 		hourButtonGroup.add(radioButtonHourEvery);
@@ -343,7 +355,7 @@ public class CronEditorDialog extends ButtonDialog {
 			}
 		});
 		radioButtonHourOnce
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_once.tip"));
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_once.tip"));
 		radioButtonHourEvery.addActionListener(new ActionListener() {
 
 			@Override
@@ -353,8 +365,8 @@ public class CronEditorDialog extends ButtonDialog {
 				checkBoxHourRepeat.setEnabled(false);
 			}
 		});
-		radioButtonHourEvery.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_hour_every.tip"));
+		radioButtonHourEvery
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_every.tip"));
 		radioButtonHourEvery.doClick();
 		checkBoxHourRepeat.addActionListener(new ActionListener() {
 
@@ -364,7 +376,7 @@ public class CronEditorDialog extends ButtonDialog {
 			}
 		});
 		checkBoxHourRepeat
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_repeat.tip"));
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_hour_repeat.tip"));
 
 		gbc.gridx = 0;
 		gbc.gridy = 0;
@@ -392,58 +404,58 @@ public class CronEditorDialog extends ButtonDialog {
 
 		// days section
 		JPanel panelDay = new JPanel();
-		panelDay.setBorder(BorderFactory.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.panel_day.label")));
+		panelDay.setBorder(BorderFactory
+				.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.panel_day.label")));
 		panelDay.setLayout(new GridBagLayout());
 
 		spinnerDayStart = new JSpinner(new SpinnerNumberModel(1, 1, 31, 1));
-		spinnerDayStart.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_once_spinner.tip"));
+		spinnerDayStart
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_once_spinner.tip"));
 		spinnerDayRepeat = new JSpinner(new SpinnerNumberModel(1, 1, 31, 1));
-		spinnerDayRepeat.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_repeat_spinner.tip"));
+		spinnerDayRepeat
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_repeat_spinner.tip"));
 
-		radioButtonDayOnce = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_once.label"));
-		radioButtonDayEvery = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_every.label"));
-		checkBoxDayRepeat = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_repeat.label"));
-		radioButtonDayUseDayOfWeek = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_day_of_week.label"));
+		radioButtonDayOnce = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_once.label"));
+		radioButtonDayEvery = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_every.label"));
+		checkBoxDayRepeat = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_repeat.label"));
+		radioButtonDayUseDayOfWeek = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_day_of_week.label"));
 		ButtonGroup dayButtonGroup = new ButtonGroup();
 		dayButtonGroup.add(radioButtonDayOnce);
 		dayButtonGroup.add(radioButtonDayEvery);
 		dayButtonGroup.add(radioButtonDayUseDayOfWeek);
 
-		checkBoxMonday = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_monday.label"));
-		checkBoxMonday.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_monday.tip"));
-		checkBoxTuesday = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_tuesday.label"));
-		checkBoxTuesday.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_tuesday.tip"));
-		checkBoxWednesday = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_wednesday.label"));
-		checkBoxWednesday.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_wednesday.tip"));
-		checkBoxThursday = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_thursday.label"));
-		checkBoxThursday.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_thursday.tip"));
-		checkBoxFriday = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_friday.label"));
-		checkBoxFriday.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_friday.tip"));
-		checkBoxSaturday = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_saturday.label"));
-		checkBoxSaturday.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_saturday.tip"));
-		checkBoxSunday = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_sunday.label"));
-		checkBoxSunday.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_of_week_sunday.tip"));
+		checkBoxMonday = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_monday.label"));
+		checkBoxMonday
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_monday.tip"));
+		checkBoxTuesday = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_tuesday.label"));
+		checkBoxTuesday
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_tuesday.tip"));
+		checkBoxWednesday = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_wednesday.label"));
+		checkBoxWednesday.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_wednesday.tip"));
+		checkBoxThursday = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_thursday.label"));
+		checkBoxThursday.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_thursday.tip"));
+		checkBoxFriday = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_friday.label"));
+		checkBoxFriday
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_friday.tip"));
+		checkBoxSaturday = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_saturday.label"));
+		checkBoxSaturday.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_saturday.tip"));
+		checkBoxSunday = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_sunday.label"));
+		checkBoxSunday
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_of_week_sunday.tip"));
 
 		radioButtonDayOnce.addActionListener(new ActionListener() {
 
@@ -479,7 +491,7 @@ public class CronEditorDialog extends ButtonDialog {
 			}
 		});
 		radioButtonDayEvery
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_every.tip"));
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_every.tip"));
 		radioButtonDayEvery.doClick();
 		checkBoxDayRepeat.addActionListener(new ActionListener() {
 
@@ -505,8 +517,8 @@ public class CronEditorDialog extends ButtonDialog {
 				checkBoxDayRepeat.setEnabled(false);
 			}
 		});
-		radioButtonDayUseDayOfWeek.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_day_day_of_week.tip"));
+		radioButtonDayUseDayOfWeek
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_day_day_of_week.tip"));
 
 		JPanel panelDayOfWeek = new JPanel();
 		panelDayOfWeek.setLayout(new GridBagLayout());
@@ -584,78 +596,78 @@ public class CronEditorDialog extends ButtonDialog {
 
 		// months section
 		JPanel panelMonth = new JPanel();
-		panelMonth.setBorder(BorderFactory.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.panel_month.label")));
+		panelMonth.setBorder(BorderFactory
+				.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.panel_month.label")));
 		panelMonth.setLayout(new GridBagLayout());
 
 		spinnerMonthStart = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
-		spinnerMonthStart.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_once_spinner.tip"));
+		spinnerMonthStart
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_once_spinner.tip"));
 		spinnerMonthRepeat = new JSpinner(new SpinnerNumberModel(1, 1, 12, 1));
-		spinnerMonthRepeat.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_repeat_spinner.tip"));
+		spinnerMonthRepeat.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_repeat_spinner.tip"));
 
-		radioButtonMonthOnce = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_once.label"));
-		radioButtonMonthEvery = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_every.label"));
-		checkBoxMonthRepeat = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_repeat.label"));
-		radioButtonMonthUseMonthOfYear = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_month_of_year.label"));
+		radioButtonMonthOnce = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_once.label"));
+		radioButtonMonthEvery = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_every.label"));
+		checkBoxMonthRepeat = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_repeat.label"));
+		radioButtonMonthUseMonthOfYear = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_month_of_year.label"));
 		ButtonGroup monthButtonGroup = new ButtonGroup();
 		monthButtonGroup.add(radioButtonMonthOnce);
 		monthButtonGroup.add(radioButtonMonthEvery);
 		monthButtonGroup.add(radioButtonMonthUseMonthOfYear);
 
-		checkBoxJanuary = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_january.label"));
-		checkBoxJanuary.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_january.tip"));
-		checkBoxFebruary = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_february.label"));
-		checkBoxFebruary.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_february.tip"));
-		checkBoxMarch = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_march.label"));
-		checkBoxMarch.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_march.tip"));
-		checkBoxApril = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_april.label"));
-		checkBoxApril.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_april.tip"));
-		checkBoxMay = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_may.label"));
+		checkBoxJanuary = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_january.label"));
+		checkBoxJanuary.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_january.tip"));
+		checkBoxFebruary = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_february.label"));
+		checkBoxFebruary.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_february.tip"));
+		checkBoxMarch = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_march.label"));
+		checkBoxMarch
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_march.tip"));
+		checkBoxApril = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_april.label"));
+		checkBoxApril
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_april.tip"));
+		checkBoxMay = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_may.label"));
 		checkBoxMay
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_may.tip"));
-		checkBoxJune = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_june.label"));
-		checkBoxJune.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_june.tip"));
-		checkBoxJuly = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_july.label"));
-		checkBoxJuly.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_july.tip"));
-		checkBoxAugust = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_august.label"));
-		checkBoxAugust.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_august.tip"));
-		checkBoxSeptember = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_september.label"));
-		checkBoxSeptember.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_september.tip"));
-		checkBoxOctober = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_october.label"));
-		checkBoxOctober.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_october.tip"));
-		checkBoxNovember = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_november.label"));
-		checkBoxNovember.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_november.tip"));
-		checkBoxDecember = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_december.label"));
-		checkBoxDecember.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_of_year_december.tip"));
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_may.tip"));
+		checkBoxJune = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_june.label"));
+		checkBoxJune
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_june.tip"));
+		checkBoxJuly = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_july.label"));
+		checkBoxJuly
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_july.tip"));
+		checkBoxAugust = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_august.label"));
+		checkBoxAugust.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_august.tip"));
+		checkBoxSeptember = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_september.label"));
+		checkBoxSeptember.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_september.tip"));
+		checkBoxOctober = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_october.label"));
+		checkBoxOctober.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_october.tip"));
+		checkBoxNovember = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_november.label"));
+		checkBoxNovember.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_november.tip"));
+		checkBoxDecember = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_december.label"));
+		checkBoxDecember.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_of_year_december.tip"));
 
 		radioButtonMonthOnce.addActionListener(new ActionListener() {
 
@@ -678,8 +690,8 @@ public class CronEditorDialog extends ButtonDialog {
 				checkBoxMonthRepeat.setEnabled(true);
 			}
 		});
-		radioButtonMonthOnce.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_once.tip"));
+		radioButtonMonthOnce
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_once.tip"));
 		radioButtonMonthEvery.addActionListener(new ActionListener() {
 
 			@Override
@@ -701,8 +713,8 @@ public class CronEditorDialog extends ButtonDialog {
 				checkBoxMonthRepeat.setEnabled(false);
 			}
 		});
-		radioButtonMonthEvery.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_every.tip"));
+		radioButtonMonthEvery
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_every.tip"));
 		radioButtonMonthEvery.doClick();
 		checkBoxMonthRepeat.addActionListener(new ActionListener() {
 
@@ -711,8 +723,8 @@ public class CronEditorDialog extends ButtonDialog {
 				spinnerMonthRepeat.setEnabled(checkBoxMonthRepeat.isSelected());
 			}
 		});
-		checkBoxMonthRepeat.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_repeat.tip"));
+		checkBoxMonthRepeat
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_repeat.tip"));
 		radioButtonMonthUseMonthOfYear.addActionListener(new ActionListener() {
 
 			@Override
@@ -734,8 +746,8 @@ public class CronEditorDialog extends ButtonDialog {
 				checkBoxMonthRepeat.setEnabled(false);
 			}
 		});
-		radioButtonMonthUseMonthOfYear.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_month_month_of_year.tip"));
+		radioButtonMonthUseMonthOfYear
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_month_month_of_year.tip"));
 
 		JPanel panelMonthOfYear = new JPanel();
 		panelMonthOfYear.setLayout(new GridBagLayout());
@@ -835,25 +847,25 @@ public class CronEditorDialog extends ButtonDialog {
 
 		// years section
 		JPanel panelYear = new JPanel();
-		panelYear.setBorder(BorderFactory.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.panel_year.label")));
+		panelYear.setBorder(BorderFactory
+				.createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.panel_year.label")));
 		panelYear.setLayout(new GridBagLayout());
 
 		Calendar cal = Calendar.getInstance();
-		spinnerYearStart = new JSpinner(new SpinnerNumberModel(cal.get(Calendar.YEAR), cal.get(Calendar.YEAR),
-				cal.get(Calendar.YEAR) + 100, 1));
-		spinnerYearStart.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_once_spinner.tip"));
+		spinnerYearStart = new JSpinner(
+				new SpinnerNumberModel(cal.get(Calendar.YEAR), cal.get(Calendar.YEAR), cal.get(Calendar.YEAR) + 100, 1));
+		spinnerYearStart
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_once_spinner.tip"));
 		spinnerYearRepeat = new JSpinner(new SpinnerNumberModel(1, 1, 99, 1));
-		spinnerYearRepeat.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_repeat_spinner.tip"));
+		spinnerYearRepeat
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_repeat_spinner.tip"));
 
-		radioButtonYearOnce = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_once.label"));
-		radioButtonYearEvery = new JRadioButton(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_every.label"));
-		checkBoxYearRepeat = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_repeat.label"));
+		radioButtonYearOnce = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_once.label"));
+		radioButtonYearEvery = new JRadioButton(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_every.label"));
+		checkBoxYearRepeat = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_repeat.label"));
 		ButtonGroup yearButtonGroup = new ButtonGroup();
 		yearButtonGroup.add(radioButtonYearOnce);
 		yearButtonGroup.add(radioButtonYearEvery);
@@ -868,7 +880,7 @@ public class CronEditorDialog extends ButtonDialog {
 			}
 		});
 		radioButtonYearOnce
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_once.tip"));
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_once.tip"));
 		radioButtonYearEvery.addActionListener(new ActionListener() {
 
 			@Override
@@ -878,8 +890,8 @@ public class CronEditorDialog extends ButtonDialog {
 				checkBoxYearRepeat.setEnabled(false);
 			}
 		});
-		radioButtonYearEvery.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_every.tip"));
+		radioButtonYearEvery
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_every.tip"));
 		radioButtonYearEvery.doClick();
 		checkBoxYearRepeat.addActionListener(new ActionListener() {
 
@@ -889,12 +901,12 @@ public class CronEditorDialog extends ButtonDialog {
 			}
 		});
 		checkBoxYearRepeat
-		.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_repeat.tip"));
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_repeat.tip"));
 
-		checkBoxYearEnabled = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_enabled.label"));
-		checkBoxYearEnabled.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.dialog.cron_editor.cron_year_enabled.tip"));
+		checkBoxYearEnabled = new JCheckBox(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_enabled.label"));
+		checkBoxYearEnabled
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.cron_editor.cron_year_enabled.tip"));
 		checkBoxYearEnabled.addActionListener(new ActionListener() {
 
 			@Override
@@ -955,15 +967,22 @@ public class CronEditorDialog extends ButtonDialog {
 		gbc.gridy = 1;
 		panelYear.add(spinnerYearRepeat, gbc);
 
-		// button section
+		// button and warning label section
 		JPanel panelButtons = new JPanel();
 		panelButtons.setLayout(new GridBagLayout());
 
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 1;
-		gbc.fill = GridBagConstraints.NONE;
 		gbc.anchor = GridBagConstraints.EAST;
+		gbc.fill = GridBagConstraints.NONE;
+
+		warningLabel.setVisible(false);
+		panelButtons.add(warningLabel, gbc);
+
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+
 		// don't want to dispose of dialog, can be reused with previously entered values
 		// so removing standard disposing listener and creating own listener
 		Action okAction = new ResourceAction("ok") {
@@ -986,7 +1005,7 @@ public class CronEditorDialog extends ButtonDialog {
 		getRootPane().setDefaultButton(okButton);
 		panelButtons.add(okButton, gbc);
 
-		gbc.gridx = 1;
+		gbc.gridx = 2;
 		gbc.gridy = 0;
 		gbc.weightx = 0;
 		// don't want to dispose of dialog, can be reused with previously entered values
@@ -1001,8 +1020,8 @@ public class CronEditorDialog extends ButtonDialog {
 				setVisible(false);
 			}
 		};
-		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
+		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
 		getRootPane().getActionMap().put("CANCEL", cancelAction);
 		JButton cancelButton = new JButton(cancelAction);
 		panelButtons.add(cancelButton, gbc);

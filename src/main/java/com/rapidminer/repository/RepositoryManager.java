@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -129,26 +128,6 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 				return REMOTE;
 			} else {
 				return OTHER;
-			}
-		}
-	};
-
-	/**
-	 * Compares two repositories, ordered by type (Samples, DB, Local Repositories, Remote
-	 * Repositories, Others) and alphabetically
-	 */
-	private static Comparator<Repository> repositoryComparator = new Comparator<Repository>() {
-
-		@Override
-		public int compare(Repository repo1, Repository repo2) {
-			RepositoryType type1 = RepositoryType.getRepositoryType(repo1);
-			RepositoryType type2 = RepositoryType.getRepositoryType(repo2);
-			int compareValue = type1.compareTo(type2);
-			if (compareValue == 0) {
-				// same repository type
-				return repo1.getName().compareTo(repo2.getName());
-			} else {
-				return compareValue;
 			}
 		}
 	};
@@ -799,6 +778,6 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	 * sorts the repositories by type and name
 	 */
 	private void sortRepositories() {
-		Collections.sort(repositories, repositoryComparator);
+		Collections.sort(repositories, RepositoryTools.REPOSITORY_COMPARATOR);
 	}
 }

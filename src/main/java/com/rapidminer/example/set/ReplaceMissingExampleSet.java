@@ -166,4 +166,9 @@ public class ReplaceMissingExampleSet extends AbstractExampleSet {
 	public int size() {
 		return parent.size();
 	}
+
+	@Override
+	public void cleanup() {
+		parent.cleanup();
+	}
 }

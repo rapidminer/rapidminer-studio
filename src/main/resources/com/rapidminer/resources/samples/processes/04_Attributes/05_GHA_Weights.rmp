@@ -1,19 +1,31 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="status"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Sonar"/>
       </operator>
-      <operator activated="true" class="generalized_hebbian_algorithm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="GHA" width="90" x="180" y="30"/>
-      <operator activated="true" class="weight_by_component_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ComponentWeights" width="90" x="313" y="30">
+      <operator activated="true" class="generalized_hebbian_algorithm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="GHA" width="90" x="179" y="34">
+        <parameter key="number_of_components" value="-1"/>
+        <parameter key="number_of_iterations" value="10"/>
+        <parameter key="learning_rate" value="0.01"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+      </operator>
+      <operator activated="true" class="weight_by_component_model" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="ComponentWeights" width="90" x="313" y="34">
         <parameter key="normalize_weights" value="true"/>
+        <parameter key="sort_weights" value="true"/>
+        <parameter key="sort_direction" value="ascending"/>
         <parameter key="component_number" value="7"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="GHA" to_port="example set input"/>
@@ -27,7 +39,7 @@
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
       <portSpacing port="sink_result 4" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="120" resized="false" width="400" x="40" y="150">GHA is a faster principal components analysis algorithm which is more suitable for bigger data sets. In this process the ModelApplier has been disabled and the operator ComponentWeights is used to determine attribute weights from the GHA model. These weights can be used for feature selection for example.</description>
+      <description align="left" color="yellow" colored="false" height="120" resized="false" width="400" x="40" y="153">GHA is a faster principal components analysis algorithm which is more suitable for bigger data sets. In this process the ModelApplier has been disabled and the operator ComponentWeights is used to determine attribute weights from the GHA model. These weights can be used for feature selection for example.</description>
     </process>
   </operator>
 </process>

@@ -24,6 +24,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 
 
 /**
@@ -34,6 +36,8 @@ import com.rapidminer.example.set.ExampleSetUtilities;
 public class RVMModel extends KernelModel {
 
 	private static final long serialVersionUID = -26935964796619097L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
 
 	private com.rapidminer.operator.learner.functions.kernel.rvm.Model model = null;
 
@@ -109,8 +113,14 @@ public class RVMModel extends KernelModel {
 	}
 
 	@Override
-	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws ProcessStoppedException {
 		Iterator<Example> i = exampleSet.iterator();
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		while (i.hasNext()) {
 			Example e = i.next();
 			double functionValue = model.applyToVector(makeInputVector(e));
@@ -127,6 +137,9 @@ public class RVMModel extends KernelModel {
 						1.0d / (1.0d + java.lang.Math.exp(functionValue)));
 			} else {
 				e.setValue(predictedLabel, functionValue);
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

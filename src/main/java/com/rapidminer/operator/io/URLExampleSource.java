@@ -30,8 +30,8 @@ import java.util.regex.Pattern;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -95,7 +95,7 @@ public class URLExampleSource extends AbstractExampleSource {
 		boolean skipErrorLines = getParameterAsBoolean(PARAMETER_SKIP_ERROR_LINES);
 		char decimalPointCharacter = getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0);
 
-		MemoryExampleTable table = null;
+		ExampleSetBuilder builder = null;
 		BufferedReader in = null;
 		try {
 			InputStream inputStream = getParameterAsInputStream(PARAMETER_URL);
@@ -134,7 +134,7 @@ public class URLExampleSource extends AbstractExampleSource {
 
 				// create table for first line
 				boolean skipLine = false;
-				if (table == null) {
+				if (builder == null) {
 					int attCounter = 1;
 					for (String r : row) {
 						if (readAttributeNames) {
@@ -144,7 +144,7 @@ public class URLExampleSource extends AbstractExampleSource {
 						}
 						attCounter++;
 					}
-					table = new MemoryExampleTable(attributes);
+					builder = ExampleSets.from(attributes);
 
 					if (readAttributeNames) {
 						skipLine = true;
@@ -157,7 +157,7 @@ public class URLExampleSource extends AbstractExampleSource {
 					for (int i = 0; i < data.length; i++) {
 						data[i] = attributes.get(i).getMapping().mapString(row[i]);
 					}
-					table.addDataRow(new DoubleArrayDataRow(data));
+					builder.addRow(data);
 				}
 				lineCounter++;
 			}
@@ -174,7 +174,7 @@ public class URLExampleSource extends AbstractExampleSource {
 			}
 		}
 
-		ExampleSet exampleSet = table.createExampleSet();
+		ExampleSet exampleSet = builder.build();
 
 		try {
 			GuessValueTypes guessValuesTypes = OperatorService.createOperator(GuessValueTypes.class);

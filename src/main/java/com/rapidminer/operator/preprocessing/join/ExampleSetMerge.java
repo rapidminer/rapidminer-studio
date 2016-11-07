@@ -18,6 +18,16 @@
  */
 package com.rapidminer.operator.preprocessing.join;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
@@ -25,7 +35,8 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.MissingIOObjectException;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -49,16 +60,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -286,7 +287,11 @@ public class ExampleSetMerge extends Operator {
 				specialAttributesMap.put(newAttribute, role.getSpecialName());
 			}
 		}
-		MemoryExampleTable exampleTable = new MemoryExampleTable(newAttributeList);
+		int totalSize = 0;
+		for (ExampleSet set : allExampleSets) {
+			totalSize += set.size();
+		}
+		ExampleSetBuilder builder = ExampleSets.from(newAttributeList).withExpectedSize(totalSize);
 
 		// now fill table with rows, copied from source example sets
 		DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
@@ -310,19 +315,20 @@ public class ExampleSetMerge extends Operator {
 						}
 					}
 				}
-				// adding new row to table
-				exampleTable.addDataRow(dataRow);
+				// adding new row to builder
+				builder.addDataRow(dataRow);
 			}
 			checkForStop();
 		}
 		// create result example set
-		ExampleSet resultSet = exampleTable.createExampleSet(specialAttributesMap);
+		ExampleSet resultSet = builder.withRoles(specialAttributesMap).build();
 		resultSet.getAnnotations().addAll(firstSet.getAnnotations());
 		return resultSet;
 	}
 
 	private void throwIncompatible(Attribute oldAttribute, Attribute otherAttribute) throws UserError {
-		throw new UserError(this, 925, "Attribute '" + oldAttribute.getName() + "' has incompatible types ("
+		throw new UserError(this, 925,
+				"Attribute '" + oldAttribute.getName() + "' has incompatible types ("
 				+ Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(oldAttribute.getValueType()) + " and "
 				+ Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(otherAttribute.getValueType()) + ") in two input sets.");
 	}

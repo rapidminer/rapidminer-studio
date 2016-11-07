@@ -304,11 +304,13 @@ public abstract class PredictionModel extends AbstractModel {
 	public static void copyPredictedLabel(ExampleSet source, ExampleSet destination) {
 		Attribute predictedLabel = source.getAttributes().getPredictedLabel();
 		if (predictedLabel != null) {
-			removePredictedLabel(destination, true, true);
+			// remove attributes but do not delete the columns from the table, otherwise copying is
+			// not possible
+			removePredictedLabel(destination, false, false);
 			if (predictedLabel.isNominal()) {
 				for (String value : predictedLabel.getMapping().getValues()) {
-					Attribute currentConfidenceAttribute = source.getAttributes().getSpecial(
-							Attributes.CONFIDENCE_NAME + "_" + value);
+					Attribute currentConfidenceAttribute = source.getAttributes()
+							.getSpecial(Attributes.CONFIDENCE_NAME + "_" + value);
 
 					// it's possible that the model does not create confidences for all label
 					// values, so check for null (e.g. OneClass-SVM)

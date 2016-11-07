@@ -47,6 +47,11 @@ public abstract class AbstractModel extends ResultObjectAdapter implements Model
 	 * is <code>null</code> nothing will happen else checkForStop will be called.
 	 */
 	private Operator operator = null;
+	
+	/**
+	 * This flag signalizes the apply method if progress in the {@link OperatorProgress} from {@link #getOperator()} should be shown.
+	 */
+	private boolean showProgress = false;
 
 	/**
 	 * Created a new model which was built on the given example set. Please note that the given
@@ -128,10 +133,19 @@ public abstract class AbstractModel extends ResultObjectAdapter implements Model
 	 * Operator. If the Operator is set to null nothing will happen and the Model will no longer
 	 * checkForStop.
 	 * 
-	 * @param operator
+	 * @param operator If {@code true} this operator will check for stop by calling checkForStop()
 	 */
 	public void setOperator(Operator operator) {
 		this.operator = operator;
+	}
+	
+	/**
+	 * If this flag is set to {@code true}, the apply method can show the progress in the {@link OperatorProgress} from {@link #getOperator()}
+	 * 
+	 * @param boolean When {@code true} progress will be shown when applying.
+	 */
+	public void setShowProgress(boolean showProgress) {
+		this.showProgress = showProgress;
 	}
 
 	/**
@@ -139,6 +153,13 @@ public abstract class AbstractModel extends ResultObjectAdapter implements Model
 	 */
 	public Operator getOperator() {
 		return operator;
+	}
+	
+	/**
+	 * {@code true} if progress should be shown while applying this model.
+	 */
+	public boolean getShowProgress() {
+		return showProgress;
 	}
 
 	/**

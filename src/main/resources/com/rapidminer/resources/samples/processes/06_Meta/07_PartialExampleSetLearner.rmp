@@ -1,33 +1,65 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="-1"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="checkerboard classification"/>
         <parameter key="number_examples" value="500"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="optimize_parameters_grid" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="GridParameterOptimization" width="90" x="179" y="30">
+      <operator activated="true" class="optimize_parameters_grid" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="GridParameterOptimization" width="90" x="179" y="34">
         <list key="parameters">
           <parameter key="PartialExampleSetLearner.fraction" value="[0.2;1.0;4;linear]"/>
         </list>
+        <parameter key="error_handling" value="fail on error"/>
         <process expanded="true">
-          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
-            <parameter key="number_of_validations" value="15"/>
+          <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="45" y="34">
+            <parameter key="enable_parallel_execution" value="true"/>
+            <parameter key="leave_one_out" value="false"/>
+            <parameter key="number_of_folds" value="15"/>
+            <parameter key="sampling_type" value="automatic"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
+            <parameter key="materialize_data" value="true"/>
             <process expanded="true">
-              <operator activated="true" class="loop_data_fractions" compatibility="6.4.000-SNAPSHOT" expanded="true" name="PartialExampleSetLearner">
+              <operator activated="true" class="loop_data_fractions" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="PartialExampleSetLearner" width="90" x="45" y="34">
                 <parameter key="fraction" value="1.0"/>
+                <parameter key="sampling_type" value="stratified sampling"/>
+                <parameter key="use_local_random_seed" value="false"/>
+                <parameter key="local_random_seed" value="1992"/>
                 <process expanded="true">
-                  <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LibSVMLearner">
+                  <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="LibSVMLearner" width="90" x="45" y="34">
+                    <parameter key="svm_type" value="C-SVC"/>
+                    <parameter key="kernel_type" value="rbf"/>
+                    <parameter key="degree" value="3"/>
                     <parameter key="gamma" value="0.5"/>
+                    <parameter key="coef0" value="0.0"/>
+                    <parameter key="C" value="0.0"/>
+                    <parameter key="nu" value="0.5"/>
+                    <parameter key="cache_size" value="80"/>
                     <parameter key="epsilon" value="0.0010"/>
+                    <parameter key="p" value="0.1"/>
                     <list key="class_weights"/>
+                    <parameter key="shrinking" value="true"/>
+                    <parameter key="calculate_confidences" value="false"/>
+                    <parameter key="confidence_for_multiclass" value="true"/>
                   </operator>
                   <connect from_port="example subset" to_op="LibSVMLearner" to_port="training set"/>
                   <connect from_op="LibSVMLearner" from_port="model" to_port="model"/>
@@ -35,40 +67,67 @@
                   <portSpacing port="sink_model" spacing="0"/>
                 </process>
               </operator>
-              <connect from_port="training" to_op="PartialExampleSetLearner" to_port="example set"/>
+              <connect from_port="training set" to_op="PartialExampleSetLearner" to_port="example set"/>
               <connect from_op="PartialExampleSetLearner" from_port="model" to_port="model"/>
-              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="source_training set" spacing="0"/>
               <portSpacing port="sink_model" spacing="0"/>
               <portSpacing port="sink_through 1" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Test">
+              <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Test" width="90" x="45" y="34">
                 <list key="application_parameters"/>
+                <parameter key="create_view" value="false"/>
               </operator>
-              <operator activated="true" class="performance_classification" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ClassificationPerformance">
+              <operator activated="true" class="performance_classification" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ClassificationPerformance" width="90" x="179" y="34">
+                <parameter key="main_criterion" value="first"/>
                 <parameter key="accuracy" value="false"/>
                 <parameter key="classification_error" value="true"/>
+                <parameter key="kappa" value="false"/>
+                <parameter key="weighted_mean_recall" value="false"/>
+                <parameter key="weighted_mean_precision" value="false"/>
+                <parameter key="spearman_rho" value="false"/>
+                <parameter key="kendall_tau" value="false"/>
+                <parameter key="absolute_error" value="false"/>
+                <parameter key="relative_error" value="false"/>
+                <parameter key="relative_error_lenient" value="false"/>
+                <parameter key="relative_error_strict" value="false"/>
+                <parameter key="normalized_absolute_error" value="false"/>
+                <parameter key="root_mean_squared_error" value="false"/>
+                <parameter key="root_relative_squared_error" value="false"/>
+                <parameter key="squared_error" value="false"/>
+                <parameter key="correlation" value="false"/>
+                <parameter key="squared_correlation" value="false"/>
+                <parameter key="cross-entropy" value="false"/>
+                <parameter key="margin" value="false"/>
+                <parameter key="soft_margin_loss" value="false"/>
+                <parameter key="logistic_loss" value="false"/>
+                <parameter key="skip_undefined_labels" value="true"/>
+                <parameter key="use_example_weights" value="true"/>
                 <list key="class_weights"/>
               </operator>
               <connect from_port="model" to_op="Test" to_port="model"/>
               <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
               <connect from_op="Test" from_port="labelled data" to_op="ClassificationPerformance" to_port="labelled data"/>
-              <connect from_op="ClassificationPerformance" from_port="performance" to_port="averagable 1"/>
+              <connect from_op="ClassificationPerformance" from_port="performance" to_port="performance 1"/>
               <portSpacing port="source_model" spacing="0"/>
               <portSpacing port="source_test set" spacing="0"/>
               <portSpacing port="source_through 1" spacing="0"/>
-              <portSpacing port="sink_averagable 1" spacing="0"/>
-              <portSpacing port="sink_averagable 2" spacing="0"/>
+              <portSpacing port="sink_test set results" spacing="0"/>
+              <portSpacing port="sink_performance 1" spacing="0"/>
+              <portSpacing port="sink_performance 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog " width="90" x="425" y="48">
+          <operator activated="true" class="log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ProcessLog " width="90" x="246" y="34">
             <list key="log">
               <parameter key="Fraction" value="operator.PartialExampleSetLearner.parameter.fraction"/>
               <parameter key="Performance" value="operator.XValidation.value.performance"/>
             </list>
+            <parameter key="sorting_type" value="none"/>
+            <parameter key="sorting_k" value="100"/>
+            <parameter key="persistent" value="false"/>
           </operator>
-          <connect from_port="input 1" to_op="XValidation" to_port="training"/>
-          <connect from_op="XValidation" from_port="averagable 1" to_op="ProcessLog " to_port="through 1"/>
+          <connect from_port="input 1" to_op="Cross Validation" to_port="example set"/>
+          <connect from_op="Cross Validation" from_port="performance 1" to_op="ProcessLog " to_port="through 1"/>
           <connect from_op="ProcessLog " from_port="through 1" to_port="performance"/>
           <portSpacing port="source_input 1" spacing="0"/>
           <portSpacing port="source_input 2" spacing="0"/>
@@ -83,7 +142,7 @@
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="156" resized="false" width="400" x="40" y="160">This operator works similar to the LearningCurveOperator. In contrast to this, it just splits the ExampleSet according to the parameter &amp;quot;fraction&amp;quot; and learns a model only on the subset. It can be used, for example, in conjunction with GridSearchParameterOptimizationOperator which sets the fraction parameter to values between 0 and 1. The advantage is that this operator can then be used inside of a XValidation which  delivers more stable results.</description>
+      <description align="left" color="yellow" colored="false" height="156" resized="false" width="400" x="40" y="161">This operator works similar to the LearningCurveOperator. In contrast to this, it just splits the ExampleSet according to the parameter &amp;quot;fraction&amp;quot; and learns a model only on the subset. It can be used, for example, in conjunction with GridSearchParameterOptimizationOperator which sets the fraction parameter to values between 0 and 1. The advantage is that this operator can then be used inside of a XValidation which  delivers more stable results.</description>
     </process>
   </operator>
 </process>

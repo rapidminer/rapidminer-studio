@@ -22,6 +22,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.error.AttributeNotFoundError;
 import com.rapidminer.operator.learner.PredictionModel;
@@ -37,6 +38,8 @@ import com.rapidminer.operator.learner.PredictionModel;
 public class AttributeDefaultModel extends PredictionModel {
 
 	private static final long serialVersionUID = 3987661566241516287L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 10_000;
 
 	private String sourceAttributeName;
 
@@ -64,6 +67,12 @@ public class AttributeDefaultModel extends PredictionModel {
 				throw new UserError(null, 120, sourceAttributeName, "nominal", "numerical");
 			}
 
+			OperatorProgress progress = null;
+			if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+				progress = getOperator().getProgress();
+				progress.setTotal(exampleSet.size());
+			}
+			int progressCounter = 0;
 			for (Example example : exampleSet) {
 				if (label.isNominal()) {
 					if (!exampleSetLabel.getMapping().equals(label.getMapping())) {
@@ -79,7 +88,9 @@ public class AttributeDefaultModel extends PredictionModel {
 					double classValue = example.getValue(sourceAttribute);
 					example.setValue(predictedLabel, classValue);
 				}
-
+				if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+					progress.setCompleted(progressCounter);
+				}
 			}
 		} else {
 			throw new AttributeNotFoundError(null, null, sourceAttributeName);

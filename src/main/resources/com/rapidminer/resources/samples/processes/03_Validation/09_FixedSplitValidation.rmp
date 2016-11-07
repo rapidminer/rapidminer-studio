@@ -1,19 +1,48 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Iris"/>
       </operator>
-      <operator activated="true" class="split_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="Validation" width="90" x="179" y="30">
+      <operator activated="true" class="split_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="Validation" width="90" x="179" y="34">
+        <parameter key="create_complete_model" value="false"/>
         <parameter key="split" value="absolute"/>
+        <parameter key="split_ratio" value="0.7"/>
+        <parameter key="training_set_size" value="100"/>
+        <parameter key="test_set_size" value="-1"/>
+        <parameter key="sampling_type" value="shuffled sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
         <process expanded="true">
-          <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="45" y="30"/>
+          <operator activated="true" class="k_nn" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NearestNeighbors" width="90" x="45" y="34">
+            <parameter key="k" value="1"/>
+            <parameter key="weighted_vote" value="false"/>
+            <parameter key="measure_types" value="MixedMeasures"/>
+            <parameter key="mixed_measure" value="MixedEuclideanDistance"/>
+            <parameter key="nominal_measure" value="NominalDistance"/>
+            <parameter key="numerical_measure" value="EuclideanDistance"/>
+            <parameter key="divergence" value="GeneralizedIDivergence"/>
+            <parameter key="kernel_type" value="radial"/>
+            <parameter key="kernel_gamma" value="1.0"/>
+            <parameter key="kernel_sigma1" value="1.0"/>
+            <parameter key="kernel_sigma2" value="0.0"/>
+            <parameter key="kernel_sigma3" value="2.0"/>
+            <parameter key="kernel_degree" value="3.0"/>
+            <parameter key="kernel_shift" value="1.0"/>
+            <parameter key="kernel_a" value="1.0"/>
+            <parameter key="kernel_b" value="0.0"/>
+          </operator>
           <connect from_port="training" to_op="NearestNeighbors" to_port="training set"/>
           <connect from_op="NearestNeighbors" from_port="model" to_port="model"/>
           <portSpacing port="source_training" spacing="0"/>
@@ -21,10 +50,13 @@
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Test" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="238" y="30"/>
+          <operator activated="true" class="performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="179" y="34">
+            <parameter key="use_example_weights" value="true"/>
+          </operator>
           <connect from_port="model" to_op="Test" to_port="model"/>
           <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
           <connect from_op="Test" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
@@ -41,7 +73,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="90" resized="true" width="400" x="35" y="154">The FixedSplitValidation uses a fixed number of examples for either the training or the test set. This might be useful if both the training and the test data are given in the same data file and the split point is known beforehand.</description>
+      <description align="left" color="yellow" colored="false" height="90" resized="true" width="400" x="40" y="178">The FixedSplitValidation uses a fixed number of examples for either the training or the test set. This might be useful if both the training and the test data are given in the same data file and the split point is known beforehand.</description>
     </process>
   </operator>
 </process>

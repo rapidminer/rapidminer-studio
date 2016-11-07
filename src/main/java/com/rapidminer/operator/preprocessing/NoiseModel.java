@@ -28,6 +28,7 @@ import com.rapidminer.example.Statistics;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 
@@ -46,6 +47,8 @@ import java.util.Set;
 public class NoiseModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = -1953073746280248791L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 100;
 
 	// settings
 	private double attributeNoise;
@@ -97,6 +100,12 @@ public class NoiseModel extends PreprocessingModel {
 		// add noise to existing attributes
 		Iterator<Example> reader = exampleSet.iterator();
 		Attribute label = exampleSet.getAttributes().getLabel();
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+		int progressCounter = 0;
 		while (reader.hasNext()) {
 			Example example = reader.next();
 			// attribute noise
@@ -124,20 +133,32 @@ public class NoiseModel extends PreprocessingModel {
 					}
 				}
 			}
+			
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) (40.0 * progressCounter / exampleSet.size()));
+			}
 		}
 
 		// add new noise attributes
 		List<Attribute> newAttributes = new LinkedList<Attribute>();
+		progressCounter = 0;
 		for (String name : noiseAttributeNames) {
 			Attribute newAttribute = AttributeFactory.createAttribute(name, Ontology.REAL);
 			newAttributes.add(newAttribute);
 			exampleSet.getExampleTable().addAttribute(newAttribute);
 			exampleSet.getAttributes().addRegular(newAttribute);
+			if (progress != null) {
+				progress.setCompleted((int) ((20.0 * ++progressCounter / noiseAttributeNames.length) + 40));
+			}
 		}
 
+		progressCounter = 0;
 		for (Example example : exampleSet) {
 			for (Attribute attribute : newAttributes) {
 				example.setValue(attribute, noiseOffset + noiseFactor * random.nextGaussian());
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) ((40.0 * progressCounter / exampleSet.size()) + 60));
 			}
 		}
 		return exampleSet;

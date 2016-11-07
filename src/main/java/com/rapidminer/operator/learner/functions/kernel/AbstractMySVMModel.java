@@ -26,6 +26,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.FormulaProvider;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExample;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples;
@@ -45,6 +46,8 @@ public abstract class AbstractMySVMModel extends KernelModel implements FormulaP
 
 	private static final long serialVersionUID = 2812901947459843681L;
 
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
+
 	private com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples model;
 
 	private Kernel kernel;
@@ -52,7 +55,8 @@ public abstract class AbstractMySVMModel extends KernelModel implements FormulaP
 	private double[] weights = null;
 
 	public AbstractMySVMModel(ExampleSet exampleSet,
-			com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples model, Kernel kernel, int kernelType) {
+			com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples model, Kernel kernel,
+			int kernelType) {
 		super(exampleSet, ExampleSetUtilities.SetsCompareOption.ALLOW_SUPERSET,
 				ExampleSetUtilities.TypesCompareOption.ALLOW_SAME_PARENTS);
 		this.model = model;
@@ -185,6 +189,12 @@ public abstract class AbstractMySVMModel extends KernelModel implements FormulaP
 		if (kernel instanceof KernelDot) {
 			if (weights != null) {
 				Map<Integer, MeanVariance> meanVariances = model.getMeanVariances();
+				OperatorProgress progress = null;
+				if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+					progress = getOperator().getProgress();
+					progress.setTotal(exampleSet.size());
+				}
+				int progressCounter = 0;
 				for (Example example : exampleSet) {
 					double prediction = getBias();
 					int a = 0;
@@ -202,6 +212,10 @@ public abstract class AbstractMySVMModel extends KernelModel implements FormulaP
 						a++;
 					}
 					setPrediction(example, prediction);
+
+					if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+						progress.setCompleted(progressCounter);
+					}
 				}
 				return exampleSet;
 			}

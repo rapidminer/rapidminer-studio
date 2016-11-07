@@ -22,8 +22,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -39,7 +39,7 @@ import com.rapidminer.tools.Ontology;
 
 /**
  * @author Marius Helf
- * 
+ *
  */
 public class AnnotationsToData extends Operator {
 
@@ -75,16 +75,16 @@ public class AnnotationsToData extends Operator {
 		Attribute annotationAttr = AttributeFactory.createAttribute(ANNOTATION_ATTRIBUTE, Ontology.POLYNOMINAL);
 		Attribute valueAttr = AttributeFactory.createAttribute(VALUE_ATTRIBUTE, Ontology.POLYNOMINAL);
 
-		MemoryExampleTable table = new MemoryExampleTable(annotationAttr, valueAttr);
+		ExampleSetBuilder builder = ExampleSets.from(annotationAttr, valueAttr).withExpectedSize(annotations.size());
 
 		for (String annotation : annotations.getDefinedAnnotationNames()) {
 			double[] rowData = new double[2];
 			rowData[0] = annotationAttr.getMapping().mapString(annotation);
 			rowData[1] = valueAttr.getMapping().mapString(annotations.getAnnotation(annotation));
-			table.addDataRow(new DoubleArrayDataRow(rowData));
+			builder.addRow(rowData);
 		}
 
-		ExampleSet exampleSet = table.createExampleSet();
+		ExampleSet exampleSet = builder.build();
 		exampleSet.getAttributes().setSpecialAttribute(annotationAttr, Attributes.ID_NAME);
 		outputPort.deliver(data);
 		annotationsOutputPort.deliver(exampleSet);

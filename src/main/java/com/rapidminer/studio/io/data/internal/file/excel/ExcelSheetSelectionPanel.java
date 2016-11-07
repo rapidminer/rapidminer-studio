@@ -21,7 +21,6 @@ package com.rapidminer.studio.io.data.internal.file.excel;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -99,7 +98,10 @@ final class ExcelSheetSelectionPanel extends JPanel {
 
 	private static final long serialVersionUID = 9179757216097316344L;
 
-	private static final Dimension CELL_TEXTFIELD_DIMENSION = new Dimension(150, 25);
+	private static final Dimension CELL_TEXTFIELD_MIN_DIMENSION = new Dimension(50, 25);
+	private static final Dimension CELL_TEXTFIELD_PREF_DIMENSION = new Dimension(150, 25);
+
+	private static final Dimension CELL_CHECKBOX_MIN_DIMENSION = new Dimension(100, 25);
 
 	/** re-use same log timer for all data import wizard dialogs */
 	private static final Timer CELL_RANGE_TIMER = new Timer(500, null);
@@ -581,6 +583,7 @@ final class ExcelSheetSelectionPanel extends JPanel {
 		// create north panel
 		{
 			GridBagConstraints constraint = new GridBagConstraints();
+			constraint.gridx = 0;
 			constraint.insets = new Insets(0, 0, 0, 30);
 			constraint.weightx = 0.0;
 			constraint.fill = GridBagConstraints.NONE;
@@ -590,9 +593,16 @@ final class ExcelSheetSelectionPanel extends JPanel {
 
 			// add sheet panel
 			{
-				JPanel sheetPanel = new JPanel(new FlowLayout());
-				sheetPanel.add(new ResourceLabel("io.dataimport.step.excel.sheet_selection.use_sheet"));
-				sheetPanel.add(sheetComboBox);
+				GridBagConstraints innerGbc = new GridBagConstraints();
+				innerGbc.insets = new Insets(5, 5, 5, 0);
+
+				JPanel sheetPanel = new JPanel(new GridBagLayout());
+
+				innerGbc.gridx = 0;
+				sheetPanel.add(new ResourceLabel("io.dataimport.step.excel.sheet_selection.use_sheet"), innerGbc);
+
+				innerGbc.gridx += 1;
+				sheetPanel.add(sheetComboBox, innerGbc);
 				sheetComboBox.addItemListener(comboBoxItemListener);
 
 				northPanel.add(sheetPanel, constraint);
@@ -600,9 +610,17 @@ final class ExcelSheetSelectionPanel extends JPanel {
 
 			// cell range panel
 			{
-				JPanel cellRangeColumnPanel = new JPanel(new FlowLayout());
-				cellRangeColumnPanel.add(new ResourceLabel("io.dataimport.step.excel.sheet_selection.cells"));
-				cellRangeTextField.setPreferredSize(CELL_TEXTFIELD_DIMENSION);
+				GridBagConstraints innerGbc = new GridBagConstraints();
+				innerGbc.insets = new Insets(5, 5, 5, 0);
+
+				JPanel cellRangeColumnPanel = new JPanel(new GridBagLayout());
+
+				innerGbc.gridx = 0;
+				cellRangeColumnPanel.add(new ResourceLabel("io.dataimport.step.excel.sheet_selection.cells"), innerGbc);
+
+				innerGbc.gridx += 1;
+				cellRangeTextField.setMinimumSize(CELL_TEXTFIELD_MIN_DIMENSION);
+				cellRangeTextField.setPreferredSize(CELL_TEXTFIELD_PREF_DIMENSION);
 				cellRangeTextField.addActionListener(applySelectionAction);
 				cellRangeTextField.getDocument().addUndoableEditListener(new UndoableEditListener() {
 
@@ -636,15 +654,23 @@ final class ExcelSheetSelectionPanel extends JPanel {
 						}
 					}
 				});
-				cellRangeColumnPanel.add(cellRangeTextField);
-				cellRangeColumnPanel.add(new JButton(selectAllAction));
+				cellRangeColumnPanel.add(cellRangeTextField, innerGbc);
 
+				innerGbc.gridx += 1;
+				cellRangeColumnPanel.add(new JButton(selectAllAction), innerGbc);
+
+				constraint.gridx += 1;
 				northPanel.add(cellRangeColumnPanel, constraint);
 			}
 
 			// header configuration
 			{
-				JPanel headerConfigurationPanel = new JPanel(new FlowLayout());
+				GridBagConstraints innerGbc = new GridBagConstraints();
+				innerGbc.insets = new Insets(5, 5, 5, 0);
+
+				JPanel headerConfigurationPanel = new JPanel(new GridBagLayout());
+
+				hasHeaderRowCheckBox.setMinimumSize(CELL_CHECKBOX_MIN_DIMENSION);
 				hasHeaderRowCheckBox.addActionListener(new ActionListener() {
 
 					@Override
@@ -661,7 +687,8 @@ final class ExcelSheetSelectionPanel extends JPanel {
 					}
 
 				});
-				headerConfigurationPanel.add(hasHeaderRowCheckBox);
+				innerGbc.gridx = 0;
+				headerConfigurationPanel.add(hasHeaderRowCheckBox, innerGbc);
 
 				headerRowSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
 				headerRowSpinner.addChangeListener(new ChangeListener() {
@@ -671,13 +698,16 @@ final class ExcelSheetSelectionPanel extends JPanel {
 						sheetSelectionModel.setHeaderRowIndex(getHeaderRowIndexFromSpinner());
 					}
 				});
-				headerConfigurationPanel.add(headerRowSpinner);
+				innerGbc.gridx += 1;
+				headerConfigurationPanel.add(headerRowSpinner, innerGbc);
 
+				constraint.gridx += 1;
 				northPanel.add(headerConfigurationPanel, constraint);
 			}
 
 			constraint.weightx = 1.0;
 			constraint.fill = GridBagConstraints.HORIZONTAL;
+			constraint.gridx += 1;
 			northPanel.add(new JLabel(), constraint);
 
 			add(northPanel, BorderLayout.NORTH);

@@ -1,21 +1,50 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Ripley-Set"/>
       </operator>
-      <operator activated="true" class="compare_rocs" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ROCComparator" width="90" x="179" y="30">
+      <operator activated="true" class="compare_rocs" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ROCComparator" width="90" x="179" y="34">
+        <parameter key="number_of_folds" value="10"/>
+        <parameter key="split_ratio" value="0.7"/>
+        <parameter key="sampling_type" value="stratified sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="use_example_weights" value="true"/>
+        <parameter key="roc_bias" value="optimistic"/>
         <process expanded="true">
-          <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NaiveBayes" width="90" x="112" y="30"/>
-          <operator activated="true" class="rule_induction" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RuleLearner" width="90" x="112" y="120"/>
-          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="112" y="210">
+          <operator activated="true" class="naive_bayes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NaiveBayes" width="90" x="112" y="34">
+            <parameter key="laplace_correction" value="true"/>
+          </operator>
+          <operator activated="true" class="rule_induction" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="RuleLearner" width="90" x="112" y="136">
+            <parameter key="criterion" value="information_gain"/>
+            <parameter key="sample_ratio" value="0.9"/>
+            <parameter key="pureness" value="0.9"/>
+            <parameter key="minimal_prune_benefit" value="0.25"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
+          </operator>
+          <operator activated="true" class="parallel_decision_tree" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DecisionTree" width="90" x="112" y="238">
+            <parameter key="criterion" value="gain_ratio"/>
+            <parameter key="maximal_depth" value="20"/>
+            <parameter key="apply_pruning" value="true"/>
             <parameter key="confidence" value="0.1"/>
+            <parameter key="apply_prepruning" value="true"/>
+            <parameter key="minimal_gain" value="0.1"/>
+            <parameter key="minimal_leaf_size" value="2"/>
+            <parameter key="minimal_size_for_split" value="4"/>
+            <parameter key="number_of_prepruning_alternatives" value="3"/>
           </operator>
           <connect from_port="train 1" to_op="NaiveBayes" to_port="training set"/>
           <connect from_port="train 2" to_op="RuleLearner" to_port="training set"/>

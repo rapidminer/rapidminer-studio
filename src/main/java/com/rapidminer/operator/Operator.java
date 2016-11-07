@@ -320,6 +320,9 @@ public abstract class Operator extends AbstractObservable<Operator>
 		this.operatorDescription = description;
 		this.parameters = null;
 		this.name = operatorDescription.getOperatorDocumentation().getShortName();
+
+		inputPorts = createInputPorts(portOwner);
+		outputPorts = createOutputPorts(portOwner);
 		inputPorts.addObserver(delegatingPortObserver, false);
 		outputPorts.addObserver(delegatingPortObserver, false);
 		makeDirtyOnUpdate(inputPorts);
@@ -1003,7 +1006,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 				getLogger().fine("Completed application " + applyCount.get() + " of operator " + getName());
 			} catch (ProcessStoppedRuntimeException e) {
 				// Convert unchecked exception to checked exception (unchecked exception might be
-				// thrown from within thread pools).
+				// thrown from places where no checked exceptions are possible, e.g. thread pools).
 				throw new ProcessStoppedException(this);
 			} catch (UserError e) {
 				// TODO: ensuring that operator is removed if it abnormally terminates but is not
@@ -2052,8 +2055,8 @@ public abstract class Operator extends AbstractObservable<Operator>
 		}
 	};
 
-	private final InputPorts inputPorts = new InputPortsImpl(portOwner);
-	private final OutputPorts outputPorts = new OutputPortsImpl(portOwner);
+	private final InputPorts inputPorts;
+	private final OutputPorts outputPorts;
 	private final MDTransformer transformer = new MDTransformer(this);
 	private final Observer<Port> delegatingPortObserver = new DelegatingObserver<>(this, this);
 	private final Observer<String> delegatingParameterObserver = new DelegatingObserver<>(this, this);
@@ -2096,6 +2099,34 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 */
 	public final OutputPorts getOutputPorts() {
 		return outputPorts;
+	}
+
+	/**
+	 * This method returns an {@link InputPorts} object for port initialization. Useful for adding
+	 * an arbitrary implementation (e.g. changing port creation & (dis)connection behavior,
+	 * optionally by customized {@link InputPort} instances) by overriding this method.
+	 *
+	 * @param portOwner
+	 *            The owner of the ports.
+	 * @return The {@link InputPorts} instance, never {@code null}.
+	 * @since 7.3.0
+	 */
+	protected InputPorts createInputPorts(PortOwner portOwner) {
+		return new InputPortsImpl(portOwner);
+	}
+
+	/**
+	 * This method returns an {@link OutputPorts} object for port initialization. Useful for adding
+	 * an arbitrary implementation (e.g. changing port creation & (dis)connection behavior,
+	 * optionally by customized {@link OutputPort} instances) by overriding this method.
+	 *
+	 * @param portOwner
+	 *            The owner of the ports.
+	 * @return The {@link OutputPorts} instance, never {@code null}.
+	 * @since 7.3.0
+	 */
+	protected OutputPorts createOutputPorts(PortOwner portOwner) {
+		return new OutputPortsImpl(portOwner);
 	}
 
 	/**

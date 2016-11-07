@@ -25,8 +25,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -98,7 +98,7 @@ public class TransfersExampleSetGenerator extends AbstractExampleSource {
 			attributes.add(label);
 		}
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -126,7 +126,7 @@ public class TransfersExampleSetGenerator extends AbstractExampleSource {
 					}
 				}
 			}
-			table.addDataRow(new DoubleArrayDataRow(values));
+			builder.addRow(values);
 
 			getProgress().step();
 		}
@@ -135,10 +135,9 @@ public class TransfersExampleSetGenerator extends AbstractExampleSource {
 
 		// create example set and return it
 		if (createFraudLabel) {
-			return table.createExampleSet(label, null, id);
-		} else {
-			return table.createExampleSet(null, null, id);
+			builder.withRole(label, Attributes.LABEL_NAME);
 		}
+		return builder.withRole(id, Attributes.ID_NAME).build();
 	}
 
 	@Override

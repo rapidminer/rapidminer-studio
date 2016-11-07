@@ -1,68 +1,162 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="sum"/>
         <parameter key="number_examples" value="60"/>
         <parameter key="number_of_attributes" value="3"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+      <operator activated="true" class="add_noise" compatibility="7.1.001" expanded="true" height="103" name="NoiseGenerator" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
         <parameter key="random_attributes" value="3"/>
+        <parameter key="label_noise" value="0.05"/>
+        <parameter key="default_attribute_noise" value="0.0"/>
         <list key="noise"/>
+        <parameter key="offset" value="0.0"/>
+        <parameter key="linear_factor" value="1.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
-      <operator activated="true" class="wrapper_x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="WrapperXValidation" width="90" x="313" y="30">
+      <operator activated="true" class="wrapper_x_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="WrapperXValidation" width="90" x="313" y="34">
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_validations" value="10"/>
         <parameter key="sampling_type" value="shuffled sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
         <process expanded="true">
-          <operator activated="true" class="optimize_selection" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="FeatureSelection" width="90" x="45" y="30">
+          <operator activated="true" class="optimize_selection" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="FeatureSelection" width="90" x="45" y="34">
+            <parameter key="selection_direction" value="forward"/>
+            <parameter key="limit_generations_without_improval" value="true"/>
+            <parameter key="generations_without_improval" value="1"/>
+            <parameter key="limit_number_of_generations" value="false"/>
+            <parameter key="keep_best" value="1"/>
+            <parameter key="maximum_number_of_generations" value="10"/>
+            <parameter key="normalize_weights" value="true"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
+            <parameter key="show_stop_dialog" value="false"/>
+            <parameter key="user_result_individual_selection" value="false"/>
+            <parameter key="show_population_plotter" value="false"/>
+            <parameter key="plot_generations" value="10"/>
+            <parameter key="constraint_draw_range" value="false"/>
+            <parameter key="draw_dominated_points" value="true"/>
+            <parameter key="maximal_fitness" value="Infinity"/>
             <process expanded="true">
-              <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="130" name="FSXValidation" width="90" x="45" y="30">
+              <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="45" y="34">
+                <parameter key="enable_parallel_execution" value="true"/>
+                <parameter key="split_on_batch_attribute" value="false"/>
+                <parameter key="leave_one_out" value="false"/>
+                <parameter key="number_of_folds" value="10"/>
                 <parameter key="sampling_type" value="shuffled sampling"/>
+                <parameter key="use_local_random_seed" value="false"/>
+                <parameter key="local_random_seed" value="1992"/>
+                <parameter key="materialize_data" value="true"/>
                 <process expanded="true">
-                  <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSLearner">
+                  <operator activated="true" class="support_vector_machine" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="FSLearner" width="90" x="45" y="34">
+                    <parameter key="kernel_type" value="dot"/>
+                    <parameter key="kernel_gamma" value="1.0"/>
+                    <parameter key="kernel_sigma1" value="1.0"/>
+                    <parameter key="kernel_sigma2" value="0.0"/>
+                    <parameter key="kernel_sigma3" value="2.0"/>
+                    <parameter key="kernel_shift" value="1.0"/>
+                    <parameter key="kernel_degree" value="2.0"/>
+                    <parameter key="kernel_a" value="1.0"/>
+                    <parameter key="kernel_b" value="0.0"/>
+                    <parameter key="kernel_cache" value="200"/>
+                    <parameter key="C" value="0.0"/>
                     <parameter key="convergence_epsilon" value="0.0010"/>
+                    <parameter key="max_iterations" value="100000"/>
+                    <parameter key="scale" value="true"/>
+                    <parameter key="calculate_weights" value="true"/>
+                    <parameter key="return_optimization_performance" value="true"/>
+                    <parameter key="L_pos" value="1.0"/>
+                    <parameter key="L_neg" value="1.0"/>
+                    <parameter key="epsilon" value="0.0"/>
+                    <parameter key="epsilon_plus" value="0.0"/>
+                    <parameter key="epsilon_minus" value="0.0"/>
+                    <parameter key="balance_cost" value="false"/>
+                    <parameter key="quadratic_loss_pos" value="false"/>
+                    <parameter key="quadratic_loss_neg" value="false"/>
+                    <parameter key="estimate_performance" value="false"/>
                   </operator>
-                  <connect from_port="training" to_op="FSLearner" to_port="training set"/>
+                  <connect from_port="training set" to_op="FSLearner" to_port="training set"/>
                   <connect from_op="FSLearner" from_port="model" to_port="model"/>
-                  <connect from_op="FSLearner" from_port="weights" to_port="through 1"/>
-                  <portSpacing port="source_training" spacing="0"/>
+                  <portSpacing port="source_training set" spacing="0"/>
                   <portSpacing port="sink_model" spacing="0"/>
                   <portSpacing port="sink_through 1" spacing="0"/>
-                  <portSpacing port="sink_through 2" spacing="0"/>
                 </process>
                 <process expanded="true">
-                  <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSModelApplier">
+                  <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="FSModelApplier" width="90" x="45" y="34">
                     <list key="application_parameters"/>
+                    <parameter key="create_view" value="false"/>
                   </operator>
-                  <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSEvaluation">
+                  <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FSEvaluation" width="90" x="179" y="34">
+                    <parameter key="main_criterion" value="first"/>
                     <parameter key="root_mean_squared_error" value="false"/>
+                    <parameter key="absolute_error" value="false"/>
+                    <parameter key="relative_error" value="false"/>
+                    <parameter key="relative_error_lenient" value="false"/>
+                    <parameter key="relative_error_strict" value="false"/>
+                    <parameter key="normalized_absolute_error" value="false"/>
+                    <parameter key="root_relative_squared_error" value="false"/>
                     <parameter key="squared_error" value="true"/>
+                    <parameter key="correlation" value="false"/>
+                    <parameter key="squared_correlation" value="false"/>
+                    <parameter key="prediction_average" value="false"/>
+                    <parameter key="spearman_rho" value="false"/>
+                    <parameter key="kendall_tau" value="false"/>
+                    <parameter key="skip_undefined_labels" value="true"/>
+                    <parameter key="use_example_weights" value="true"/>
                   </operator>
-                  <operator activated="true" class="performance_min_max" compatibility="6.4.000-SNAPSHOT" expanded="true" name="FSMinMaxWrapper">
+                  <operator activated="true" class="performance_min_max" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="FSMinMaxWrapper" width="90" x="313" y="34">
                     <parameter key="minimum_weight" value="0.5"/>
                   </operator>
                   <connect from_port="model" to_op="FSModelApplier" to_port="model"/>
                   <connect from_port="test set" to_op="FSModelApplier" to_port="unlabelled data"/>
-                  <connect from_port="through 1" to_port="averagable 2"/>
                   <connect from_op="FSModelApplier" from_port="labelled data" to_op="FSEvaluation" to_port="labelled data"/>
                   <connect from_op="FSEvaluation" from_port="performance" to_op="FSMinMaxWrapper" to_port="performance vector"/>
-                  <connect from_op="FSMinMaxWrapper" from_port="performance vector" to_port="averagable 1"/>
+                  <connect from_op="FSMinMaxWrapper" from_port="performance vector" to_port="performance 1"/>
                   <portSpacing port="source_model" spacing="0"/>
                   <portSpacing port="source_test set" spacing="0"/>
                   <portSpacing port="source_through 1" spacing="0"/>
-                  <portSpacing port="source_through 2" spacing="0"/>
-                  <portSpacing port="sink_averagable 1" spacing="0"/>
-                  <portSpacing port="sink_averagable 2" spacing="0"/>
-                  <portSpacing port="sink_averagable 3" spacing="0"/>
+                  <portSpacing port="sink_test set results" spacing="0"/>
+                  <portSpacing port="sink_performance 1" spacing="0"/>
+                  <portSpacing port="sink_performance 2" spacing="0"/>
                 </process>
               </operator>
-              <connect from_port="example set" to_op="FSXValidation" to_port="training"/>
-              <connect from_op="FSXValidation" from_port="averagable 1" to_port="performance"/>
+              <connect from_port="example set" to_op="Cross Validation" to_port="example set"/>
+              <connect from_op="Cross Validation" from_port="performance 1" to_port="performance"/>
               <portSpacing port="source_example set" spacing="0"/>
               <portSpacing port="source_through 1" spacing="0"/>
               <portSpacing port="sink_performance" spacing="0"/>
@@ -74,8 +168,32 @@
           <portSpacing port="sink_attribute weights sink" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="support_vector_machine" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="Learner" width="90" x="45" y="30">
+          <operator activated="true" class="support_vector_machine" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="Learner" width="90" x="45" y="34">
+            <parameter key="kernel_type" value="dot"/>
+            <parameter key="kernel_gamma" value="1.0"/>
+            <parameter key="kernel_sigma1" value="1.0"/>
+            <parameter key="kernel_sigma2" value="0.0"/>
+            <parameter key="kernel_sigma3" value="2.0"/>
+            <parameter key="kernel_shift" value="1.0"/>
+            <parameter key="kernel_degree" value="2.0"/>
+            <parameter key="kernel_a" value="1.0"/>
+            <parameter key="kernel_b" value="0.0"/>
+            <parameter key="kernel_cache" value="200"/>
+            <parameter key="C" value="0.0"/>
             <parameter key="convergence_epsilon" value="0.0010"/>
+            <parameter key="max_iterations" value="100000"/>
+            <parameter key="scale" value="true"/>
+            <parameter key="calculate_weights" value="true"/>
+            <parameter key="return_optimization_performance" value="true"/>
+            <parameter key="L_pos" value="1.0"/>
+            <parameter key="L_neg" value="1.0"/>
+            <parameter key="epsilon" value="0.0"/>
+            <parameter key="epsilon_plus" value="0.0"/>
+            <parameter key="epsilon_minus" value="0.0"/>
+            <parameter key="balance_cost" value="false"/>
+            <parameter key="quadratic_loss_pos" value="false"/>
+            <parameter key="quadratic_loss_neg" value="false"/>
+            <parameter key="estimate_performance" value="false"/>
           </operator>
           <connect from_port="train set source" to_op="Learner" to_port="training set"/>
           <connect from_op="Learner" from_port="model" to_port="model sink"/>
@@ -83,12 +201,27 @@
           <portSpacing port="sink_model sink" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="WrapperEvaluation" width="90" x="158" y="30">
+          <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="WrapperEvaluation" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="first"/>
             <parameter key="root_mean_squared_error" value="false"/>
+            <parameter key="absolute_error" value="false"/>
+            <parameter key="relative_error" value="false"/>
+            <parameter key="relative_error_lenient" value="false"/>
+            <parameter key="relative_error_strict" value="false"/>
+            <parameter key="normalized_absolute_error" value="false"/>
+            <parameter key="root_relative_squared_error" value="false"/>
             <parameter key="squared_error" value="true"/>
+            <parameter key="correlation" value="false"/>
+            <parameter key="squared_correlation" value="false"/>
+            <parameter key="prediction_average" value="false"/>
+            <parameter key="spearman_rho" value="false"/>
+            <parameter key="kendall_tau" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="true"/>
           </operator>
           <connect from_port="test set source" to_op="ModelApplier" to_port="unlabelled data"/>
           <connect from_port="model source" to_op="ModelApplier" to_port="model"/>
@@ -107,7 +240,7 @@
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="328" resized="true" width="924" x="33" y="137">Just as for learning, it is also possible that overfitting occurs during preprocessing. In order to estimate the generalization performance of a preprocessing method RapidMiner supports several validation operators for preprocessing steps. The basic idea is the same as for all other validation operators with a slight difference: the first inner operator must produce a transformed example set, the second must produce a model from this transformed data set and the third operator must produce a performance vector of this model on a hold-out test set transformed in the same way. &lt;br/&gt;&lt;br/&gt;This is a more complex process which demonstrates RapidMiner's capability to build processes from already known building blocks. In this process a special variant of a cross validation operator is used to estimate the performance of a feature space transformation, i.e. the simple feature forward selection in this case. &lt;br/&gt;&lt;br/&gt;The complete feature selection block is now the first inner operator of a WrapperXValidation which like normal crossvalidation uses a subset for feature space transformation (selection here) and learning based on the determined feature set. A second applier chain is used to estimate the performance on a test set which was not used for learning and feature selection. The estimated performance and an attribute weights vector is returned as result. &lt;br/&gt;&lt;br/&gt;Please note the MinMaxWrapper after the inner performance evaluator. This operator encapsulate the given performance criteria in such a way that no longer only average values but also minimum values are calculated during cross validation. Arbitrarily weighted linear combinations of the minimum and the normal average leads to far better generalization capabilities. Just change the weighting parameter to 0.0 or disable the operator in the context menu or delete it from the process to see the effect. The performance decreases rapidly when only the average performance is used as selection criterion.</description>
+      <description align="left" color="yellow" colored="false" height="328" resized="true" width="924" x="33" y="150">Just as for learning, it is also possible that overfitting occurs during preprocessing. In order to estimate the generalization performance of a preprocessing method RapidMiner supports several validation operators for preprocessing steps. The basic idea is the same as for all other validation operators with a slight difference: the first inner operator must produce a transformed example set, the second must produce a model from this transformed data set and the third operator must produce a performance vector of this model on a hold-out test set transformed in the same way. &lt;br/&gt;&lt;br/&gt;This is a more complex process which demonstrates RapidMiner's capability to build processes from already known building blocks. In this process a special variant of a cross validation operator is used to estimate the performance of a feature space transformation, i.e. the simple feature forward selection in this case. &lt;br/&gt;&lt;br/&gt;The complete feature selection block is now the first inner operator of a WrapperXValidation which like normal crossvalidation uses a subset for feature space transformation (selection here) and learning based on the determined feature set. A second applier chain is used to estimate the performance on a test set which was not used for learning and feature selection. The estimated performance and an attribute weights vector is returned as result. &lt;br/&gt;&lt;br/&gt;Please note the MinMaxWrapper after the inner performance evaluator. This operator encapsulate the given performance criteria in such a way that no longer only average values but also minimum values are calculated during cross validation. Arbitrarily weighted linear combinations of the minimum and the normal average leads to far better generalization capabilities. Just change the weighting parameter to 0.0 or disable the operator in the context menu or delete it from the process to see the effect. The performance decreases rapidly when only the average performance is used as selection criterion.</description>
     </process>
   </operator>
 </process>

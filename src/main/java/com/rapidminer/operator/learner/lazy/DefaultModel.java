@@ -22,6 +22,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Tools;
 
@@ -35,6 +36,8 @@ import com.rapidminer.tools.Tools;
 public class DefaultModel extends PredictionModel {
 
 	private static final long serialVersionUID = -1455906287520811107L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 10_000;
 
 	/** The default prediction. */
 	private double value;
@@ -61,12 +64,21 @@ public class DefaultModel extends PredictionModel {
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabelAttribute) throws OperatorException {
 		Attribute label = getLabel();
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			example.setValue(predictedLabelAttribute, value);
 			if (label.isNominal()) {
 				for (int i = 0; i < confidences.length; i++) {
 					example.setConfidence(predictedLabelAttribute.getMapping().mapIndex(i), confidences[i]);
 				}
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;
@@ -77,11 +89,11 @@ public class DefaultModel extends PredictionModel {
 		return super.toString() + Tools.getLineSeparator() + "default value: "
 				+ (getLabel().isNominal() ? getLabel().getMapping().mapIndex((int) value) : value + "");
 	}
-	
+
 	public double getValue() {
 		return value;
 	}
-	
+
 	public double[] getConfidences() {
 		return confidences;
 	}

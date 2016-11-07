@@ -29,6 +29,7 @@ import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.clustering.Centroid;
 import com.rapidminer.operator.clustering.CentroidClusterModel;
@@ -329,8 +330,9 @@ public class XMeansCore extends RMAbstractClusterer {
 	 *
 	 * @param bestModel
 	 * @return BIC of the given modell
+	 * @throws ProcessStoppedException 
 	 */
-	private double calcBIC(CentroidClusterModel bestModel) {
+	private double calcBIC(CentroidClusterModel bestModel) throws ProcessStoppedException {
 		double loglike = 0;
 		int numCenters = bestModel.getNumberOfClusters();
 		int numDimensions = bestModel.getCentroidCoordinates(0).length;

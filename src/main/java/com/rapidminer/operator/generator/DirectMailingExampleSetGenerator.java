@@ -25,8 +25,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -86,7 +86,7 @@ public class DirectMailingExampleSetGenerator extends AbstractExampleSource {
 		label.getMapping().mapString("response");
 		attributes.add(label);
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -126,14 +126,14 @@ public class DirectMailingExampleSetGenerator extends AbstractExampleSource {
 			} else if (values[7] > 140000) { // earnings
 				values[8] = label.getMapping().mapString("response");
 			}
-			table.addDataRow(new DoubleArrayDataRow(values));
+			builder.addRow(values);
 
 			getProgress().step();
 		}
 		getProgress().complete();
 
 		// create example set and return it
-		return table.createExampleSet(label);
+		return builder.withRole(label, Attributes.LABEL_NAME).build();
 	}
 
 	@Override

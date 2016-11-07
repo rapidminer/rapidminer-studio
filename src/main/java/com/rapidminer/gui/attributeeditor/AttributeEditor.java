@@ -18,40 +18,6 @@
  */
 package com.rapidminer.gui.attributeeditor;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Attributes;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.DataRowReader;
-import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.example.table.FileDataRowReader;
-import com.rapidminer.example.table.MemoryExampleTable;
-import com.rapidminer.example.table.RapidMinerLineReader;
-import com.rapidminer.gui.EditorCellRenderer;
-import com.rapidminer.gui.attributeeditor.actions.GuessAllTypesAction;
-import com.rapidminer.gui.attributeeditor.actions.GuessTypeAction;
-import com.rapidminer.gui.attributeeditor.actions.RemoveColumnAction;
-import com.rapidminer.gui.attributeeditor.actions.RemoveRowAction;
-import com.rapidminer.gui.attributeeditor.actions.UseRowAsNamesAction;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.UserError;
-import com.rapidminer.operator.io.ExampleSource;
-import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.ParameterService;
-import com.rapidminer.tools.RandomGenerator;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.XMLException;
-import com.rapidminer.tools.att.AttributeDataSource;
-import com.rapidminer.tools.att.AttributeDataSources;
-import com.rapidminer.tools.att.AttributeSet;
-import com.rapidminer.tools.io.Encoding;
-
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -88,6 +54,40 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.DataRowFactory;
+import com.rapidminer.example.table.DataRowReader;
+import com.rapidminer.example.table.FileDataRowReader;
+import com.rapidminer.example.table.RapidMinerLineReader;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
+import com.rapidminer.gui.EditorCellRenderer;
+import com.rapidminer.gui.attributeeditor.actions.GuessAllTypesAction;
+import com.rapidminer.gui.attributeeditor.actions.GuessTypeAction;
+import com.rapidminer.gui.attributeeditor.actions.RemoveColumnAction;
+import com.rapidminer.gui.attributeeditor.actions.RemoveRowAction;
+import com.rapidminer.gui.attributeeditor.actions.UseRowAsNamesAction;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.io.ExampleSource;
+import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.att.AttributeDataSource;
+import com.rapidminer.tools.att.AttributeDataSources;
+import com.rapidminer.tools.att.AttributeSet;
+import com.rapidminer.tools.io.Encoding;
 
 
 /**
@@ -827,14 +827,15 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 					createNewColumn();
 				}
 
-				ExampleTable table = null;
+				ExampleSetBuilder builder = null;
 				try {
-					table = new MemoryExampleTable(new AttributeSet(attributeDataSources).getAllAttributes(), reader);
+					builder = ExampleSets.from(new AttributeSet(attributeDataSources).getAllAttributes())
+							.withDataRowReader(reader);
 				} catch (UserError e) {
 					SwingTools.showSimpleErrorMessage("cannot_load_attr_descr", e);
 				}
-				if (table != null) {
-					Iterator<Example> e = table.createExampleSet().iterator();
+				if (builder != null) {
+					Iterator<Example> e = builder.build().iterator();
 					rowCount = 0;
 					while (e.hasNext()) {
 						Example example = e.next();

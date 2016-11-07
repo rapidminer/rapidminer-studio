@@ -21,12 +21,23 @@ package com.rapidminer.operator.learner.meta;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.AbstractModel;
 import com.rapidminer.operator.Model;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.learner.PredictionModel;
+import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observable;
+import com.rapidminer.tools.Observer;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.Tools;
 
 
@@ -70,10 +81,50 @@ public class StackingModel extends PredictionModel implements MetaModel {
 			stackingExampleSet.getAttributes().clearRegular();
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+
 		// create predictions from base models
 		List<Attribute> tempPredictions = new LinkedList<Attribute>();
 		int i = 0;
+
 		for (Model baseModel : baseModels) {
+			// add observer to observe the progress of the model
+			Operator dummy = null;
+			if (progress != null) {
+				try {
+					dummy = OperatorService.createOperator("dummy");
+				} catch (OperatorCreationException e) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.operator.learner.meta.StackingModel.couldnt_create_operator");
+				}
+				if (dummy != null && baseModel instanceof AbstractModel) {
+					final OperatorProgress finalProgress = progress;
+					final int finalModelCounter = i;
+					((AbstractModel) baseModel).setOperator(dummy);
+					((AbstractModel) baseModel).setShowProgress(true);
+					OperatorProgress internalProgress = dummy.getProgress();
+					internalProgress.setCheckForStop(false);
+					internalProgress.addObserver(new Observer<OperatorProgress>() {
+
+						@Override
+						public void update(Observable<OperatorProgress> observable, OperatorProgress arg) {
+							try {
+								finalProgress.setCompleted((int) (0.9 * arg.getProgress() / baseModels.size()
+										+ 90.0 * finalModelCounter / baseModels.size()));
+							} catch (ProcessStoppedException e) {
+								throw new ProcessStoppedRuntimeException();
+							}
+						}
+					}, false);
+				}
+			}
+
+			// apply the model
 			exampleSet = baseModel.apply(exampleSet);
 			Attribute basePrediction = exampleSet.getAttributes().getPredictedLabel();
 			// renaming attribute
@@ -83,6 +134,13 @@ public class StackingModel extends PredictionModel implements MetaModel {
 			stackingExampleSet.getAttributes().addRegular(basePrediction);
 			tempPredictions.add(basePrediction);
 			i++;
+			if (progress != null) {
+				if (dummy != null && baseModel instanceof AbstractModel) {
+					((AbstractModel) baseModel).setShowProgress(false);
+					((AbstractModel) baseModel).setOperator(null);
+				}
+				progress.setCompleted((int) (90.0 * i / baseModels.size()));
+			}
 		}
 
 		// apply stacking model and copy prediction to original example set
@@ -95,6 +153,7 @@ public class StackingModel extends PredictionModel implements MetaModel {
 			stackingExampleSet.getExampleTable().removeAttribute(tempPrediction);
 		}
 
+		progress.complete();
 		return exampleSet;
 	}
 

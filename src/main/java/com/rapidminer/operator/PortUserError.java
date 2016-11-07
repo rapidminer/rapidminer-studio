@@ -81,6 +81,16 @@ public class PortUserError extends UserError {
 	}
 
 	/**
+	 * Setter for the port which causes the error.
+	 *
+	 * @param port
+	 *            the port
+	 */
+	public void setPort(Port port) {
+		this.port = port;
+	}
+
+	/**
 	 * Sets the expected data type.
 	 *
 	 * @param expectedType

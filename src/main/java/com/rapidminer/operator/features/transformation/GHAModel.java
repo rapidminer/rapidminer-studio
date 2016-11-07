@@ -31,6 +31,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.gui.renderer.models.EigenvectorModelEigenvalueRenderer.EigenvalueTableModel;
 import com.rapidminer.gui.renderer.models.EigenvectorModelEigenvectorRenderer.EigenvectorTableModel;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -54,6 +55,17 @@ import Jama.Matrix;
 public class GHAModel extends AbstractEigenvectorModel implements ComponentWeightsCreatable {
 
 	private static final long serialVersionUID = -5204076842779376622L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 40000;
+
+	/**
+	 * The progress of this operator is split into 5 part-progresses. These values define how many
+	 * percent are completed after part-progress 1, part-progress 2, etc.
+	 */
+	private static final int INTERMEDIATE_PROGRESS_1 = 20;
+	private static final int INTERMEDIATE_PROGRESS_2 = 40;
+	private static final int INTERMEDIATE_PROGRESS_3 = 60;
+	private static final int INTERMEDIATE_PROGRESS_4 = 80;
 
 	private int numberOfAttributes;
 
@@ -123,6 +135,12 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 		Iterator<Example> reader = exampleSet.iterator();
 		Example example;
 
+		int progressCounter = 0;
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
 		for (int sample = 0; sample < exampleSet.size(); sample++) {
 			example = reader.next();
 			int d = 0;
@@ -130,7 +148,9 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 				data[sample][d] = example.getValue(attribute) - means[d];
 				d++;
 			}
-
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) ((double) INTERMEDIATE_PROGRESS_1 * sample / exampleSet.size()));
+			}
 		}
 		Matrix dataMatrix = new Matrix(data);
 
@@ -139,6 +159,11 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 		int counter = 0;
 		for (WeightVector wv : this.weightVectors) {
 			values[counter++] = wv.getWeights();
+			if (progress != null) {
+				progress.setCompleted(
+						(int) (((double) INTERMEDIATE_PROGRESS_2 - INTERMEDIATE_PROGRESS_1) * counter / weightVectors.size()
+								+ INTERMEDIATE_PROGRESS_1));
+			}
 		}
 		Matrix W = new Matrix(values);
 		Matrix finaldataMatrix = dataMatrix.times(W.transpose());
@@ -149,11 +174,20 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 			exampleSet.getAttributes().clearRegular();
 		}
 
+		if (progress != null) {
+			progress.setCompleted(INTERMEDIATE_PROGRESS_3);
+		}
+
 		Attribute[] principalComponentAttributes = new Attribute[numberOfComponents];
 		for (int i = 0; i < numberOfComponents; i++) {
 			principalComponentAttributes[i] = AttributeFactory.createAttribute("pc_" + (i + 1), Ontology.REAL);
 			exampleSet.getExampleTable().addAttribute(principalComponentAttributes[i]);
 			exampleSet.getAttributes().addRegular(principalComponentAttributes[i]);
+			if (progress != null) {
+				progress.setCompleted(
+						(int) (((double) INTERMEDIATE_PROGRESS_4 - INTERMEDIATE_PROGRESS_3) * i / numberOfComponents
+								+ INTERMEDIATE_PROGRESS_3));
+			}
 		}
 
 		reader = exampleSet.iterator();
@@ -161,6 +195,10 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 			example = reader.next();
 			for (int d = 0; d < numberOfComponents; d++) {
 				example.setValue(principalComponentAttributes[d], finaldata[sample][d]);
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(
+						(int) ((100.0 - INTERMEDIATE_PROGRESS_4) * sample / exampleSet.size() + INTERMEDIATE_PROGRESS_4));
 			}
 		}
 

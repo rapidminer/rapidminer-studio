@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="-1"/>
     <parameter key="send_mail" value="never"/>
@@ -13,35 +12,39 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="FirstExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="FirstExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="sum classification"/>
         <parameter key="number_examples" value="100"/>
         <parameter key="number_of_attributes" value="5"/>
         <parameter key="attributes_lower_bound" value="-10.0"/>
         <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
         <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="1992"/>
         <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="generate_id" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FirstIdTagging" width="90" x="179" y="30">
+      <operator activated="true" class="generate_id" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FirstIdTagging" width="90" x="179" y="34">
         <parameter key="create_nominal_ids" value="false"/>
         <parameter key="offset" value="0"/>
       </operator>
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="SecondExampleSetGenerator" width="90" x="45" y="120">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="SecondExampleSetGenerator" width="90" x="45" y="136">
         <parameter key="target_function" value="sum classification"/>
         <parameter key="number_examples" value="100"/>
         <parameter key="number_of_attributes" value="10"/>
         <parameter key="attributes_lower_bound" value="-10.0"/>
         <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
         <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="1992"/>
         <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="generate_id" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="SecondIdTagging" width="90" x="179" y="120">
+      <operator activated="true" class="generate_id" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="SecondIdTagging" width="90" x="179" y="136">
         <parameter key="create_nominal_ids" value="false"/>
         <parameter key="offset" value="0"/>
       </operator>
-      <operator activated="true" class="select_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Select Attributes" width="90" x="313" y="120">
+      <operator activated="true" class="select_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Select Attributes" width="90" x="313" y="136">
         <parameter key="attribute_filter_type" value="single"/>
         <parameter key="attribute" value="label"/>
         <parameter key="attributes" value=""/>
@@ -55,7 +58,7 @@
         <parameter key="invert_selection" value="true"/>
         <parameter key="include_special_attributes" value="true"/>
       </operator>
-      <operator activated="true" class="join" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ExampleSetJoin" width="90" x="447" y="30">
+      <operator activated="true" class="join" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ExampleSetJoin" width="90" x="447" y="34">
         <parameter key="remove_double_attributes" value="false"/>
         <parameter key="join_type" value="inner"/>
         <parameter key="use_id_attribute_as_key" value="true"/>
@@ -71,7 +74,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="138" resized="false" width="400" x="40" y="220">The operator ExampleSetJoin in this process builds a join of two given example sets. Please note that attributes with equal names will be renamed during the joining process. The example sets must provide an Id attribute in order to determine corrsponding examples. After reaching the breakpoint you can inspect the input example sets. After resuming the process the joined example set will be the result.</description>
+      <description align="left" color="yellow" colored="false" height="138" resized="false" width="400" x="41" y="231">The operator ExampleSetJoin in this process builds a join of two given example sets. Please note that attributes with equal names will be renamed during the joining process. The example sets must provide an Id attribute in order to determine corrsponding examples. After reaching the breakpoint you can inspect the input example sets. After resuming the process the joined example set will be the result.</description>
     </process>
   </operator>
 </process>

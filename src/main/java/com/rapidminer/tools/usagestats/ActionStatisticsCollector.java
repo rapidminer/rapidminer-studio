@@ -75,7 +75,7 @@ public enum ActionStatisticsCollector {
 
 	INSTANCE;
 
-	private static final String TYPE_CONSTANT = "rapidminer";
+	public static final String TYPE_CONSTANT = "rapidminer";
 	private static final String TYPE_DOCKABLE = "dockable";
 	private static final String TYPE_ACTION = "action";
 	public static final String TYPE_OPERATOR = "operator";
@@ -136,6 +136,36 @@ public enum ActionStatisticsCollector {
 	public static final String VALUE_ROW_LIMIT_UPGRADE_NOT_ENOUGH = "upgrade_not_enough";
 	public static final String VALUE_ROW_LIMIT_UPGRADE_SELECTED = "upgrade_selected";
 	public static final String ARG_ROW_LIMIT_NO_UPGRADE = "no_upgrade";
+
+	/** commercial and educational sign up (since 7.3) */
+	public static final String TYPE_SIGN_UP = "sign_up";
+	public static final String VALUE_ACCOUNT_TYPE = "account_type";
+	public static final String ARG_COMMERCIAL = "commercial";
+	public static final String ARG_EDUCATIONAL = "educational";
+	public static final String VALUE_ACCOUNT_CREATION = "account_creation";
+	public static final String ARG_ACCOUNT_CREATION_ABORTED = "aborted";
+	public static final String ARG_ACCOUNT_CREATION_SUCCESS = "success";
+	public static final String ARG_ACCOUNT_ALREADY_EXISTS = "already_exists";
+	public static final String ARG_COMMUNICATION_ERROR = "communication_error";
+	public static final String VALUE_EMAIL_VERIFICATION = "email_verification";
+	public static final String ARG_EMAIL_VERIFICATION_SUCCESS = "success";
+	public static final String ARG_EMAIL_VERIFICATION_PENDING = "pending";
+
+	/** row limit check additions (since 7.3) */
+	public static final String VALUE_ROW_LIMIT_DIALOG = "dialog";
+
+	/** beta features (since 7.3) */
+	public static final String TYPE_BETA_FEATURES = "beta-features";
+	public static final String VALUE_BETA_FEATURES_ACTIVATION = "activated";
+
+	/** marketplace search (since 7.3) */
+	public static final String TYPE_MARKETPLACE = "marketplace";
+	public static final String VALUE_OPERATOR_SEARCH = "operator_search";
+	public static final String VALUE_SEARCH = "search";
+	public static final String VALUE_EXTENSION_INSTALLATION = "extension_installation";
+
+	/** extension initialization (since 7.3) */
+	public static final String VALUE_EXTENSION_INITIALIZATION = "extension_initialization";
 
 	/**
 	 * added to a key arg to indicated that this stores the maximum amount of all the amounts stored

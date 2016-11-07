@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator.learner.rules;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -41,9 +44,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
 
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * <p>
@@ -52,18 +52,18 @@ import java.util.List;
  * algorithm iteratively grows and prunes rules until there are no positive examples left or the
  * error rate is greater than 50%.
  * </p>
- * 
+ *
  * <p>
  * In the growing phase, for each rule greedily conditions are added to the rule until the rule is
  * perfect (i.e. 100% accurate). The procedure tries every possible value of each attribute and
  * selects the condition with highest information gain.
  * </p>
- * 
+ *
  * <p>
  * In the prune phase, for each rule any final sequences of the antecedents is pruned with the
  * pruning metric p/(p+n).
  * </p>
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class RuleLearner extends AbstractLearner {
@@ -74,7 +74,7 @@ public class RuleLearner extends AbstractLearner {
 
 	public static final String[] CRITERIA_NAMES = { "information_gain", "accuracy" };
 
-	public static final Class[] CRITERIA_CLASSES = { InfoGainCriterion.class, AccuracyCriterion.class };
+	public static final Class<?>[] CRITERIA_CLASSES = { InfoGainCriterion.class, AccuracyCriterion.class };
 
 	public static final int CRITERION_INFO_GAIN = 0;
 
@@ -109,19 +109,19 @@ public class RuleLearner extends AbstractLearner {
 
 			SplittedExampleSet growPruneSet = new SplittedExampleSet(trainingSet, sampleRatio,
 					SplittedExampleSet.STRATIFIED_SAMPLING,
-					getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
+					getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED), true,
 					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
 
 			// growing
 			SplittedExampleSet growingSet = (SplittedExampleSet) growPruneSet.clone();
 			growingSet.selectSingleSubset(0);
-			SplittedExampleSet pruneSet = (SplittedExampleSet) growPruneSet.clone();
+			SplittedExampleSet pruneSet = growPruneSet;
 			pruneSet.selectSingleSubset(1);
 
 			int growOldSize = -1;
-			ExampleSet growSet = growingSet.clone();
-			while ((growSet.size() > 0) && (growSet.size() != growOldSize) && (!rule.isPure(growSet, pureness))
-					&& (growSet.getAttributes().size() > 0)) {
+			ExampleSet growSet = growingSet;
+			while (growSet.size() > 0 && growSet.size() != growOldSize && !rule.isPure(growSet, pureness)
+					&& growSet.getAttributes().size() > 0) {
 				SplitCondition term = termDetermination.getBestTerm(growSet, labelName);
 				if (term == null) {
 					break;
@@ -239,14 +239,14 @@ public class RuleLearner extends AbstractLearner {
 
 	private Criterion createCriterion() throws UndefinedParameterError {
 		String criterionName = getParameterAsString(AbstractTreeLearner.PARAMETER_CRITERION);
-		Class criterionClass = null;
+		Class<?> criterionClass = null;
 		for (int i = 0; i < CRITERIA_NAMES.length; i++) {
 			if (CRITERIA_NAMES[i].equals(criterionName)) {
 				criterionClass = CRITERIA_CLASSES[i];
 			}
 		}
 
-		if ((criterionClass == null) && (criterionName != null)) {
+		if (criterionClass == null && criterionName != null) {
 			try {
 				criterionClass = Tools.classForName(criterionName);
 			} catch (ClassNotFoundException e) {

@@ -1,20 +1,48 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Golf"/>
       </operator>
-      <operator activated="true" class="discretize_by_frequency" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="FrequencyDiscretization" width="90" x="180" y="30">
+      <operator activated="true" class="discretize_by_frequency" compatibility="7.1.001" expanded="true" height="103" name="FrequencyDiscretization" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="use_sqrt_of_examples" value="false"/>
         <parameter key="number_of_bins" value="3"/>
+        <parameter key="range_name_type" value="long"/>
+        <parameter key="automatic_number_of_digits" value="true"/>
+        <parameter key="number_of_digits" value="-1"/>
       </operator>
-      <operator activated="true" class="rule_induction" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RuleLearner" width="90" x="313" y="30">
+      <operator activated="true" class="rule_induction" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="RuleLearner" width="90" x="313" y="34">
+        <parameter key="criterion" value="information_gain"/>
         <parameter key="sample_ratio" value="1.0"/>
+        <parameter key="pureness" value="0.9"/>
+        <parameter key="minimal_prune_benefit" value="0.25"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="FrequencyDiscretization" to_port="example set input"/>
       <connect from_op="FrequencyDiscretization" from_port="example set output" to_op="RuleLearner" to_port="training set"/>
@@ -22,7 +50,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="84" resized="false" width="400" x="40" y="140">Using a rule learner for a classification task of the golf data set. Please note that a preprocessing operator (discretization) is used before since the rule and tree learning schemes work less efficient for numerical attributes.</description>
+      <description align="left" color="yellow" colored="false" height="84" resized="false" width="400" x="41" y="151">Using a rule learner for a classification task of the golf data set. Please note that a preprocessing operator (discretization) is used before since the rule and tree learning schemes work less efficient for numerical attributes.</description>
     </process>
   </operator>
 </process>

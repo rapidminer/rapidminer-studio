@@ -38,7 +38,8 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
@@ -127,22 +128,21 @@ public class DataResultSetTranslator {
 			if (attributeValueType == Ontology.ATTRIBUTE_VALUE) {
 				attributeValueType = Ontology.POLYNOMINAL;
 			}
-			attributes[i] = AttributeFactory.createAttribute(configuration.getColumnMetaData(attributeColumns[i])
-					.getOriginalAttributeName(), attributeValueType);
+			attributes[i] = AttributeFactory.createAttribute(
+					configuration.getColumnMetaData(attributeColumns[i]).getOriginalAttributeName(), attributeValueType);
 		}
 
 		// check whether all columns are accessible
 		int numberOfAvailableColumns = dataResultSet.getNumberOfColumns();
 		for (int attributeColumn : attributeColumns) {
 			if (attributeColumn >= numberOfAvailableColumns) {
-				throw new UserError(null, "data_import.specified_more_columns_than_exist", configuration.getColumnMetaData(
-						attributeColumn).getUserDefinedAttributeName(), attributeColumn);
+				throw new UserError(null, "data_import.specified_more_columns_than_exist",
+						configuration.getColumnMetaData(attributeColumn).getUserDefinedAttributeName(), attributeColumn);
 			}
 		}
 
-		// building example table
-		MemoryExampleTable exampleTable = new MemoryExampleTable(attributes);
-		attributes = exampleTable.getAttributes();
+		// building example set
+		ExampleSetBuilder builder = ExampleSets.from(attributes);
 
 		// now iterate over complete dataResultSet and copy data
 		int currentRow = 0; 		// The row in the underlying DataResultSet
@@ -224,7 +224,6 @@ public class DataResultSetTranslator {
 			} else {
 				// creating data row
 				DataRow row = factory.create(attributes.length);
-				exampleTable.addDataRow(row);
 				int attributeIndex = 0;
 				for (Attribute attribute : attributes) {
 					// check for missing
@@ -233,38 +232,35 @@ public class DataResultSetTranslator {
 					} else {
 						switch (attribute.getValueType()) {
 							case Ontology.INTEGER:
-								row.set(attribute,
-										getOrParseNumber(configuration, dataResultSet, exampleIndex,
-												attributeColumns[attributeIndex], isFaultTolerant));
+								row.set(attribute, getOrParseNumber(configuration, dataResultSet, exampleIndex,
+										attributeColumns[attributeIndex], isFaultTolerant));
 								break;
 							case Ontology.NUMERICAL:
 							case Ontology.REAL:
-								row.set(attribute,
-										getOrParseNumber(configuration, dataResultSet, exampleIndex,
-												attributeColumns[attributeIndex], isFaultTolerant));
+								row.set(attribute, getOrParseNumber(configuration, dataResultSet, exampleIndex,
+										attributeColumns[attributeIndex], isFaultTolerant));
 								break;
 							case Ontology.DATE_TIME:
 							case Ontology.TIME:
 							case Ontology.DATE:
-								row.set(attribute,
-										getOrParseDate(configuration, dataResultSet, exampleIndex,
-												attributeColumns[attributeIndex], isFaultTolerant));
+								row.set(attribute, getOrParseDate(configuration, dataResultSet, exampleIndex,
+										attributeColumns[attributeIndex], isFaultTolerant));
 								break;
 							default:
-								row.set(attribute,
-										getStringIndex(attribute, dataResultSet, exampleIndex,
-												attributeColumns[attributeIndex], isFaultTolerant));
+								row.set(attribute, getStringIndex(attribute, dataResultSet, exampleIndex,
+										attributeColumns[attributeIndex], isFaultTolerant));
 						}
 					}
 					attributeIndex++;
 				}
+				builder.addDataRow(row);
 				exampleIndex++;
 			}
 			currentRow++;
 		}
 
-		// derive ExampleSet from exampleTable and assigning roles
-		ExampleSet exampleSet = exampleTable.createExampleSet();
+		// derive ExampleSet from builder and assigning roles
+		ExampleSet exampleSet = builder.build();
 		// Copy attribute list to avoid concurrent modification when setting to special
 		List<Attribute> allAttributes = new LinkedList<>();
 		for (Attribute att : exampleSet.getAttributes()) {

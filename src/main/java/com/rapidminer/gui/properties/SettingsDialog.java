@@ -164,6 +164,7 @@ public class SettingsDialog extends ButtonDialog {
 		buttons.add(makeCancelButton());
 
 		layoutDefault(container, NORMAL_EXTENDED, buttons);
+		addWindowListener(new BetaFeaturesListener());
 	}
 
 	/**

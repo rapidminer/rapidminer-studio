@@ -252,4 +252,9 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 	public Annotations getAnnotations() {
 		return parent.getAnnotations();
 	}
+
+	@Override
+	public void cleanup() {
+		parent.cleanup();
+	}
 }

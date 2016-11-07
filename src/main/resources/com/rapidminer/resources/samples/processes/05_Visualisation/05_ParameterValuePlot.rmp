@@ -1,68 +1,105 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="optimize_parameters_grid" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ParameterOptimization" width="90" x="246" y="30">
+      <operator activated="true" class="optimize_parameters_grid" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="ParameterOptimization" width="90" x="246" y="34">
         <list key="parameters">
           <parameter key="Training.C" value="50,100,150,200,250"/>
           <parameter key="Training.degree" value="1,2,3,4,5"/>
         </list>
+        <parameter key="error_handling" value="fail on error"/>
         <process expanded="true">
-          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="Validation" width="90" x="45" y="30">
+          <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="45" y="34">
+            <parameter key="enable_parallel_execution" value="true"/>
+            <parameter key="leave_one_out" value="false"/>
+            <parameter key="number_of_folds" value="10"/>
             <parameter key="sampling_type" value="shuffled sampling"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
+            <parameter key="materialize_data" value="true"/>
             <process expanded="true">
-              <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Training" width="90" x="176" y="30">
+              <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Training" width="90" x="45" y="34">
                 <parameter key="svm_type" value="epsilon-SVR"/>
                 <parameter key="kernel_type" value="poly"/>
                 <parameter key="degree" value="5"/>
+                <parameter key="gamma" value="0.0"/>
+                <parameter key="coef0" value="0.0"/>
                 <parameter key="C" value="250"/>
+                <parameter key="nu" value="0.5"/>
+                <parameter key="cache_size" value="80"/>
                 <parameter key="epsilon" value="0.01"/>
+                <parameter key="p" value="0.1"/>
                 <list key="class_weights"/>
+                <parameter key="shrinking" value="true"/>
+                <parameter key="calculate_confidences" value="false"/>
+                <parameter key="confidence_for_multiclass" value="true"/>
               </operator>
-              <connect from_port="training" to_op="Training" to_port="training set"/>
+              <connect from_port="training set" to_op="Training" to_port="training set"/>
               <connect from_op="Training" from_port="model" to_port="model"/>
-              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="source_training set" spacing="0"/>
               <portSpacing port="sink_model" spacing="0"/>
               <portSpacing port="sink_through 1" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+              <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Test" width="90" x="45" y="34">
                 <list key="application_parameters"/>
+                <parameter key="create_view" value="false"/>
               </operator>
-              <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Evaluation" width="90" x="243" y="30">
+              <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Evaluation" width="90" x="243" y="34">
+                <parameter key="main_criterion" value="first"/>
                 <parameter key="root_mean_squared_error" value="false"/>
                 <parameter key="absolute_error" value="true"/>
+                <parameter key="relative_error" value="false"/>
+                <parameter key="relative_error_lenient" value="false"/>
+                <parameter key="relative_error_strict" value="false"/>
                 <parameter key="normalized_absolute_error" value="true"/>
+                <parameter key="root_relative_squared_error" value="false"/>
                 <parameter key="squared_error" value="true"/>
+                <parameter key="correlation" value="false"/>
+                <parameter key="squared_correlation" value="false"/>
+                <parameter key="prediction_average" value="false"/>
+                <parameter key="spearman_rho" value="false"/>
+                <parameter key="kendall_tau" value="false"/>
+                <parameter key="skip_undefined_labels" value="true"/>
+                <parameter key="use_example_weights" value="true"/>
               </operator>
               <connect from_port="model" to_op="Test" to_port="model"/>
               <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
               <connect from_op="Test" from_port="labelled data" to_op="Evaluation" to_port="labelled data"/>
-              <connect from_op="Evaluation" from_port="performance" to_port="averagable 1"/>
+              <connect from_op="Evaluation" from_port="performance" to_port="performance 1"/>
               <portSpacing port="source_model" spacing="0"/>
               <portSpacing port="source_test set" spacing="0"/>
               <portSpacing port="source_through 1" spacing="0"/>
-              <portSpacing port="sink_averagable 1" spacing="0"/>
-              <portSpacing port="sink_averagable 2" spacing="0"/>
+              <portSpacing port="sink_test set results" spacing="0"/>
+              <portSpacing port="sink_performance 1" spacing="0"/>
+              <portSpacing port="sink_performance 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Log" width="90" x="179" y="30">
+          <operator activated="true" class="log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="76" name="Log" width="90" x="179" y="30">
             <list key="log">
               <parameter key="C" value="operator.Training.parameter.C"/>
               <parameter key="degree" value="operator.Training.parameter.degree"/>
               <parameter key="absolute" value="operator.Validation.value.performance"/>
             </list>
+            <parameter key="sorting_type" value="none"/>
+            <parameter key="sorting_k" value="100"/>
+            <parameter key="persistent" value="false"/>
           </operator>
-          <connect from_port="input 1" to_op="Validation" to_port="training"/>
-          <connect from_op="Validation" from_port="averagable 1" to_op="Log" to_port="through 1"/>
+          <connect from_port="input 1" to_op="Cross Validation" to_port="example set"/>
+          <connect from_op="Cross Validation" from_port="performance 1" to_op="Log" to_port="through 1"/>
           <connect from_op="Log" from_port="through 1" to_port="performance"/>
           <portSpacing port="source_input 1" spacing="0"/>
           <portSpacing port="source_input 2" spacing="0"/>
@@ -73,7 +110,7 @@
       <connect from_op="Retrieve" from_port="output" to_op="ParameterOptimization" to_port="input 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="272" resized="true" width="409" x="35" y="139">This process is very similar to the parameter optimization process in the meta sample directory. Again we use an ProcessLog operator which collects all desired values each time it is applied. In this process, two of the three values are parameters (the parameters C and degree of a polynomial kernel SVM) and the third value is the prediction performance which was achieved with these parameters. Please check out the parameter list of the Log operator. Instead of &amp;quot;value&amp;quot; the key &amp;quot;parameter&amp;quot; was used for two of the logging values. &lt;br/&gt;&lt;br/&gt;The result is a three dimensional plot of the error against the parameters which again can be checked online during running of the process. This time you should set x axis to C, y axis to degree and the value from the selection list should be the calculated error.</description>
+      <description align="left" color="yellow" colored="false" height="272" resized="true" width="409" x="40" y="155">This process is very similar to the parameter optimization process in the meta sample directory. Again we use an ProcessLog operator which collects all desired values each time it is applied. In this process, two of the three values are parameters (the parameters C and degree of a polynomial kernel SVM) and the third value is the prediction performance which was achieved with these parameters. Please check out the parameter list of the Log operator. Instead of &amp;quot;value&amp;quot; the key &amp;quot;parameter&amp;quot; was used for two of the logging values. &lt;br/&gt;&lt;br/&gt;The result is a three dimensional plot of the error against the parameters which again can be checked online during running of the process. This time you should set x axis to C, y axis to degree and the value from the selection list should be the calculated error.</description>
     </process>
   </operator>
 </process>

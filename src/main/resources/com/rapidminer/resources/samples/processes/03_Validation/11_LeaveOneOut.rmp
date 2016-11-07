@@ -1,47 +1,72 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Labor-Negotiations"/>
       </operator>
-      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="180" y="30">
-        <parameter key="number_of_validations" value="5"/>
+      <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="179" y="34">
+        <parameter key="enable_parallel_execution" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="5"/>
+        <parameter key="sampling_type" value="automatic"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="materialize_data" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="171" y="30"/>
-          <connect from_port="training" to_op="DecisionTree" to_port="training set"/>
+          <operator activated="true" class="parallel_decision_tree" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DecisionTree" width="90" x="45" y="34">
+            <parameter key="criterion" value="gain_ratio"/>
+            <parameter key="maximal_depth" value="20"/>
+            <parameter key="apply_pruning" value="true"/>
+            <parameter key="confidence" value="0.25"/>
+            <parameter key="apply_prepruning" value="true"/>
+            <parameter key="minimal_gain" value="0.1"/>
+            <parameter key="minimal_leaf_size" value="2"/>
+            <parameter key="minimal_size_for_split" value="4"/>
+            <parameter key="number_of_prepruning_alternatives" value="3"/>
+          </operator>
+          <connect from_port="training set" to_op="DecisionTree" to_port="training set"/>
           <connect from_op="DecisionTree" from_port="model" to_port="model"/>
-          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="source_training set" spacing="0"/>
           <portSpacing port="sink_model" spacing="0"/>
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="238" y="30"/>
+          <operator activated="true" class="performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="179" y="34">
+            <parameter key="use_example_weights" value="true"/>
+          </operator>
           <connect from_port="model" to_op="ModelApplier" to_port="model"/>
           <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
           <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
-          <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+          <connect from_op="Performance" from_port="performance" to_port="performance 1"/>
           <portSpacing port="source_model" spacing="0"/>
           <portSpacing port="source_test set" spacing="0"/>
           <portSpacing port="source_through 1" spacing="0"/>
-          <portSpacing port="sink_averagable 1" spacing="0"/>
-          <portSpacing port="sink_averagable 2" spacing="0"/>
+          <portSpacing port="sink_test set results" spacing="0"/>
+          <portSpacing port="sink_performance 1" spacing="0"/>
+          <portSpacing port="sink_performance 2" spacing="0"/>
         </process>
       </operator>
-      <connect from_op="Retrieve" from_port="output" to_op="XValidation" to_port="training"/>
-      <connect from_op="XValidation" from_port="averagable 1" to_port="result 1"/>
+      <connect from_op="Retrieve" from_port="output" to_op="Cross Validation" to_port="example set"/>
+      <connect from_op="Cross Validation" from_port="performance 1" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="218" resized="true" width="421" x="34" y="167">This process is basically the same as process &amp;quot;04_XValidation_Nominal.xml&amp;quot;. There are two differences: the first one is that the parameter &amp;quot;leave_one_out&amp;quot; of the XValidation operator is set to true. The cross validation use exactly as many iterations as are examples in the input data set which turns the XValidation into a leave-one-out estimation operator. &lt;br/&gt;&lt;br/&gt;The second difference is that another preprocessing operator is used called MissingValueReplenishment. This operator uses a simple strategy in order to replace missing attribute values by a fixed value, e.g. the average of all other non-missing values.</description>
+      <description align="left" color="yellow" colored="false" height="218" resized="true" width="421" x="37" y="192">This process is basically the same as process &amp;quot;04_XValidation_Nominal.xml&amp;quot;. There are two differences: the first one is that the parameter &amp;quot;leave_one_out&amp;quot; of the XValidation operator is set to true. The cross validation use exactly as many iterations as are examples in the input data set which turns the XValidation into a leave-one-out estimation operator. &lt;br/&gt;&lt;br/&gt;The second difference is that another preprocessing operator is used called MissingValueReplenishment. This operator uses a simple strategy in order to replace missing attribute values by a fixed value, e.g. the average of all other non-missing values.</description>
     </process>
   </operator>
 </process>

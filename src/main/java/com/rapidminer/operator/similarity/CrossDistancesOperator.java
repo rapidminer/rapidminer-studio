@@ -18,6 +18,12 @@
  */
 package com.rapidminer.operator.similarity;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -27,7 +33,8 @@ import com.rapidminer.example.set.SortedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -48,20 +55,14 @@ import com.rapidminer.tools.math.container.BoundedPriorityQueue;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
 import com.rapidminer.tools.math.similarity.DistanceMeasures;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * This operator creates an exampleSet containing the distances between each example of the request
  * exampleSet and the k nearest of the reference exampleSet.
- * 
+ *
  * This operator needs ID attributes in both example sets in order to work. If not present, new ones
  * are created.
- * 
+ *
  * @author Sebastian Land
  */
 public class CrossDistancesOperator extends Operator {
@@ -132,7 +133,7 @@ public class CrossDistancesOperator extends Operator {
 
 		List<Attribute> newAttributes = new LinkedList<Attribute>();
 		Collections.addAll(newAttributes, requestId, documentId, distance);
-		MemoryExampleTable table = new MemoryExampleTable(newAttributes);
+		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
 
 		double searchModeFactor = getParameterAsInt(PARAMETER_SEARCH_MODE) == MODE_FARTHEST ? -1d : 1d;
 		boolean computeSimilarity = getParameterAsBoolean(PARAMETER_COMPUTE_SIMILARITIES);
@@ -167,20 +168,20 @@ public class CrossDistancesOperator extends Operator {
 			for (Tupel<Double, Double> tupel : distances) {
 				double documentIdValue = tupel.getSecond();
 				if (oldDocumentId.isNominal()) {
-					documentIdValue = documentId.getMapping().mapString(
-							oldDocumentId.getMapping().mapIndex((int) documentIdValue));
+					documentIdValue = documentId.getMapping()
+							.mapString(oldDocumentId.getMapping().mapIndex((int) documentIdValue));
 				}
 				DataRow row = factory.create(3);
 				row.set(distance, tupel.getFirst() * searchModeFactor);
 				row.set(requestId, requestIdValue);
 				row.set(documentId, documentIdValue);
-				table.addDataRow(row);
+				builder.addDataRow(row);
 				checkForStop();
 			}
 		}
 
 		// sorting set
-		ExampleSet result = new SortedExampleSet(table.createExampleSet(), distance,
+		ExampleSet result = new SortedExampleSet(builder.build(), distance,
 				searchModeFactor == -1d ? SortedExampleSet.DECREASING : SortedExampleSet.INCREASING);
 
 		requestSetOutput.deliver(requestSet);

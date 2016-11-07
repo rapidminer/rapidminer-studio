@@ -25,6 +25,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.distribution.DiscreteDistribution;
 import com.rapidminer.tools.math.distribution.Distribution;
@@ -52,6 +54,8 @@ public class KernelDistributionModel extends DistributionModel {
 	private static final long serialVersionUID = -402827845291958569L;
 
 	private static final String UNKNOWN_VALUE_NAME = "unknown";
+
+	private static final int OPERATOR_PROGRESS_STEPS = 200;
 
 	/** The number of classes. */
 	private int numberOfClasses;
@@ -177,7 +181,8 @@ public class KernelDistributionModel extends DistributionModel {
 							}
 							break;
 						case KernelNaiveBayes.ESTIMATION_MODE_GREEDY:
-							kernelDistributions[attributeIndex][i] = new GreedyKernelDistribution(bandwidth, numberOfKernels);
+							kernelDistributions[attributeIndex][i] = new GreedyKernelDistribution(bandwidth,
+									numberOfKernels);
 							break;
 						default:
 							kernelDistributions[attributeIndex][i] = new FullKernelDistribution();
@@ -241,7 +246,8 @@ public class KernelDistributionModel extends DistributionModel {
 								// extend weight array if attribute value is not in mapping
 								for (int i = 0; i < numberOfClasses; i++) {
 									double[] newWeightSums = new double[(int) attributeValue + 2];
-									newWeightSums[newWeightSums.length - 1] = weightSums[attributeIndex][i][weightSums[attributeIndex][i].length - 1];
+									newWeightSums[newWeightSums.length
+											- 1] = weightSums[attributeIndex][i][weightSums[attributeIndex][i].length - 1];
 									for (int j = 0; j < weightSums[attributeIndex][i].length - 1; j++) {
 										newWeightSums[j] = weightSums[attributeIndex][i][j];
 									}
@@ -254,10 +260,12 @@ public class KernelDistributionModel extends DistributionModel {
 								for (int i = 0; i < attributeValues[attributeIndex].length - 1; i++) {
 									attributeValues[attributeIndex][i] = attribute.getMapping().mapIndex(i);
 								}
-								attributeValues[attributeIndex][attributeValues[attributeIndex].length - 1] = UNKNOWN_VALUE_NAME;
+								attributeValues[attributeIndex][attributeValues[attributeIndex].length
+										- 1] = UNKNOWN_VALUE_NAME;
 							}
 						} else {
-							weightSums[attributeIndex][classIndex][weightSums[attributeIndex][classIndex].length - 1] += weight;
+							weightSums[attributeIndex][classIndex][weightSums[attributeIndex][classIndex].length
+									- 1] += weight;
 						}
 					} else {
 						if (!Double.isNaN(attributeValue)) {
@@ -284,8 +292,8 @@ public class KernelDistributionModel extends DistributionModel {
 			if (nominal[i]) {
 				for (int j = 0; j < numberOfClasses; j++) {
 					for (int k = 0; k < weightSums[i][j].length; k++) {
-						distributionProperties[i][j][k] = Math.log((weightSums[i][j][k] + f)
-								/ (classWeights[j] + f * weightSums[i][j].length));
+						distributionProperties[i][j][k] = Math
+								.log((weightSums[i][j][k] + f) / (classWeights[j] + f * weightSums[i][j].length));
 					}
 				}
 			}
@@ -312,12 +320,23 @@ public class KernelDistributionModel extends DistributionModel {
 
 	/**
 	 * Perform predictions based on the distribution properties.
+	 * 
+	 * @throws ProcessStoppedException
 	 */
 	@Override
-	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws ProcessStoppedException {
 		if (modelRecentlyUpdated) {
 			updateDistributionProperties();
 		}
+
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+
 		for (Example example : exampleSet) {
 			double[] probabilities = new double[numberOfClasses];
 			double maxLogProbability = Double.NEGATIVE_INFINITY;
@@ -376,6 +395,11 @@ public class KernelDistributionModel extends DistributionModel {
 				for (int i = 0; i < numberOfClasses; i++) {
 					example.setConfidence(classValues[i], probabilities[i] / probabilitySum);
 				}
+			}
+
+			// trigger progress
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

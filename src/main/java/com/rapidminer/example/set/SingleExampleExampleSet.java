@@ -31,7 +31,7 @@ import java.util.Iterator;
 
 /**
  * This view can be used to wrap a single example.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SingleExampleExampleSet extends AbstractExampleSet {
@@ -129,5 +129,10 @@ public class SingleExampleExampleSet extends AbstractExampleSet {
 	@Override
 	public ExampleTable getExampleTable() {
 		return parent.getExampleTable();
+	}
+
+	@Override
+	public void cleanup() {
+		parent.cleanup();
 	}
 }

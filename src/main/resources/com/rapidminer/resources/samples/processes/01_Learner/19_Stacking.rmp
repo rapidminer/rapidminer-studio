@@ -1,23 +1,72 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="simple polynomial classification"/>
         <parameter key="number_examples" value="1000"/>
+        <parameter key="number_of_attributes" value="5"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="stacking" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Stacking" width="90" x="179" y="30">
+      <operator activated="true" class="stacking" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Stacking" width="90" x="179" y="34">
+        <parameter key="keep_all_attributes" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="179" y="30"/>
-          <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="179" y="120">
-            <parameter key="k" value="5"/>
+          <operator activated="true" class="parallel_decision_tree" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DecisionTree" width="90" x="179" y="34">
+            <parameter key="criterion" value="gain_ratio"/>
+            <parameter key="maximal_depth" value="20"/>
+            <parameter key="apply_pruning" value="true"/>
+            <parameter key="confidence" value="0.25"/>
+            <parameter key="apply_prepruning" value="true"/>
+            <parameter key="minimal_gain" value="0.1"/>
+            <parameter key="minimal_leaf_size" value="2"/>
+            <parameter key="minimal_size_for_split" value="4"/>
+            <parameter key="number_of_prepruning_alternatives" value="3"/>
           </operator>
-          <operator activated="true" class="linear_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="LinearRegression" width="90" x="179" y="210"/>
+          <operator activated="true" class="k_nn" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NearestNeighbors" width="90" x="179" y="136">
+            <parameter key="k" value="5"/>
+            <parameter key="weighted_vote" value="false"/>
+            <parameter key="measure_types" value="MixedMeasures"/>
+            <parameter key="mixed_measure" value="MixedEuclideanDistance"/>
+            <parameter key="nominal_measure" value="NominalDistance"/>
+            <parameter key="numerical_measure" value="EuclideanDistance"/>
+            <parameter key="divergence" value="GeneralizedIDivergence"/>
+            <parameter key="kernel_type" value="radial"/>
+            <parameter key="kernel_gamma" value="1.0"/>
+            <parameter key="kernel_sigma1" value="1.0"/>
+            <parameter key="kernel_sigma2" value="0.0"/>
+            <parameter key="kernel_sigma3" value="2.0"/>
+            <parameter key="kernel_degree" value="3.0"/>
+            <parameter key="kernel_shift" value="1.0"/>
+            <parameter key="kernel_a" value="1.0"/>
+            <parameter key="kernel_b" value="0.0"/>
+          </operator>
+          <operator activated="true" class="linear_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="LinearRegression" width="90" x="179" y="238">
+            <parameter key="feature_selection" value="M5 prime"/>
+            <parameter key="alpha" value="0.05"/>
+            <parameter key="max_iterations" value="10"/>
+            <parameter key="forward_alpha" value="0.05"/>
+            <parameter key="backward_alpha" value="0.05"/>
+            <parameter key="eliminate_colinear_features" value="true"/>
+            <parameter key="min_tolerance" value="0.05"/>
+            <parameter key="use_bias" value="true"/>
+            <parameter key="ridge" value="1.0E-8"/>
+          </operator>
           <connect from_port="training set 1" to_op="DecisionTree" to_port="training set"/>
           <connect from_port="training set 2" to_op="NearestNeighbors" to_port="training set"/>
           <connect from_port="training set 3" to_op="LinearRegression" to_port="training set"/>
@@ -34,7 +83,9 @@
           <portSpacing port="sink_base model 4" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NaiveBayes" width="90" x="172" y="30"/>
+          <operator activated="true" class="naive_bayes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NaiveBayes" width="90" x="179" y="34">
+            <parameter key="laplace_correction" value="true"/>
+          </operator>
           <connect from_port="stacking examples" to_op="NaiveBayes" to_port="training set"/>
           <connect from_op="NaiveBayes" from_port="model" to_port="stacking model"/>
           <portSpacing port="source_stacking examples" spacing="0"/>

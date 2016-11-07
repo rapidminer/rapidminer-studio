@@ -29,6 +29,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Tools;
 
@@ -43,6 +44,8 @@ import com.rapidminer.tools.Tools;
 public class MultiModelByRegression extends PredictionModel implements MetaModel {
 
 	private static final long serialVersionUID = 4526668088304067678L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
 
 	private Model[] models;
 
@@ -66,6 +69,12 @@ public class MultiModelByRegression extends PredictionModel implements MetaModel
 	 */
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabelAttribute) throws OperatorException {
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
 
 		ExampleSet[] eSet = new ExampleSet[getNumberOfModels()];
 
@@ -73,6 +82,9 @@ public class MultiModelByRegression extends PredictionModel implements MetaModel
 			Model model = getModel(i);
 			eSet[i] = (ExampleSet) exampleSet.clone();
 			eSet[i] = model.apply(eSet[i]);
+			if (progress != null) {
+				progress.setCompleted((int) (50.0 * (i + 1) / getNumberOfModels()));
+			}
 		}
 
 		List<Iterator<Example>> reader = new ArrayList<Iterator<Example>>(eSet.length);
@@ -82,6 +94,7 @@ public class MultiModelByRegression extends PredictionModel implements MetaModel
 
 		Iterator<Example> originalReader = exampleSet.iterator();
 		Attribute predictedLabel = exampleSet.getAttributes().getPredictedLabel();
+		int progressCounter = 0;
 		while (originalReader.hasNext()) {
 			double bestLabel = Double.NaN;
 			double highestFunctionValue = Double.NEGATIVE_INFINITY;
@@ -95,6 +108,10 @@ public class MultiModelByRegression extends PredictionModel implements MetaModel
 			Example example = originalReader.next();
 			example.setPredictedLabel(bestLabel);
 			example.setConfidence(predictedLabel.getMapping().mapIndex((int) bestLabel), 1.0d);
+
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) (50 + 50.0 * progressCounter / exampleSet.size()));
+			}
 		}
 
 		return exampleSet;

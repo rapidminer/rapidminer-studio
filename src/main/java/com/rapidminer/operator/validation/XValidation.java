@@ -88,7 +88,9 @@ import com.rapidminer.tools.RandomGenerator;
  *
  * @rapidminer.index cross-validation
  * @author Ingo Mierswa
+ * @deprecated use the {@link #CrossValidationOperator} from the concurrency extension instead.
  */
+@Deprecated
 public class XValidation extends ValidationChain {
 
 	/** The parameter name for &quot;Number of subsets for the crossvalidation.&quot; */

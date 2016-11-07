@@ -1,25 +1,68 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="warning"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Purchases"/>
       </operator>
-      <operator activated="true" class="nominal_to_binominal" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Nominal2Binominal" width="90" x="180" y="30">
+      <operator activated="true" class="nominal_to_binominal" compatibility="7.1.001" expanded="true" height="103" name="Nominal2Binominal" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="nominal"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="file_path"/>
+        <parameter key="block_type" value="single_value"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="single_value"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
         <parameter key="transform_binominal" value="true"/>
+        <parameter key="use_underscore_in_name" value="false"/>
       </operator>
-      <operator activated="true" class="select_attributes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeFilter" width="90" x="315" y="30">
+      <operator activated="true" class="select_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AttributeFilter" width="90" x="313" y="34">
         <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
         <parameter key="regular_expression" value=".*true.*"/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
       </operator>
-      <operator activated="true" class="fp_growth" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FPGrowth" width="90" x="447" y="30"/>
-      <operator activated="true" class="create_association_rules" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AssociationRuleGenerator" width="90" x="581" y="75"/>
+      <operator activated="true" class="fp_growth" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FPGrowth" width="90" x="447" y="34">
+        <parameter key="find_min_number_of_itemsets" value="true"/>
+        <parameter key="min_number_of_itemsets" value="100"/>
+        <parameter key="max_number_of_retries" value="15"/>
+        <parameter key="min_support" value="0.95"/>
+        <parameter key="max_items" value="-1"/>
+        <parameter key="keep_example_set" value="false"/>
+      </operator>
+      <operator activated="true" class="create_association_rules" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AssociationRuleGenerator" width="90" x="581" y="85">
+        <parameter key="criterion" value="confidence"/>
+        <parameter key="min_confidence" value="0.8"/>
+        <parameter key="min_criterion_value" value="0.8"/>
+        <parameter key="gain_theta" value="2.0"/>
+        <parameter key="laplace_k" value="1.0"/>
+      </operator>
       <connect from_op="Retrieve" from_port="output" to_op="Nominal2Binominal" to_port="example set input"/>
       <connect from_op="Nominal2Binominal" from_port="example set output" to_op="AttributeFilter" to_port="example set input"/>
       <connect from_op="AttributeFilter" from_port="example set output" to_op="FPGrowth" to_port="example set"/>
@@ -30,7 +73,7 @@
       <portSpacing port="sink_result 1" spacing="18"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="304" resized="true" width="685" x="32" y="169">This process uses two important preprocessing operators: First the frequency discretization operator, which discretizes numerical attributes by putting the values into bins of equal size. Second, the filter operator nominal to binominal creates for each possible nominal value of a polynominal attribute a new binominal (binary) feature which is true if the example had the particular nominal value.&lt;br/&gt;&lt;br/&gt;These preprocessing operators are necessary since particular learning schemes can not handle attributes of certain value types. For example, the very efficient frequent item set mining operator FPGrowth used in this process setup can only handle binominal features and no numerical or polynominal ones.&lt;br/&gt;&lt;br/&gt;The next operator is the frequent item set mining operator FPGrowth. This operator efficiently calculates attribute value sets often occuring together. From these so called frequent item sets the most confident rules are calculated. with the association rule generator.&lt;br/&gt;&lt;br/&gt;The result will be displayed in a rule browser where desired conclusion can be selected in a selection list on the left side. As for all other tables available in RapidMiner you can sort the columns by clicking on the column header. Pressing CTRL during these clicks allows the selection for up to three sorting columns.</description>
+      <description align="left" color="yellow" colored="false" height="304" resized="true" width="685" x="34" y="178">This process uses two important preprocessing operators: First the frequency discretization operator, which discretizes numerical attributes by putting the values into bins of equal size. Second, the filter operator nominal to binominal creates for each possible nominal value of a polynominal attribute a new binominal (binary) feature which is true if the example had the particular nominal value.&lt;br/&gt;&lt;br/&gt;These preprocessing operators are necessary since particular learning schemes can not handle attributes of certain value types. For example, the very efficient frequent item set mining operator FPGrowth used in this process setup can only handle binominal features and no numerical or polynominal ones.&lt;br/&gt;&lt;br/&gt;The next operator is the frequent item set mining operator FPGrowth. This operator efficiently calculates attribute value sets often occuring together. From these so called frequent item sets the most confident rules are calculated. with the association rule generator.&lt;br/&gt;&lt;br/&gt;The result will be displayed in a rule browser where desired conclusion can be selected in a selection list on the left side. As for all other tables available in RapidMiner you can sort the columns by clicking on the column header. Pressing CTRL during these clicks allows the selection for up to three sorting columns.</description>
     </process>
   </operator>
 </process>

@@ -1,37 +1,89 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Market-Data"/>
       </operator>
-      <operator activated="true" class="generate_id" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="IdTagging" width="90" x="179" y="30"/>
-      <operator activated="true" class="set_role" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="IdToRegular" width="90" x="313" y="30">
+      <operator activated="true" class="generate_id" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="IdTagging" width="90" x="179" y="34">
+        <parameter key="create_nominal_ids" value="false"/>
+        <parameter key="offset" value="0"/>
+      </operator>
+      <operator activated="true" class="set_role" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="IdToRegular" width="90" x="313" y="34">
         <parameter key="attribute_name" value="id"/>
+        <parameter key="target_role" value="regular"/>
         <list key="set_additional_roles"/>
       </operator>
-      <operator activated="true" breakpoints="after" class="pivot" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Example2AttributePivoting" width="90" x="450" y="30">
+      <operator activated="true" breakpoints="after" class="pivot" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Example2AttributePivoting" width="90" x="447" y="34">
         <parameter key="group_attribute" value="TID"/>
         <parameter key="index_attribute" value="ITEM"/>
+        <parameter key="consider_weights" value="true"/>
+        <parameter key="weight_aggregation" value="sum"/>
+        <parameter key="skip_constant_attributes" value="true"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="numerical_to_polynominal" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Numerical2Polynominal" width="90" x="179" y="210"/>
-      <operator activated="true" class="work_on_subset" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="AttributeSubsetPreprocessing" width="90" x="313" y="210">
+      <operator activated="true" class="numerical_to_polynominal" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Numerical2Polynominal" width="90" x="179" y="238">
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+      </operator>
+      <operator activated="true" class="work_on_subset" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AttributeSubsetPreprocessing" width="90" x="313" y="238">
         <parameter key="attribute_filter_type" value="regular_expression"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
         <parameter key="regular_expression" value="TID"/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
         <parameter key="invert_selection" value="true"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="name_conflict_handling" value="error"/>
+        <parameter key="role_conflict_handling" value="error"/>
+        <parameter key="keep_subset_only" value="false"/>
+        <parameter key="deliver_inner_results" value="false"/>
         <parameter key="remove_roles" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="map" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Mapping" width="90" x="45" y="30">
+          <operator activated="true" class="map" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Mapping" width="90" x="45" y="34">
             <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
             <parameter key="regular_expression" value=".*"/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
             <list key="value_mappings"/>
             <parameter key="replace_what" value="?"/>
             <parameter key="replace_by" value="false"/>
+            <parameter key="consider_regular_expressions" value="false"/>
             <parameter key="add_default_mapping" value="true"/>
             <parameter key="default_value" value="true"/>
           </operator>
@@ -42,8 +94,14 @@
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="fp_growth" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FPGrowth" width="90" x="447" y="210">
+      <operator activated="true" class="fp_growth" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FPGrowth" width="90" x="447" y="238">
+        <parameter key="find_min_number_of_itemsets" value="true"/>
+        <parameter key="min_number_of_itemsets" value="100"/>
+        <parameter key="max_number_of_retries" value="15"/>
         <parameter key="positive_value" value="true"/>
+        <parameter key="min_support" value="0.95"/>
+        <parameter key="max_items" value="-1"/>
+        <parameter key="keep_example_set" value="false"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="IdTagging" to_port="example set input"/>
       <connect from_op="IdTagging" from_port="example set output" to_op="IdToRegular" to_port="example set input"/>

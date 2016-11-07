@@ -24,7 +24,7 @@ import java.util.Iterator;
 
 /**
  * @author Sebastian Land
- * 
+ *
  */
 public class Sequence extends ArrayList<Transaction> implements Comparable<Sequence> {
 
@@ -194,12 +194,19 @@ public class Sequence extends ArrayList<Transaction> implements Comparable<Seque
 				int itsIndex = itsItem.next().getIndex();
 				int myIndex = myItem.next().getIndex();
 				if (itsIndex != myIndex) {
-					return (myIndex > itsIndex) ? 1 : -1;
+					return myIndex > itsIndex ? 1 : -1;
+				}
+			}
+			for (int i = 0; i < this.size(); i++) {
+				int myLocalSize = this.get(i).size();
+				int itsLocalSize = o.get(i).size();
+				if (myLocalSize != itsLocalSize) {
+					return myLocalSize > itsLocalSize ? 1 : -1;
 				}
 			}
 			return 0;
 		} else {
-			return (mySize > itsSize) ? 1 : -1;
+			return mySize > itsSize ? 1 : -1;
 		}
 	}
 }

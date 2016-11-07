@@ -32,8 +32,8 @@ import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
@@ -199,7 +199,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	}
 
 	@Override
-	protected MemoryExampleTable joinData(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
+	protected ExampleSetBuilder joinData(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList) throws OperatorException {
 		int joinType = getParameterAsInt(PARAMETER_JOIN_TYPE);
 		leftExampleSet.remapIds();
@@ -308,10 +308,10 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	 * sets whose key attributes match.
 	 *
 	 */
-	private MemoryExampleTable performInnerJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
+	private ExampleSetBuilder performInnerJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
 			Pair<Attribute[], Attribute[]> keyAttributes) throws ProcessStoppedException {
-		MemoryExampleTable unionTable = new MemoryExampleTable(unionAttributeList);
+		ExampleSetBuilder builder = ExampleSets.from(unionAttributeList);
 
 		Attribute[] leftKeyAttributes = null;
 		Attribute[] rightKeyAttributes = null;
@@ -334,8 +334,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 			if (matchingRightExamples != null) {
 				for (Example rightExample : matchingRightExamples) {
-					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample,
-							rightExample);
+					addCombinedOccurence(originalAttributeSources, unionAttributeList, builder, leftExample, rightExample);
 				}
 			}
 
@@ -346,18 +345,18 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 				progressCounter = 0;
 			}
 		}
-		return unionTable;
+		return builder;
 	}
 
 	/**
 	 * Performs a left join.
 	 *
 	 */
-	private MemoryExampleTable performLeftJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
+	private ExampleSetBuilder performLeftJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
 			Pair<Attribute[], Attribute[]> keyAttributes, Set<DoubleArrayWrapper> matchedExamplesInRightTable)
 			throws ProcessStoppedException {
-		MemoryExampleTable unionTable = new MemoryExampleTable(unionAttributeList);
+		ExampleSetBuilder builder = ExampleSets.from(unionAttributeList);
 
 		Attribute[] leftKeyAttributes = null;
 		Attribute[] rightKeyAttributes = null;
@@ -380,8 +379,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			if (matchingRightExamples != null) {
 				// add combination of left example and all matching right examples
 				for (Example rightExample : matchingRightExamples) {
-					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample,
-							rightExample);
+					addCombinedOccurence(originalAttributeSources, unionAttributeList, builder, leftExample, rightExample);
 					if (matchedExamplesInRightTable != null) {
 						matchedExamplesInRightTable
 								.add(new DoubleArrayWrapper(getKeyValues(rightExample, rightKeyAttributes)));
@@ -389,7 +387,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 				}
 			} else { // no rows with this key in right table
 				// insert this row with null values for the right table
-				addLeftOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample);
+				addLeftOnlyOccurence(originalAttributeSources, unionAttributeList, builder, leftExample);
 			}
 			// trigger operator progress every 100 examples
 			++progressCounter;
@@ -398,17 +396,17 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 				progressCounter = 0;
 			}
 		}
-		return unionTable;
+		return builder;
 	}
 
 	/**
 	 * Performs a right join.
 	 *
 	 */
-	private MemoryExampleTable performRightJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
+	private ExampleSetBuilder performRightJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
 			Pair<Attribute[], Attribute[]> keyAttributes) throws ProcessStoppedException {
-		MemoryExampleTable unionTable = new MemoryExampleTable(unionAttributeList);
+		ExampleSetBuilder builder = ExampleSets.from(unionAttributeList);
 
 		Attribute[] leftKeyAttributes = null;
 		Attribute[] rightKeyAttributes = null;
@@ -442,12 +440,11 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			if (matchingLeftExamples != null) {
 				// add combination of left example and all matching right examples
 				for (Example leftExample : matchingLeftExamples) {
-					addCombinedOccurence(originalAttributeSources, unionAttributeList, unionTable, leftExample,
-							rightExample);
+					addCombinedOccurence(originalAttributeSources, unionAttributeList, builder, leftExample, rightExample);
 				}
 			} else {
-				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, rightExample,
-						leftKeyAttributes, rightKeyAttributes, keepBoth, removeDoubleAttributes);
+				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, builder, rightExample, leftKeyAttributes,
+						rightKeyAttributes, keepBoth, removeDoubleAttributes);
 			}
 			// trigger operator progress every 100 examples
 			++progressCounter;
@@ -456,17 +453,17 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 				progressCounter = 0;
 			}
 		}
-		return unionTable;
+		return builder;
 	}
 
 	/**
 	 * Performs an outer join (not to be confused with a full outer join).
 	 *
 	 */
-	private MemoryExampleTable performOuterJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
+	private ExampleSetBuilder performOuterJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
 			Pair<Attribute[], Attribute[]> keyAttributes) throws ProcessStoppedException {
-		MemoryExampleTable unionTable = new MemoryExampleTable(unionAttributeList);
+		ExampleSetBuilder builder;
 
 		Attribute[] leftKeyAttributes = keyAttributes.getFirst();
 		Attribute[] rightKeyAttributes = keyAttributes.getSecond();
@@ -474,7 +471,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 		// perform left join (an outer join is the union of a left join and a right join on the same
 		// tables)
 		Set<DoubleArrayWrapper> mappedRightExamples = new HashSet<>();
-		unionTable = performLeftJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
+		builder = performLeftJoin(leftExampleSet, rightExampleSet, originalAttributeSources, unionAttributeList,
 				keyAttributes, mappedRightExamples);
 
 		boolean keepBoth = getParameterAsBoolean(PARAMETER_KEEP_BOTH_JOIN_ATTRIBUTES);
@@ -484,8 +481,8 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			// perform right join, but add example only if it has not been matched during left join
 			// above
 			if (!mappedRightExamples.contains(new DoubleArrayWrapper(getKeyValues(rightExample, rightKeyAttributes)))) {
-				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, unionTable, rightExample,
-						leftKeyAttributes, rightKeyAttributes, keepBoth, removeDoubleAttributes);
+				addRightOnlyOccurence(originalAttributeSources, unionAttributeList, builder, rightExample, leftKeyAttributes,
+						rightKeyAttributes, keepBoth, removeDoubleAttributes);
 			}
 			// trigger operator progress every 100 examples
 			++progressCounter;
@@ -494,7 +491,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 				progressCounter = 0;
 			}
 		}
-		return unionTable;
+		return builder;
 	}
 
 	/**
@@ -503,7 +500,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	 * constructed example is added to unionTable.
 	 */
 	private void addCombinedOccurence(List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
-			MemoryExampleTable unionTable, Example leftExample, Example rightExample) {
+			ExampleSetBuilder builder, Example leftExample, Example rightExample) {
 		double[] unionDataRow = new double[unionAttributeList.size()];
 		int attributeIndex = 0;
 		for (AttributeSource attributeSource : originalAttributeSources) {
@@ -514,7 +511,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			}
 			attributeIndex++;
 		}
-		unionTable.addDataRow(new DoubleArrayDataRow(unionDataRow));
+		builder.addRow(unionDataRow);
 	}
 
 	/**
@@ -523,7 +520,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	 * should normally be taken from a right example.
 	 */
 	private void addLeftOnlyOccurence(List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
-			MemoryExampleTable unionTable, Example leftExample) {
+			ExampleSetBuilder builder, Example leftExample) {
 		double[] unionDataRow = new double[unionAttributeList.size()];
 		int attributeIndex = 0;
 		for (AttributeSource attributeSource : originalAttributeSources) {
@@ -534,7 +531,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			}
 			attributeIndex++;
 		}
-		unionTable.addDataRow(new DoubleArrayDataRow(unionDataRow));
+		builder.addRow(unionDataRow);
 	}
 
 	/**
@@ -545,8 +542,8 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	 * corresponding attribute in rightExample is taken.
 	 */
 	private void addRightOnlyOccurence(List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
-			MemoryExampleTable unionTable, Example rightExample, Attribute[] leftKeyAttributes,
-			Attribute[] rightKeyAttributes, boolean keepBoth, boolean removeDoubleAttributes) {
+			ExampleSetBuilder builder, Example rightExample, Attribute[] leftKeyAttributes, Attribute[] rightKeyAttributes,
+			boolean keepBoth, boolean removeDoubleAttributes) {
 		double[] unionDataRow = new double[unionAttributeList.size()];
 		int attributeIndex = 0;
 		for (AttributeSource attributeSource : originalAttributeSources) {
@@ -590,7 +587,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			}
 			attributeIndex++;
 		}
-		unionTable.addDataRow(new DoubleArrayDataRow(unionDataRow));
+		builder.addRow(unionDataRow);
 	}
 
 	/**

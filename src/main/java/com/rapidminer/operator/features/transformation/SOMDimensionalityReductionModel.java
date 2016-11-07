@@ -18,24 +18,24 @@
  */
 package com.rapidminer.operator.features.transformation;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
-import com.rapidminer.operator.AbstractModel;
-import com.rapidminer.operator.OperatorException;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.math.som.KohonenNet;
-
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
+import com.rapidminer.operator.AbstractModel;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.math.som.KohonenNet;
 
 
 /**
@@ -46,6 +46,8 @@ import java.util.Map;
 public class SOMDimensionalityReductionModel extends AbstractModel {
 
 	private static final long serialVersionUID = 7249399167412746295L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 100;
 
 	private KohonenNet net;
 
@@ -86,8 +88,16 @@ public class SOMDimensionalityReductionModel extends AbstractModel {
 			newSpecialAttributes.put(newAttribute, role.getSpecialName());
 		}
 
-		MemoryExampleTable newDataTable = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(exampleSet.size());
 		Iterator<Example> iterator = exampleSet.iterator();
+
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 
 		// applying Example on net
 		while (iterator.hasNext()) {
@@ -102,9 +112,12 @@ public class SOMDimensionalityReductionModel extends AbstractModel {
 			while (s.hasNext()) {
 				exampleData[i++] = currentExample.getValue(s.next().getAttribute());
 			}
-			DataRow newRow = new DoubleArrayDataRow(exampleData);
-			newDataTable.addDataRow(newRow);
+			builder.addRow(exampleData);
+
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
+			}
 		}
-		return newDataTable.createExampleSet(newSpecialAttributes);
+		return builder.withRoles(newSpecialAttributes).build();
 	}
 }

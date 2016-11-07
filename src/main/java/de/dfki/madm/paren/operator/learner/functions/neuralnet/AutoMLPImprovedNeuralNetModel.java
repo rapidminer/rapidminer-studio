@@ -29,6 +29,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.operator.learner.functions.neuralnet.ActivationFunction;
 import com.rapidminer.operator.learner.functions.neuralnet.InnerNode;
@@ -54,6 +55,8 @@ public class AutoMLPImprovedNeuralNetModel extends PredictionModel {
 	public static final ActivationFunction SIGMOID_FUNCTION = new SigmoidFunction();
 
 	public static final ActivationFunction LINEAR_FUNCTION = new LinearFunction();
+
+	private static final int OPERATOR_PROGRESS_STEPS = 100;
 
 	public String[] attributeNames;
 
@@ -97,7 +100,7 @@ public class AutoMLPImprovedNeuralNetModel extends PredictionModel {
 		if (is_old_model == false) {
 			initHiddenLayers(exampleSet, label, hiddenLayers, randomGenerator);
 		} else		// an old model has been provided, so initialize the hidden layers with previous
-			// knowledge.
+		// knowledge.
 		{
 			initHiddenLayers(exampleSet, label, hiddenLayers, randomGenerator, old_model);
 		}
@@ -168,9 +171,14 @@ public class AutoMLPImprovedNeuralNetModel extends PredictionModel {
 
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			resetNetwork();
-
 			if (predictedLabel.isNominal()) {
 				int numberOfClasses = getNumberOfClasses(getLabel());
 				double[] classProbabilities = new double[numberOfClasses];
@@ -201,6 +209,10 @@ public class AutoMLPImprovedNeuralNetModel extends PredictionModel {
 			} else {
 				double value = outputNodes[0].calculateValue(true, example);
 				example.setValue(predictedLabel, value);
+			}
+
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 
@@ -290,7 +302,8 @@ public class AutoMLPImprovedNeuralNetModel extends PredictionModel {
 		}
 	}
 
-	public void initOutputLayer(Attribute label, int numberOfClasses, double min, double max, RandomGenerator randomGenerator) {
+	public void initOutputLayer(Attribute label, int numberOfClasses, double min, double max,
+			RandomGenerator randomGenerator) {
 		double range = (max - min) / 2;
 		double offset = (max + min) / 2;
 
@@ -345,11 +358,13 @@ public class AutoMLPImprovedNeuralNetModel extends PredictionModel {
 		for (int layerIndex = 0; layerIndex < layerNames.length; layerIndex++) {
 			int numberOfNodes = layerSizes[layerIndex];
 			for (int nodeIndex = 0; nodeIndex < numberOfNodes; nodeIndex++) {
-				InnerNode innerNode = new InnerNode("Node " + (nodeIndex + 1), layerIndex, randomGenerator, SIGMOID_FUNCTION);
+				InnerNode innerNode = new InnerNode("Node " + (nodeIndex + 1), layerIndex, randomGenerator,
+						SIGMOID_FUNCTION);
 				addNode(innerNode);
 				if (layerIndex > 0) {
 					// connect to all nodes of previous layer
-					for (int i = innerNodes.length - nodeIndex - 1 - lastLayerSize; i < innerNodes.length - nodeIndex - 1; i++) {
+					for (int i = innerNodes.length - nodeIndex - 1 - lastLayerSize; i < innerNodes.length - nodeIndex
+							- 1; i++) {
 						Node.connect(innerNodes[i], innerNode);
 					}
 				}
@@ -398,7 +413,8 @@ public class AutoMLPImprovedNeuralNetModel extends PredictionModel {
 				double[] old_weights = old_innerNode.getWeights();
 				double[] new_weights = new_innerNode.getWeights();
 
-				int length = old_innerNode.getInputNodes().length;		// input nodes count should be
+				int length = old_innerNode.getInputNodes().length;		// input nodes count should
+																			// be
 				// the same for both the nets .
 				// copies all the weights and also the bias which is at index 0
 				for (int j = 0; j <= length; j++) {

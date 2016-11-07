@@ -60,7 +60,8 @@ class ResultLimitPanel extends JPanel {
 	private static final Font BOLD_LABEL_FONT = new JLabel().getFont().deriveFont(Font.BOLD);
 
 	/** action to open the {@link #DOCUMENTATION_LINK} */
-	private static final ResourceAction DOCUMENTATION_ACTION = new ResourceAction("too_much_data.learn_more_limits") {
+	private static final ResourceAction DOCUMENTATION_ACTION = new ResourceAction(
+			"too_much_data.results_banner.learn_more_limits") {
 
 		private static final long serialVersionUID = 1L;
 
@@ -72,7 +73,7 @@ class ResultLimitPanel extends JPanel {
 	};
 
 	/** opens the pricing page */
-	private static final ResourceAction UPGRADE_ACTION = new ResourceAction("too_much_data.upgrade_license") {
+	private static final ResourceAction UPGRADE_ACTION = new ResourceAction("too_much_data.results_banner.upgrade_license") {
 
 		private static final long serialVersionUID = 1L;
 

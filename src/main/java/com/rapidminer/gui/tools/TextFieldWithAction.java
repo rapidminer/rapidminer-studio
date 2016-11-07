@@ -40,6 +40,7 @@ import javax.swing.event.DocumentListener;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.borders.TextFieldBorder;
+import com.rapidminer.gui.tools.ResourceAction.IconType;
 import com.rapidminer.tools.I18N;
 
 
@@ -103,7 +104,7 @@ public class TextFieldWithAction extends JPanel {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		add(field, gbc);
 
-		actionIcon = SwingTools.createIcon("16/" + action.getIconName());
+		actionIcon = SwingTools.createIcon("16/" + action.getIconName(), action.getIconType() == IconType.MONO);
 		hoverActionIcon = hoverIcon;
 
 		final JLabel actionLabel = new JLabel(actionIcon) {

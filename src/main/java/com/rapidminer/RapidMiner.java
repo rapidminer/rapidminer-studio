@@ -72,6 +72,7 @@ import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.PlatformUtilities;
 import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.ProxySettings;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.XMLException;
@@ -165,7 +166,9 @@ public class RapidMiner {
 
 	// --- GENERAL PROPERTIES ---
 
-	/** The name of the property indicating the version of RapidMiner (read only). */
+	/**
+	 * The name of the property indicating the version of RapidMiner (read only).
+	 */
 	public static final String PROPERTY_RAPIDMINER_VERSION = "rapidminer.version";
 
 	/**
@@ -186,13 +189,19 @@ public class RapidMiner {
 	 */
 	public static final String PROPERTY_RAPIDMINER_OBJECTS_ADDITIONAL = "rapidminer.objects.additional";
 
-	/** The name of the property indicating the path to an RC file (settings). */
+	/**
+	 * The name of the property indicating the path to an RC file (settings).
+	 */
 	public static final String PROPERTY_RAPIDMINER_RC_FILE = "rapidminer.rcfile";
 
-	/** The name of the property indicating the path to the global logging file. */
+	/**
+	 * The name of the property indicating the path to the global logging file.
+	 */
 	public static final String PROPERTY_RAPIDMINER_GLOBAL_LOG_FILE = "rapidminer.global.logging.file";
 
-	/** The name of the property indicating the path to the global logging file. */
+	/**
+	 * The name of the property indicating the path to the global logging file.
+	 */
 	public static final String PROPERTY_RAPIDMINER_GLOBAL_LOG_VERBOSITY = "rapidminer.global.logging.verbosity";
 
 	// Webstart properties
@@ -209,7 +218,9 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_GENERAL_LOCALE_COUNTRY = "rapidminer.general.locale.country";
 	public static final String PROPERTY_RAPIDMINER_GENERAL_LOCALE_VARIANT = "rapidminer.general.locale.variant";
 
-	/** Boolean parameter indicating if the plugins should be initialized at all. */
+	/**
+	 * Boolean parameter indicating if the plugins should be initialized at all.
+	 */
 	public static final String PROPERTY_RAPIDMINER_INIT_PLUGINS = "rapidminer.init.plugins";
 
 	/** A file path to the directory containing the plugin Jar files. */
@@ -217,7 +228,9 @@ public class RapidMiner {
 
 	// --- OTHER PROPERTIES ---
 
-	/** The property name for &quot;The number of fraction digits of formatted numbers.&quot; */
+	/**
+	 * The property name for &quot;The number of fraction digits of formatted numbers.&quot;
+	 */
 	public static final String PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS = "rapidminer.general.fractiondigits.numbers";
 
 	/**
@@ -255,7 +268,9 @@ public class RapidMiner {
 	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_EDITOR = "rapidminer.tools.editor";
 
-	/** The property specifying the method to send mails. Either SMTP or sendmail. */
+	/**
+	 * The property specifying the method to send mails. Either SMTP or sendmail.
+	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD = "rapidminer.tools.mail.method";
 	public static final String[] PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_VALUES = { "sendmail", "SMTP" };
 	public static final int PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_SENDMAIL = 0;
@@ -273,16 +288,24 @@ public class RapidMiner {
 	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_MAIL_DEFAULT_PROCESS_DURATION_FOR_MAIL = "rapidminer.tools.mail.process_duration_for_mail";
 
-	/** The property name for &quot;Path to sendmail. Used for email notifications.&quot; */
+	/**
+	 * The property name for &quot;Path to sendmail. Used for email notifications.&quot;
+	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND = "rapidminer.tools.sendmail.command";
 
-	/** The property name for &quot;The smtp host. Used for email notifications.&quot; */
+	/**
+	 * The property name for &quot;The smtp host. Used for email notifications.&quot;
+	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST = "rapidminer.tools.smtp.host";
 
-	/** The property name for &quot;The smtp port. Used for email notifications.&quot; */
+	/**
+	 * The property name for &quot;The smtp port. Used for email notifications.&quot;
+	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT = "rapidminer.tools.smtp.port";
 
-	/** The property name for the &quot;SMTP user. Used for email notifications.&quot; */
+	/**
+	 * The property name for the &quot;SMTP user. Used for email notifications.&quot;
+	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_USER = "rapidminer.tools.smtp.user";
 
 	/**
@@ -319,11 +342,20 @@ public class RapidMiner {
 	/** The name of the property indicating the default encoding for files. */
 	public static final String PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING = "rapidminer.general.encoding";
 
-	/** The name of the property indicating the preferred globally used time zone. */
+	/**
+	 * The name of the property indicating the preferred globally used time zone.
+	 */
 	public static final String PROPERTY_RAPIDMINER_GENERAL_TIME_ZONE = "rapidminer.general.timezone";
 
-	/** The maximum number of working threads that should be used by processes. */
+	/**
+	 * The maximum number of working threads that should be used by processes.
+	 */
 	public static final String PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS = "rapidminer.general.number_of_threads";
+
+	/**
+	 * The name of the property indicating whether beta features should be activated.
+	 */
+	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features";
 
 	// --- INIT PROPERTIES ---
 
@@ -332,28 +364,32 @@ public class RapidMiner {
 	 */
 	public static final String PROPERTY_RAPIDMINER_MAX_MEMORY = "maxMemory";
 
-	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_SET = "http.proxySet";
-	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_HOST = "http.proxyHost";
-	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_PORT = "http.proxyPort";
-	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_NON_PROXY_HOSTS = "http.nonProxyHosts";
-	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_USERNAME = "http.proxyUsername";
-	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_PASSWORD = "http.proxyPassword";
+	public static final String PROPERTY_RAPIDMINER_PROXY_MODE = "rapidminer.proxy.mode";
+	public static final String PROPERTY_RAPIDMINER_PROXY_EXCLUDE = "rapidminer.proxy.exclude";
 
-	public static final String PROPERTY_RAPIDMINER_HTTPS_PROXY_SET = "https.proxySet";
-	public static final String PROPERTY_RAPIDMINER_HTTPS_PROXY_HOST = "https.proxyHost";
-	public static final String PROPERTY_RAPIDMINER_HTTPS_PROXY_PORT = "https.proxyPort";
-	public static final String PROPERTY_RAPIDMINER_HTTPS_PROXY_USERNAME = "https.proxyUsername";
-	public static final String PROPERTY_RAPIDMINER_HTTPS_PROXY_PASSWORD = "https.proxyPassword";
+	public final static String RAPIDMINER_PROXY_MODE_SYSTEM = "System proxy";
+	public final static String RAPIDMINER_PROXY_MODE_DIRECT = "Direct (no proxy)";
+	public final static String RAPIDMINER_PROXY_MODE_MANUAL = "Manual proxy configuration";
 
-	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_SET = "ftp.proxySet";
-	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_HOST = "ftp.proxyHost";
-	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_PORT = "ftp.proxyPort";
-	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_USERNAME = "ftp.proxyUsername";
-	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_PASSWORD = "ftp.proxyPassword";
-	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_NON_PROXY_HOSTS = "ftp.nonProxyHosts";
+	public final static String[] RAPIDMINER_PROXY_MODES = { RAPIDMINER_PROXY_MODE_SYSTEM, RAPIDMINER_PROXY_MODE_DIRECT,
+			RAPIDMINER_PROXY_MODE_MANUAL };
 
-	public static final String PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST = "socksProxyHost";
-	public static final String PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT = "socksProxyPort";
+	/**
+	 * These settings are the JVM Params with a prepended rapidminer.proxy
+	 */
+	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_HOST = "rapidminer.proxy.http.proxyHost";
+	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_PORT = "rapidminer.proxy.http.proxyPort";
+	public static final String PROPERTY_RAPIDMINER_HTTP_PROXY_NON_PROXY_HOSTS = "rapidminer.proxy.http.nonProxyHosts";
+
+	public static final String PROPERTY_RAPIDMINER_HTTPS_PROXY_HOST = "rapidminer.proxy.https.proxyHost";
+	public static final String PROPERTY_RAPIDMINER_HTTPS_PROXY_PORT = "rapidminer.proxy.https.proxyPort";
+
+	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_HOST = "rapidminer.proxy.ftp.proxyHost";
+	public static final String PROPERTY_RAPIDMINER_FTP_PROXY_PORT = "rapidminer.proxy.ftp.proxyPort";
+	public static final String PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST = "rapidminer.proxy.socksProxyHost";
+	public static final String PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT = "rapidminer.proxy.socksProxyPort";
+	public static final String PROPERTY_RAPIDMINER_SOCKS_VERSION = "rapidminer.proxy.socksProxyVersion";
+	public final static String[] RAPIDMINER_SOCKS_VERSIONS = { "Version 4", "Version 5" };
 
 	public static final String PROCESS_FILE_EXTENSION = "rmp";
 
@@ -390,7 +426,8 @@ public class RapidMiner {
 
 		// if there is less then one language, take default language
 		if (languages.size() < 1) {
-			registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE, "", default_language, 0));
+			registerParameter(
+					new ParameterTypeCategory(PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE, "", default_language, 0));
 
 		} else {
 			// save vector as array
@@ -403,21 +440,22 @@ public class RapidMiner {
 			registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE, "", languageArray, 0));
 		}
 
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS, "", 0, Integer.MAX_VALUE,
-				3));
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_PERCENT, "", 0, Integer.MAX_VALUE,
-				2));
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_MAX_NOMINAL_VALUES, "", 0, Integer.MAX_VALUE, 100));
+		registerParameter(
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS, "", 0, Integer.MAX_VALUE, 3));
+		registerParameter(
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_PERCENT, "", 0, Integer.MAX_VALUE, 2));
+		registerParameter(
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_MAX_NOMINAL_VALUES, "", 0, Integer.MAX_VALUE, 100));
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_MAX_TEST_ROWS, "", 0, Integer.MAX_VALUE, 100));
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_MAX_PROCESS_NESTING_DEPTH, "", 0,
-				Integer.MAX_VALUE, 100));
+		registerParameter(
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_MAX_PROCESS_NESTING_DEPTH, "", 0, Integer.MAX_VALUE, 100));
 		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GENERAL_LOGFILE_FORMAT, "", false));
 		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE, "", false));
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING, "", SYSTEM_ENCODING_NAME));
 		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_GENERAL_TIME_ZONE, "", Tools.getAllTimeZones(),
 				Tools.SYSTEM_TIME_ZONE));
-		registerParameter(new ParameterTypeBoolean(CapabilityProvider.PROPERTY_RAPIDMINER_GENERAL_CAPABILITIES_WARN, "",
-				false));
+		registerParameter(
+				new ParameterTypeBoolean(CapabilityProvider.PROPERTY_RAPIDMINER_GENERAL_CAPABILITIES_WARN, "", false));
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS, "", 0, Integer.MAX_VALUE, 0));
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_EDITOR, "", true));
 		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD, "",
@@ -436,42 +474,15 @@ public class RapidMiner {
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_TOOLS_DB_LOGIN_TIMEOUT, "", 0, Integer.MAX_VALUE,
 				DB_LOGIN_TIMEOUT_DEFAULT));
 
-		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_INIT_PLUGINS, "", true));
-		RapidMiner.registerParameter(new ParameterTypeDirectory(PROPERTY_RAPIDMINER_INIT_PLUGINS_LOCATION, "", true));
+		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_INIT_PLUGINS, "", true));
+		registerParameter(new ParameterTypeDirectory(PROPERTY_RAPIDMINER_INIT_PLUGINS_LOCATION, "", true));
 
 		// System parameter types
+		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_MAX_MEMORY, "", 384, Integer.MAX_VALUE, true), "system");
 
-		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_MAX_MEMORY, "", 384, Integer.MAX_VALUE, true),
+		registerParameter(new ParameterTypeInt(WebServiceTools.WEB_SERVICE_TIMEOUT, "", 1, Integer.MAX_VALUE, 20000),
 				"system");
-		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_HTTP_PROXY_SET, "", false), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_HOST, "", true), "system");
-		RapidMiner
-		.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTP_PROXY_PORT, "", 0, 65535, true), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_USERNAME, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_HTTP_PROXY_PASSWORD, ""), "system");
-
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_NON_PROXY_HOSTS, "", true),
-				"system");
-
-		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_HTTPS_PROXY_SET, "", false), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTPS_PROXY_HOST, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTPS_PROXY_PORT, "", 0, 65535, true),
-				"system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTPS_PROXY_USERNAME, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_HTTPS_PROXY_PASSWORD, ""), "system");
-		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_FTP_PROXY_SET, "", false), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_HOST, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_FTP_PROXY_PORT, "", 0, 65535, true), "system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_NON_PROXY_HOSTS, "", true),
-				"system");
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_USERNAME, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_FTP_PROXY_PASSWORD, ""), "system");
-
-		RapidMiner.registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST, "", true), "system");
-		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT, "", 0, 65535, true),
-				"system");
-		RapidMiner.registerParameter(new ParameterTypeInt(WebServiceTools.WEB_SERVICE_TIMEOUT, "", 1, Integer.MAX_VALUE,
-				20000), "system");
+		registerParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, "", false));
 
 		// initialize the state of IOObjects
 		ioObjectCache = new IOObjectMap();
@@ -517,13 +528,13 @@ public class RapidMiner {
 	 * @deprecated Use {@link #readProcessFile(File)} instead
 	 */
 	@Deprecated
-	public static Process readExperimentFile(final File experimentfile) throws XMLException, IOException,
-	InstantiationException, IllegalAccessException {
+	public static Process readExperimentFile(final File experimentfile)
+			throws XMLException, IOException, InstantiationException, IllegalAccessException {
 		return readProcessFile(experimentfile);
 	}
 
-	public static Process readProcessFile(final File processFile) throws XMLException, IOException, InstantiationException,
-	IllegalAccessException {
+	public static Process readProcessFile(final File processFile)
+			throws XMLException, IOException, InstantiationException, IllegalAccessException {
 		return readProcessFile(processFile, null);
 	}
 
@@ -587,6 +598,7 @@ public class RapidMiner {
 
 		// initializing networking tools
 		GlobalAuthenticator.init();
+		initializeProxy();
 
 		// do initial license check
 		RapidMiner.splashMessage("license_check");
@@ -615,6 +627,8 @@ public class RapidMiner {
 		// parse settings xml (before plugins are initialized)
 		SettingsItems.INSTANCE.parseStudioXml();
 
+		UsageStatistics.getInstance(); // initializes as a side effect
+
 		// registering operators
 		RapidMiner.splashMessage("register_plugins");
 		Plugin.initAll();
@@ -626,8 +640,6 @@ public class RapidMiner {
 		// init custom repositories after extension initialization
 		RepositoryManager.initCustomRepositories();
 
-		UsageStatistics.getInstance(); // initializes as a side effect
-
 		RapidMiner.splashMessage("xml_transformer");
 		XMLImporter.init();
 
@@ -637,10 +649,8 @@ public class RapidMiner {
 			try {
 				KeyGeneratorTool.createAndStoreKey();
 			} catch (KeyGenerationException e) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.RapidMiner.generating_encryption_key_error", e.getMessage()), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.RapidMiner.generating_encryption_key_error", e.getMessage()), e);
 			}
 		}
 
@@ -753,19 +763,15 @@ public class RapidMiner {
 				in = new BufferedReader(new FileReader(lastVersionFile));
 				versionString = in.readLine();
 			} catch (IOException e) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.RapidMiner.reading_global_version_file_error"), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.RapidMiner.reading_global_version_file_error"), e);
 			} finally {
 				if (in != null) {
 					try {
 						in.close();
 					} catch (IOException e) {
-						LogService.getRoot().log(
-								Level.WARNING,
-								I18N.getMessage(LogService.getRoot().getResourceBundle(),
-										"com.rapidminer.RapidMiner.closing_stream_error", lastVersionFile), e);
+						LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+								"com.rapidminer.RapidMiner.closing_stream_error", lastVersionFile), e);
 					}
 				}
 			}
@@ -802,10 +808,8 @@ public class RapidMiner {
 			out = new PrintWriter(new FileWriter(versionFile));
 			out.println(getLongVersion());
 		} catch (IOException e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.RapidMiner.writing_current_version_error"), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.RapidMiner.writing_current_version_error"), e);
 		} finally {
 			if (out != null) {
 				out.close();
@@ -874,10 +878,8 @@ public class RapidMiner {
 		try {
 			runnable.run();
 		} catch (Exception e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.RapidMiner.executing_startup_hook_error", e.getMessage()), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.RapidMiner.executing_startup_hook_error", e.getMessage()), e);
 		}
 	}
 
@@ -886,19 +888,15 @@ public class RapidMiner {
 			try {
 				hook.run();
 			} catch (Exception e) {
-				LogService.getRoot().log(
-						Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.RapidMiner.executing_shotdown_hook_error", e.getMessage()), e);
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.RapidMiner.executing_shotdown_hook_error", e.getMessage()), e);
 			}
 		}
 		try {
 			Runtime.getRuntime().runFinalization();
 		} catch (Exception e) {
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.RapidMiner.error_during_finalization", e.getMessage()), e);
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.RapidMiner.error_during_finalization", e.getMessage()), e);
 		}
 		isInitiated = false;
 		switch (exitMode) {
@@ -957,6 +955,30 @@ public class RapidMiner {
 
 	public static void setExecutionMode(final ExecutionMode executionMode) {
 		RapidMiner.executionMode = executionMode;
+	}
+
+	private static void initializeProxy() {
+		ProxySettings.init();
+		// parameters for proxy settings
+		registerParameter(new ParameterTypeCategory(RapidMiner.PROPERTY_RAPIDMINER_PROXY_MODE, "",
+				RapidMiner.RAPIDMINER_PROXY_MODES, 0), "proxy");
+		// Global exclusion list (applies on all NON_PROXY_HOSTS)
+		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_PROXY_EXCLUDE, "", true), "proxy");
+		// HTTP
+		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_HOST, "", true), "proxy");
+		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTP_PROXY_PORT, "", 0, 65535, true), "proxy");
+		// HTTPS
+		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTPS_PROXY_HOST, "", true), "proxy");
+		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTPS_PROXY_PORT, "", 0, 65535, true), "proxy");
+		// FTP
+		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_HOST, "", true), "proxy");
+		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_FTP_PROXY_PORT, "", 0, 65535, true), "proxy");
+
+		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST, "", true), "proxy");
+		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT, "", 0, 65535, true), "proxy");
+		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_SOCKS_VERSION, "", RAPIDMINER_SOCKS_VERSIONS, 1),
+				"proxy");
+		ProxySettings.apply();
 	}
 
 	/**

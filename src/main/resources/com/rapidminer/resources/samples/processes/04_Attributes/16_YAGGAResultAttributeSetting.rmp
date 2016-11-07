@@ -1,23 +1,35 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="read_constructions" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="AttributeConstructionsLoader" width="90" x="180" y="30">
+      <operator activated="true" class="legacy:read_constructions" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="AttributeConstructionsLoader" width="90" x="179" y="34">
         <parameter key="attribute_constructions_file" value="yagga.att"/>
         <parameter key="keep_all" value="true"/>
       </operator>
-      <operator activated="true" class="read_weights" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="AttributeWeightsLoader" width="90" x="179" y="120">
+      <operator activated="true" class="legacy:read_weights" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="AttributeWeightsLoader" width="90" x="179" y="136">
         <parameter key="attribute_weights_file" value="yagga.wgt"/>
       </operator>
-      <operator activated="true" class="select_by_weights" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="AttributeWeightSelection" width="90" x="380" y="30"/>
+      <operator activated="true" class="select_by_weights" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="AttributeWeightSelection" width="90" x="380" y="34">
+        <parameter key="weight_relation" value="greater equals"/>
+        <parameter key="weight" value="1.0"/>
+        <parameter key="k" value="10"/>
+        <parameter key="p" value="0.5"/>
+        <parameter key="deselect_unknown" value="true"/>
+        <parameter key="use_absolute_weights" value="true"/>
+      </operator>
       <connect from_op="Retrieve" from_port="output" to_op="AttributeConstructionsLoader" to_port="example set"/>
       <connect from_op="AttributeConstructionsLoader" from_port="example set" to_op="AttributeWeightSelection" to_port="example set input"/>
       <connect from_op="AttributeWeightsLoader" from_port="output" to_op="AttributeWeightSelection" to_port="weights"/>
@@ -25,7 +37,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="108" resized="true" width="430" x="32" y="198">In the previous process an optimal attribute set was searched (please make sure that you have performed the previous process before this process is startet). This optimal attribute set is loaded and applied to another input data. This is necessary to apply a learned model which was learned from data with the same input representation.</description>
+      <description align="left" color="yellow" colored="false" height="108" resized="true" width="430" x="34" y="223">In the previous process an optimal attribute set was searched (please make sure that you have performed the previous process before this process is startet). This optimal attribute set is loaded and applied to another input data. This is necessary to apply a learned model which was learned from data with the same input representation.</description>
     </process>
   </operator>
 </process>

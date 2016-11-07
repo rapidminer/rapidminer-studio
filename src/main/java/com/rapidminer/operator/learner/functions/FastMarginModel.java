@@ -27,6 +27,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.FastExample2SparseTransform;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Tools;
 
@@ -43,6 +44,8 @@ import de.bwaldvogel.liblinear.Model;
 public class FastMarginModel extends PredictionModel {
 
 	private static final long serialVersionUID = 7701199447666181333L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
 
 	private Model linearModel;
 
@@ -79,6 +82,12 @@ public class FastMarginModel extends PredictionModel {
 		}
 
 		Iterator<Example> i = exampleSet.iterator();
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		while (i.hasNext()) {
 			Example e = i.next();
 
@@ -101,6 +110,9 @@ public class FastMarginModel extends PredictionModel {
 				}
 			}
 
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
+			}
 		}
 		return exampleSet;
 	}

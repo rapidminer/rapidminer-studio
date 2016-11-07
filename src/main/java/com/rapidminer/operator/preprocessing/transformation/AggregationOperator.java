@@ -35,9 +35,9 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -237,19 +237,20 @@ public class AggregationOperator extends AbstractDataProcessing {
 
 			aggregationAttributes.add(currentAggregationAttribute);
 		}
-		AggregationAttribute[] aggregations = aggregationAttributes.toArray(new AggregationAttribute[aggregationAttributes
-				.size()]);
+		AggregationAttribute[] aggregations = aggregationAttributes
+				.toArray(new AggregationAttribute[aggregationAttributes.size()]);
 		int numberOfAggregations = aggregationAttributes.size();
 
 		Attribute weightAttribute = exampleSet.getAttributes().getWeight();
-		MemoryExampleTable resultTable = null;
+		ExampleSetBuilder builder = null;
 		boolean allCombinations = getParameterAsBoolean(PARAMETER_ALL_COMBINATIONS);
 
 		/*
 		 * We have to check whether parameter is set and not empty, because RegexpAttributeFilter
 		 * needs parameter set and not empty. Otherwise a UserError is thrown.
 		 */
-		if (isParameterSet(PARAMETER_GROUP_BY_ATTRIBUTES) && !getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES).isEmpty()) {
+		if (isParameterSet(PARAMETER_GROUP_BY_ATTRIBUTES)
+				&& !getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES).isEmpty()) {
 			String groupByAttributesRegex = getParameterAsString(PARAMETER_GROUP_BY_ATTRIBUTES);
 
 			// make attributes nominal
@@ -357,7 +358,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 			}
 
 			// create grouped data table
-			List<Attribute> resultAttributes = new LinkedList<>();
+			List<Attribute> resultAttributes = new ArrayList<>();
 			Attribute[] resultGroupAttributes = new Attribute[groupByAttributes.length];
 			for (int i = 0; i < groupByAttributes.length; i++) {
 				Attribute resultGroupAttribute = AttributeFactory.createAttribute(groupByAttributes[i].getName(),
@@ -378,10 +379,11 @@ public class AggregationOperator extends AbstractDataProcessing {
 				// + "(" +
 				// aggregationAttributes[i].getName() + ")", Ontology.REAL));
 				// }
-				resultAttributes.add(AttributeFactory.createAttribute(aggregations[i].functionName + "("
-						+ aggregations[i].attribute.getName() + ")", aggregations[i].resultType));
+				resultAttributes.add(AttributeFactory.createAttribute(
+						aggregations[i].functionName + "(" + aggregations[i].attribute.getName() + ")",
+						aggregations[i].resultType));
 			}
-			resultTable = new MemoryExampleTable(resultAttributes);
+			builder = ExampleSets.from(resultAttributes);
 
 			// fill data table
 			// TODO (Simon): Again pointless loop. We should iterate only over non-null entries
@@ -400,16 +402,14 @@ public class AggregationOperator extends AbstractDataProcessing {
 						// functions[j].getValue())) :
 						// functions[j].getValue();
 						if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(aggregations[j].resultType, Ontology.NOMINAL)) {
-							data[groupByAttributes.length + j] = resultTable
-									.getAttribute(groupByAttributes.length + j)
-									.getMapping()
-									.mapString(
+							data[groupByAttributes.length + j] = resultAttributes.get(groupByAttributes.length + j)
+									.getMapping().mapString(
 											aggregations[j].attribute.getMapping().mapIndex((int) functions[j].getValue()));
 						} else {
 							data[groupByAttributes.length + j] = functions[j].getValue();
 						}
 					}
-					resultTable.addDataRow(new DoubleArrayDataRow(data));
+					builder.addRow(data);
 				}
 			}
 		} else {
@@ -451,7 +451,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 			}
 
 			// create data table
-			List<Attribute> resultAttributes = new LinkedList<>();
+			List<Attribute> resultAttributes = new ArrayList<>();
 			Attribute resultGroupAttribute = AttributeFactory.createAttribute(GENERIC_GROUP_NAME, Ontology.NOMINAL);
 			resultAttributes.add(resultGroupAttribute);
 			for (int i = 0; i < numberOfAggregations; i++) {
@@ -464,14 +464,15 @@ public class AggregationOperator extends AbstractDataProcessing {
 				// + "(" +
 				// aggregationAttributes[i].getName() + ")", Ontology.REAL));
 				// }
-				resultAttributes.add(AttributeFactory.createAttribute(aggregations[i].functionName + "("
-						+ aggregations[i].attribute.getName() + ")", aggregations[i].resultType));
+				resultAttributes.add(AttributeFactory.createAttribute(
+						aggregations[i].functionName + "(" + aggregations[i].attribute.getName() + ")",
+						aggregations[i].resultType));
 
 			}
 			for (Attribute attribute : resultAttributes) {
 				attribute.setConstruction(attribute.getName());
 			}
-			resultTable = new MemoryExampleTable(resultAttributes);
+			builder = ExampleSets.from(resultAttributes);
 
 			// fill data table
 			double[] data = new double[numberOfAggregations + 1];
@@ -482,17 +483,17 @@ public class AggregationOperator extends AbstractDataProcessing {
 				// functions[i].getValue())) :
 				// functions[i].getValue();
 				if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(aggregations[i].resultType, Ontology.NOMINAL)) {
-					data[i + 1] = resultTable.getAttribute(i + 1).getMapping()
+					data[i + 1] = resultAttributes.get(i + 1).getMapping()
 							.mapString(aggregations[i].attribute.getMapping().mapIndex((int) functions[i].getValue()));
 				} else {
 					data[i + 1] = functions[i].getValue();
 				}
 
 			}
-			resultTable.addDataRow(new DoubleArrayDataRow(data));
+			builder.addRow(data);
 		}
 
-		ExampleSet resultSet = resultTable.createExampleSet();
+		ExampleSet resultSet = builder.build();
 		return resultSet;
 	}
 

@@ -18,11 +18,6 @@
  */
 package com.rapidminer.operator.learner.functions.kernel;
 
-import libsvm.Svm;
-import libsvm.svm_model;
-import libsvm.svm_node;
-import libsvm.svm_parameter;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
@@ -31,10 +26,17 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.FastExample2SparseTransform;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.FormulaProvider;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
+
+import libsvm.Svm;
+import libsvm.svm_model;
+import libsvm.svm_node;
+import libsvm.svm_parameter;
 
 
 /**
@@ -46,6 +48,8 @@ import com.rapidminer.tools.Tools;
 public class LibSVMModel extends KernelModel implements FormulaProvider {
 
 	private static final long serialVersionUID = -2654603017217487365L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 2000;
 
 	private svm_model model;
 
@@ -146,9 +150,18 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 	}
 
 	@Override
-	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws UserError {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel)
+			throws UserError, ProcessStoppedException {
 		FastExample2SparseTransform ripper = new FastExample2SparseTransform(exampleSet);
 		Attribute label = getLabel();
+
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 
 		// check if one class SVM is used
 		if (model.param.svm_type == LibSVMLearner.SVM_TYPE_ONE_CLASS) {
@@ -185,6 +198,10 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 				maxConfidence = Math.max(maxConfidence, prob[0]);
 
 				counter++;
+
+				if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+					progress.setCompleted(progressCounter);
+				}
 			}
 
 			counter = 0;
@@ -204,8 +221,8 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 				confidenceAttributes = new Attribute[model.label.length];
 				for (int j = 0; j < model.label.length; j++) {
 					String labelName = label.getMapping().mapIndex(model.label[j]);
-					confidenceAttributes[j] = exampleSet.getAttributes().getSpecial(
-							Attributes.CONFIDENCE_NAME + "_" + labelName);
+					confidenceAttributes[j] = exampleSet.getAttributes()
+							.getSpecial(Attributes.CONFIDENCE_NAME + "_" + labelName);
 				}
 			}
 
@@ -227,8 +244,8 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 						int k = 0;
 						for (int a = 0; a < nr_class; a++) {
 							for (int j = a + 1; j < nr_class; j++) {
-								pairwise_prob[a][j] = Math.min(Math.max(
-										Svm.sigmoid_predict(dec_values[k], model.probA[k], model.probB[k]), min_prob),
+								pairwise_prob[a][j] = Math.min(Math
+										.max(Svm.sigmoid_predict(dec_values[k], model.probA[k], model.probB[k]), min_prob),
 										1 - min_prob);
 								pairwise_prob[j][a] = 1 - pairwise_prob[a][j];
 								k++;
@@ -258,7 +275,8 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 							if (confidenceAttributes != null && confidenceAttributes.length > 0) {
 								example.setValue(confidenceAttributes[0], 1.0d / (1.0d + java.lang.Math.exp(-prediction)));
 								if (confidenceAttributes.length > 1) {
-									example.setValue(confidenceAttributes[1], 1.0d / (1.0d + java.lang.Math.exp(prediction)));
+									example.setValue(confidenceAttributes[1],
+											1.0d / (1.0d + java.lang.Math.exp(prediction)));
 								}
 							}
 						} else {
@@ -269,6 +287,10 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 					}
 				} else {
 					example.setValue(predictedLabel, Svm.svm_predict(model, LibSVMLearner.makeNodes(example, ripper)));
+				}
+
+				if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+					progress.setCompleted(progressCounter);
 				}
 			}
 		}
@@ -407,7 +429,7 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 				}
 
 				return "pow((" + model.param.gamma + " * (" + dotResult.toString() + ") + " + model.param.coef0 + "), "
-				+ model.param.degree + ")";
+						+ model.param.degree + ")";
 			case svm_parameter.SIGMOID:
 				dotResult = new StringBuffer();
 				first = true;

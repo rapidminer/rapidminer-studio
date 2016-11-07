@@ -18,6 +18,11 @@
  */
 package com.rapidminer.operator.preprocessing.sampling;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
@@ -33,18 +38,15 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
- * Abstract superclass of stratified sampling operators. Provides funcionallity for samping,
+ * Abstract superclass of stratified sampling operators. Provides functionality for sampling,
  * subclasses have to provide ratio via getRatio()
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land Exp $
+ * @deprecated since 7.3, use {@link StratifiedSamplingOperator} instead
  */
+@Deprecated
 public abstract class AbstractStratifiedSampling extends AbstractSamplingOperator {
 
 	public AbstractStratifiedSampling(OperatorDescription description) {

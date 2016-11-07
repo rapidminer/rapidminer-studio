@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator.preprocessing;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
@@ -30,15 +33,13 @@ import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.table.PolynominalMapping;
 import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
-
-import java.util.Iterator;
-import java.util.Map;
+import com.rapidminer.operator.OperatorProgress;
 
 
 /**
  * This model removes all nominal values. During application it might happen that missing values are
  * introduced. If applied on data, new columns are created in a cloned example set.
- * 
+ *
  * @author Sebastian Land
  */
 public class RemoveUnusedNominalValuesModel extends PreprocessingModel {
@@ -59,6 +60,9 @@ public class RemoveUnusedNominalValuesModel extends PreprocessingModel {
 	}
 
 	private static final long serialVersionUID = 1L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
+
 	private Map<String, MappingTranslation> translations;
 
 	protected RemoveUnusedNominalValuesModel(ExampleSet exampleSet, Map<String, MappingTranslation> translations) {
@@ -112,6 +116,12 @@ public class RemoveUnusedNominalValuesModel extends PreprocessingModel {
 
 		Attributes attributes = exampleSet.getAttributes();
 		Iterator<Attribute> iterator = attributes.iterator();
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(attributes.size());
+		}
+		int progressCounter = 0;
 		while (iterator.hasNext()) {
 			Attribute currentAttribute = iterator.next();
 			MappingTranslation mappingTranslation = translations.get(currentAttribute.getName());
@@ -143,6 +153,9 @@ public class RemoveUnusedNominalValuesModel extends PreprocessingModel {
 					}
 				}
 				newAttribute.setMapping(mappingTranslation.newMapping);
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 

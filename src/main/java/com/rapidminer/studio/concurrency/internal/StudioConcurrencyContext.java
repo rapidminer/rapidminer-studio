@@ -27,15 +27,15 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.rapidminer.Process;
-import com.rapidminer.ProcessListener;
+import com.rapidminer.RapidMiner;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
-import com.rapidminer.operator.Operator;
+import com.rapidminer.studio.internal.ParameterServiceRegistry;
 import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
-import com.rapidminer.studio.internal.Resources;
 
 
 /**
@@ -55,41 +55,16 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 	 */
 	private static final int FJPOOL_MAXIMAL_PARALLELISM = 32767;
 
-	/** The corresponding process. */
-	private final Process process;
+	/** Locks to handle access from different threads */
+	private static final ReentrantReadWriteLock LOCK = new ReentrantReadWriteLock(true);
+	private static final Lock READ_LOCK = LOCK.readLock();
+	private static final Lock WRITE_LOCK = LOCK.writeLock();
 
 	/** The fork join pool all task are submitted to. */
-	private volatile ForkJoinPool pool = null;
+	private static ForkJoinPool pool = null;
 
-	/** The parallelism level. */
-	private final int parallelismLevel;
-
-	/**
-	 * This enumeration reflects the possible states of the context. It is used to manage the pool
-	 * and to prevent concurrent submissions. State transitions are handled via
-	 * {@link StudioConcurrencyContext#transitionState(ContextState)}.
-	 *
-	 * @author Michael Knopf
-	 */
-	private enum ContextState {
-		/** The worker pool is <strong>not initialized</strong> and no submissions are queued. */
-		PASSIVE,
-		/** The worker pool is <strong>initialized and processing</strong> a submitted task. */
-		WORKING,
-		/**
-		 * The worker pool is <strong>initialized and idling</strong>, no submissions are queued.
-		 */
-		IDLE;
-	};
-
-	/** Counter for concurrent submissions. */
-	private AtomicInteger concurrentSubmissions = new AtomicInteger(0);
-
-	/**
-	 * The current status of the context. <strong>Do not manipulate this attribute outside of
-	 * {@link #transitionState(ContextState)}!</strong>
-	 */
-	private ContextState state = ContextState.PASSIVE;
+	/** The corresponding process. */
+	private final Process process;
 
 	/**
 	 * Creates a new {@link ConcurrencyContext} for the given {@link Process}.
@@ -104,38 +79,7 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		if (process == null) {
 			throw new IllegalArgumentException("process must not be null");
 		}
-
-		// remember process
 		this.process = process;
-
-		parallelismLevel = Math.min(Math.max(1, Resources.getParallelismLevel()), FJPOOL_MAXIMAL_PARALLELISM);
-
-		// listen to process state changes to shutdown pool when necessary
-		process.getRootOperator().addProcessListener(new ProcessListener() {
-
-			@Override
-			public void processStarts(Process process) {
-				// ignore
-			}
-
-			@Override
-			public void processStartedOperator(Process process, Operator op) {
-				// ignore
-			}
-
-			@Override
-			public void processFinishedOperator(Process process, Operator op) {
-				// ignore
-			}
-
-			@Override
-			public void processEnded(Process process) {
-				// Transition back to state PASSIVE to shut down the pool. Note that this does
-				// not prevent the context to be used for further process executions (the pool
-				// will be reinitialized).
-				transitionState(ContextState.PASSIVE);
-			}
-		});
 	}
 
 	@Override
@@ -156,9 +100,6 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 			}
 		}
 
-		// Change to state WORKING (if not already in that state).
-		transitionState(ContextState.WORKING);
-
 		// wrap runnables in callables
 		List<Callable<Void>> callables = new ArrayList<>(runnables.size());
 		for (final Runnable runnable : runnables) {
@@ -173,11 +114,7 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		}
 
 		// submit callables without further checks
-		try {
-			callUnchecked(callables);
-		} finally {
-			transitionState(ContextState.IDLE);
-		}
+		callUnchecked(callables);
 	}
 
 	@Override
@@ -198,16 +135,9 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 			}
 		}
 
-		// Change to state WORKING (if not already in that state).
-		transitionState(ContextState.WORKING);
-
 		// submit callables without further checks
-		try {
-			List<T> result = callUnchecked(callables);
-			return result;
-		} finally {
-			transitionState(ContextState.IDLE);
-		}
+		List<T> result = callUnchecked(callables);
+		return result;
 	}
 
 	/**
@@ -224,7 +154,7 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 	 */
 	private <T> List<T> callUnchecked(List<Callable<T>> callables) throws ExecutionException, ExecutionStoppedException {
 		// the following line is blocking
-		List<Future<T>> futures = pool.invokeAll(callables);
+		List<Future<T>> futures = getForkJoinPool().invokeAll(callables);
 		List<T> results = new ArrayList<>(callables.size());
 		for (Future<T> future : futures) {
 			try {
@@ -260,63 +190,15 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 
 	@Override
 	public int getParallelism() {
-		return parallelismLevel;
-	}
-
-	/**
-	 * Implements transitions between {@link ContextState}s. Supported transitions are:
-	 * <ul>
-	 * <li>{@code PASSIVE} &#8594; {@code PASSIVE} (no operation)</li>
-	 * <li>{@code PASSIVE} &#8594; {@code WORKING} (initializes the pool)</li>
-	 * <li>{@code WORKING} &#8594; {@code IDLE} (may not change state if there are concurrent
-	 * submissions)</li>
-	 * <li>{@code WORKING} &#8594; {@code WORKING} (concurrent submission)</li>
-	 * <li>{@code IDLE} &#8594; {@code IDLE} (no operation)</li>
-	 * <li>{@code IDLE} &#8594; {@code WORKING}</li>
-	 * <li>{@code IDLE} &#8594; {@code PASSIVE} (shuts down the pool)</li>
-	 * </ul>
-	 * If an unsupported transition is triggered, an {@link IllegalStateException} is thrown.
-	 *
-	 *
-	 * @param targetState
-	 *            the target state
-	 * @throws IllegalStateException
-	 *             if the transition is not supported
-	 */
-	private synchronized void transitionState(ContextState targetState) {
-		switch (targetState) {
-			case PASSIVE:
-				if (this.state == ContextState.WORKING) {
-					throw new IllegalStateException("Unsupported transition.");
-				} else if (this.state == ContextState.IDLE) {
-					// shutdown current pool
-					if (this.pool != null) {
-						this.pool.shutdownNow();
-						this.pool = null;
-					}
-				}
-				this.state = ContextState.PASSIVE;
-				break;
-			case WORKING:
-				if (this.state == ContextState.PASSIVE) {
-					// initialize pool
-					if (pool == null) {
-						pool = new ForkJoinPool(parallelismLevel);
-					}
-				}
-				// increase submission counter and change state
-				this.concurrentSubmissions.incrementAndGet();
-				this.state = ContextState.WORKING;
-				break;
-			case IDLE:
-				if (this.state == ContextState.PASSIVE) {
-					throw new IllegalStateException("Unsupported transition.");
-				}
-				// only transition to IDLE state of no more submissions are being processed
-				if (this.concurrentSubmissions.decrementAndGet() == 0) {
-					this.state = ContextState.IDLE;
-				}
-				break;
+		READ_LOCK.lock();
+		try {
+			if (pool != null) {
+				return pool.getParallelism();
+			} else {
+				return getDesiredParallelismLevel();
+			}
+		} finally {
+			READ_LOCK.unlock();
 		}
 	}
 
@@ -337,4 +219,81 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Verifies and fetches the ForkJoinPool.
+	 *
+	 * @return the pool which should be used for execution.
+	 */
+	private static ForkJoinPool getForkJoinPool() {
+		READ_LOCK.lock();
+		try {
+			if (!isPoolOutdated()) {
+				// nothing to do
+				return pool;
+			}
+		} finally {
+			READ_LOCK.unlock();
+		}
+		WRITE_LOCK.lock();
+		try {
+			if (!isPoolOutdated()) {
+				// pool has been updated in the meantime
+				// no reason to re-create the pool once again
+				return pool;
+			}
+			if (pool != null) {
+				pool.shutdown();
+			}
+			pool = new ForkJoinPool(getDesiredParallelismLevel());
+			return pool;
+		} finally {
+			WRITE_LOCK.unlock();
+		}
+	}
+
+	/**
+	 * Checks if the pool needs to be re-created.
+	 *
+	 * @return {@code true} if the current pool is {@code null} or the
+	 *         {@link #getDesiredParallelismLevel()} is not equal to the current {@link #pool}
+	 *         parallelism otherwise {@code false}
+	 */
+	private static boolean isPoolOutdated() {
+		if (pool == null) {
+			return true;
+		}
+		return getDesiredParallelismLevel() != pool.getParallelism();
+	}
+
+	/**
+	 * Returns the desired number of cores to be used for concurrent computations. This number is
+	 * always at least one and either bound by a license limit or by the user's configuration.
+	 *
+	 * @return the desired parallelism level
+	 */
+	private static int getDesiredParallelismLevel() {
+		String numberOfThreads = ParameterServiceRegistry.INSTANCE
+				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
+
+		int userLevel = 0;
+
+		if (numberOfThreads != null) {
+			try {
+				userLevel = Integer.parseInt(numberOfThreads);
+			} catch (NumberFormatException e) {
+				// ignore and use default value
+			}
+		}
+
+		if (userLevel <= 0) {
+			userLevel = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+		}
+
+		// should not happen, but we want to avoid any exception
+		// during the pool creation
+		if (userLevel > FJPOOL_MAXIMAL_PARALLELISM) {
+			userLevel = FJPOOL_MAXIMAL_PARALLELISM;
+		}
+		return userLevel;
+	}
 }

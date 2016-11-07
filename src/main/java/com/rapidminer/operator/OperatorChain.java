@@ -25,7 +25,13 @@ import java.util.List;
 
 import com.rapidminer.Process;
 import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.InputPorts;
+import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.OutputPorts;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.PortOwner;
+import com.rapidminer.operator.ports.impl.InputPortsImpl;
+import com.rapidminer.operator.ports.impl.OutputPortsImpl;
 import com.rapidminer.operator.ports.metadata.MDTransformer;
 import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.tools.DelegatingObserver;
@@ -114,6 +120,36 @@ public abstract class OperatorChain extends Operator {
 
 	protected ExecutionUnit createSubprocess(int index) {
 		return new ExecutionUnit(this, "Subprocess");
+	}
+
+	/**
+	 * This method returns an arbitrary implementation of {@link InputPorts} for inner sink port
+	 * initialization. Useful for adding an arbitrary implementation (e.g. changing port creation &
+	 * (dis)connection behavior, optionally by customized {@link InputPort} instances) by overriding
+	 * this method.
+	 * 
+	 * @param portOwner
+	 *            The owner of the ports.
+	 * @return The {@link InputPorts} instance, never {@code null}.
+	 * @since 7.3.0
+	 */
+	protected InputPorts createInnerSinks(PortOwner portOwner) {
+		return new InputPortsImpl(portOwner);
+	}
+
+	/**
+	 * This method returns an arbitrary implementation of {@link OutputPorts} for inner source port
+	 * initialization. Useful for adding an arbitrary implementation (e.g. changing port creation &
+	 * (dis)connection behavior, optionally by customized {@link OutputPort} instances) by
+	 * overriding this method.
+	 * 
+	 * @param portOwner
+	 *            The owner of the ports.
+	 * @return The {@link OutputPorts} instance, never {@code null}.
+	 * @since 7.3.0
+	 */
+	protected OutputPorts createInnerSources(PortOwner portOwner) {
+		return new OutputPortsImpl(portOwner);
 	}
 
 	/**

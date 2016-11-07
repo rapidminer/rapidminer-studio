@@ -1,20 +1,35 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="weight_by_relief" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Relief" width="90" x="180" y="30">
+      <operator activated="true" class="weight_by_relief" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Relief" width="90" x="179" y="34">
         <parameter key="normalize_weights" value="true"/>
+        <parameter key="sort_weights" value="true"/>
+        <parameter key="sort_direction" value="ascending"/>
+        <parameter key="number_of_neighbors" value="10"/>
+        <parameter key="sample_ratio" value="1.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
-      <operator activated="true" class="select_by_weights" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="AttributeWeightSelection" width="90" x="315" y="30">
+      <operator activated="true" class="select_by_weights" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="AttributeWeightSelection" width="90" x="313" y="34">
+        <parameter key="weight_relation" value="greater equals"/>
         <parameter key="weight" value="0.5"/>
+        <parameter key="k" value="10"/>
+        <parameter key="p" value="0.5"/>
+        <parameter key="deselect_unknown" value="true"/>
         <parameter key="use_absolute_weights" value="false"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="Relief" to_port="example set"/>
@@ -24,7 +39,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="196" resized="true" width="437" x="35" y="137">A simple and usually fast possibility to perform feature selection is to first calculate attribute weights from the given data set (in this process: Relief) and to apply an AttributeWeightSelection operator afterwards. This operator deselects all features not fulfilling a given weight relation. &lt;br/&gt;&lt;br/&gt;This is usually referred to as &amp;quot;filter approach&amp;quot; since no other information than the data set is used. If the performance of a specific learner should be taken into account we refer to this as &amp;quot;wrapper approach&amp;quot;. The next sample processes give examples for different wrapper approaches for feature weighting, selection, and construction.</description>
+      <description align="left" color="yellow" colored="false" height="196" resized="true" width="437" x="39" y="149">A simple and usually fast possibility to perform feature selection is to first calculate attribute weights from the given data set (in this process: Relief) and to apply an AttributeWeightSelection operator afterwards. This operator deselects all features not fulfilling a given weight relation. &lt;br/&gt;&lt;br/&gt;This is usually referred to as &amp;quot;filter approach&amp;quot; since no other information than the data set is used. If the performance of a specific learner should be taken into account we refer to this as &amp;quot;wrapper approach&amp;quot;. The next sample processes give examples for different wrapper approaches for feature weighting, selection, and construction.</description>
     </process>
   </operator>
 </process>

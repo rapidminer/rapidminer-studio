@@ -18,11 +18,15 @@
  */
 package com.rapidminer.operator.learner.associations;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -32,16 +36,12 @@ import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.tools.Ontology;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-
 
 /**
  * This operator takes a FrequentItemSet set within IOObjects and creates attributes for every
  * frequent item set. This attributes indicate if the examples contains all items of this set. The
  * attributes will contain values 0 or 1 and are numerical.
- * 
+ *
  * @author Sebastian Land
  */
 public class FrequentItemSetAttributeCreator extends Operator {
@@ -78,7 +78,7 @@ public class FrequentItemSetAttributeCreator extends Operator {
 			setAttributeMap.put(set, newAttribute);
 			exampleSet.getAttributes().addRegular(newAttribute);
 		}
-		MemoryExampleTable table = (MemoryExampleTable) exampleSet.getExampleTable();
+		ExampleTable table = exampleSet.getExampleTable();
 		table.addAttributes(newAttributes);
 
 		// running over examples

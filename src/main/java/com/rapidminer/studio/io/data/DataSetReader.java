@@ -37,7 +37,8 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadStoppedException;
 import com.rapidminer.operator.Operator;
@@ -161,11 +162,11 @@ public class DataSetReader {
 		}
 
 		// building example table
-		MemoryExampleTable exampleTable = new MemoryExampleTable(attributes);
-		fillExampleTable(dataSet, listener, attributeColumns, exampleTable);
+		ExampleSetBuilder builder = ExampleSets.from(attributes);
+		fillExampleTable(dataSet, listener, attributeColumns, builder, attributes);
 
 		// derive ExampleSet from exampleTable and assigning roles
-		ExampleSet exampleSet = exampleTable.createExampleSet();
+		ExampleSet exampleSet = builder.build();
 		assignRoles(attributeColumns, exampleSet);
 
 		isReading = false;
@@ -209,8 +210,8 @@ public class DataSetReader {
 	 * Fills the exampleTable with the data from the dataSet.
 	 */
 	private void fillExampleTable(DataSet dataSet, ProgressListener listener, int[] attributeColumns,
-			MemoryExampleTable exampleTable) throws DataSetException, ProcessStoppedException, ParseException {
-		Attribute[] attributes = exampleTable.getAttributes();
+			ExampleSetBuilder builder, Attribute[] attributes)
+			throws DataSetException, ProcessStoppedException, ParseException {
 
 		dataSet.reset();
 		int numberOfRows = dataSet.getNumberOfRows();
@@ -236,7 +237,6 @@ public class DataSetReader {
 
 			// creating data row
 			DataRow row = factory.create(attributes.length);
-			exampleTable.addDataRow(row);
 			int attributeIndex = 0;
 			for (Attribute attribute : attributes) {
 				// check for missing
@@ -260,6 +260,7 @@ public class DataSetReader {
 				}
 				attributeIndex++;
 			}
+			builder.addDataRow(row);
 		}
 	}
 

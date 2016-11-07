@@ -21,7 +21,6 @@ package com.rapidminer.repository.local;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.locks.Lock;
@@ -31,12 +30,12 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
@@ -46,22 +45,6 @@ import com.rapidminer.tools.Tools;
  * @author Simon Fischer
  */
 public class SimpleFolder extends SimpleEntry implements Folder {
-
-	private static final Comparator<Entry> NAME_COMPARATOR = new Comparator<Entry>() {
-
-		@Override
-		public int compare(Entry entryA, Entry entryB) {
-			if ((entryA == null || entryA.getName() == null) && (entryB == null || entryB.getName() == null)) {
-				return 0;
-			} else if (entryA == null || entryA.getName() == null) {
-				return -1;
-			} else if (entryB == null || entryB.getName() == null) {
-				return 1;
-			} else {
-				return entryA.getName().compareTo(entryB.getName());
-			}
-		}
-	};
 
 	private List<DataEntry> data;
 	private List<Folder> folders;
@@ -169,9 +152,9 @@ public class SimpleFolder extends SimpleEntry implements Folder {
 					data.add(new SimpleBlobEntry(file.getName().substring(0, file.getName().length() - 5), this,
 							getRepository()));
 				}
+				Collections.sort(data, RepositoryTools.SIMPLE_NAME_COMPARATOR);
+				Collections.sort(folders, RepositoryTools.SIMPLE_NAME_COMPARATOR);
 			}
-			Collections.sort(data, NAME_COMPARATOR);
-			Collections.sort(folders, NAME_COMPARATOR);
 		}
 	}
 

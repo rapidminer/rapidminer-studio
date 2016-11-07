@@ -1,18 +1,39 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" breakpoints="after" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" breakpoints="after" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="gaussian mixture clusters"/>
         <parameter key="number_examples" value="500"/>
         <parameter key="number_of_attributes" value="3"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="self_organizing_map" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="SOMDimensionalityReduction" width="90" x="246" y="30"/>
+      <operator activated="true" class="self_organizing_map" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="SOMDimensionalityReduction" width="90" x="246" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="number_of_dimensions" value="2"/>
+        <parameter key="net_size" value="30"/>
+        <parameter key="training_rounds" value="30"/>
+        <parameter key="learning_rate_start" value="0.8"/>
+        <parameter key="learning_rate_end" value="0.01"/>
+        <parameter key="adaption_radius_start" value="10.0"/>
+        <parameter key="adaption_radius_end" value="1.0"/>
+      </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="SOMDimensionalityReduction" to_port="example set input"/>
       <connect from_op="SOMDimensionalityReduction" from_port="example set output" to_port="result 1"/>
       <connect from_op="SOMDimensionalityReduction" from_port="original" to_port="result 2"/>
@@ -20,7 +41,7 @@
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="272" resized="true" width="424" x="41" y="138">A very powerful visualisation technique are Self-Organizing Maps (SOM, also known as Kohonen nets). A SOM reduces the dimensionality on two dimensions and consists of a nice and intuitive representation of the training point distances. &lt;br/&gt;&lt;br/&gt;After a set of gaussian mixture clusters consisting of 500 data points was created, these points can be visualized by several data plotters, including one for SOMs. You can adjust the net size and the number of training iterations until they fit your requirements. Please note that calculating a SOM might take some time. &lt;br/&gt;&lt;br/&gt;In addition to the mere visualization there also exist a SOM dimensionality reduction operator which can be used to transform high-dimensional data sets into low dimensions.</description>
+      <description align="left" color="yellow" colored="false" height="272" resized="true" width="424" x="41" y="150">A very powerful visualisation technique are Self-Organizing Maps (SOM, also known as Kohonen nets). A SOM reduces the dimensionality on two dimensions and consists of a nice and intuitive representation of the training point distances. &lt;br/&gt;&lt;br/&gt;After a set of gaussian mixture clusters consisting of 500 data points was created, these points can be visualized by several data plotters, including one for SOMs. You can adjust the net size and the number of training iterations until they fit your requirements. Please note that calculating a SOM might take some time. &lt;br/&gt;&lt;br/&gt;In addition to the mere visualization there also exist a SOM dimensionality reduction operator which can be used to transform high-dimensional data sets into low dimensions.</description>
     </process>
   </operator>
 </process>

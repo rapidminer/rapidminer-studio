@@ -29,7 +29,7 @@ import com.rapidminer.operator.learner.tree.SplitCondition;
 
 /**
  * Determines the best term for the given example set with respect to the criterion.
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa
  */
 public class TermDetermination {
@@ -57,20 +57,18 @@ public class TermDetermination {
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			if (attribute.isNominal()) {
 				SplittedExampleSet splitted = SplittedExampleSet.splitByAttribute(exampleSet, attribute);
+				SplittedExampleSet posSet = (SplittedExampleSet) splitted.clone();
+				SplittedExampleSet negSet = splitted;
 				for (int i = 0; i < splitted.getNumberOfSubsets(); i++) {
-					SplittedExampleSet posSet = (SplittedExampleSet) splitted.clone();
 					posSet.selectSingleSubset(i);
-					SplittedExampleSet negSet = (SplittedExampleSet) splitted.clone();
 					negSet.selectAllSubsetsBut(i);
 					double[] benefits = this.criterion.getBenefit(posSet, negSet, labelName);
-					if ((benefits[0] > minValue)
-							&& (benefits[0] > 0)
-							&& (benefits[1] > 0)
-							&& ((benefits[0] > bestBenefit) || ((benefits[0] == bestBenefit) && (benefits[1] > bestTotalWeight)))) {
+					if (benefits[0] > minValue && benefits[0] > 0 && benefits[1] > 0
+							&& (benefits[0] > bestBenefit || benefits[0] == bestBenefit && benefits[1] > bestTotalWeight)) {
 						bestBenefit = benefits[0];
 						bestTotalWeight = benefits[1];
-						bestCondition = new NominalSplitCondition(attribute, posSet.iterator().next()
-								.getValueAsString(attribute));
+						bestCondition = new NominalSplitCondition(attribute,
+								posSet.iterator().next().getValueAsString(attribute));
 					}
 				}
 			} else {
@@ -78,10 +76,8 @@ public class TermDetermination {
 				double bestSplitValue = bestSplit.getSplitPoint();
 				if (!Double.isNaN(bestSplitValue)) {
 					double[] benefits = bestSplit.getBenefit();
-					if ((benefits[0] > minValue)
-							&& (benefits[0] > 0)
-							&& (benefits[1] > 0)
-							&& ((benefits[0] > bestBenefit) || ((benefits[0] == bestBenefit) && (benefits[1] > bestTotalWeight)))) {
+					if (benefits[0] > minValue && benefits[0] > 0 && benefits[1] > 0
+							&& (benefits[0] > bestBenefit || benefits[0] == bestBenefit && benefits[1] > bestTotalWeight)) {
 						bestBenefit = benefits[0];
 						bestTotalWeight = benefits[1];
 						if (bestSplit.getSplitType() == Split.LESS_SPLIT) {

@@ -34,6 +34,7 @@ import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.tools.GlobalAuthenticator;
 
 
 /**
@@ -121,6 +122,7 @@ public class PasswordManager extends ButtonDialog {
 	protected void ok() {
 		Wallet.setInstance(clone);
 		clone.saveCache();
+		GlobalAuthenticator.refreshProxyAuthenticators();
 		super.ok();
 	}
 

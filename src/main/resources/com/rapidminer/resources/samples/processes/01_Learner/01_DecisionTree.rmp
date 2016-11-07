@@ -1,22 +1,37 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Golf"/>
       </operator>
-      <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="179" y="30"/>
+      <operator activated="true" class="parallel_decision_tree" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DecisionTree" width="90" x="179" y="34">
+        <parameter key="criterion" value="gain_ratio"/>
+        <parameter key="maximal_depth" value="20"/>
+        <parameter key="apply_pruning" value="true"/>
+        <parameter key="confidence" value="0.25"/>
+        <parameter key="apply_prepruning" value="true"/>
+        <parameter key="minimal_gain" value="0.1"/>
+        <parameter key="minimal_leaf_size" value="2"/>
+        <parameter key="minimal_size_for_split" value="4"/>
+        <parameter key="number_of_prepruning_alternatives" value="3"/>
+      </operator>
       <connect from_op="Retrieve" from_port="output" to_op="DecisionTree" to_port="training set"/>
       <connect from_op="DecisionTree" from_port="model" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="170" resized="true" width="563" x="40" y="123">This process starts with loading the data. After finishing the input operator a typical learning step is performed. Here, an implementation of a decision tree learner is used which also can handle numerical values (similar to the well known C4.5 algorithm).&lt;br&gt;&lt;br&gt;Each operator may demand some input and delivers some output. These in- and output types are passed between the operators. In this example the first operator &amp;quot;Input&amp;quot; does not demand input and delivers an example set as output. This example set is consumed by the learner which delivers the final output: the learned model.</description>
+      <description align="left" color="yellow" colored="false" height="170" resized="true" width="563" x="40" y="126">This process starts with loading the data. After finishing the input operator a typical learning step is performed. Here, an implementation of a decision tree learner is used which also can handle numerical values (similar to the well known C4.5 algorithm).&lt;br&gt;&lt;br&gt;Each operator may demand some input and delivers some output. These in- and output types are passed between the operators. In this example the first operator &amp;quot;Input&amp;quot; does not demand input and delivers an example set as output. This example set is consumed by the learner which delivers the final output: the learned model.</description>
     </process>
   </operator>
 </process>

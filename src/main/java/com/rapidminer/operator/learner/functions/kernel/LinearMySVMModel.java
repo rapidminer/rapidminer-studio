@@ -25,6 +25,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples.MeanVariance;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel.Kernel;
@@ -40,6 +41,8 @@ public class LinearMySVMModel extends PredictionModel {
 
 	private static final long serialVersionUID = 2812901947459843681L;
 
+	private static final int OPERATOR_PROGRESS_STEPS = 2000;
+
 	private Map<Integer, MeanVariance> meanVariances;
 
 	private double bias;
@@ -47,7 +50,8 @@ public class LinearMySVMModel extends PredictionModel {
 	private double[] weights = null;
 
 	public LinearMySVMModel(ExampleSet exampleSet,
-			com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples model, Kernel kernel, int kernelType) {
+			com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples model, Kernel kernel,
+			int kernelType) {
 		super(exampleSet, ExampleSetUtilities.SetsCompareOption.ALLOW_SUPERSET,
 				ExampleSetUtilities.TypesCompareOption.ALLOW_SAME_PARENTS);
 		this.meanVariances = model.getMeanVariances();
@@ -68,6 +72,12 @@ public class LinearMySVMModel extends PredictionModel {
 
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabelAttribute) throws OperatorException {
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			double prediction = bias;
 			int a = 0;
@@ -95,6 +105,9 @@ public class LinearMySVMModel extends PredictionModel {
 						1.0d / (1.0d + java.lang.Math.exp(prediction)));
 			} else {
 				example.setValue(predictedLabelAttribute, prediction);
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

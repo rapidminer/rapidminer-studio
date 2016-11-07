@@ -25,8 +25,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -89,7 +89,7 @@ public class NominalExampleSetGenerator extends AbstractExampleSource {
 		label.getMapping().mapString("positive");
 		attributes.add(label);
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -103,16 +103,16 @@ public class NominalExampleSetGenerator extends AbstractExampleSource {
 				example = new double[numberOfAttributes + 1];
 				System.arraycopy(features, 0, example, 0, features.length);
 				if (features.length >= 2) {
-					example[example.length - 1] = features[0] == 0 || features[1] == 0 ? label.getMapping().mapString(
-							"positive") : label.getMapping().mapString("negative");
+					example[example.length - 1] = features[0] == 0 || features[1] == 0
+							? label.getMapping().mapString("positive") : label.getMapping().mapString("negative");
 				} else if (features.length == 1) {
-					example[example.length - 1] = features[0] == 0 ? label.getMapping().mapString("positive") : label
-							.getMapping().mapString("negative");
+					example[example.length - 1] = features[0] == 0 ? label.getMapping().mapString("positive")
+							: label.getMapping().mapString("negative");
 				} else {
 					example[example.length - 1] = label.getMapping().mapString("positive");
 				}
 			}
-			table.addDataRow(new DoubleArrayDataRow(example));
+			builder.addRow(example);
 
 			getProgress().step();
 		}
@@ -120,7 +120,7 @@ public class NominalExampleSetGenerator extends AbstractExampleSource {
 		getProgress().complete();
 
 		// create example set and return it
-		return table.createExampleSet(label);
+		return builder.withRole(label, Attributes.LABEL_NAME).build();
 	}
 
 	@Override

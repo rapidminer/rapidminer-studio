@@ -29,23 +29,22 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.test.ExampleTestTools;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.performance.AbsoluteError;
 import com.rapidminer.operator.performance.AbstractPerformanceEvaluator;
 import com.rapidminer.operator.performance.PerformanceCriterion;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.operator.performance.SquaredError;
-import com.rapidminer.tools.att.AttributeSet;
 
 
 /**
  * Tests regression critetia.
- * 
- * @author Simon Fischer, Ingo Mierswa
- *          ingomierswa Exp $
+ *
+ * @author Simon Fischer, Ingo Mierswa ingomierswa Exp $
  */
 public class MeasuredCriterionTest extends AbstractCriterionTestCase {
 
@@ -57,21 +56,23 @@ public class MeasuredCriterionTest extends AbstractCriterionTestCase {
 		List<Attribute> attributeList = new LinkedList<Attribute>();
 		attributeList.add(label);
 
-		MemoryExampleTable exampleTable = new MemoryExampleTable(attributeList, ExampleTestTools.createDataRowReader(labelValues));
-		AttributeSet attributeSet = new AttributeSet();
-		attributeSet.setSpecialAttribute("label", label);
-		ExampleSet exampleSet = exampleTable.createExampleSet(attributeSet);
+		ExampleSet exampleSet = ExampleSets.from(attributeList)
+				.withDataRowReader(ExampleTestTools.createDataRowReader(labelValues)).withRole(label, Attributes.LABEL_NAME)
+				.build();
+
 		Attribute predictedLabel = ExampleTestTools.createPredictedLabel(exampleSet);
 		Iterator<Example> r = exampleSet.iterator();
-		for (int i = 0; i < predictedValues.length; i++)
+		for (int i = 0; i < predictedValues.length; i++) {
 			r.next().setValue(predictedLabel, predictedValues[i]);
+		}
 
 		return exampleSet;
 	}
 
 	@Before
 	public void setUp() throws Exception {
-		exampleSet1 = createExampleSet(new double[][] { { 5.0 }, { 3.0 }, { -1.0 }, { -4.0 }, { 0.0 }, { 2.0 } }, new double[] { 6.0, 1.0, 0.0, -1.0, 3.0, -2.0 });
+		exampleSet1 = createExampleSet(new double[][] { { 5.0 }, { 3.0 }, { -1.0 }, { -4.0 }, { 0.0 }, { 2.0 } },
+				new double[] { 6.0, 1.0, 0.0, -1.0, 3.0, -2.0 });
 		exampleSet2 = createExampleSet(new double[][] { { 3.0 }, { 6.0 }, { -1.0 } }, new double[] { 1.0, 8.0, -4.0 });
 	}
 

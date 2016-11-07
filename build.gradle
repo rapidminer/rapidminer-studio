@@ -6,12 +6,10 @@ buildscript {
 	dependencies {
 		classpath 'com.rapidminer.gradle:java-basics:0.4.0'
 		classpath 'com.rapidminer.gradle:java-publishing:0.2.0'
-	 	classpath 'com.rapidminer.gradle:java-signing:0.1.0'
 	}
 }
 
 apply plugin: 'com.rapidminer.java-basics'
-apply plugin: 'com.rapidminer.java-signing'
 apply plugin: 'com.rapidminer.java-publishing.agpl-v3'
 
 repositories {
@@ -30,6 +28,9 @@ dependencies {
 
 	// RapidMiner API
 	compile 'com.rapidminer:rapidminer-api:0.2.0'
+	
+	// Alphanumeric sorting
+	compile 'com.rapidminer.external:alphanumeric-sorting:1.0'
 
 	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
 	compile 'com.rapidminer.external:vldocking:1.1.1'

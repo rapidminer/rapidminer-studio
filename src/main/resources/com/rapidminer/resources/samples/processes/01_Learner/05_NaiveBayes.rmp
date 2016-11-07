@@ -1,22 +1,29 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Iris"/>
       </operator>
-      <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NaiveBayes" width="90" x="179" y="30"/>
+      <operator activated="true" class="naive_bayes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NaiveBayes" width="90" x="179" y="34">
+        <parameter key="laplace_correction" value="true"/>
+      </operator>
       <connect from_op="Retrieve" from_port="output" to_op="NaiveBayes" to_port="training set"/>
       <connect from_op="NaiveBayes" from_port="model" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="50" resized="true" width="236" x="40" y="140">Using a simple Naive Bayes classifier.</description>
+      <description align="left" color="yellow" colored="false" height="50" resized="true" width="236" x="42" y="137">Using a simple Naive Bayes classifier.</description>
     </process>
   </operator>
 </process>

@@ -19,6 +19,8 @@
 package com.rapidminer.operator.learner.functions.kernel.logistic;
 
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.learner.functions.kernel.AbstractMySVMLearner;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExample;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples;
@@ -29,10 +31,12 @@ import com.rapidminer.parameter.UndefinedParameterError;
 
 /**
  * The main class for the Kernel Logistic Regression.
- * 
+ *
  * @author Stefan Rueping
  */
 public class KLR implements SVMInterface {
+
+	private static final int OPERATOR_PROGRESS_STEPS = 20;
 
 	protected Kernel kernel;
 
@@ -73,7 +77,9 @@ public class KLR implements SVMInterface {
 	double mu; // Genauigkeit f?r bound (is_zero)
 
 	int maxIterations = 100000; // maximale Anzahl Iterationen im
-								// Newton-Raphson-Schritt
+								 // Newton-Raphson-Schritt
+
+	private OperatorProgress operatorProgress;
 
 	public KLR() {}
 
@@ -81,6 +87,7 @@ public class KLR implements SVMInterface {
 		C = paramOperator.getParameterAsDouble(AbstractMySVMLearner.PARAMETER_C);
 		tol = paramOperator.getParameterAsDouble(AbstractMySVMLearner.PARAMETER_CONVERGENCE_EPSILON);
 		maxIterations = paramOperator.getParameterAsInt(AbstractMySVMLearner.PARAMETER_MAX_ITERATIONS);
+		operatorProgress = paramOperator.getProgress();
 	}
 
 	@Override
@@ -98,12 +105,12 @@ public class KLR implements SVMInterface {
 		mu = epsilon;
 		n1 = examples.count_pos_examples();
 		n2 = n - n1;
-	};
+	}
 
 	final double dG(double alpha) {
 		// return dG(alpha/C)
 		return Math.log(alpha / (C - alpha));
-	};
+	}
 
 	final double dPhi(double t, int i, int j, double ai, double aj, double Kii, double Kij, double Kjj) {
 		// return Hi(alpha(t)) - Hj(alpha(t))
@@ -116,7 +123,7 @@ public class KLR implements SVMInterface {
 			result = Kij - Kii;
 			ydG = dG(ai) - dG(ai - t);
 		}
-		;
+
 		if (target[j] > 0) {
 			result = Kjj - Kij;
 			ydG -= dG(aj - t) - dG(aj);
@@ -124,14 +131,14 @@ public class KLR implements SVMInterface {
 			result = Kij - Kjj;
 			ydG -= dG(aj) - dG(aj + t);
 		}
-		;
+
 		// result *= t;
 		result = t * (Kii - 2.0 * Kij + Kjj);
 		result += ydG;
 		result += hCache[i] - hCache[j]; // value for t=0
 
 		return result;
-	};
+	}
 
 	final double d2Phi(double t, int i, int j, double ai, double aj, double Kii, double Kij, double Kjj) {
 		double result;
@@ -141,20 +148,20 @@ public class KLR implements SVMInterface {
 		} else {
 			atilde = ai - t;
 		}
-		;
+
 		result = C / (atilde * (C - atilde));
 		if (target[j] > 0) {
 			atilde = aj - t;
 		} else {
 			atilde = aj + t;
 		}
-		;
+
 		result += C / (atilde * (C - atilde));
 
 		result += Kii - 2.0 * Kij + Kjj; // eta
 
 		return result;
-	};
+	}
 
 	protected boolean takeStep(int i, int j) {
 		double[] kernel_row_i = kernel.get_row(i);
@@ -181,36 +188,35 @@ public class KLR implements SVMInterface {
 			t_max = aio - mu / 2.0;
 			t_min = aio - (C - mu / 2.0);
 		}
-		;
+
 		if (yj > 0) {
 			t_tmp = ajo - mu / 2.0;
 			if (t_tmp < t_max) {
 				t_max = t_tmp;
 			}
-			;
+
 			t_tmp = ajo - (C - mu / 2.0);
 			if (t_tmp > t_min) {
 				t_min = t_tmp;
 			}
-			;
+
 		} else {
 			t_tmp = mu / 2.0 - ajo;
 			if (t_tmp > t_min) {
 				t_min = t_tmp;
 			}
-			;
+
 			t_tmp = C - mu / 2.0 - ajo;
 			if (t_tmp < t_max) {
 				t_max = t_tmp;
 			}
-			;
+
 		}
-		;
 
 		if (t_max - t_min <= epsilon) {
 			return false;
 		}
-		;
+
 		double t = 0.0;
 		double the_dPhi = Hio - Hjo;
 		double the_d2Phi = Kii - 2.0 * Kij + Kjj + C / (aio * (C - aio)) + C / (ajo * (C - ajo));
@@ -235,7 +241,7 @@ public class KLR implements SVMInterface {
 				t = t_min;
 				takestepFlag = 2;
 			}
-			;
+
 		} else if (the_dPhi < 0) {
 			// Compute dPhi(t) and d2Phi(t) at t = t_max and denoted as
 			// dPhi_right, d2Phi_right
@@ -250,11 +256,10 @@ public class KLR implements SVMInterface {
 				t = t_max;
 				takestepFlag = 2;
 			}
-			;
+
 		} else {
 			return false;
 		}
-		;
 
 		double t0;
 		double dt;
@@ -279,7 +284,6 @@ public class KLR implements SVMInterface {
 				if (t <= t_left || t >= t_right) {
 					t = (t_left + t_right) / 2.0; // Bisection step
 				}
-				;
 
 				ai = aio + t / yi;
 				aj = ajo - t / yj;
@@ -298,7 +302,7 @@ public class KLR implements SVMInterface {
 					t_right = t;
 					dPhi_right = the_dPhi;
 				}
-				;
+
 				t0 = t;
 			} while (Math.abs(the_dPhi) > 0.1 * tol && t_left + epsilon < t_right);
 		} else if (takestepFlag == 2) {
@@ -307,12 +311,10 @@ public class KLR implements SVMInterface {
 			Hi = Hio + t * (Kii - Kij) + yi * (Math.log(ai / (C - ai)) - Math.log(aio / (C - aio)));
 			Hj = Hjo + t * (Kij - Kjj) + yj * (Math.log(aj / (C - aj)) - Math.log(ajo / (C - ajo)));
 		}
-		;
 
 		if (t == 0) {
 			return false;
 		}
-		;
 
 		// Save ai, aj, Hi, Hj
 		alphas[i] = ai;
@@ -324,7 +326,6 @@ public class KLR implements SVMInterface {
 			} else {
 				alphas[j] += mu - alphas[i];
 			}
-			;
 			alphas[i] = mu;
 			atBound[i] = true;
 		} else if (ai >= C - mu) {
@@ -333,20 +334,17 @@ public class KLR implements SVMInterface {
 			} else {
 				alphas[j] += C - mu - alphas[i];
 			}
-			;
 			alphas[i] = C - mu;
 			atBound[i] = true;
 		} else {
 			atBound[i] = false;
 		}
-		;
 		if (aj <= mu) {
 			if (target[i] > 0 && target[j] > 0 || target[i] < 0 && target[j] < 0) {
 				alphas[i] -= mu - alphas[j];
 			} else {
 				alphas[i] += mu - alphas[j];
 			}
-			;
 			alphas[j] = mu;
 			atBound[j] = true;
 		} else if (aj >= C - mu) {
@@ -355,14 +353,11 @@ public class KLR implements SVMInterface {
 			} else {
 				alphas[i] += C - mu - alphas[j];
 			}
-			;
 			alphas[j] = C - mu;
 			atBound[j] = true;
 		} else {
 			atBound[j] = false;
 		}
-		;
-
 		t = ((alphas[i] - aio) * yi + (ajo - alphas[j]) * yj) / 2.0;
 
 		Hi = Hio + t * (Kii - Kij) + yi * (Math.log(alphas[i] / (C - alphas[i])) - Math.log(aio / (C - aio)));
@@ -371,7 +366,6 @@ public class KLR implements SVMInterface {
 		for (int k = 0; k < n; k++) {
 			hCache[k] += t * (kernel_row_i[k] - kernel_row_j[k]);
 		}
-		;
 
 		hCache[i] = Hi;
 		hCache[j] = Hj;
@@ -387,21 +381,17 @@ public class KLR implements SVMInterface {
 					bUp = hCache[l];
 					iUp = l;
 				}
-				;
 				if (hCache[l] < bLow) {
 					bLow = hCache[l];
 					iLow = l;
 				}
-				;
 			}
-			;
 		}
-		;
 
 		return true;
-	}; // end takeStep procedure
+	} // end takeStep procedure
 
-	public void klr() {
+	public void klr() throws ProcessStoppedException {
 		// main routine:
 
 		// precond: n, target, examples, kernel intialisiert
@@ -420,10 +410,9 @@ public class KLR implements SVMInterface {
 			} else {
 				alphas[i] = alpha_neg;
 			}
-			;
+
 			atBound[i] = false;
 		}
-		;
 
 		// initialize all Hcache[i]
 		double sum_pos_K;
@@ -433,6 +422,11 @@ public class KLR implements SVMInterface {
 		bLow = Double.POSITIVE_INFINITY;
 		iUp = 0;
 		iLow = 0;
+
+		if (operatorProgress != null) {
+			operatorProgress.setTotal(n);
+		}
+
 		for (i = 0; i < n; i++) {
 			sum_pos_K = 0.0;
 			sum_neg_K = 0.0;
@@ -443,22 +437,21 @@ public class KLR implements SVMInterface {
 				} else {
 					sum_neg_K += kernel_row[j];
 				}
-				;
 			}
-			;
 			hCache[i] = alpha_pos * sum_pos_K - alpha_neg * sum_neg_K + target[i] * dG(alphas[i]);
 			if (hCache[i] > bUp) {
 				bUp = hCache[i];
 				iUp = i;
 			}
-			;
 			if (hCache[i] < bLow) {
 				bLow = hCache[i];
 				iLow = i;
 			}
-			;
+
+			if (operatorProgress != null && i % OPERATOR_PROGRESS_STEPS == 0) {
+				operatorProgress.setCompleted(i);
+			}
 		}
-		;
 
 		boolean Flag = false;
 		double Hi;
@@ -505,7 +498,7 @@ public class KLR implements SVMInterface {
 
 		b = (bLow + bUp) / 2.0;
 
-	};
+	}
 
 	@Override
 	public double predict(SVMExample sVMExample) {
@@ -519,12 +512,12 @@ public class KLR implements SVMInterface {
 				sv = examples.get_example(i);
 				the_sum += alphas[i] * kernel.calculate_K(sv, sVMExample);
 			}
-			;
+
 		}
-		;
+
 		the_sum = 1.0 / (1.0 + Math.exp(-the_sum));
 		return the_sum;
-	};
+	}
 
 	@Override
 	public void predict(SVMExamples to_predict) {
@@ -538,11 +531,11 @@ public class KLR implements SVMInterface {
 			prediction = predict(sVMExample);
 			to_predict.set_y(i, prediction);
 		}
-		;
-	};
+
+	}
 
 	@Override
-	public void train() {
+	public void train() throws ProcessStoppedException {
 		// train the klr
 		klr();
 
@@ -555,11 +548,10 @@ public class KLR implements SVMInterface {
 			if (target[i] < 0) {
 				alphas[i] = -alphas[i];
 			}
-			;
 
 		}
-		;
-	};
+
+	}
 
 	/** Return the weights of the features. */
 	@Override
@@ -586,4 +578,4 @@ public class KLR implements SVMInterface {
 		return examples.get_b();
 	}
 
-};
+}

@@ -26,12 +26,13 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.ListDataRowReader;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
@@ -89,7 +90,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 
 	/** The parameter name for &quot;Standard deviation of the Gaussian distribution used for generating attributes.&quot; */
 	public static final String PARAMETER_ATTRIBUTES_GAUSSIAN_STDDEV = "gaussian_standard_deviation";
-	
+
 	/** The parameter name for &quot;The radius of the outermost ring cluster.&quot; */
 	public static final String PARAMETER_ATTRIBUTES_LARGEST_RADIUS = "largest_radius";
 
@@ -136,7 +137,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 			FUNCTIONS_USING_GAUSSIAN_STDDEV, FUNCTIONS_USING_LARGEST_RADIUS);
 
 	protected static final double DEFAULT_SINGLE_BOUND = 10.0;
-			
+
 	public static final OperatorVersion VERSION_TARGET_PARAMETERS_CHANGED = new OperatorVersion(7, 1, 1);
 
 	public ExampleSetGenerator(OperatorDescription description) {
@@ -167,11 +168,10 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 		if (label != null) {
 			attributes.add(label);
 		}
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
-		List<DataRow> data = new LinkedList<>();
 		DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
 		try {
 			function.init(random);
@@ -191,7 +191,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 					row.set(attributes.get(i), example[i]);
 				}
 				row.trim();
-				data.add(row);
+				builder.addDataRow(row);
 
 				// trigger operator progress every 100 examples
 				++progressCounter;
@@ -205,11 +205,11 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 			throw new UserError(this, 918, e.getFunctionName(), e.getMessage());
 		}
 
-		// fill table with data
-		table.readExamples(new ListDataRowReader(data.iterator()));
-
+		if (label != null) {
+			builder.withRole(label, Attributes.LABEL_NAME);
+		}
 		// create example set and return it
-		ExampleSet result = table.createExampleSet(label);
+		ExampleSet result = builder.build();
 
 		getProgress().complete();
 
@@ -257,7 +257,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 	/**
 	 * This function sets the single argument bound of the target function, using the parameter(s)
 	 * that is/are compatible with the current version.
-	 * 
+	 *
 	 * @param function
 	 *            The target function.
 	 * @param targetParameter

@@ -1,64 +1,103 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XVal" width="90" x="180" y="30">
+      <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="179" y="34">
+        <parameter key="enable_parallel_execution" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="10"/>
         <parameter key="sampling_type" value="shuffled sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="materialize_data" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Training" width="90" x="211" y="30">
+          <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Training" width="90" x="45" y="34">
             <parameter key="svm_type" value="epsilon-SVR"/>
             <parameter key="kernel_type" value="poly"/>
+            <parameter key="degree" value="3"/>
+            <parameter key="gamma" value="0.0"/>
+            <parameter key="coef0" value="0.0"/>
             <parameter key="C" value="1000.0"/>
+            <parameter key="nu" value="0.5"/>
+            <parameter key="cache_size" value="80"/>
             <parameter key="epsilon" value="0.0010"/>
+            <parameter key="p" value="0.1"/>
             <list key="class_weights"/>
+            <parameter key="shrinking" value="true"/>
+            <parameter key="calculate_confidences" value="false"/>
+            <parameter key="confidence_for_multiclass" value="true"/>
           </operator>
-          <connect from_port="training" to_op="Training" to_port="training set"/>
+          <connect from_port="training set" to_op="Training" to_port="training set"/>
           <connect from_op="Training" from_port="model" to_port="model"/>
-          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="source_training set" spacing="0"/>
           <portSpacing port="sink_model" spacing="0"/>
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Test" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="write_special" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Write Special" width="90" x="179" y="30">
+          <operator activated="true" class="write_special" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Write Special" width="90" x="179" y="34">
             <parameter key="example_set_file" value="xval_%a.dat"/>
             <parameter key="special_format" value="True: $l  Pred: $p"/>
+            <parameter key="fraction_digits" value="-1"/>
+            <parameter key="add_line_separator" value="true"/>
+            <parameter key="quote_nominal_values" value="true"/>
+            <parameter key="zipped" value="false"/>
+            <parameter key="overwrite_mode" value="overwrite first, append then"/>
+            <parameter key="encoding" value="SYSTEM"/>
           </operator>
-          <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="RegressionPerformance" width="90" x="346" y="30">
+          <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="RegressionPerformance" width="90" x="313" y="34">
             <parameter key="main_criterion" value="root_mean_squared_error"/>
+            <parameter key="root_mean_squared_error" value="true"/>
             <parameter key="absolute_error" value="true"/>
             <parameter key="relative_error" value="true"/>
+            <parameter key="relative_error_lenient" value="false"/>
+            <parameter key="relative_error_strict" value="false"/>
+            <parameter key="normalized_absolute_error" value="false"/>
+            <parameter key="root_relative_squared_error" value="false"/>
             <parameter key="squared_error" value="true"/>
             <parameter key="correlation" value="true"/>
+            <parameter key="squared_correlation" value="false"/>
+            <parameter key="prediction_average" value="false"/>
+            <parameter key="spearman_rho" value="false"/>
+            <parameter key="kendall_tau" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="true"/>
           </operator>
           <connect from_port="model" to_op="Test" to_port="model"/>
           <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
           <connect from_op="Test" from_port="labelled data" to_op="Write Special" to_port="input"/>
           <connect from_op="Write Special" from_port="through" to_op="RegressionPerformance" to_port="labelled data"/>
-          <connect from_op="RegressionPerformance" from_port="performance" to_port="averagable 1"/>
+          <connect from_op="RegressionPerformance" from_port="performance" to_port="performance 1"/>
           <portSpacing port="source_model" spacing="0"/>
           <portSpacing port="source_test set" spacing="0"/>
           <portSpacing port="source_through 1" spacing="0"/>
-          <portSpacing port="sink_averagable 1" spacing="0"/>
-          <portSpacing port="sink_averagable 2" spacing="0"/>
+          <portSpacing port="sink_test set results" spacing="0"/>
+          <portSpacing port="sink_performance 1" spacing="0"/>
+          <portSpacing port="sink_performance 2" spacing="0"/>
         </process>
       </operator>
-      <connect from_op="Retrieve" from_port="output" to_op="XVal" to_port="training"/>
-      <connect from_op="XVal" from_port="averagable 1" to_port="result 1"/>
+      <connect from_op="Retrieve" from_port="output" to_op="Cross Validation" to_port="example set"/>
+      <connect from_op="Cross Validation" from_port="performance 1" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="181" resized="true" width="407" x="37" y="152">Sometimes the inner intermediate results of an operator which performs a loop (like cross validation) are of interest. The ExampleSetWriter in this process demonstrates a way to write the intermediate output into a file using the macro %{a} in the parameter string.&lt;br&gt;&lt;br&gt;Another possibility would be to embed the Training learner in an OperatorChain operator and add an additional Write Model. This would also write down the intermediate models.</description>
+      <description align="left" color="yellow" colored="false" height="181" resized="true" width="407" x="39" y="193">Sometimes the inner intermediate results of an operator which performs a loop (like cross validation) are of interest. The ExampleSetWriter in this process demonstrates a way to write the intermediate output into a file using the macro %{a} in the parameter string.&lt;br&gt;&lt;br&gt;Another possibility would be to embed the Training learner in an OperatorChain operator and add an additional Write Model. This would also write down the intermediate models.</description>
     </process>
   </operator>
 </process>

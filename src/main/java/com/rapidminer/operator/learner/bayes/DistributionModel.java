@@ -23,6 +23,7 @@ import java.util.Collection;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.learner.UpdateablePredictionModel;
 import com.rapidminer.tools.math.distribution.Distribution;
 
@@ -69,6 +70,6 @@ public abstract class DistributionModel extends UpdateablePredictionModel {
 	public abstract Distribution getDistribution(int classIndex, int attributeIndex);
 
 	@Override
-	public abstract ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel);
+	public abstract ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws ProcessStoppedException;
 
 }

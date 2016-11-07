@@ -1,26 +1,42 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="1977"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="gaussian mixture clusters"/>
         <parameter key="number_examples" value="200"/>
         <parameter key="number_of_attributes" value="2"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" breakpoints="before,after" class="detect_outlier_distances" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DistanceBasedOutlierDetection" width="90" x="180" y="30">
+      <operator activated="true" breakpoints="before,after" class="detect_outlier_distances" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DistanceBasedOutlierDetection" width="90" x="179" y="34">
         <parameter key="number_of_neighbors" value="4"/>
         <parameter key="number_of_outliers" value="12"/>
+        <parameter key="distance_function" value="euclidian distance"/>
       </operator>
-      <operator activated="true" breakpoints="after" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="ExampleFilter" width="90" x="313" y="30">
+      <operator activated="true" breakpoints="after" class="filter_examples" compatibility="6.4.000" expanded="true" height="103" name="ExampleFilter" width="90" x="313" y="34">
         <parameter key="parameter_string" value="outlier=false"/>
+        <parameter key="parameter_expression" value=""/>
         <parameter key="condition_class" value="attribute_value_filter"/>
+        <parameter key="invert_filter" value="false"/>
         <list key="filters_list"/>
+        <parameter key="filters_logic_and" value="true"/>
+        <parameter key="filters_check_metadata" value="true"/>
       </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="DistanceBasedOutlierDetection" to_port="example set input"/>
       <connect from_op="DistanceBasedOutlierDetection" from_port="example set output" to_op="ExampleFilter" to_port="example set input"/>
@@ -28,7 +44,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="141" resized="true" width="406" x="32" y="142">This setup demonstrates how outliers can be detected by RapidMiner and removed afterwards with an example filter operator. If you plot the data set after the breakpoint was reached, you can select the outlier column for example in a scatter plot of the two data dimensions and see which points are classified as outliers. These points are then filtered after the process was resumed.</description>
+      <description align="left" color="yellow" colored="false" height="141" resized="true" width="406" x="37" y="153">This setup demonstrates how outliers can be detected by RapidMiner and removed afterwards with an example filter operator. If you plot the data set after the breakpoint was reached, you can select the outlier column for example in a scatter plot of the two data dimensions and see which points are classified as outliers. These points are then filtered after the process was resumed.</description>
     </process>
   </operator>
 </process>

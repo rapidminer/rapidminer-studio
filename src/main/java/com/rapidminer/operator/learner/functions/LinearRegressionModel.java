@@ -25,6 +25,7 @@ import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.example.set.ExampleSetUtilities.SetsCompareOption;
 import com.rapidminer.example.set.ExampleSetUtilities.TypesCompareOption;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.error.AttributeNotFoundError;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Tools;
@@ -38,6 +39,8 @@ import com.rapidminer.tools.Tools;
 public class LinearRegressionModel extends PredictionModel {
 
 	private static final long serialVersionUID = 8381268071090932037L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
 
 	private String[] attributeNames;
 
@@ -91,6 +94,14 @@ public class LinearRegressionModel extends PredictionModel {
 			}
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+
 		for (Example example : exampleSet) {
 			double prediction = 0;
 			int index = 0;
@@ -124,6 +135,10 @@ public class LinearRegressionModel extends PredictionModel {
 				example.setConfidence(firstClassName, 1 - logFunction);
 			} else {
 				example.setValue(predictedLabel, prediction);
+			}
+
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

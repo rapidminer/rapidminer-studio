@@ -26,12 +26,21 @@ import java.util.logging.Level;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.AbstractModel;
 import com.rapidminer.operator.Model;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.PredictionModel;
+import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observable;
+import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.Tools;
 
 
@@ -43,6 +52,8 @@ import com.rapidminer.tools.Tools;
 public class BayBoostModel extends PredictionModel implements MetaModel {
 
 	private static final long serialVersionUID = 5821921049035718838L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 10_000;
 
 	// Holds the models and their weights in array format.
 	// Please access with getter methods.
@@ -206,22 +217,69 @@ public class BayBoostModel extends PredictionModel implements MetaModel {
 		final Attribute[] specialAttributes = this.createSpecialAttributes(exampleSet);
 		this.initIntermediateResultAttributes(exampleSet, specialAttributes);
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
+
 		// Apply all models to the example set, each time updating the
 		// intermediate results:
 		for (int i = 0; i < this.getNumberOfModels(); i++) {
 			Model model = this.getModel(i);
 			ExampleSet clonedExampleSet = (ExampleSet) exampleSet.clone();
+
+			// add observer to observe the progress of the model
+			Operator dummy = null;
+			if (progress != null) {
+				try {
+					dummy = OperatorService.createOperator("dummy");
+				} catch (OperatorCreationException e) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.operator.learner.meta.BayBoostModel.couldnt_create_operator");
+				}
+				if (dummy != null && model instanceof AbstractModel) {
+					final OperatorProgress finalProgress = progress;
+					final int finalModelCounter = i;
+					((AbstractModel) model).setOperator(dummy);
+					((AbstractModel) model).setShowProgress(true);
+					OperatorProgress internalProgress = dummy.getProgress();
+					internalProgress.setCheckForStop(false);
+					internalProgress.addObserver(new Observer<OperatorProgress>() {
+
+						@Override
+						public void update(Observable<OperatorProgress> observable, OperatorProgress arg) {
+							try {
+								finalProgress.setCompleted((int) (arg.getProgress() / (getNumberOfModels() + 1)
+										+ 100.0 * finalModelCounter / (getNumberOfModels() + 1)));
+							} catch (ProcessStoppedException e) {
+								throw new ProcessStoppedRuntimeException();
+							}
+						}
+					}, false);
+				}
+			}
+
 			clonedExampleSet = model.apply(clonedExampleSet);
 			this.updateEstimates(clonedExampleSet, this.getContingencyMatrix(i), specialAttributes);
 			PredictionModel.removePredictedLabel(clonedExampleSet);
+			if (progress != null) {
+				progress.setCompleted((int) 100.0 * i / (this.getNumberOfModels() + 1));
+			}
 		}
 
 		// Compute and store probability estimates from the intermediate
 		// results:
 		Iterator<Example> reader = exampleSet.iterator();
+		int progressCounter = 0;
 		while (reader.hasNext()) {
 			Example example = reader.next();
 			this.translateOddsIntoPredictions(example, specialAttributes, getTrainingHeader().getAttributes().getLabel());
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) (100.0 / (this.getNumberOfModels() + 1) * progressCounter / exampleSet.size()
+						+ 100.0 * this.getNumberOfModels() / (this.getNumberOfModels() + 1)));
+			}
 		}
 
 		// Remove the special attributes used for storing intermediate
@@ -232,7 +290,7 @@ public class BayBoostModel extends PredictionModel implements MetaModel {
 	}
 
 	/** Creates a special attribute for each label to store intermediate results. */
-	private Attribute[] createSpecialAttributes(ExampleSet exampleSet) throws OperatorException {
+	private Attribute[] createSpecialAttributes(ExampleSet exampleSet) {
 		final String attributePrefix = "BayBoostModelPrediction";
 
 		Attribute[] specialAttributes = new Attribute[this.getLabel().getMapping().size()];
@@ -244,7 +302,7 @@ public class BayBoostModel extends PredictionModel implements MetaModel {
 	}
 
 	/** Removes the provided special labels from the exampleSet and exampleTable. */
-	private void cleanUpSpecialAttributes(ExampleSet exampleSet, Attribute[] specialAttributes) throws OperatorException {
+	private void cleanUpSpecialAttributes(ExampleSet exampleSet, Attribute[] specialAttributes) {
 		for (int i = 0; i < specialAttributes.length; i++) {
 			exampleSet.getAttributes().remove(specialAttributes[i]);
 			exampleSet.getExampleTable().removeAttribute(specialAttributes[i]);
@@ -423,14 +481,15 @@ public class BayBoostModel extends PredictionModel implements MetaModel {
 			} else { // the "normal" case
 				products[i] *= liftFactors[i];
 				if (Double.isNaN(products[i])) {
-					// LogService.getGlobal().log("Found NaN value in intermediate odds ratio estimates!",
+					// LogService.getGlobal().log("Found NaN value in intermediate odds ratio
+					// estimates!",
 					// LogService.WARNING);
 					LogService.getRoot().log(Level.WARNING,
 							"com.rapidminer.operator.leaner.meta.BayBoostModel.found_nan_value");
 				}
 			}
 		}
-	return false;
+		return false;
 	}
 
 	/**

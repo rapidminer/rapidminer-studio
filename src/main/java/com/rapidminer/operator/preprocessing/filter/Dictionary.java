@@ -27,6 +27,8 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.tools.Tools;
 
@@ -39,6 +41,8 @@ import com.rapidminer.tools.Tools;
 public class Dictionary extends PreprocessingModel {
 
 	private static final long serialVersionUID = 1441613108993813785L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 100;
 
 	private List<String[]> replacements;
 	private String[] affectedAttributeNames;
@@ -65,7 +69,14 @@ public class Dictionary extends PreprocessingModel {
 		}
 	}
 
-	private void remap(Attributes attributes) {
+	private void remap(Attributes attributes) throws ProcessStoppedException {
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(affectedAttributeNames.length);
+		}
+		int progressCounter = 0;
+
 		for (String attributeName : affectedAttributeNames) {
 			Attribute attr = attributes.get(attributeName);
 			if (attr.isNominal()) {
@@ -95,6 +106,9 @@ public class Dictionary extends PreprocessingModel {
 					}
 				}
 
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 	}
@@ -146,7 +160,12 @@ public class Dictionary extends PreprocessingModel {
 	@Override
 	public Attributes getTargetAttributes(ExampleSet viewParent) {
 		Attributes attributes = (Attributes) viewParent.getAttributes().clone();
-		remap(attributes);
+		try {
+			remap(attributes);
+		} catch (ProcessStoppedException e) {
+			// Cannot happen
+			e.printStackTrace();
+		}
 		return attributes;
 	}
 
@@ -166,11 +185,11 @@ public class Dictionary extends PreprocessingModel {
 		}
 		return b.toString();
 	}
-	
+
 	public List<String[]> getReplacements() {
 		return replacements;
 	}
-	
+
 	public String[] getAffectedAttributeNames() {
 		return affectedAttributeNames;
 	}
@@ -186,7 +205,7 @@ public class Dictionary extends PreprocessingModel {
 	public boolean shouldStopAfterFirstMatch() {
 		return stopAfterFirstMatch;
 	}
-	
+
 	public ExampleSet getExampleSet() {
 		return exampleSet;
 	}

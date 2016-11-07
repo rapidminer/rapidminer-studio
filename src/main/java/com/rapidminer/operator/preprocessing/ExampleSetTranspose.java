@@ -28,8 +28,8 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.AbstractExampleSetProcessing;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -131,7 +131,7 @@ public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 		}
 
 		// create and fill table
-		MemoryExampleTable table = new MemoryExampleTable(newAttributes);
+		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
 		a = exampleSet.getAttributes().allAttributeRoles();
 		while (a.hasNext()) {
 			AttributeRole attributeRole = a.next();
@@ -155,14 +155,14 @@ public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 					}
 					counter++;
 				}
-				table.addDataRow(new DoubleArrayDataRow(data));
+				builder.addRow(data);
 			}
 			getProgress().step();
 		}
 
 		// create and deliver example set
 		getProgress().complete();
-		ExampleSet result = table.createExampleSet(null, null, newIdAttribute);
+		ExampleSet result = builder.withRole(newIdAttribute, Attributes.ID_NAME).build();
 		result.getAnnotations().addAll(exampleSet.getAnnotations());
 		return result;
 	}

@@ -185,4 +185,9 @@ public class SimilarityExampleSet extends AbstractExampleSet {
 	public int size() {
 		return this.parent.size() * this.parent.size();
 	}
+
+	@Override
+	public void cleanup() {
+		parent.cleanup();
+	}
 }

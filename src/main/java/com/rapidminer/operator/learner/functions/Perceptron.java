@@ -61,7 +61,6 @@ public class Perceptron extends AbstractLearner {
 	@Override
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 		Kernel kernel = getKernel();
-		kernel.init(exampleSet);
 
 		double initLearnRate = getParameterAsDouble(PARAMETER_LEARNING_RATE);
 		NominalMapping labelMapping = exampleSet.getAttributes().getLabel().getMapping();

@@ -65,9 +65,11 @@ public class DataSequence extends Sequence {
 
 	private TransactionSet findTransaction(Transaction findWhat, double t, CountingInformations countingInformations) {
 		TransactionSet result = new TransactionSet();
+		boolean includeStartValue = false;
+
 		while (true) {
 			for (Item item : findWhat) {
-				double foundTime = firstOccurenceAfter(item, t);
+				double foundTime = firstOccurenceAfter(item, t, includeStartValue);
 				if (Double.isNaN(foundTime)) {
 					return null; // then no item later currentTime has been found
 				}
@@ -82,6 +84,8 @@ public class DataSequence extends Sequence {
 																			// is at this position.
 																			// Since it must be
 																			// included.
+
+				includeStartValue = true;
 				result.reset();
 			} else {
 				return result;
@@ -90,10 +94,10 @@ public class DataSequence extends Sequence {
 
 	}
 
-	private double firstOccurenceAfter(Item item, double currentTime) {
+	private double firstOccurenceAfter(Item item, double currentTime, boolean includeCurrentTime) {
 		int itemIndex = item.getIndex();
 		for (int i = 0; i < times[itemIndex].length; i++) {
-			if (times[itemIndex][i] > currentTime) {
+			if (times[itemIndex][i] > currentTime || includeCurrentTime && times[itemIndex][i] == currentTime) {
 				return times[itemIndex][i];
 			}
 		}
@@ -114,7 +118,9 @@ public class DataSequence extends Sequence {
 				TransactionSet currentSet = data.findTransaction(currentTransaction, t, countingInformations);
 				if (currentSet != null) {
 					double difference = currentSet.getEndTime() - t;
-					if (matches.isEmpty() || difference < countingInformations.maxGap && difference > 0) { // matches
+
+					if (matches.isEmpty()
+							|| difference <= countingInformations.maxGap && difference >= countingInformations.minGap) { // matches
 																											// is
 																											// empty
 																											// as
@@ -129,6 +135,10 @@ public class DataSequence extends Sequence {
 						matchesIterator.add(currentSet);
 						t = currentSet.getEndTime();
 					} else {
+						// Go to the last valid entry
+						if (candidateIterator.hasPrevious()) {
+							candidateIterator.previous();
+						}
 						t = currentSet.getEndTime();
 						break;
 					}
@@ -144,7 +154,6 @@ public class DataSequence extends Sequence {
 			}
 
 			// backward step
-			candidateIterator.previous(); // going one back
 			if (matchesIterator.hasPrevious()) {
 				matchesIterator.previous();
 			} else {
@@ -162,7 +171,7 @@ public class DataSequence extends Sequence {
 																							// be
 																							// negative
 						// because of window!
-						if (difference < countingInformations.maxGap && difference > countingInformations.minGap
+						if (difference <= countingInformations.maxGap && difference >= countingInformations.minGap
 								&& difference > 0d || !candidateIterator.hasPrevious()) {
 							t = currentSet.getEndTime();
 							matchesIterator.add(currentSet);

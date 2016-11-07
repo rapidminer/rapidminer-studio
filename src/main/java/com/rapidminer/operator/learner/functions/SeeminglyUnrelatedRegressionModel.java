@@ -28,6 +28,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -43,6 +44,8 @@ import com.rapidminer.tools.Tools;
 public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 
 	private static final long serialVersionUID = 4843759046775802520L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 20_000;
 
 	private ArrayList<String[]> usedAttributeNames;
 	private ArrayList<String> labelNames;
@@ -83,6 +86,14 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 			usedAttributes[i] = regressionAttributes;
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+
 		// perform prediction
 		for (Example example : exampleSet) {
 			int coefficientOffset = 0;
@@ -97,6 +108,10 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 				}
 				coefficientOffset += usedAttributes[i].length;
 				example.setValue(predictedLabels[i], predictedValue);
+			}
+			
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

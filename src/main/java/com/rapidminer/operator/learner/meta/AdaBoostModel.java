@@ -27,6 +27,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -40,6 +41,8 @@ import com.rapidminer.tools.Tools;
 public class AdaBoostModel extends PredictionModel implements MetaModel {
 
 	private static final long serialVersionUID = -4145136493164813582L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 100_000;
 
 	// Holds the models
 	private List<Model> models;
@@ -139,16 +142,28 @@ public class AdaBoostModel extends PredictionModel implements MetaModel {
 		final String attributePrefix = "AdaBoostModelPrediction";
 		final int numLabels = predictedLabel.getMapping().size();
 		final Attribute[] specialAttributes = new Attribute[numLabels];
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(100);
+		}
 		for (int i = 0; i < numLabels; i++) {
 			specialAttributes[i] = com.rapidminer.example.Tools.createSpecialAttribute(origExampleSet, attributePrefix + i,
 					Ontology.NUMERICAL);
+			if (progress != null) {
+				progress.setCompleted((int) (25.0 * (i + 1) / numLabels));
+			}
 		}
 
 		Iterator<Example> reader = origExampleSet.iterator();
+		int progressCounter = 0;
 		while (reader.hasNext()) {
 			Example example = reader.next();
 			for (int i = 0; i < specialAttributes.length; i++) {
 				example.setValue(specialAttributes[i], 0);
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted((int) (25.0 * progressCounter / origExampleSet.size()) + 25);
 			}
 		}
 
@@ -159,6 +174,9 @@ public class AdaBoostModel extends PredictionModel implements MetaModel {
 			exampleSet = model.apply(exampleSet);
 			this.updateEstimates(exampleSet, modelNr, specialAttributes);
 			PredictionModel.removePredictedLabel(exampleSet);
+			if (progress != null) {
+				progress.setCompleted((int) (25.0 * (modelNr + 1) / this.getNumberOfModels()) + 50);
+			}
 		}
 
 		// Turn prediction weights into confidences and a crisp predcition:
@@ -168,6 +186,9 @@ public class AdaBoostModel extends PredictionModel implements MetaModel {
 		for (int i = 0; i < numLabels; i++) {
 			origExampleSet.getAttributes().remove(specialAttributes[i]);
 			origExampleSet.getExampleTable().removeAttribute(specialAttributes[i]);
+			if (progress != null) {
+				progress.setCompleted((int) (25.0 * (i + 1) / numLabels) + 75);
+			}
 		}
 
 		return origExampleSet;

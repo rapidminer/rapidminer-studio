@@ -282,4 +282,9 @@ public class SortedExampleSet extends AbstractExampleSet {
 	public ExampleTable getExampleTable() {
 		return this.parent.getExampleTable();
 	}
+
+	@Override
+	public void cleanup() {
+		parent.cleanup();
+	}
 }

@@ -31,8 +31,8 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.ObjectVisualizerService;
@@ -303,7 +303,7 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
 			}
 		}
 
-		MemoryExampleTable exampleTable = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(table.getNumberOfRows());
 
 		for (int i = 0; i < table.getNumberOfRows(); i++) {
 			DataTableRow row = table.getRow(i);
@@ -318,10 +318,10 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
 					values[a] = row.getValue(a);
 				}
 			}
-			exampleTable.addDataRow(new DoubleArrayDataRow(values));
+			builder.addRow(values);
 		}
 
-		return exampleTable.createExampleSet();
+		return builder.build();
 	}
 
 	private void registerVisualizerForMe(Object father) {

@@ -88,18 +88,18 @@ public class OperatorWarningHandler implements ProcessEventDecorator {
 			if (operator != null && !operator.getErrorList().isEmpty()) {
 
 				// calculate the bounding box of the warning icon as it is drawn by {@link
-				// ProcessDrawer#renderOperator()} respecting the zoomfactor
+				// ProcessDrawer#renderOperator()}
 				Rectangle2D frame = model.getOperatorRect(operator);
-				double zoomFactor = model.getZoomFactor();
 
-				int iconX = (int) ((frame.getX() + 3 + WARNING_ICON_SIZE) * zoomFactor);
-				int iconY = (int) ((frame.getY() + frame.getHeight() - WARNING_ICON_SIZE - 2) * zoomFactor);
-				int zoomedSize = (int) Math.ceil(WARNING_ICON_SIZE * zoomFactor);
+				int iconX = (int) (frame.getX() + 3 + WARNING_ICON_SIZE);
+				int iconY = (int) (frame.getY() + frame.getHeight() - WARNING_ICON_SIZE - 2);
+				int size = (int) Math.ceil(WARNING_ICON_SIZE);
 
-				Rectangle2D boundingBox = new Rectangle2D.Float(iconX, iconY, zoomedSize, zoomedSize);
+				Rectangle2D boundingBox = new Rectangle2D.Float(iconX, iconY, size, size);
 
 				// check if the user clicked into the bounding box of the warning icon
-				if (boundingBox.contains(e.getPoint())) {
+				if (model.getMousePositionRelativeToProcess() != null
+						&& boundingBox.contains(model.getMousePositionRelativeToProcess())) {
 					showOperatorWarning(operator);
 				}
 			}

@@ -18,20 +18,6 @@
  */
 package com.rapidminer.operator.visualization;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
-import com.rapidminer.gui.plotter.PlotterConfigurationModel;
-import com.rapidminer.gui.plotter.som.SOMClassColorizer;
-import com.rapidminer.gui.plotter.som.SOMMatrixColorizer;
-import com.rapidminer.gui.plotter.som.SOMPlotter;
-import com.rapidminer.operator.Model;
-import com.rapidminer.operator.OperatorException;
-import com.rapidminer.tools.LogService;
-
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
@@ -48,12 +34,27 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.table.DataRow;
+import com.rapidminer.example.table.DoubleArrayDataRow;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
+import com.rapidminer.gui.plotter.PlotterConfigurationModel;
+import com.rapidminer.gui.plotter.som.SOMClassColorizer;
+import com.rapidminer.gui.plotter.som.SOMMatrixColorizer;
+import com.rapidminer.gui.plotter.som.SOMPlotter;
+import com.rapidminer.operator.Model;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.tools.LogService;
+
 
 /**
  * This class uses the SOM Plotter for displaying the classification behavior of every model. It
  * overlays the SOM with the classification area transparently, so that missclassifications may be
  * recognized immediately.
- * 
+ *
  * @author Sebastian Land
  */
 public class SOMModelPlotter extends SOMPlotter {
@@ -129,14 +130,14 @@ public class SOMModelPlotter extends SOMPlotter {
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			attributes.add((Attribute) attribute.clone());
 		}
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes);
 		for (int x = 0; x < dimensions[0]; x++) {
 			for (int y = 0; y < dimensions[1]; y++) {
 				DataRow row = new DoubleArrayDataRow(net.getNodeWeights(new int[] { x, y }));
-				table.addDataRow(row);
+				builder.addDataRow(row);
 			}
 		}
-		ExampleSet set = table.createExampleSet();
+		ExampleSet set = builder.build();
 		this.classificationMatrix = new double[dimensions[0]][dimensions[1]];
 		try {
 			set = model.apply(set);

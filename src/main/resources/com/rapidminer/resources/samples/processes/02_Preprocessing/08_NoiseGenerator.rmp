@@ -1,28 +1,50 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="179" y="30">
+      <operator activated="true" class="add_noise" compatibility="7.1.001" expanded="true" height="103" name="NoiseGenerator" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
         <parameter key="attribute" value="a1"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
         <parameter key="random_attributes" value="3"/>
+        <parameter key="label_noise" value="0.05"/>
+        <parameter key="default_attribute_noise" value="0.0"/>
         <list key="noise"/>
         <parameter key="offset" value="5.0"/>
         <parameter key="linear_factor" value="2.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="NoiseGenerator" to_port="example set input"/>
       <connect from_op="NoiseGenerator" from_port="example set output" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="159" resized="true" width="409" x="39" y="136">The NoiseOperator can be used to add controlled noise or noisy feature to your data set. That is especially useful in order to estimate the performance of a feature preprocessing or the robustness of a specific learner.&lt;br/&gt;&lt;br/&gt;RapidMiner Studio also provides many other preprocessing operators including a TFIDF filter, obfuscating, value series handling and more.</description>
+      <description align="left" color="yellow" colored="false" height="159" resized="true" width="409" x="42" y="149">The NoiseOperator can be used to add controlled noise or noisy feature to your data set. That is especially useful in order to estimate the performance of a feature preprocessing or the robustness of a specific learner.&lt;br/&gt;&lt;br/&gt;RapidMiner Studio also provides many other preprocessing operators including a TFIDF filter, obfuscating, value series handling and more.</description>
     </process>
   </operator>
 </process>

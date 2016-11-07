@@ -42,10 +42,10 @@ public interface Model extends ResultObject, Readable {
 	 * already implements all necessary functionality.
 	 */
 	public HeaderExampleSet getTrainingHeader();
-
+	
 	/**
-	 * Applies the model on the given example set. Please note that the delivered example set might
-	 * be the same as the input example set. This does, however, no always to be the case.
+	 * Applies the model on the given {@link ExampleSet}. Please note that the delivered {@link ExampleSet} might
+	 * be the same as the input {@link ExampleSet}. This is, however, not always the case.
 	 */
 	public ExampleSet apply(ExampleSet testSet) throws OperatorException;
 

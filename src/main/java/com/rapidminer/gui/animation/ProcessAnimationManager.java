@@ -19,6 +19,7 @@
 package com.rapidminer.gui.animation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ public enum ProcessAnimationManager {
 	INSTANCE;
 
 	/** the map from operator name to animation */
-	private final Map<String, Animation> animations = new HashMap<>();
+	private final Map<String, Animation> animations = Collections.synchronizedMap(new HashMap<>());
 
 	/**
 	 * Retrieves the {@link Animation} associated with the operator if it exists.
@@ -79,7 +80,10 @@ public enum ProcessAnimationManager {
 	 * @return whether at least one of the animations need a repaint
 	 */
 	boolean isRepaintRequired() {
-		List<Animation> animationList = new ArrayList<>(animations.values());
+		List<Animation> animationList;
+		synchronized (animations) {
+			animationList = new ArrayList<>(animations.values());
+		}
 		for (Animation animation : animationList) {
 			if (animation.isRedrawRequired()) {
 				return true;

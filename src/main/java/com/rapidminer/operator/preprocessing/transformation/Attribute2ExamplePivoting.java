@@ -30,9 +30,9 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
@@ -275,7 +275,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 			}
 		}
 
-		MemoryExampleTable table = new MemoryExampleTable(newAttributes);
+		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
 		int counter = 0;
 		for (Example example : exampleSet) {
 
@@ -328,13 +328,13 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 				if (!getParameterAsBoolean(PARAMETER_KEEP_MISSINGS) && onlyMissings) {
 					continue;
 				} else {
-					table.addDataRow(new DoubleArrayDataRow(data));
+					builder.addRow(data);
 				}
 			}
 		}
 
 		// create and deliver example set
-		ExampleSet result = table.createExampleSet();
+		ExampleSet result = builder.build();
 		result.recalculateAllAttributeStatistics();
 		result.getAnnotations().addAll(exampleSet.getAnnotations());
 

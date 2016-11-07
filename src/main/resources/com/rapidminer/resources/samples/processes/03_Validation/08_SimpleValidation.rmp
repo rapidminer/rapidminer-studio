@@ -1,20 +1,43 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Iris"/>
       </operator>
-      <operator activated="true" class="split_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="SimpleValidation" width="90" x="180" y="30">
+      <operator activated="true" class="split_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="SimpleValidation" width="90" x="179" y="34">
+        <parameter key="create_complete_model" value="false"/>
+        <parameter key="split" value="relative"/>
+        <parameter key="split_ratio" value="0.7"/>
+        <parameter key="training_set_size" value="100"/>
+        <parameter key="test_set_size" value="-1"/>
+        <parameter key="sampling_type" value="shuffled sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
         <process expanded="true">
-          <operator activated="true" class="classification_by_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ClassificationByRegression" width="90" x="45" y="30">
+          <operator activated="true" class="classification_by_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ClassificationByRegression" width="90" x="45" y="34">
             <process expanded="true">
-              <operator activated="true" class="linear_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LinearRegression"/>
+              <operator activated="true" class="linear_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" name="LinearRegression">
+                <parameter key="feature_selection" value="M5 prime"/>
+                <parameter key="alpha" value="0.05"/>
+                <parameter key="max_iterations" value="10"/>
+                <parameter key="forward_alpha" value="0.05"/>
+                <parameter key="backward_alpha" value="0.05"/>
+                <parameter key="eliminate_colinear_features" value="true"/>
+                <parameter key="min_tolerance" value="0.05"/>
+                <parameter key="use_bias" value="true"/>
+                <parameter key="ridge" value="1.0E-8"/>
+              </operator>
               <connect from_port="training set" to_op="LinearRegression" to_port="training set"/>
               <connect from_op="LinearRegression" from_port="model" to_port="model"/>
               <portSpacing port="source_training set" spacing="0"/>
@@ -28,10 +51,13 @@
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Test" width="90" x="45" y="30">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Test" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="238" y="30"/>
+          <operator activated="true" class="performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="179" y="34">
+            <parameter key="use_example_weights" value="true"/>
+          </operator>
           <connect from_port="model" to_op="Test" to_port="model"/>
           <connect from_port="test set" to_op="Test" to_port="unlabelled data"/>
           <connect from_op="Test" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
@@ -48,7 +74,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="282" resized="true" width="396" x="33" y="157">Beside cross validation (XValidation operator) there are several validation schemes which can be used in order to estimate the performance of a learner. You can build a random hold out set (test set) with the SimpleValidation operator and evaluate the model performance on this unseen test data. The basic setup is the same as for XValidation: the first inner operator must produce a model and the second inner operator must be able to handle the create model and the test example set and must provide a PerformanceVector. &lt;br/&gt;&lt;br/&gt;This process loads ARFF data with the ArffExampleSource operator and performs a random split validation chain. Since the label has three class values, multi class learning is done with a classification by regression approach.</description>
+      <description align="left" color="yellow" colored="false" height="282" resized="true" width="396" x="33" y="174">Beside cross validation (XValidation operator) there are several validation schemes which can be used in order to estimate the performance of a learner. You can build a random hold out set (test set) with the SimpleValidation operator and evaluate the model performance on this unseen test data. The basic setup is the same as for XValidation: the first inner operator must produce a model and the second inner operator must be able to handle the create model and the test example set and must provide a PerformanceVector. &lt;br/&gt;&lt;br/&gt;This process loads ARFF data with the ArffExampleSource operator and performs a random split validation chain. Since the label has three class values, multi class learning is done with a classification by regression approach.</description>
     </process>
   </operator>
 </process>

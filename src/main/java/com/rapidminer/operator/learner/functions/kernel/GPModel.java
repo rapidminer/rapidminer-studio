@@ -25,6 +25,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 
 
 /**
@@ -35,6 +36,8 @@ import com.rapidminer.operator.OperatorException;
 public class GPModel extends KernelModel {
 
 	private static final long serialVersionUID = 6094706651995436944L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
 
 	private com.rapidminer.operator.learner.functions.kernel.gaussianprocess.Model model = null;
 
@@ -102,6 +105,12 @@ public class GPModel extends KernelModel {
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
 		Iterator<Example> i = exampleSet.iterator();
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		while (i.hasNext()) {
 			Example e = i.next();
 			double functionValue = model.applyToVector(RVMModel.makeInputVector(e));
@@ -118,6 +127,9 @@ public class GPModel extends KernelModel {
 						1.0d / (1.0d + java.lang.Math.exp(functionValue)));
 			} else {
 				e.setValue(predictedLabel, functionValue);
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;

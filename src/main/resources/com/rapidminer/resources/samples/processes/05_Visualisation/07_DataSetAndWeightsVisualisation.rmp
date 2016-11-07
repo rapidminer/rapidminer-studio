@@ -1,18 +1,25 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="-1"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Sonar"/>
       </operator>
-      <operator activated="true" class="weight_by_chi_squared_statistic" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ChiSquaredWeighting" width="90" x="179" y="30">
+      <operator activated="true" class="weight_by_chi_squared_statistic" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ChiSquaredWeighting" width="90" x="179" y="34">
         <parameter key="normalize_weights" value="true"/>
+        <parameter key="sort_weights" value="true"/>
+        <parameter key="sort_direction" value="ascending"/>
+        <parameter key="number_of_bins" value="10"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="ChiSquaredWeighting" to_port="example set"/>
       <connect from_op="ChiSquaredWeighting" from_port="weights" to_port="result 1"/>
@@ -21,7 +28,7 @@
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="289" resized="true" width="404" x="35" y="121">In this process we load a data set and apply one of the feature weighting schemes available in RapidMiner on this data set. After the process has finished, just change into the plot view of the example set and check out the available high-dimensional plotters like parallel plot, survey plot, quartile matrix and the colorized variants of these plots. You will see that some of the columns are marked by a yellowish color, e.g. by a surrounding rectangle or directly in the plot. These yellow marks indicate the weight of the corresponding attributes and the color is more intensive if the corresponding weight is higher. &lt;br/&gt;&lt;br/&gt;This process demonstrates RapidMiner's ability to present several results by combining them. Of course you can still have a look at the weights table or the different plot views of the attribute weights.</description>
+      <description align="left" color="yellow" colored="false" height="289" resized="true" width="404" x="42" y="132">In this process we load a data set and apply one of the feature weighting schemes available in RapidMiner on this data set. After the process has finished, just change into the plot view of the example set and check out the available high-dimensional plotters like parallel plot, survey plot, quartile matrix and the colorized variants of these plots. You will see that some of the columns are marked by a yellowish color, e.g. by a surrounding rectangle or directly in the plot. These yellow marks indicate the weight of the corresponding attributes and the color is more intensive if the corresponding weight is higher. &lt;br/&gt;&lt;br/&gt;This process demonstrates RapidMiner's ability to present several results by combining them. Of course you can still have a look at the weights table or the different plot views of the attribute weights.</description>
     </process>
   </operator>
 </process>

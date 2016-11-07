@@ -1,25 +1,48 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="status"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Ripley-Set"/>
       </operator>
-      <operator activated="true" class="optimize_parameters_grid" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="GridParameterOptimization" width="90" x="179" y="30">
+      <operator activated="true" class="optimize_parameters_grid" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="GridParameterOptimization" width="90" x="179" y="34">
         <list key="parameters">
           <parameter key="OperatorEnabler.select_which" value="1,2"/>
         </list>
+        <parameter key="error_handling" value="fail on error"/>
         <process expanded="true">
-          <operator activated="true" class="select_subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="OperatorEnabler" width="90" x="45" y="30">
+          <operator activated="true" class="select_subprocess" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="OperatorEnabler" width="90" x="45" y="34">
             <parameter key="select_which" value="2"/>
             <process expanded="true">
-              <operator activated="true" class="normalize" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="Normalization" width="90" x="45" y="30"/>
+              <operator activated="true" class="normalize" compatibility="7.1.001" expanded="true" height="103" name="Normalization" width="90" x="45" y="34">
+                <parameter key="return_preprocessing_model" value="false"/>
+                <parameter key="create_view" value="false"/>
+                <parameter key="attribute_filter_type" value="all"/>
+                <parameter key="attribute" value=""/>
+                <parameter key="attributes" value=""/>
+                <parameter key="use_except_expression" value="false"/>
+                <parameter key="value_type" value="numeric"/>
+                <parameter key="use_value_type_exception" value="false"/>
+                <parameter key="except_value_type" value="real"/>
+                <parameter key="block_type" value="value_series"/>
+                <parameter key="use_block_type_exception" value="false"/>
+                <parameter key="except_block_type" value="value_series_end"/>
+                <parameter key="invert_selection" value="false"/>
+                <parameter key="include_special_attributes" value="false"/>
+                <parameter key="method" value="Z-transformation"/>
+                <parameter key="min" value="0.0"/>
+                <parameter key="max" value="1.0"/>
+              </operator>
               <connect from_port="input 1" to_op="Normalization" to_port="example set input"/>
               <connect from_op="Normalization" from_port="example set output" to_port="output 1"/>
               <portSpacing port="source_input 1" spacing="0"/>
@@ -35,41 +58,56 @@
               <portSpacing port="sink_output 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="180" y="30">
-            <parameter key="number_of_validations" value="5"/>
+          <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="179" y="34">
+            <parameter key="enable_parallel_execution" value="true"/>
+            <parameter key="leave_one_out" value="false"/>
+            <parameter key="number_of_folds" value="5"/>
+            <parameter key="sampling_type" value="automatic"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
+            <parameter key="materialize_data" value="true"/>
             <process expanded="true">
-              <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" name="NaiveBayes"/>
-              <connect from_port="training" to_op="NaiveBayes" to_port="training set"/>
+              <operator activated="true" class="naive_bayes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NaiveBayes" width="90" x="45" y="34">
+                <parameter key="laplace_correction" value="true"/>
+              </operator>
+              <connect from_port="training set" to_op="NaiveBayes" to_port="training set"/>
               <connect from_op="NaiveBayes" from_port="model" to_port="model"/>
-              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="source_training set" spacing="0"/>
               <portSpacing port="sink_model" spacing="0"/>
               <portSpacing port="sink_through 1" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
+              <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="45" y="34">
                 <list key="application_parameters"/>
+                <parameter key="create_view" value="false"/>
               </operator>
-              <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Performance"/>
+              <operator activated="true" class="performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="179" y="34">
+                <parameter key="use_example_weights" value="true"/>
+              </operator>
               <connect from_port="model" to_op="ModelApplier" to_port="model"/>
               <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
               <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
-              <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+              <connect from_op="Performance" from_port="performance" to_port="performance 1"/>
               <portSpacing port="source_model" spacing="0"/>
               <portSpacing port="source_test set" spacing="0"/>
               <portSpacing port="source_through 1" spacing="0"/>
-              <portSpacing port="sink_averagable 1" spacing="0"/>
-              <portSpacing port="sink_averagable 2" spacing="0"/>
+              <portSpacing port="sink_test set results" spacing="0"/>
+              <portSpacing port="sink_performance 1" spacing="0"/>
+              <portSpacing port="sink_performance 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="log" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ProcessLog" width="90" x="313" y="30">
+          <operator activated="true" class="log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ProcessLog" width="90" x="313" y="34">
             <list key="log">
               <parameter key="enable_normalization" value="operator.OperatorEnabler.parameter.select_which"/>
               <parameter key="performance" value="operator.XValidation.value.performance"/>
             </list>
+            <parameter key="sorting_type" value="none"/>
+            <parameter key="sorting_k" value="100"/>
+            <parameter key="persistent" value="false"/>
           </operator>
           <connect from_port="input 1" to_op="OperatorEnabler" to_port="input 1"/>
-          <connect from_op="OperatorEnabler" from_port="output 1" to_op="XValidation" to_port="training"/>
-          <connect from_op="XValidation" from_port="averagable 1" to_op="ProcessLog" to_port="through 1"/>
+          <connect from_op="OperatorEnabler" from_port="output 1" to_op="Cross Validation" to_port="example set"/>
+          <connect from_op="Cross Validation" from_port="performance 1" to_op="ProcessLog" to_port="through 1"/>
           <connect from_op="ProcessLog" from_port="through 1" to_port="performance"/>
           <portSpacing port="source_input 1" spacing="0"/>
           <portSpacing port="source_input 2" spacing="0"/>
@@ -84,7 +122,7 @@
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="156" resized="false" width="400" x="40" y="160">This meta process shows another possibility for automatically optimizing the process layout. The operator &amp;quot;OperatorEnabler&amp;quot; can be used to enable or disable one of its children. Together with one of the parameter optimization operators this can be used to check which operators should be used for optimal results. This is especially useful in order to determine which preprocessing operators should be used for a particular data set - learner combination.</description>
+      <description align="left" color="yellow" colored="false" height="156" resized="false" width="400" x="40" y="163">This meta process shows another possibility for automatically optimizing the process layout. The operator &amp;quot;OperatorEnabler&amp;quot; can be used to enable or disable one of its children. Together with one of the parameter optimization operators this can be used to check which operators should be used for optimal results. This is especially useful in order to determine which preprocessing operators should be used for a particular data set - learner combination.</description>
     </process>
   </operator>
 </process>

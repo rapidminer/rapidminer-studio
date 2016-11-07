@@ -1,48 +1,96 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Polynomial"/>
       </operator>
-      <operator activated="true" class="weight_by_pca" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="PCAWeighting" width="90" x="180" y="30"/>
-      <operator activated="true" class="optimize_selection_weight_guided" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="WeightGuidedFeatureSelection" width="90" x="380" y="30">
+      <operator activated="true" class="weight_by_pca" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="PCAWeighting" width="90" x="179" y="34">
+        <parameter key="normalize_weights" value="false"/>
+        <parameter key="sort_weights" value="true"/>
+        <parameter key="sort_direction" value="ascending"/>
+        <parameter key="component_number" value="1"/>
+      </operator>
+      <operator activated="true" class="optimize_selection_weight_guided" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="WeightGuidedFeatureSelection" width="90" x="380" y="34">
+        <parameter key="use_early_stopping" value="false"/>
+        <parameter key="generations_without_improval" value="2"/>
+        <parameter key="use_absolute_weights" value="true"/>
+        <parameter key="normalize_weights" value="true"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="show_stop_dialog" value="false"/>
+        <parameter key="user_result_individual_selection" value="false"/>
+        <parameter key="show_population_plotter" value="false"/>
+        <parameter key="plot_generations" value="10"/>
+        <parameter key="constraint_draw_range" value="false"/>
+        <parameter key="draw_dominated_points" value="true"/>
+        <parameter key="maximal_fitness" value="Infinity"/>
         <process expanded="true">
-          <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="45" y="30">
+          <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="45" y="34">
+            <parameter key="enable_parallel_execution" value="true"/>
+            <parameter key="leave_one_out" value="false"/>
+            <parameter key="number_of_folds" value="10"/>
             <parameter key="sampling_type" value="shuffled sampling"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="1992"/>
+            <parameter key="materialize_data" value="true"/>
             <process expanded="true">
-              <operator activated="true" class="k_nn" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NearestNeighbors" width="90" x="45" y="30">
+              <operator activated="true" class="k_nn" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NearestNeighbors" width="90" x="45" y="34">
                 <parameter key="k" value="5"/>
+                <parameter key="weighted_vote" value="false"/>
+                <parameter key="measure_types" value="MixedMeasures"/>
+                <parameter key="mixed_measure" value="MixedEuclideanDistance"/>
+                <parameter key="nominal_measure" value="NominalDistance"/>
+                <parameter key="numerical_measure" value="EuclideanDistance"/>
+                <parameter key="divergence" value="GeneralizedIDivergence"/>
+                <parameter key="kernel_type" value="radial"/>
+                <parameter key="kernel_gamma" value="1.0"/>
+                <parameter key="kernel_sigma1" value="1.0"/>
+                <parameter key="kernel_sigma2" value="0.0"/>
+                <parameter key="kernel_sigma3" value="2.0"/>
+                <parameter key="kernel_degree" value="3.0"/>
+                <parameter key="kernel_shift" value="1.0"/>
+                <parameter key="kernel_a" value="1.0"/>
+                <parameter key="kernel_b" value="0.0"/>
               </operator>
-              <connect from_port="training" to_op="NearestNeighbors" to_port="training set"/>
+              <connect from_port="training set" to_op="NearestNeighbors" to_port="training set"/>
               <connect from_op="NearestNeighbors" from_port="model" to_port="model"/>
-              <portSpacing port="source_training" spacing="0"/>
+              <portSpacing port="source_training set" spacing="0"/>
               <portSpacing port="sink_model" spacing="0"/>
               <portSpacing port="sink_through 1" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="45" y="30">
+              <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="45" y="34">
                 <list key="application_parameters"/>
+                <parameter key="create_view" value="false"/>
               </operator>
-              <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="180" y="30"/>
+              <operator activated="true" class="performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="180" y="34">
+                <parameter key="use_example_weights" value="true"/>
+              </operator>
               <connect from_port="model" to_op="ModelApplier" to_port="model"/>
               <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
               <connect from_op="ModelApplier" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
-              <connect from_op="Performance" from_port="performance" to_port="averagable 1"/>
+              <connect from_op="Performance" from_port="performance" to_port="performance 1"/>
               <portSpacing port="source_model" spacing="0"/>
               <portSpacing port="source_test set" spacing="0"/>
               <portSpacing port="source_through 1" spacing="0"/>
-              <portSpacing port="sink_averagable 1" spacing="0"/>
-              <portSpacing port="sink_averagable 2" spacing="0"/>
+              <portSpacing port="sink_test set results" spacing="0"/>
+              <portSpacing port="sink_performance 1" spacing="0"/>
+              <portSpacing port="sink_performance 2" spacing="0"/>
             </process>
           </operator>
-          <connect from_port="example set" to_op="XValidation" to_port="training"/>
-          <connect from_op="XValidation" from_port="averagable 1" to_port="performance"/>
+          <connect from_port="example set" to_op="Cross Validation" to_port="example set"/>
+          <connect from_op="Cross Validation" from_port="performance 1" to_port="performance"/>
           <portSpacing port="source_example set" spacing="0"/>
           <portSpacing port="source_through 1" spacing="0"/>
           <portSpacing port="sink_performance" spacing="0"/>
@@ -59,7 +107,7 @@
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
       <portSpacing port="sink_result 4" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="102" resized="false" width="400" x="40" y="140">The WeightGuidedFeatureSelection operator uses given input AttributeWeights to determine the order of attribute adding. In this process we use a 10-fold cross validation of a learning scheme as performance evaluation (the inner operator) and combine attribute filtering with a wrapper approach.</description>
+      <description align="left" color="yellow" colored="false" height="102" resized="false" width="400" x="40" y="153">The WeightGuidedFeatureSelection operator uses given input AttributeWeights to determine the order of attribute adding. In this process we use a 10-fold cross validation of a learning scheme as performance evaluation (the inner operator) and combine attribute filtering with a wrapper approach.</description>
     </process>
   </operator>
 </process>

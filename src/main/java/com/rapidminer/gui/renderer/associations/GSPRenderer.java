@@ -18,21 +18,38 @@
  */
 package com.rapidminer.gui.renderer.associations;
 
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
+
 import com.rapidminer.gui.renderer.AbstractTableModelTableRenderer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.associations.gsp.GSPSet;
 import com.rapidminer.operator.learner.associations.gsp.Sequence;
 
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
-
 
 /**
  * This class is the renderer for the GSP results. It shows the sequential pattern in a table view.
- * 
+ *
  * @author Sebastian Land
  */
 public class GSPRenderer extends AbstractTableModelTableRenderer {
+
+	/**
+	 * Position of the support column
+	 */
+	public static final int SUPPORT_COLUMN = 0;
+	/**
+	 * Position of the Transactions column
+	 */
+	public static final int TRANSACTIONS_COLUMN = 1;
+	/**
+	 * Position of the items column
+	 */
+	public static final int ITEMS_COLUMN = 2;
+	/**
+	 * The offset caused by the SUPPORT, TRANSACTIONS, and ITEMS fields
+	 */
+	private static final int FIELD_COUNT = new int[] { SUPPORT_COLUMN, TRANSACTIONS_COLUMN, ITEMS_COLUMN }.length;
 
 	@Override
 	public TableModel getTableModel(Object renderable, IOContainer ioContainer, boolean isReporting) {
@@ -45,7 +62,7 @@ public class GSPRenderer extends AbstractTableModelTableRenderer {
 
 			@Override
 			public int getColumnCount() {
-				return set.getMaxTransactions() + 3;
+				return set.getMaxTransactions() + FIELD_COUNT;
 			}
 
 			@Override
@@ -55,43 +72,48 @@ public class GSPRenderer extends AbstractTableModelTableRenderer {
 
 			@Override
 			public Object getValueAt(int rowIndex, int columnIndex) {
-				if (columnIndex == 0) {
-					return supports[rowIndex];
-				} else if (columnIndex == 1) {
-					return sequences[rowIndex].size();
-				} else if (columnIndex == 2) {
-					return sequences[rowIndex].getNumberOfItems();
-				} else {
-					Sequence sequence = sequences[rowIndex];
-					if (sequence.size() > columnIndex - 3) {
-						return sequence.get(columnIndex - 3).toString();
-					} else {
-						return "";
-					}
+				switch (columnIndex) {
+					case SUPPORT_COLUMN:
+						return supports[rowIndex];
+					case TRANSACTIONS_COLUMN:
+						return sequences[rowIndex].size();
+					case ITEMS_COLUMN:
+						return sequences[rowIndex].getNumberOfItems();
+					default:
+						Sequence sequence = sequences[rowIndex];
+						if (sequence.size() > columnIndex - FIELD_COUNT) {
+							return sequence.get(columnIndex - FIELD_COUNT).toString();
+						} else {
+							return "";
+						}
 				}
 			}
 
 			@Override
 			public Class<?> getColumnClass(int columnIndex) {
-				if (columnIndex == 0) {
-					return Double.class;
-				} else if (columnIndex == 0) {
-					return Integer.class;
-				} else {
-					return String.class;
+				switch (columnIndex) {
+					case SUPPORT_COLUMN:
+						return Double.class;
+					case TRANSACTIONS_COLUMN:
+						return Integer.class;
+					case ITEMS_COLUMN:
+						return Integer.class;
+					default:
+						return String.class;
 				}
 			}
 
 			@Override
 			public String getColumnName(int columnIndex) {
-				if (columnIndex == 0) {
-					return "Support";
-				} else if (columnIndex == 1) {
-					return "Transactions";
-				} else if (columnIndex == 2) {
-					return "Items";
-				} else {
-					return "Transaction " + (columnIndex - 3);
+				switch (columnIndex) {
+					case SUPPORT_COLUMN:
+						return "Support";
+					case TRANSACTIONS_COLUMN:
+						return "Transactions";
+					case ITEMS_COLUMN:
+						return "Items";
+					default:
+						return "Transaction " + (columnIndex - FIELD_COUNT);
 				}
 			}
 		};

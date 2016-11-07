@@ -25,6 +25,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.learner.FormulaProvider;
 import com.rapidminer.operator.learner.functions.kernel.KernelModel;
 import com.rapidminer.operator.learner.functions.kernel.SupportVector;
@@ -41,6 +43,8 @@ import com.rapidminer.tools.math.kernels.Kernel;
 public class EvoSVMModel extends KernelModel implements FormulaProvider {
 
 	private static final long serialVersionUID = 2848059541066828127L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5000;
 
 	/** The used kernel function. */
 	private Kernel kernel;
@@ -144,13 +148,24 @@ public class EvoSVMModel extends KernelModel implements FormulaProvider {
 		return bias + kernel.getSum(supportVectors, values);
 	}
 
-	/** Applies the model to each example of the example set. */
+	/**
+	 * Applies the model to each example of the example set.
+	 * 
+	 * @throws ProcessStoppedException
+	 */
 	@Override
-	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predLabel) {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predLabel) throws ProcessStoppedException {
 		if (exampleSet.getAttributes().size() != getNumberOfAttributes()) {
 			throw new RuntimeException("Cannot apply model: incompatible numbers of attributes ("
 					+ exampleSet.getAttributes().size() + " != " + getNumberOfAttributes() + ")!");
 		}
+
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 
 		if (kernel instanceof DotKernel) {
 			if (weights != null) {
@@ -163,8 +178,8 @@ public class EvoSVMModel extends KernelModel implements FormulaProvider {
 					}
 
 					if (getLabel().isNominal()) {
-						int index = sum > 0 ? getLabel().getMapping().getPositiveIndex() : getLabel().getMapping()
-								.getNegativeIndex();
+						int index = sum > 0 ? getLabel().getMapping().getPositiveIndex()
+								: getLabel().getMapping().getNegativeIndex();
 						example.setValue(predLabel, index);
 						example.setConfidence(predLabel.getMapping().getPositiveString(),
 								1.0d / (1.0d + java.lang.Math.exp(-sum)));
@@ -172,6 +187,9 @@ public class EvoSVMModel extends KernelModel implements FormulaProvider {
 								1.0d / (1.0d + java.lang.Math.exp(sum)));
 					} else {
 						example.setValue(predLabel, sum);
+					}
+					if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+						progress.setCompleted(progressCounter);
 					}
 				}
 				return exampleSet;
@@ -188,13 +206,16 @@ public class EvoSVMModel extends KernelModel implements FormulaProvider {
 			}
 			double sum = bias + kernel.getSum(supportVectors, currentX);
 			if (getLabel().isNominal()) {
-				int index = sum > 0 ? getLabel().getMapping().getPositiveIndex() : getLabel().getMapping()
-						.getNegativeIndex();
+				int index = sum > 0 ? getLabel().getMapping().getPositiveIndex()
+						: getLabel().getMapping().getNegativeIndex();
 				current.setValue(predLabel, index);
 				current.setConfidence(predLabel.getMapping().getPositiveString(), 1.0d / (1.0d + java.lang.Math.exp(-sum)));
 				current.setConfidence(predLabel.getMapping().getNegativeString(), 1.0d / (1.0d + java.lang.Math.exp(sum)));
 			} else {
 				current.setValue(predLabel, sum);
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 

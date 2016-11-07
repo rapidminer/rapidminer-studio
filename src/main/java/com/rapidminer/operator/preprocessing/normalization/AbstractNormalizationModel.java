@@ -24,6 +24,8 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.tools.Ontology;
 
@@ -36,6 +38,8 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = 9003091723155805502L;
 
+	private static final int OPERATOR_PROGRESS_STEPS = 10_000;
+	
 	protected AbstractNormalizationModel(ExampleSet exampleSet) {
 		super(exampleSet);
 
@@ -85,14 +89,26 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 	 * This method must be implemented by the subclasses. Subclasses have to iterate over the
 	 * exampleset and on each example iterate over the oldAttribute array and set the new values on
 	 * the corresponding new attribute
+	 * @throws ProcessStoppedException 
 	 */
-	protected void applyOnData(ExampleSet exampleSet, Attribute[] oldAttributes, Attribute[] newAttributes) {
+	protected void applyOnData(ExampleSet exampleSet, Attribute[] oldAttributes, Attribute[] newAttributes) throws ProcessStoppedException {
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+		
 		// copying data
 		for (Example example : exampleSet) {
 			for (int i = 0; i < oldAttributes.length; i++) {
 				if (oldAttributes[i].isNumerical()) {
 					example.setValue(newAttributes[i], computeValue(oldAttributes[i], example.getValue(oldAttributes[i])));
 				}
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 	}

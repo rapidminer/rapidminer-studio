@@ -28,6 +28,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.example.set.ExampleSetUtilities.SetsCompareOption;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.UpdateablePredictionModel;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.Tupel;
@@ -43,6 +44,8 @@ import com.rapidminer.tools.math.container.GeometricDataCollection;
 public class KNNRegressionModel extends UpdateablePredictionModel {
 
 	private static final long serialVersionUID = -6292869962412072573L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 1000;
 
 	private int k;
 
@@ -79,10 +82,16 @@ public class KNNRegressionModel extends UpdateablePredictionModel {
 			sampleAttributes.add(attributes.get(attributeName));
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+
 		double[] values = new double[sampleAttributes.size()];
 		for (Example example : exampleSet) {
-			checkForStop();
-
 			// reading values
 			int i = 0;
 			for (Attribute attribute : sampleAttributes) {
@@ -124,6 +133,11 @@ public class KNNRegressionModel extends UpdateablePredictionModel {
 			}
 			// setting prediction
 			example.setValue(predictedLabel, result);
+
+			// trigger progress
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
+			}
 		}
 
 		return exampleSet;

@@ -1,39 +1,78 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="sum classification"/>
+        <parameter key="number_examples" value="100"/>
         <parameter key="number_of_attributes" value="3"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="-1"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="add_noise" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="NoiseGenerator" width="90" x="180" y="30">
+      <operator activated="true" class="add_noise" compatibility="7.1.001" expanded="true" height="103" name="NoiseGenerator" width="90" x="179" y="34">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
         <parameter key="random_attributes" value="3"/>
+        <parameter key="label_noise" value="0.05"/>
+        <parameter key="default_attribute_noise" value="0.0"/>
         <list key="noise"/>
+        <parameter key="offset" value="0.0"/>
+        <parameter key="linear_factor" value="1.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="-1"/>
       </operator>
-      <operator activated="true" class="loop_attribute_subsets" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="FeatureSubsetIteration" width="90" x="313" y="30">
+      <operator activated="true" class="loop_attribute_subsets" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="FeatureSubsetIteration" width="90" x="313" y="34">
+        <parameter key="use_exact_number" value="false"/>
+        <parameter key="exact_number_of_attributes" value="-1"/>
+        <parameter key="min_number_of_attributes" value="1"/>
         <parameter key="limit_max_number" value="true"/>
         <parameter key="max_number_of_attributes" value="3"/>
         <process expanded="true">
-          <operator activated="true" class="extract_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="DataMacroDefinition" width="90" x="45" y="30">
+          <operator activated="true" class="extract_macro" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="DataMacroDefinition" width="90" x="45" y="34">
             <parameter key="macro" value="feature_count"/>
             <parameter key="macro_type" value="number_of_attributes"/>
+            <parameter key="statistics" value="average"/>
+            <parameter key="attribute_name" value=""/>
             <list key="additional_macros"/>
           </operator>
-          <operator activated="true" class="generate_macro" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="MacroConstruction" width="90" x="179" y="30">
+          <operator activated="true" class="generate_macro" compatibility="6.4.000" expanded="true" height="82" name="MacroConstruction" width="90" x="179" y="34">
             <list key="function_descriptions">
               <parameter key="feature_count_new" value="cut(str(%{feature_count} + 1), 0, 1)"/>
             </list>
           </operator>
-          <operator activated="true" class="parallel_decision_tree" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="DecisionTree" width="90" x="313" y="30">
+          <operator activated="true" class="parallel_decision_tree" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="DecisionTree" width="90" x="313" y="34">
+            <parameter key="criterion" value="gain_ratio"/>
             <parameter key="maximal_depth" value="%{feature_count_new}"/>
             <parameter key="apply_pruning" value="false"/>
+            <parameter key="confidence" value="0.25"/>
+            <parameter key="apply_prepruning" value="true"/>
             <parameter key="minimal_gain" value="0.0"/>
             <parameter key="minimal_leaf_size" value="1"/>
             <parameter key="minimal_size_for_split" value="2"/>

@@ -50,8 +50,6 @@ import com.rapidminer.operator.ports.OutputPorts;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.PortException;
 import com.rapidminer.operator.ports.PortOwner;
-import com.rapidminer.operator.ports.impl.InputPortsImpl;
-import com.rapidminer.operator.ports.impl.OutputPortsImpl;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.rapidminer.operator.ports.metadata.OperatorLoopError;
 import com.rapidminer.tools.AbstractObservable;
@@ -97,8 +95,8 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	private String name;
 	private final OperatorChain enclosingOperator;
 
-	private final InputPorts innerInputPorts = new InputPortsImpl(portOwner);
-	private final OutputPorts innerOutputPorts = new OutputPortsImpl(portOwner);
+	private final InputPorts innerInputPorts;
+	private final OutputPorts innerOutputPorts;
 	private Vector<Operator> operators = new Vector<Operator>();
 	private Vector<Operator> executionOrder;
 
@@ -118,6 +116,9 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	public ExecutionUnit(OperatorChain enclosingOperator, String name) {
 		this.name = name;
+
+		innerInputPorts = enclosingOperator.createInnerSinks(portOwner);
+		innerOutputPorts = enclosingOperator.createInnerSources(portOwner);
 		this.enclosingOperator = enclosingOperator;
 		innerInputPorts.addObserver(delegatingPortObserver, false);
 		innerOutputPorts.addObserver(delegatingPortObserver, false);

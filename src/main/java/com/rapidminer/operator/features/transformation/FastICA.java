@@ -23,9 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
-import Jama.Matrix;
-import Jama.SingularValueDecomposition;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -56,6 +53,9 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.MathFunctions;
+
+import Jama.Matrix;
+import Jama.SingularValueDecomposition;
 
 
 /**
@@ -133,11 +133,11 @@ public class FastICA extends Operator {
 						if (emd.getAttributeSetRelation() == SetRelation.SUPERSET) {
 							sev = Severity.WARNING;
 						}
-						exampleSetInput.addError(new SimpleMetaDataError(sev, exampleSetInput, Collections
-								.singletonList(new ParameterSettingQuickFix(FastICA.this, PARAMETER_NUMBER_OF_COMPONENTS,
-										emd.getNumberOfRegularAttributes() + "")),
-										"exampleset.parameters.need_more_attributes", desiredComponents,
-										PARAMETER_NUMBER_OF_COMPONENTS, desiredComponents));
+						exampleSetInput.addError(new SimpleMetaDataError(sev, exampleSetInput,
+								Collections.singletonList(new ParameterSettingQuickFix(FastICA.this,
+										PARAMETER_NUMBER_OF_COMPONENTS, emd.getNumberOfRegularAttributes() + "")),
+								"exampleset.parameters.need_more_attributes", desiredComponents,
+								PARAMETER_NUMBER_OF_COMPONENTS, desiredComponents));
 					}
 				}
 				super.makeAdditionalChecks(emd);
@@ -233,8 +233,8 @@ public class FastICA extends Operator {
 
 		if (numberOfComponents > numberOfAttributes) {
 			numberOfComponents = numberOfAttributes;
-			getLogger()
-			.log(Level.WARNING, "The parameter 'number_of_components' is too large! Set to number of attributes.");
+			getLogger().log(Level.WARNING,
+					"The parameter 'number_of_components' is too large! Set to number of attributes.");
 		}
 
 		// get the centered data
@@ -444,7 +444,7 @@ public class FastICA extends Operator {
 	}
 
 	private Matrix parallel(Matrix X, double[][] wInit, double tolerance, double alpha, int numberOfSamples,
-			int numberOfComponents, int function, int maxIteration) throws OperatorException {
+			int numberOfComponents, int function, int maxIteration) {
 		int p = X.getColumnDimension();
 		Matrix W = new Matrix(wInit);
 
@@ -563,13 +563,12 @@ public class FastICA extends Operator {
 
 		type = new ParameterTypeInt(PARAMETER_NUMBER_OF_COMPONENTS, "Keep this number of components.", 1, Integer.MAX_VALUE,
 				true);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_REDUCTION_TYPE, REDUCTION_METHODS, true,
-				REDUCTION_FIXED));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_REDUCTION_TYPE, REDUCTION_METHODS, true, REDUCTION_FIXED));
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeCategory(
-				PARAMETER_ALGORITHM_TYPE,
+		type = new ParameterTypeCategory(PARAMETER_ALGORITHM_TYPE,
 				"If 'parallel' the components are extracted simultaneously, 'deflation' the components are extracted one at a time",
 				ALGORITHM_TYPE, 0);
 		types.add(type);
@@ -582,16 +581,17 @@ public class FastICA extends Operator {
 				"constant in range [1, 2] used in approximation to neg-entropy when fun=\"logcosh\"", 1.0d, 2.0d, 1.0d);
 		types.add(type);
 
-		type = new ParameterTypeBoolean(PARAMETER_ROW_NORM, "Indicates whether rows of the data matrix "
-				+ "should be standardized beforehand.", false);
+		type = new ParameterTypeBoolean(PARAMETER_ROW_NORM,
+				"Indicates whether rows of the data matrix " + "should be standardized beforehand.", false);
 		types.add(type);
 
-		type = new ParameterTypeInt(PARAMETER_MAX_ITERATION, "maximum number of iterations to perform", 0,
-				Integer.MAX_VALUE, 200);
+		type = new ParameterTypeInt(PARAMETER_MAX_ITERATION, "maximum number of iterations to perform", 0, Integer.MAX_VALUE,
+				200);
 		types.add(type);
 
-		type = new ParameterTypeDouble(PARAMETER_TOLERANCE, "A positive scalar giving the tolerance at which "
-				+ "the un-mixing matrix is considered to have converged.", 0.0d, Double.POSITIVE_INFINITY, 1e-4);
+		type = new ParameterTypeDouble(PARAMETER_TOLERANCE,
+				"A positive scalar giving the tolerance at which " + "the un-mixing matrix is considered to have converged.",
+				0.0d, Double.POSITIVE_INFINITY, 1e-4);
 		types.add(type);
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));

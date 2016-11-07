@@ -29,6 +29,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.Tupel;
@@ -45,7 +46,7 @@ import com.rapidminer.tools.math.smoothing.SmoothingKernel;
 public class LocalPolynomialRegressionModel extends PredictionModel {
 
 	public static class RegressionData implements Serializable {
-
+		
 		private static final long serialVersionUID = 8540161261369474329L;
 
 		private double[] exampleValues;
@@ -94,6 +95,13 @@ public class LocalPolynomialRegressionModel extends PredictionModel {
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
 		Attributes attributes = exampleSet.getAttributes();
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+				
 		double[] probe = new double[attributes.size()];
 		for (Example example : exampleSet) {
 			// copying example values
@@ -143,6 +151,10 @@ public class LocalPolynomialRegressionModel extends PredictionModel {
 				} else {
 					example.setPredictedLabel(Double.NaN);
 				}
+			}
+			
+			if (progress != null) {
+				progress.step();
 			}
 		}
 		return exampleSet;

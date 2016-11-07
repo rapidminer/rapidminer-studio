@@ -60,7 +60,7 @@
 	<step name="Train and apply the model.">
 		<tasks>
 			<task>
-				<activity>Add</activity> a <op>Decision Tree</op> to the process and 
+				<activity>Add</activity> <op>Naive Bayes</op> to the process and 
 				<activity>connect it</activity> to the first output port of 
 				<op>Split Data</op>.
 			</task>
@@ -68,8 +68,8 @@
 				<activity>Add</activity> <op>Apply Model</op> to the process.
 			</task>
 			<task>
-				<activity>Connect</activity> the green model port from <op>Decision Tree</op> 
-				with the model input of <op>Apply Model</op>. 
+				<activity>Connect</activity> the green model port from <op>Naive Bayes</op> 
+				with the model input of <op>Apply Model</op>.
 			</task>
 			<task>
 				Also, <activity>connect</activity> the second output port of <op>Split Data</op> 

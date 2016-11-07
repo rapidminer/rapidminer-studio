@@ -26,8 +26,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
@@ -56,7 +56,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 	private static final int MAX_CUSTOMERS = 2000;
 
 	private static final String[] ATTRIBUTE_NAMES = { "transaction_id", "store_id", "customer_id", "product_id",
-		"product_category", "date", "amount", "single_price" };
+			"product_category", "date", "amount", "single_price" };
 
 	private static final int ATT_TRANSACTION_ID = 0;
 	private static final int ATT_STORE_ID = 1;
@@ -68,7 +68,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 	private static final int ATT_SINGLE_PRICE = 7;
 
 	private static final String[] PRODUCT_CATEGORIES = new String[] { "Books", "Movies", "Electronics", "Home/Garden",
-		"Health", "Toys", "Sports", "Clothing" };
+			"Health", "Toys", "Sports", "Clothing" };
 
 	public SalesExampleSetGenerator(OperatorDescription description) {
 		super(description);
@@ -103,8 +103,8 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 		attributes.add(AttributeFactory.createAttribute(ATTRIBUTE_NAMES[ATT_PRODUCT_ID], Ontology.INTEGER));
 
 		// product category
-		Attribute productCategory = AttributeFactory
-				.createAttribute(ATTRIBUTE_NAMES[ATT_PRODUCT_CATEGORY], Ontology.NOMINAL);
+		Attribute productCategory = AttributeFactory.createAttribute(ATTRIBUTE_NAMES[ATT_PRODUCT_CATEGORY],
+				Ontology.NOMINAL);
 		for (int s = 0; s < PRODUCT_CATEGORIES.length; s++) {
 			productCategory.getMapping().mapString(PRODUCT_CATEGORIES[s]);
 		}
@@ -119,8 +119,8 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 		// single price
 		attributes.add(AttributeFactory.createAttribute(ATTRIBUTE_NAMES[ATT_SINGLE_PRICE], Ontology.REAL));
 
-		// create table
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		// create builder
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
@@ -143,7 +143,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 			values[6] = random.nextIntInRange(1, 10);
 			values[7] = random.nextDoubleInRange(10, 100);
 
-			table.addDataRow(new DoubleArrayDataRow(values));
+			builder.addRow(values);
 
 			getProgress().step();
 		}
@@ -151,7 +151,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 		getProgress().complete();
 
 		// create example set and return it
-		return table.createExampleSet(null, null, transactionId);
+		return builder.withRole(transactionId, Attributes.ID_NAME).build();
 	}
 
 	private String getFullStoreNumber(int number) {

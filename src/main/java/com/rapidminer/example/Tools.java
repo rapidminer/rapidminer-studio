@@ -29,8 +29,9 @@ import java.util.Random;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.generator.FeatureGenerator;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -594,7 +595,7 @@ public class Tools {
 			}
 		}
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes);
 		int maxSize = exampleSet.size();
 		for (int i = offset; i < offset + size && i < maxSize; i++) {
 			Example example = exampleSet.getExample(i);
@@ -604,18 +605,18 @@ public class Tools {
 			while (allI.hasNext()) {
 				dataRow[counter++] = example.getValue(allI.next());
 			}
-			table.addDataRow(new DoubleArrayDataRow(dataRow));
+			builder.addDataRow(new DoubleArrayDataRow(dataRow));
 		}
 
-		return table.createExampleSet(specialMap);
+		return builder.withRoles(specialMap).build();
 	}
 
 	/**
 	 * Returns a new example set based on a fresh memory example table sampled from the given set.
 	 */
 	public static ExampleSet getShuffledSubsetCopy(ExampleSet exampleSet, int size, RandomGenerator randomGenerator) {
-		int[] selectedIndices = OrderedSamplingWithoutReplacement
-				.getSampledIndices(randomGenerator, exampleSet.size(), size);
+		int[] selectedIndices = OrderedSamplingWithoutReplacement.getSampledIndices(randomGenerator, exampleSet.size(),
+				size);
 		Map<Attribute, String> specialMap = new LinkedHashMap<>();
 		List<Attribute> attributes = new LinkedList<>();
 		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
@@ -628,7 +629,7 @@ public class Tools {
 			}
 		}
 
-		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(selectedIndices.length);
 
 		for (int i = 0; i < selectedIndices.length; i++) {
 			Example example = exampleSet.getExample(selectedIndices[i]);
@@ -638,10 +639,10 @@ public class Tools {
 			while (allI.hasNext()) {
 				dataRow[counter++] = example.getValue(allI.next());
 			}
-			table.addDataRow(new DoubleArrayDataRow(dataRow));
+			builder.addRow(dataRow);
 		}
 
-		return table.createExampleSet(specialMap);
+		return builder.withRoles(specialMap).build();
 	}
 
 	/**

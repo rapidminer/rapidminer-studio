@@ -29,9 +29,9 @@ import java.util.List;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.FileDataRowReader;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.gui.tools.dialogs.wizards.dataimport.csv.CSVFileReader;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -244,10 +244,10 @@ public class SimpleExampleSource extends AbstractExampleSource {
 		AttributeSet attributeSet = new AttributeSet(new AttributeDataSources(attributeDataSources, file, encoding));
 
 		// create table and example set
-		ExampleTable table = new MemoryExampleTable(attributeSet.getAllAttributes(), reader);
-		ExampleSet result = table.createExampleSet(attributeSet);
-
-		return result;
+		ExampleSetBuilder builder = ExampleSets.from(attributeSet.getAllAttributes()).withDataRowReader(reader);
+		attributeSet.getSpecialAttributes().entrySet().stream()
+				.forEach(entry -> builder.withRole(entry.getValue(), entry.getKey()));
+		return builder.build();
 	}
 
 	private static void resetAttributeType(List<AttributeDataSource> attributeDataSources, String attribute, int column,

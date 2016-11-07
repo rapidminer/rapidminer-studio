@@ -1,25 +1,59 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="sum"/>
+        <parameter key="number_examples" value="100"/>
+        <parameter key="number_of_attributes" value="5"/>
+        <parameter key="attributes_lower_bound" value="-10.0"/>
+        <parameter key="attributes_upper_bound" value="10.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="loop_parameters" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ParameterIteration" width="90" x="180" y="30">
+      <operator activated="true" class="loop_parameters" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ParameterIteration" width="90" x="179" y="34">
         <list key="parameters">
           <parameter key="OperatorSelector.select_which" value="1,2,3"/>
         </list>
+        <parameter key="error_handling" value="fail on error"/>
+        <parameter key="synchronize" value="false"/>
         <process expanded="true">
-          <operator activated="true" breakpoints="after" class="select_subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="OperatorSelector" width="90" x="45" y="30">
+          <operator activated="true" breakpoints="after" class="select_subprocess" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="OperatorSelector" width="90" x="45" y="34">
             <parameter key="select_which" value="3"/>
             <process expanded="true">
-              <operator activated="true" class="discretize_by_bins" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinDiscretization">
+              <operator activated="true" class="discretize_by_bins" compatibility="7.1.001" expanded="true" height="103" name="BinDiscretization" width="90" x="45" y="34">
+                <parameter key="return_preprocessing_model" value="false"/>
                 <parameter key="create_view" value="true"/>
+                <parameter key="attribute_filter_type" value="all"/>
+                <parameter key="attribute" value=""/>
+                <parameter key="attributes" value=""/>
+                <parameter key="use_except_expression" value="false"/>
+                <parameter key="value_type" value="numeric"/>
+                <parameter key="use_value_type_exception" value="false"/>
+                <parameter key="except_value_type" value="real"/>
+                <parameter key="block_type" value="value_series"/>
+                <parameter key="use_block_type_exception" value="false"/>
+                <parameter key="except_block_type" value="value_series_end"/>
+                <parameter key="invert_selection" value="false"/>
+                <parameter key="include_special_attributes" value="false"/>
+                <parameter key="number_of_bins" value="2"/>
+                <parameter key="define_boundaries" value="false"/>
+                <parameter key="range_name_type" value="long"/>
+                <parameter key="automatic_number_of_digits" value="true"/>
+                <parameter key="number_of_digits" value="3"/>
               </operator>
               <connect from_port="input 1" to_op="BinDiscretization" to_port="example set input"/>
               <connect from_op="BinDiscretization" from_port="example set output" to_port="output 1"/>
@@ -29,9 +63,26 @@
               <portSpacing port="sink_output 2" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="discretize_by_bins" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinDiscretization (2)">
+              <operator activated="true" class="discretize_by_bins" compatibility="7.1.001" expanded="true" height="103" name="BinDiscretization (2)" width="90" x="45" y="34">
+                <parameter key="return_preprocessing_model" value="false"/>
                 <parameter key="create_view" value="true"/>
+                <parameter key="attribute_filter_type" value="all"/>
+                <parameter key="attribute" value=""/>
+                <parameter key="attributes" value=""/>
+                <parameter key="use_except_expression" value="false"/>
+                <parameter key="value_type" value="numeric"/>
+                <parameter key="use_value_type_exception" value="false"/>
+                <parameter key="except_value_type" value="real"/>
+                <parameter key="block_type" value="value_series"/>
+                <parameter key="use_block_type_exception" value="false"/>
+                <parameter key="except_block_type" value="value_series_end"/>
+                <parameter key="invert_selection" value="false"/>
+                <parameter key="include_special_attributes" value="false"/>
                 <parameter key="number_of_bins" value="3"/>
+                <parameter key="define_boundaries" value="false"/>
+                <parameter key="range_name_type" value="long"/>
+                <parameter key="automatic_number_of_digits" value="true"/>
+                <parameter key="number_of_digits" value="3"/>
               </operator>
               <connect from_port="input 1" to_op="BinDiscretization (2)" to_port="example set input"/>
               <connect from_op="BinDiscretization (2)" from_port="example set output" to_port="output 1"/>
@@ -41,9 +92,26 @@
               <portSpacing port="sink_output 2" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="discretize_by_bins" compatibility="6.4.000-SNAPSHOT" expanded="true" name="BinDiscretization (3)">
+              <operator activated="true" class="discretize_by_bins" compatibility="7.1.001" expanded="true" height="103" name="BinDiscretization (3)" width="90" x="45" y="34">
+                <parameter key="return_preprocessing_model" value="false"/>
                 <parameter key="create_view" value="true"/>
+                <parameter key="attribute_filter_type" value="all"/>
+                <parameter key="attribute" value=""/>
+                <parameter key="attributes" value=""/>
+                <parameter key="use_except_expression" value="false"/>
+                <parameter key="value_type" value="numeric"/>
+                <parameter key="use_value_type_exception" value="false"/>
+                <parameter key="except_value_type" value="real"/>
+                <parameter key="block_type" value="value_series"/>
+                <parameter key="use_block_type_exception" value="false"/>
+                <parameter key="except_block_type" value="value_series_end"/>
+                <parameter key="invert_selection" value="false"/>
+                <parameter key="include_special_attributes" value="false"/>
                 <parameter key="number_of_bins" value="4"/>
+                <parameter key="define_boundaries" value="false"/>
+                <parameter key="range_name_type" value="long"/>
+                <parameter key="automatic_number_of_digits" value="true"/>
+                <parameter key="number_of_digits" value="3"/>
               </operator>
               <connect from_port="input 1" to_op="BinDiscretization (3)" to_port="example set input"/>
               <connect from_op="BinDiscretization (3)" from_port="example set output" to_port="output 1"/>

@@ -18,12 +18,18 @@
  */
 package com.rapidminer.operator.learner.associations;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -39,14 +45,9 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 
 /**
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class FrequentItemSetsToData extends Operator {
@@ -113,7 +114,7 @@ public class FrequentItemSetsToData extends Operator {
 			}
 		}
 
-		MemoryExampleTable exampleTable = new MemoryExampleTable(attributes);
+		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(sets.size());
 		DataRowFactory dataRowFactory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
 		for (FrequentItemSet set : sets) {
 			DataRow dataRow = dataRowFactory.create(attributes.size());
@@ -132,15 +133,15 @@ public class FrequentItemSetsToData extends Operator {
 			dataRow.set(scoreAttribute, support / independentProbabilityEstimate);
 			if (generateItemSetIndicators) {
 				for (Item item : set.getItems()) {
-					assert (itemAttributeMap.containsKey(item)) : "item not inserted";
+					assert itemAttributeMap.containsKey(item) : "item not inserted";
 					Attribute attribute = itemAttributeMap.get(item);
 					dataRow.set(attribute, attribute.getMapping().mapString("true"));
 				}
 			}
-			exampleTable.addDataRow(dataRow);
+			builder.addDataRow(dataRow);
 		}
 
-		ExampleSet exampleSet = exampleTable.createExampleSet();
+		ExampleSet exampleSet = builder.build();
 		exampleSetOutput.deliver(exampleSet);
 		frequentItemSetsOutput.deliver(sets);
 	}

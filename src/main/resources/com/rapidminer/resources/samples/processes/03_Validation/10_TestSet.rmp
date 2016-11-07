@@ -1,23 +1,33 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve (2)" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve (2)" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Golf"/>
       </operator>
-      <operator activated="true" class="naive_bayes" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="NaiveBayes" width="90" x="180" y="30"/>
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="313" y="75">
+      <operator activated="true" class="naive_bayes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="NaiveBayes" width="90" x="179" y="34">
+        <parameter key="laplace_correction" value="true"/>
+      </operator>
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="313" y="85">
         <parameter key="repository_entry" value="../../data/Golf-Testset"/>
       </operator>
-      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="450" y="30">
+      <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="447" y="34">
         <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
       </operator>
-      <operator activated="true" class="performance" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="Performance" width="90" x="682" y="30"/>
+      <operator activated="true" class="performance" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="648" y="34">
+        <parameter key="use_example_weights" value="true"/>
+      </operator>
       <connect from_op="Retrieve (2)" from_port="output" to_op="NaiveBayes" to_port="training set"/>
       <connect from_op="NaiveBayes" from_port="model" to_op="ModelApplier" to_port="model"/>
       <connect from_op="Retrieve" from_port="output" to_op="ModelApplier" to_port="unlabelled data"/>
@@ -26,7 +36,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="112" resized="true" width="598" x="41" y="156">This process uses two different data files for training and testing. The first Retrieve operator loads the training data and a Naive Bayes model is trained on this data set. Then, the test data is loaded and the model is applied on this test data set. Please note that the test data set must also provide a true label attribute in order to produce a proper performance estimation. This label is of course not used during model applying but only for performance calculation.</description>
+      <description align="left" color="yellow" colored="false" height="112" resized="true" width="598" x="41" y="171">This process uses two different data files for training and testing. The first Retrieve operator loads the training data and a Naive Bayes model is trained on this data set. Then, the test data is loaded and the model is applied on this test data set. Please note that the test data set must also provide a true label attribute in order to produce a proper performance estimation. This label is of course not used during model applying but only for performance calculation.</description>
     </process>
   </operator>
 </process>

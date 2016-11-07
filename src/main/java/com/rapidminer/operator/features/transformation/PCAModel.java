@@ -36,6 +36,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.gui.renderer.models.EigenvectorModelEigenvalueRenderer.EigenvalueTableModel;
 import com.rapidminer.gui.renderer.models.EigenvectorModelEigenvectorRenderer.EigenvectorTableModel;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -58,6 +59,8 @@ import com.rapidminer.tools.Tools;
 public class PCAModel extends AbstractEigenvectorModel implements ComponentWeightsCreatable {
 
 	private static final long serialVersionUID = 5424591594470376525L;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 5_000;
 
 	private List<Eigenvector> eigenVectors;
 
@@ -219,6 +222,12 @@ public class PCAModel extends AbstractEigenvectorModel implements ComponentWeigh
 
 		// now iterator through all examples and derive value of new features
 		double[] derivedValues = new double[numberOfUsedComponents];
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			// calculate values of new attributes with single scan over attributes
 			d = 0;
@@ -237,6 +246,11 @@ public class PCAModel extends AbstractEigenvectorModel implements ComponentWeigh
 
 			// set values back
 			Arrays.fill(derivedValues, 0);
+
+			// trigger progress
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
+			}
 		}
 
 		// now remove attributes if needed
@@ -320,8 +334,8 @@ public class PCAModel extends AbstractEigenvectorModel implements ComponentWeigh
 
 	@Override
 	public String toResultString() {
-		StringBuilder result = new StringBuilder(Tools.getLineSeparator() + "Principal Components:"
-				+ Tools.getLineSeparator());
+		StringBuilder result = new StringBuilder(
+				Tools.getLineSeparator() + "Principal Components:" + Tools.getLineSeparator());
 		if (manualNumber) {
 			result.append("Number of Components: " + numberOfComponents + Tools.getLineSeparator());
 		} else {
@@ -345,8 +359,8 @@ public class PCAModel extends AbstractEigenvectorModel implements ComponentWeigh
 
 	@Override
 	public String toString() {
-		StringBuilder result = new StringBuilder(Tools.getLineSeparator() + "Principal Components:"
-				+ Tools.getLineSeparator());
+		StringBuilder result = new StringBuilder(
+				Tools.getLineSeparator() + "Principal Components:" + Tools.getLineSeparator());
 		if (manualNumber) {
 			result.append("Number of Components: " + numberOfComponents + Tools.getLineSeparator());
 		} else {

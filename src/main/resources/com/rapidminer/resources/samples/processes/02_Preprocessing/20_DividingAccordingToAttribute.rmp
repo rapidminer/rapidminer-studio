@@ -1,27 +1,40 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="RepositorySource" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="RepositorySource" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Golf"/>
       </operator>
-      <operator activated="true" class="subprocess" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="SplittingChain" width="90" x="179" y="30">
+      <operator activated="true" class="subprocess" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="SplittingChain" width="90" x="179" y="34">
         <process expanded="true">
-          <operator activated="true" class="multiply" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="IOMultiplier" width="90" x="45" y="30"/>
-          <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="FirstFilter" width="90" x="246" y="30">
+          <operator activated="true" class="multiply" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="IOMultiplier" width="90" x="45" y="34"/>
+          <operator activated="true" class="filter_examples" compatibility="6.4.000" expanded="true" height="103" name="FirstFilter" width="90" x="246" y="34">
             <parameter key="parameter_string" value="Wind=true"/>
+            <parameter key="parameter_expression" value=""/>
             <parameter key="condition_class" value="attribute_value_filter"/>
+            <parameter key="invert_filter" value="false"/>
             <list key="filters_list"/>
+            <parameter key="filters_logic_and" value="true"/>
+            <parameter key="filters_check_metadata" value="true"/>
           </operator>
-          <operator activated="true" class="filter_examples" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="SecondFilter" width="90" x="246" y="120">
+          <operator activated="true" class="filter_examples" compatibility="6.4.000" expanded="true" height="103" name="SecondFilter" width="90" x="246" y="136">
             <parameter key="parameter_string" value="Wind=false"/>
+            <parameter key="parameter_expression" value=""/>
             <parameter key="condition_class" value="attribute_value_filter"/>
+            <parameter key="invert_filter" value="false"/>
             <list key="filters_list"/>
+            <parameter key="filters_logic_and" value="true"/>
+            <parameter key="filters_check_metadata" value="true"/>
           </operator>
           <connect from_port="in 1" to_op="IOMultiplier" to_port="input"/>
           <connect from_op="IOMultiplier" from_port="output 1" to_op="FirstFilter" to_port="example set input"/>

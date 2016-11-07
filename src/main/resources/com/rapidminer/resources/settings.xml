@@ -28,33 +28,6 @@
 		<property key="rapidminer.init.plugins.location" />
 	</group>
 	<group key="system">
-		<group key="rapidminer.preferences.subgroup.system.http">
-			<property key="http.proxySet" />
-			<property key="http.proxyHost" />
-			<property key="http.proxyPort" />
-			<property key="http.proxyUsername" />
-			<property key="http.proxyPassword" />
-			<property key="http.nonProxyHosts" />
-		</group>
-		<group key="rapidminer.preferences.subgroup.system.https">
-			<property key="https.proxySet" />
-			<property key="https.proxyHost" />
-			<property key="https.proxyPort" />
-			<property key="https.proxyUsername" />
-			<property key="https.proxyPassword" />
-		</group>
-		<group key="rapidminer.preferences.subgroup.system.ftp">
-			<property key="ftp.proxySet" />
-			<property key="ftp.proxyHost" />
-			<property key="ftp.proxyPort" />
-			<property key="ftp.proxyUsername" />
-			<property key="ftp.proxyPassword" />
-			<property key="ftp.nonProxyHosts" />
-		</group>
-		<group key="rapidminer.preferences.subgroup.system.socks">
-			<property key="socksProxyHost" />
-			<property key="socksProxyPort" />
-		</group>
 		<property key="maxMemory" />
 		<property key="connection.timeout" />
 		<property key="account_server_url" />
@@ -76,11 +49,16 @@
 		<property key="rapidminer.tools.db.assist.show_only_standard_tables" />
 	</group>
 	<group key="update">
-		<property key="rapidminer.update.check" />
-		<property key="rapidminer.update.incremental" />
-		<property key="rapidminer.update.to_home" />
-		<property key="rapidminer.update.purchased.not_installed.check" />
-		<property key="rapidminer.update.url" />
+		<group key="rapidminer.preferences.subgroup.update.updates">
+			<property key="rapidminer.update.check" />
+			<property key="rapidminer.update.incremental" />
+			<property key="rapidminer.update.to_home" />
+			<property key="rapidminer.update.purchased.not_installed.check" />
+			<property key="rapidminer.update.url" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.update.beta_program">
+			<property key="rapidminer.update.beta_features" />
+		</group>
 	</group>
 	<group key="gui">
 		<group key="rapidminer.preferences.subgroup.gui.general">
@@ -130,5 +108,31 @@
 		<property key="rapidminer.gui.fetch_data_base_table_names" />
 		<property key="rapidminer.gui.evaluate_meta_data_for_sql_queries" />
 		<property key="rapidminer.gui.processinfo.show" />
+	</group>
+	<group key="proxy">
+		<group key="rapidminer.preferences.subgroup.proxy.settings">
+			<property key="rapidminer.proxy.mode" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.user">
+			<property key="rapidminer.proxy.exclude" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.socks">
+			<property key="rapidminer.proxy.socksProxyHost" />
+			<property key="rapidminer.proxy.socksProxyPort" />
+			<property key="rapidminer.proxy.socksProxyVersion" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.http">
+			<property key="rapidminer.proxy.http.proxyHost" />
+			<property key="rapidminer.proxy.http.proxyPort" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.https">
+			<property key="rapidminer.proxy.https.proxyHost" />
+			<property key="rapidminer.proxy.https.proxyPort" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.ftp">
+			<property key="rapidminer.proxy.ftp.proxyHost" />
+			<property key="rapidminer.proxy.ftp.proxyPort" />
+		</group>
+
 	</group>
 </settings>

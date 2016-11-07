@@ -42,7 +42,8 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -450,9 +451,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 			i++;
 		}
 
-		// creating example table
-		MemoryExampleTable table = new MemoryExampleTable(newAttributes);
-		;
+		// creating example set
+		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
 		DataRowFactory factory = new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY, '.');
 		double[] dataOfUpperLevels = new double[groupAttributes.length];
 
@@ -482,6 +482,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 		}
 
 		// write data into table
+		builder.withExpectedSize(allGroupCombinations.size());
 		int currentRow = 0;
 		for (double[] groupValues : allGroupCombinations) {
 			double[] rowData = new double[newAttributes.length];
@@ -502,7 +503,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 				}
 				++currentColumn;
 			}
-			table.addDataRow(dataRow);
+			builder.addDataRow(dataRow);
 			++currentRow;
 		}
 
@@ -511,11 +512,13 @@ public class AggregationOperator extends AbstractDataProcessing {
 		// version
 		if (getCompatibilityLevel().isAtMost(VERSION_5_1_6)) {
 			if (groupAttributes.length == 0) {
+				ExampleSet resultSet = builder.build();
 				Attribute resultGroupAttribute = AttributeFactory.createAttribute(GENERIC_GROUP_NAME, Ontology.NOMINAL);
-				table.addAttribute(resultGroupAttribute);
-				table.getDataRow(0).set(resultGroupAttribute, resultGroupAttribute.getMapping().mapString(GENERIC_ALL_NAME));
+				resultSet.getExampleTable().addAttribute(resultGroupAttribute);
+				resultSet.getAttributes().addRegular(resultGroupAttribute);
+				resultSet.getExample(0).setValue(resultGroupAttribute,
+						resultGroupAttribute.getMapping().mapString(GENERIC_ALL_NAME));
 
-				ExampleSet resultSet = table.createExampleSet();
 				resultSet.getAnnotations().addAll(exampleSet.getAnnotations());
 				for (Attribute attribute : newAttributes) {
 					resultSet.getAttributes().remove(attribute);
@@ -524,7 +527,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 				return resultSet;
 			} else {
 				// make attributes nominal
-				ExampleSet resultSet = table.createExampleSet();
+				ExampleSet resultSet = builder.build();
 				resultSet.getAnnotations().addAll(exampleSet.getAnnotations());
 				try {
 					NumericToNominal toNominalOperator = OperatorService.createOperator(NumericToPolynominal.class);
@@ -542,7 +545,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 		}
 
 		// for recent version table is correct: Deliver example set
-		ExampleSet resultSet = table.createExampleSet();
+		ExampleSet resultSet = builder.build();
 		resultSet.getAnnotations().addAll(exampleSet.getAnnotations());
 		return resultSet;
 	}

@@ -137,6 +137,8 @@ public class ResultDisplayTools {
 			if (violation != null) {
 				result = downsample((ExampleSet) result, violation.getConstraintValue());
 				violationList.add(violation);
+				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_ROW_LIMIT,
+						ActionStatisticsCollector.VALUE_ROW_LIMIT_DIALOG, "results_banner");
 			}
 		}
 		final IOObject resultObject = result;

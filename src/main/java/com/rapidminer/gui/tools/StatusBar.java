@@ -35,6 +35,7 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
@@ -202,9 +203,23 @@ public class StatusBar extends JPanel implements ProcessEditor {
 
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 
-		constraints.weightx = 1;
+		constraints.weightx = 0;
 		constraints.gridwidth = 1;
 		constraints.insets = new Insets(0, 5, 0, 0);
+		BetaFeaturesIndicator indicator = new BetaFeaturesIndicator();
+		JLabel modeLabel = indicator.getModeLabel();
+		layout.setConstraints(modeLabel, constraints);
+		add(modeLabel);
+
+		constraints.weighty = 1;
+		constraints.fill = GridBagConstraints.VERTICAL;
+		JSeparator separator = indicator.getModeSeparator();
+		layout.setConstraints(separator, constraints);
+		add(separator);
+
+		constraints.weightx = 1;
+		constraints.weighty = 0;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
 		layout.setConstraints(operatorLabel, constraints);
 		add(operatorLabel);
 

@@ -18,16 +18,19 @@
  */
 package com.rapidminer.operator.features.transformation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
-import com.rapidminer.example.set.SimpleExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.DataRowReader;
 import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
@@ -51,15 +54,11 @@ import com.rapidminer.tools.math.SpectrumFilter;
 import com.rapidminer.tools.math.WindowFunction;
 import com.rapidminer.tools.math.container.Range;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * Creates a new example set consisting of the result of a fourier transformation for each attribute
  * of the input example set.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class FourierTransform extends AbstractFeatureTransformation {
@@ -76,13 +75,13 @@ public class FourierTransform extends AbstractFeatureTransformation {
 					getExampleSetInputPort().addError(
 							new SimpleMetaDataError(Severity.ERROR, getExampleSetInputPort(), Collections
 									.singletonList(new OperatorInsertionQuickFix("insert_missing_value_replenishment",
-											new String[0], 1, getExampleSetInputPort()) {
+									new String[0], 1, getExampleSetInputPort()) {
 
-										@Override
-										public Operator createOperator() throws OperatorCreationException {
-											return OperatorService.createOperator(MissingValueReplenishment.class);
-										}
-									}), "exampleset.contains_missings", getName()));
+								@Override
+								public Operator createOperator() throws OperatorCreationException {
+									return OperatorService.createOperator(MissingValueReplenishment.class);
+								}
+							}), "exampleset.contains_missings", getName()));
 					break;
 				}
 			}
@@ -115,21 +114,26 @@ public class FourierTransform extends AbstractFeatureTransformation {
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		Tools.onlyNonMissingValues(exampleSet, getOperatorClassName(), this);
 
-		// create new example table
+		// collect data for new example table
 		int numberOfNewExamples = FastFourierTransform.getGreatestPowerOf2LessThan(exampleSet.size()) / 2;
-		ExampleTable exampleTable = new MemoryExampleTable(new LinkedList<Attribute>(), new DataRowFactory(
-				DataRowFactory.TYPE_DOUBLE_ARRAY, '.'), numberOfNewExamples);
+		List<Attribute> allAttributes = new ArrayList<>();
 
 		// create frequency attribute (for frequency)
 		Attribute frequencyAttribute = AttributeFactory.createAttribute("frequency", Ontology.REAL);
-		exampleTable.addAttribute(frequencyAttribute);
-		DataRowReader drr = exampleTable.getDataRowReader();
-		int k = 0;
-		while (drr.hasNext()) {
-			DataRow dataRow = drr.next();
-			dataRow.set(frequencyAttribute,
-					FastFourierTransform.convertFrequency(k++, numberOfNewExamples, exampleSet.size()));
+		allAttributes.add(frequencyAttribute);
+
+		for (Attribute current : exampleSet.getAttributes()) {
+			if (current.isNumerical()) {
+				// create new attribute
+				Attribute newAttribute = AttributeFactory.createAttribute("fft(" + current.getName() + ")", Ontology.REAL);
+				allAttributes.add(newAttribute);
+			}
 		}
+
+		ExampleSet resultSet = ExampleSets.from(allAttributes).withBlankSize(numberOfNewExamples)
+				.withColumnFiller(frequencyAttribute,
+						k -> FastFourierTransform.convertFrequency(k++, numberOfNewExamples, exampleSet.size()))
+				.build();
 
 		// create FFT values
 		Attribute label = exampleSet.getAttributes().getLabel();
@@ -137,18 +141,15 @@ public class FourierTransform extends AbstractFeatureTransformation {
 		// add FFT values
 		FastFourierTransform fft = new FastFourierTransform(WindowFunction.BLACKMAN_HARRIS);
 		SpectrumFilter filter = new SpectrumFilter(SpectrumFilter.NONE);
+		int index = 1;
 		for (Attribute current : exampleSet.getAttributes()) {
 			if (current.isNumerical()) {
 				Complex[] result = fft.getFourierTransform(exampleSet, label, current);
 				Peak[] spectrum = filter.filter(result, exampleSet.size());
-				// create new attribute and fill table with values
-				Attribute newAttribute = AttributeFactory.createAttribute("fft(" + current.getName() + ")", Ontology.REAL);
-				exampleTable.addAttribute(newAttribute);
-				fillTable(exampleTable, newAttribute, spectrum);
+				// fill table with values
+				fillTable(resultSet.getExampleTable(), allAttributes.get(index++), spectrum);
 			}
 		}
-
-		ExampleSet resultSet = new SimpleExampleSet(exampleTable);
 
 		return resultSet;
 	}

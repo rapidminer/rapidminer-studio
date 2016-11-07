@@ -1,20 +1,34 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="Retrieve" width="90" x="45" y="30">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Sonar"/>
       </operator>
-      <operator activated="true" class="independent_component_analysis" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="FastICA" width="90" x="180" y="30">
+      <operator activated="true" class="independent_component_analysis" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="FastICA" width="90" x="179" y="34">
+        <parameter key="dimensionality_reduction" value="none"/>
+        <parameter key="algorithm_type" value="deflation"/>
+        <parameter key="function" value="logcosh"/>
+        <parameter key="alpha" value="1.0"/>
+        <parameter key="row_norm" value="false"/>
         <parameter key="max_iteration" value="300"/>
+        <parameter key="tolerance" value="1.0E-4"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
       </operator>
-      <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" height="76" name="ModelApplier" width="90" x="380" y="30">
+      <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="380" y="34">
         <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="FastICA" to_port="example set input"/>
       <connect from_op="FastICA" from_port="original" to_op="ModelApplier" to_port="unlabelled data"/>
@@ -23,7 +37,7 @@
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="138" resized="false" width="400" x="40" y="140">This process contains an operator for a fast Independent Component Analysis (ICA). In contrast to PCA, the FastICA algorithm tries to identify the main independent components of the data set. In this process an ICA model is created and directly applied to the input data set. Please check out the plot view of the resulting example set, especially a scatter plot of the data for the label attribute.</description>
+      <description align="left" color="yellow" colored="false" height="138" resized="false" width="400" x="41" y="151">This process contains an operator for a fast Independent Component Analysis (ICA). In contrast to PCA, the FastICA algorithm tries to identify the main independent components of the data set. In this process an ICA model is created and directly applied to the input data set. Please check out the plot view of the resulting example set, especially a scatter plot of the data for the label attribute.</description>
     </process>
   </operator>
 </process>

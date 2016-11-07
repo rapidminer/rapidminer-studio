@@ -28,6 +28,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.tools.Ontology;
 
@@ -41,6 +42,8 @@ import com.rapidminer.tools.Ontology;
 public class ValueReplenishmentModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = -4886756106998999255L;
+
+	private static final int PROGRESS_UPDATE_STEPS = 100;
 
 	private HashMap<String, Double> numericalAndDateReplacementMap;
 	private HashMap<String, String> nominalReplacementMap;
@@ -81,6 +84,14 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 			i++;
 		}
 
+		// initialize progress
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(exampleSet.size());
+		}
+		int progressCounter = 0;
+
 		for (Example example : exampleSet) {
 			i = 0;
 			for (Attribute attribute : attributes) {
@@ -92,6 +103,9 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 					}
 				}
 				i++;
+			}
+			if (progress != null && ++progressCounter % PROGRESS_UPDATE_STEPS == 0) {
+				progress.setCompleted(progressCounter);
 			}
 		}
 		return exampleSet;
@@ -142,21 +156,21 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 			return value;
 		}
 	}
-	
+
 	public Map<String, Double> getNumericalAndDateReplacementMap() {
 		return numericalAndDateReplacementMap;
 	}
-	
+
 	public Map<String, String> getNominalReplacementMap() {
 		return nominalReplacementMap;
 	}
-	
+
 	public double getReplaceWhat() {
 		return replaceWhat;
 	}
-	
+
 	public Map<Attribute, Double> getAttributeReplacementMap() {
 		return attributeReplacementMap;
 	}
-	
+
 }

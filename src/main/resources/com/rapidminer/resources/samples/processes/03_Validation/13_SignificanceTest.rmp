@@ -1,90 +1,171 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="6.4.000-SNAPSHOT" expanded="true" height="60" name="ExampleSetGenerator" width="90" x="45" y="30">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
         <parameter key="target_function" value="one variable non linear"/>
         <parameter key="number_examples" value="80"/>
         <parameter key="number_of_attributes" value="1"/>
         <parameter key="attributes_lower_bound" value="-40.0"/>
         <parameter key="attributes_upper_bound" value="30.0"/>
+        <parameter key="gaussian_standard_deviation" value="10.0"/>
+        <parameter key="largest_radius" value="10.0"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="datamanagement" value="double_array"/>
       </operator>
-      <operator activated="true" class="multiply" compatibility="6.4.000-SNAPSHOT" expanded="true" height="94" name="IOMultiplier_1" width="90" x="179" y="30"/>
-      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation" width="90" x="315" y="30">
+      <operator activated="true" class="multiply" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="IOMultiplier_1" width="90" x="179" y="34"/>
+      <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation (2)" width="90" x="313" y="187">
+        <parameter key="enable_parallel_execution" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="10"/>
         <parameter key="sampling_type" value="shuffled sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="materialize_data" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="support_vector_machine_libsvm" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LibSVMLearner">
-            <parameter key="svm_type" value="nu-SVR"/>
-            <parameter key="C" value="10000.0"/>
-            <parameter key="epsilon" value="0.0010"/>
-            <list key="class_weights"/>
+          <operator activated="true" class="linear_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="LinearRegression" width="90" x="45" y="34">
+            <parameter key="feature_selection" value="M5 prime"/>
+            <parameter key="alpha" value="0.05"/>
+            <parameter key="max_iterations" value="10"/>
+            <parameter key="forward_alpha" value="0.05"/>
+            <parameter key="backward_alpha" value="0.05"/>
+            <parameter key="eliminate_colinear_features" value="true"/>
+            <parameter key="min_tolerance" value="0.05"/>
+            <parameter key="use_bias" value="true"/>
+            <parameter key="ridge" value="1.0E-8"/>
           </operator>
-          <connect from_port="training" to_op="LibSVMLearner" to_port="training set"/>
-          <connect from_op="LibSVMLearner" from_port="model" to_port="model"/>
-          <portSpacing port="source_training" spacing="0"/>
-          <portSpacing port="sink_model" spacing="0"/>
-          <portSpacing port="sink_through 1" spacing="0"/>
-        </process>
-        <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier">
-            <list key="application_parameters"/>
-          </operator>
-          <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="RegressionPerformance">
-            <parameter key="root_mean_squared_error" value="false"/>
-            <parameter key="absolute_error" value="true"/>
-          </operator>
-          <connect from_port="model" to_op="ModelApplier" to_port="model"/>
-          <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
-          <connect from_op="ModelApplier" from_port="labelled data" to_op="RegressionPerformance" to_port="labelled data"/>
-          <connect from_op="RegressionPerformance" from_port="performance" to_port="averagable 1"/>
-          <portSpacing port="source_model" spacing="0"/>
-          <portSpacing port="source_test set" spacing="0"/>
-          <portSpacing port="source_through 1" spacing="0"/>
-          <portSpacing port="sink_averagable 1" spacing="0"/>
-          <portSpacing port="sink_averagable 2" spacing="0"/>
-        </process>
-      </operator>
-      <operator activated="true" class="x_validation" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="XValidation (2)" width="90" x="313" y="165">
-        <parameter key="sampling_type" value="shuffled sampling"/>
-        <process expanded="true">
-          <operator activated="true" class="linear_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="LinearRegression"/>
-          <connect from_port="training" to_op="LinearRegression" to_port="training set"/>
+          <connect from_port="training set" to_op="LinearRegression" to_port="training set"/>
           <connect from_op="LinearRegression" from_port="model" to_port="model"/>
-          <portSpacing port="source_training" spacing="0"/>
+          <connect from_op="LinearRegression" from_port="weights" to_port="through 1"/>
+          <portSpacing port="source_training set" spacing="0"/>
           <portSpacing port="sink_model" spacing="0"/>
           <portSpacing port="sink_through 1" spacing="0"/>
+          <portSpacing port="sink_through 2" spacing="0"/>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="6.4.000-SNAPSHOT" expanded="true" name="ModelApplier (2)">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier (2)" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance_regression" compatibility="6.4.000-SNAPSHOT" expanded="true" name="RegressionPerformance (2)">
+          <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="RegressionPerformance (2)" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="first"/>
             <parameter key="root_mean_squared_error" value="false"/>
             <parameter key="absolute_error" value="true"/>
+            <parameter key="relative_error" value="false"/>
+            <parameter key="relative_error_lenient" value="false"/>
+            <parameter key="relative_error_strict" value="false"/>
+            <parameter key="normalized_absolute_error" value="false"/>
+            <parameter key="root_relative_squared_error" value="false"/>
+            <parameter key="squared_error" value="false"/>
+            <parameter key="correlation" value="false"/>
+            <parameter key="squared_correlation" value="false"/>
+            <parameter key="prediction_average" value="false"/>
+            <parameter key="spearman_rho" value="false"/>
+            <parameter key="kendall_tau" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="true"/>
           </operator>
           <connect from_port="model" to_op="ModelApplier (2)" to_port="model"/>
           <connect from_port="test set" to_op="ModelApplier (2)" to_port="unlabelled data"/>
           <connect from_op="ModelApplier (2)" from_port="labelled data" to_op="RegressionPerformance (2)" to_port="labelled data"/>
-          <connect from_op="RegressionPerformance (2)" from_port="performance" to_port="averagable 1"/>
+          <connect from_op="RegressionPerformance (2)" from_port="performance" to_port="performance 1"/>
           <portSpacing port="source_model" spacing="0"/>
           <portSpacing port="source_test set" spacing="0"/>
           <portSpacing port="source_through 1" spacing="0"/>
-          <portSpacing port="sink_averagable 1" spacing="0"/>
-          <portSpacing port="sink_averagable 2" spacing="0"/>
+          <portSpacing port="source_through 2" spacing="0"/>
+          <portSpacing port="sink_test set results" spacing="0"/>
+          <portSpacing port="sink_performance 1" spacing="0"/>
+          <portSpacing port="sink_performance 2" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="t_test" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="T-Test" width="90" x="514" y="120"/>
-      <operator activated="true" class="anova" compatibility="6.4.000-SNAPSHOT" expanded="true" height="112" name="Anova" width="90" x="715" y="165"/>
+      <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000-SNAPSHOT" expanded="true" height="145" name="Cross Validation" width="90" x="313" y="34">
+        <parameter key="enable_parallel_execution" value="true"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="10"/>
+        <parameter key="sampling_type" value="shuffled sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="materialize_data" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="support_vector_machine_libsvm" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="LibSVMLearner" width="90" x="45" y="34">
+            <parameter key="svm_type" value="nu-SVR"/>
+            <parameter key="kernel_type" value="rbf"/>
+            <parameter key="degree" value="3"/>
+            <parameter key="gamma" value="0.0"/>
+            <parameter key="coef0" value="0.0"/>
+            <parameter key="C" value="10000.0"/>
+            <parameter key="nu" value="0.5"/>
+            <parameter key="cache_size" value="80"/>
+            <parameter key="epsilon" value="0.0010"/>
+            <parameter key="p" value="0.1"/>
+            <list key="class_weights"/>
+            <parameter key="shrinking" value="true"/>
+            <parameter key="calculate_confidences" value="false"/>
+            <parameter key="confidence_for_multiclass" value="true"/>
+          </operator>
+          <connect from_port="training set" to_op="LibSVMLearner" to_port="training set"/>
+          <connect from_op="LibSVMLearner" from_port="model" to_port="model"/>
+          <portSpacing port="source_training set" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="ModelApplier" width="90" x="45" y="34">
+            <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
+          </operator>
+          <operator activated="true" class="performance_regression" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="RegressionPerformance" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="first"/>
+            <parameter key="root_mean_squared_error" value="false"/>
+            <parameter key="absolute_error" value="true"/>
+            <parameter key="relative_error" value="false"/>
+            <parameter key="relative_error_lenient" value="false"/>
+            <parameter key="relative_error_strict" value="false"/>
+            <parameter key="normalized_absolute_error" value="false"/>
+            <parameter key="root_relative_squared_error" value="false"/>
+            <parameter key="squared_error" value="false"/>
+            <parameter key="correlation" value="false"/>
+            <parameter key="squared_correlation" value="false"/>
+            <parameter key="prediction_average" value="false"/>
+            <parameter key="spearman_rho" value="false"/>
+            <parameter key="kendall_tau" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="true"/>
+          </operator>
+          <connect from_port="model" to_op="ModelApplier" to_port="model"/>
+          <connect from_port="test set" to_op="ModelApplier" to_port="unlabelled data"/>
+          <connect from_op="ModelApplier" from_port="labelled data" to_op="RegressionPerformance" to_port="labelled data"/>
+          <connect from_op="RegressionPerformance" from_port="performance" to_port="performance 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_test set results" spacing="0"/>
+          <portSpacing port="sink_performance 1" spacing="0"/>
+          <portSpacing port="sink_performance 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="t_test" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="T-Test" width="90" x="514" y="120">
+        <parameter key="alpha" value="0.05"/>
+      </operator>
+      <operator activated="true" class="anova" compatibility="7.3.000-SNAPSHOT" expanded="true" height="124" name="Anova" width="90" x="715" y="165">
+        <parameter key="alpha" value="0.05"/>
+      </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="IOMultiplier_1" to_port="input"/>
-      <connect from_op="IOMultiplier_1" from_port="output 1" to_op="XValidation" to_port="training"/>
-      <connect from_op="IOMultiplier_1" from_port="output 2" to_op="XValidation (2)" to_port="training"/>
-      <connect from_op="XValidation" from_port="averagable 1" to_op="T-Test" to_port="performance 1"/>
-      <connect from_op="XValidation (2)" from_port="averagable 1" to_op="T-Test" to_port="performance 2"/>
+      <connect from_op="IOMultiplier_1" from_port="output 1" to_op="Cross Validation" to_port="example set"/>
+      <connect from_op="IOMultiplier_1" from_port="output 2" to_op="Cross Validation (2)" to_port="example set"/>
+      <connect from_op="Cross Validation (2)" from_port="performance 1" to_op="T-Test" to_port="performance 2"/>
+      <connect from_op="Cross Validation" from_port="performance 1" to_op="T-Test" to_port="performance 1"/>
       <connect from_op="T-Test" from_port="significance" to_port="result 2"/>
       <connect from_op="T-Test" from_port="performance 1" to_op="Anova" to_port="performance 1"/>
       <connect from_op="T-Test" from_port="performance 2" to_op="Anova" to_port="performance 2"/>
@@ -97,7 +178,7 @@
       <portSpacing port="sink_result 3" spacing="18"/>
       <portSpacing port="sink_result 4" spacing="0"/>
       <portSpacing port="sink_result 5" spacing="0"/>
-      <description align="left" color="yellow" colored="false" height="328" resized="true" width="805" x="38" y="287">Many RapidMiner operators can be used to estimate the performance of a learner, a preprocessing step, or a feature space on one or several data sets. The result of these validation operators is a performance vector collecting the values of a set of performance criteria. For each criterion, the mean value and standard deviation are given. &lt;br/&gt;&lt;br/&gt;The question is how these performance vectors can be compared? Statistical significance tests like ANOVA or pairwise t-tests can be used to calculate the probability that the actual mean values are different. &lt;br/&gt;&lt;br/&gt;We assume that you have achieved several performance vectors and want to compare them. In this process we use the same data set for both cross validations (hence the IOMultiplier) and estimate the performance of a linear learning scheme and a RBF based SVM. &lt;br/&gt;&lt;br/&gt;Run the process and compare the results: the probabilities for a significant difference are equal since only two performance vectors were created. In this case the SVM is probably better suited for the data set at hand since the actual mean values are probably different. &lt;br/&gt;&lt;br/&gt;Please note that performance vectors like all other objects which can be passed between RapidMiner operators can be written into and loaded from a file.</description>
+      <description align="left" color="yellow" colored="false" height="328" resized="true" width="805" x="37" y="348">Many RapidMiner operators can be used to estimate the performance of a learner, a preprocessing step, or a feature space on one or several data sets. The result of these validation operators is a performance vector collecting the values of a set of performance criteria. For each criterion, the mean value and standard deviation are given. &lt;br/&gt;&lt;br/&gt;The question is how these performance vectors can be compared? Statistical significance tests like ANOVA or pairwise t-tests can be used to calculate the probability that the actual mean values are different. &lt;br/&gt;&lt;br/&gt;We assume that you have achieved several performance vectors and want to compare them. In this process we use the same data set for both cross validations (hence the IOMultiplier) and estimate the performance of a linear learning scheme and a RBF based SVM. &lt;br/&gt;&lt;br/&gt;Run the process and compare the results: the probabilities for a significant difference are equal since only two performance vectors were created. In this case the SVM is probably better suited for the data set at hand since the actual mean values are probably different. &lt;br/&gt;&lt;br/&gt;Please note that performance vectors like all other objects which can be passed between RapidMiner operators can be written into and loaded from a file.</description>
     </process>
   </operator>
 </process>

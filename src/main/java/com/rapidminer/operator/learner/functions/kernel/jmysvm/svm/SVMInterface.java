@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.learner.functions.kernel.jmysvm.svm;
 
+import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExample;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel.Kernel;
@@ -25,7 +26,7 @@ import com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel.Kernel;
 
 /**
  * The interface of all SVMs.
- * 
+ *
  * @author Stefan Rueping, Ingo Mierswa
  */
 public interface SVMInterface {
@@ -34,7 +35,7 @@ public interface SVMInterface {
 	public void init(Kernel kernel, SVMExamples examples);
 
 	/** Train this SVM. */
-	public void train();
+	public void train() throws OperatorException;
 
 	/** Perform a prediction of label for all examples. */
 	public void predict(SVMExamples examples);

@@ -27,24 +27,24 @@ import java.util.List;
 import org.junit.Test;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.test.ExampleTestTools;
+import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.performance.AbstractPerformanceEvaluator;
 import com.rapidminer.operator.performance.BinaryClassificationPerformance;
 import com.rapidminer.operator.performance.MultiClassificationPerformance;
 import com.rapidminer.operator.performance.PerformanceCriterion;
 import com.rapidminer.operator.performance.PerformanceVector;
-import com.rapidminer.tools.att.AttributeSet;
 
 
 /**
  * Tests classification criteria.
- * 
- * @author Simon Fischer, Ingo Mierswa
- *          ingomierswa Exp $
+ *
+ * @author Simon Fischer, Ingo Mierswa ingomierswa Exp $
  */
 public class ClassificationCriterionTest extends AbstractCriterionTestCase {
 
@@ -56,13 +56,13 @@ public class ClassificationCriterionTest extends AbstractCriterionTestCase {
 		int yes = label.getMapping().mapString("yes"); // positive class
 		List<Attribute> attributeList = new LinkedList<Attribute>();
 		attributeList.add(label);
-		MemoryExampleTable exampleTable = new MemoryExampleTable(attributeList, ExampleTestTools.createDataRowReader(new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY, '.'), new Attribute[] { label }, new String[][] { { "no" }, { "yes" }, { "yes" }, { "no" }, { "yes" }, { "no" }, { "yes" }, { "yes" },
-				{ "yes" }, { "no" }, { "no" }, { "yes" } }));
+		ExampleSetBuilder builder = ExampleSets.from(attributeList)
+				.withDataRowReader(ExampleTestTools.createDataRowReader(
+						new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY, '.'), new Attribute[] { label },
+						new String[][] { { "no" }, { "yes" }, { "yes" }, { "no" }, { "yes" }, { "no" }, { "yes" }, { "yes" },
+								{ "yes" }, { "no" }, { "no" }, { "yes" } }));
 
-		AttributeSet attributeSet = new AttributeSet();
-		attributeSet.setSpecialAttribute("label", label);
-
-		ExampleSet eSet = exampleTable.createExampleSet(attributeSet);
+		ExampleSet eSet = builder.withRole(label, Attributes.LABEL_NAME).build();
 		Attribute predictedLabel = ExampleTestTools.createPredictedLabel(eSet);
 
 		// eSet.createPredictedLabel();
