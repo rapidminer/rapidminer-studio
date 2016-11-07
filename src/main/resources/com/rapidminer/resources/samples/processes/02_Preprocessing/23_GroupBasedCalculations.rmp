@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="subprocess" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Generate Data" width="90" x="45" y="34">
+        <process expanded="true">
+          <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
+            <parameter key="target_function" value="sum"/>
+            <parameter key="number_examples" value="12"/>
+            <parameter key="number_of_attributes" value="2"/>
+            <parameter key="attributes_lower_bound" value="-10.0"/>
+            <parameter key="attributes_upper_bound" value="10.0"/>
+            <parameter key="gaussian_standard_deviation" value="10.0"/>
+            <parameter key="largest_radius" value="10.0"/>
+            <parameter key="use_local_random_seed" value="false"/>
+            <parameter key="local_random_seed" value="-1"/>
+            <parameter key="datamanagement" value="double_array"/>
+          </operator>
+          <operator activated="true" class="select_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AttributeFilter" width="90" x="179" y="34">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="regular_expression" value="label"/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="true"/>
+            <parameter key="include_special_attributes" value="true"/>
+          </operator>
+          <operator activated="true" class="work_on_subset" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AttributeSubsetPreprocessing" width="90" x="313" y="34">
+            <parameter key="attribute_filter_type" value="regular_expression"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="regular_expression" value="att1"/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="name_conflict_handling" value="error"/>
+            <parameter key="role_conflict_handling" value="error"/>
+            <parameter key="keep_subset_only" value="false"/>
+            <parameter key="deliver_inner_results" value="false"/>
+            <parameter key="remove_roles" value="true"/>
+            <process expanded="true">
+              <operator activated="true" class="discretize_by_frequency" compatibility="7.1.001" expanded="true" name="FrequencyDiscretization">
+                <parameter key="return_preprocessing_model" value="false"/>
+                <parameter key="create_view" value="false"/>
+                <parameter key="attribute_filter_type" value="all"/>
+                <parameter key="attribute" value=""/>
+                <parameter key="attributes" value=""/>
+                <parameter key="use_except_expression" value="false"/>
+                <parameter key="value_type" value="numeric"/>
+                <parameter key="use_value_type_exception" value="false"/>
+                <parameter key="except_value_type" value="real"/>
+                <parameter key="block_type" value="value_series"/>
+                <parameter key="use_block_type_exception" value="false"/>
+                <parameter key="except_block_type" value="value_series_end"/>
+                <parameter key="invert_selection" value="false"/>
+                <parameter key="include_special_attributes" value="false"/>
+                <parameter key="use_sqrt_of_examples" value="false"/>
+                <parameter key="number_of_bins" value="3"/>
+                <parameter key="range_name_type" value="short"/>
+                <parameter key="automatic_number_of_digits" value="true"/>
+                <parameter key="number_of_digits" value="-1"/>
+              </operator>
+              <connect from_port="exampleSet" to_op="FrequencyDiscretization" to_port="example set input"/>
+              <connect from_op="FrequencyDiscretization" from_port="example set output" to_port="example set"/>
+              <portSpacing port="source_exampleSet" spacing="0"/>
+              <portSpacing port="sink_example set" spacing="0"/>
+              <portSpacing port="sink_through 1" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="sort" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Sorting" width="90" x="637" y="34">
+            <parameter key="attribute_name" value="att1"/>
+            <parameter key="sorting_direction" value="increasing"/>
+          </operator>
+          <connect from_op="ExampleSetGenerator" from_port="output" to_op="AttributeFilter" to_port="example set input"/>
+          <connect from_op="AttributeFilter" from_port="example set output" to_op="AttributeSubsetPreprocessing" to_port="example set"/>
+          <connect from_op="AttributeSubsetPreprocessing" from_port="example set" to_op="Sorting" to_port="example set input"/>
+          <connect from_op="Sorting" from_port="example set output" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="loop_values" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ValueIterator" width="90" x="179" y="34">
+        <parameter key="attribute" value="att1"/>
+        <parameter key="iteration_macro" value="loop_value"/>
+        <process expanded="true">
+          <operator activated="true" class="filter_examples" compatibility="6.4.000" expanded="true" height="103" name="ExampleFilter" width="90" x="45" y="34">
+            <parameter key="parameter_string" value="att1 = %{loop_value}"/>
+            <parameter key="parameter_expression" value=""/>
+            <parameter key="condition_class" value="attribute_value_filter"/>
+            <parameter key="invert_filter" value="false"/>
+            <list key="filters_list"/>
+            <parameter key="filters_logic_and" value="true"/>
+            <parameter key="filters_check_metadata" value="true"/>
+          </operator>
+          <operator activated="true" class="aggregate" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Aggregation" width="90" x="179" y="34">
+            <parameter key="use_default_aggregation" value="false"/>
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="default_aggregation_function" value="average"/>
+            <list key="aggregation_attributes">
+              <parameter key="att2" value="average"/>
+            </list>
+            <parameter key="group_by_attributes" value=""/>
+            <parameter key="count_all_combinations" value="false"/>
+            <parameter key="only_distinct" value="false"/>
+            <parameter key="ignore_missings" value="true"/>
+          </operator>
+          <operator activated="true" class="extract_macro" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="DataMacroDefinition" width="90" x="313" y="34">
+            <parameter key="macro" value="current_average"/>
+            <parameter key="macro_type" value="data_value"/>
+            <parameter key="statistics" value="average"/>
+            <parameter key="attribute_name" value="average(att2)"/>
+            <parameter key="example_index" value="1"/>
+            <list key="additional_macros"/>
+          </operator>
+          <operator activated="true" class="generate_attributes" compatibility="6.4.000" expanded="true" height="82" name="AttributeConstruction" width="90" x="313" y="136">
+            <list key="function_descriptions">
+              <parameter key="att2_abs_avg" value="abs(att2 - %{current_average})"/>
+            </list>
+            <parameter key="keep_all" value="true"/>
+          </operator>
+          <connect from_port="example set" to_op="ExampleFilter" to_port="example set input"/>
+          <connect from_op="ExampleFilter" from_port="example set output" to_op="Aggregation" to_port="example set input"/>
+          <connect from_op="Aggregation" from_port="example set output" to_op="DataMacroDefinition" to_port="example set"/>
+          <connect from_op="Aggregation" from_port="original" to_op="AttributeConstruction" to_port="example set input"/>
+          <connect from_op="AttributeConstruction" from_port="example set output" to_port="out 1"/>
+          <portSpacing port="source_example set" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="90"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="append" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ExampleSetMerge" width="90" x="313" y="34">
+        <parameter key="datamanagement" value="double_array"/>
+        <parameter key="merge_type" value="all"/>
+      </operator>
+      <connect from_op="Generate Data" from_port="out 1" to_op="ValueIterator" to_port="example set"/>
+      <connect from_op="ValueIterator" from_port="out 1" to_op="ExampleSetMerge" to_port="example set 1"/>
+      <connect from_op="ExampleSetMerge" from_port="merged set" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="287" resized="true" width="410" x="40" y="141">This processes shows a more complex preprocessing which demonstrates some of the extended ETL functionality available within RapidMiner by using concepts like loops or macros.&lt;br/&gt;&lt;br/&gt;The first operator chain just encapsulates a sequence of operators producing data of a specific format. Afterwards, the ValueIterator iterates over all possible values of the specified attribute and stores the current value in the macro %{loop_value}. This macro is then used within the ExampleFilter followed by an aggregation in order to calculate the average for another attribute according to the groups defined by the first one. Then, another macro definition is used to read the average and this macro %{current_average} is then used within the AttributeConstruction. All resulting data sets, one for each group, will then be merged after the loop has been finished.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
+        <parameter key="repository_entry" value="../../data/Golf"/>
+      </operator>
+      <operator activated="true" class="aggregate" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Aggregation" width="90" x="179" y="34">
+        <parameter key="use_default_aggregation" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="default_aggregation_function" value="average"/>
+        <list key="aggregation_attributes">
+          <parameter key="Temperature" value="average"/>
+          <parameter key="Humidity" value="maximum"/>
+        </list>
+        <parameter key="group_by_attributes" value="Outlook"/>
+        <parameter key="count_all_combinations" value="false"/>
+        <parameter key="only_distinct" value="false"/>
+        <parameter key="ignore_missings" value="true"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Aggregation" to_port="example set input"/>
+      <connect from_op="Aggregation" from_port="example set output" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="251" resized="true" width="425" x="41" y="128">This process demonstrates a typical example for data aggregation. This type of calculations is often used in OLAP analysis tasks and usually performed by aggregation functions in SQL statements together with a group-by clause. In this example, the data is grouped in several parts according to two different nominal attributes and some statistics are calculated for each of these groups. &lt;br/&gt;&lt;br/&gt;Using the Aggregation operator might especially useful after clustering where some of attributes of the different clusters are aggregated in order to describe the examples in each cluster. For example, if you cluster your customer database you might want to perform aggregation grouped by the cluster attribute and calculate the sum of some sort of income attribute for each of the clusters.</description>
+    </process>
+  </operator>
+</process>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+	<group key="general">
+		<group key="rapidminer.preferences.subgroup.general.locale">
+			<property key="rapidminer.general.locale.language" />
+			<property key="rapidminer.general.timezone" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.general.encoding">
+			<property key="rapidminer.general.encoding" />
+			<property key="rapidminer.general.logfile.format" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.general.error.handling">
+			<property key="rapidminer.general.debugmode" />
+			<property key="rapidminer.general.capabilities.warn" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.general.numbers">
+			<property key="rapidminer.general.fractiondigits.percent" />
+			<property key="rapidminer.general.fractiondigits.numbers" />
+		</group>
+		<property key="rapidminer.general.randomseed" />
+		<property key="rapidminer.general.number_of_threads" />
+		<property key="rapidminer.general.md_nominal_values_limit" />
+		<property key="rapidminer.general.max_rows_used_for_guessing" />
+		<property key="rapidminer.general.max_process_execution_nesting_depth" />
+	</group>
+	<group key="init">
+		<property key="rapidminer.init.plugins" />
+		<property key="rapidminer.init.plugins.location" />
+	</group>
+	<group key="system">
+		<property key="maxMemory" />
+		<property key="connection.timeout" />
+		<property key="account_server_url" />
+	</group>
+	<group key="tools">
+		<group key="rapidminer.preferences.subgroup.tools.mail">
+			<property key="rapidminer.tools.mail.method" />
+			<property key="rapidminer.tools.sendmail.command" />
+			<property key="rapidminer.tools.mail.default_recipient" />
+			<property key="rapidminer.tools.mail.process_duration_for_mail" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.tools.smtp">
+			<property key="rapidminer.tools.smtp.host" />
+			<property key="rapidminer.tools.smtp.port" />
+			<property key="rapidminer.tools.smtp.user" />
+			<property key="rapidminer.tools.smtp.passwd" />
+		</group>
+		<property key="rapidminer.tools.editor" />
+		<property key="rapidminer.tools.db.assist.show_only_standard_tables" />
+	</group>
+	<group key="update">
+		<group key="rapidminer.preferences.subgroup.update.updates">
+			<property key="rapidminer.update.check" />
+			<property key="rapidminer.update.incremental" />
+			<property key="rapidminer.update.to_home" />
+			<property key="rapidminer.update.purchased.not_installed.check" />
+			<property key="rapidminer.update.url" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.update.beta_program">
+			<property key="rapidminer.update.beta_features" />
+		</group>
+	</group>
+	<group key="gui">
+		<group key="rapidminer.preferences.subgroup.gui.general">
+			<property key="rapidminer.gui.undolist.size" />
+			<property key="rapidminer.gui.log_level" />
+			<property key="rapidminer.gui.transfer_usagestats" />
+			<property key="rapidminer.gui.resolve_relative_repository_locations" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.gui.plotter">
+			<property key="rapidminer.gui.plotter.matrixplot.size" />
+			<property key="rapidminer.gui.plotter.rows.maximum" />
+			<property key="rapidminer.gui.plotter.default.maximum" />
+			<property key="rapidminer.gui.plotter.colors.classlimit" />
+			<property key="rapidminer.gui.plotter.legend.classlimit" />
+			<property key="rapidminer.gui.plotter.legend.mincolor" />
+			<property key="rapidminer.gui.plotter.legend.maxcolor" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.gui.statechange">
+			<property key="rapidminer.gui.save_before_run" />
+			<property key="rapidminer.gui.close_results_before_run" />
+			<property key="rapidminer.gui.close_all_results_without_confirmation" />
+			<property key="rapidminer.gui.auto_switch_to_resultview" />
+			<property key="rapidminer.gui.save_on_process_creation" />
+			<property key="rapidminer.gui.confirm_exit" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.gui.beep">
+			<property key="rapidminer.gui.beep.success" />
+			<property key="rapidminer.gui.beep.error" />
+			<property key="rapidminer.gui.beep.breakpoint" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.gui.limits">
+			<property key="rapidminer.gui.max_statistics_rows" />
+			<property key="rapidminer.gui.max_sortable_rows" />
+			<property key="rapidminer.gui.attributeeditor.rowlimit" />
+			<property key="rapidminer.gui.messageviewer.rowlimit" />
+			<property key="rapidminer.gui.max_displayed_values" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.gui.modelling">
+			<property key="rapidminer.gui.drag_target_highlighting" />
+			<property key="rapidminer.gui.snap_to_grid" />
+			<property key="rapidminer.gui.autowire_input" />
+			<property key="rapidminer.gui.autowire_output" />
+			<property key="rapidminer.gui.disconnect_on_disable" />
+		</group>
+		<property key="rapidminer.gui.entry_open_in_filebrowser" />
+		<property key="rapidminer.gui.add_breakpoint_results_to_history" />
+		<property key="rapidminer.gui.fetch_data_base_table_names" />
+		<property key="rapidminer.gui.evaluate_meta_data_for_sql_queries" />
+		<property key="rapidminer.gui.processinfo.show" />
+	</group>
+	<group key="proxy">
+		<group key="rapidminer.preferences.subgroup.proxy.settings">
+			<property key="rapidminer.proxy.mode" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.user">
+			<property key="rapidminer.proxy.exclude" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.socks">
+			<property key="rapidminer.proxy.socksProxyHost" />
+			<property key="rapidminer.proxy.socksProxyPort" />
+			<property key="rapidminer.proxy.socksProxyVersion" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.http">
+			<property key="rapidminer.proxy.http.proxyHost" />
+			<property key="rapidminer.proxy.http.proxyPort" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.https">
+			<property key="rapidminer.proxy.https.proxyHost" />
+			<property key="rapidminer.proxy.https.proxyPort" />
+		</group>
+		<group key="rapidminer.preferences.subgroup.proxy.ftp">
+			<property key="rapidminer.proxy.ftp.proxyHost" />
+			<property key="rapidminer.proxy.ftp.proxyPort" />
+		</group>
+
+	</group>
+</settings>

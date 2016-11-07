@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Get better estimations for accuracy.">
+		<text>In the last tutorial, we saw how easy it was to create an estimation for 
+		the accuracy of the model by splitting your data into a training and testing set. 
+		But what if the training and tests sets had significant differences between them? 
+		Our performance estimate might be based on a particularly "easy" or "hard" test set! 
+		This tutorial introduces a technique called <emph>Cross Validation</emph> to make 
+		sure each data point is used as often for training as it is for testing which avoids this problem.
+		</text>
+		
+		<info>
+			<emph>Cross validation</emph> divides the example set into equal parts and rotates 
+			through all parts, always using one for testing and all others for training the model.  
+			At the end, the average of all testing accuracies is delivered as result. 
+			This is a great way to compute the accuracy of models and should become your standard 
+			estimation approach whenever the additional computation efforts are feasible. 
+		</info>
+	</step>
+
+
+
+	<step name="Load the data and feed it into the validation.">
+		<tasks>
+			<task>
+				<activity>
+					Drag the
+					<file>Titanic Training</file>
+					data
+				</activity>
+				into your process.
+			</task>
+			<task>
+				<activity>Add</activity> the operator 
+				<op>Cross Validation</op> to the process and <activity>connect it</activity>.
+			</task>
+		</tasks>
+
+		<info>
+			<op>Cross Validation</op> is the name of the operator performing the cross validation and
+			it needs a labeled input example set.  By default this splits the data into 10 different parts, so we 
+			call this a 10-fold cross validation.  You can of course change the number of folds in the <ui>Parameters</ui> panel.
+		</info>
+	</step>
+
+
+	<step name="Train and apply the model.">
+		<info>
+			Note the small icon in the bottom right corner of <op>Cross Validation</op>. 
+			Recall that this means the operator can have other operators nested in it. 
+			In fact, <op>Cross Validation</op> has two sub-processes, one for training 
+			the model and one for testing it. Double-click on the operator to view its sub-processes.
+		</info>
+		
+		<tasks>
+			<task>
+				<activity>Double-click</activity> the <op>Cross Validation</op> operator. 
+				The <ui>Process</ui> panel now shows two sub-processes named 
+				<ui>Training</ui> and <ui>Testing</ui>.
+			</task>
+			<task>
+				<activity>Add</activity> a <op>Decision Tree</op> to the <ui>Training</ui> sub-process.
+			</task>
+			<task>
+				<activity>Connect it</activity> with the ports delivering the training data 
+				on the left and outputting the model on the right.
+			</task>
+			<task>
+				<activity>Add</activity> <op>Apply Model</op> to the <ui>Testing</ui> sub-process.
+			</task>
+			<task>
+				<activity>Connect</activity> the model and the testing data from the left to <op>Apply Model</op>.
+			</task>
+			<task>
+				Also <activity>add</activity> the operator <op>Performance</op> to <ui>Testing</ui>.
+			</task>
+			<task>
+				<activity>Connect</activity> the output of <op>Apply Model</op> with <op>Performance</op> and the 
+				output of <op>Performance</op> with the first average port "ave" on the right.
+			</task>
+		</tasks>
+
+		<info>
+			Every performance delivered at the "ave" port on the right will be averaged together and delivered to the "ave" output port 
+			of the <op>Cross Validation</op> operator.  Also, note that you can fully control what happens inside of 
+			the cross-validation.  This allows you to take into account the effects of preprocessing 
+			like normalization or feature selection, which can have a significant impact on the performance of the model.
+		</info>
+	</step>
+
+
+	<step name="Connect to result ports and run process.">
+		<tasks>
+			<task>
+				Go back to the main process by clicking on <icon>16/nav_up.png</icon> in the top left corner 
+				of the <ui>Process</ui> panel or by clicking on the link called "Process".
+			</task>
+			<task>
+				<activity>Connect</activity> the green model and yellow averaged performance ports to 
+				the result ports on the right.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon>
+				<activity>Run</activity>
+				the process and inspect the results.
+			</task>
+		</tasks>
+
+		<info>
+			Note that the accuracy now has an additional number (after the "+/-") indicating 
+			the standard deviation of the performances from our cross validation. The standard 
+			deviation gives us an idea of how robust the model is: the smaller the standard deviation, 
+			the less dependent the model performance is on the test data set.
+		</info>
+		
+		<info>
+			The model that is returned is the model trained on the complete data set, and not one of 
+			the models from inside the cross validation.  We deliver this as a convenience to you, but keep 
+			in mind that a cross validation is only about estimating the accuracy of the model, not 
+			about building the best one.  In general, you should build models on as much data as possible.
+		</info>
+	</step>
+			
+			
+	<step name="Leverage the Wisdom of the Crowds">
+		<info>
+			This step only works if you have an internet connection and have registered as 
+			a user of the RapidMiner Community.  Consider 
+			<link url="https://my.rapidminer.com/nexus/account/index.html">doing this now</link> 
+			to get the full power of the Wisdom of the Crowds! You also need to activate the function at 
+			the bottom of the Process panel.
+		</info>
+		
+		<tasks>
+			<task>
+				<activity>Select</activity> the <op>Cross Validation</op> operator by clicking on it.
+			</task>
+			<task>
+				<activity>Look</activity> at the <ui>Parameters</ui> panel.  You will notice that some parameters 
+				have green carets <icon>16/legacy_down_green.png</icon>.  Parameters marked by this are  
+				frequently changed by RapidMiner users.
+			</task>
+			<task>
+				<activity>Click</activity> on the caret next to <param>number of validations</param>.  A small chart will 
+				appear showing you how many users have changed this parameter and what they typically 
+				change it to.
+			</task>
+			<task>
+				You can see that another typical value for the number of cross validation folds is 5 or 6. 
+				<activity>Click on the bar</activity> 
+				to automatically select one of those values or enter the value manually.
+			</task>
+			<task>
+				<icon>16/media_play.png</icon>
+				<activity>Run</activity>
+				the process again.
+			</task>
+		</tasks>
+
+		<info>
+			Whenever you see those green carets in RapidMiner, you can access the <emph>Wisdom of the Crowds</emph>. 
+			RapidMiner gives you recommendations for optimizing your process based on the habits of 
+			hundreds of thousands of other users.  You can see which parameters are typically changed, what values are used, 
+			and at the bottom of the <ui>Process</ui> panel you can see suggested operators to add to your process.  Try it out!
+		</info>
+	</step>
+				
+
+	<step name="Congratulations!">
+		<text>Well done, you have learned how to properly validate supervised machine learning 
+		models! The fact that you used <emph>all</emph> of your data for testing makes cross-validation 
+		a much stronger method than a single split-validation. The modular design of the <op>Cross Validation</op> 
+		operator also allows you to nest preprocessing operators inside of it, leading to even better estimations!
+		Unfortunately, this will come with a resource cost: if you do a 10-fold cross validation, you need to train
+		10 models. This adds extra number-crunching to your process and can increase the required execution time.</text>
+
+		<questions>
+			<question>
+				Does cross validation also work for unsupervised learning where the data does 
+				not have a label?
+			</question>
+			<question>
+				Change the process so that you get a 2-fold cross validation. Use breakpoints 
+				inside the Cross Validation to find out how large the training and the test sets 
+				are now. What is your expectation?
+			</question>
+			<question>
+				Which is the best model: Decision Tree, Naïve Bayes, Rules, or Neural Net? Try them all and find out  
+				which one has the highest accuracy.
+			</question>
+		</questions>
+		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
+	</step>
+</steps>

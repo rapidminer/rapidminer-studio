@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
+<operatorHelp lang="en_EN">
+   <operator>
+      <key>operator_single_tag</key>
+      <name>Operator with one Tag</name>
+      <tags>
+      	<tag>First Tag</tag>
+      </tags>
+   </operator>
+</operatorHelp>
