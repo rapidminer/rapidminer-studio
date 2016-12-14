@@ -47,7 +47,7 @@ public class FloatArrayDataRow extends DataRow {
 
 	/** Sets the given data for the given index. */
 	@Override
-	protected void set(int index, double value, double defaultValue) {
+	protected synchronized void set(int index, double value, double defaultValue) {
 		data[index] = (float) value;
 	}
 
@@ -55,7 +55,7 @@ public class FloatArrayDataRow extends DataRow {
 	 * Creates a new array of the given size if necessary and copies the data into the new array.
 	 */
 	@Override
-	protected void ensureNumberOfColumns(int numberOfColumns) {
+	protected synchronized void ensureNumberOfColumns(int numberOfColumns) {
 		if (data.length >= numberOfColumns) {
 			return;
 		}
@@ -63,10 +63,6 @@ public class FloatArrayDataRow extends DataRow {
 		System.arraycopy(data, 0, newData, 0, data.length);
 		data = newData;
 	}
-
-	/** Does nothing. */
-	@Override
-	public void trim() {}
 
 	/** Returns a string representation of the data row. */
 	@Override

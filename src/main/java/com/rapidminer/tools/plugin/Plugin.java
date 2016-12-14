@@ -297,6 +297,9 @@ public class Plugin {
 		PLUGIN_BLACKLIST.put("rmx_r_scripting", upToRm711);
 		PLUGIN_BLACKLIST.put("rmx_python_scripting", upToRm711);
 
+		// Radoop uses an outdated signature of getAllPlugins() method
+		PLUGIN_BLACKLIST.put("rmx_radoop", upToRm711);
+
 		// RapidLabs / 3rd party extensions causing problems since Studio 7.2
 		PLUGIN_BLACKLIST.put("rmx_rapidprom", new Pair<>(null, new VersionNumber(3, 0, 7)));
 		// yes the rmx_rmx_ prefix is correct...

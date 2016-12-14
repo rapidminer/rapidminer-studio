@@ -61,6 +61,9 @@ public class MetaDataStatisticsController {
 	/** the {@link UpdateQueue} used to sort */
 	private UpdateQueue sortingQueue;
 
+	/** the {@link SwingWorker} to recalculate statistics */
+	private SwingWorker<Void, Void> worker;
+
 	/**
 	 * needed to restore the initial order; faster way as opposed to sorting (which is not easily
 	 * possible because role information is not available)
@@ -106,9 +109,9 @@ public class MetaDataStatisticsController {
 			// updated
 			barrier.await();
 		} catch (InterruptedException e) {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.meta_data_view.calculation_interrupted", e);
+			LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.meta_data_view.calc_interrupted");
 		} catch (BrokenBarrierException e) {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.meta_data_view.calc_sync_broken", e);
+			LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.meta_data_view.calc_sync_broken");
 		}
 	}
 
@@ -323,6 +326,14 @@ public class MetaDataStatisticsController {
 		}
 
 		return resultList;
+	}
+
+	/**
+	 * Stops the statistics recalculation and the sorting queue.
+	 */
+	void stop() {
+		worker.cancel(true);
+		sortingQueue.shutdown();
 	}
 
 	/**
@@ -598,7 +609,7 @@ public class MetaDataStatisticsController {
 	 * @param exampleSet
 	 */
 	private void calculateStatistics(final ExampleSet exampleSet) {
-		final SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+		worker = new SwingWorker<Void, Void>() {
 
 			@Override
 			protected Void doInBackground() throws Exception {

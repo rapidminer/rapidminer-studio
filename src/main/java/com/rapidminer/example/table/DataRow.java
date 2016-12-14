@@ -49,8 +49,8 @@ public abstract class DataRow implements Serializable {
 	 */
 	protected abstract void ensureNumberOfColumns(int numberOfColumns);
 
-	/** Trims the number of columns to the actually needed number. */
-	public abstract void trim();
+	/** Trims the number of columns to the actually needed number. Does nothing by default. */
+	public void trim() {}
 
 	/**
 	 * This returns the type of this particular {@link DataRow} implementation according to the list

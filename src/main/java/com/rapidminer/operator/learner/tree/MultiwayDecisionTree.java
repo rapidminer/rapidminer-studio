@@ -18,6 +18,14 @@
  */
 package com.rapidminer.operator.learner.tree;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.GroupedModel;
 import com.rapidminer.operator.Model;
@@ -25,6 +33,7 @@ import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.meta.AbstractMetaLearner;
 import com.rapidminer.operator.preprocessing.PreprocessingOperator;
@@ -35,14 +44,6 @@ import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.Pair;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 
 /**
@@ -55,10 +56,20 @@ import java.util.Map.Entry;
  * immediately and hence the depth might be reduced. Please note: The resulting tree might be easier
  * to comprehend, but this have to make it perform neither better nor worse! To get an impression of
  * the reliability of the result perform a XValidation.
- * 
+ *
  * @author Sebastian Land
  */
 public class MultiwayDecisionTree extends AbstractMetaLearner {
+
+	/**
+	 * After version 7.3.0 the behaviour of the operator changed. Previously all the models in the
+	 * Grouped Model were created over the original ExampleSet without ever being applied. This made
+	 * it so that the Grouped Model could not easily be applied, since the final Decision Tree model
+	 * was not coherent with the previous models. Starting in version 7.3.1, every model is created
+	 * after the previous one has been applied. Like this, the Grouped Model can be easily applied.
+	 */
+
+	private static final OperatorVersion VERSION_NOT_DISCRETIZING = new OperatorVersion(7, 3, 0);
 
 	/**
 	 * @param description
@@ -103,30 +114,32 @@ public class MultiwayDecisionTree extends AbstractMetaLearner {
 				// setting attribute to consider
 				userbasedDiscretization.setParameter(RegexpAttributeFilter.PARAMETER_REGULAR_EXPRESSION,
 						currentAttributeName);
-
 				// setting borders for splitting
 				List<String[]> borders = new LinkedList<String[]>();
 				double lowerBorder = Double.NEGATIVE_INFINITY;
 				for (i = 0; i < splitPoints.length; i++) {
-					String[] pointSpecifier = new String[] {
-							currentEntry + " in " + Tools.formatNumber(lowerBorder, 2) + " to "
-									+ Tools.formatNumber(splitPoints[i], 2), splitPoints[i] + "" };
+					String[] pointSpecifier = new String[] { currentEntry + " in " + Tools.formatNumber(lowerBorder, 2)
+							+ " to " + Tools.formatNumber(splitPoints[i], 2), splitPoints[i] + "" };
 					lowerBorder = splitPoints[i];
 					borders.add(pointSpecifier);
 				}
-				String[] pointSpecifier = new String[] {
-						currentEntry + " in " + Tools.formatNumber(lowerBorder, 2) + " to "
-								+ Tools.formatNumber(Double.POSITIVE_INFINITY, 2), "Infinity" };
+				String[] pointSpecifier = new String[] { currentEntry + " in " + Tools.formatNumber(lowerBorder, 2) + " to "
+						+ Tools.formatNumber(Double.POSITIVE_INFINITY, 2), "Infinity" };
 				borders.add(pointSpecifier);
 
 				userbasedDiscretization.setParameter(UserBasedDiscretization.PARAMETER_RANGE_NAMES,
 						ParameterTypeList.transformList2String(borders));
 
-				// executing operators
-
+				// Execute the discretization operator and add the outputed discretization model to
+				// the groupedModel
 				Pair<ExampleSet, Model> result = userbasedDiscretization.doWorkModel(exampleSet);
-				exampleSet = result.getFirst();
 				groupedModel.addModel(result.getSecond());
+			}
+
+			// Apply the previously built discretization models to the example Set
+			// if the compatibility level requires it.
+			if (getCompatibilityLevel().isAbove(VERSION_NOT_DISCRETIZING)) {
+				exampleSet = groupedModel.apply(exampleSet);
 			}
 
 			// now apply inner operator on transformed exampleset
@@ -181,6 +194,14 @@ public class MultiwayDecisionTree extends AbstractMetaLearner {
 			default:
 				return false;
 		}
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] changes = super.getIncompatibleVersionChanges();
+		changes = Arrays.copyOf(changes, changes.length + 1);
+		changes[changes.length - 1] = VERSION_NOT_DISCRETIZING;
+		return changes;
 	}
 
 }

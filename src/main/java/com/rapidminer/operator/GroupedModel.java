@@ -53,6 +53,7 @@ public class GroupedModel extends AbstractModel implements Iterable<Model>, Meta
 	/** Applies all models. */
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
+		exampleSet = (ExampleSet) exampleSet.clone();
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();

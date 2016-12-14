@@ -133,6 +133,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 
 	private int size;
 	private int sizeLimit;
+	private boolean completable;
 
 	/**
 	 * Creates a new, empty data table with the given attributes.
@@ -141,6 +142,19 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	 *            the table's attributes
 	 */
 	public ColumnarExampleTable(List<Attribute> attributes) {
+		this(attributes, false);
+	}
+
+	/**
+	 * Creates a new, empty data table with the given attributes.
+	 *
+	 * @param attributes
+	 *            the table's attributes
+	 * @param completable
+	 *            whether {@link #complete()} will be called when the number of rows is final and
+	 *            before the first reading of values
+	 */
+	public ColumnarExampleTable(List<Attribute> attributes, boolean completable) {
 		super(attributes);
 		int attributeCount = super.getNumberOfAttributes();
 
@@ -148,6 +162,9 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 
 		size = 0;
 		sizeLimit = 0;
+
+		// must be set before updating columns
+		this.completable = completable;
 
 		for (int i = 0; i < attributes.size(); i++) {
 			updateColumn(i, attributes.get(i));
@@ -165,6 +182,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 		this.columns = Arrays.copyOf(table.columns, table.columns.length);
 		this.size = table.size;
 		this.sizeLimit = table.sizeLimit;
+		this.completable = table.completable;
 	}
 
 	@Override
@@ -216,7 +234,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 		// prevent index out of bounds if row size does not match
 		for (int i = 0; i < numberOfAttributes; i++) {
 			Attribute attribute = getAttribute(i);
-			columns[i].set(size, dataRow.get(attribute));
+			columns[i].append(dataRow.get(attribute));
 		}
 		size++;
 	}
@@ -231,7 +249,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 		ensureHeight(size + 1);
 		int min = Math.min(super.getNumberOfAttributes(), row.length);
 		for (int i = 0; i < min; i++) {
-			columns[i].set(size, row[i]);
+			columns[i].append(row[i]);
 		}
 		size++;
 	}
@@ -246,7 +264,9 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	public void addBlankRows(int numberOfRows) {
 		if (numberOfRows > 0) {
 			int newSize = size + numberOfRows;
-			ensureHeight(newSize);
+			if (newSize > sizeLimit) {
+				ensureHeight(newSize);
+			}
 			size = newSize;
 		}
 	}
@@ -262,8 +282,23 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	public void fillColumn(Attribute attribute, IntToDoubleFunction function) {
 		Column column = columns[attribute.getTableIndex()];
 		for (int i = 0; i < size; i++) {
-			column.set(i, function.applyAsDouble(i));
+			column.append(function.applyAsDouble(i));
 		}
+	}
+
+	/**
+	 * Resets the column associated with the attribute. The reset is necessary if there were already
+	 * rows added in case auto columns are used because this overwrites the values, so the automatic
+	 * detection needs to be reset.
+	 *
+	 * @param attribute
+	 *            the attribute whose column should be reset
+	 */
+	public void resetColumn(Attribute attribute) {
+		// TODO: discuss if there is a way that is not as memory intensive
+		updateColumn(attribute.getTableIndex(), attribute);
+		columns[attribute.getTableIndex()].ensure(sizeLimit);
+
 	}
 
 	/**
@@ -279,6 +314,18 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 			return;
 		}
 		updateHeight(expectedNumberOfRows);
+	}
+
+	/**
+	 * Signals that the number of rows is final. Must be called when using the constructor
+	 * {@link #ColumnarExampleTable(List, boolean)} with completable {@code true} before the first
+	 * time that values are read.
+	 */
+	public void complete() {
+		completable = false;
+		for (Column column : columns) {
+			column.complete();
+		}
 	}
 
 	/**
@@ -376,10 +423,11 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 				break;
 			case Ontology.NOMINAL:
 			case Ontology.POLYNOMINAL:
-				columns[column] = new IntegerArrayColumn(sizeLimit);
+				columns[column] = completable ? new IntegerAutoColumn(sizeLimit)
+						: new IntegerIncompleteAutoColumn(sizeLimit);
 				break;
 			default:
-				columns[column] = new DoubleArrayColumn(sizeLimit);
+				columns[column] = completable ? new DoubleAutoColumn(sizeLimit) : new DoubleIncompleteAutoColumn(sizeLimit);
 				break;
 		}
 	}

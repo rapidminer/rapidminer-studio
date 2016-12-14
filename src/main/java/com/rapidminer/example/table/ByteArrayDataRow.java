@@ -49,7 +49,7 @@ public class ByteArrayDataRow extends DataRow {
 	 * Sets the value for the given index. This method should only be used by attributes.
 	 */
 	@Override
-	protected void set(int index, double value, double defaultValue) {
+	protected synchronized void set(int index, double value, double defaultValue) {
 		data[index] = (byte) value;
 	}
 
@@ -57,7 +57,7 @@ public class ByteArrayDataRow extends DataRow {
 	 * Creates a new array of the given size if necessary and copies the data into the new array.
 	 */
 	@Override
-	protected void ensureNumberOfColumns(int numberOfColumns) {
+	protected synchronized void ensureNumberOfColumns(int numberOfColumns) {
 		if (data.length >= numberOfColumns) {
 			return;
 		}
@@ -65,10 +65,6 @@ public class ByteArrayDataRow extends DataRow {
 		System.arraycopy(data, 0, newData, 0, data.length);
 		data = newData;
 	}
-
-	/** Does nothing. */
-	@Override
-	public void trim() {}
 
 	/** Returns a string representation of the data row. */
 	@Override

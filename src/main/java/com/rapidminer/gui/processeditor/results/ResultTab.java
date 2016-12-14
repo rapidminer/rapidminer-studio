@@ -41,6 +41,7 @@ import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.viewer.metadata.MetaDataStatisticsViewer;
 import com.rapidminer.license.ConstraintNotRestrictedException;
 import com.rapidminer.license.LicenseConstants;
 import com.rapidminer.license.LicenseEvent;
@@ -257,11 +258,29 @@ public class ResultTab extends JPanel implements Dockable {
 
 	public void freeResources() {
 		if (component != null) {
+			stopStatisticsRecursively(component);
 			remove(component);
 			component = null;
 			resultObject = null;
 		}
 		LicenseManagerRegistry.INSTANCE.get().removeLicenseManagerListener(licenseListener);
+	}
+
+	/**
+	 * Looks recursively for the {@link MetaDataStatisticsViewer} and stops its statistics
+	 * calculation.
+	 *
+	 * @param component
+	 *            the component whose children should be searched
+	 */
+	private void stopStatisticsRecursively(Container component) {
+		for (Component child : component.getComponents()) {
+			if (child instanceof MetaDataStatisticsViewer) {
+				((MetaDataStatisticsViewer) child).stop();
+			} else if (child instanceof Container) {
+				stopStatisticsRecursively((Container) child);
+			}
+		}
 	}
 
 	/**

@@ -117,6 +117,7 @@ public abstract class PredictionModel extends AbstractModel {
 
 		// Copy in order to avoid RemappedExampleSets wrapped around each other accumulating over
 		// time
+		exampleSet = (ExampleSet) exampleSet.clone();
 		copyPredictedLabel(result, exampleSet);
 
 		return exampleSet;

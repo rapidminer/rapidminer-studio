@@ -22,12 +22,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.BinominalMapping;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.preprocessing.AbstractDataProcessing;
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
@@ -62,7 +66,13 @@ public class InternalBinominalRemapping extends AbstractDataProcessing {
 	/** The parameter name for &quot;The second/positive/true value.&quot; */
 	public static final String PARAMETER_POSITIVE_VALUE = "positive_value";
 
-	private AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getInputPort(), Ontology.BINOMINAL);
+	/**
+	 * Incompatible version, old version writes into the example set.
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 3, 0);
+
+	private AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getInputPort(),
+			Ontology.BINOMINAL);
 
 	public InternalBinominalRemapping(OperatorDescription description) {
 		super(description);
@@ -81,9 +91,10 @@ public class InternalBinominalRemapping extends AbstractDataProcessing {
 			if (negativeValue.equals(attribute.getMapping().getPositiveString())
 					&& positiveValue.equals(attribute.getMapping().getNegativeString())) {
 				// create inverse value mapping
-				attribute.getMapping().clear();
-				attribute.getMapping().mapString(negativeValue);
-				attribute.getMapping().mapString(positiveValue);
+				NominalMapping mapping = attribute.getMapping();
+				mapping.clear();
+				mapping.mapString(negativeValue);
+				mapping.mapString(positiveValue);
 				remappedAttributes.add(attribute);
 			} else if (!negativeValue.equals(attribute.getMapping().getNegativeString())
 					|| !positiveValue.equals(attribute.getMapping().getPositiveString())) {
@@ -121,7 +132,13 @@ public class InternalBinominalRemapping extends AbstractDataProcessing {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		return false;
+		return getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 
 	@Override

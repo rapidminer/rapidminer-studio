@@ -63,6 +63,7 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		checkCompatibility(exampleSet);
+		exampleSet = (ExampleSet) exampleSet.clone();
 
 		// creating labels
 		Attribute[] predictedLabels = new Attribute[labelNames.size()];

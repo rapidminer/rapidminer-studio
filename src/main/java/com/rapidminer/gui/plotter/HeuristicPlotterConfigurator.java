@@ -19,10 +19,7 @@
 package com.rapidminer.gui.plotter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,22 +56,15 @@ public class HeuristicPlotterConfigurator {
 
 	public HeuristicPlotterConfigurator(PlotterConfigurationModel plotterSettings, DataTable dataTable) {
 
-		List<String> columnNames = new LinkedList<>(Arrays.asList(dataTable.getColumnNames()));
-		Iterator<String> iterator = columnNames.iterator();
-
-		// iterate over columns and remove all columns from list that have too many values
-		while (iterator.hasNext()) {
-			String columnName = iterator.next();
-			int columnIndex = dataTable.getColumnIndex(columnName);
-
-			// nominal columns with more than MAX_NOMINAL_VALUES will be removed
-			if (columnIndex != -1 && dataTable.isNominal(columnIndex)
-					&& dataTable.getNumberOfValues(columnIndex) > MAX_NOMINAL_VALUES) {
-				iterator.remove();
+		List<String> columnNamesNotTooBig = new ArrayList<>();
+		// only take nominal columns with not to many values
+		for (int i = 0; i < dataTable.getNumberOfColumns(); i++) {
+			if (!(dataTable.isNominal(i) && dataTable.getNumberOfValues(i) > MAX_NOMINAL_VALUES)) {
+				columnNamesNotTooBig.add(dataTable.getColumnName(i));
 			}
 		}
 
-		this.columnNames = columnNames.toArray(new String[columnNames.size()]);
+		this.columnNames = columnNamesNotTooBig.toArray(new String[columnNamesNotTooBig.size()]);
 		this.settings = plotterSettings;
 		this.categoryToColumnListMap = new HashMap<>();
 		populateCategoryMap(dataTable);
@@ -154,7 +144,7 @@ public class HeuristicPlotterConfigurator {
 			if (!type.equals(DATE) && columnNames.length != 0) {
 				selection = columnNames[0]; // default case
 			} // selection remains empty for "Date" if there is no Date value or if the columnNames
-			// list is empty
+				 // list is empty
 		}
 
 		return selection;
