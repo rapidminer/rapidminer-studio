@@ -46,7 +46,11 @@ class NaNColumn implements Column {
 	@Override
 	public void ensure(int size) {
 		// do nothing
+	}
 
+	@Override
+	public void append(double value) {
+		// do nothing
 	}
 
 }

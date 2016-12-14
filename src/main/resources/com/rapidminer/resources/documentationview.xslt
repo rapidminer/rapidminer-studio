@@ -304,27 +304,8 @@
 						<xsl:value-of select="@title" />
 					</a>
 				</p>
-				<xsl:for-each select="description/paragraph">
-					<xsl:choose>
-						<xsl:when test="ul">
-							<xsl:for-each select="ul">
-						 		<table style="padding-left:10px;">			
-	 								<xsl:for-each select="li">
-										<tr>
-											<td valign="top" style="font-family: Ionicons; font-style: normal;">&#xf10a;</td>
-			 								<td><xsl:value-of select="." /></td>
-										</tr>
-									</xsl:for-each>
-								</table>
-					
-							</xsl:for-each>
-						</xsl:when>
-						<xsl:otherwise>
-							<p>
-								<xsl:value-of select="." />
-							</p>
-						</xsl:otherwise>
-					</xsl:choose>					
+				<xsl:for-each select="description">
+					<xsl:apply-templates />
 				</xsl:for-each>
 				<br/>
 			</xsl:for-each>

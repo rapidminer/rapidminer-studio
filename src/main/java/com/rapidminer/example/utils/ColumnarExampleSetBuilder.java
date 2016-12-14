@@ -38,6 +38,9 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	/** the functions to use for filling the columns */
 	private Map<Attribute, IntToDoubleFunction> columnFillers = new HashMap<>();
 
+	/** stores whether rows were added */
+	private boolean rowsAdded = false;
+
 	/**
 	 * Creates a builder that stores values in a {@link ColumnarExampleTable} based on the given
 	 * attributes.
@@ -47,7 +50,7 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	 */
 	ColumnarExampleSetBuilder(List<Attribute> attributes) {
 		super(attributes);
-		table = new ColumnarExampleTable(attributes);
+		table = new ColumnarExampleTable(attributes, true);
 	}
 
 	/**
@@ -59,7 +62,7 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	 */
 	ColumnarExampleSetBuilder(Attribute... attributes) {
 		super(attributes);
-		table = new ColumnarExampleTable(Arrays.asList(attributes));
+		table = new ColumnarExampleTable(Arrays.asList(attributes), true);
 	}
 
 	@Override
@@ -83,12 +86,14 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	@Override
 	public ExampleSetBuilder addDataRow(DataRow dataRow) {
 		table.addDataRow(dataRow);
+		rowsAdded = true;
 		return this;
 	}
 
 	@Override
 	public ExampleSetBuilder addRow(double[] row) {
 		table.addRow(row);
+		rowsAdded = true;
 		return this;
 	}
 
@@ -101,6 +106,7 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	@Override
 	protected ExampleTable getExampleTable() {
 		if (reader != null) {
+			rowsAdded = true;
 			while (reader.hasNext()) {
 				table.addDataRow(reader.next());
 			}
@@ -112,6 +118,8 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 			writeColumnValues();
 		}
 
+		table.complete();
+
 		return table;
 	}
 
@@ -120,6 +128,11 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	 */
 	private void writeColumnValues() {
 		for (Entry<Attribute, IntToDoubleFunction> entry : columnFillers.entrySet()) {
+			if (rowsAdded) {
+				// must reset the column when rows were added so that the auto column mechanism can
+				// work
+				table.resetColumn(entry.getKey());
+			}
 			table.fillColumn(entry.getKey(), entry.getValue());
 		}
 	}

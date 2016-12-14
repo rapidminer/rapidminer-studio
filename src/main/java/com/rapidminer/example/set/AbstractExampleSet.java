@@ -18,25 +18,6 @@
  */
 package com.rapidminer.example.set;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableExampleSetAdapter;
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
-import com.rapidminer.example.AttributeWeights;
-import com.rapidminer.example.Attributes;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.Statistics;
-import com.rapidminer.example.table.SparseFormatDataRowReader;
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.operator.IOContainer;
-import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.MissingIOObjectException;
-import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.XMLException;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,14 +39,33 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableExampleSetAdapter;
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
+import com.rapidminer.example.AttributeWeights;
+import com.rapidminer.example.Attributes;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Statistics;
+import com.rapidminer.example.table.SparseFormatDataRowReader;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.operator.IOContainer;
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.MissingIOObjectException;
+import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.XMLException;
+
 
 /**
  * Implements wrapper methods of abstract example set. Implements all ResultObject methods.<br>
- * 
+ *
  * Apart from the interface methods the implementing classes must have a public single argument
  * clone constructor. This constructor is invoked by reflection from the clone method. Do not forget
  * to call the superclass method.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer
  */
 public abstract class AbstractExampleSet extends ResultObjectAdapter implements ExampleSet {
@@ -431,6 +431,8 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * minimum, and maximum. For nominal attributes the occurences for all values are counted. This
 	 * method collects all attributes (regular and special) in a list and invokes
 	 * <code>recalculateAttributeStatistics(List attributes)</code> and performs only one data scan.
+	 * <p>
+	 * The statistics calculation is stopped by {@link Thread#interrupt()}.
 	 */
 	@Override
 	public void recalculateAllAttributeStatistics() {
@@ -442,7 +444,11 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 		recalculateAttributeStatistics(allAttributes);
 	}
 
-	/** Recalculate the attribute statistics of the given attribute. */
+	/**
+	 * Recalculate the attribute statistics of the given attribute.
+	 * <p>
+	 * The statistics calculation is stopped by {@link Thread#interrupt()}.
+	 */
 	@Override
 	public void recalculateAttributeStatistics(Attribute attribute) {
 		List<Attribute> allAttributes = new ArrayList<Attribute>();
@@ -453,6 +459,8 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	/**
 	 * Here the Example Set is parsed only once, all the information is retained for each example
 	 * set.
+	 * <p>
+	 * The statistics calculation is stopped by {@link Thread#interrupt()}.
 	 */
 	private void recalculateAttributeStatistics(List<Attribute> attributeList) {
 		// do nothing if not desired
@@ -460,17 +468,11 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 			return;
 		} else {
 			// init statistics
-			for (Attribute attribute : attributeList) {
-				Iterator<Statistics> stats = attribute.getAllStatistics();
-				while (stats.hasNext()) {
-					Statistics statistics = stats.next();
-					statistics.startCounting(attribute);
-				}
-			}
+			resetAttributeStatistics(attributeList);
 
 			// calculate statistics
 			Attribute weightAttribute = getAttributes().getWeight();
-			if ((weightAttribute != null) && (!weightAttribute.isNumerical())) {
+			if (weightAttribute != null && !weightAttribute.isNumerical()) {
 				weightAttribute = null;
 			}
 			for (Example example : this) {
@@ -480,11 +482,15 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 					if (weightAttribute != null) {
 						weight = example.getValue(weightAttribute);
 					}
-					Iterator<Statistics> stats = attribute.getAllStatistics();
-					while (stats.hasNext()) {
+					for (Iterator<Statistics> stats = attribute.getAllStatistics(); stats.hasNext();) {
 						Statistics statistics = stats.next();
 						statistics.count(value, weight);
 					}
+				}
+				if (Thread.currentThread().isInterrupted()) {
+					// statistics is only partly calculated, reset
+					resetAttributeStatistics(attributeList);
+					return;
 				}
 			}
 
@@ -505,6 +511,24 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 					Statistics statistics = (Statistics) stats.next().clone();
 					statisticsList.add(statistics);
 				}
+				if (Thread.currentThread().isInterrupted()) {
+					return;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Resets the statistics for all attributes from attributeList.
+	 *
+	 * @param attributeList
+	 *            the attributes for which to reset the statistics
+	 */
+	private void resetAttributeStatistics(List<Attribute> attributeList) {
+		for (Attribute attribute : attributeList) {
+			for (Iterator<Statistics> stats = attribute.getAllStatistics(); stats.hasNext();) {
+				Statistics statistics = stats.next();
+				statistics.startCounting(attribute);
 			}
 		}
 	}

@@ -75,7 +75,7 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
-
+		exampleSet = (ExampleSet) exampleSet.clone();
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();

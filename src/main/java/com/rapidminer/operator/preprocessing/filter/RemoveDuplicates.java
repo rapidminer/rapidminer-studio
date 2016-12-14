@@ -18,6 +18,12 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -36,17 +42,11 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-
 
 /**
  * This operator removed duplicate examples from an example set by comparing all examples with each
  * other on basis of the specified attributes.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land, Zoltan Prekopcsak
  */
 public class RemoveDuplicates extends AbstractDataProcessing {
@@ -80,13 +80,14 @@ public class RemoveDuplicates extends AbstractDataProcessing {
 		// Creating hash buckets and check in case of collision if the example is equal to any other
 		// in the bucket
 		HashMap<Integer, List<Integer>> buckets = new HashMap<>();
+		boolean missingsAsDuplicates = getParameterAsBoolean(PARAMETER_TREAT_MISSING_VALUES_AS_DUPLICATES);
 		for (int i = 0; i < exampleSet.size(); i++) {
 			this.checkForStop();
 			Example example = exampleSet.getExample(i);
 			int hash = 0;
 			for (Attribute attribute : compareAttributes) {
 				long bits = Double.doubleToLongBits(example.getValue(attribute));
-				hash = hash * 31 + (int) (bits ^ (bits >>> 32));
+				hash = hash * 31 + (int) (bits ^ bits >>> 32);
 			}
 			if (!buckets.containsKey(hash)) {
 				buckets.put(hash, Collections.singletonList(Integer.valueOf(i)));
@@ -96,7 +97,7 @@ public class RemoveDuplicates extends AbstractDataProcessing {
 					boolean equal = true;
 					Example compExample = exampleSet.getExample(exampleIndex);
 					for (Attribute attribute : compareAttributes) {
-						if (getParameterAsBoolean(PARAMETER_TREAT_MISSING_VALUES_AS_DUPLICATES)) {
+						if (missingsAsDuplicates) {
 							if (Double.isNaN(example.getValue(attribute)) && Double.isNaN(compExample.getValue(attribute))) {
 								continue;
 							}

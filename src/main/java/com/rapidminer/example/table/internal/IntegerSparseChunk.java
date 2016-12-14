@@ -18,52 +18,51 @@
  */
 package com.rapidminer.example.table.internal;
 
-import java.util.Arrays;
-
-import com.rapidminer.tools.Ontology;
-
-
 /**
- * This implementation of {@link Column} uses an internal double array to store values and is
- * usually used for non-nominal attributes (see {@link Ontology#NOMINAL},
- * {@link Ontology#BINOMINAL}, {@link Ontology#POLYNOMINAL}) .
+ * A sparse chunk that stores integer values.
  *
  * @author Jan Czogalla
- * @see Column
- * @see ColumnarExampleTable
- * @since 7.3
- *
+ * @since 7.3.1
  */
-class DoubleArrayColumn implements Column {
+class IntegerSparseChunk extends AbstractSparseChunk {
 
 	private static final long serialVersionUID = 1L;
 
-	protected double[] data;
-	private int position = 0;
+	private int[] data = AutoColumnUtils.EMPTY_INTEGER_ARRAY;
 
-	/** Creates a new {@code DoubleArrayColumn} with a capacity for {@code size} double values. */
-	DoubleArrayColumn(int size) {
-		data = new double[size];
+	IntegerSparseChunk(double defaultValue) {
+		super(defaultValue);
 	}
 
 	@Override
-	public double get(int row) {
-		return data[row];
+	void removeValueIndex(int index, int length) {
+		int[] tmp = data;
+		if (length != tmp.length) {
+			tmp = new int[length];
+		}
+		copy(data, tmp, index, index + 1, index, valueCount);
+		data = tmp;
 	}
 
 	@Override
-	public void set(int row, double value) {
-		data[row] = value;
+	void insertValueIndex(int index, int length) {
+		int[] tmp = data;
+		if (length != tmp.length) {
+			tmp = new int[length];
+		}
+		copy(data, tmp, index, index, index + 1, valueCount);
+		data = tmp;
 	}
 
 	@Override
-	public void ensure(int size) {
-		data = Arrays.copyOf(data, size);
+	double getValue(int index) {
+		int value = data[index];
+		return value == AutoColumnUtils.INTEGER_NAN ? Double.NaN : value;
 	}
 
 	@Override
-	public void append(double value) {
-		set(position++, value);
+	void setValue(int index, double value) {
+		data[index] = Double.isNaN(value) ? AutoColumnUtils.INTEGER_NAN : (int) value;
 	}
 
 }

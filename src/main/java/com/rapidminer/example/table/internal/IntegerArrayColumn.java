@@ -39,6 +39,7 @@ class IntegerArrayColumn implements Column {
 	private static final long serialVersionUID = 1L;
 
 	protected int[] data;
+	private int position = 0;
 
 	/** Creates a new {@code IntegerArrayColumn} with a capacity for {@code size} integer values. */
 	IntegerArrayColumn(int size) {
@@ -59,6 +60,11 @@ class IntegerArrayColumn implements Column {
 	@Override
 	public void ensure(int size) {
 		data = Arrays.copyOf(data, size);
+	}
+
+	@Override
+	public void append(double value) {
+		set(position++, value);
 	}
 
 }

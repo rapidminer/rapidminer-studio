@@ -55,26 +55,26 @@ public class IntSparseArrayDataRow extends AbstractSparseArrayDataRow {
 	}
 
 	@Override
-	public void resizeValues(int length) {
+	protected void resizeValues(int length) {
 		int[] d = new int[length];
 		System.arraycopy(values, 0, d, 0, Math.min(values.length, length));
 		values = d;
 	}
 
 	@Override
-	public void removeValue(int index) {
-		System.arraycopy(values, index + 1, values, index, (values.length - (index + 1)));
+	protected void removeValue(int index) {
+		System.arraycopy(values, index + 1, values, index, values.length - (index + 1));
 	}
 
 	/** Returns the desired data for the given attribute. */
 	@Override
-	public double getValue(int index) {
+	protected double getValue(int index) {
 		return values[index];
 	}
 
 	/** Sets the given data for the given attribute. */
 	@Override
-	public void setValue(int index, double v) {
+	protected void setValue(int index, double v) {
 		values[index] = (int) v;
 	}
 

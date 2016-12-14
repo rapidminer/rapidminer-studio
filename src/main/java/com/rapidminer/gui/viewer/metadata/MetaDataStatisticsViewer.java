@@ -1257,4 +1257,11 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		return I18N.getGUIMessage("gui.cards.result_view.meta_data_view.icon");
 	}
 
+	/**
+	 * Stops the statistics calculation.
+	 */
+	public void stop() {
+		controller.stop();
+	}
+
 }

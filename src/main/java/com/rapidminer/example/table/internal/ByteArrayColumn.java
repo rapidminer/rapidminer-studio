@@ -53,6 +53,7 @@ class ByteArrayColumn implements Column {
 	private static final int BYTE_NAN = 0b10;
 
 	private byte[] data;
+	private int position = 0;
 
 	/** Creates a new {@code ByteArrayColumn} with a capacity for {@code size} boolean values. */
 	ByteArrayColumn(int size) {
@@ -97,6 +98,11 @@ class ByteArrayColumn implements Column {
 	 */
 	private int byteSize(int size) {
 		return size > 0 ? (size >> 2) + ((size & MOD_FOUR_MASK) > 0 ? 1 : 0) : 0;
+	}
+
+	@Override
+	public void append(double value) {
+		set(position++, value);
 	}
 
 }

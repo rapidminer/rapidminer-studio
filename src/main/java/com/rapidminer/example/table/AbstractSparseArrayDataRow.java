@@ -180,7 +180,7 @@ public abstract class AbstractSparseArrayDataRow extends DataRow implements Spar
 
 	/** Sets the given data for the given attribute. */
 	@Override
-	protected void set(int index, double value, double defaultValue) {
+	protected synchronized void set(int index, double value, double defaultValue) {
 		// first search if it is already available
 		// we need to replace the value
 		// return a negative int if the value is not in the array
@@ -242,7 +242,7 @@ public abstract class AbstractSparseArrayDataRow extends DataRow implements Spar
 
 	/** Trims the data row to the number of actually used elements. */
 	@Override
-	public void trim() {
+	public synchronized void trim() {
 		if (counter < x.length) {
 			int[] y = new int[counter];
 			System.arraycopy(x, 0, y, 0, counter);

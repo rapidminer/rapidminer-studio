@@ -42,6 +42,15 @@ interface Column extends Serializable {
 	double get(int row);
 
 	/**
+	 * Appends the given value to the column. Note that this operation is unchecked, make sure to
+	 * {@link #ensure(int)} a sufficient size before.
+	 *
+	 * @param value
+	 *            the value to append
+	 */
+	void append(double value);
+
+	/**
 	 * Sets the value at the specified row to the given value.
 	 *
 	 * @param row
@@ -58,5 +67,11 @@ interface Column extends Serializable {
 	 *            the size that should be ensured
 	 */
 	void ensure(int size);
+
+	/**
+	 * Completes the column (optional). Invoking this method signals that no further calls to
+	 * {@link #ensure(int)} and {@link #append(double)} will be made.
+	 */
+	default void complete() {};
 
 }

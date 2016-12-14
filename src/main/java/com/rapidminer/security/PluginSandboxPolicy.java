@@ -9,6 +9,7 @@ import java.net.SocketPermission;
 import java.net.URLPermission;
 import java.security.AccessController;
 import java.security.AllPermission;
+import java.security.CodeSource;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PermissionCollection;
@@ -99,6 +100,21 @@ public final class PluginSandboxPolicy extends Policy {
 		} else {
 			return createAllPermissions();
 		}
+	}
+
+	@Override
+	public PermissionCollection getPermissions(CodeSource codesource) {
+		// This is a workaround for the following bug
+		// https://bugs.openjdk.java.net/browse/JDK-8014008
+		// return modifiable empty permissions, to avoid manipulation of read only permissions
+		for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+			if ("sun.rmi.server.LoaderHandler".equals(element.getClassName())
+					&& ("loadClass".equals(element.getMethodName()) || "loadProxyClass".equals(element.getMethodName()))) {
+				return new Permissions();
+			}
+		}
+		// return unmodifiable Policy.UNSUPPORTED_EMPTY_COLLECTION
+		return super.getPermissions(codesource);
 	}
 
 	/**

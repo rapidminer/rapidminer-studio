@@ -152,7 +152,7 @@ public class OperatorDocLoader {
 
 		buf.append("</span></h2></td></tr></table><div style=\"border-top: 1px solid #bbbbbb\">");
 		buf.append(OperatorDocToHtmlConverter.getTagHtmlForDescription(descr));
-		
+
 		buf.append("<h4>Synopsis</h4><p>");
 		buf.append(descr.getShortDescription());
 		buf.append("</p></p><br/><h4>Description</h4>");
@@ -167,8 +167,8 @@ public class OperatorDocLoader {
 			}
 			buf.append("<br/>");
 		}
-		appendPortsToDocumentation(displayedOperator.getInputPorts(), "Input", null, buf);
-		appendPortsToDocumentation(displayedOperator.getOutputPorts(), "Output", "outPorts", buf);
+		appendPortsToDocumentation(displayedOperator.getInputPorts(), "Input", buf);
+		appendPortsToDocumentation(displayedOperator.getOutputPorts(), "Output", buf);
 
 		Parameters parameters = displayedOperator.getParameters();
 		if (parameters.getKeys().size() > 0) {
@@ -240,8 +240,7 @@ public class OperatorDocLoader {
 		return "<br/><a href=\"show_example_" + exampleIndex + "\">Show example process</a>.";
 	}
 
-	private static void appendPortsToDocumentation(Ports<? extends Port> ports, String title, String ulClass,
-			StringBuilder buf) {
+	private static void appendPortsToDocumentation(Ports<? extends Port> ports, String title, StringBuilder buf) {
 		if (ports.getNumberOfPorts() > 0) {
 			buf.append("<h4>" + title + "</h4><table border=\"0\" cellspacing=\"0\"><tr><td>");
 			for (Port port : ports.getAllPorts()) {

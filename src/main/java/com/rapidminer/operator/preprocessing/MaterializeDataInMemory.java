@@ -21,6 +21,7 @@ package com.rapidminer.operator.preprocessing;
 import java.util.Iterator;
 import java.util.List;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
@@ -40,6 +41,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
+import com.rapidminer.tools.ParameterService;
 
 
 /**
@@ -143,30 +145,48 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 
 		// size table by setting number of rows and add attributes
 		ExampleSetBuilder builder = ExampleSets.from(targetAttributes);
-		DataRowFactory rowFactory = new DataRowFactory(dataManagement, '.');
 
-		// copying data differently for sparse and non sparse for speed reasons
-		if (isSparseType(dataManagement)) {
-			for (Example example : exampleSet) {
-				DataRow targetRow = rowFactory.create(targetAttributes.length);
-				for (int i = 0; i < sourceAttributes.length; i++) {
-					double value = example.getValue(sourceAttributes[i]);
-					// we have a fresh sparse row, so everything is currently empty and we only need
-					// to set non default value attributes to avoid unnecessary binary searchs
-					if (value != 0) {
-						targetRow.set(targetAttributes[i], value);
-					}
-				}
-				builder.addDataRow(targetRow);
+		// copy columnwise if beta features are activated and dataManagment is double array or
+		// column view
+		// if datamanagment is not one of the two then there can be value changes when copying to a
+		// "smaller" row which we need to keep
+		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))
+				&& (dataManagement == DataRowFactory.TYPE_DOUBLE_ARRAY
+						|| dataManagement == DataRowFactory.TYPE_COLUMN_VIEW)) {
+			builder.withBlankSize(exampleSet.size());
+			for (int i = 0; i < sourceAttributes.length; i++) {
+				final int index = i;
+				builder.withColumnFiller(targetAttributes[i],
+						j -> exampleSet.getExample(j).getValue(sourceAttributes[index]));
 			}
 		} else {
-			// dense data we copy entirely without condition
-			for (Example example : exampleSet) {
-				DataRow targetRow = rowFactory.create(targetAttributes.length);
-				for (int i = 0; i < sourceAttributes.length; i++) {
-					targetRow.set(targetAttributes[i], example.getValue(sourceAttributes[i]));
+			builder.withExpectedSize(exampleSet.size());
+			DataRowFactory rowFactory = new DataRowFactory(dataManagement, '.');
+
+			// copying data differently for sparse and non sparse for speed reasons
+			if (isSparseType(dataManagement)) {
+				for (Example example : exampleSet) {
+					DataRow targetRow = rowFactory.create(targetAttributes.length);
+					for (int i = 0; i < sourceAttributes.length; i++) {
+						double value = example.getValue(sourceAttributes[i]);
+						// we have a fresh sparse row, so everything is currently empty and we only
+						// need to set non default value attributes to avoid unnecessary binary
+						// searchs
+						if (value != 0) {
+							targetRow.set(targetAttributes[i], value);
+						}
+					}
+					builder.addDataRow(targetRow);
 				}
-				builder.addDataRow(targetRow);
+			} else {
+				// dense data we copy entirely without condition
+				for (Example example : exampleSet) {
+					DataRow targetRow = rowFactory.create(targetAttributes.length);
+					for (int i = 0; i < sourceAttributes.length; i++) {
+						targetRow.set(targetAttributes[i], example.getValue(sourceAttributes[i]));
+					}
+					builder.addDataRow(targetRow);
+				}
 			}
 		}
 

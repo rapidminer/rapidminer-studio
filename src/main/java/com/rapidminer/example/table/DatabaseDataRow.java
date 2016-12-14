@@ -107,7 +107,7 @@ public class DatabaseDataRow extends DataRow {
 	}
 
 	@Override
-	protected void set(int index, double value, double defaultValue) {
+	protected synchronized void set(int index, double value, double defaultValue) {
 		try {
 			String name = this.lastAttribute.getName();
 			if (Double.isNaN(value)) {
@@ -128,10 +128,6 @@ public class DatabaseDataRow extends DataRow {
 	/** Does nothing. */
 	@Override
 	protected void ensureNumberOfColumns(int numberOfColumns) {}
-
-	/** Does nothing. */
-	@Override
-	public void trim() {}
 
 	@Override
 	public String toString() {

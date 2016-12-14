@@ -53,9 +53,9 @@ public class FastSparseDoubleArrayDataRow extends DataRow {
 	}
 
 	@Override
-	protected void set(int index, double value, double defaultValue) {
-		assert (numberOfValues <= tableIndices.length);
-		assert (tableIndices.length == values.length);
+	protected synchronized void set(int index, double value, double defaultValue) {
+		assert numberOfValues <= tableIndices.length;
+		assert tableIndices.length == values.length;
 		int valueIndex = Arrays.binarySearch(tableIndices, 0, numberOfValues, index);
 		if (valueIndex > 0) {
 			// if index already has a value: test if new values is equal to defaultValue
@@ -102,7 +102,7 @@ public class FastSparseDoubleArrayDataRow extends DataRow {
 	}
 
 	@Override
-	public void trim() {
+	public synchronized void trim() {
 		values = Arrays.copyOfRange(values, 0, numberOfValues);
 		tableIndices = Arrays.copyOfRange(tableIndices, 0, numberOfValues);
 	}
