@@ -27,7 +27,7 @@ dependencies {
 	compile 'com.rapidminer.license:rapidminer-license-commons:3.2.0'
 
 	// RapidMiner API
-	compile 'com.rapidminer:rapidminer-api:0.2.1-SNAPSHOT'
+	compile 'com.rapidminer:rapidminer-api:0.2.1'
 	
 	// Alphanumeric sorting
 	compile 'com.rapidminer.external:alphanumeric-sorting:1.0.1'
