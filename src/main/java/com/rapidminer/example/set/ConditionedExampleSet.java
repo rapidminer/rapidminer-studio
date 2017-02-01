@@ -1,23 +1,24 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.set;
 
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,6 +32,7 @@ import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.tools.ExpressionEvaluationException;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -226,20 +228,20 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 			}
 		}
 		try {
-			Class<?> clazz = com.rapidminer.tools.Tools.classForName(className);
+			Class<?> clazz = Tools.classForName(className);
 			if (!Condition.class.isAssignableFrom(clazz)) {
 				throw new ConditionCreationException("'" + className + "' does not implement Condition!");
 			}
-			java.lang.reflect.Constructor constructor = clazz.getConstructor(new Class[] { ExampleSet.class, String.class });
+			Constructor<?> constructor = clazz.getConstructor(new Class[] { ExampleSet.class, String.class });
 			return (Condition) constructor.newInstance(new Object[] { exampleSet, parameterString });
 		} catch (ClassNotFoundException e) {
 			throw new ConditionCreationException("Cannot find class '" + className + "'. Check your classpath.", e);
 		} catch (NoSuchMethodException e) {
-			throw new ConditionCreationException("'" + className + "' must implement two argument constructor " + className
-					+ "(ExampleSet, String)!", e);
+			throw new ConditionCreationException(
+					"'" + className + "' must implement two argument constructor " + className + "(ExampleSet, String)!", e);
 		} catch (IllegalAccessException e) {
-			throw new ConditionCreationException("'" + className + "' cannot access two argument constructor " + className
-					+ "(ExampleSet, String)!", e);
+			throw new ConditionCreationException(
+					"'" + className + "' cannot access two argument constructor " + className + "(ExampleSet, String)!", e);
 		} catch (InstantiationException e) {
 			throw new ConditionCreationException(className + ": cannot create condition (" + e.getMessage() + ").", e);
 		} catch (Throwable e) {

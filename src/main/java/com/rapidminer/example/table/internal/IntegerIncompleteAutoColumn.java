@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.table.internal;
 
 import java.io.Serializable;
+
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 
 
 /**
@@ -53,9 +55,15 @@ final class IntegerIncompleteAutoColumn implements Column {
 		 */
 		final IntegerIncompleteChunk[] chunks;
 
-		IntegerIncompleteChunk(int id, IntegerIncompleteChunk[] chunks) {
+		/**
+		 * decides about sparsity thresholds
+		 */
+		final DataManagement management;
+
+		IntegerIncompleteChunk(int id, IntegerIncompleteChunk[] chunks, DataManagement management) {
 			this.id = id;
 			this.chunks = chunks;
+			this.management = management;
 		}
 
 		/**
@@ -92,13 +100,16 @@ final class IntegerIncompleteAutoColumn implements Column {
 	private int chunkCount = 0;
 	private int ensuredSize = 0;
 
+	private final DataManagement management;
+
 	/**
 	 * Constructs a column with enough chunks to fit size values.
 	 *
 	 * @param size
 	 *            the size of the column
 	 */
-	IntegerIncompleteAutoColumn(int size) {
+	IntegerIncompleteAutoColumn(int size, DataManagement management) {
+		this.management = management;
 		ensure(size);
 	}
 
@@ -138,7 +149,16 @@ final class IntegerIncompleteAutoColumn implements Column {
 				chunks[chunkCount - 1].ensure(chunkSize);
 				enlargeLastChunk = false;
 			} else {
-				chunks[chunkCount] = new IntegerIncompleteDenseChunk(chunkCount, chunks, chunkSize);
+				if (management == DataManagement.MEMORY_OPTIMIZED) {
+					// create sparse chunk with guessed default value 0
+					IntegerIncompleteSparseChunk sparse = new IntegerIncompleteSparseChunk(chunkCount, chunks, 0,
+							management);
+					sparse.hasGuessedDefault();
+					sparse.ensure(chunkSize);
+					chunks[chunkCount] = sparse;
+				} else {
+					chunks[chunkCount] = new IntegerIncompleteDenseChunk(chunkCount, chunks, chunkSize, management);
+				}
 				chunkCount++;
 			}
 			rowsLeft -= chunkSize;

@@ -1,38 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui;
-
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.StackingMode;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
-import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent.RangeAxisConfigChangeType;
-import com.rapidminer.gui.new_plotter.listener.events.ValueSourceChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.ValueSourceChangeEvent.ValueSourceChangeType;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.tools.I18N;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -51,20 +35,36 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.StackingMode;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
+import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent.RangeAxisConfigChangeType;
+import com.rapidminer.gui.new_plotter.listener.events.ValueSourceChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.ValueSourceChangeEvent.ValueSourceChangeType;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.tools.I18N;
+
 
 /**
  * @author Nils Woehler
- * 
+ *
  */
 public class AreaAndBarChartConfigurationPanel extends AbstractTreeSelectionDependentPanel {
 
 	private static final long serialVersionUID = 1L;
 	private JLabel stackingModeLabel;
-	private JComboBox stackingModeComboBox;
+	private JComboBox<StackingMode> stackingModeComboBox;
 	private JLabel itemColorLabel;
 	private JButton itemColorButton;
 	private JLabel fillStyleLabel;
-	private JComboBox fillStyleComboBox;
+	private JComboBox<FillStyle> fillStyleComboBox;
 	private JLabel opacityLabel;
 	private JSlider opacitySlider;
 
@@ -84,9 +84,9 @@ public class AreaAndBarChartConfigurationPanel extends AbstractTreeSelectionDepe
 			fillStyleLabel = new ResourceLabel("plotter.configuration_dialog.fill_style");
 
 			// create fill style combobox
-			fillStyleComboBox = new JComboBox(com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle.values());
+			fillStyleComboBox = new JComboBox<>(FillStyle.values());
 			fillStyleLabel.setLabelFor(fillStyleComboBox);
-			fillStyleComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.fillstyle"));
+			fillStyleComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.fillstyle"));
 			fillStyleComboBox.setSelectedIndex(0);
 			fillStyleComboBox.addPopupMenuListener(new PopupMenuListener() {
 
@@ -119,9 +119,9 @@ public class AreaAndBarChartConfigurationPanel extends AbstractTreeSelectionDepe
 			stackingModeLabel = new ResourceLabel("plotter.configuration_dialog.stacking_mode");
 
 			// create stacking mode combo box
-			stackingModeComboBox = new JComboBox(StackingMode.values());
+			stackingModeComboBox = new JComboBox<>(StackingMode.values());
 			stackingModeLabel.setLabelFor(stackingModeComboBox);
-			stackingModeComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.stacking_mode"));
+			stackingModeComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.stacking_mode"));
 			stackingModeComboBox.setSelectedIndex(0);
 			stackingModeComboBox.addPopupMenuListener(new PopupMenuListener() {
 

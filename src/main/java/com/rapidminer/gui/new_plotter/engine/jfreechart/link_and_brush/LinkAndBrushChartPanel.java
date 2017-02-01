@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush;
 
 import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection;
@@ -245,13 +245,14 @@ public class LinkAndBrushChartPanel extends ChartPanel {
 
 	/**
 	 * Returns whether the panel will zoom on selection or not.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean getZoomOnLinkAndBrushSelection() {
 		return zoomOnLinkAndBrushSelection;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -368,9 +369,7 @@ public class LinkAndBrushChartPanel extends ChartPanel {
 
 		}
 
-		Iterator iterator = ((List) getChartFieldValueByName("overlays")).iterator();
-		while (iterator.hasNext()) {
-			Overlay overlay = (Overlay) iterator.next();
+		for (Overlay overlay : (List<Overlay>) getChartFieldValueByName("overlays")) {
 			overlay.paintOverlay(g2, this);
 		}
 
@@ -388,7 +387,7 @@ public class LinkAndBrushChartPanel extends ChartPanel {
 
 	@SuppressWarnings("unchecked")
 	public List<Overlay> getOverlayList() {
-		return ((List<Overlay>) getChartFieldValueByName("overlays"));
+		return (List<Overlay>) getChartFieldValueByName("overlays");
 	}
 
 	public void setOverlayList(List<Overlay> list) {
@@ -505,7 +504,7 @@ public class LinkAndBrushChartPanel extends ChartPanel {
 		Rectangle2D zoomRectangle = (Rectangle2D) getChartFieldValueByName("zoomRectangle");
 		Point2D zoomPoint = (Point2D) getChartFieldValueByName("zoomPoint");
 		if (getChartFieldValueByName("panLast") != null) {
-			setChartFieldValue((getChartFieldByName("panLast")), null);
+			setChartFieldValue(getChartFieldByName("panLast"), null);
 			setCursor(Cursor.getDefaultCursor());
 		} else if (zoomRectangle != null) {
 			boolean hZoom = false;
@@ -523,7 +522,7 @@ public class LinkAndBrushChartPanel extends ChartPanel {
 			boolean zoomTrigger2 = vZoom
 					&& Math.abs(e.getY() - zoomPoint.getY()) >= (Integer) getChartFieldValueByName("zoomTriggerDistance");
 			if (zoomTrigger1 || zoomTrigger2) {
-				if ((hZoom && (e.getX() < zoomPoint.getX())) || (vZoom && (e.getY() < zoomPoint.getY()))) {
+				if (hZoom && e.getX() < zoomPoint.getX() || vZoom && e.getY() < zoomPoint.getY()) {
 					restoreAutoBounds();
 				} else {
 					double x, y, w, h;

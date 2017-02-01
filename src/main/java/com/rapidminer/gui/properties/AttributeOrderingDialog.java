@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.properties;
 
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -75,13 +75,13 @@ public class AttributeOrderingDialog extends PropertyDialog {
 
 	private final JTextField addRuleTextField;
 
-	private final FilterableListModel attributeListModel;
+	private final FilterableListModel<String> attributeListModel;
 
-	private final DefaultListModel selectedRulesListModel;
+	private final DefaultListModel<String> selectedRulesListModel;
 
-	private final JList attributeList;
+	private final JList<String> attributeList;
 
-	private final JList selectedRulesList;
+	private final JList<String> selectedRulesList;
 
 	private FilterCondition currentTextFieldCondition;
 
@@ -246,6 +246,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 
 		private static final long serialVersionUID = 1L;
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			int[] selectedIndices = selectedRulesList.getSelectedIndices();
@@ -289,8 +290,8 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		attributes = new ArrayList<String>();
 		selectedRules = new ArrayList<String>();
 
-		attributeListModel = new FilterableListModel();
-		selectedRulesListModel = new DefaultListModel();
+		attributeListModel = new FilterableListModel<>();
+		selectedRulesListModel = new DefaultListModel<>();
 		for (String item : type.getAttributeNames()) {
 			if (item != null && item.trim().length() != 0 && !preselectedItems.contains(item)) {
 				attributes.add(item);
@@ -343,7 +344,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		c.weightx = 0;
 		itemSearchFieldPanel.add(hideMatchedButton, c);
 
-		attributeList = new JList(attributeListModel);
+		attributeList = new JList<>(attributeListModel);
 		attributeList.addMouseListener(new MouseListener() {
 
 			@Override
@@ -365,13 +366,13 @@ public class AttributeOrderingDialog extends PropertyDialog {
 			@Override
 			public void mouseReleased(MouseEvent e) {}
 		});
-		attributeList.setCellRenderer(new ListCellRenderer() {
+		attributeList.setCellRenderer(new ListCellRenderer<String>() {
 
 			DefaultListCellRenderer renderer = new DefaultListCellRenderer();
 
 			@Override
-			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
-					boolean cellHasFocus) {
+			public Component getListCellRendererComponent(JList<? extends String> list, String value, int index,
+					boolean isSelected, boolean cellHasFocus) {
 				Component renderComp = renderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				if (currentTextFieldCondition != null && currentTextFieldCondition.matches(value.toString())) {
 					renderComp.setForeground(Color.red);
@@ -453,7 +454,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 
 		JPanel orderingListAndButtonContainer = new JPanel(new GridBagLayout());
 
-		selectedRulesList = new JList(selectedRulesListModel);
+		selectedRulesList = new JList<>(selectedRulesListModel);
 		selectedRulesList.addMouseListener(new MouseListener() {
 
 			@Override

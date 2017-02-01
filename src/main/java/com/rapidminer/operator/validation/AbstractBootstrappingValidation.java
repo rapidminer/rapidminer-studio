@@ -1,22 +1,25 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.validation;
+
+import java.util.List;
+import java.util.Random;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.MappedExampleSet;
@@ -31,9 +34,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-import java.util.Random;
-
 
 /**
  * <p>
@@ -42,13 +42,13 @@ import java.util.Random;
  * not sampled, build a test set on which the model is evaluated. This process is repeated for the
  * specified number of iterations after which the average performance is calculated.
  * </p>
- * 
+ *
  * <p>
  * The basic setup is the same as for the usual cross validation operator. The first inner operator
  * must provide a model and the second a performance vector. Please note that this operator does not
  * regard example weights, i.e. weights specified in a weight column.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractBootstrappingValidation extends ValidationChain {
@@ -79,16 +79,16 @@ public abstract class AbstractBootstrappingValidation extends ValidationChain {
 	@Override
 	public void estimatePerformance(ExampleSet inputSet) throws OperatorException {
 		number = getParameterAsInt(PARAMETER_NUMBER_OF_VALIDATIONS);
+		double sampleRatio = getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
 
 		// start bootstrapping loop
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
 		for (iteration = 0; iteration < number; iteration++) {
-			int[] mapping = createMapping(inputSet,
-					(int) Math.round(inputSet.size() * getParameterAsDouble(PARAMETER_SAMPLE_RATIO)), random);
-			MappedExampleSet trainingSet = new MappedExampleSet((ExampleSet) inputSet.clone(), mapping, true);
+			int[] mapping = createMapping(inputSet, (int) Math.round(inputSet.size() * sampleRatio), random);
+			MappedExampleSet trainingSet = new MappedExampleSet(inputSet, mapping, true);
 			learn(trainingSet);
 
-			MappedExampleSet inverseExampleSet = new MappedExampleSet((ExampleSet) inputSet.clone(), mapping, false);
+			MappedExampleSet inverseExampleSet = new MappedExampleSet(inputSet, mapping, false);
 			evaluate(inverseExampleSet);
 			inApplyLoop();
 		}
@@ -116,7 +116,8 @@ public abstract class AbstractBootstrappingValidation extends ValidationChain {
 				"This ratio of examples will be sampled (with replacement) in each iteration.", 0.0d,
 				Double.POSITIVE_INFINITY, 1.0d));
 		types.add(new ParameterTypeBoolean(PARAMETER_AVERAGE_PERFORMANCES_ONLY,
-				"Indicates if only performance vectors should be averaged or all types of averagable result vectors.", true));
+				"Indicates if only performance vectors should be averaged or all types of averagable result vectors.",
+				true));
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 

@@ -1,22 +1,24 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.clustering.clusterer;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorCapability;
@@ -33,20 +35,19 @@ import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
 import com.rapidminer.tools.math.similarity.DistanceMeasureHelper;
 import com.rapidminer.tools.math.similarity.DistanceMeasures;
+
 import de.dfki.madm.operator.ClusteringAlgorithms;
 import de.dfki.madm.operator.KMeanspp;
 import de.dfki.madm.operator.clustering.XMeansCore;
-
-import java.util.List;
 
 
 /**
  * This operator represents an implementation of X-Means algorithm. It will create a cluster
  * attribute if not present yet.
- * 
+ *
  * The implementation is according to paper of Dan Pelleg an Andrew Moore: - X-means: Extending
  * K-means with Efficient Estimation of the Number of Clusters
- * 
+ *
  * @author Patrick Kalka
  */
 public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
@@ -91,6 +92,7 @@ public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
 		int maxRuns = getParameterAsInt(PARAMETER_MAX_RUNS);
 
 		XMeansCore xm = new XMeansCore(eSet, k_min, k_max, kpp, maxOptimizationSteps, maxRuns, Description, measure, fast_k);
+		xm.setExecutingOperator(this);
 
 		return xm.doXMean();
 	}
@@ -132,8 +134,8 @@ public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
 
 		types.addAll(ClusteringAlgorithms.getParameterTypes(this));
 		types.add(new ParameterTypeInt(PARAMETER_MAX_RUNS,
-				"The maximal number of runs of k-Means with random initialization that are performed.", 1,
-				Integer.MAX_VALUE, 10, false));
+				"The maximal number of runs of k-Means with random initialization that are performed.", 1, Integer.MAX_VALUE,
+				10, false));
 		types.add(new ParameterTypeInt(PARAMETER_MAX_OPTIMIZATION_STEPS,
 				"The maximal number of iterations performed for one run of k-Means.", 1, Integer.MAX_VALUE, 100, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));

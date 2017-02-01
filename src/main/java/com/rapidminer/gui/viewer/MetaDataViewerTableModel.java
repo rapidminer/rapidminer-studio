@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.viewer;
 
 import com.rapidminer.example.Attribute;
@@ -82,7 +82,7 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
 			"The number of unknown values in the data set for this attribute", "The unit annotation.",
 			"The comment annotation" };
 
-	public static final Class[] COLUMN_CLASSES = new Class[] { String.class, Double.class, String.class, String.class,
+	public static final Class<?>[] COLUMN_CLASSES = new Class[] { String.class, Double.class, String.class, String.class,
 			String.class, String.class, String.class, String.class, Double.class, Double.class, String.class, String.class };
 
 	private int[] currentMapping = { TYPE, NAME, VALUE_TYPE, STATISTICS_AVERAGE, STATISTICS_RANGE, STATISTICS_UNKNOWN };
@@ -418,18 +418,15 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
 						}
 
 						List<ValueAndCount> valuesAndCounts = new ArrayList<ValueAndCount>();
-						Iterator<String> i = attribute.getMapping().getValues().iterator();
-						while (i.hasNext()) {
-							String value = i.next();
-							valuesAndCounts.add(new ValueAndCount(value, (int) exampleSet.getStatistics(attribute,
-									Statistics.COUNT, value)));
+						for (String value : attribute.getMapping().getValues()) {
+							valuesAndCounts.add(new ValueAndCount(value,
+									(int) exampleSet.getStatistics(attribute, Statistics.COUNT, value)));
 						}
 
 						Collections.sort(valuesAndCounts);
 
-						Iterator<ValueAndCount> f = valuesAndCounts.iterator();
 						int n = 0;
-						while (f.hasNext()) {
+						for (ValueAndCount valueAndCount : valuesAndCounts) {
 							if (n > maxDisplayValues) {
 								break;
 							}
@@ -438,15 +435,14 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
 							}
 							n++;
 
-							ValueAndCount valueAndCount = f.next();
 							str.append(valueAndCount.value);
 							str.append(" (" + valueAndCount.count + ")");
 						}
 
 						str.append(", ... and " + (valuesAndCounts.size() - 2 * maxDisplayValues) + " more ... ");
 
-						Iterator<ValueAndCount> l = valuesAndCounts.listIterator(valuesAndCounts.size() - 1
-								- maxDisplayValues);
+						Iterator<ValueAndCount> l = valuesAndCounts
+								.listIterator(valuesAndCounts.size() - 1 - maxDisplayValues);
 						while (l.hasNext()) {
 							str.append(", ");
 							ValueAndCount valueAndCount = l.next();
@@ -454,10 +450,8 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
 							str.append(" (" + valueAndCount.count + ")");
 						}
 					} else {
-						Iterator<String> i = attribute.getMapping().getValues().iterator();
 						int n = 0;
-						while (i.hasNext()) {
-							String value = i.next();
+						for (String value : attribute.getMapping().getValues()) {
 							if (n > 0) {
 								str.append(", ");
 							}

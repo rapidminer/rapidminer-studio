@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.look.ui;
 
 import java.awt.Component;
@@ -71,7 +71,7 @@ public class ComboBoxUI extends BasicComboBoxUI {
 
 		private static final long serialVersionUID = 1389744017891652801L;
 
-		public RapidLookComboPopup(JComboBox comboBox) {
+		public RapidLookComboPopup(JComboBox<?> comboBox) {
 			super(comboBox);
 		}
 
@@ -94,8 +94,9 @@ public class ComboBoxUI extends BasicComboBoxUI {
 			setFocusable(false);
 		}
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		@Override
-		protected JList createList() {
+		protected JList<?> createList() {
 			return new JList(this.comboBox.getModel()) {
 
 				private static final long serialVersionUID = -2467344849011408539L;
@@ -253,6 +254,7 @@ public class ComboBoxUI extends BasicComboBoxUI {
 		this.comboBox.add(this.currentValuePane);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void installUI(JComponent c) {
 		super.installUI(c);
@@ -291,9 +293,10 @@ public class ComboBoxUI extends BasicComboBoxUI {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void paintCurrentValue(Graphics g, Rectangle bounds, boolean hasFocus) {
-		ListCellRenderer renderer = this.comboBox.getRenderer();
+		ListCellRenderer<Object> renderer = this.comboBox.getRenderer();
 		Component c;
 
 		if (hasFocus && !isPopupVisible(this.comboBox)) {
@@ -342,7 +345,7 @@ public class ComboBoxUI extends BasicComboBoxUI {
 		return new RapidLookComboPopup(this.comboBox);
 	}
 
-	private JComboBox getComboBox() {
+	private JComboBox<?> getComboBox() {
 		return this.comboBox;
 	}
 
@@ -420,8 +423,8 @@ public class ComboBoxUI extends BasicComboBoxUI {
 
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		boolean hasFocus = comboBox.isEditable() ? c.isFocusOwner()
-				|| ((JComboBox) c).getEditor().getEditorComponent().isFocusOwner() : c.isFocusOwner();
+		boolean hasFocus = comboBox.isEditable()
+				? c.isFocusOwner() || ((JComboBox<?>) c).getEditor().getEditorComponent().isFocusOwner() : c.isFocusOwner();
 				if (c.isEnabled()) {
 					if (hasFocus) {
 						g2.setColor(Colors.COMBOBOX_BORDER_FOCUS);

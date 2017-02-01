@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.io;
 
 import com.rapidminer.Process;
@@ -149,11 +149,12 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	public static class ReaderDescription {
 
 		private final String fileExtension;
-		private final Class<? extends AbstractReader> readerClass;
+		private final Class<? extends AbstractReader<?>> readerClass;
 		/** This parameter must be set to the file name. */
 		private final String fileParameterKey;
 
-		public ReaderDescription(String fileExtension, Class<? extends AbstractReader> readerClass, String fileParameterKey) {
+		public ReaderDescription(String fileExtension, Class<? extends AbstractReader<?>> readerClass,
+				String fileParameterKey) {
 			super();
 			this.fileExtension = fileExtension;
 			this.readerClass = readerClass;
@@ -172,7 +173,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	 * @depreacated call {@link #createReader(URI)}
 	 */
 	@Deprecated
-	public static AbstractReader createReader(URL url) throws OperatorCreationException {
+	public static AbstractReader<?> createReader(URL url) throws OperatorCreationException {
 		try {
 			return createReader(url.toURI());
 		} catch (URISyntaxException e) {
@@ -185,7 +186,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	 * the file extension. Only Operators registered via
 	 * {@link #registerReaderDescription(ReaderDescription)} will be checked.
 	 */
-	public static AbstractReader createReader(URI uri) throws OperatorCreationException {
+	public static AbstractReader<?> createReader(URI uri) throws OperatorCreationException {
 		String fileName = uri.toString();
 		int dot = fileName.lastIndexOf('.');
 		if (dot == -1) {
@@ -197,7 +198,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 				return null;
 			}
 
-			AbstractReader reader = OperatorService.createOperator(rd.readerClass);
+			AbstractReader<?> reader = OperatorService.createOperator(rd.readerClass);
 			if (uri.getScheme().equals("file")) {
 				// local file
 				File file = new File(uri);

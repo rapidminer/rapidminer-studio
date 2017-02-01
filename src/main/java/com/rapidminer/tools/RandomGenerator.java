@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools;
 
 import com.rapidminer.Process;
@@ -49,6 +49,12 @@ public class RandomGenerator extends Random {
 
 	public static final String PARAMETER_LOCAL_RANDOM_SEED = "local_random_seed";
 
+	/** The default seed (used by the ProcessRootOperator) */
+	public static final int DEFAULT_SEED = 2001;
+
+	/** Magic seed of the ProcessRootOperator to use the current system time as seed */
+	private static final int USE_SYSTEM_TIME = -1;
+
 	/** Use this alphabet for random String creation. */
 	private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -56,7 +62,13 @@ public class RandomGenerator extends Random {
 	 * Global random number generator using the random number generator seed specified for the root
 	 * operator (ProcessRootOperator).
 	 */
-	private static RandomGenerator globalRandomGenerator = new RandomGenerator(2001);
+	private static final ThreadLocal<RandomGenerator> GLOBAL_RANDOM_GENERATOR = new ThreadLocal<RandomGenerator>() {
+
+		@Override
+		protected RandomGenerator initialValue() {
+			return new RandomGenerator(DEFAULT_SEED);
+		}
+	};
 
 	/** Initializes the random number generator without a seed. */
 	private RandomGenerator() {
@@ -72,19 +84,8 @@ public class RandomGenerator extends Random {
 
 	/** Returns the global random number generator. */
 	public static RandomGenerator getGlobalRandomGenerator() {
-		return getRandomGenerator(null, -1);
+		return GLOBAL_RANDOM_GENERATOR.get();
 	}
-
-	// /** Returns the global random number generator if the seed is negative and a new
-	// RandomGenerator
-	// * with the given seed if the seed is positive or zero. This way is is possible to allow for
-	// local
-	// * random seeds. Operators like learners or validation operators should definitely make use of
-	// such
-	// * a local random generator. */
-	// public static RandomGenerator getRandomGenerator(int seed) {
-	// return getRandomGenerator(null, seed);
-	// }
 
 	/**
 	 * Returns the global random number generator if useLocalGenerator is false and a new
@@ -99,15 +100,18 @@ public class RandomGenerator extends Random {
 	/**
 	 * Returns the global random number generator if the seed is negative and a new RandomGenerator
 	 * with the given seed if the seed is positive or zero. This way is is possible to allow for
-	 * local random seeds. Operators like learners or validation operators should definitely make use
-	 * of such a local random generator.
+	 * local random seeds. Operators like learners or validation operators should definitely make
+	 * use of such a local random generator.
+	 *
+	 * @param process
+	 *            Not used
+	 * @param seed
+	 *            The seed to use in the RandomGenerator
+	 * @return new RandomGenerator if seed >=0, globalRandomGenerator otherwise
 	 */
 	public static RandomGenerator getRandomGenerator(Process process, int seed) {
 		if (seed < 0) {
-			if (globalRandomGenerator == null) { // might happen
-				init(process);
-			}
-			return globalRandomGenerator;
+			return GLOBAL_RANDOM_GENERATOR.get();
 		} else {
 			return new RandomGenerator(seed);
 		}
@@ -119,20 +123,20 @@ public class RandomGenerator extends Random {
 	 * be invoked before the process starts.
 	 */
 	public static void init(Process process) {
-		long seed = 2001;
+		long seed = DEFAULT_SEED;
 		if (process != null) {
 			try {
 				seed = process.getRootOperator().getParameterAsInt(ProcessRootOperator.PARAMETER_RANDOM_SEED);
 			} catch (UndefinedParameterError e) {
 				// tries to read the general random seed
-				// if no seed was specified (cannot happen) use seed 2001
-				seed = 2001;
+				// if no seed was specified (cannot happen) use default seed
+				seed = DEFAULT_SEED;
 			}
 		}
-		if (seed == -1) {
-			globalRandomGenerator = new RandomGenerator();
+		if (seed == USE_SYSTEM_TIME) {
+			GLOBAL_RANDOM_GENERATOR.set(new RandomGenerator());
 		} else {
-			globalRandomGenerator = new RandomGenerator(seed);
+			GLOBAL_RANDOM_GENERATOR.set(new RandomGenerator(seed));
 		}
 	}
 
@@ -168,7 +172,7 @@ public class RandomGenerator extends Random {
 		if (operator.getParameterAsBoolean(PARAMETER_USE_LOCAL_RANDOM_SEED)) {
 			return new RandomGenerator(operator.getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
 		} else {
-			return globalRandomGenerator;
+			return GLOBAL_RANDOM_GENERATOR.get();
 		}
 	}
 

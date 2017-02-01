@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter;
 
 import java.awt.BorderLayout;
@@ -67,7 +67,7 @@ public class PlotterPanel extends JPanel implements PrintableComponent {
 	}
 
 	/** The line style rendered for the legend (or key). */
-	public static class LineStyleCellRenderer extends JLabel implements ListCellRenderer {
+	public static class LineStyleCellRenderer<E> extends JLabel implements ListCellRenderer<E> {
 
 		private static final long serialVersionUID = -7039142638209143602L;
 
@@ -78,10 +78,9 @@ public class PlotterPanel extends JPanel implements PrintableComponent {
 		}
 
 		@Override
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+		public Component getListCellRendererComponent(JList<? extends E> list, E value, int index, boolean isSelected,
 				boolean cellHasFocus) {
-			String s = value.toString();
-			setText(s);
+			setText(value.toString());
 			Icon icon = plotter.getIcon(index);
 			if (icon != null) {
 				setIcon(icon);

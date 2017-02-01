@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.construction;
 
 import java.util.Iterator;
@@ -25,7 +25,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
-import com.rapidminer.gui.dialog.StopDialog;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -39,7 +38,6 @@ import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
@@ -56,8 +54,6 @@ import com.rapidminer.tools.Tools;
  * @author Ingo Mierswa <br>
  */
 public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
-
-	public static final String PARAMETER_SHOW_STOP_DIALOG = "show_stop_dialog";
 
 	public static final String PARAMETER_MAXIMAL_FITNESS = "maximal_fitness";
 
@@ -241,16 +237,6 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 		List<ExampleSetBasedPopulationOperator> preOps = getPreEvaluationPopulationOperators(es);
 		List<ExampleSetBasedPopulationOperator> postOps = getPostEvaluationPopulationOperators(es);
 
-		// stop dialog
-		boolean userDialogOk = true;
-		StopDialog stopDialog = null;
-		if (getParameterAsBoolean(PARAMETER_SHOW_STOP_DIALOG)) {
-			stopDialog = new StopDialog("Stop Dialog",
-					"<html>Press the stop button to abort the search for best feature space.<br>"
-							+ "The best individual found so far is returned.</html>");
-			stopDialog.setVisible(true);
-		}
-
 		// create initial population
 		population = createInitialPopulation(es);
 		log("Initial population has " + population.getNumberOfIndividuals() + " individuals.");
@@ -260,7 +246,7 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 		getProgress().setCheckForStop(false);
 
 		// optimization loop
-		while (userDialogOk && !solutionGoodEnough(population) && !isMaximumReached()) {
+		while (!solutionGoodEnough(population) && !isMaximumReached()) {
 			population.nextGeneration();
 
 			applyOpList(preOps, population);
@@ -273,14 +259,7 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 			population.updateEvaluation();
 			applyOpList(postOps, population);
 
-			userDialogOk = stopDialog == null ? true : stopDialog.isStillRunning();
-
 			applyLoopOperations();
-		}
-
-		if (stopDialog != null) {
-			stopDialog.setVisible(false);
-			stopDialog.dispose();
 		}
 
 		// optimization finished
@@ -407,12 +386,6 @@ public abstract class ExampleSetBasedFeatureOperator extends OperatorChain {
 		List<ParameterType> types = super.getParameterTypes();
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
-
-		ParameterType type = new ParameterTypeBoolean(
-				PARAMETER_SHOW_STOP_DIALOG,
-				"Determines if a dialog with a button should be displayed which stops the run: the best individual is returned.",
-				false);
-		types.add(type);
 
 		types.add(new ParameterTypeDouble(PARAMETER_MAXIMAL_FITNESS,
 				"The optimization will stop if the fitness reaches the defined maximum.", 0.0d, Double.POSITIVE_INFINITY,

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,7 +18,6 @@
  */
 package com.rapidminer.gui.viewer;
 
-import java.awt.Color;
 import java.awt.event.MouseEvent;
 
 import javax.swing.table.JTableHeader;
@@ -27,9 +26,7 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableListener;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.look.RapidLookTools;
-import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
 
 
 /**
@@ -40,18 +37,6 @@ import com.rapidminer.gui.tools.SwingTools;
 public class DataTableViewerTable extends ExtendedJTable implements DataTableListener {
 
 	private static final long serialVersionUID = 3206734427933036268L;
-
-	public static final int ALTERNATING = 0;
-
-	public static final int SCALED = 1;
-
-	public static final int ABS_SCALED = 2;
-
-	private int rendererType = ALTERNATING;
-
-	private double min = 0.0d;
-
-	private double max = 0.0d;
 
 	private DataTableViewerTableModel model;
 
@@ -64,35 +49,12 @@ public class DataTableViewerTable extends ExtendedJTable implements DataTableLis
 		if (dataTable != null) {
 			setDataTable(dataTable);
 		}
-		setCellColorProvider(new CellColorProvider() {
 
-			@Override
-			public Color getCellColor(int row, int col) {
-				switch (rendererType) {
-					case ALTERNATING:
-						if (row % 2 == 0) {
-							return Color.WHITE;
-						} else {
-							return SwingTools.LIGHTEST_BLUE;
-						}
-					case SCALED:
-					case ABS_SCALED:
-					default:
-						Object valueObject = getValueAt(row, col);
-						try {
-							double value = Double.parseDouble(valueObject.toString());
-							if (rendererType == ABS_SCALED) {
-								value = Math.abs(value);
-							}
-							float scaled = (float) ((value - min) / (max - min));
-							Color color = new Color(1.0f - scaled * 0.2f, 1.0f - scaled * 0.2f, 1.0f);
-							return color;
-						} catch (NumberFormatException e) {
-							return Color.WHITE;
-						}
-				}
-			}
-		});
+		setAutoResizeMode(AUTO_RESIZE_OFF);
+		setRowHeight(getRowHeight() + 5);
+
+		// handles the highlighting of the currently hovered row
+		setRowHighlighting(true);
 	}
 
 	@Override
@@ -106,41 +68,7 @@ public class DataTableViewerTable extends ExtendedJTable implements DataTableLis
 		this.model = new DataTableViewerTableModel(dataTable);
 		setModel(model);
 
-		// if not alternating color scheme the cells are colored scaled with the value
-		if (rendererType != ALTERNATING) {
-			recalculateStatistics();
-		}
-
 		dataTable.addDataTableListener(this);
-	}
-
-	public void setRendererType(int rendererType) {
-		this.rendererType = rendererType;
-		if (rendererType != ALTERNATING) {
-			recalculateStatistics();
-		}
-	}
-
-	private void recalculateStatistics() {
-		this.min = Double.POSITIVE_INFINITY;
-		this.max = Double.NEGATIVE_INFINITY;
-		for (int x = 0; x < getRowCount(); x++) {
-			for (int y = 0; y < getColumnCount(); y++) {
-				Object valueObject = getValueAt(x, y);
-				double value = Double.NaN;
-				try {
-					value = Double.parseDouble(valueObject.toString());
-					if (rendererType == ABS_SCALED) {
-						value = Math.abs(value);
-					}
-				} catch (NumberFormatException e) {
-				}
-				if (!Double.isNaN(value)) {
-					this.min = Math.min(this.min, value);
-					this.max = Math.max(this.max, value);
-				}
-			}
-		}
 	}
 
 	/** This method ensures that the correct tool tip for the current column is delivered. */

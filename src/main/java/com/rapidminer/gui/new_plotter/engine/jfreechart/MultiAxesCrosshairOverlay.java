@@ -1,28 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.engine.jfreechart;
 
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
@@ -98,7 +97,7 @@ public class MultiAxesCrosshairOverlay extends CrosshairOverlay {
 	 * Returns the crosshairs on the range axis with index 0.
 	 */
 	@Override
-	public List getRangeCrosshairs() {
+	public List<Crosshair> getRangeCrosshairs() {
 		return getRangeCrosshairs(0);
 	}
 
@@ -106,6 +105,7 @@ public class MultiAxesCrosshairOverlay extends CrosshairOverlay {
 		return rangeCrosshairs.get(axisIdx);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void paintOverlay(Graphics2D g2, ChartPanel chartPanel) {
 		Shape savedClip = g2.getClip();
@@ -115,9 +115,7 @@ public class MultiAxesCrosshairOverlay extends CrosshairOverlay {
 		XYPlot plot = (XYPlot) chart.getPlot();
 		ValueAxis xAxis = plot.getDomainAxis();
 		RectangleEdge xAxisEdge = plot.getDomainAxisEdge();
-		Iterator iterator = this.getDomainCrosshairs().iterator();
-		while (iterator.hasNext()) {
-			Crosshair ch = (Crosshair) iterator.next();
+		for (Crosshair ch : (List<Crosshair>) getDomainCrosshairs()) {
 			if (ch.isVisible()) {
 				double x = ch.getValue();
 				double xx = xAxis.valueToJava2D(x, dataArea, xAxisEdge);
@@ -133,9 +131,7 @@ public class MultiAxesCrosshairOverlay extends CrosshairOverlay {
 		for (ArrayList<Crosshair> crosshairsForRange : rangeCrosshairs) {
 			ValueAxis yAxis = plot.getRangeAxis(rangeAxisIdx);
 			RectangleEdge yAxisEdge = plot.getRangeAxisEdge(rangeAxisIdx);
-			iterator = crosshairsForRange.iterator();
-			while (iterator.hasNext()) {
-				Crosshair ch = (Crosshair) iterator.next();
+			for (Crosshair ch : crosshairsForRange) {
 				if (ch.isVisible()) {
 					double y = ch.getValue();
 					double yy = yAxis.valueToJava2D(y, dataArea, yAxisEdge);

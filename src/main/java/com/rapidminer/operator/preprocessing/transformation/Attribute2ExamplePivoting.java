@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.transformation;
 
 import java.util.ArrayList;
@@ -123,9 +123,10 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 		// identify series attributes and check attribute types
 		for (AttributeMetaData attribute : metaData.getAllAttributes()) {
 			if (attribute.getName().equals(indexParamName)) {
-				addError(new SimpleMetaDataError(Severity.ERROR, getInputPort(),
-						Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_INDEX_ATTRIBUTE,
-								"newly_quick_fix_created_index_attr")), "already_contains_attribute", indexParamName));
+				addError(new SimpleMetaDataError(Severity.ERROR,
+						getInputPort(), Collections.singletonList(new ParameterSettingQuickFix(this,
+								PARAMETER_INDEX_ATTRIBUTE, "newly_quick_fix_created_index_attr")),
+						"already_contains_attribute", indexParamName));
 			}
 			if (!attribute.isSpecial()) {
 				boolean matched = false;
@@ -276,6 +277,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 		}
 
 		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
+		boolean keepMissings = getParameterAsBoolean(PARAMETER_KEEP_MISSINGS);
 		int counter = 0;
 		for (Example example : exampleSet) {
 
@@ -303,8 +305,8 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 				if (!createNominalIndex) {
 					data[data.length - numberOfSeries - 1] = l;
 				} else {
-					data[data.length - numberOfSeries - 1] = indexAttribute.getMapping().mapString(
-							seriesAttributes.get(0).get(k).getName());
+					data[data.length - numberOfSeries - 1] = indexAttribute.getMapping()
+							.mapString(seriesAttributes.get(0).get(k).getName());
 				}
 
 				// set series attribute values
@@ -325,7 +327,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 					data[data.length - numberOfSeries + i] = newValue;
 				}
 				checkForStop();
-				if (!getParameterAsBoolean(PARAMETER_KEEP_MISSINGS) && onlyMissings) {
+				if (!keepMissings && onlyMissings) {
 					continue;
 				} else {
 					builder.addRow(data);
@@ -346,9 +348,9 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = new ParameterTypeList(PARAMETER_SERIES,
-				"Maps a number of source attributes onto result attributes.", new ParameterTypeString("attribute_name",
-						"Specifies the name of the resulting attribute"), new ParameterTypeRegexp(
-								PARAMETER_ATTRIBUTE_NAME_REGEX, "Attributes that forms series.", false));
+				"Maps a number of source attributes onto result attributes.",
+				new ParameterTypeString("attribute_name", "Specifies the name of the resulting attribute"),
+				new ParameterTypeRegexp(PARAMETER_ATTRIBUTE_NAME_REGEX, "Attributes that forms series.", false));
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeString(PARAMETER_INDEX_ATTRIBUTE, "Name of newly created index attribute.", false, false);

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.dialog;
 
 import java.awt.Component;
@@ -134,7 +134,7 @@ public class BugZillaAssistant extends ButtonDialog {
 
 	private final JTextArea descriptionField = new JTextArea(descriptionText, 5, 20);
 
-	private final JList attachments = new JList(new DefaultListModel());
+	private final JList<File> attachments = new JList<>(new DefaultListModel<>());
 
 	private JButton submitButton;
 
@@ -154,7 +154,7 @@ public class BugZillaAssistant extends ButtonDialog {
 		Map<String, String> valQueryMap = new HashMap<String, String>();
 		valQueryMap.put("field", "component");
 		valQueryMap.put("product_id", "2");
-		Map resultMap = (Map) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
+		Map<?, ?> resultMap = (Map<?, ?>) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
 		compVals = (Object[]) resultMap.get("values");
 		thread.getProgressListener().setCompleted(50);
 		if (thread.isCancelled()) {
@@ -164,7 +164,7 @@ public class BugZillaAssistant extends ButtonDialog {
 		valQueryMap = new HashMap<String, String>();
 		valQueryMap.put("field", "severity");
 		valQueryMap.put("product_id", "2");
-		resultMap = (Map) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
+		resultMap = (Map<?, ?>) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
 		severityVals = (Object[]) resultMap.get("values");
 		thread.getProgressListener().setCompleted(65);
 		if (thread.isCancelled()) {
@@ -174,7 +174,7 @@ public class BugZillaAssistant extends ButtonDialog {
 		valQueryMap = new HashMap<String, String>();
 		valQueryMap.put("field", "platform");
 		valQueryMap.put("product_id", "2");
-		resultMap = (Map) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
+		resultMap = (Map<?, ?>) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
 		platformVals = (Object[]) resultMap.get("values");
 		thread.getProgressListener().setCompleted(80);
 		if (thread.isCancelled()) {
@@ -184,7 +184,7 @@ public class BugZillaAssistant extends ButtonDialog {
 		valQueryMap = new HashMap<String, String>();
 		valQueryMap.put("field", "op_sys");
 		valQueryMap.put("product_id", "2");
-		resultMap = (Map) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
+		resultMap = (Map<?, ?>) rpcClient.execute("Bug.legal_values", new Object[] { valQueryMap });
 		osVals = (Object[]) resultMap.get("values");
 		thread.getProgressListener().setCompleted(95);
 		if (thread.isCancelled()) {
@@ -273,7 +273,7 @@ public class BugZillaAssistant extends ButtonDialog {
 
 		c.gridx = 1;
 		c.gridy = 0;
-		final JComboBox compBox = new JComboBox(compVals);
+		final JComboBox<Object> compBox = new JComboBox<>(compVals);
 		compBox.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), getKey() + ".component.tip"));
 		compBox.setSelectedItem("Vega: Processes, data flow  and meta data");
 		detailPanel.add(compBox, c);
@@ -284,7 +284,7 @@ public class BugZillaAssistant extends ButtonDialog {
 
 		c.gridx = 3;
 		c.gridy = 0;
-		final JComboBox severityBox = new JComboBox(severityVals);
+		final JComboBox<Object> severityBox = new JComboBox<>(severityVals);
 		severityBox.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), getKey() + ".severity.tip"));
 		severityBox.setSelectedItem("normal");
 		detailPanel.add(severityBox, c);
@@ -295,7 +295,7 @@ public class BugZillaAssistant extends ButtonDialog {
 
 		c.gridx = 1;
 		c.gridy = 1;
-		final JComboBox platformBox = new JComboBox(platformVals);
+		final JComboBox<Object> platformBox = new JComboBox<>(platformVals);
 		platformBox.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), getKey() + ".platform.tip"));
 		detailPanel.add(platformBox, c);
 
@@ -305,7 +305,7 @@ public class BugZillaAssistant extends ButtonDialog {
 
 		c.gridx = 3;
 		c.gridy = 1;
-		final JComboBox osBox = new JComboBox(osVals);
+		final JComboBox<Object> osBox = new JComboBox<>(osVals);
 		osBox.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), getKey() + ".os.tip"));
 		String os = System.getProperty("os.name");
 		if (os.toLowerCase(Locale.ENGLISH).contains("windows")) {
@@ -426,7 +426,7 @@ public class BugZillaAssistant extends ButtonDialog {
 			public void actionPerformed(ActionEvent e) {
 				File file = SwingTools.chooseFile(null, null, true, null, null);
 				if (file != null) {
-					((DefaultListModel) attachments.getModel()).addElement(file);
+					((DefaultListModel<File>) attachments.getModel()).addElement(file);
 				}
 			}
 
@@ -438,7 +438,7 @@ public class BugZillaAssistant extends ButtonDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (attachments.getSelectedIndex() >= 0) {
-					((DefaultListModel) attachments.getModel()).remove(attachments.getSelectedIndex());
+					((DefaultListModel<File>) attachments.getModel()).remove(attachments.getSelectedIndex());
 				}
 			}
 		}));
@@ -548,10 +548,10 @@ public class BugZillaAssistant extends ButtonDialog {
 					public void run() {
 						try {
 							getProgressListener().setTotal(100);
-							ListModel model = attachments.getModel();
+							ListModel<File> model = attachments.getModel();
 							File[] attachments = new File[model.getSize()];
 							for (int i = 0; i < attachments.length; i++) {
-								attachments[i] = (File) model.getElementAt(i);
+								attachments[i] = model.getElementAt(i);
 							}
 							getProgressListener().setCompleted(20);
 

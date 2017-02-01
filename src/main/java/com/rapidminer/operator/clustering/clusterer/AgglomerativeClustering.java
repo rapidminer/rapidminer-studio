@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.HashMap;
@@ -62,14 +62,18 @@ import com.rapidminer.tools.math.similarity.DistanceMeasures;
  */
 public class AgglomerativeClustering extends Operator {
 
+	public static final String PARAMETER_MODE = "mode";
+
+	public static final String[] modes = new String[] { "SingleLink", "CompleteLink", "AverageLink" };
+
+	private static final double INTERMEDIATE_PROGRESS = 60;
+
+	private static final int OPERATOR_PROGRESS_STEPS = 10;
+
 	private InputPort exampleSetInput = getInputPorts().createPort("example set", new ExampleSetMetaData());
 	private OutputPort modelOutput = getOutputPorts().createPort("cluster model");
 	private OutputPort exampleSetOutput = getOutputPorts().createPort("example set");
 	private DistanceMeasureHelper measureHelper = new DistanceMeasureHelper(this);
-
-	public static final String PARAMETER_MODE = "mode";
-
-	public static final String[] modes = new String[] { "SingleLink", "CompleteLink", "AverageLink" };
 
 	public AgglomerativeClustering(OperatorDescription description) {
 		super(description);
@@ -96,6 +100,9 @@ public class AgglomerativeClustering extends Operator {
 		Tools.onlyNonMissingValues(exampleSet, getOperatorClassName(), this, new String[0]);
 		Tools.checkAndCreateIds(exampleSet);
 
+		// initialize operator progress
+		getProgress().setTotal(100);
+
 		Attribute idAttribute = exampleSet.getAttributes().getId();
 		boolean idAttributeIsNominal = idAttribute.isNominal();
 		DistanceMatrix matrix = new DistanceMatrix(exampleSet.size());
@@ -117,10 +124,13 @@ public class AgglomerativeClustering extends Operator {
 				clusterMap.put(nextClusterId,
 						new HierarchicalClusterLeafNode(nextClusterId, example1.getValueAsString(idAttribute)));
 			} else {
-				clusterMap
-						.put(nextClusterId, new HierarchicalClusterLeafNode(nextClusterId, example1.getValue(idAttribute)));
+				clusterMap.put(nextClusterId,
+						new HierarchicalClusterLeafNode(nextClusterId, example1.getValue(idAttribute)));
 			}
 			nextClusterId++;
+			if (nextClusterId % OPERATOR_PROGRESS_STEPS == 0) {
+				getProgress().setCompleted((int) (INTERMEDIATE_PROGRESS * nextClusterId / exampleSet.size()));
+			}
 		}
 
 		// creating linkage method
@@ -132,6 +142,7 @@ public class AgglomerativeClustering extends Operator {
 		}
 
 		// now building agglomerative tree bottom up
+		int clusterMapStartSize = clusterMap.size();
 		while (clusterMap.size() > 1) {
 			Agglomeration agglomeration = linkage.getNextAgglomeration(nextClusterId, clusterMap);
 			HierarchicalClusterNode newNode = new HierarchicalClusterNode(nextClusterId, agglomeration.getDistance());
@@ -141,11 +152,15 @@ public class AgglomerativeClustering extends Operator {
 			clusterMap.remove(agglomeration.getClusterId2());
 			clusterMap.put(nextClusterId, newNode);
 			nextClusterId++;
+			if (nextClusterId % OPERATOR_PROGRESS_STEPS == 0) {
+				getProgress().setCompleted((int) (INTERMEDIATE_PROGRESS + (100.0 - INTERMEDIATE_PROGRESS)
+						* (clusterMapStartSize - clusterMap.size()) / clusterMapStartSize));
+			}
 		}
 
 		// creating model
-		HierarchicalClusterModel model = new DendogramHierarchicalClusterModel(clusterMap.entrySet().iterator().next()
-				.getValue());
+		HierarchicalClusterModel model = new DendogramHierarchicalClusterModel(
+				clusterMap.entrySet().iterator().next().getValue());
 
 		// registering visualizer
 		ObjectVisualizerService.addObjectVisualizer(model, new ExampleVisualizer((ExampleSet) exampleSet.clone()));

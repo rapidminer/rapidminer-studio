@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.postprocessing;
 
 import java.util.HashMap;
@@ -75,9 +75,8 @@ public class SimpleUncertainPredictionsTransformation extends AbstractDataProces
 	public SimpleUncertainPredictionsTransformation(OperatorDescription description) {
 		super(description);
 
-		getExampleSetInputPort().addPrecondition(
-				new ExampleSetPrecondition(getExampleSetInputPort(), Ontology.VALUE_TYPE, Attributes.PREDICTION_NAME,
-						Attributes.CONFIDENCE_NAME));
+		getExampleSetInputPort().addPrecondition(new ExampleSetPrecondition(getExampleSetInputPort(), Ontology.VALUE_TYPE,
+				Attributes.PREDICTION_NAME, Attributes.CONFIDENCE_NAME));
 	}
 
 	@Override
@@ -146,14 +145,13 @@ public class SimpleUncertainPredictionsTransformation extends AbstractDataProces
 				CLASS_HANDLING_MODES, CLASS_HANDLING_BALANCED, false));
 		ParameterType type = new ParameterTypeDouble(PARAMETER_MIN_CONFIDENCE,
 				"The minimal confidence necessary for not setting the prediction to 'unknown'.", 0.0d, 1.0d, 0.5d);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_CLASS_HANDLING, CLASS_HANDLING_MODES, true,
-				CLASS_HANDLING_BALANCED));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_CLASS_HANDLING, CLASS_HANDLING_MODES, true, CLASS_HANDLING_BALANCED));
 		type.setExpert(false);
 		list.add(type);
-		type = new ParameterTypeList(
-				PARAMETER_MIN_CONFIDENCES,
-				"A list which defines individual thresholds for classes.",
-				new ParameterTypeString(PARAMETER_CLASS_VALUE, "The class for which the confidence threshold should be set."),
+		type = new ParameterTypeList(PARAMETER_MIN_CONFIDENCES, "A list which defines individual thresholds for classes.",
+				new ParameterTypeString(PARAMETER_CLASS_VALUE,
+						"The class for which the confidence threshold should be set."),
 				new ParameterTypeDouble(PARAMETER_MIN_CONFIDENCE,
 						"The minimal confidence necessary for not setting the prediction to 'unknown'.", 0.0d, 1.0d, 0.5d),
 				false);

@@ -1,22 +1,24 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.visualization;
+
+import java.util.List;
 
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
@@ -57,17 +59,15 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorService;
 
-import java.util.List;
-
 
 /**
  * This operator creates a Lift chart based on a Pareto plot for the discretized confidence values
  * for the given example set and model. The model will be applied on the example set and a lift
  * chart will be produced afterwards.
- * 
+ *
  * Please note that a predicted label of the given example set will be removed during the
  * application of this operator.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class LiftParetoChartGenerator extends Operator {
@@ -185,8 +185,8 @@ public class LiftParetoChartGenerator extends Operator {
 			noiseGeneration.setParameter(AttributeSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
 			noiseGeneration.setParameter(AttributeSubsetSelector.PARAMETER_FILTER_TYPE,
 					AttributeSubsetSelector.CONDITION_NAMES[AttributeSubsetSelector.CONDITION_REGULAR_EXPRESSION]);
-			noiseGeneration.setParameter(RegexpAttributeFilter.PARAMETER_REGULAR_EXPRESSION, Attributes.CONFIDENCE_NAME
-					+ "\\(" + targetClass + "\\)");
+			noiseGeneration.setParameter(RegexpAttributeFilter.PARAMETER_REGULAR_EXPRESSION,
+					Attributes.CONFIDENCE_NAME + "\\(" + targetClass + "\\)");
 		} catch (OperatorCreationException e1) {
 			// cannot happen
 			throw new OperatorException(getName() + ": Cannot create noise operator (" + e1 + ")", e1);
@@ -195,17 +195,16 @@ public class LiftParetoChartGenerator extends Operator {
 
 		// create and specify discretization
 		AbstractDiscretizationOperator discretization = null;
+		int numberOfBins = getParameterAsInt(PARAMETER_NUMBER_OF_BINS);
 		try {
 			if (binningType == BINNING_SIMPLE) {
 				discretization = OperatorService.createOperator(BinDiscretization.class);
-				discretization.setParameter(BinDiscretization.PARAMETER_NUMBER_OF_BINS,
-						getParameterAsInt(PARAMETER_NUMBER_OF_BINS) + "");
+				discretization.setParameter(BinDiscretization.PARAMETER_NUMBER_OF_BINS, numberOfBins + "");
 				discretization.setParameter(BinDiscretization.PARAMETER_RANGE_NAME_TYPE,
 						DiscretizationModel.RANGE_NAME_TYPES[DiscretizationModel.RANGE_NAME_INTERVAL]);
 				discretization.setParameter(BinDiscretization.PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS,
 						getParameterAsBoolean(PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS) + "");
-				discretization.setParameter(BinDiscretization.PARAMETER_NUMBER_OF_DIGITS,
-						getParameterAsInt(PARAMETER_NUMBER_OF_BINS) + "");
+				discretization.setParameter(BinDiscretization.PARAMETER_NUMBER_OF_DIGITS, numberOfBins + "");
 			} else if (binningType == BINNING_ABSOLUTE) {
 				discretization = OperatorService.createOperator(AbsoluteDiscretization.class);
 
@@ -213,26 +212,23 @@ public class LiftParetoChartGenerator extends Operator {
 						DiscretizationModel.RANGE_NAME_TYPES[DiscretizationModel.RANGE_NAME_INTERVAL]);
 				discretization.setParameter(AbsoluteDiscretization.PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS,
 						getParameterAsBoolean(PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS) + "");
-				discretization.setParameter(AbsoluteDiscretization.PARAMETER_NUMBER_OF_DIGITS,
-						getParameterAsInt(PARAMETER_NUMBER_OF_BINS) + "");
+				discretization.setParameter(AbsoluteDiscretization.PARAMETER_NUMBER_OF_DIGITS, numberOfBins + "");
 
 			} else {
 				discretization = OperatorService.createOperator(FrequencyDiscretization.class);
-				discretization.setParameter(FrequencyDiscretization.PARAMETER_NUMBER_OF_BINS,
-						getParameterAsInt(PARAMETER_NUMBER_OF_BINS) + "");
+				discretization.setParameter(FrequencyDiscretization.PARAMETER_NUMBER_OF_BINS, numberOfBins + "");
 				discretization.setParameter(FrequencyDiscretization.PARAMETER_RANGE_NAME_TYPE,
 						DiscretizationModel.RANGE_NAME_TYPES[DiscretizationModel.RANGE_NAME_INTERVAL]);
 				discretization.setParameter(FrequencyDiscretization.PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS,
 						getParameterAsBoolean(PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS) + "");
-				discretization.setParameter(FrequencyDiscretization.PARAMETER_NUMBER_OF_DIGITS,
-						getParameterAsInt(PARAMETER_NUMBER_OF_BINS) + "");
+				discretization.setParameter(FrequencyDiscretization.PARAMETER_NUMBER_OF_DIGITS, numberOfBins + "");
 			}
 			discretization.setParameter(PreprocessingOperator.PARAMETER_CREATE_VIEW, true + "");
 			discretization.setParameter(AttributeSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
 			discretization.setParameter(AttributeSubsetSelector.PARAMETER_FILTER_TYPE,
 					AttributeSubsetSelector.CONDITION_NAMES[AttributeSubsetSelector.CONDITION_REGULAR_EXPRESSION]);
-			discretization.setParameter(RegexpAttributeFilter.PARAMETER_REGULAR_EXPRESSION, Attributes.CONFIDENCE_NAME
-					+ "\\(" + targetClass + "\\)");
+			discretization.setParameter(RegexpAttributeFilter.PARAMETER_REGULAR_EXPRESSION,
+					Attributes.CONFIDENCE_NAME + "\\(" + targetClass + "\\)");
 		} catch (OperatorCreationException e) {
 			// cannot happen
 			throw new OperatorException(getName() + ": Cannot create discretization operator (" + e + ")");
@@ -247,10 +243,9 @@ public class LiftParetoChartGenerator extends Operator {
 			discretizedData = discretization.doWork(discretizedData);
 		} else {
 			// Frequency or Bin discretization
-			int numberOfBins = getParameterAsInt(PARAMETER_NUMBER_OF_BINS);
 			int startNumber = numberOfBins;
 			boolean valid = false;
-			while ((!valid) && (numberOfBins >= 2)) {
+			while (!valid && numberOfBins >= 2) {
 				try {
 					discretizedData = noiseGeneration.doWork(discretizedData);
 					discretizedData = discretization.doWork(discretizedData);
@@ -268,16 +263,16 @@ public class LiftParetoChartGenerator extends Operator {
 		}
 
 		// create lift data
-		Attribute confidenceAttribute = discretizedData.getAttributes().get(
-				Attributes.CONFIDENCE_NAME + "(" + targetClass + ")");
+		Attribute confidenceAttribute = discretizedData.getAttributes()
+				.get(Attributes.CONFIDENCE_NAME + "(" + targetClass + ")");
 		labelAttribute = discretizedData.getAttributes().getLabel();
-		SimpleDataTable dataTable = new SimpleDataTable("Lift Data", new String[] { "Confidence for " + targetClass,
-				labelAttribute.getName() });
+		SimpleDataTable dataTable = new SimpleDataTable("Lift Data",
+				new String[] { "Confidence for " + targetClass, labelAttribute.getName() });
 		for (Example example : discretizedData) {
 			String confidenceValue = example.getValueAsString(confidenceAttribute);
 			String classValue = example.getNominalValue(labelAttribute);
-			dataTable.add(new SimpleDataTableRow(new double[] { dataTable.mapString(0, confidenceValue),
-					dataTable.mapString(1, classValue) }));
+			dataTable.add(new SimpleDataTableRow(
+					new double[] { dataTable.mapString(0, confidenceValue), dataTable.mapString(1, classValue) }));
 		}
 
 		// clean up
@@ -312,8 +307,8 @@ public class LiftParetoChartGenerator extends Operator {
 				"The confidence is discretized so that each bin contains this amount of examples.", 1, Integer.MAX_VALUE,
 				1000);
 		type.setExpert(false);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_BINNING_TYPE, BINNING_TYPES, false,
-				BINNING_ABSOLUTE));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_BINNING_TYPE, BINNING_TYPES, false, BINNING_ABSOLUTE));
 		types.add(type);
 
 		type = new ParameterTypeBoolean(PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS,
@@ -322,23 +317,21 @@ public class LiftParetoChartGenerator extends Operator {
 		types.add(type);
 
 		type = new ParameterTypeInt(PARAMETER_NUMBER_OF_DIGITS,
-				"The minimum number of digits used for the interval names (-1: determine minimal number automatically).",
-				-1, Integer.MAX_VALUE, -1);
+				"The minimum number of digits used for the interval names (-1: determine minimal number automatically).", -1,
+				Integer.MAX_VALUE, -1);
 		type.setExpert(false);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS, false,
-				false));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_AUTOMATIC_NUMBER_OF_DIGITS, false, false));
 		types.add(type);
 
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_SHOW_BAR_LABELS,
+		types.add(new ParameterTypeBoolean(PARAMETER_SHOW_BAR_LABELS,
 				"Indicates if the bars should display the size of the bin together with the amount of the target class in the corresponding bin.",
 				true, false));
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_SHOW_CUMULATIVE_LABELS,
+		types.add(new ParameterTypeBoolean(PARAMETER_SHOW_CUMULATIVE_LABELS,
 				"Indicates if the cumulative line plot should display the cumulative sizes of the bins together with the cumulative amount of the target class in the corresponding bins.",
 				false, false));
-		types.add(new ParameterTypeBoolean(PARAMETER_ROTATE_LABELS,
-				"Indicates if the labels of the bins should be rotated.", false, false));
+		types.add(new ParameterTypeBoolean(PARAMETER_ROTATE_LABELS, "Indicates if the labels of the bins should be rotated.",
+				false, false));
 
 		return types;
 	}

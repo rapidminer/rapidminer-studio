@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.selection;
 
 import java.util.ArrayList;
@@ -90,7 +90,7 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 	public static final String PARAMETER_ALLOWED_CONSECUTIVE_FAILS = "speculative_rounds";
 
 	public static final String[] STOPPING_BEHAVIORS = new String[] { "with decrease", "with decrease of more than",
-	"with significant decrease" };
+			"with significant decrease" };
 
 	public static final int WITH_DECREASE = 0;
 	public static final int WITH_DECREASE_EXCEEDS = 1;
@@ -158,8 +158,8 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 		int maxNumberOfFails = getParameterAsInt(PARAMETER_ALLOWED_CONSECUTIVE_FAILS);
 		int behavior = getParameterAsInt(PARAMETER_STOPPING_BEHAVIOR);
 
-		boolean useRelativeIncrease = behavior == WITH_DECREASE_EXCEEDS ? getParameterAsBoolean(PARAMETER_USE_RELATIVE_DECREASE)
-				: false;
+		boolean useRelativeIncrease = behavior == WITH_DECREASE_EXCEEDS
+				? getParameterAsBoolean(PARAMETER_USE_RELATIVE_DECREASE) : false;
 		double maximalDecrease = 0;
 		if (useRelativeIncrease) {
 			maximalDecrease = useRelativeIncrease ? getParameterAsDouble(PARAMETER_MAX_RELATIVE_DECREASE)
@@ -188,7 +188,7 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 		PerformanceVector lastPerformance = getPerformance(exampleSet);
 		PerformanceVector bestPerformanceEver = lastPerformance;
 		// init operator progress
-		getProgress().setTotal(maxNumberOfAttributes * numberOfAttributes);
+		getProgress().setTotal(100);
 
 		for (i = 0; i < maxNumberOfAttributes && !earlyAbort; i++) {
 			// setting values for logging
@@ -214,7 +214,10 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 					attributes.addRegular(attributeArray[current]);
 					currentAttributes = null; // removing reference
 				}
-				getProgress().step();
+
+				// update operator progress
+				getProgress().setCompleted((int) (100.0 * (i * numberOfAttributes + current + 1)
+						/ (maxNumberOfAttributes * numberOfAttributes)));
 			}
 			double currentFitness = currentBestPerformance.getMainCriterion().getFitness();
 			if (i != 0) {
@@ -283,9 +286,6 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 			// switching best index off
 			attributes.remove(attributeArray[bestIndex]);
 			selected[bestIndex] = false;
-
-			// update operator progress
-			getProgress().step();
 		}
 		// add predictively removed attributes: speculative execution did not yield good result
 		for (Integer removeIndex : speculativeList) {
@@ -320,15 +320,13 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeInt(
-				PARAMETER_MAX_ATTRIBUTES,
+		ParameterType type = new ParameterTypeInt(PARAMETER_MAX_ATTRIBUTES,
 				"The maximal number of backward eliminations. Hence the resulting number of attributes is maximal reduced by this number.",
 				1, Integer.MAX_VALUE, 10);
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeInt(
-				PARAMETER_ALLOWED_CONSECUTIVE_FAILS,
+		type = new ParameterTypeInt(PARAMETER_ALLOWED_CONSECUTIVE_FAILS,
 				"Defines the number of times, the stopping criterion might be consecutivly ignored before the elimination is actually stopped. A number higher than one might help not to stack in the local optima.",
 				0, Integer.MAX_VALUE, 0);
 		type.setExpert(false);
@@ -342,27 +340,25 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 		type = new ParameterTypeBoolean(PARAMETER_USE_RELATIVE_DECREASE,
 				"If checked, the relative performance decrease will be used as stopping criterion.", true);
 		type.setExpert(false);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS,
-				false, WITH_DECREASE_EXCEEDS));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS, false, WITH_DECREASE_EXCEEDS));
 		types.add(type);
 
-		type = new ParameterTypeDouble(
-				PARAMETER_MAX_ABSOLUT_DECREASE,
+		type = new ParameterTypeDouble(PARAMETER_MAX_ABSOLUT_DECREASE,
 				"If the absolut performance decrease to the last step exceeds this threshold, the selection will be stopped.",
 				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true);
 		type.setExpert(false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_RELATIVE_DECREASE, true, false));
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS,
-				false, WITH_DECREASE_EXCEEDS));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS, false, WITH_DECREASE_EXCEEDS));
 		types.add(type);
-		type = new ParameterTypeDouble(
-				PARAMETER_MAX_RELATIVE_DECREASE,
+		type = new ParameterTypeDouble(PARAMETER_MAX_RELATIVE_DECREASE,
 				"If the relative performance decrease to the last step exceeds this threshold, the selection will be stopped.",
 				-1d, 1d, true);
 		type.setExpert(false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_RELATIVE_DECREASE, true, true));
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS,
-				false, WITH_DECREASE_EXCEEDS));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS, false, WITH_DECREASE_EXCEEDS));
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_ALPHA,

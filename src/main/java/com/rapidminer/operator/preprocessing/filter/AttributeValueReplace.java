@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.util.LinkedHashMap;
@@ -57,7 +57,7 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
  * replace_by parameter can be defined as an arbitrary string. Empty strings are also allowed.
  * Capturing groups of the defined regular expression can be accessed with $1, $2, $3...
  * </p>
- * 
+ *
  * @author Ingo Mierswa, Helge Homburg, Tobias Malbrecht
  */
 public class AttributeValueReplace extends AbstractValueProcessing {
@@ -122,16 +122,18 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 		for (Attribute oldAttribute : exampleSet.getAttributes()) {
 			Attribute newAttribute = AttributeFactory.createAttribute(oldAttribute.getValueType());
 			attributeMap.put(oldAttribute, newAttribute);
-			for (String value : oldAttribute.getMapping().getValues()) {
-				Matcher whatMatcher = whatPattern.matcher(value);
-				String replacedValue = null;
-				try {
-					replacedValue = whatMatcher.replaceAll(replaceBy);
-				} catch (Exception e) {
-					throw new UserError(this, "malformed_regexp_replacement", replaceBy, replaceWhat);
-				}
-				if (replacedValue.length() > 0) {
-					newAttribute.getMapping().mapString(replacedValue);
+			if (oldAttribute.isNominal() && newAttribute.isNominal()) {
+				for (String value : oldAttribute.getMapping().getValues()) {
+					Matcher whatMatcher = whatPattern.matcher(value);
+					String replacedValue = null;
+					try {
+						replacedValue = whatMatcher.replaceAll(replaceBy);
+					} catch (Exception e) {
+						throw new UserError(this, "malformed_regexp_replacement", replaceBy, replaceWhat);
+					}
+					if (replacedValue.length() > 0) {
+						newAttribute.getMapping().mapString(replacedValue);
+					}
 				}
 			}
 		}
@@ -139,26 +141,29 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 		for (Entry<Attribute, Attribute> entry : attributeMap.entrySet()) {
 			Attribute oldAttribute = entry.getKey();
 			Attribute newAttribute = entry.getValue();
-			exampleSet.getExampleTable().addAttribute(newAttribute);
-			exampleSet.getAttributes().addRegular(newAttribute);
-			for (Example example : exampleSet) {
-				double value = example.getValue(oldAttribute);
-				if (Double.isNaN(value)) {
-					example.setValue(newAttribute, Double.NaN);
-				} else {
-					String stringValue = oldAttribute.getMapping().mapIndex((int) value);
-					Matcher whatMatcher = whatPattern.matcher(stringValue);
-					String newValue = whatMatcher.replaceAll(replaceBy);
-					if (newValue.length() == 0) {
+			if (oldAttribute.isNominal() && newAttribute.isNominal()) {
+				exampleSet.getExampleTable().addAttribute(newAttribute);
+				exampleSet.getAttributes().addRegular(newAttribute);
+				for (Example example : exampleSet) {
+					double value = example.getValue(oldAttribute);
+					if (Double.isNaN(value)) {
 						example.setValue(newAttribute, Double.NaN);
 					} else {
-						example.setValue(newAttribute, newAttribute.getMapping().mapString(newValue));
+						String stringValue = oldAttribute.getMapping().mapIndex((int) value);
+						Matcher whatMatcher = whatPattern.matcher(stringValue);
+						String newValue = whatMatcher.replaceAll(replaceBy);
+						if (newValue.length() == 0) {
+							example.setValue(newAttribute, Double.NaN);
+						} else {
+							example.setValue(newAttribute, newAttribute.getMapping().mapString(newValue));
+						}
 					}
 				}
+				exampleSet.getAttributes().remove(oldAttribute);
+				newAttribute.setName(oldAttribute.getName());
+				newAttribute
+						.setConstruction("replace(" + oldAttribute.getName() + "," + replaceWhat + "," + replaceBy + ")");
 			}
-			exampleSet.getAttributes().remove(oldAttribute);
-			newAttribute.setName(oldAttribute.getName());
-			newAttribute.setConstruction("replace(" + oldAttribute.getName() + "," + replaceWhat + "," + replaceBy + ")");
 		}
 		return exampleSet;
 	}
@@ -171,8 +176,8 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeRegexp(PARAMETER_REPLACE_WHAT,
-				"A regular expression specifying what should be replaced.", false, false));
+		types.add(new ParameterTypeRegexp(PARAMETER_REPLACE_WHAT, "A regular expression specifying what should be replaced.",
+				false, false));
 		types.add(new ParameterTypeString(PARAMETER_REPLACE_BY,
 				"The replacement for the region matched by the regular expression. Possibly including capturing groups.",
 				true, false));

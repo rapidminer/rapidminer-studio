@@ -1,27 +1,28 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.table.internal;
 
 import java.util.Arrays;
 
 import com.rapidminer.example.table.internal.AutoColumnUtils.DensityResult;
 import com.rapidminer.example.table.internal.IntegerIncompleteAutoColumn.IntegerIncompleteChunk;
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 
 
 /**
@@ -41,12 +42,13 @@ final class IntegerIncompleteDenseChunk extends IntegerIncompleteChunk {
 
 	private int[] data = AutoColumnUtils.EMPTY_INTEGER_ARRAY;
 
-	IntegerIncompleteDenseChunk(int id, IntegerIncompleteChunk[] chunks, int size) {
-		this(id, chunks, size, false);
+	IntegerIncompleteDenseChunk(int id, IntegerIncompleteChunk[] chunks, int size, DataManagement management) {
+		this(id, chunks, size, false, management);
 	}
 
-	IntegerIncompleteDenseChunk(int id, IntegerIncompleteChunk[] chunks, int size, boolean stayDense) {
-		super(id, chunks);
+	IntegerIncompleteDenseChunk(int id, IntegerIncompleteChunk[] chunks, int size, boolean stayDense,
+			DataManagement management) {
+		super(id, chunks, management);
 		this.undecided = !stayDense;
 		ensure(size);
 	}
@@ -88,10 +90,12 @@ final class IntegerIncompleteDenseChunk extends IntegerIncompleteChunk {
 	 */
 	private void checkSparse() {
 		DensityResult result = AutoColumnUtils.checkDensity(data);
+		double thresholdDensity = management == DataManagement.AUTO ? AutoColumnUtils.THRESHOLD_HIGH_SPARSITY_DENSITY
+				: AutoColumnUtils.THRESHOLD_INTEGER_MEDIUM_SPARSITY_DENSITY;
 
-		if (result.density < AutoColumnUtils.THRESHOLD_SPARSE_DENSITY) {
+		if (result.density < thresholdDensity) {
 			double defaultValue = result.mostFrequentValue;
-			IntegerIncompleteChunk sparse = new IntegerIncompleteSparseChunk(id, chunks, defaultValue);
+			IntegerIncompleteChunk sparse = new IntegerIncompleteSparseChunk(id, chunks, defaultValue, management);
 			sparse.ensure(ensuredSize);
 			boolean isNaN = Double.isNaN(defaultValue);
 			for (int i = 0; i < AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE; i++) {

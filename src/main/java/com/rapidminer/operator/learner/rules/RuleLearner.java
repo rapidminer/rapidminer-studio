@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.rules;
 
 import java.util.LinkedList;
@@ -95,6 +95,8 @@ public class RuleLearner extends AbstractLearner {
 		double pureness = getParameterAsDouble(SimpleRuleLearner.PARAMETER_PURENESS);
 		double sampleRatio = getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
 		double minimalPruneBenefit = getParameterAsDouble(PARAMETER_MINIMAL_PRUNE_BENEFIT);
+		boolean useLocalRandomSeed = getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED);
+		int localRandomSeed = getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED);
 
 		Attribute label = exampleSet.getAttributes().getLabel();
 		RuleModel ruleModel = new RuleModel(exampleSet);
@@ -108,12 +110,10 @@ public class RuleLearner extends AbstractLearner {
 			ExampleSet oldTrainingSet = (ExampleSet) trainingSet.clone();
 
 			SplittedExampleSet growPruneSet = new SplittedExampleSet(trainingSet, sampleRatio,
-					SplittedExampleSet.STRATIFIED_SAMPLING,
-					getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED), true,
-					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+					SplittedExampleSet.STRATIFIED_SAMPLING, useLocalRandomSeed, true, localRandomSeed);
 
 			// growing
-			SplittedExampleSet growingSet = (SplittedExampleSet) growPruneSet.clone();
+			SplittedExampleSet growingSet = new SplittedExampleSet(growPruneSet);
 			growingSet.selectSingleSubset(0);
 			SplittedExampleSet pruneSet = growPruneSet;
 			pruneSet.selectSingleSubset(1);
@@ -306,8 +306,7 @@ public class RuleLearner extends AbstractLearner {
 				"The sample ratio of training data used for growing and pruning.", 0.0d, 1.0d, 0.9d);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeDouble(
-				SimpleRuleLearner.PARAMETER_PURENESS,
+		types.add(new ParameterTypeDouble(SimpleRuleLearner.PARAMETER_PURENESS,
 				"The desired pureness, i.e. the necessary amount of the major class in a covered subset in order become pure.",
 				0.0d, 1.0d, 0.9d, false));
 		types.add(new ParameterTypeDouble(PARAMETER_MINIMAL_PRUNE_BENEFIT,

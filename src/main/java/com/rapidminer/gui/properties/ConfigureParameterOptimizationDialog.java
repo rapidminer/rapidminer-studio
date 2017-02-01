@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.properties;
 
 import java.awt.BorderLayout;
@@ -111,17 +111,17 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 	private final int mode;
 
-	private ExtendedListModel operatorListModel;
+	private ExtendedListModel<Operator> operatorListModel;
 
-	private ExtendedListModel parametersListModel;
+	private ExtendedListModel<String> parametersListModel;
 
-	private ExtendedListModel selectedParametersListModel;
+	private ExtendedListModel<String> selectedParametersListModel;
 
-	private ExtendedJList operatorList;
+	private ExtendedJList<Operator> operatorList;
 
-	private ExtendedJList parametersList;
+	private ExtendedJList<String> parametersList;
 
-	private ExtendedJList selectedParametersList;
+	private ExtendedJList<String> selectedParametersList;
 
 	private JLabel minValueJLabel;
 
@@ -143,9 +143,9 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 	private JList<String> selectedCategoriesList;
 
-	private DefaultListModel categoriesListModel;
+	private DefaultListModel<String> categoriesListModel;
 
-	private DefaultListModel selectedCategoriesListModel;
+	private DefaultListModel<String> selectedCategoriesListModel;
 
 	private JTextField createValueTextField;
 
@@ -205,17 +205,17 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		GridBagConstraints c = new GridBagConstraints();
 
 		// initialize selection lists
-		operatorListModel = new ExtendedListModel();
+		operatorListModel = new ExtendedListModel<>();
 		for (Operator op : ((OperatorChain) listener).getAllInnerOperators()) {
 			operatorListModel.addElement(op, null);
 		}
 
-		operatorList = new ExtendedJList(operatorListModel);
+		operatorList = new ExtendedJList<>(operatorListModel);
 		operatorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		operatorList.setLayoutOrientation(JList.VERTICAL);
 
-		parametersListModel = new ExtendedListModel();
-		parametersList = new ExtendedJList(parametersListModel);
+		parametersListModel = new ExtendedListModel<>();
+		parametersList = new ExtendedJList<>(parametersListModel);
 		parametersList.setLayoutOrientation(JList.VERTICAL);
 
 		operatorList.addListSelectionListener(new ListSelectionListener() {
@@ -224,14 +224,14 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 			public void valueChanged(ListSelectionEvent e) {
 				int index = operatorList.getSelectedIndex();
 				if (index != -1) {
-					Operator op = (Operator) operatorList.getModel().getElementAt(index);
+					Operator op = operatorList.getModel().getElementAt(index);
 					updateParameterListModel(op);
 				}
 			}
 		});
 
-		selectedParametersListModel = new ExtendedListModel();
-		selectedParametersList = new ExtendedJList(selectedParametersListModel);
+		selectedParametersListModel = new ExtendedListModel<>();
+		selectedParametersList = new ExtendedJList<>(selectedParametersListModel);
 		selectedParametersList.setLayoutOrientation(JList.VERTICAL);
 		selectedParametersList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
@@ -249,7 +249,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 							updateNumericalParameterValues(previousIndex);
 						}
 					}
-					showParameterValues((String) selectedParametersList.getSelectedValue());
+					showParameterValues(selectedParametersList.getSelectedValue());
 				}
 			}
 		});
@@ -480,8 +480,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		JPanel listPanel = new JPanel(new GridBagLayout());
 		listPanel.setBorder(createTitledBorder("Value List"));
 
-		categoriesListModel = new DefaultListModel();
-		selectedCategoriesListModel = new DefaultListModel();
+		categoriesListModel = new DefaultListModel<>();
+		selectedCategoriesListModel = new DefaultListModel<>();
 
 		createValueTextField = new JTextField();
 		createValueTextField.setToolTipText("Type in a new value here.");
@@ -556,15 +556,13 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel
-						.get(selectedParametersList.getLeadSelectionIndex());
-				Object[] selectedValues = categoriesList.getSelectedValues();
-				for (int i = 0; i < selectedValues.length; i++) {
-					categoriesListModel.removeElement(selectedValues[i]);
-					selectedCategoriesListModel.addElement(selectedValues[i]);
+				String selectedParameter = selectedParametersListModel.get(selectedParametersList.getLeadSelectionIndex());
+				for (String selected : categoriesList.getSelectedValuesList()) {
+					categoriesListModel.removeElement(selected);
+					selectedCategoriesListModel.addElement(selected);
 					ParameterValues parameterValue = parameterValuesMap.get(selectedParameter);
 					if (parameterValue instanceof ParameterValueList) {
-						((ParameterValueList) parameterValue).add((String) selectedValues[i]);
+						((ParameterValueList) parameterValue).add(selected);
 					}
 				}
 				updateInfoLabel();
@@ -581,16 +579,14 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel
-						.get(selectedParametersList.getLeadSelectionIndex());
-				Object[] selectedValues = selectedCategoriesList.getSelectedValues();
-				for (int i = 0; i < selectedValues.length; i++) {
-					selectedCategoriesListModel.removeElement(selectedValues[i]);
+				String selectedParameter = selectedParametersListModel.get(selectedParametersList.getLeadSelectionIndex());
+				for (String selected : selectedCategoriesList.getSelectedValuesList()) {
+					selectedCategoriesListModel.removeElement(selected);
 					ParameterValues parameterValue = parameterValuesMap.get(selectedParameter);
 					if (parameterValue instanceof ParameterValueList) {
-						if (((ParameterValueList) parameterValue).contains((String) selectedValues[i])) {
-							categoriesListModel.addElement(selectedValues[i]);
-							((ParameterValueList) parameterValue).remove((String) selectedValues[i]);
+						if (((ParameterValueList) parameterValue).contains(selected)) {
+							categoriesListModel.addElement(selected);
+							((ParameterValueList) parameterValue).remove(selected);
 						}
 					}
 				}
@@ -608,7 +604,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		c.fill = GridBagConstraints.NONE;
 		listPanel.add(valueSelectionButtonsPanel, c);
 
-		selectedCategoriesList = new JList(selectedCategoriesListModel);
+		selectedCategoriesList = new JList<>(selectedCategoriesListModel);
 		selectedCategoriesList.setToolTipText("Selected values.");
 		selectedCategoriesList.setEnabled(false);
 		c.insets = new Insets(GAP, 0, 0, GAP);
@@ -642,14 +638,13 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel
-						.get(selectedParametersList.getLeadSelectionIndex());
+				String selectedParameter = selectedParametersListModel.get(selectedParametersList.getLeadSelectionIndex());
 				int[] selectedIndices = selectedCategoriesList.getSelectedIndices();
 				if (selectedIndices.length == 1) {
 					ParameterValues parameterValue = parameterValuesMap.get(selectedParameter);
 					if (parameterValue instanceof ParameterValueList) {
-						Object selectedValue = selectedCategoriesList.getSelectedValue();
-						if (((ParameterValueList) parameterValue).contains((String) selectedValue)) {
+						String selectedValue = selectedCategoriesList.getSelectedValue();
+						if (((ParameterValueList) parameterValue).contains(selectedValue)) {
 							int selectedIndex = selectedIndices[0];
 							if (selectedIndex >= 1) {
 								parameterValue.move(selectedIndex, -1);
@@ -674,14 +669,13 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String selectedParameter = (String) selectedParametersListModel
-						.get(selectedParametersList.getLeadSelectionIndex());
+				String selectedParameter = selectedParametersListModel.get(selectedParametersList.getLeadSelectionIndex());
 				int[] selectedIndices = selectedCategoriesList.getSelectedIndices();
 				if (selectedIndices.length == 1) {
 					ParameterValues parameterValue = parameterValuesMap.get(selectedParameter);
 					if (parameterValue instanceof ParameterValueList) {
-						Object selectedValue = selectedCategoriesList.getSelectedValue();
-						if (((ParameterValueList) parameterValue).contains((String) selectedValue)) {
+						String selectedValue = selectedCategoriesList.getSelectedValue();
+						if (((ParameterValueList) parameterValue).contains(selectedValue)) {
 							int selectedIndex = selectedIndices[0];
 							if (selectedIndex < selectedCategoriesListModel.size() - 1) {
 								parameterValue.move(selectedIndex, 1);
@@ -798,7 +792,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 	}
 
 	private void createListValue() {
-		String selectedParameter = (String) selectedParametersListModel.get(selectedParametersList.getLeadSelectionIndex());
+		String selectedParameter = selectedParametersListModel.get(selectedParametersList.getLeadSelectionIndex());
 		String createdValue = createValueTextField.getText();
 		if (createdValue.equals("")) {
 			return;
@@ -819,7 +813,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 	}
 
 	private void switchToGrid() {
-		String key = (String) selectedParametersList.getSelectedValue();
+		String key = selectedParametersList.getSelectedValue();
 		if (key != null) {
 			ParameterValues oldParameterValues = parameterValuesMap.get(key);
 			if (oldParameterValues instanceof ParameterValueList) {
@@ -849,7 +843,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 	}
 
 	private void switchToList() {
-		String key = (String) selectedParametersList.getSelectedValue();
+		String key = selectedParametersList.getSelectedValue();
 		if (key != null) {
 			ParameterValues oldParameterValues = parameterValuesMap.get(key);
 			if (oldParameterValues instanceof ParameterValueGrid) {
@@ -902,10 +896,8 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 	}
 
 	private void addSelectedParameters() {
-		Object[] parameterKeys = parametersList.getSelectedValues();
-		Operator operator = (Operator) operatorList.getSelectedValue();
-		for (int i = 0; i < parameterKeys.length; i++) {
-			String parameterKey = (String) parameterKeys[i];
+		Operator operator = operatorList.getSelectedValue();
+		for (String parameterKey : parametersList.getSelectedValuesList()) {
 			ParameterType type = operator.getParameterType(parameterKey);
 
 			ParameterValues parameterValue = null;
@@ -933,17 +925,15 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 	}
 
 	private void removeSelectedParameters() {
-		Object[] selectedParameters = selectedParametersList.getSelectedValues();
-		for (int i = 0; i < selectedParameters.length; i++) {
-			String selected = (String) selectedParameters[i];
+		for (String selected : selectedParametersList.getSelectedValuesList()) {
 			String operatorName = ParameterTypeTupel.transformString2Tupel(selected)[0];
 			// String operatorName = ((String)selectedParameters[i]).substring(0,
 			// ((String)selectedParameters[i]).indexOf("."));
-			selectedParametersListModel.removeElement(selectedParameters[i]);
-			parameterValuesMap.remove(selectedParameters[i]);
+			selectedParametersListModel.removeElement(selected);
+			parameterValuesMap.remove(selected);
 			int index = operatorList.getSelectedIndex();
 			if (index != -1) {
-				Operator op = (Operator) operatorList.getModel().getElementAt(index);
+				Operator op = operatorList.getModel().getElementAt(index);
 				if (op == process.getOperator(operatorName)) {
 					updateParameterListModel(op);
 				}
@@ -1056,7 +1046,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		} else if (parameterValue instanceof ParameterValueList) {
 			ParameterValueList parameterValueList = (ParameterValueList) parameterValue;
 			ParameterType type = parameterValueList.getParameterType();
-			for (Object value : parameterValueList) {
+			for (String value : parameterValueList) {
 				selectedCategoriesListModel.addElement(value);
 			}
 			String[] categories = getDefaultListParameterValues(type);
@@ -1095,7 +1085,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 			enableComponents(null);
 			return false;
 		}
-		String key = (String) selectedParametersListModel.get(index);
+		String key = selectedParametersListModel.get(index);
 		ParameterValues parameterValues = parameterValuesMap.get(key);
 		if (parameterValues != null) {
 			if (parameterValues instanceof ParameterValueGrid) {

@@ -1,22 +1,28 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.meta;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Vector;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -47,16 +53,10 @@ import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.Pair;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Vector;
-
 
 /**
  * Subgroup discovery learner.
- * 
+ *
  * @author Martin Scholz
  */
 public class SDRulesetInduction extends OperatorChain {
@@ -123,8 +123,8 @@ public class SDRulesetInduction extends OperatorChain {
 			}
 		});
 		getTransformer().addRule(new SubprocessTransformRule(getSubprocess(0)));
-		getTransformer().addRule(
-				new GeneratePredictionModelTransformationRule(exampleSetInput, modelOutput, PredictionModel.class));
+		getTransformer()
+				.addRule(new GeneratePredictionModelTransformationRule(exampleSetInput, modelOutput, PredictionModel.class));
 
 		addValue(new ValueDouble("performance", "The performance.") {
 
@@ -143,17 +143,17 @@ public class SDRulesetInduction extends OperatorChain {
 	}
 
 	public static int getPosIndex(Attribute label) {
-		return (label.getMapping().getPositiveIndex());
+		return label.getMapping().getPositiveIndex();
 	}
 
 	/**
 	 * Creates a weight attribute if not yet done and fills it with an initial value so that
 	 * positive and negative examples are equally probable.
-	 * 
+	 *
 	 * @param exampleSet
 	 *            the example set to be prepared
 	 */
-	private double[] prepareWeights(ExampleSet exampleSet) throws OperatorException {
+	private double[] prepareWeights(ExampleSet exampleSet) {
 		Attribute weightAttr = com.rapidminer.example.Tools.createWeightAttribute(exampleSet);
 		Attribute timesCoveredAttrib = null;
 		boolean additive = this.getParameterAsBoolean(PARAMETER_ADDITIVE_REWEIGHT);
@@ -169,12 +169,12 @@ public class SDRulesetInduction extends OperatorChain {
 		final int positiveClass = getPosIndex(exampleSet.getAttributes().getLabel());
 		final int negativeClass = 1 - positiveClass;
 		while (exRead.hasNext()) {
-			if ((exRead.next().getLabel()) == positiveClass) {
+			if (exRead.next().getLabel() == positiveClass) {
 				numPos++;
 			}
 		}
 		final double[] classPriors = new double[2];
-		classPriors[positiveClass] = ((double) numPos) / exampleSet.size();
+		classPriors[positiveClass] = (double) numPos / exampleSet.size();
 		classPriors[negativeClass] = 1.0d - classPriors[positiveClass];
 		final double posWeight = 0.5 / classPriors[positiveClass];
 		final double negWeight = 0.5 / classPriors[negativeClass];
@@ -182,7 +182,7 @@ public class SDRulesetInduction extends OperatorChain {
 		exRead = exampleSet.iterator();
 		while (exRead.hasNext()) {
 			Example example = exRead.next();
-			double w = (example.getLabel() == positiveClass) ? posWeight : negWeight;
+			double w = example.getLabel() == positiveClass ? posWeight : negWeight;
 			example.setValue(weightAttr, w);
 			if (additive) {
 				example.setValue(timesCoveredAttrib, 0);
@@ -194,7 +194,7 @@ public class SDRulesetInduction extends OperatorChain {
 
 	/**
 	 * Runs the &quot;embedded&quot; learner on the example set and retuns a model.
-	 * 
+	 *
 	 * @param exampleSet
 	 *            an <code>ExampleSet</code> to train a model for
 	 * @return a <code>Model</code>
@@ -233,7 +233,7 @@ public class SDRulesetInduction extends OperatorChain {
 
 		// check whether to use the complete training set for training
 		final double splitRatio = this.getParameterAsDouble(PARAMETER_RATIO_INTERNAL_BOOTSTRAP);
-		final boolean bootstrap = ((splitRatio > 0) && (splitRatio < 1.0));
+		final boolean bootstrap = splitRatio > 0 && splitRatio < 1.0;
 		log(bootstrap ? "Bootstrapping enabled." : "Bootstrapping disabled.");
 
 		// maximum number of iterations
@@ -247,6 +247,9 @@ public class SDRulesetInduction extends OperatorChain {
 			rocCurve.add(new double[] { 1, 1 });
 		}
 
+		boolean useLocalRandomSeed = getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED);
+		int localRandomSeed = getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED);
+
 		for (int i = 0; i < iterations; i++) {
 			this.currentIteration = i;
 			// int size = trainingSet.getSize();
@@ -254,8 +257,7 @@ public class SDRulesetInduction extends OperatorChain {
 
 			if (bootstrap == true) {
 				splittedSet = new SplittedExampleSet(trainingSet, splitRatio, SplittedExampleSet.SHUFFLED_SAMPLING,
-						getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-						getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+						useLocalRandomSeed, localRandomSeed);
 				((SplittedExampleSet) splittedSet).selectSingleSubset(0); // switch to training set
 			}
 
@@ -264,7 +266,7 @@ public class SDRulesetInduction extends OperatorChain {
 			ExampleSet resultSet = null;
 			if (bootstrap == true) {
 				((SplittedExampleSet) splittedSet).selectSingleSubset(1); // switch to out-of-bag
-																			// set
+																			 // set
 				resultSet = model.apply(splittedSet); // apply model to all examples
 			} else {
 				resultSet = model.apply(trainingSet); // apply model to all examples
@@ -301,14 +303,14 @@ public class SDRulesetInduction extends OperatorChain {
 				// (syntactically)
 				// in the rule, so we assume the label that results in higher
 				// WRAcc.
-				double cov0 = ((double) rowTotals[0]) / total;
-				double cov1 = ((double) rowTotals[1]) / total;
+				double cov0 = (double) rowTotals[0] / total;
+				double cov1 = (double) rowTotals[1] / total;
 				double prior0 = ((double) predClasses[0][0] + predClasses[1][0]) / total;
 				double prior1 = ((double) predClasses[0][1] + predClasses[1][1]) / total; // used
 				// later
-				double bias0 = Math.abs(((double) predClasses[0][0] / rowTotals[0]) - prior0);
-				double bias1 = Math.abs(((double) predClasses[1][0] / rowTotals[1]) - prior0);
-				int subset = (Double.isNaN(bias1) || cov0 * bias0 >= cov1 * bias1) ? 0 : 1; // WRAcc
+				double bias0 = Math.abs((double) predClasses[0][0] / rowTotals[0] - prior0);
+				double bias1 = Math.abs((double) predClasses[1][0] / rowTotals[1] - prior0);
+				int subset = Double.isNaN(bias1) || cov0 * bias0 >= cov1 * bias1 ? 0 : 1; // WRAcc
 				// is
 				// coverage
 				// *
@@ -316,17 +318,17 @@ public class SDRulesetInduction extends OperatorChain {
 
 				// The subset not covered by the rule is marked with zero
 				// estimates.
-				modelWeightMatrix[subset][0] = ((double) predClasses[subset][0]) / rowTotals[subset];
-				modelWeightMatrix[subset][1] = ((double) predClasses[subset][1]) / rowTotals[subset];
+				modelWeightMatrix[subset][0] = (double) predClasses[subset][0] / rowTotals[subset];
+				modelWeightMatrix[subset][1] = (double) predClasses[subset][1] / rowTotals[subset];
 
-				double ratio0 = (((double) predClasses[subset][0]) / total) / prior0;
-				double ratio1 = (((double) predClasses[subset][1]) / total) / prior1;
+				double ratio0 = (double) predClasses[subset][0] / total / prior0;
+				double ratio1 = (double) predClasses[subset][1] / total / prior1;
 
 				// Reweight the example set with respect to the weighted
 				// performance values.
 				// The last parameter is the positive class. It is selected so
 				// that TPr is higher.
-				wp.reweightExamples(trainingSet, ((ratio0 > ratio1) ? 0 : 1), subset);
+				wp.reweightExamples(trainingSet, ratio0 > ratio1 ? 0 : 1, subset);
 
 				// As "positive" and "negative" depend on the explicitly
 				// predicted class
@@ -337,13 +339,13 @@ public class SDRulesetInduction extends OperatorChain {
 					fpr = Math.min(ratio0, ratio1);
 				}
 
-				defaultRule = (cov0 == 0) || (cov1 == 0);
+				defaultRule = cov0 == 0 || cov1 == 0;
 
 			}
 
 			// If activated just keep rules lying on the convex hull in ROC
 			// space:
-			if ((defaultRule == false) && (roc_filter == false || this.isOnConvexHull(rocCurve, tpr, fpr))) {
+			if (defaultRule == false && (roc_filter == false || this.isOnConvexHull(rocCurve, tpr, fpr))) {
 				// Add the new model and its weights to the collection of
 				// models:
 				modelInfo.add(new Pair<Model, double[][]>(model, modelWeightMatrix));
@@ -353,8 +355,8 @@ public class SDRulesetInduction extends OperatorChain {
 		}
 
 		if (roc_filter) {
-			StringBuffer message = new StringBuffer("The convex hull in ROC space contains the following points (TPr/FPr):"
-					+ Tools.getLineSeparator());
+			StringBuffer message = new StringBuffer(
+					"The convex hull in ROC space contains the following points (TPr/FPr):" + Tools.getLineSeparator());
 			Iterator<double[]> it = rocCurve.iterator();
 			while (it.hasNext()) {
 				double[] tpfp = it.next();
@@ -379,12 +381,12 @@ public class SDRulesetInduction extends OperatorChain {
 	 * "Positively labeled: " + (wp.getProbability(0, 0) + wp.getProbability(0, 1)) +
 	 * Tools.getLineSeparator() + "Negatively labeled: " + (wp.getProbability(1, 0) +
 	 * wp.getProbability(1, 1));
-	 * 
+	 *
 	 * LogService.getGlobal().log(message, LogService.STATUS); }
 	 */
 
 	private boolean isOnConvexHull(List<double[]> rocCurve, double tpr, double fpr) {
-		if ((tpr <= 0) || (tpr > 1) || (fpr < 0) || (fpr >= 1)) {
+		if (tpr <= 0 || tpr > 1 || fpr < 0 || fpr >= 1) {
 			return false;
 		}
 
@@ -393,7 +395,7 @@ public class SDRulesetInduction extends OperatorChain {
 		boolean fprGreater = true;
 		while (fprGreater) {
 			double[] current = iter.next();
-			fprGreater = (fpr > current[1]);
+			fprGreater = fpr > current[1];
 
 			if (fprGreater) {
 				double newSlope = (tpr - current[0]) / (fpr - current[1]);
@@ -433,7 +435,7 @@ public class SDRulesetInduction extends OperatorChain {
 		// candidate and (1,1)
 		iter = rocCurve.listIterator(rocCurve.size());
 		while (iter.hasPrevious()) {
-			double[] current = (double[]) iter.previous();
+			double[] current = iter.previous();
 			if (current[1] <= fpr) {
 				return true; // done.
 			}
@@ -442,7 +444,7 @@ public class SDRulesetInduction extends OperatorChain {
 			// point
 			// to
 			// candidate
-			if ((current[1]) < 1 && (newSlope <= slope)) { // needs to be
+			if (current[1] < 1 && newSlope <= slope) { // needs to be
 				// greater than last
 				// slope
 				iter.remove();
@@ -464,14 +466,14 @@ public class SDRulesetInduction extends OperatorChain {
 		type.setExpert(false);
 		types.add(type);
 
-		types.add(new ParameterTypeDouble(
-				PARAMETER_RATIO_INTERNAL_BOOTSTRAP,
+		types.add(new ParameterTypeDouble(PARAMETER_RATIO_INTERNAL_BOOTSTRAP,
 				"Fraction of examples used for training (internal bootstrapping). If activated (value < 1) only the rest is used to estimate the biases.",
 				0, 1, 0.7));
 		types.add(new ParameterTypeBoolean(PARAMETER_ROC_CONVEX_HULL_FILTER,
 				"A parameter whether to discard all rules not lying on the convex hull in ROC space.", true));
 		types.add(new ParameterTypeBoolean(PARAMETER_ADDITIVE_REWEIGHT,
-				"If enabled then resampling is done by additive reweighting, otherwise by multiplicative reweighting.", true));
+				"If enabled then resampling is done by additive reweighting, otherwise by multiplicative reweighting.",
+				true));
 		types.add(new ParameterTypeDouble(PARAMETER_GAMMA,
 				"Factor used for multiplicative reweighting. Has no effect in case of additive reweighting.", 0, 1, 0.9));
 

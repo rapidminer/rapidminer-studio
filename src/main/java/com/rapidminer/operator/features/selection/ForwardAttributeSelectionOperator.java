@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.selection;
 
 import java.util.ArrayList;
@@ -155,8 +155,8 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 		int maxNumberOfFails = getParameterAsInt(PARAMETER_ALLOWED_CONSECUTIVE_FAILS);
 		int behavior = getParameterAsInt(PARAMETER_STOPPING_BEHAVIOR);
 
-		boolean useRelativeIncrease = behavior == WITHOUT_INCREASE_OF_AT_LEAST ? getParameterAsBoolean(PARAMETER_USE_RELATIVE_INCREASE)
-				: false;
+		boolean useRelativeIncrease = behavior == WITHOUT_INCREASE_OF_AT_LEAST
+				? getParameterAsBoolean(PARAMETER_USE_RELATIVE_INCREASE) : false;
 		double minimalIncrease = 0;
 		if (useRelativeIncrease) {
 			minimalIncrease = useRelativeIncrease ? getParameterAsDouble(PARAMETER_MIN_RELATIVE_INCREASE)
@@ -182,7 +182,7 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 		PerformanceVector lastPerformance = null;
 		PerformanceVector bestPerformanceEver = null;
 		// init operator progress
-		getProgress().setTotal(maxNumberOfAttributes * numberOfAttributes);
+		getProgress().setTotal(100);
 
 		for (i = 0; i < maxNumberOfAttributes && !earlyAbort; i++) {
 			// setting values for logging
@@ -212,7 +212,10 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 					attributes.remove(attributeArray[current]);
 					currentAttributes = null;
 				}
-				getProgress().step();
+
+				// update operator progress
+				getProgress().setCompleted((int) (100.0 * (i * numberOfAttributes + current + 1)
+						/ (maxNumberOfAttributes * numberOfAttributes)));
 			}
 			double currentFitness = currentBestPerformance.getMainCriterion().getFitness();
 			if (i != 0) {
@@ -281,9 +284,6 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 			// switching best index on
 			attributes.addRegular(attributeArray[bestIndex]);
 			selected[bestIndex] = true;
-
-			// update operator progress
-			getProgress().step();
 		}
 		// removing predictively added attributes: speculative execution did not yield good result
 		for (Integer removeIndex : speculativeList) {
@@ -316,8 +316,7 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeInt(
-				PARAMETER_ALLOWED_CONSECUTIVE_FAILS,
+		type = new ParameterTypeInt(PARAMETER_ALLOWED_CONSECUTIVE_FAILS,
 				"Defines the number of times, the stopping criterion might be consecutivly ignored before the selection is actually stopped. A number higher than one might help not to stack in the local optima.",
 				0, Integer.MAX_VALUE, 0);
 		type.setExpert(false);
@@ -331,27 +330,25 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 		type = new ParameterTypeBoolean(PARAMETER_USE_RELATIVE_INCREASE,
 				"If checked, the relative performance increase will be used as stopping criterion.", true);
 		type.setExpert(false);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS,
-				false, WITHOUT_INCREASE_OF_AT_LEAST));
+		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS, false,
+				WITHOUT_INCREASE_OF_AT_LEAST));
 		types.add(type);
 
-		type = new ParameterTypeDouble(
-				PARAMETER_MIN_ABSOLUT_INCREASE,
+		type = new ParameterTypeDouble(PARAMETER_MIN_ABSOLUT_INCREASE,
 				"If the absolut performance increase to the last step drops below this threshold, the selection will be stopped.",
 				0d, Double.POSITIVE_INFINITY, true);
 		type.setExpert(false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_RELATIVE_INCREASE, true, false));
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS,
-				false, WITHOUT_INCREASE_OF_AT_LEAST));
+		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS, false,
+				WITHOUT_INCREASE_OF_AT_LEAST));
 		types.add(type);
-		type = new ParameterTypeDouble(
-				PARAMETER_MIN_RELATIVE_INCREASE,
+		type = new ParameterTypeDouble(PARAMETER_MIN_RELATIVE_INCREASE,
 				"If the relative performance increase to the last step drops below this threshold, the selection will be stopped.",
 				0d, 1d, true);
 		type.setExpert(false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_RELATIVE_INCREASE, true, true));
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS,
-				false, WITHOUT_INCREASE_OF_AT_LEAST));
+		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_STOPPING_BEHAVIOR, STOPPING_BEHAVIORS, false,
+				WITHOUT_INCREASE_OF_AT_LEAST));
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_ALPHA,

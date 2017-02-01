@@ -1,25 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.rapidminer.example.Attribute;
@@ -113,6 +115,7 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 
 	@Override
 	public Attributes getTargetAttributes(ExampleSet viewParent) {
+		List<Attribute> targetAttributes = new ArrayList<>();
 		Attributes attributes = viewParent.getAttributes();
 		Iterator<Attribute> iterator = attributes.allAttributes();
 		while (iterator.hasNext()) {
@@ -124,6 +127,7 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 					Attribute viewAttribute = new ViewAttribute(this, attribute, attribute.getName(),
 							attribute.getValueType(), attribute.getMapping());
 					attributeReplacementMap.put(viewAttribute, (double) attribute.getMapping().mapString(replacement));
+					targetAttributes.add(viewAttribute);
 					// delete original attribute
 					iterator.remove();
 				}
@@ -135,13 +139,14 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 					Attribute viewAttribute = new ViewAttribute(this, attribute, attribute.getName(),
 							attribute.getValueType(), null);
 					attributeReplacementMap.put(viewAttribute, replacement);
+					targetAttributes.add(viewAttribute);
 					// delete original attribute
 					iterator.remove();
 				}
 			}
 		}
 
-		for (Attribute attribute : attributeReplacementMap.keySet()) {
+		for (Attribute attribute : targetAttributes) {
 			attributes.addRegular(attribute);
 		}
 
@@ -171,6 +176,16 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 
 	public Map<Attribute, Double> getAttributeReplacementMap() {
 		return attributeReplacementMap;
+	}
+
+	@Override
+	protected boolean writesIntoExistingData() {
+		return true;
+	}
+
+	@Override
+	protected boolean needsRemapping() {
+		return false;
 	}
 
 }

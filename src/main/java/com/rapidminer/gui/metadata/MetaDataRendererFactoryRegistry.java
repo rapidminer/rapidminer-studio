@@ -1,31 +1,32 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.metadata;
+
+import java.awt.Component;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import com.rapidminer.gui.flow.ExampleSetMetaDataTableModel;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
-
-import java.awt.Component;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 
 /**
@@ -71,33 +72,23 @@ public class MetaDataRendererFactoryRegistry {
 			return distance;
 		}
 
+		boolean isInterface = currentClass.isInterface();
+		Class<?>[] interfaces = currentClass.getInterfaces();
 		// if it is a leaf node of the inheritance tree and it is not the target class then return
 		// with -1
-		if (currentClass.isInterface() && currentClass.getInterfaces().length == 0) {
+		if (isInterface && interfaces.length == 0) {
 			return -1;
 		}
-		if (!currentClass.isInterface() && currentClass.getSuperclass().equals(Object.class)) {
+		if (!isInterface && currentClass.getSuperclass().equals(Object.class)) {
 			return -1;
 		}
 
 		// determine all super* (included superclass and superinterfaces)
-		Class<?>[] superClassAndInterfaces = null;
-
-		if (currentClass.isInterface()) {
 			// if it is interface then there is no superclass
-			superClassAndInterfaces = new Class<?>[currentClass.getInterfaces().length];
-		} else {
-			// if it is a class then then is a superclass
-			superClassAndInterfaces = new Class<?>[currentClass.getInterfaces().length + 1];
-		}
-
-		// add interfaces to list
-		for (int i = 0; i < currentClass.getInterfaces().length; i++) {
-			superClassAndInterfaces[i] = currentClass.getInterfaces()[i];
-		}
+		Class<?>[] superClassAndInterfaces = Arrays.copyOf(interfaces, interfaces.length + (isInterface ? 0 : 1));
 
 		// add superclass if it is not interface
-		if (!currentClass.isInterface()) {
+		if (!isInterface) {
 			superClassAndInterfaces[superClassAndInterfaces.length - 1] = currentClass.getSuperclass();
 		}
 

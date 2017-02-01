@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.generator;
 
 import java.util.Arrays;
@@ -50,22 +50,22 @@ public abstract class FeatureGenerator {
 			"min", "max", "floor", "ceil", "round", "sqrt", "abs", "sgn", "pow" };
 
 	/** The classes which corresponds to FUNCTION_NAMES. */
-	private static final Class[] GENERATOR_CLASSES = { BasicArithmeticOperationGenerator.class,
+	private static final List<Class<? extends FeatureGenerator>> GENERATOR_CLASSES = Arrays.asList(
 			BasicArithmeticOperationGenerator.class, BasicArithmeticOperationGenerator.class,
-			BasicArithmeticOperationGenerator.class, ReciprocalValueGenerator.class, TrigonometricFunctionGenerator.class,
-			TrigonometricFunctionGenerator.class, TrigonometricFunctionGenerator.class,
+			BasicArithmeticOperationGenerator.class, BasicArithmeticOperationGenerator.class, ReciprocalValueGenerator.class,
+			TrigonometricFunctionGenerator.class, TrigonometricFunctionGenerator.class, TrigonometricFunctionGenerator.class,
 			TrigonometricFunctionGenerator.class, ExponentialFunctionGenerator.class, ExponentialFunctionGenerator.class,
 			MinMaxGenerator.class, MinMaxGenerator.class, FloorCeilGenerator.class, FloorCeilGenerator.class,
 			FloorCeilGenerator.class, SquareRootGenerator.class, AbsoluteValueGenerator.class, SignumGenerator.class,
-			PowerGenerator.class };
+			PowerGenerator.class);
 
 	/** Maps function names to generators. */
-	private static Map<String, Class> generatorMap;
+	private static Map<String, Class<? extends FeatureGenerator>> generatorMap;
 
 	static {
 		generatorMap = new HashMap<>();
 		for (int i = 0; i < FUNCTION_NAMES.length; i++) {
-			generatorMap.put(FUNCTION_NAMES[i], GENERATOR_CLASSES[i]);
+			generatorMap.put(FUNCTION_NAMES[i], GENERATOR_CLASSES.get(i));
 		}
 	}
 
@@ -215,26 +215,25 @@ public abstract class FeatureGenerator {
 		if (functionName == null) {
 			return null;
 		}
-		Class genClass = generatorMap.get(functionName);
+		Class<? extends FeatureGenerator> genClass = generatorMap.get(functionName);
 		if (genClass == null) {
-			if (functionName.startsWith(ConstantGenerator.FUNCTION_NAME)) {
-				FeatureGenerator gen = new ConstantGenerator();
-				gen.setFunction(functionName);
-				return gen;
-			} else {
+			if (!functionName.startsWith(ConstantGenerator.FUNCTION_NAME)) {
 				return null;
 			}
-		} else {
-			try {
-				FeatureGenerator gen = (FeatureGenerator) genClass.newInstance();
-				gen.setFunction(functionName);
-				return gen;
-			} catch (Exception e) {
-				LogService.getRoot().log(Level.SEVERE, "com.rapidminer.generator.FeatureGenerator.instantiating_error",
-						genClass.getName());
-				return null;
-			}
+			FeatureGenerator gen = new ConstantGenerator();
+			gen.setFunction(functionName);
+			return gen;
 		}
+		try {
+			FeatureGenerator gen = genClass.newInstance();
+			gen.setFunction(functionName);
+			return gen;
+		} catch (Exception e) {
+			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.generator.FeatureGenerator.instantiating_error",
+					genClass.getName());
+			return null;
+		}
+
 	}
 
 	// --------------------------------------------------------------------------------
@@ -244,35 +243,31 @@ public abstract class FeatureGenerator {
 	 * selected is proportional to its number of attribute combinations as delivered by
 	 * {@link #getInputCandidates(ExampleSet, String[])} method. Returns null if no generators are
 	 * applicable.
-	 * 
+	 *
 	 * @param generators
 	 *            List of {@link FeatureGenerator}s
 	 */
-	public static FeatureGenerator selectGenerator(ExampleSet exampleSet, List generators, String[] functions,
-			RandomGenerator random) {
+	public static FeatureGenerator selectGenerator(ExampleSet exampleSet, List<? extends FeatureGenerator> generators,
+			String[] functions, RandomGenerator random) {
 		int combinationSum = 0;
-		Iterator i = generators.iterator();
 		double[] probs = new double[generators.size()];
 		int k = 0;
-		while (i.hasNext()) {
-			FeatureGenerator generator = (FeatureGenerator) i.next();
+		for (FeatureGenerator generator : generators) {
 			// probs[k] =
 			// generator.getNumberOfApplicableGenerations(exampleSet);
-			probs[k] = generator.getInputCandidates(exampleSet, functions).size();
-			combinationSum += probs[k];
+			int candidates = generator.getInputCandidates(exampleSet, functions).size();
+			probs[k] = candidates;
+			combinationSum += candidates;
 			k++;
 		}
 		if (combinationSum == 0) {
 			return null;
-		} else {
-			for (k = 0; k < probs.length; k++) {
-				probs[k] /= combinationSum;
-			}
-
-			int index = random.randomIndex(probs);
-			FeatureGenerator selected = (FeatureGenerator) generators.get(index);
-			return selected;
 		}
+		for (k = 0; k < probs.length; k++) {
+			probs[k] /= combinationSum;
+		}
+
+		return generators.get(random.randomIndex(probs));
 	}
 
 	// --------------------------------------------------------------------------------

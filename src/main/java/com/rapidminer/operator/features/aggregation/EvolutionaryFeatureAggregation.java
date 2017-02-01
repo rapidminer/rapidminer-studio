@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.aggregation;
 
 import java.io.File;
@@ -23,11 +23,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import com.rapidminer.datatable.SimpleDataTable;
+import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.generator.AlgebraicOrGenerator;
@@ -36,6 +38,7 @@ import com.rapidminer.generator.MinMaxGenerator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.operator.ports.InputPort;
@@ -52,6 +55,7 @@ import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -95,6 +99,9 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 
 	/** Indicates the algebraic OR aggregation function. */
 	private static final int AGGREGATION_ALGEBRAIC = 1;
+
+	/** Compatibility Level for different number of generations */
+	private static final OperatorVersion CHANGE_7_3_1_NUMBER_OF_GENERATIONS = new OperatorVersion(7, 3, 1);
 
 	/** The original attributes. */
 	private Attribute[] allAttributes;
@@ -156,6 +163,9 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 		int popSize = getParameterAsInt(PARAMETER_POPULATION_SIZE);
 		this.generation = 0;
 		this.maxGeneration = getParameterAsInt(PARAMETER_MAXIMUM_NUMBER_OF_GENERATIONS);
+		if (getCompatibilityLevel().isAtMost(CHANGE_7_3_1_NUMBER_OF_GENERATIONS)) {
+			this.maxGeneration++;
+		}
 		int functionType = getParameterAsInt(PARAMETER_AGGREGATION_FUNCTION);
 		switch (functionType) {
 			case AGGREGATION_MAX:
@@ -173,8 +183,6 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 			allAttributes[index++] = attribute;
 		}
 
-		// plotter
-		AggregationPopulationPlotter plotter = new AggregationPopulationPlotter(exampleSet, allAttributes, this.generator);
 		// crossover
 		AggregationCrossover crossover = new AggregationCrossover(getParameterAsInt(PARAMETER_CROSSOVER_TYPE),
 				getParameterAsDouble(PARAMETER_P_CROSSOVER), random);
@@ -198,33 +206,44 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 		getProgress().setTotal(maxGeneration);
 		// start optimization loop
 		while (!solutionGoodEnough()) {
+			getProgress().setCompleted(generation++);
 			crossover.crossover(population);
 			mutation.mutate(population);
 			evaluate(population, exampleSet);
 			selection.performSelection(population);
-			plotter.operate(population);
 			inApplyLoop();
-			getProgress().setCompleted(++generation);
 		}
 
 		// write criteria data of the final population into a file
 		if (isParameterSet(PARAMETER_POPULATION_CRITERIA_DATA_FILE)) {
 			File outFile = getParameterAsFile(PARAMETER_POPULATION_CRITERIA_DATA_FILE, true);
-			SimpleDataTable finalStatistics = plotter.createDataTable(population);
-			plotter.fillDataTable(finalStatistics, population);
-			PrintWriter out = null;
-			try {
-				out = new PrintWriter(new FileWriter(outFile));
+
+			PerformanceVector prototype = population.get(0).getPerformance();
+			SimpleDataTable finalStatistics = new SimpleDataTable("Population", prototype.getCriteriaNames());
+
+			for (int i = 0; i < population.size(); i++) {
+				StringBuffer id = new StringBuffer(i + " (");
+				PerformanceVector current = population.get(i).getPerformance();
+				double[] data = new double[current.getSize()];
+				for (int d = 0; d < data.length; d++) {
+					data[d] = current.getCriterion(d).getFitness();
+					if (d != 0) {
+						id.append(", ");
+					}
+					id.append(Tools.formatNumber(data[d]));
+				}
+				id.append(")");
+				finalStatistics.add(new SimpleDataTableRow(data, id.toString()));
+			}
+
+			try (PrintWriter out = new PrintWriter(new FileWriter(outFile))) {
 				finalStatistics.write(out);
 			} catch (IOException e) {
 				throw new UserError(this, e, 303, new Object[] { outFile, e.getMessage() });
-			} finally {
-				if (out != null) {
-					out.close();
-				}
 			}
-			getProgress().complete();
 		}
+
+		getProgress().complete();
 
 		// return result
 		evaluate(population, exampleSet);
@@ -264,7 +283,7 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 
 	/** Returns true if the maximum number of generations was reached. */
 	private boolean solutionGoodEnough() {
-		if (generation > maxGeneration) {
+		if (generation >= maxGeneration) {
 			return true;
 		} else {
 			return false;
@@ -300,8 +319,8 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 				"The aggregation function which is used for feature aggregations.", AGGREGATION_FUNCTIONS, AGGREGATION_MAX);
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeInt(PARAMETER_POPULATION_SIZE, "Number of individuals per generation.", 1,
-				Integer.MAX_VALUE, 10);
+		type = new ParameterTypeInt(PARAMETER_POPULATION_SIZE, "Number of individuals per generation.", 1, Integer.MAX_VALUE,
+				10);
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeInt(PARAMETER_MAXIMUM_NUMBER_OF_GENERATIONS,
@@ -313,8 +332,8 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 		types.add(type);
 		type = new ParameterTypeDouble(PARAMETER_TOURNAMENT_FRACTION,
 				"The fraction of the population which will participate in each tournament.", 0.0d, 1.0d, 0.2d);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SELECTION_TYPE, SELECTION_TYPES, false,
-				SELECTION_TOURNAMENT));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_SELECTION_TYPE, SELECTION_TYPES, false, SELECTION_TOURNAMENT));
 		types.add(type);
 		types.add(new ParameterTypeCategory(PARAMETER_CROSSOVER_TYPE, "The type of crossover.",
 				AggregationCrossover.CROSSOVER_TYPES, AggregationCrossover.CROSSOVER_UNIFORM));
@@ -327,5 +346,14 @@ public class EvolutionaryFeatureAggregation extends OperatorChain {
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 
 		return types;
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] incompatibleVersionChanges = super.getIncompatibleVersionChanges();
+		OperatorVersion[] newIncompatibleVersionChanges = Arrays.copyOf(incompatibleVersionChanges,
+				incompatibleVersionChanges.length + 1);
+		newIncompatibleVersionChanges[newIncompatibleVersionChanges.length - 1] = CHANGE_7_3_1_NUMBER_OF_GENERATIONS;
+		return newIncompatibleVersionChanges;
 	}
 }

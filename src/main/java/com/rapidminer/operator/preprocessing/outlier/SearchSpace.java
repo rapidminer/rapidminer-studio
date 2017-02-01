@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.outlier;
 
 import com.rapidminer.operator.Operator;
@@ -281,7 +281,7 @@ public class SearchSpace {
 	/**
 	 * This method returns an Enumeration of all SearchObjects from a SearchSpace.
 	 */
-	public Enumeration getObjects() {
+	public Enumeration<SearchObject> getObjects() {
 		return this.listOfObjects.elements();
 	}
 
@@ -534,7 +534,7 @@ public class SearchSpace {
 	public void findKdistanceContainers(SearchObject so, int kindOfDistance) {
 		SearchObject obj; // an iterator reference for the i-th object
 		double distance; // the distance between the so object and the obj object
-		ListIterator li; // an iterator over the list of containers for so
+		ListIterator<KdistanceContainer> li; // an iterator over the list of containers for so
 		KdistanceContainer container; // a reference for a container out of so's container list
 		int index; // index to know where we are in the list, as we use a while loop
 		boolean added; // flag on whether we already added an obj to the/a container
@@ -569,7 +569,7 @@ public class SearchSpace {
 			index = -1; // we set our counting index at element zero (after the first ++)
 			added = false; // we have not yet added any obj to a container
 			while (li.hasNext()) { // as long as there are containers in so's list
-				container = (KdistanceContainer) li.next(); // take the next container from the list
+				container = li.next(); // take the next container from the list
 				index++; // and increase the parallel indexing accordingly
 
 				if (container.getDistance() == distance) { // if the distances are equal, do (3)
@@ -668,11 +668,13 @@ public class SearchSpace {
 			k = 1; // for each object start k at 1 for 1-distance
 
 			// for this object so now browse through its containers
-			ListIterator li = so.getKdContainerListIterator(); // first get an iterator over the
+			ListIterator<KdistanceContainer> li = so.getKdContainerListIterator(); // first get an
+																					 // iterator
+																					 // over the
 																// container list
 			// iterate over the container list
 			while (li.hasNext() && k <= kMax) { // for all containers in the list
-				KdistanceContainer container = (KdistanceContainer) li.next(); // get the container
+				KdistanceContainer container = li.next(); // get the container
 				sumCardinality = sumCardinality + container.getNumberOfObjects(); // add container
 																					// objects to #
 																					// in distance
@@ -710,8 +712,8 @@ public class SearchSpace {
 			sumdistance = 0;
 
 			// for this object now browse again through its containers
-			ListIterator li = so.getKdContainerListIterator(); // first get an iterator over the
-																// container list
+			ListIterator<KdistanceContainer> li = so.getKdContainerListIterator();
+			// first get an iterator over the container list
 
 			// we look to compute the local k-reachability density, which is the reciprocal of
 			// the average k-reachability-distance for the object in its k-neighbourhood
@@ -736,7 +738,7 @@ public class SearchSpace {
 
 			while (li.hasNext() && k <= kMax) { // for all containers in the list until MinPtsUB is
 												// reached
-				KdistanceContainer container = (KdistanceContainer) li.next(); // get the container
+				KdistanceContainer container = li.next(); // get the container
 				/**
 				 * now that we have the container, in this container is a number of objects. We add
 				 * this number to the increasing number of the sum of objects in the containers
@@ -773,10 +775,12 @@ public class SearchSpace {
 					// as the lrd_k is the same for all k-distances with the same objects, we only
 					// need compute once
 					if (!calcLRD) {
-						ListIterator lobj = container.getListIterator(); // get an iterator for the
+						ListIterator<SearchObject> lobj = container.getListIterator(); // get an
+																						 // iterator
+																						 // for the
 																			// container
 						while (lobj.hasNext()) { // and iterate over it
-							SearchObject sobj = (SearchObject) lobj.next(); // get the object o
+							SearchObject sobj = lobj.next(); // get the object o
 																			// (sobj)
 							// now increase the sum of reachability distances with the rd of sobj
 							sumdistance = sumdistance + Math.max(container.getDistance(), sobj.getKDistance(k));
@@ -814,11 +818,13 @@ public class SearchSpace {
 			}
 
 			// for this object so now browse through its containers
-			ListIterator li = so.getKdContainerListIterator(); // first get an iterator over the
+			ListIterator<KdistanceContainer> li = so.getKdContainerListIterator(); // first get an
+																					 // iterator
+																					 // over the
 																// container list
 			// iterate over the container list
 			while (li.hasNext() && k <= kMax) { // for all containers in the list
-				KdistanceContainer container = (KdistanceContainer) li.next(); // get the container
+				KdistanceContainer container = li.next(); // get the container
 				sumCardinality = sumCardinality + container.getNumberOfObjects(); // add container
 																					// objects to #
 																					// in distance
@@ -831,38 +837,20 @@ public class SearchSpace {
 
 					if (!calcLOF) { // if we haven't calculated the LOF yet, we should do it
 
-						ListIterator lobj = container.getListIterator(); // get an iterator over the
+						ListIterator<SearchObject> lobj = container.getListIterator(); // get an
+																						 // iterator
+																						 // over the
 																			// container
 						while (lobj.hasNext()) {
-							SearchObject sobj = (SearchObject) lobj.next(); // get the next object
+							SearchObject sobj = lobj.next(); // get the next object
 																			// from the container
 							for (int j = 1; j <= kMax; j++) { // explaination for this see below...
 								double lrd2 = so.getLRD(j);
 								double lrd3 = sobj.getLRD(j);
-								if (!(Double.isInfinite(lrd2) || Double.isInfinite(lrd3))) { // for
-																								// a
-																								// huge
-																								// number
-																								// of
-																								// duplicates
-																								// the
-																								// k-lrd
-																								// becomes
-																								// infinite.
-																								// In
-																								// this
-																								// case
-																								// we
-																								// need
-																								// to
-																								// skip
-																								// the
-																								// sum-step
-																								// because
-																								// it
-																								// is
-																								// mathematically
-																								// undefined.
+								if (!(Double.isInfinite(lrd2) || Double.isInfinite(lrd3))) {
+									// for a huge number of duplicates the k-lrd becomes infinite.
+									// In this case we need to skip the sum-step because it is
+									// mathematically undefined.
 									sumlrdratio[j] = sumlrdratio[j] + lrd3 / lrd2;
 								}
 							}
@@ -947,11 +935,11 @@ public class SearchSpace {
 			k = 1; // for each object start k at 1 for 1-distance
 
 			// for this object so now browse through its containers
-			ListIterator li = so.getKdContainerListIterator(); // first get an iterator over the
-																// container list
+			ListIterator<KdistanceContainer> li = so.getKdContainerListIterator();
+			// first get an iterator over the container list
 			// iterate over the container list
 			while (li.hasNext() && k <= kMax) { // for all containers in the list
-				KdistanceContainer container = (KdistanceContainer) li.next(); // get the container
+				KdistanceContainer container = li.next(); // get the container
 				sumCardinality = sumCardinality + container.getNumberOfObjects(); // add container
 																					// objects to #
 																					// in distance

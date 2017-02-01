@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,18 +18,19 @@
  */
 package de.dfki.madm.paren.gui.renderer.models;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.report.Reportable;
+
 import de.dfki.madm.paren.operator.learner.functions.neuralnet.AutoMLPImprovedNeuralNetModel;
 import de.dfki.madm.paren.operator.learner.functions.neuralnet.AutoMLPImprovedNeuralNetVisualizer;
 
-import java.awt.Component;
-
 
 /**
- * 
+ *
  * @author Sebastian Land, modified by Syed Atif Mehdi (01/09/2010)
  */
 

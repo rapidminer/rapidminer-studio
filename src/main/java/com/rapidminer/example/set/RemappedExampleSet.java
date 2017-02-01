@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.set;
 
 import java.util.Iterator;
@@ -37,7 +37,7 @@ import com.rapidminer.operator.Annotations;
  * nominal values according to the given set. It also sorts the regular attributes in the order of
  * the other exampleSet if possible. If additional attributes occur, they are appended on the end of
  * the example set, if keepAdditional is selected.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land
  */
 public class RemappedExampleSet extends AbstractExampleSet {
@@ -51,11 +51,38 @@ public class RemappedExampleSet extends AbstractExampleSet {
 	}
 
 	public RemappedExampleSet(ExampleSet parentSet, ExampleSet _mappingSet, boolean keepAdditional) {
+		this(parentSet, _mappingSet, keepAdditional, true);
+	}
+
+	/**
+	 * Sorts the regular attributes of parentSet in the order of mappingSet. If additional
+	 * attributes occur and keepAdditional is {@code true}, they are appended on the end of the
+	 * example set. If transformMappings is {@code true} then mapping indices returned by
+	 * {@link Example#getValue} are remapped to the mappings used in mappingSet.
+	 * <p>
+	 * Note that {@link Example#getValueAsString} must never be used on such remapped attributes as
+	 * it permutes the values. Therefore, {@link RemappedExampleSet}s with transformMappings
+	 * {@code true} must not be returned at ports unless those attributes are removed.
+	 *
+	 * @param parentSet
+	 *            the example set that should be adjusted to the
+	 * @param mappingSet
+	 *            the example set to which we want to adjust the parent set
+	 * @param keepAdditional
+	 *            if {@code true} attributes from the parentSet that are not in the mappingSet are
+	 *            kept
+	 * @param transformMappings
+	 *            if {@code true} an {@link AttributeTransformationRemapping} is added to the
+	 *            nominal attributes of the adjusted example set so that {@code example.getValue(a)}
+	 *            returns the mapping index according to the mapping of the attribute in mappingSet
+	 */
+	public RemappedExampleSet(ExampleSet parentSet, ExampleSet mappingSet, boolean keepAdditional,
+			boolean transformMappings) {
 		this.parent = (ExampleSet) parentSet.clone();
-		ExampleSet mappingSet = (ExampleSet) _mappingSet.clone();
+		ExampleSet clonedMappingSet = (ExampleSet) mappingSet.clone();
 
 		// check for a missing mappingSet because of compatibility
-		if (mappingSet != null) {
+		if (clonedMappingSet != null) {
 			Attributes attributes = parent.getAttributes();
 
 			// copying attributes into name map
@@ -68,7 +95,7 @@ public class RemappedExampleSet extends AbstractExampleSet {
 			attributes.clearRegular();
 
 			// adding again in mappingSets's order
-			for (Attribute mapAttribute : mappingSet.getAttributes()) {
+			for (Attribute mapAttribute : clonedMappingSet.getAttributes()) {
 				String name = mapAttribute.getName();
 				Attribute attribute = attributeMap.get(name);
 				if (attribute != null) {
@@ -84,19 +111,21 @@ public class RemappedExampleSet extends AbstractExampleSet {
 				}
 			}
 
-			// mapping nominal values
-			Iterator<AttributeRole> a = this.parent.getAttributes().allAttributeRoles();
-			while (a.hasNext()) {
-				AttributeRole role = a.next();
-				Attribute currentAttribute = role.getAttribute();
-				if (currentAttribute.isNominal()) {
-					NominalMapping mapping = null;
-					mapping = currentAttribute.getMapping();
-					Attribute oldMappingAttribute = mappingSet.getAttributes().get(role.getAttribute().getName());
-					if (oldMappingAttribute != null && oldMappingAttribute.isNominal()) {
-						mapping = oldMappingAttribute.getMapping();
+			if (transformMappings) {
+				// mapping nominal values
+				Iterator<AttributeRole> a = this.parent.getAttributes().allAttributeRoles();
+				while (a.hasNext()) {
+					AttributeRole role = a.next();
+					Attribute currentAttribute = role.getAttribute();
+					if (currentAttribute.isNominal()) {
+						NominalMapping mapping = null;
+						mapping = currentAttribute.getMapping();
+						Attribute oldMappingAttribute = clonedMappingSet.getAttributes().get(role.getAttribute().getName());
+						if (oldMappingAttribute != null && oldMappingAttribute.isNominal()) {
+							mapping = oldMappingAttribute.getMapping();
+						}
+						currentAttribute.addTransformation(new AttributeTransformationRemapping(mapping));
 					}
-					currentAttribute.addTransformation(new AttributeTransformationRemapping(mapping));
 				}
 			}
 		}

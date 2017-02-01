@@ -1,46 +1,49 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.io;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import com.rapidminer.RapidMiner;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.generator.ExampleSetGenerator;
 import com.rapidminer.operator.nio.file.FileInputPortHandler;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
+import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
 
 
 /**
  * Superclass for file data source operators which read the file byte per byte into a byte array and
  * extract the actual data from that array. This class provides some methods to extract integer and
  * floating point values from such an array.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public abstract class BytewiseExampleSource extends AbstractExampleSource {
@@ -49,7 +52,7 @@ public abstract class BytewiseExampleSource extends AbstractExampleSource {
 	public static final String PARAMETER_FILENAME = "filename";
 
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
-	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
+	public static final String PARAMETER_DATAMANAGEMENT = ExampleSetGenerator.PARAMETER_DATAMANAGEMENT;
 
 	/** A generic wrong file format error message. */
 	protected static final String GENERIC_ERROR_MESSAGE = "Wrong file format";
@@ -75,7 +78,11 @@ public abstract class BytewiseExampleSource extends AbstractExampleSource {
 
 	@Override
 	public ExampleSet createExampleSet() throws OperatorException {
-		DataRowFactory dataRowFactory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
+		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
+		}
+		DataRowFactory dataRowFactory = new DataRowFactory(datamanagement, '.');
 		ExampleSet result = null;
 
 		// read file and construct example set
@@ -278,10 +285,7 @@ public abstract class BytewiseExampleSource extends AbstractExampleSource {
 				});
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.",
-				DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY);
-		type.setExpert(true);
-		types.add(type);
+		DataManagementParameterHelper.addParameterTypes(types, this);
 		return types;
 	}
 }

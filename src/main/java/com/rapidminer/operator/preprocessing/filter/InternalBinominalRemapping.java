@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.util.HashSet;
@@ -28,7 +28,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.BinominalMapping;
-import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
@@ -88,18 +87,19 @@ public class InternalBinominalRemapping extends AbstractDataProcessing {
 		Set<Attribute> remappedAttributes = new HashSet<>();
 
 		for (Attribute attribute : attributes) {
-			if (negativeValue.equals(attribute.getMapping().getPositiveString())
-					&& positiveValue.equals(attribute.getMapping().getNegativeString())) {
-				// create inverse value mapping
-				NominalMapping mapping = attribute.getMapping();
-				mapping.clear();
-				mapping.mapString(negativeValue);
-				mapping.mapString(positiveValue);
-				remappedAttributes.add(attribute);
-			} else if (!negativeValue.equals(attribute.getMapping().getNegativeString())
-					|| !positiveValue.equals(attribute.getMapping().getPositiveString())) {
-				logWarning("specified values do not match values of attribute " + attribute.getName()
-						+ ", attribute is skipped.");
+			if (attribute.isNominal()) {
+				if (negativeValue.equals(attribute.getMapping().getPositiveString())
+						&& positiveValue.equals(attribute.getMapping().getNegativeString())) {
+					// create inverse value mapping
+					attribute.getMapping().clear();
+					attribute.getMapping().mapString(negativeValue);
+					attribute.getMapping().mapString(positiveValue);
+					remappedAttributes.add(attribute);
+				} else if (!negativeValue.equals(attribute.getMapping().getNegativeString())
+						|| !positiveValue.equals(attribute.getMapping().getPositiveString())) {
+					logWarning("specified values do not match values of attribute " + attribute.getName()
+							+ ", attribute is skipped.");
+				}
 			}
 		}
 

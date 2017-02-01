@@ -1,22 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
+
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -32,6 +37,7 @@ import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.features.weighting.InfoGainWeighting;
@@ -43,6 +49,7 @@ import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
 import com.rapidminer.operator.ports.metadata.MDInteger;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
+import com.rapidminer.operator.preprocessing.MaterializeDataInMemory;
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -51,9 +58,6 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * The operator MissingValueImpution imputes missing values by learning models for each attribute
@@ -61,15 +65,15 @@ import java.util.List;
  * has to be given as inner operator. In order to specify a subset of the example set in which the
  * missing values should be imputed (e.g. to limit the imputation to only numerical attributes) the
  * corresponding attributes might be chosen by the filter parameters.
- * 
+ *
  * Please be aware that depending on the ability of the inner operator to handle missing values this
  * operator might not be able to impute all missing values in some cases. This behavior leads to a
  * warning. It might hence be useful to combine this operator with a subsequent
  * MissingValueReplenishment.
- * 
+ *
  * ATTENTION: This operator is currently under development and does not properly work in all cases.
  * We do not recommend the usage of this operator in production systems.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class MissingValueImputation extends OperatorChain {
@@ -116,6 +120,11 @@ public class MissingValueImputation extends OperatorChain {
 
 	/** Sort strategies names. */
 	private static final String[] sortStrategies = { "ascending", "descending" };
+
+	/**
+	 * Incompatible version, old version writes into the exampleset
+	 */
+	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 3, 1);
 
 	private final InputPort exampleSetInput = getInputPorts().createPort("example set in", ExampleSet.class);
 	private final OutputPort innerExampleSetSource = getSubprocess(0).getInnerSources().createPort("example set source");
@@ -180,10 +189,14 @@ public class MissingValueImputation extends OperatorChain {
 	public void doWork() throws OperatorException {
 		boolean iterate = getParameterAsBoolean(PARAMETER_ITERATE);
 		int order = getParameterAsInt(PARAMETER_ORDER);
-		boolean ascending = (getParameterAsInt(PARAMETER_SORT) == ASCENDING);
+		boolean ascending = getParameterAsInt(PARAMETER_SORT) == ASCENDING;
 		boolean learnOnCompleteCases = getParameterAsBoolean(PARAMETER_LEARN_ON_COMPLETE_CASES);
 
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
+		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
+			// materialize since imputed values are written into the data
+			exampleSet = MaterializeDataInMemory.materializeExampleSet(exampleSet);
+		}
 
 		// delete original label which should not be learned from
 		Attribute label = exampleSet.getAttributes().getLabel();
@@ -378,4 +391,11 @@ public class MissingValueImputation extends OperatorChain {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPorts().getPortByIndex(0),
 				MissingValueImputation.class, attributeSelector);
 	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+	}
+
 }

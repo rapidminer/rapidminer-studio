@@ -1,22 +1,25 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.functions.kernel;
+
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -48,9 +51,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * Relevance Vector Machine (RVM) Learner. The RVM is a probabilistic method both for classification
@@ -58,10 +58,10 @@ import java.util.List;
  * algorithm described by Tipping/2001. The fast version of the marginal likelihood maximization
  * (Tipping/Faul/2003) is also available if the parameter &quot;rvm_type&quot; is set to
  * &quot;Constructive-Regression-RVM&quot;.
- * 
+ *
  * @rapidminer.reference Tipping/2001a
  * @rapidminer.reference Tipping/Faul/2003a
- * 
+ *
  * @author Piotr Kasprzak, Ingo Mierswa
  * @rapidminer.index RVM
  */
@@ -100,10 +100,14 @@ public class RVMLearner extends AbstractKernelBasedLearner {
 	 */
 	public static final String PARAMETER_KERNEL_SIGMA1 = "kernel_sigma1";
 
-	/** The parameter name for &quot;The SVM kernel parameter sigma2 (Gaussian Combination).&quot; */
+	/**
+	 * The parameter name for &quot;The SVM kernel parameter sigma2 (Gaussian Combination).&quot;
+	 */
 	public static final String PARAMETER_KERNEL_SIGMA2 = "kernel_sigma2";
 
-	/** The parameter name for &quot;The SVM kernel parameter sigma3 (Gaussian Combination).&quot; */
+	/**
+	 * The parameter name for &quot;The SVM kernel parameter sigma3 (Gaussian Combination).&quot;
+	 */
 	public static final String PARAMETER_KERNEL_SIGMA3 = "kernel_sigma3";
 
 	/**
@@ -152,21 +156,26 @@ public class RVMLearner extends AbstractKernelBasedLearner {
 		/** Get user defined control parameters from RapidMiner */
 
 		parameter.min_delta_log_alpha = getParameterAsDouble(PARAMETER_MIN_DELTA_LOG_ALPHA);  // Abort
-																								// iteration
-																								// if
-																								// largest
-																								// log
-																								// alpha
-																								// change
-																								// is
-																								// smaller
-																								// than
-																								// this
-		parameter.alpha_max = getParameterAsDouble(PARAMETER_ALPHA_MAX);				// Prune basis function if
-																			// its alpha is bigger
-																			// than this
-		parameter.maxIterations = getParameterAsInt(PARAMETER_MAX_ITERATION);				// Maximum number of
-																				// iterations
+																							  // iteration
+																							  // if
+																							  // largest
+																							  // log
+																							  // alpha
+																							  // change
+																							  // is
+																							  // smaller
+																							  // than
+																							  // this
+		parameter.alpha_max = getParameterAsDouble(PARAMETER_ALPHA_MAX);				// Prune
+																						// basis
+																						// function
+																						// if
+		// its alpha is bigger
+		// than this
+		parameter.maxIterations = getParameterAsInt(PARAMETER_MAX_ITERATION);				// Maximum
+																								// number
+																								// of
+		// iterations
 
 		/** Transfer input / target vectors into array form */
 
@@ -187,7 +196,7 @@ public class RVMLearner extends AbstractKernelBasedLearner {
 
 		Attribute label = exampleSet.getAttributes().getLabel();
 
-		parameter.initAlpha = Math.pow((1.0 / numExamples), 2);
+		parameter.initAlpha = Math.pow(1.0 / numExamples, 2);
 
 		parameter.initSigma = 0.1;
 
@@ -279,12 +288,13 @@ public class RVMLearner extends AbstractKernelBasedLearner {
 		double sigma2 = getParameterAsDouble(PARAMETER_KERNEL_SIGMA2);
 		double sigma3 = getParameterAsDouble(PARAMETER_KERNEL_SIGMA3);
 		double shift = getParameterAsDouble(PARAMETER_KERNEL_SHIFT);
+		int kernelType = getParameterAsInt(PARAMETER_KERNEL_TYPE);
 
 		for (int j = 0; j < numKernels - 1; j++) {
 
 			input = x[j];
 
-			switch (getParameterAsInt(PARAMETER_KERNEL_TYPE)) {
+			switch (kernelType) {
 				case 0:
 					kernel = new KernelBasisFunction(new KernelRadial(lengthScale), input);
 					break;
@@ -335,7 +345,8 @@ public class RVMLearner extends AbstractKernelBasedLearner {
 
 		type = new ParameterTypeDouble(PARAMETER_KERNEL_LENGTHSCALE, "The lengthscale used in all kernels.", 0,
 				Double.POSITIVE_INFINITY, 3.0);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, false, 0, 1, 2, 3));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, false, 0, 1, 2, 3));
 		type.setExpert(false);
 		types.add(type);
 

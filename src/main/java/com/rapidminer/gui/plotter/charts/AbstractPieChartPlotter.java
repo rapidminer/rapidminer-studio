@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter.charts;
 
 import java.awt.Color;
@@ -124,7 +124,7 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 	private ListeningJCheckBox useDistinct;
 
 	/** The used aggregation function. */
-	private ListeningJComboBox aggregationFunction = null;
+	private ListeningJComboBox<String> aggregationFunction = null;
 
 	/** Indicates if absolute values should be used. */
 	private boolean absoluteFlag = false;
@@ -136,7 +136,7 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 	 * This list hold all groups of the selected grouping column which should be selected for
 	 * explosion.
 	 */
-	private ExtendedJList explodingGroupList;
+	private ExtendedJList<String> explodingGroupList;
 	private ListeningListSelectionModel explodingGroupListSelectionModel;
 
 	/** The slider for the amount of explosion. */
@@ -167,9 +167,9 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 		allFunctions[0] = "none";
 		System.arraycopy(AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES, 0, allFunctions, 1,
 				AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES.length);
-		aggregationFunction = new ListeningJComboBox(settings, "_" + PARAMETERS_AGGREGATION, allFunctions);
-		aggregationFunction.setPreferredSize(new Dimension(aggregationFunction.getPreferredSize().width,
-				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+		aggregationFunction = new ListeningJComboBox<>(settings, "_" + PARAMETERS_AGGREGATION, allFunctions);
+		aggregationFunction.setPreferredSize(
+				new Dimension(aggregationFunction.getPreferredSize().width, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		aggregationFunction
 				.setToolTipText("Select the type of the aggregation function which should be used for grouped values.");
 		aggregationFunction.addActionListener(new ActionListener() {
@@ -186,7 +186,7 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 			}
 		}
 
-		explodingGroupList = new ExtendedJList(new ExtendedListModel(), 200);
+		explodingGroupList = new ExtendedJList<>(new ExtendedListModel<>(), 200);
 		explodingGroupListSelectionModel = new ListeningListSelectionModel("_" + PARAMETERS_EXPLOSION_GROUPS,
 				explodingGroupList);
 		explodingGroupList.setSelectionModel(explodingGroupListSelectionModel);
@@ -195,11 +195,7 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (!e.getValueIsAdjusting()) {
-					Object[] values = explodingGroupList.getSelectedValues();
-					List<String> list = new LinkedList<String>();
-					for (Object object : values) {
-						list.add((String) object);
-					}
+					List<String> list = explodingGroupList.getSelectedValuesList();
 					String result = ParameterTypeEnumeration.transformEnumeration2String(list);
 					settings.setParameterAsString(PARAMETERS_EXPLOSION_GROUPS, result);
 				}
@@ -207,7 +203,7 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 		});
 		explodingGroupList.setForeground(Color.BLACK);
 		explodingGroupList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		explodingGroupList.setCellRenderer(new PlotterPanel.LineStyleCellRenderer(this));
+		explodingGroupList.setCellRenderer(new PlotterPanel.LineStyleCellRenderer<>(this));
 
 		updateGroups();
 
@@ -349,17 +345,15 @@ public abstract class AbstractPieChartPlotter extends PlotterAdapter {
 				}
 			}
 		}
+		ExtendedListModel<String> model = new ExtendedListModel<>();
 		if (groups.size() > 0) {
-			ExtendedListModel model = new ExtendedListModel();
 			for (String group : groups) {
 				model.addElement(group, "Select group '" + group + "' for explosion.");
 			}
-			this.explodingGroupList.setModel(model);
 		} else {
-			ExtendedListModel model = new ExtendedListModel();
 			model.addElement("Specify 'Group By' first...");
-			this.explodingGroupList.setModel(model);
 		}
+		this.explodingGroupList.setModel(model);
 	}
 
 	private int prepareData() {

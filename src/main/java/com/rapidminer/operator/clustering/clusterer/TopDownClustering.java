@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.Collection;
@@ -33,6 +33,7 @@ import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.operator.clustering.ClusterModel2ExampleSet;
 import com.rapidminer.operator.clustering.FlattenClusterModel;
@@ -96,8 +97,8 @@ public class TopDownClustering extends OperatorChain {
 			@Override
 			public ExampleSetMetaData modifyExampleSet(ExampleSetMetaData metaData) {
 				if (addsClusterAttribute()) {
-					metaData.addAttribute(new AttributeMetaData(Attributes.CLUSTER_NAME, Ontology.NOMINAL,
-							Attributes.CLUSTER_NAME));
+					metaData.addAttribute(
+							new AttributeMetaData(Attributes.CLUSTER_NAME, Ontology.NOMINAL, Attributes.CLUSTER_NAME));
 				}
 				MetaDataTools.checkAndCreateIds(metaData);
 				return metaData;
@@ -122,7 +123,8 @@ public class TopDownClustering extends OperatorChain {
 		// recursively descend until leaf_size smaller than max_leaf_size
 		HierarchicalClusterNode root = new HierarchicalClusterNode("root");
 		HierarchicalClusterModel model = new HierarchicalClusterModel(root);
-		int createdLeafs = descend(exampleSet, root, 0, maxLeafSize, getParameterAsInt(PARAMETER_MAX_DEPTH) - 1);
+		int createdLeafs = descend(exampleSet, root, 0, maxLeafSize, getParameterAsInt(PARAMETER_MAX_DEPTH) - 1,
+				getProgress());
 
 		if (getParameterAsBoolean(PARAMETER_CREATE_CLUSTER_LABEL) && exampleSetOutput.isConnected()) {
 			try {
@@ -146,8 +148,8 @@ public class TopDownClustering extends OperatorChain {
 		}
 	}
 
-	private int descend(ExampleSet exampleSet, HierarchicalClusterNode elter, int depth, int maxLeafSize, int maxDepth)
-			throws OperatorException {
+	private int descend(ExampleSet exampleSet, HierarchicalClusterNode elter, int depth, int maxLeafSize, int maxDepth,
+			OperatorProgress progress) throws OperatorException {
 		// checking and creating ids if necessary
 		Tools.checkAndCreateIds(exampleSet);
 
@@ -161,6 +163,12 @@ public class TopDownClustering extends OperatorChain {
 		Partition partition = new Partition(clusterAssignments, currentModel.getNumberOfClusters());
 		SplittedExampleSet splittedSet = new SplittedExampleSet(exampleSet, partition);
 		int numberOfCreatedLeafs = 0;
+
+		// initialize operator progress
+		if (progress != null) {
+			progress.setTotal(currentModel.getNumberOfClusters());
+		}
+
 		for (int i = 0; i < currentModel.getNumberOfClusters(); i++) {
 			// testing if cluster is large enough to split again
 			splittedSet.selectSingleSubset(i);
@@ -168,7 +176,7 @@ public class TopDownClustering extends OperatorChain {
 				// create new node and descend again on split of examples
 				HierarchicalClusterNode node = new HierarchicalClusterNode(depth + ":" + i);
 				elter.addSubNode(node);
-				numberOfCreatedLeafs += descend(splittedSet, node, depth + 1, maxLeafSize, maxDepth);
+				numberOfCreatedLeafs += descend(splittedSet, node, depth + 1, maxLeafSize, maxDepth, null);
 			} else {
 				// create leaf node and add all examples
 				Collection<Object> exampleIds = new LinkedList<Object>();
@@ -185,6 +193,9 @@ public class TopDownClustering extends OperatorChain {
 				HierarchicalClusterLeafNode leaf = new HierarchicalClusterLeafNode(depth + ":" + i, exampleIds);
 				elter.addSubNode(leaf);
 				numberOfCreatedLeafs++;
+			}
+			if (progress != null) {
+				progress.step();
 			}
 		}
 		return numberOfCreatedLeafs;

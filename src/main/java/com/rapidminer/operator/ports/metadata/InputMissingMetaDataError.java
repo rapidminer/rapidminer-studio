@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.ports.metadata;
 
 import com.rapidminer.operator.IOObject;
@@ -45,19 +45,20 @@ public class InputMissingMetaDataError extends SimpleMetaDataError {
 
 	public InputMissingMetaDataError(InputPort inputPort, Class<? extends IOObject> desiredClass,
 			Class<? extends IOObject> receivedClass) {
-		super(Severity.ERROR, inputPort, (receivedClass == null ? "input_missing" : "expected"),
-				(receivedClass == null ? new Object[] { inputPort.getSpec() } : new Object[] { desiredClass.getSimpleName(),
-						receivedClass.getSimpleName() }));
+		super(Severity.ERROR, inputPort, receivedClass == null ? "input_missing" : "expected",
+				receivedClass == null ? new Object[] { inputPort.getSpec() }
+						: new Object[] { desiredClass.getSimpleName(), receivedClass.getSimpleName() });
 		this.inputPort = inputPort;
 		this.desiredClass = desiredClass;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public List<QuickFix> getQuickFixes() {
 		List<QuickFix> fixes = new LinkedList<QuickFix>();
 		if (desiredClass != null) {
 			for (OutputPort outputPort : inputPort.getPorts().getOwner().getConnectionContext().getAllOutputPorts()) {
-				if (!outputPort.isConnected() && (outputPort.getMetaData() != null)
+				if (!outputPort.isConnected() && outputPort.getMetaData() != null
 						&& desiredClass.isAssignableFrom(outputPort.getMetaData().getObjectClass())) {
 					fixes.add(new ConnectToQuickFix(inputPort, outputPort));
 				}

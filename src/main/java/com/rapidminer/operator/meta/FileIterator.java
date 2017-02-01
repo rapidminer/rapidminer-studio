@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.meta;
 
 import java.io.File;
@@ -40,6 +40,7 @@ import com.rapidminer.parameter.ParameterTypeDirectory;
  *
  * @author Sebastian Land, Ingo Mierswa, Marius Helf
  */
+@Deprecated
 public class FileIterator extends AbstractFileIterator {
 
 	public static final String PARAMETER_DIRECTORY = "directory";
@@ -59,8 +60,8 @@ public class FileIterator extends AbstractFileIterator {
 		super.doWork();
 	}
 
-	private List<EntryContainer> calcObjectsOfIntrest(File dir, Pattern filter, boolean iterateSubDirs,
-			boolean iterateFiles, boolean recursive, List<EntryContainer> toFill) throws OperatorException {
+	private List<EntryContainer> calcObjectsOfIntrest(File dir, Pattern filter, boolean iterateSubDirs, boolean iterateFiles,
+			boolean recursive, List<EntryContainer> toFill) throws OperatorException {
 
 		File[] directoryListFiles = dir.listFiles();
 		if (dir.isDirectory() && directoryListFiles != null) {
@@ -79,8 +80,8 @@ public class FileIterator extends AbstractFileIterator {
 					calcObjectsOfIntrest(child, filter, iterateSubDirs, iterateFiles, recursive, toFill);
 				}
 			}
-		} else if (getCompatibilityLevel().isAbove(CHANGE_6_4_0_ERROR_WHEN_DIRECTORY_NOT_EXISTS) || dir.isDirectory()
-				&& directoryListFiles == null) {
+		} else if (getCompatibilityLevel().isAbove(CHANGE_6_4_0_ERROR_WHEN_DIRECTORY_NOT_EXISTS)
+				|| dir.isDirectory() && directoryListFiles == null) {
 			throw new UserError(this, 324, getParameterAsString(PARAMETER_DIRECTORY));
 		}
 		return toFill;

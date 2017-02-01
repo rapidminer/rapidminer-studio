@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.look.fc;
 
 import com.rapidminer.gui.look.RapidLookTools;
@@ -29,7 +29,6 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.Enumeration;
 import java.util.Vector;
 
 import javax.swing.JComponent;
@@ -48,8 +47,6 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 
 	private static final long serialVersionUID = -4300786583560333090L;
 
-	private int visiblesCount = 0;
-
 	private DragSelectionThread selectingThread;
 
 	private int mpcy = 0, mpcx = 0, mpy = 0, mpx = 0;
@@ -57,8 +54,6 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 	private int tx = 0, ty = 0;
 
 	private boolean mouseDownFlag = false;
-
-	private Item tempItem;
 
 	private Rectangle selectionRect;
 
@@ -71,10 +66,6 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 	private JPopupMenu popup;
 
 	private ItemPanelKeyboardListener keylistener = new ItemPanelKeyboardListener();
-
-	private Enumeration en;
-
-	private Item tc;
 
 	private int totalColumn;
 
@@ -140,15 +131,13 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 	}
 
 	private void determinePreferredSize() {
-		this.en = this.filePane.visibleItemsList.elements();
 		int w = 0, h = 0;
-		while (this.en.hasMoreElements()) {
-			this.tempItem = (Item) this.en.nextElement();
-			if ((this.tempItem.getX() + this.tempItem.getWidth()) > w) {
-				w = this.tempItem.getX() + this.tempItem.getWidth();
+		for (Item tempItem : filePane.visibleItemsList) {
+			if (tempItem.getX() + tempItem.getWidth() > w) {
+				w = tempItem.getX() + tempItem.getWidth();
 			}
-			if ((this.tempItem.getY() + this.tempItem.getHeight()) > h) {
-				h = this.tempItem.getY() + this.tempItem.getHeight();
+			if (tempItem.getY() + tempItem.getHeight() > h) {
+				h = tempItem.getY() + tempItem.getHeight();
 			}
 		}
 
@@ -206,12 +195,11 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 		repaint();
 	}
 
-	public void moveSelectedItems(int difX, int difY) {
-		Enumeration en = this.filePane.selectedFilesVector.elements();
-		while (en.hasMoreElements()) {
-			this.tempItem = (Item) en.nextElement();
-		}
-	}
+	/**
+	 * @deprecated Since 7.4; did nothing
+	 */
+	@Deprecated
+	public void moveSelectedItems(int difX, int difY) {}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
@@ -227,27 +215,21 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 	public void mouseMoved(MouseEvent e) {}
 
 	public void selectedComponentMousePressed(MouseEvent e) {
-		this.en = this.filePane.selectedFilesVector.elements();
-		while (this.en.hasMoreElements()) {
-			this.tempItem = (Item) this.en.nextElement();
-			this.tempItem.componentMousePressed(e);
+		for (Item tempItem : filePane.selectedFilesVector) {
+			tempItem.componentMousePressed(e);
 		}
 	}
 
 	public void selectedComponentMouseReleased(MouseEvent e) {
-		this.en = this.filePane.selectedFilesVector.elements();
-		while (this.en.hasMoreElements()) {
-			this.tempItem = (Item) this.en.nextElement();
-			this.tempItem.componentMouseReleased(e);
+		for (Item tempItem : filePane.selectedFilesVector) {
+			tempItem.componentMouseReleased(e);
 		}
 		this.determinePreferredSize();
 	}
 
 	public void selectedComponentMouseDragged(Point point) {
-		this.en = this.filePane.selectedFilesVector.elements();
-		while (this.en.hasMoreElements()) {
-			this.tempItem = (Item) this.en.nextElement();
-			this.tempItem.componentMouseDragged(point);
+		for (Item tempItem : filePane.selectedFilesVector) {
+			tempItem.componentMouseDragged(point);
 		}
 		this.scrollRectToVisible(this.filePane.lastSelected.getBounds());
 	}
@@ -257,55 +239,45 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 	}
 
 	protected void arrangeTheFiles(int w) {
-		this.en = this.filePane.visibleItemsList.elements();
 		int counter = 0, r, c;
 
 		if (this.filePane.filechooserUI.viewType.equals(FileChooserUI.FILECHOOSER_VIEW_THUMBNAIL)) {
 			this.totalColumn = (w - 30) / 130;
-			this.visiblesCount = 0;
 			if (this.totalColumn < 1) {
 				this.totalColumn = 1;
 			}
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
-				this.tc.setVisible(true);
+			for (Item tc : filePane.visibleItemsList) {
+				tc.setVisible(true);
 				r = counter / this.totalColumn;
 				c = counter % this.totalColumn;
-				this.tc.setLocation((c * 130) + 30, (r * 150) + 30);
+				tc.setLocation(c * 130 + 30, r * 150 + 30);
 				counter++;
-				this.visiblesCount++;
 			}
 		} else if (this.filePane.filechooserUI.viewType.equals(FileChooserUI.FILECHOOSER_VIEW_ICON)) {
 			this.totalColumn = (w - 30) / 90;
-			this.visiblesCount = 0;
 			if (this.totalColumn < 1) {
 				this.totalColumn = 1;
 			}
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
+			for (Item tc : filePane.visibleItemsList) {
 				r = counter / this.totalColumn;
 				c = counter % this.totalColumn;
-				this.tc.setLocation((c * 90) + 20, (r * 100) + 20);
+				tc.setLocation(c * 90 + 20, r * 100 + 20);
 				counter++;
-				this.visiblesCount++;
 			}
 		} else if (this.filePane.filechooserUI.viewType.equals(FileChooserUI.FILECHOOSER_VIEW_LIST)) {
 			if (this.maxWidth == 0) {
 				return;
 			}
-			this.visiblesCount = 0;
 			this.totalColumn = (w - 30) / (this.maxWidth + 30);
 			if (this.totalColumn < 1) {
 				this.totalColumn = 1;
 			}
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
-				this.tc.setVisible(true);
+			for (Item tc : filePane.visibleItemsList) {
+				tc.setVisible(true);
 				r = counter / this.totalColumn;
 				c = counter % this.totalColumn;
-				this.tc.setLocation(c * (this.maxWidth + 30) + (c + 1) * 10, (r * 18) + 10);
+				tc.setLocation(c * (this.maxWidth + 30) + (c + 1) * 10, r * 18 + 10);
 				counter++;
-				this.visiblesCount++;
 			}
 		}
 
@@ -324,55 +296,48 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 
 			r = counter / this.totalColumn;
 			c = counter % this.totalColumn;
-			thumb.setLocation(c * (this.maxWidth + 30) + (c + 1) * 10, (r * 18) + 10);
+			thumb.setLocation(c * (this.maxWidth + 30) + (c + 1) * 10, r * 18 + 10);
 		} else if (this.filePane.filechooserUI.viewType.equals(FileChooserUI.FILECHOOSER_VIEW_ICON)) {
 			updateForIconView(thumb);
 			r = counter / this.totalColumn;
 			c = counter % this.totalColumn;
-			thumb.setLocation((c * 90) + 20, (r * 100) + 20);
+			thumb.setLocation(c * 90 + 20, r * 100 + 20);
 		} else if (this.filePane.filechooserUI.viewType.equals(FileChooserUI.FILECHOOSER_VIEW_THUMBNAIL)) {
 			updateForThumbnailView(thumb);
 			r = counter / this.totalColumn;
 			c = counter % this.totalColumn;
-			thumb.setLocation((c * 130) + 30, (r * 150) + 30);
+			thumb.setLocation(c * 130 + 30, r * 150 + 30);
 		}
 	}
 
 	public void updateForViewAndArrange() {
 		if (this.filePane.filechooserUI.getView().equals(FileChooserUI.FILECHOOSER_VIEW_THUMBNAIL)) {
-			this.en = this.filePane.visibleItemsList.elements();
-			while (this.en.hasMoreElements()) {
-				updateForThumbnailView((Item) this.en.nextElement());
+			for (Item item : filePane.visibleItemsList) {
+				updateForThumbnailView(item);
 			}
 			this.filePane.updateThumbnail();
 		} else if (this.filePane.filechooserUI.viewType.equals(FileChooserUI.FILECHOOSER_VIEW_ICON)) {
-			this.en = this.filePane.visibleItemsList.elements();
-			while (this.en.hasMoreElements()) {
-				updateForIconView((Item) this.en.nextElement());
+			for (Item item : filePane.visibleItemsList) {
+				updateForIconView(item);
 			}
 		} else if (this.filePane.filechooserUI.viewType.equals(FileChooserUI.FILECHOOSER_VIEW_LIST)) {
-			this.en = this.filePane.visibleItemsList.elements();
-			while (this.en.hasMoreElements()) {
-				updateForListView((Item) this.en.nextElement());
+			for (Item item : filePane.visibleItemsList) {
+				updateForListView(item);
 			}
-			this.en = this.filePane.visibleItemsList.elements();
 			this.maxWidth = 0;
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
-				if (this.tc.imageLabel.getPreferredSize().getWidth() + this.tc.nameLabel.getPreferredLineWidth() > this.maxWidth) {
-					this.maxWidth = (int) (this.tc.imageLabel.getPreferredSize().getWidth() + this.tc.nameLabel
-							.getPreferredLineWidth());
+			for (Item tc : filePane.visibleItemsList) {
+				if (tc.imageLabel.getPreferredSize().getWidth() + tc.nameLabel.getPreferredLineWidth() > this.maxWidth) {
+					this.maxWidth = (int) (tc.imageLabel.getPreferredSize().getWidth()
+							+ tc.nameLabel.getPreferredLineWidth());
 				}
 			}
 		}
 
-		this.en = this.filePane.selectedFilesVector.elements();
-		while (this.en.hasMoreElements()) {
-			this.tempItem = (Item) this.en.nextElement();
+		for (Item tempItem : filePane.selectedFilesVector) {
 			if (!this.filePane.filechooserUI.getView().equals(FileChooserUI.FILECHOOSER_VIEW_LIST)) {
-				this.tempItem.nameLabel.setMultiLine(true);
+				tempItem.nameLabel.setMultiLine(true);
 			}
-			this.tempItem.updateSelectionMode(true);
+			tempItem.updateSelectionMode(true);
 		}
 
 		arrangeTheFiles();
@@ -464,7 +429,7 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 	}
 
 	public void useKeyMoves(String str, boolean isCtrl) {
-		if ((this.filePane.lastSelected == null) || (this.filePane.visibleItemsList.size() == 0)) {
+		if (this.filePane.lastSelected == null || this.filePane.visibleItemsList.size() == 0) {
 			return;
 		}
 		Item tempLast = this.filePane.lastSelected;
@@ -497,21 +462,18 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 			while (flag) {
 				res = tempLast;
 				mainCenter = tempLast.getLocation();
-				this.en = this.filePane.visibleItemsList.elements();
-				while (this.en.hasMoreElements()) {
-					this.tc = (Item) this.en.nextElement();
-					center = this.tc.getLocation();
+				for (Item tc : filePane.visibleItemsList) {
+					center = tc.getLocation();
 					if (mainCenter.getY() > center.getY()) {
-						if ((res.getLocation().distance(tempLast.getLocation()) == 0)
-								|| (this.tc.getLocation().distance(tempLast.getLocation()) < res.getLocation().distance(
-										tempLast.getLocation()))) {
-							res = this.tc;
+						if (res.getLocation().distance(tempLast.getLocation()) == 0 || tc.getLocation()
+								.distance(tempLast.getLocation()) < res.getLocation().distance(tempLast.getLocation())) {
+							res = tc;
 						}
 					}
 				}
 
-				if ((((JViewport) this.getParent()).getViewRect().getHeight() < res.getLocation().distance(
-						this.filePane.lastSelected.getLocation()))
+				if (((JViewport) this.getParent()).getViewRect().getHeight() < res.getLocation()
+						.distance(this.filePane.lastSelected.getLocation())
 						|| tempLast.getFileName().equals(res.getFileName())) {
 					flag = false;
 					this.filePane.updateFilechooserSelectedItems(tempLast, isCtrl);
@@ -535,21 +497,18 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 			while (flag) {
 				res = tempLast;
 				mainCenter = tempLast.getLocation();
-				this.en = this.filePane.visibleItemsList.elements();
-				while (this.en.hasMoreElements()) {
-					this.tc = (Item) this.en.nextElement();
-					center = this.tc.getLocation();
+				for (Item tc : filePane.visibleItemsList) {
+					center = tc.getLocation();
 					if (mainCenter.getY() < center.getY()) {
-						if ((res.getLocation().distance(tempLast.getLocation()) == 0)
-								|| (this.tc.getLocation().distance(tempLast.getLocation()) < res.getLocation().distance(
-										tempLast.getLocation()))) {
-							res = this.tc;
+						if (res.getLocation().distance(tempLast.getLocation()) == 0 || tc.getLocation()
+								.distance(tempLast.getLocation()) < res.getLocation().distance(tempLast.getLocation())) {
+							res = tc;
 						}
 					}
 				}
 
-				if ((((JViewport) this.getParent()).getViewRect().getHeight() < res.getLocation().distance(
-						this.filePane.lastSelected.getLocation()))
+				if (((JViewport) this.getParent()).getViewRect().getHeight() < res.getLocation()
+						.distance(this.filePane.lastSelected.getLocation())
 						|| tempLast.getFileName().equals(res.getFileName())) {
 					flag = false;
 					this.filePane.updateFilechooserSelectedItems(tempLast, isCtrl);
@@ -560,44 +519,38 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 			}
 
 		} else if (str.equals("DOWN")) {
-			this.en = this.filePane.visibleItemsList.elements();
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
-				center = this.tc.getLocation();
+			for (Item tc : filePane.visibleItemsList) {
+				center = tc.getLocation();
 				if (mainCenter.getY() < center.getY()) {
-					if ((res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0)
-							|| (this.tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
-									.distance(this.filePane.lastSelected.getLocation()))) {
-						res = this.tc;
+					if (res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0
+							|| tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
+									.distance(this.filePane.lastSelected.getLocation())) {
+						res = tc;
 
 					}
 				}
 			}
 			this.filePane.updateFilechooserSelectedItems(res, isCtrl);
 		} else if (str.equals("UP")) {
-			this.en = this.filePane.visibleItemsList.elements();
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
-				center = this.tc.getLocation();
+			for (Item tc : filePane.visibleItemsList) {
+				center = tc.getLocation();
 				if (mainCenter.getY() > center.getY()) {
-					if ((res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0)
-							|| (this.tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
-									.distance(this.filePane.lastSelected.getLocation()))) {
-						res = this.tc;
+					if (res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0
+							|| tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
+									.distance(this.filePane.lastSelected.getLocation())) {
+						res = tc;
 					}
 				}
 			}
 			this.filePane.updateFilechooserSelectedItems(res, isCtrl);
 		} else if (str.equals("LEFT")) {
-			this.en = this.filePane.visibleItemsList.elements();
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
-				center = this.tc.getLocation();
+			for (Item tc : filePane.visibleItemsList) {
+				center = tc.getLocation();
 				if (mainCenter.getX() > center.getX()) {
-					if ((res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0)
-							|| (this.tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
-									.distance(this.filePane.lastSelected.getLocation()))) {
-						res = this.tc;
+					if (res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0
+							|| tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
+									.distance(this.filePane.lastSelected.getLocation())) {
+						res = tc;
 					}
 				}
 			}
@@ -605,15 +558,13 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 			this.filePane.updateFilechooserSelectedItems(res, isCtrl);
 
 		} else if (str.equals("RIGHT")) {
-			this.en = this.filePane.visibleItemsList.elements();
-			while (this.en.hasMoreElements()) {
-				this.tc = (Item) this.en.nextElement();
-				center = this.tc.getLocation();
+			for (Item tc : filePane.visibleItemsList) {
+				center = tc.getLocation();
 				if (mainCenter.getX() < center.getX()) {
-					if ((res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0)
-							|| (this.tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
-									.distance(this.filePane.lastSelected.getLocation()))) {
-						res = this.tc;
+					if (res.getLocation().distance(this.filePane.lastSelected.getLocation()) == 0
+							|| tc.getLocation().distance(this.filePane.lastSelected.getLocation()) < res.getLocation()
+									.distance(this.filePane.lastSelected.getLocation())) {
+						res = tc;
 					}
 				}
 			}
@@ -625,7 +576,7 @@ public class ItemPanel extends JPanel implements MouseListener, MouseMotionListe
 		return this.filePane.filechooserUI.viewType;
 	}
 
-	public Vector getItemsList() {
+	public Vector<Item> getItemsList() {
 		return this.filePane.visibleItemsList;
 	}
 

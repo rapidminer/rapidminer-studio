@@ -1,28 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.properties.celleditors.value;
-
-import com.rapidminer.gui.tools.autocomplete.AutoCompleteComboBoxAddition;
-import com.rapidminer.operator.ports.MetaDataChangeListener;
-import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.parameter.MetaDataProvider;
-import com.rapidminer.parameter.ParameterTypeAttribute;
 
 import java.util.Vector;
 
@@ -30,19 +24,25 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.SwingUtilities;
 
+import com.rapidminer.gui.tools.autocomplete.AutoCompleteComboBoxAddition;
+import com.rapidminer.operator.ports.MetaDataChangeListener;
+import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.parameter.MetaDataProvider;
+import com.rapidminer.parameter.ParameterTypeAttribute;
+
 
 /**
  * Autocompletion combo box that observes an input port so it can update itself whenever the meta
  * data changes.
- * 
+ *
  * @author Simon Fischer, Sebastian Land
- * 
+ *
  */
-public class AttributeComboBox extends JComboBox {
+public class AttributeComboBox extends JComboBox<String> {
 
 	private static final long serialVersionUID = 1L;
 
-	private static class AttributeComboBoxModel extends DefaultComboBoxModel implements MetaDataChangeListener {
+	private static class AttributeComboBoxModel extends DefaultComboBoxModel<String> implements MetaDataChangeListener {
 
 		private static final long serialVersionUID = 1L;
 
@@ -64,7 +64,7 @@ public class AttributeComboBox extends JComboBox {
 		}
 
 		@Override
-		public Object getElementAt(int index) {
+		public String getElementAt(int index) {
 			return attributes.get(index);
 		}
 
@@ -108,7 +108,7 @@ public class AttributeComboBox extends JComboBox {
 		super(new AttributeComboBoxModel(type));
 		model = (AttributeComboBoxModel) getModel();
 		AutoCompleteComboBoxAddition autoCompleteCBA = new AutoCompleteComboBoxAddition(this);
-		autoCompleteCBA.setCaseSensitive(true);
+		autoCompleteCBA.setCaseSensitive(false);
 	}
 
 	@Override

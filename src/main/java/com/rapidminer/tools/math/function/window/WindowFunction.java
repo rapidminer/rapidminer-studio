@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.math.function.window;
 
 import java.lang.reflect.InvocationTargetException;
@@ -30,9 +30,11 @@ import java.lang.reflect.InvocationTargetException;
  */
 public abstract class WindowFunction {
 
-	public static final Class[] FUNCTIONS = { RectangularWindowFunction.class, TriangularWindowFunction.class,
-			GaussianWindowFunction.class, HannWindowFunction.class, HammingWindowFunction.class,
-			BlackmanWindowFunction.class, BlackmanHarrisWindowFunction.class, BartlettWindowFunction.class };
+	@SuppressWarnings("unchecked")
+	public static final Class<? extends WindowFunction>[] FUNCTIONS = new Class[] { RectangularWindowFunction.class,
+			TriangularWindowFunction.class, GaussianWindowFunction.class, HannWindowFunction.class,
+			HammingWindowFunction.class, BlackmanWindowFunction.class, BlackmanHarrisWindowFunction.class,
+			BartlettWindowFunction.class };
 
 	public static final String[] FUNCTION_NAMES = { "Rectangular", "Triangular", "Gaussian", "Hann", "Hamming", "Blackman",
 			"Blackman-Harris", "Bartlett" };
@@ -65,6 +67,7 @@ public abstract class WindowFunction {
 
 	private int justifiedOffset;
 
+	@SuppressWarnings("unchecked")
 	public static WindowFunction createWindowFunction(String functionName, int justification, int width)
 			throws InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException,
 			InvocationTargetException {
@@ -75,14 +78,13 @@ public abstract class WindowFunction {
 				break;
 			}
 		}
-		Class<?> clazz = null;
+		Class<? extends WindowFunction> clazz = null;
 		if (typeIndex < 0) {
-			clazz = Class.forName(functionName);
+			clazz = (Class<? extends WindowFunction>) Class.forName(functionName);
 		} else {
 			clazz = FUNCTIONS[typeIndex];
 		}
-		return (WindowFunction) clazz.getConstructor(new Class[] { Integer.class, Integer.class }).newInstance(width,
-				justification);
+		return clazz.getConstructor(Integer.class, Integer.class).newInstance(width, justification);
 	}
 
 	public static WindowFunction createWindowFunction(String functionName, int width) throws InstantiationException,
@@ -93,16 +95,15 @@ public abstract class WindowFunction {
 	public static WindowFunction createWindowFunction(int typeIndex, int justification, int width)
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
 		if (typeIndex >= 0 && typeIndex < FUNCTION_NAMES.length) {
-			Class<?> clazz = FUNCTIONS[typeIndex];
-			return (WindowFunction) clazz.getConstructor(new Class[] { Integer.class, Integer.class }).newInstance(width,
-					justification);
+			Class<? extends WindowFunction> clazz = FUNCTIONS[typeIndex];
+			return clazz.getConstructor(Integer.class, Integer.class).newInstance(width, justification);
 		} else {
 			throw new InstantiationException();
 		}
 	}
 
-	public static WindowFunction createWindowFunction(int typeIndex, int width) throws InstantiationException,
-			IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+	public static WindowFunction createWindowFunction(int typeIndex, int width)
+			throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
 		return createWindowFunction(typeIndex, JUSTIFY_CENTER, width);
 	}
 

@@ -1,22 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.visualization;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
@@ -50,21 +55,16 @@ import com.rapidminer.tools.math.ROCBias;
 import com.rapidminer.tools.math.ROCData;
 import com.rapidminer.tools.math.ROCDataGenerator;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * This operator uses its inner operators (each of those must produce a model) and calculates the
  * ROC curve for each of them. All ROC curves together are plotted in the same plotter. The
  * comparison is based on the average values of a k-fold cross validation. Alternatively, this
  * operator can use an internal split into a test and a training set from the given data set.
- * 
+ *
  * Please note that a former predicted label of the given example set will be removed during the
  * application of this operator.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ROCBasedComparisonOperator extends OperatorChain implements CapabilityProvider {
@@ -88,8 +88,8 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 	private final InputPort exampleSetInput = getInputPorts().createPort("example set", ExampleSet.class);
 	private final OutputPort exampleSetOutput = getOutputPorts().createPort("exampleSet");
 	private final OutputPort rocComparisonOutput = getOutputPorts().createPort("rocComparison");
-	private final OutputPortExtender trainingSetExtender = new OutputPortExtender("train", getSubprocess(0)
-			.getInnerSources());
+	private final OutputPortExtender trainingSetExtender = new OutputPortExtender("train",
+			getSubprocess(0).getInnerSources());
 	private final InputPortExtender modelExtender = new InputPortExtender("model", getSubprocess(0).getInnerSinks()) {
 
 		@Override
@@ -128,13 +128,14 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 		Map<String, List<ROCData>> rocData = new HashMap<String, List<ROCData>>();
 
 		int numberOfFolds = getParameterAsInt(PARAMETER_NUMBER_OF_FOLDS);
-		ExampleSet clone = (ExampleSet) exampleSet.clone();
+		boolean useExampleWeights = getParameterAsBoolean(PARAMETER_USE_EXAMPLE_WEIGHTS);
 		if (numberOfFolds < 0) {
 			double splitRatio = getParameterAsDouble(PARAMETER_SPLIT_RATIO);
-			SplittedExampleSet eSet = new SplittedExampleSet(clone, splitRatio, getParameterAsInt(PARAMETER_SAMPLING_TYPE),
+			SplittedExampleSet eSet = new SplittedExampleSet(exampleSet, splitRatio,
+					getParameterAsInt(PARAMETER_SAMPLING_TYPE),
 					getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED), getCompatibilityLevel().isAtMost(
-							SplittedExampleSet.VERSION_SAMPLING_CHANGED));
+					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
+					getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 
 			// apply subprocess to generate all models
 			eSet.selectSingleSubset(0);
@@ -151,8 +152,8 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 
 				// calculate ROC values
 				ROCDataGenerator rocDataGenerator = new ROCDataGenerator(1.0d, 1.0d);
-				ROCData rocPoints = rocDataGenerator.createROCData(resultSet,
-						getParameterAsBoolean(PARAMETER_USE_EXAMPLE_WEIGHTS), ROCBias.getROCBiasParameter(this));
+				ROCData rocPoints = rocDataGenerator.createROCData(resultSet, useExampleWeights,
+						ROCBias.getROCBiasParameter(this));
 				List<ROCData> dataList = new LinkedList<ROCData>();
 				dataList.add(rocPoints);
 				rocData.put(model.getSource(), dataList);
@@ -161,11 +162,11 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 				PredictionModel.removePredictedLabel(resultSet);
 			}
 		} else {
-			SplittedExampleSet eSet = new SplittedExampleSet(clone, numberOfFolds,
+			SplittedExampleSet eSet = new SplittedExampleSet(exampleSet, numberOfFolds,
 					getParameterAsInt(PARAMETER_SAMPLING_TYPE),
 					getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED), getCompatibilityLevel().isAtMost(
-							SplittedExampleSet.VERSION_SAMPLING_CHANGED));
+					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
+					getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 
 			PredictionModel.removePredictedLabel(eSet);
 
@@ -184,8 +185,8 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 
 					// calculate ROC values
 					ROCDataGenerator rocDataGenerator = new ROCDataGenerator(1.0d, 1.0d);
-					ROCData rocPoints = rocDataGenerator.createROCData(resultSet,
-							getParameterAsBoolean(PARAMETER_USE_EXAMPLE_WEIGHTS), ROCBias.getROCBiasParameter(this));
+					ROCData rocPoints = rocDataGenerator.createROCData(resultSet, useExampleWeights,
+							ROCBias.getROCBiasParameter(this));
 					List<ROCData> dataList = rocData.get(model.getSource());
 					if (dataList == null) {
 						dataList = new LinkedList<ROCData>();
@@ -213,8 +214,7 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 		type.setExpert(false);
 		types.add(type);
 		types.add(new ParameterTypeDouble(PARAMETER_SPLIT_RATIO, "Relative size of the training set", 0.0d, 1.0d, 0.7d));
-		types.add(new ParameterTypeCategory(
-				PARAMETER_SAMPLING_TYPE,
+		types.add(new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE,
 				"Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant)",
 				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.STRATIFIED_SAMPLING));
 

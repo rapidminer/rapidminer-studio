@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.Arrays;
@@ -42,7 +42,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 
@@ -116,6 +115,14 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 
 	public static final String NOISE_CLUSTER_DESCRIPTION = "Outliers";
 
+	private static final int OPERATOR_PROGRESS_STEPS = 10;
+
+	private static final double INTERMEDIATE_PROGRESS = 20.0;
+
+	private double paramR;
+
+	private int numSamplePoints;
+
 	public SVClustering(OperatorDescription description) {
 		super(description);
 	}
@@ -132,6 +139,8 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 		// creating kernel
 		int kernelType = getParameterAsInt(PARAMETER_KERNEL_TYPE);
 		int cacheSize = getParameterAsInt(PARAMETER_KERNEL_CACHE);
+		paramR = getParameterAsDouble(PARAMETER_R);
+		numSamplePoints = getParameterAsInt(PARAMETER_NUMBER_SAMPLE_POINTS);
 		Kernel kernel = createKernel(kernelType);
 		if (kernelType == KERNEL_RADIAL) {
 			((KernelRadial) kernel).setGamma(getParameterAsDouble(PARAMETER_KERNEL_GAMMA));
@@ -144,9 +153,13 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 		SVCExampleSet svmExamples = new SVCExampleSet(exampleSet, false);
 		kernel.init(svmExamples, cacheSize);
 
+		// initialize progress
+		getProgress().setTotal(100);
+
 		// creating kernel using SVClusteringAlgorithm
 		SVClusteringAlgorithm clustering = new SVClusteringAlgorithm(this, kernel, svmExamples);
 		clustering.train();
+		getProgress().setCompleted((int) INTERMEDIATE_PROGRESS);
 
 		// doing neighborhood search for density estimation
 		int nextClusterId = 0;
@@ -156,7 +169,6 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 
 		int i = 0;
 		for (Example example : exampleSet) {
-			checkForStop();
 			if (clusterAssignments[i] == UNASSIGNED) {
 				LinkedList<Integer> neighbours = getNeighbours(exampleSet, example, i, clusterAssignments, clustering);
 				if (neighbours.size() >= minPts) {
@@ -166,8 +178,6 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 						clusterAssignments[exampleIndex] = nextClusterId;
 					}
 					while (neighbours.size() > 0) {
-						checkForStop();
-
 						// Take the first index from the queue and fetch indexed example
 						int index = neighbours.poll().intValue();
 						Example neighbourExample = exampleSet.getExample(index);
@@ -192,7 +202,10 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 					clusterAssignments[i] = NOISE;
 				}
 			}
-			i++;
+			if (i++ % OPERATOR_PROGRESS_STEPS == 0) {
+				getProgress().setCompleted(
+						(int) (INTERMEDIATE_PROGRESS + (100.0 - INTERMEDIATE_PROGRESS) * i / exampleSet.size()));
+			}
 		}
 		ClusterModel model = new ClusterModel(exampleSet, nextClusterId + 1,
 				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
@@ -217,11 +230,9 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 	}
 
 	protected LinkedList<Integer> getNeighbours(ExampleSet exampleSet, Example centroid, int centroidIndex,
-			final int[] assignments, SVClusteringAlgorithm clustering) throws UndefinedParameterError {
+			final int[] assignments, SVClusteringAlgorithm clustering) {
 		LinkedList<Integer> neighbors = new LinkedList<Integer>();
-		double paramR = getParameterAsDouble(PARAMETER_R);
 		double maxRadius = paramR < 0 ? clustering.getR() : paramR;
-		int numSamplePoints = getParameterAsInt(PARAMETER_NUMBER_SAMPLE_POINTS);
 
 		int i = 0;
 		for (Example example : exampleSet) {
@@ -237,8 +248,8 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 						double[] virtualExample = new double[directions.length];
 						x = 0;
 						for (Attribute attribute : centroid.getAttributes()) {
-							virtualExample[x] = centroid.getValue(attribute) + (j + 1) * directions[x]
-									/ (numSamplePoints + 1);
+							virtualExample[x] = centroid.getValue(attribute)
+									+ (j + 1) * directions[x] / (numSamplePoints + 1);
 							x++;
 						}
 						SVMExample svmExample = new SVMExample(virtualExample);
@@ -304,26 +315,26 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 
 		type = new ParameterTypeDouble(PARAMETER_KERNEL_GAMMA, "The SVM kernel parameter gamma (radial).", 0.0d,
 				Double.POSITIVE_INFINITY, 1.0d);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true,
-				KERNEL_RADIAL));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true, KERNEL_RADIAL));
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeInt(PARAMETER_KERNEL_DEGREE, "The SVM kernel parameter degree (polynomial).", 0,
 				Integer.MAX_VALUE, 2);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true,
-				KERNEL_POLYNOMIAL));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true, KERNEL_POLYNOMIAL));
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeDouble(PARAMETER_KERNEL_A, "The SVM kernel parameter a (neural).", Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY, 1.0d);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true,
-				KERNEL_NEURAL));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true, KERNEL_NEURAL));
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeDouble(PARAMETER_KERNEL_B, "The SVM kernel parameter b (neural).", Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY, 0.0d);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true,
-				KERNEL_NEURAL));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_KERNEL_TYPE, KERNEL_TYPES, true, KERNEL_NEURAL));
 		type.setExpert(false);
 		types.add(type);
 
@@ -337,8 +348,8 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 		type = new ParameterTypeDouble(PARAMETER_P, "The fraction of allowed outliers.", 0, 1, 0.0d);
 		types.add(type);
 		type = new ParameterTypeDouble(PARAMETER_R,
-				"Use this radius instead of the calculated one (-1 for calculated radius).", -1.0d,
-				Double.POSITIVE_INFINITY, -1.0d);
+				"Use this radius instead of the calculated one (-1 for calculated radius).", -1.0d, Double.POSITIVE_INFINITY,
+				-1.0d);
 		types.add(type);
 		types.add(new ParameterTypeInt(PARAMETER_NUMBER_SAMPLE_POINTS,
 				"The number of virtual sample points to check for neighborship.", 1, Integer.MAX_VALUE, 20));

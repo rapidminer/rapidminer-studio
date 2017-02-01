@@ -1,22 +1,25 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.math;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.report.Readable;
@@ -233,17 +236,11 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	@Override
 	public Object clone() throws CloneNotSupportedException {
 		try {
-			Class<?> clazz = this.getClass();
-			java.lang.reflect.Constructor cloneConstructor = clazz.getConstructor(new Class[] { clazz });
-			Averagable result = (Averagable) cloneConstructor.newInstance(new Object[] { this });
+			Class<? extends Averagable> clazz = this.getClass();
+			Constructor<? extends Averagable> cloneConstructor = clazz.getConstructor(clazz);
+			Averagable result = cloneConstructor.newInstance(this);
 			return result;
-		} catch (IllegalAccessException e) {
-			throw new CloneNotSupportedException("Cannot clone averagable: " + e.getMessage());
-		} catch (InstantiationException e) {
-			throw new CloneNotSupportedException("Cannot clone averagable: " + e.getMessage());
-		} catch (java.lang.reflect.InvocationTargetException e) {
-			throw new CloneNotSupportedException("Cannot clone averagable: " + e.getMessage());
-		} catch (NoSuchMethodException e) {
+		} catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
 			throw new CloneNotSupportedException("Cannot clone averagable: " + e.getMessage());
 		}
 	}

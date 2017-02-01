@@ -1,33 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui;
-
-import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.ItemShape;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.tools.I18N;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -47,17 +36,28 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.ItemShape;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.tools.I18N;
+
 
 /**
  * @author Nils Woehler
- * 
+ *
  */
 public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentPanel {
 
 	private static final long serialVersionUID = 1L;
 
 	private JLabel itemShapeLabel;
-	private JComboBox itemShapeComboBox;
+	private JComboBox<ItemShape> itemShapeComboBox;
 
 	private JLabel itemColorLabel;
 	private JButton itemColorButton;
@@ -66,7 +66,7 @@ public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentP
 	private JSlider opacitySlider;
 
 	private JLabel lineStyleLabel;
-	private JComboBox lineStyleComboBox;
+	private JComboBox<LineStyle> lineStyleComboBox;
 
 	// private JLabel lineColorLabel;
 	// private JButton lineColorButton;
@@ -75,7 +75,7 @@ public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentP
 	private JSpinner lineWidthSpinner;
 
 	private JLabel itemFillLabel;
-	private JComboBox itemFillComboBox;
+	private JComboBox<SeriesFormat.FillStyle> itemFillComboBox;
 
 	private JLabel itemSizeLabel;
 	private JSpinner itemSizeSpinner;
@@ -97,10 +97,10 @@ public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentP
 			itemShapeLabel.setPreferredSize(preferredSize);
 
 			// create item shape combobox
-			itemShapeComboBox = new JComboBox(ItemShape.values());
+			itemShapeComboBox = new JComboBox<>(ItemShape.values());
 			itemShapeLabel.setLabelFor(itemShapeComboBox);
 			itemShapeComboBox.setPreferredSize(preferredSize);
-			itemShapeComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.dotstyle"));
+			itemShapeComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.dotstyle"));
 			itemShapeComboBox.setSelectedIndex(0);
 			itemShapeComboBox.addPopupMenuListener(new PopupMenuListener() {
 
@@ -159,11 +159,11 @@ public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentP
 			lineStyleLabel.setPreferredSize(preferredSize);
 
 			// create line style combobox
-			lineStyleComboBox = new JComboBox(LineStyle.values());
+			lineStyleComboBox = new JComboBox<>(LineStyle.values());
 			lineStyleLabel.setLabelFor(lineStyleComboBox);
 			lineStyleComboBox.setPreferredSize(preferredSize);
 			lineStyleComboBox.setSelectedIndex(0);
-			lineStyleComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.linestyle"));
+			lineStyleComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.linestyle"));
 			lineStyleComboBox.addActionListener(new ActionListener() {
 
 				@Override
@@ -258,18 +258,18 @@ public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentP
 			itemFillLabel = new ResourceLabel("plotter.configuration_dialog.fill_style");
 			itemFillLabel.setPreferredSize(preferredSize);
 
-			itemFillComboBox = new JComboBox(SeriesFormat.FillStyle.values());
+			itemFillComboBox = new JComboBox<>(SeriesFormat.FillStyle.values());
 			itemFillLabel.setLabelFor(itemFillComboBox);
 			itemFillComboBox.setPreferredSize(preferredSize);
 			itemFillComboBox.setSelectedIndex(0);
-			itemFillComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.fillstyle"));
+			itemFillComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.fillstyle"));
 			itemFillComboBox.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					if (getSelectedValueSource() != null) {
-						getSelectedValueSource().getSeriesFormat().setAreaFillStyle(
-								(FillStyle) itemFillComboBox.getSelectedItem());
+						getSelectedValueSource().getSeriesFormat()
+								.setAreaFillStyle((FillStyle) itemFillComboBox.getSelectedItem());
 					}
 				}
 			});

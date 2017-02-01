@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.properties.celleditors.value;
 
 import java.awt.Component;
@@ -70,9 +70,9 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 	private boolean rendersLabel = false;
 
 	public DefaultPropertyValueCellEditor(final ParameterTypeCategory type) {
-		super(new ExtendedJComboBox(type.getValues()));
+		super(new ExtendedJComboBox<>(type.getValues()));
 		useEditorAsRenderer = true;
-		((JComboBox) editorComponent).removeItemListener(this.delegate);
+		((JComboBox<?>) editorComponent).removeItemListener(this.delegate);
 		this.delegate = new EditorDelegate() {
 
 			private static final long serialVersionUID = -2104662561680969750L;
@@ -81,42 +81,42 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 			public void setValue(Object x) {
 				if (x == null) {
 					super.setValue(null);
-					((JComboBox) editorComponent).setSelectedIndex(-1);
+					((JComboBox<?>) editorComponent).setSelectedIndex(-1);
 				} else {
 					try {
 						Integer index = Integer.valueOf(x.toString());
 						super.setValue(index);
-						((JComboBox) editorComponent).setSelectedIndex(index);
+						((JComboBox<?>) editorComponent).setSelectedIndex(index);
 					} catch (NumberFormatException e) {
 						// try to get index from string...
 						int index = type.getIndex(x.toString());
 						super.setValue(index);
-						((JComboBox) editorComponent).setSelectedIndex(index);
+						((JComboBox<?>) editorComponent).setSelectedIndex(index);
 					}
 				}
 			}
 
 			@Override
 			public Object getCellEditorValue() {
-				return ((JComboBox) editorComponent).getSelectedItem();
+				return ((JComboBox<?>) editorComponent).getSelectedItem();
 			}
 		};
-		((JComboBox) editorComponent).addItemListener(delegate);
+		((JComboBox<?>) editorComponent).addItemListener(delegate);
 	}
 
 	public DefaultPropertyValueCellEditor(final ParameterTypeStringCategory type) {
-		super(new JComboBox(type.getValues()));
+		super(new JComboBox<>(type.getValues()));
 
 		if (type.isEditable()) {
-			AutoCompleteComboBoxAddition autoCompleteCBA = new AutoCompleteComboBoxAddition((JComboBox) editorComponent);
+			AutoCompleteComboBoxAddition autoCompleteCBA = new AutoCompleteComboBoxAddition((JComboBox<?>) editorComponent);
 			autoCompleteCBA.setCaseSensitive(false);
 		}
 
-		final JTextComponent textField = (JTextComponent) ((JComboBox) editorComponent).getEditor().getEditorComponent();
+		final JTextComponent textField = (JTextComponent) ((JComboBox<?>) editorComponent).getEditor().getEditorComponent();
 
 		useEditorAsRenderer = true;
-		((JComboBox) editorComponent).removeItemListener(this.delegate);
-		((JComboBox) editorComponent).setEditable(type.isEditable());
+		((JComboBox<?>) editorComponent).removeItemListener(this.delegate);
+		((JComboBox<?>) editorComponent).setEditable(type.isEditable());
 		this.delegate = new EditorDelegate() {
 
 			private static final long serialVersionUID = -5592150438626222295L;
@@ -125,11 +125,11 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 			public void setValue(Object x) {
 				if (x == null) {
 					super.setValue(null);
-					((JComboBox) editorComponent).setSelectedItem(null);
+					((JComboBox<?>) editorComponent).setSelectedItem(null);
 				} else {
 					String value = x.toString();
 					super.setValue(value);
-					((JComboBox) editorComponent).setSelectedItem(value);
+					((JComboBox<?>) editorComponent).setSelectedItem(value);
 					if (value != null) {
 						textField.setText(value.toString());
 					} else {
@@ -147,12 +147,12 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 					}
 					return selected;
 				} else {
-					return ((JComboBox) editorComponent).getSelectedItem();
+					return ((JComboBox<?>) editorComponent).getSelectedItem();
 				}
 			}
 		};
 		editorComponent.setToolTipText(type.getDescription());
-		((JComboBox) editorComponent).addItemListener(delegate);
+		((JComboBox<?>) editorComponent).addItemListener(delegate);
 	}
 
 	public DefaultPropertyValueCellEditor(final ParameterTypeBoolean type) {

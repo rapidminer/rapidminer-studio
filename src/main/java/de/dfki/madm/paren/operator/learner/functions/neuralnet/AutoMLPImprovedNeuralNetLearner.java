@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,6 +18,9 @@
  */
 package de.dfki.madm.paren.operator.learner.functions.neuralnet;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -35,14 +38,11 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
- * 
+ *
  * @rapidminer.index Neural Net
- * 
+ *
  * @author Ingo Mierswa, modified by Syed Atif Mehdi (01/09/2010)
  */
 
@@ -134,21 +134,12 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 		 * = current; } }
 		 */
 
-		SplittedExampleSet splittedES = new SplittedExampleSet(exampleSet, cv_split, 1 /*
-																						 * samplingType
-																						 * = 1 for
-																						 * shuffeled
-																						 * split
-																						 */, false, 1992 /*
-																										 * this
-																										 * is
-																										 * the
-																										 * seed
-																										 * that
-																										 * is
-																										 * used
-																										 * .
-																										 */);
+		SplittedExampleSet splittedES = new SplittedExampleSet(exampleSet, cv_split,
+				1 /*
+					 * samplingType = 1 for shuffeled split
+					 */, false, 1992 /*
+									 * this is the seed that is used .
+									 */);
 
 		// NOTE the following -atif
 		// splittedES.selectSingleSubset(0); // training data 0.8
@@ -177,7 +168,7 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 			splittedES.selectSingleSubset(1);
 
 			autoMlpThread.CrossValidate(splittedES); // although it is working.. but the next
-														// function seems much
+													 // function seems much
 			// better... - atif
 
 			for (int i = 0; i < nensemble; i++) {
@@ -208,7 +199,7 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 			// now for the rest half of NN, change their structure and the learning rate
 
 			for (int i = nensemble / 2, j = 0; i < nensemble; i++, j++) // this loop should run
-																		// nensemble/2
+																		 // nensemble/2
 			{
 				do {
 					learningRate[i] = rlognormal(eta_init, eta_varlog);
@@ -302,32 +293,32 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 		 * ParameterTypeInt("hidden_layer_sizes",
 		 * "The size of the hidden layers. A size of < 0 leads to a layer size of (number_of_attributes + number of classes) / 2 + 1."
 		 * , -1, Integer.MAX_VALUE, -1)); type.setExpert(false); types.add(type);
-		 * 
-		 * 
-		 * 
+		 *
+		 *
+		 *
 		 * type = new ParameterTypeDouble(PARAMETER_LEARNING_RATE,
 		 * "The learning rate determines by how much we change the weights at each step.", 0.0d,
 		 * 1.0d, 0.3d); type.setExpert(true); types.add(type);
-		 * 
+		 *
 		 * types.add(new ParameterTypeDouble(PARAMETER_MOMENTUM,
 		 * "The momentum simply adds a fraction of the previous weight update to the current one (prevent local maxima and smoothes optimization directions)."
 		 * , 0.0d, 1.0d, 0.2d));
-		 * 
+		 *
 		 * types.add(new ParameterTypeBoolean(PARAMETER_DECAY,
 		 * "Indicates if the learning rate should be decreased during learningh", false));
-		 * 
+		 *
 		 * types.add(new ParameterTypeBoolean(PARAMETER_SHUFFLE,
 		 * "Indicates if the input data should be shuffled before learning (increases memory usage but is recommended if data is sorted before)"
 		 * , true));
-		 * 
+		 *
 		 * types.add(new ParameterTypeBoolean(PARAMETER_NORMALIZE,
 		 * "Indicates if the input data should be normalized between -1 and +1 before learning (increases runtime but is in most cases necessary)"
 		 * , true));
-		 * 
+		 *
 		 * types.add(new ParameterTypeDouble(PARAMETER_ERROR_EPSILON,
 		 * "The optimization is stopped if the training error gets below this epsilon value.", 0.0d,
 		 * Double.POSITIVE_INFINITY, 0.00001d));
-		 * 
+		 *
 		 * //types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		 */
 		return types;
@@ -338,7 +329,7 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 			double result;
 			do {
 				double n = rnormal(Math.log(etaInit), Math.log(r));
-				result = (Math.exp(n));
+				result = Math.exp(n);
 			} while (Double.isNaN(result));
 			return result;
 		} else {
@@ -372,7 +363,7 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 	private int logspace(int i, int n, float lo, float hi) {
 		Double d;
 		do {
-			d = (Math.exp((i / (float) (n - 1)) * (Math.log(hi) - Math.log(lo)) + Math.log(lo)));
+			d = Math.exp(i / (float) (n - 1) * (Math.log(hi) - Math.log(lo)) + Math.log(lo));
 		} while (d.isNaN());
 		return d.intValue();
 	}
@@ -382,7 +373,7 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 		int i = low, j = high;
 		// Get the pivot element from the middle of the list
 		// Using shift instead of division to avoid overflow if low or high get large.
-		double pivot = old_nn[(low + high) >>> 1].getError();
+		double pivot = old_nn[low + high >>> 1].getError();
 
 		// Divide into two lists
 		while (i <= j) {

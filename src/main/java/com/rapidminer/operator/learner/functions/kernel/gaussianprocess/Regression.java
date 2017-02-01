@@ -1,50 +1,51 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.functions.kernel.gaussianprocess;
 
-import Jama.Matrix;
+import java.util.TreeSet;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.Kernel;
 
-import java.util.TreeSet;
+import Jama.Matrix;
 
 
 /**
  * Gaussian Process Regression.
- * 
+ *
  * REFERENCES:
- * 
+ *
  * Lehel Csato. Gaussian Processes --- Iterative Sparse Approximations. PhD thesis, Aston
  * University, Birmingham, UK, March 2002.
- * 
+ *
  * TODO: - own Matrix implementation with SE-cholesky-decomposition and the ability to constrain
  * matrix operation on sub matrices - CompositeKernel implementation for kernels based on finite
  * basis functions
- * 
+ *
  * @author Piotr Kasprzak
- * 
+ *
  */
 public class Regression extends GPBase {
 
 	/** Used to hold a score value with an associated index */
 
-	protected static class Score implements Comparable {
+	protected static class Score implements Comparable<Score> {
 
 		double score;
 
@@ -56,8 +57,7 @@ public class Regression extends GPBase {
 		}
 
 		@Override
-		public int compareTo(Object o) throws NullPointerException {
-			Score s2 = (Score) o;
+		public int compareTo(Score s2) throws NullPointerException {
 
 			if (score < s2.getScore()) {
 				return -1;
@@ -410,19 +410,19 @@ public class Regression extends GPBase {
 
 			/**
 			 * Check if we have too many basis vectors. If so:
-			 * 
+			 *
 			 * 1.) For each basis vector i calculate a score epsilon_i (3.26) [approximation of
 			 * (3.24)]
-			 * 
+			 *
 			 * epsilon_t+1(i) = alpha^2(i) / (q(i) + c(i))
-			 * 
+			 *
 			 * 2.) Find the basis vector with the minimum score 3.) Permutate the GP
 			 * parameterisation, so that this basis vector is the last added 4.) Remove the last
 			 * basis vector using eqs. (3.19), (3.21) and (3.22)
 			 */
 
 			if (d >= dMax) {
-				int min_index = ((Score) getMinScoresKLApprox(alpha, C, Q, d).first()).getIndex();
+				int min_index = getMinScoresKLApprox(alpha, C, Q, d).first().getIndex();
 				/*
 				 * Permute the relevant vector / matrices, so that the found basis vector is the
 				 * last.
@@ -437,7 +437,7 @@ public class Regression extends GPBase {
 			 * removed.
 			 */
 			while (d > 0) {
-				Score minScore = (Score) getMinScoresGeometrical(alpha, C, Q, d).first();
+				Score minScore = getMinScoresGeometrical(alpha, C, Q, d).first();
 				if (minScore.getScore() > parameter.geometrical_tol) {
 					break;
 				}
@@ -452,12 +452,12 @@ public class Regression extends GPBase {
 
 	/**
 	 * Return the scores of all BVs.
-	 * 
+	 *
 	 * The score used is a mean based approximation to the true KL-distance between the full GP and
 	 * the GP without the current BV for which the score is calculated.
 	 */
 
-	private TreeSet getMinScoresKLApprox(Matrix alpha, Matrix C, Matrix Q, int d) {
+	private TreeSet<Score> getMinScoresKLApprox(Matrix alpha, Matrix C, Matrix Q, int d) {
 		/* The scores used to decide which basis vector to remove */
 		TreeSet<Score> scores = new TreeSet<Score>();
 
@@ -472,15 +472,15 @@ public class Regression extends GPBase {
 
 	/**
 	 * Return the scores of all BVs.
-	 * 
+	 *
 	 * The score used is based on the euclidean distance between the current BV and it's orthogonal
 	 * projection into the span of all the other BVs.
-	 * 
+	 *
 	 * This score is especially important since it can (must!) be used to prevent the kernel gram
 	 * matrix from becoming too badly conditioned.
 	 */
 
-	private TreeSet getMinScoresGeometrical(Matrix alpha, Matrix C, Matrix Q, int d) {
+	private TreeSet<Score> getMinScoresGeometrical(Matrix alpha, Matrix C, Matrix Q, int d) {
 		/* The scores used to decide which basis vector to remove */
 		TreeSet<Score> scores = new TreeSet<Score>();
 

@@ -1,30 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui.dialog;
-
-import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -57,6 +49,15 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
+
 
 /**
  * This dialog allows the user to manage existing crosshair lines in an advanced chart.
@@ -82,7 +83,7 @@ public class ManageParallelLinesDialog extends JDialog {
 	 * the {@link JComboBox} where the {@link RangeAxisConfig} will be selected if horizontal line
 	 * is selected
 	 */
-	private JComboBox rangeAxisSelectionCombobox;
+	private JComboBox<RangeAxisConfig> rangeAxisSelectionCombobox;
 
 	/**
 	 * the {@link JList} which displays the appropriate crosshair lines according to the user
@@ -117,6 +118,7 @@ public class ManageParallelLinesDialog extends JDialog {
 	 * Creates a new {@link ManageParallelLinesDialog}.
 	 */
 	public ManageParallelLinesDialog() {
+		super(ApplicationFrame.getApplicationFrame());
 		setupGUI();
 	}
 
@@ -177,9 +179,9 @@ public class ManageParallelLinesDialog extends JDialog {
 		gbc.weightx = 1;
 		gbc.gridwidth = 2;
 		gbc.anchor = GridBagConstraints.CENTER;
-		rangeAxisSelectionCombobox = new JComboBox();
-		rangeAxisSelectionCombobox.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.action.manage_parallel_lines.range_axis_combobox.tip"));
+		rangeAxisSelectionCombobox = new JComboBox<>();
+		rangeAxisSelectionCombobox.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.action.manage_parallel_lines.range_axis_combobox.tip"));
 		rangeAxisSelectionCombobox.addActionListener(new ActionListener() {
 
 			@Override
@@ -343,7 +345,7 @@ public class ManageParallelLinesDialog extends JDialog {
 		// misc settings
 		this.setMinimumSize(new Dimension(400, 300));
 		// center dialog
-		this.setLocationRelativeTo(null);
+		this.setLocationRelativeTo(getOwner());
 		this.setTitle(I18N.getMessage(I18N.getGUIBundle(), "gui.action.manage_parallel_lines.title.label"));
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.setModal(true);
@@ -393,7 +395,7 @@ public class ManageParallelLinesDialog extends JDialog {
 		for (RangeAxisConfig config : this.plotConfig.getRangeAxisConfigs()) {
 			rangeConfigsVector.add(config);
 		}
-		rangeAxisSelectionCombobox.setModel(new DefaultComboBoxModel(rangeConfigsVector));
+		rangeAxisSelectionCombobox.setModel(new DefaultComboBoxModel<>(rangeConfigsVector));
 	}
 
 	/**
@@ -447,8 +449,7 @@ public class ManageParallelLinesDialog extends JDialog {
 			return;
 		}
 
-		for (Object value : linesList.getSelectedValues()) {
-			AxisParallelLineConfiguration line = (AxisParallelLineConfiguration) value;
+		for (AxisParallelLineConfiguration line : linesList.getSelectedValuesList()) {
 			if (horizontalLineRadiobutton.isSelected()) {
 				// horizontal, remove from selected RangeAxisConfig
 				RangeAxisConfig config = (RangeAxisConfig) rangeAxisSelectionCombobox.getSelectedItem();
@@ -519,16 +520,8 @@ public class ManageParallelLinesDialog extends JDialog {
 	 */
 	private void updateButtonStates() {
 		// enable buttons according to selection
-		if (linesList.getSelectedValues().length == 0) {
-			deleteSelectedLinesButton.setEnabled(false);
-			modifySelectedLineButton.setEnabled(false);
-			return;
-		} else if (linesList.getSelectedValues().length == 1) {
-			deleteSelectedLinesButton.setEnabled(true);
-			modifySelectedLineButton.setEnabled(true);
-		} else if (linesList.getSelectedValues().length > 1) {
-			deleteSelectedLinesButton.setEnabled(true);
-			modifySelectedLineButton.setEnabled(false);
-		}
+		int size = linesList.getSelectedValuesList().size();
+		deleteSelectedLinesButton.setEnabled(size != 0);
+		modifySelectedLineButton.setEnabled(size == 1);
 	}
 }

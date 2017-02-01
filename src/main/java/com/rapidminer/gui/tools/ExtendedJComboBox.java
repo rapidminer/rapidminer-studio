@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.tools;
 
 import java.awt.Component;
@@ -39,7 +39,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
  *
  * @author Ingo Mierswa
  */
-public class ExtendedJComboBox extends JComboBox {
+public class ExtendedJComboBox<E> extends JComboBox<E> {
 
 	private static final long serialVersionUID = 8320969518243948543L;
 
@@ -47,6 +47,7 @@ public class ExtendedJComboBox extends JComboBox {
 
 		private static final long serialVersionUID = -6192190927539294311L;
 
+		@SuppressWarnings("rawtypes")
 		@Override
 		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
 				boolean cellHasFocus) {
@@ -100,7 +101,7 @@ public class ExtendedJComboBox extends JComboBox {
 
 	private boolean wide = true;
 
-	public ExtendedJComboBox(String[] values) {
+	public ExtendedJComboBox(E[] values) {
 		this(-1, -1, true, values);
 	}
 
@@ -116,15 +117,17 @@ public class ExtendedJComboBox extends JComboBox {
 		this(preferredWidth, minimumWidth, true);
 	}
 
+	// parameter cannot be null, must be array; there is no type checking on empty array
+	@SuppressWarnings("unchecked")
 	public ExtendedJComboBox(int preferredWidth, int minimumWidth, boolean wide) {
-		this(preferredWidth, minimumWidth, wide, new String[0]);
+		this(preferredWidth, minimumWidth, wide, (E[]) new Object[0]);
 	}
 
-	public ExtendedJComboBox(ComboBoxModel model) {
+	public ExtendedJComboBox(ComboBoxModel<E> model) {
 		this(-1, -1, true, model);
 	}
 
-	public ExtendedJComboBox(int preferredWidth, int minimumWidth, boolean wide, ComboBoxModel model) {
+	public ExtendedJComboBox(int preferredWidth, int minimumWidth, boolean wide, ComboBoxModel<E> model) {
 		super(model);
 		this.preferredWidth = preferredWidth;
 		this.minimumWidth = minimumWidth;
@@ -133,7 +136,9 @@ public class ExtendedJComboBox extends JComboBox {
 		addScrollToTopListener();
 	}
 
-	public ExtendedJComboBox(int preferredWidth, int minimumWidth, boolean wide, String[] values) {
+	// ExtendedComboBoxRenderer cannot be typed because of super class
+	@SuppressWarnings("unchecked")
+	public ExtendedJComboBox(int preferredWidth, int minimumWidth, boolean wide, E[] values) {
 		super(values);
 		this.preferredWidth = preferredWidth;
 		this.minimumWidth = minimumWidth;
@@ -148,7 +153,7 @@ public class ExtendedJComboBox extends JComboBox {
 	}
 
 	@Override
-	public void setModel(ComboBoxModel aModel) {
+	public void setModel(ComboBoxModel<E> aModel) {
 		super.setModel(aModel);
 		addScrollToTopListener();
 	}

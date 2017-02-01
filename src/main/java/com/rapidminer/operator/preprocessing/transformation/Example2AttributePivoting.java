@@ -1,27 +1,28 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.transformation;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -36,6 +37,7 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.error.AttributeNotFoundError;
+import com.rapidminer.operator.generator.ExampleSetGenerator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.AttributeSetPrecondition;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -50,8 +52,10 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction;
 import com.rapidminer.tools.math.function.aggregation.AggregationFunction;
+import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
 
 
 /**
@@ -80,7 +84,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 	public static final String PARAMETER_SKIP_CONSTANT_ATTRIBUTES = "skip_constant_attributes";
 
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
-	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
+	public static final String PARAMETER_DATAMANAGEMENT = ExampleSetGenerator.PARAMETER_DATAMANAGEMENT;
 
 	public Example2AttributePivoting(OperatorDescription description) {
 		super(description);
@@ -259,6 +263,13 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 		getProgress().setCompleted(40);
 
 		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
+
+		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
+			builder.withOptimizationHint(DataManagementParameterHelper.getSelectedDataManagement(this));
+		}
+
 		AggregationFunction aggregationFunction = null;
 		if (newWeightAttribute != null && considerWeights) {
 			try {
@@ -271,7 +282,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 		}
 		double lastGroupValue = Double.NaN;
 
-		DataRowFactory dataRowFactory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
+		DataRowFactory dataRowFactory = new DataRowFactory(datamanagement, '.');
 		DataRow dataRow = dataRowFactory.create(newAttributes.size());
 		if (exampleSet.size() > 0) {
 			// if the original example set has a size = 0 we would create a size = 1 new example set
@@ -376,8 +387,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 
 		types.add(new ParameterTypeBoolean(PARAMETER_SKIP_CONSTANT_ATTRIBUTES,
 				"Skips attributes if their value never changes within a group.", true));
-		types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.",
-				DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
+		DataManagementParameterHelper.addParameterTypes(types, this);
 		return types;
 	}
 

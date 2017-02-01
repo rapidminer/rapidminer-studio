@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter;
 
 import com.rapidminer.datatable.DataTable;
@@ -113,10 +113,10 @@ public class RadVizPlotter extends PlotterAdapter {
 	private double maxColor;
 
 	/** Selection of column mapping. */
-	private JComboBox columnMappingSelection;
+	private JComboBox<String> columnMappingSelection;
 
 	/** The list of columns which should not be used as dimension anchors. */
-	protected JList ignoreList;
+	protected JList<String> ignoreList;
 
 	/** The currently selected type of column mapping. Default is ORDERED. */
 	private int columnMappingType = ORDERED;
@@ -134,7 +134,7 @@ public class RadVizPlotter extends PlotterAdapter {
 	public RadVizPlotter(PlotterConfigurationModel settings) {
 		super(settings);
 		setBackground(Color.white);
-		this.columnMappingSelection = new JComboBox(COLUMN_MAPPING_TYPES);
+		this.columnMappingSelection = new JComboBox<>(COLUMN_MAPPING_TYPES);
 		columnMappingSelection.setToolTipText("Indicates the type of column mapping (reordering).");
 		this.columnMappingSelection.addActionListener(new ActionListener() {
 
@@ -144,7 +144,7 @@ public class RadVizPlotter extends PlotterAdapter {
 			}
 		});
 
-		this.ignoreList = new JList(new DefaultListModel());
+		this.ignoreList = new JList<>(new DefaultListModel<>());
 		this.ignoreList.setToolTipText("The selected columns will not be used as dimension anchors.");
 		ignoreList.addListSelectionListener(new ListSelectionListener() {
 
@@ -172,7 +172,7 @@ public class RadVizPlotter extends PlotterAdapter {
 		this.dataTable = dataTable;
 
 		// ignore list
-		DefaultListModel ignoreModel = (DefaultListModel) ignoreList.getModel();
+		DefaultListModel<String> ignoreModel = (DefaultListModel<String>) ignoreList.getModel();
 		ignoreModel.clear();
 		for (int i = 0; i < this.dataTable.getNumberOfColumns(); i++) {
 			if (i == colorColumn) {
@@ -194,7 +194,7 @@ public class RadVizPlotter extends PlotterAdapter {
 			this.colorColumn = -1;
 		}
 		// ignore list
-		DefaultListModel ignoreModel = (DefaultListModel) ignoreList.getModel();
+		DefaultListModel<String> ignoreModel = (DefaultListModel<String>) ignoreList.getModel();
 		ignoreModel.clear();
 		for (int i = 0; i < this.dataTable.getNumberOfColumns(); i++) {
 			if (i == this.colorColumn) {
@@ -265,9 +265,8 @@ public class RadVizPlotter extends PlotterAdapter {
 	}
 
 	protected boolean shouldIgnoreColumn(String column) {
-		Object[] ignoredColumns = ignoreList.getSelectedValues();
-		for (int i = 0; i < ignoredColumns.length; i++) {
-			if (ignoredColumns[i].equals(column)) {
+		for (Object ignored : ignoreList.getSelectedValuesList()) {
+			if (ignored.equals(column)) {
 				return true;
 			}
 		}

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.table.internal;
 
 import java.util.Arrays;
@@ -30,6 +30,7 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.DataRowReader;
 import com.rapidminer.example.table.GrowingExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.tools.Ontology;
 
@@ -135,6 +136,8 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	private int sizeLimit;
 	private boolean completable;
 
+	private DataManagement management = DataManagement.AUTO;
+
 	/**
 	 * Creates a new, empty data table with the given attributes.
 	 *
@@ -142,7 +145,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	 *            the table's attributes
 	 */
 	public ColumnarExampleTable(List<Attribute> attributes) {
-		this(attributes, false);
+		this(attributes, DataManagement.AUTO, false);
 	}
 
 	/**
@@ -150,11 +153,13 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	 *
 	 * @param attributes
 	 *            the table's attributes
+	 * @param management
+	 *            the data management optimization type to use
 	 * @param completable
 	 *            whether {@link #complete()} will be called when the number of rows is final and
 	 *            before the first reading of values
 	 */
-	public ColumnarExampleTable(List<Attribute> attributes, boolean completable) {
+	public ColumnarExampleTable(List<Attribute> attributes, DataManagement management, boolean completable) {
 		super(attributes);
 		int attributeCount = super.getNumberOfAttributes();
 
@@ -165,6 +170,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 
 		// must be set before updating columns
 		this.completable = completable;
+		this.management = management;
 
 		for (int i = 0; i < attributes.size(); i++) {
 			updateColumn(i, attributes.get(i));
@@ -173,6 +179,10 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 
 	/**
 	 * Constructor for a shallow clone of the table. The data columns are not cloned.
+	 *
+	 * <b>Warning:</b> If this called from an unsynchronized method, it can happen that the
+	 * {@link #columns} and the {@link AbstractExampleTable#attributes} are in an incompatible state
+	 * because of changes that are not yet visible to the current thread.
 	 *
 	 * @param table
 	 *            the table to clone
@@ -295,7 +305,6 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	 *            the attribute whose column should be reset
 	 */
 	public void resetColumn(Attribute attribute) {
-		// TODO: discuss if there is a way that is not as memory intensive
 		updateColumn(attribute.getTableIndex(), attribute);
 		columns[attribute.getTableIndex()].ensure(sizeLimit);
 
@@ -337,9 +346,9 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	 *         attributes
 	 */
 	public ColumnarExampleTable columnCleanupClone(Attributes attributes) {
-		int attributeCount = this.getNumberOfAttributes();
-		ColumnarExampleTable newTable = new ColumnarExampleTable(this);
+		ColumnarExampleTable newTable = createClone();
 		// check which table indices are still in use
+		int attributeCount = newTable.getNumberOfAttributes();
 		boolean[] usedIndices = new boolean[attributeCount];
 		for (Iterator<Attribute> allIterator = attributes.allAttributes(); allIterator.hasNext();) {
 			Attribute attribute = allIterator.next();
@@ -353,6 +362,16 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 			}
 		}
 		return newTable;
+	}
+
+	/**
+	 * Creates a clone. Synchronized in order to prevent incompatible states when some changes are
+	 * not yet seen by the current thread.
+	 *
+	 * @return a clone of the current table
+	 */
+	private synchronized ColumnarExampleTable createClone() {
+		return new ColumnarExampleTable(this);
 	}
 
 	/**
@@ -423,11 +442,20 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 				break;
 			case Ontology.NOMINAL:
 			case Ontology.POLYNOMINAL:
-				columns[column] = completable ? new IntegerAutoColumn(sizeLimit)
-						: new IntegerIncompleteAutoColumn(sizeLimit);
+				if (management == DataManagement.SPEED_OPTIMIZED) {
+					columns[column] = new IntegerArrayColumn(sizeLimit);
+				} else {
+					columns[column] = completable ? new IntegerAutoColumn(sizeLimit, management)
+							: new IntegerIncompleteAutoColumn(sizeLimit, management);
+				}
 				break;
 			default:
-				columns[column] = completable ? new DoubleAutoColumn(sizeLimit) : new DoubleIncompleteAutoColumn(sizeLimit);
+				if (management == DataManagement.SPEED_OPTIMIZED) {
+					columns[column] = new DoubleArrayColumn(sizeLimit);
+				} else {
+					columns[column] = completable ? new DoubleAutoColumn(sizeLimit, management)
+							: new DoubleIncompleteAutoColumn(sizeLimit, management);
+				}
 				break;
 		}
 	}

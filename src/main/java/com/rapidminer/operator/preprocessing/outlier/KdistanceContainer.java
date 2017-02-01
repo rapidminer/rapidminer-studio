@@ -1,28 +1,28 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.outlier;
 
-import com.rapidminer.tools.Tools;
-
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -73,7 +73,7 @@ public class KdistanceContainer {
 	 * of Objects.
 	 */
 	public KdistanceContainer(SearchObject so) {
-		this.listOfObjects = new LinkedList<SearchObject>(); // construct a new listOfObjects
+		this.listOfObjects = new ArrayList<SearchObject>(); // construct a new listOfObjects
 		// this.distanceAssociatedObject = so; // set the container to associate the SearchObject so
 		this.setDistance(0); // set distance to zero (as we do not yet have any object associated
 		this.setNumberOfObjects(0); // accordingly the number of objects is zero as well
@@ -175,16 +175,14 @@ public class KdistanceContainer {
 	 * @param i
 	 */
 	public SearchObject getObject(int i) {
-		ListIterator li = this.listOfObjects.listIterator(i);
-		return (SearchObject) li.next();
+		return listOfObjects.get(i);
 	}
 
 	/**
 	 * This method delivers an Iterator on the list of objects of the container positioned at the
 	 * beginning of the list.
 	 */
-	public ListIterator getListIterator() {
-		ListIterator li = this.listOfObjects.listIterator();
-		return li;
+	public ListIterator<SearchObject> getListIterator() {
+		return listOfObjects.listIterator();
 	}
 }

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.ArrayList;
@@ -98,6 +98,8 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 		int k = getParameterAsInt(PARAMETER_K);
 		int maxOptimizationSteps = getParameterAsInt(PARAMETER_MAX_OPTIMIZATION_STEPS);
 		int maxRuns = getParameterAsInt(PARAMETER_MAX_RUNS);
+		boolean addAsLabel = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL);
+		boolean removeUnlabeled = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED);
 		DistanceMeasure measure;
 		if (presetMeasure != null) {
 			measure = presetMeasure;
@@ -135,9 +137,8 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 		int[] bestAssignments = null;
 
 		for (int iter = 0; iter < maxRuns; iter++) {
-			CentroidClusterModel model = new CentroidClusterModel(exampleSet, k, attributeNames, measure,
-					getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
-					getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
+			CentroidClusterModel model = new CentroidClusterModel(exampleSet, k, attributeNames, measure, addAsLabel,
+					removeUnlabeled);
 
 			// init centroids by assigning one single, unique example!
 			int i = 0;
@@ -362,8 +363,8 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeInt(PARAMETER_K, "The number of clusters which should be detected.", 2,
-				Integer.MAX_VALUE, 2, false));
+		types.add(new ParameterTypeInt(PARAMETER_K, "The number of clusters which should be detected.", 2, Integer.MAX_VALUE,
+				2, false));
 		types.add(new ParameterTypeBoolean(KMeanspp.PARAMETER_USE_KPP, KMeanspp.SHORT_DESCRIPTION, false));
 		for (ParameterType a : DistanceMeasures.getParameterTypes(this)) {
 			if (a.getKey() == DistanceMeasures.PARAMETER_MEASURE_TYPES) {
@@ -372,8 +373,8 @@ public class FastKMeans extends RMAbstractClusterer implements CapabilityProvide
 			types.add(a);
 		}
 		types.add(new ParameterTypeInt(PARAMETER_MAX_RUNS,
-				"The maximal number of runs of k-Means with random initialization that are performed.", 1,
-				Integer.MAX_VALUE, 10, false));
+				"The maximal number of runs of k-Means with random initialization that are performed.", 1, Integer.MAX_VALUE,
+				10, false));
 		types.add(new ParameterTypeInt(PARAMETER_MAX_OPTIMIZATION_STEPS,
 				"The maximal number of iterations performed for one run of k-Means.", 1, Integer.MAX_VALUE, 100, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.math;
 
 import com.rapidminer.datatable.DataTable;
@@ -122,12 +122,10 @@ public class LiftDataGenerator {
 	public void createLiftChartPlot(List<double[]> data) {
 		// create data table
 		DataTable dataTable = new SimpleDataTable("Lift Chart", new String[] { "Fraction", "Lift" });
-		Iterator i = data.iterator();
 		int pointCounter = 0;
 		int eachPoint = Math.max(1, (int) Math.round((double) data.size() / (double) MAX_LIFT_POINTS));
-		while (i.hasNext()) {
-			double[] point = (double[]) i.next();
-			if ((pointCounter == 0) || ((pointCounter % eachPoint) == 0) || (!i.hasNext())) {
+		for (double[] point : data) {
+			if (pointCounter == 0 || pointCounter % eachPoint == 0 || pointCounter == data.size() - 1) {
 				double fraction = point[0];
 				double lift = point[1];
 				if (Double.isNaN(lift)) {

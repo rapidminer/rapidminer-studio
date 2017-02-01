@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.4.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="7.4.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -12,16 +12,16 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="subprocess" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="OperatorChain" width="90" x="45" y="34">
+      <operator activated="true" class="subprocess" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="OperatorChain" width="90" x="45" y="34">
         <process expanded="true">
-          <operator activated="true" class="generate_nominal_data" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="NominalExampleSetGenerator" width="90" x="45" y="34">
+          <operator activated="true" class="generate_nominal_data" compatibility="7.4.000-SNAPSHOT" expanded="true" height="68" name="NominalExampleSetGenerator" width="90" x="45" y="34">
             <parameter key="number_examples" value="100"/>
             <parameter key="number_of_attributes" value="10"/>
             <parameter key="number_of_values" value="20"/>
             <parameter key="use_local_random_seed" value="false"/>
             <parameter key="local_random_seed" value="-1"/>
           </operator>
-          <operator activated="true" class="sample" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Sample" width="90" x="179" y="34">
+          <operator activated="true" class="sample" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="Sample" width="90" x="179" y="34">
             <parameter key="sample" value="absolute"/>
             <parameter key="balance_data" value="false"/>
             <parameter key="sample_size" value="20"/>
@@ -56,7 +56,7 @@
           <portSpacing port="sink_out 2" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="loop_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FeatureIterator" width="90" x="179" y="34">
+      <operator activated="true" class="loop_attributes" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="FeatureIterator" width="90" x="179" y="34">
         <parameter key="attribute_filter_type" value="all"/>
         <parameter key="attribute" value=""/>
         <parameter key="attributes" value=""/>
@@ -71,11 +71,11 @@
         <parameter key="include_special_attributes" value="false"/>
         <parameter key="iteration_macro" value="loop_feature"/>
         <process expanded="true">
-          <operator activated="true" class="set_macro" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="SingleMacroDefinition" width="90" x="45" y="34">
+          <operator activated="true" class="set_macro" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="SingleMacroDefinition" width="90" x="45" y="34">
             <parameter key="macro" value="value_counter"/>
             <parameter key="value" value="0"/>
           </operator>
-          <operator activated="true" class="loop_values" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ValueIterator" width="90" x="179" y="34">
+          <operator activated="true" class="loop_values" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="ValueIterator" width="90" x="179" y="34">
             <parameter key="attribute" value="%{loop_feature}"/>
             <parameter key="iteration_macro" value="loop_value"/>
             <process expanded="true">
@@ -91,10 +91,10 @@
               <portSpacing port="sink_out 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="provide_macro_as_log_value" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Macro2Log" width="90" x="313" y="34">
+          <operator activated="true" class="provide_macro_as_log_value" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="Macro2Log" width="90" x="313" y="34">
             <parameter key="macro_name" value="value_counter"/>
           </operator>
-          <operator activated="true" class="log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ProcessLog" width="90" x="447" y="34">
+          <operator activated="true" class="log" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="ProcessLog" width="90" x="447" y="34">
             <list key="log">
               <parameter key="Feature" value="operator.FeatureIterator.value.feature_name"/>
               <parameter key="Count" value="operator.Macro2Log.value.macro_value"/>
@@ -112,10 +112,10 @@
           <portSpacing port="sink_result 1" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="log_to_data" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="ProcessLog2ExampleSet" width="90" x="45" y="187">
+      <operator activated="true" class="log_to_data" compatibility="7.4.000-SNAPSHOT" expanded="true" height="103" name="ProcessLog2ExampleSet" width="90" x="45" y="187">
         <parameter key="log_name" value="ProcessLog"/>
       </operator>
-      <operator activated="true" class="clear_log" compatibility="7.3.000-SNAPSHOT" expanded="true" height="103" name="ClearProcessLog" width="90" x="179" y="187">
+      <operator activated="true" class="clear_log" compatibility="7.4.000-SNAPSHOT" expanded="true" height="103" name="ClearProcessLog" width="90" x="179" y="187">
         <parameter key="log_name" value="ProcessLog"/>
         <parameter key="delete_table" value="true"/>
       </operator>
@@ -143,22 +143,24 @@
         <parameter key="filters_logic_and" value="true"/>
         <parameter key="filters_check_metadata" value="true"/>
       </operator>
-      <operator activated="true" class="remember" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="IOStorer" width="90" x="313" y="289">
+      <operator activated="true" class="remember" compatibility="7.4.000-SNAPSHOT" expanded="true" height="68" name="IOStorer" width="90" x="313" y="289">
         <parameter key="name" value="original_data"/>
         <parameter key="io_object" value="ExampleSet"/>
         <parameter key="store_which" value="2"/>
         <parameter key="remove_from_process" value="true"/>
       </operator>
-      <operator activated="true" class="loop_values" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ValueIterator (2)" width="90" x="581" y="187">
+      <operator activated="true" class="concurrency:loop_values" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="Loop Values" width="90" x="581" y="187">
         <parameter key="attribute" value="Feature"/>
         <parameter key="iteration_macro" value="loop_value"/>
+        <parameter key="reuse_results" value="false"/>
+        <parameter key="enable_parallel_execution" value="false"/>
         <process expanded="true">
-          <operator activated="true" class="recall" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="IORetriever" width="90" x="45" y="34">
+          <operator activated="true" class="recall" compatibility="7.4.000-SNAPSHOT" expanded="true" height="68" name="IORetriever" width="90" x="45" y="34">
             <parameter key="name" value="original_data"/>
             <parameter key="io_object" value="ExampleSet"/>
             <parameter key="remove_from_store" value="true"/>
           </operator>
-          <operator activated="true" class="select_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Select Attributes" width="90" x="179" y="34">
+          <operator activated="true" class="select_attributes" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="Select Attributes" width="90" x="179" y="34">
             <parameter key="attribute_filter_type" value="regular_expression"/>
             <parameter key="attribute" value=""/>
             <parameter key="attributes" value=""/>
@@ -173,21 +175,22 @@
             <parameter key="invert_selection" value="true"/>
             <parameter key="include_special_attributes" value="false"/>
           </operator>
-          <operator activated="true" class="remember" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="IOStorer (2)" width="90" x="313" y="34">
+          <operator activated="true" class="remember" compatibility="7.4.000-SNAPSHOT" expanded="true" height="68" name="IOStorer (2)" width="90" x="313" y="34">
             <parameter key="name" value="original_data"/>
             <parameter key="io_object" value="ExampleSet"/>
             <parameter key="store_which" value="1"/>
             <parameter key="remove_from_process" value="true"/>
           </operator>
-          <connect from_port="example set" to_port="out 1"/>
+          <connect from_port="input 1" to_port="output 1"/>
           <connect from_op="IORetriever" from_port="result" to_op="Select Attributes" to_port="example set input"/>
           <connect from_op="Select Attributes" from_port="example set output" to_op="IOStorer (2)" to_port="store"/>
-          <portSpacing port="source_example set" spacing="0"/>
-          <portSpacing port="sink_out 1" spacing="0"/>
-          <portSpacing port="sink_out 2" spacing="0"/>
+          <portSpacing port="source_input 1" spacing="0"/>
+          <portSpacing port="source_input 2" spacing="0"/>
+          <portSpacing port="sink_output 1" spacing="0"/>
+          <portSpacing port="sink_output 2" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="recall" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="IORetriever (2)" width="90" x="782" y="34">
+      <operator activated="true" class="recall" compatibility="7.4.000-SNAPSHOT" expanded="true" height="68" name="IORetriever (2)" width="90" x="782" y="34">
         <parameter key="name" value="original_data"/>
         <parameter key="io_object" value="ExampleSet"/>
         <parameter key="remove_from_store" value="true"/>
@@ -199,7 +202,7 @@
       <connect from_op="ClearProcessLog" from_port="through 1" to_op="GuessValueTypes (2)" to_port="example set input"/>
       <connect from_op="ClearProcessLog" from_port="through 2" to_op="IOStorer" to_port="store"/>
       <connect from_op="GuessValueTypes (2)" from_port="example set output" to_op="ExampleFilter" to_port="example set input"/>
-      <connect from_op="ExampleFilter" from_port="example set output" to_op="ValueIterator (2)" to_port="example set"/>
+      <connect from_op="ExampleFilter" from_port="example set output" to_op="Loop Values" to_port="input 1"/>
       <connect from_op="IORetriever (2)" from_port="result" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>

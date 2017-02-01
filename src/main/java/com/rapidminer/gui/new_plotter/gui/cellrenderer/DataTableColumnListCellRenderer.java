@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui.cellrenderer;
 
 import java.awt.Color;
@@ -47,7 +47,7 @@ import com.rapidminer.tools.I18N;
  * @author Nils Woehler
  *
  */
-public class DataTableColumnListCellRenderer implements ListCellRenderer {
+public class DataTableColumnListCellRenderer implements ListCellRenderer<DataTableColumn> {
 
 	private final Color BORDER_SELECTION_COLOR = UIManager.getColor("Tree.selectionBorderColor").darker();
 	private JPanel container;
@@ -73,8 +73,8 @@ public class DataTableColumnListCellRenderer implements ListCellRenderer {
 	}
 
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
-			boolean cellHasFocus) {
+	public Component getListCellRendererComponent(JList<? extends DataTableColumn> list, DataTableColumn value, int index,
+			boolean isSelected, boolean cellHasFocus) {
 
 		String text;
 		ValueType valueType = null;
@@ -82,7 +82,7 @@ public class DataTableColumnListCellRenderer implements ListCellRenderer {
 			text = "##ERROR## Empty";
 		} else {
 			text = value.toString();
-			valueType = ((DataTableColumn) value).getValueType();
+			valueType = value.getValueType();
 		}
 
 		tableColumnLabel.setText(text);

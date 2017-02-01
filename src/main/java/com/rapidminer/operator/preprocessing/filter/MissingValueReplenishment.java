@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.text.ParseException;
@@ -65,7 +65,9 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
  */
 public class MissingValueReplenishment extends ValueReplenishment {
 
-	/** The parameter name for &quot;This value is used for some of the replenishment types.&quot; */
+	/**
+	 * The parameter name for &quot;This value is used for some of the replenishment types.&quot;
+	 */
 	public static final String PARAMETER_REPLENISHMENT_VALUE = "replenishment_value";
 
 	private static final int NONE = 0;
@@ -84,12 +86,6 @@ public class MissingValueReplenishment extends ValueReplenishment {
 
 	public static final OperatorVersion VERSION_BEFORE_ROUND_ON_INTEGER_ATTRIBUTES = new OperatorVersion(5, 2, 0);
 
-	/**
-	 * Incompatible version, old version writes into the exampleset, if original output port is not
-	 * connected.
-	 */
-	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
-
 	public MissingValueReplenishment(OperatorDescription description) {
 		super(description);
 	}
@@ -102,12 +98,11 @@ public class MissingValueReplenishment extends ValueReplenishment {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		OperatorVersion[] oldIncompatibleVersionChanges = super.getIncompatibleVersionChanges();
-		OperatorVersion[] newIncompatibleVersionChanges = new OperatorVersion[oldIncompatibleVersionChanges.length + 2];
+		OperatorVersion[] newIncompatibleVersionChanges = new OperatorVersion[oldIncompatibleVersionChanges.length + 1];
 		for (int i = 0; i < oldIncompatibleVersionChanges.length; ++i) {
 			newIncompatibleVersionChanges[i] = oldIncompatibleVersionChanges[i];
 		}
-		newIncompatibleVersionChanges[newIncompatibleVersionChanges.length - 2] = VERSION_BEFORE_ROUND_ON_INTEGER_ATTRIBUTES;
-		newIncompatibleVersionChanges[newIncompatibleVersionChanges.length - 1] = VERSION_MAY_WRITE_INTO_DATA;
+		newIncompatibleVersionChanges[newIncompatibleVersionChanges.length - 1] = VERSION_BEFORE_ROUND_ON_INTEGER_ATTRIBUTES;
 		return newIncompatibleVersionChanges;
 	}
 
@@ -163,8 +158,8 @@ public class MissingValueReplenishment extends ValueReplenishment {
 			}
 			getExampleSetInputPort().addError(
 					new SimpleMetaDataError(Severity.WARNING, getExampleSetInputPort(),
-							"missing_value_replenishment.value_type_not_supported_by_replenishment",
-							REPLENISHMENT_NAMES[replenishment], builder.toString()));
+					"missing_value_replenishment.value_type_not_supported_by_replenishment",
+					REPLENISHMENT_NAMES[replenishment], builder.toString()));
 		}
 	}
 
@@ -325,12 +320,8 @@ public class MissingValueReplenishment extends ValueReplenishment {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
-			return super.writesIntoExistingData();
-		} else {
-			// old version: true only if original output port is connected
-			return isOriginalOutputConnected() && super.writesIntoExistingData();
-		}
+		// the model takes care of materialization
+		return false;
 	}
 
 	@Override

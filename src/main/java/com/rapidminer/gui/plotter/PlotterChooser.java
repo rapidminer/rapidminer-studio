@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter;
 
 import java.awt.Color;
@@ -79,7 +79,7 @@ public class PlotterChooser extends JButton {
 
 	private boolean smallIcons = false;
 
-	private final class PlotterListCellRenderer extends JPanel implements ListCellRenderer {
+	private final class PlotterListCellRenderer<E> extends JPanel implements ListCellRenderer<E> {
 
 		private static final long serialVersionUID = 1L;
 
@@ -121,7 +121,7 @@ public class PlotterChooser extends JButton {
 		 * Updates panel and label for the given cell.
 		 */
 		@Override
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+		public Component getListCellRendererComponent(JList<? extends E> list, E value, int index, boolean isSelected,
 				boolean cellHasFocus) {
 			String plotterName = (String) value;
 			// display selected variant of the icon if the cell is selected
@@ -155,25 +155,25 @@ public class PlotterChooser extends JButton {
 			// check to decide which icon size should be loaded
 			if (!isSmallIconsUsed()) {
 				if (selected) {
-					return SwingTools.createImage("icons/chartPreview/" + ICON_SIZE + "/" + plotterName.replace(' ', '_')
-							+ ".png");
+					return SwingTools
+							.createImage("icons/chartPreview/" + ICON_SIZE + "/" + plotterName.replace(' ', '_') + ".png");
 				} else {
-					return SwingTools.createImage("icons/chartPreview/" + ICON_SIZE + "/" + plotterName.replace(' ', '_')
-							+ "-grey.png");
+					return SwingTools.createImage(
+							"icons/chartPreview/" + ICON_SIZE + "/" + plotterName.replace(' ', '_') + "-grey.png");
 				}
 			} else {
 				if (selected) {
-					return SwingTools.createImage("icons/chartPreview/" + SMALL_ICON_SIZE + "/"
-							+ plotterName.replace(' ', '_') + ".png");
+					return SwingTools.createImage(
+							"icons/chartPreview/" + SMALL_ICON_SIZE + "/" + plotterName.replace(' ', '_') + ".png");
 				} else {
-					return SwingTools.createImage("icons/chartPreview/" + SMALL_ICON_SIZE + "/"
-							+ plotterName.replace(' ', '_') + "-grey.png");
+					return SwingTools.createImage(
+							"icons/chartPreview/" + SMALL_ICON_SIZE + "/" + plotterName.replace(' ', '_') + "-grey.png");
 				}
 			}
 		}
 	}
 
-	private JList plotterList = new JList(new DefaultListModel());
+	private JList<String> plotterList = new JList<>(new DefaultListModel<>());
 
 	public PlotterChooser() {
 		super();
@@ -184,7 +184,7 @@ public class PlotterChooser extends JButton {
 
 		plotterList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
 		plotterList.setVisibleRowCount(5);
-		plotterList.setCellRenderer(new PlotterListCellRenderer());
+		plotterList.setCellRenderer(new PlotterListCellRenderer<>());
 		plotterList.setBackground(UIManager.getColor("Panel.background"));
 		plotterList.setSelectionForeground(Color.BLACK);
 		final PopupAction popupAction = new PopupAction("choose_plotter", plotterList);
@@ -197,7 +197,7 @@ public class PlotterChooser extends JButton {
 				if (smallIcons != isResolutionTooSmall()) {
 					smallIcons = !smallIcons; // toggle the type of icons
 					// if the resolution has changed, create a new panel to support this resolution
-					plotterList.setCellRenderer(new PlotterListCellRenderer());
+					plotterList.setCellRenderer(new PlotterListCellRenderer<>());
 				}
 			}
 		});
@@ -232,14 +232,14 @@ public class PlotterChooser extends JButton {
 	}
 
 	private void populateList(PlotterConfigurationModel plotterSettings) {
-		((DefaultListModel) plotterList.getModel()).clear();
+		((DefaultListModel<?>) plotterList.getModel()).clear();
 		Iterator<String> n = plotterSettings.getAvailablePlotters().keySet().iterator();
 		while (n.hasNext()) {
 			String plotterName = n.next();
 			try {
 				Class<? extends Plotter> plotterClass = plotterSettings.getAvailablePlotters().get(plotterName);
 				if (plotterClass != null) {
-					((DefaultListModel) plotterList.getModel()).addElement(plotterName);
+					((DefaultListModel<String>) plotterList.getModel()).addElement(plotterName);
 				}
 			} catch (IllegalArgumentException e) {
 				LogService.getRoot().log(Level.WARNING,
@@ -253,12 +253,12 @@ public class PlotterChooser extends JButton {
 	}
 
 	public void removeAllItems() {
-		((DefaultListModel) plotterList.getModel()).clear();
+		((DefaultListModel<String>) plotterList.getModel()).clear();
 
 	}
 
-	public void addItem(Object item) {
-		((DefaultListModel) plotterList.getModel()).addElement(item);
+	public void addItem(String item) {
+		((DefaultListModel<String>) plotterList.getModel()).addElement(item);
 		if (plotterList.getModel().getSize() == 1) {
 			plotterList.setSelectedIndex(0);
 			updateButtonText();

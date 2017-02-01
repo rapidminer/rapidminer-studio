@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.normalization;
 
 import com.rapidminer.example.Attribute;
@@ -32,14 +32,14 @@ import com.rapidminer.tools.Ontology;
 
 /**
  * @author Sebastian Land
- * 
+ *
  */
 public abstract class AbstractNormalizationModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = 9003091723155805502L;
 
 	private static final int OPERATOR_PROGRESS_STEPS = 10_000;
-	
+
 	protected AbstractNormalizationModel(ExampleSet exampleSet) {
 		super(exampleSet);
 
@@ -60,13 +60,11 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 		for (i = 0; i < newAttributes.length; i++) {
 			newAttributes[i] = oldAttributes[i];
 			if (oldAttributes[i].isNumerical()) {
-				if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttributes[i].getValueType(), Ontology.REAL)) {
 					newAttributes[i] = AttributeFactory.createAttribute(Ontology.REAL);
 					exampleSet.getExampleTable().addAttribute(newAttributes[i]);
 					attributes.addRegular(newAttributes[i]);
 				}
 			}
-		}
 
 		// applying on data
 		applyOnData(exampleSet, oldAttributes, newAttributes);
@@ -89,7 +87,7 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 	 * This method must be implemented by the subclasses. Subclasses have to iterate over the
 	 * exampleset and on each example iterate over the oldAttribute array and set the new values on
 	 * the corresponding new attribute
-	 * @throws ProcessStoppedException 
+	 * @throws ProcessStoppedException
 	 */
 	protected void applyOnData(ExampleSet exampleSet, Attribute[] oldAttributes, Attribute[] newAttributes) throws ProcessStoppedException {
 		// initialize progress
@@ -99,7 +97,7 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 			progress.setTotal(exampleSet.size());
 		}
 		int progressCounter = 0;
-		
+
 		// copying data
 		for (Example example : exampleSet) {
 			for (int i = 0; i < oldAttributes.length; i++) {
@@ -123,4 +121,8 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 		return getValue(attribute, oldValue);
 	}
 
+	@Override
+	protected boolean needsRemapping() {
+		return false;
+	}
 }

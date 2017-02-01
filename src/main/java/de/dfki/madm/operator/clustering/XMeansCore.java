@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,8 +27,10 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.clustering.Centroid;
@@ -46,6 +48,8 @@ import de.dfki.madm.operator.KMeanspp;
 
 public class XMeansCore extends RMAbstractClusterer {
 
+	private static final int INTERMEDIATE_PROGRESS = 20;
+
 	private ExampleSet exampleSet = null;
 	private int examplesize = -1;
 	private DistanceMeasure measure = null;
@@ -59,6 +63,7 @@ public class XMeansCore extends RMAbstractClusterer {
 	private int dimension = -1;
 	private int[] centroidAssignments = null;
 	private String ClusteringAlgorithm = "";
+	private Operator executingOperator = null;
 
 	/**
 	 * Initialization of X-Mean
@@ -105,6 +110,7 @@ public class XMeansCore extends RMAbstractClusterer {
 	 * @throws OperatorException
 	 */
 	public ClusterModel doXMean() throws OperatorException {
+
 		examplesize = exampleSet.size();
 
 		measure.init(exampleSet);
@@ -146,8 +152,18 @@ public class XMeansCore extends RMAbstractClusterer {
 		KMean.setParameter("max_optimization_steps", maxOptimizationSteps + "");
 		KMean.setParameter(KMeanspp.PARAMETER_USE_KPP, kpp + "");
 
+		// initialize progress
+		OperatorProgress operatorProgress = null;
+		if (executingOperator != null && executingOperator.getProgress() != null) {
+			operatorProgress = executingOperator.getProgress();
+			operatorProgress.setTotal(100);
+		}
+
 		// get the first run
 		bestModel = (CentroidClusterModel) KMean.generateClusterModel(exampleSet);
+		if (operatorProgress != null) {
+			operatorProgress.setCompleted(INTERMEDIATE_PROGRESS);
+		}
 
 		// save Dimension of data
 		dimension = bestModel.getCentroid(0).getCentroid().length;
@@ -157,8 +173,10 @@ public class XMeansCore extends RMAbstractClusterer {
 
 		boolean change = true;
 
+		boolean addAsLabel = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL);
+		boolean removeUnlabeled = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED);
+
 		while (bestModel.getCentroids().size() < k_max && change) {
-			checkForStop();
 			change = false;
 			int array_size = bestModel.getClusters().size();
 
@@ -204,9 +222,8 @@ public class XMeansCore extends RMAbstractClusterer {
 			CentroidClusterModel model = null;
 			if (change_anz + array_size < k_max) {
 				// all children are in the limit
-				model = new CentroidClusterModel(exampleSet, change_anz + array_size, attributeNames, measure,
-						getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
-						getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
+				model = new CentroidClusterModel(exampleSet, change_anz + array_size, attributeNames, measure, addAsLabel,
+						removeUnlabeled);
 
 				int id = 0;
 				for (int i = 0; i < array_size; i++) {
@@ -222,9 +239,7 @@ public class XMeansCore extends RMAbstractClusterer {
 				}
 			} else {
 				// pick the best children
-				model = new CentroidClusterModel(exampleSet, k_max, attributeNames, measure,
-						getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
-						getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
+				model = new CentroidClusterModel(exampleSet, k_max, attributeNames, measure, addAsLabel, removeUnlabeled);
 				double hilf = 0;
 				CentroidClusterModel hilf2 = null;
 				// sort
@@ -280,6 +295,15 @@ public class XMeansCore extends RMAbstractClusterer {
 			} else {
 				model = null;
 			}
+
+			if (operatorProgress != null) {
+				if (bestModel.getCentroids().size() > k_max) {
+					operatorProgress.complete();
+				} else {
+					operatorProgress.setCompleted((int) (INTERMEDIATE_PROGRESS
+							+ (100.0 - INTERMEDIATE_PROGRESS) * bestModel.getCentroids().size() / k_max));
+				}
+			}
 		}
 
 		if (addsClusterAttribute()) {
@@ -292,6 +316,11 @@ public class XMeansCore extends RMAbstractClusterer {
 				i++;
 			}
 		}
+
+		if (operatorProgress != null) {
+			operatorProgress.complete();
+		}
+
 		return bestModel;
 	}
 
@@ -330,7 +359,7 @@ public class XMeansCore extends RMAbstractClusterer {
 	 *
 	 * @param bestModel
 	 * @return BIC of the given modell
-	 * @throws ProcessStoppedException 
+	 * @throws ProcessStoppedException
 	 */
 	private double calcBIC(CentroidClusterModel bestModel) throws ProcessStoppedException {
 		double loglike = 0;
@@ -343,8 +372,7 @@ public class XMeansCore extends RMAbstractClusterer {
 
 		for (Cluster c : bestModel.getClusters()) {
 			int current_id = c.getClusterId();
-			loglike += logLikelihoodEstimate(c, bestModel.getCentroidCoordinates(current_id),
-					bestModel.getClusterAssignments(exampleSet), numCenters);
+			loglike += logLikelihoodEstimate(c, bestModel.getCentroidCoordinates(current_id), numCenters);
 		}
 
 		loglike -= numParameters / 2.0 * Math.log(examplesize);
@@ -360,7 +388,7 @@ public class XMeansCore extends RMAbstractClusterer {
 		return values;
 	}
 
-	private double logLikelihoodEstimate(Cluster c, double[] centroid, int[] as, int K) {
+	private double logLikelihoodEstimate(Cluster c, double[] centroid, int K) {
 		double l = 0;
 		double R = examplesize;
 		double Rn = c.getNumberOfExamples();
@@ -389,8 +417,8 @@ public class XMeansCore extends RMAbstractClusterer {
 
 			d = 1.0 / (Rn - K) * sum;
 
-			l = -(Rn / 2.0) * Math.log(2.0 * Math.PI) - Rn * M / 2.0 * Math.log(d) - (Rn - K) / 2.0 + Rn * Math.log(Rn) - Rn
-					* Math.log(R);
+			l = -(Rn / 2.0) * Math.log(2.0 * Math.PI) - Rn * M / 2.0 * Math.log(d) - (Rn - K) / 2.0 + Rn * Math.log(Rn)
+					- Rn * Math.log(R);
 		}
 		return l;
 	}
@@ -398,5 +426,15 @@ public class XMeansCore extends RMAbstractClusterer {
 	@Override
 	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
 		return null;
+	}
+
+	/**
+	 * The operator in which XMeans is done. Used to display the progress.
+	 *
+	 * @param executingOperator
+	 *            The executing XMeans operator
+	 */
+	public void setExecutingOperator(Operator executingOperator) {
+		this.executingOperator = executingOperator;
 	}
 }

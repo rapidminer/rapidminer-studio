@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.join;
 
 import java.util.Collections;
@@ -143,7 +143,6 @@ public abstract class AbstractExampleSetJoin extends Operator {
 
 	@Override
 	public void doWork() throws OperatorException {
-
 		ExampleSet es1;
 		ExampleSet es2;
 		if (getCompatibilityLevel().isAtMost(VERSION_SWAPPED_INPUT_PORTS)) {
@@ -190,16 +189,12 @@ public abstract class AbstractExampleSetJoin extends Operator {
 				unionAttributeList.add((Attribute) attribute.clone());
 			}
 		}
+		boolean removeDoubleAttributes = getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES);
 		for (Attribute attribute : es2.getAttributes()) {
 			if (!excludedAttributes.contains(new Pair<>(AttributeSource.SECOND_SOURCE, attribute))) {
 				Attribute cloneAttribute = (Attribute) attribute.clone();
 				if (containsAttribute(unionAttributeList, attribute)) { // in list...
-					if (!getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES)) { // ... but
-																						 // should
-																						 // not be
-																						 // removed
-																						 // -->
-																						 // rename
+					if (!removeDoubleAttributes) { // ... but should not be removed --> rename
 						originalAttributeSources.add(new AttributeSource(AttributeSource.SECOND_SOURCE, attribute));
 						cloneAttribute.setName(cloneAttribute.getName() + "_from_ES2");
 						if (containsAttribute(unionAttributeList, cloneAttribute)) {
@@ -253,7 +248,7 @@ public abstract class AbstractExampleSetJoin extends Operator {
 			String specialName = role.getSpecialName();
 			Attribute specialAttribute = role.getAttribute();
 			if (!usedSpecialAttributes.contains(specialName)
-					&& !excludedAttributes.contains(new Pair(AttributeSource.SECOND_SOURCE, specialAttribute))) { // not
+					&& !excludedAttributes.contains(new Pair<>(AttributeSource.SECOND_SOURCE, specialAttribute))) { // not
 																													 // there
 				Attribute specialAttributeClone = (Attribute) specialAttribute.clone();
 				boolean addToUnionList = true;
@@ -318,8 +313,7 @@ public abstract class AbstractExampleSetJoin extends Operator {
 			if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(id1.getValueType(), id2.getValueType())
 					&& !Ontology.ATTRIBUTE_VALUE_TYPE.isA(id2.getValueType(), id1.getValueType())) {
 				// this.addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(),
-				// "attributes_type_mismatch", id1.getName(), "left",
-				// id2.getName(), "right"));
+				// "attributes_type_mismatch", id1.getName(), "left", id2.getName(), "right"));
 				return new LinkedList<>();
 			}
 		}
@@ -343,16 +337,12 @@ public abstract class AbstractExampleSetJoin extends Operator {
 			}
 		}
 
+		boolean removeDoubleAttributes = getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES);
 		for (AttributeMetaData attributeMD : emd2.getAllAttributes()) {
 			if (!excludedAttributes.contains(new Pair<>(AttributeSource.SECOND_SOURCE, attributeMD))) {
 				AttributeMetaData cloneAttribute = attributeMD.clone();
 				if (containsAttributeMD(unionAttributeList, attributeMD)) { // in list...
-					if (!getParameterAsBoolean(PARAMETER_REMOVE_DOUBLE_ATTRIBUTES)) { // ... but
-																						 // should
-																						 // not be
-																						 // removed
-																						 // -->
-																						 // rename
+					if (!removeDoubleAttributes) { // ... but should not be removed --> rename
 						if (attributeMD.isSpecial() && unionSpecialRoleList.contains(attributeMD.getRole())) {
 							// this special attribute's role already exists
 							rightInput.addError(new SimpleMetaDataError(Severity.WARNING, rightInput,

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing;
 
 import java.util.Iterator;
@@ -31,17 +31,18 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.MemoryCleanUp;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
-import com.rapidminer.operator.io.ExampleSource;
+import com.rapidminer.operator.generator.ExampleSetGenerator;
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
 
 
 /**
@@ -59,16 +60,22 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
-		ExampleSet createdSet = materializeExampleSet(exampleSet, getParameterAsInt(ExampleSource.PARAMETER_DATAMANAGEMENT));
+		int dataManagement;
+		DataManagement newDataManagement = DataManagement.AUTO;
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+			dataManagement = DataRowFactory.TYPE_COLUMN_VIEW;
+			newDataManagement = DataManagementParameterHelper.getSelectedDataManagement(this);
+		} else {
+			dataManagement = getParameterAsInt(ExampleSetGenerator.PARAMETER_DATAMANAGEMENT);
+		}
+		ExampleSet createdSet = materialize(exampleSet, dataManagement, newDataManagement);
 		return createdSet;
 	}
 
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeCategory(ExampleSource.PARAMETER_DATAMANAGEMENT,
-				"Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES,
-				DataRowFactory.TYPE_DOUBLE_ARRAY, false));
+		DataManagementParameterHelper.addParameterTypes(types, this);
 		return types;
 	}
 
@@ -120,6 +127,22 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 	 * @return the materialized example set
 	 */
 	private static ExampleSet materialize(ExampleSet exampleSet, int dataManagement) {
+		return materialize(exampleSet, dataManagement, DataManagement.AUTO);
+	}
+
+	/**
+	 * Creates a materialized copy of the given example set, i.e., a hard copy with all unnecessary
+	 * abstraction layers being removed.
+	 *
+	 * @param exampleSet
+	 *            the example set to materialize
+	 * @param dataManagement
+	 *            the data management strategy
+	 * @param newDataManagement
+	 *            the new data management strategy
+	 * @return the materialized example set
+	 */
+	private static ExampleSet materialize(ExampleSet exampleSet, int dataManagement, DataManagement newDataManagement) {
 		// create new attributes
 		Attribute[] sourceAttributes = new Attribute[exampleSet.getAttributes().allSize()];
 		Attribute[] targetAttributes = new Attribute[exampleSet.getAttributes().allSize()];
@@ -148,12 +171,13 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 
 		// copy columnwise if beta features are activated and dataManagment is double array or
 		// column view
-		// if datamanagment is not one of the two then there can be value changes when copying to a
+		// if datamanagement is not one of the two then there can be value changes when copying to a
 		// "smaller" row which we need to keep
 		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))
 				&& (dataManagement == DataRowFactory.TYPE_DOUBLE_ARRAY
 						|| dataManagement == DataRowFactory.TYPE_COLUMN_VIEW)) {
 			builder.withBlankSize(exampleSet.size());
+			builder.withOptimizationHint(newDataManagement);
 			for (int i = 0; i < sourceAttributes.length; i++) {
 				final int index = i;
 				builder.withColumnFiller(targetAttributes[i],

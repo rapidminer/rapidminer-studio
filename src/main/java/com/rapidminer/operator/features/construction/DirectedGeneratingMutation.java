@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.construction;
 
 import com.rapidminer.example.Attribute;
@@ -34,13 +34,13 @@ import java.util.List;
  * The mutation operator for directed GGAs. This operator adds single attributes from the original
  * set, creates new ones and deselect single attributes. The number of attributes remains until
  * longer or shorter example sets have proven to perform better.
- * 
+ *
  * @see DirectedGGA
  * @author Ingo Mierswa ingomierswa Exp $
  */
 public class DirectedGeneratingMutation extends ExampleSetBasedIndividualOperator {
 
-	private List generators;
+	private List<FeatureGenerator> generators;
 
 	private Attribute[] originalAttributes;
 
@@ -54,8 +54,8 @@ public class DirectedGeneratingMutation extends ExampleSetBasedIndividualOperato
 
 	private RandomGenerator random;
 
-	public DirectedGeneratingMutation(Attribute[] originalAttributes, double p, List generators, int maxGeneratedAttributes,
-			int maxAddedOriginalAttributes, String[] unusableFunctions, RandomGenerator random) {
+	public DirectedGeneratingMutation(Attribute[] originalAttributes, double p, List<FeatureGenerator> generators,
+			int maxGeneratedAttributes, int maxAddedOriginalAttributes, String[] unusableFunctions, RandomGenerator random) {
 		this.originalAttributes = originalAttributes;
 		this.p = p / (maxGeneratedAttributes + maxAddedOriginalAttributes);
 		this.generators = generators;
@@ -76,7 +76,7 @@ public class DirectedGeneratingMutation extends ExampleSetBasedIndividualOperato
 	@Override
 	public List<ExampleSetBasedIndividual> operate(ExampleSetBasedIndividual individual) throws Exception {
 		List<ExampleSetBasedIndividual> l = new LinkedList<ExampleSetBasedIndividual>();
-		AttributeWeightedExampleSet clone = (AttributeWeightedExampleSet) individual.getExampleSet().clone();
+		AttributeWeightedExampleSet clone = new AttributeWeightedExampleSet(individual.getExampleSet());
 
 		try {
 			addOriginalAttribute(clone);

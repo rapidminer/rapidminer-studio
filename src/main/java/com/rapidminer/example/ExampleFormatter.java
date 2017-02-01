@@ -1,28 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example;
 
-import com.rapidminer.tools.Tools;
-
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -97,10 +96,6 @@ public class ExampleFormatter {
 			this.command = command;
 			this.fractionDigits = fractionDigits;
 			this.quoteNominal = quoteNominal;
-			if ((command != 'a') && (command != 's') && (command != 'l') && (command != 'p') && (command != 'd')
-					&& (command != 'i') && (command != 'w') && (command != 'c') && (command != 'b')) {
-				throw new FormatterException("Unknown command: '" + command + "'");
-			}
 			switch (command) {
 				case 'a':
 					if (arguments.length == 0) {
@@ -160,18 +155,20 @@ public class ExampleFormatter {
 					}
 					break;
 				default:
-					break;
+					throw new FormatterException("Unknown command: '" + command + "'");
 			}
 			this.arguments = arguments;
 		}
 
 		@Override
 		public String format(Example example) {
+			Attributes attributes = example.getAttributes();
+			Attribute chosenAttribute = null;
 			switch (command) {
-				case 'a':
+				case 'a': {
 					StringBuffer str = new StringBuffer();
 					boolean first = true;
-					for (Attribute attribute : example.getAttributes()) {
+					for (Attribute attribute : attributes) {
 						if (!first) {
 							str.append(arguments[0]);
 						}
@@ -179,43 +176,48 @@ public class ExampleFormatter {
 						first = false;
 					}
 					return str.toString();
+				}
 				case 's':
 					return example.getAttributesAsSparseString(arguments[0], arguments[1], fractionDigits, quoteNominal);
 				case 'l':
-					return example.getValueAsString(example.getAttributes().getLabel(), fractionDigits, quoteNominal);
+					chosenAttribute = attributes.getLabel();
+					break;
 				case 'p':
-					return example.getValueAsString(example.getAttributes().getPredictedLabel(), fractionDigits,
-							quoteNominal);
+					chosenAttribute = attributes.getPredictedLabel();
+					break;
 				case 'i':
-					return example.getValueAsString(example.getAttributes().getId(), fractionDigits, quoteNominal);
+					chosenAttribute = attributes.getId();
+					break;
 				case 'w':
-					return example.getValueAsString(example.getAttributes().getWeight(), fractionDigits, quoteNominal);
+					chosenAttribute = attributes.getWeight();
+					break;
 				case 'c':
-					return example.getValueAsString(example.getAttributes().getCluster(), fractionDigits, quoteNominal);
+					chosenAttribute = attributes.getCluster();
+					break;
 				case 'b':
-					return example.getValueAsString(example.getAttributes().getSpecial(Attributes.BATCH_NAME),
-							fractionDigits, quoteNominal);
-				case 'd':
-					if (arguments.length == 0) {
-						Iterator i = example.getAttributes().getPredictedLabel().getMapping().getValues().iterator();
-						StringBuffer result = new StringBuffer();
-						int index = 0;
-						while (i.hasNext()) {
-							String value = (String) i.next();
-							if (index != 0) {
-								result.append(Example.SEPARATOR);
-							}
-							result.append("conf(" + value + ")="
-									+ Tools.formatNumber(example.getConfidence(value), fractionDigits));
-							index++;
-						}
-						return result.toString();
-					} else {
+					chosenAttribute = attributes.getSpecial(Attributes.BATCH_NAME);
+					break;
+				case 'd': {
+					if (arguments.length != 0) {
 						return Tools.formatNumber(example.getConfidence(arguments[0]), fractionDigits);
 					}
+					StringBuffer str = new StringBuffer();
+					boolean first = true;
+					for (String value : attributes.getPredictedLabel().getMapping().getValues()) {
+						if (first) {
+							first = false;
+						} else {
+							str.append(Example.SEPARATOR);
+						}
+						str.append(
+								"conf(" + value + ")=" + Tools.formatNumber(example.getConfidence(value), fractionDigits));
+					}
+					return str.toString();
+				}
 				default:
 					return command + "";
 			}
+			return example.getValueAsString(chosenAttribute, fractionDigits, quoteNominal);
 		}
 	}
 

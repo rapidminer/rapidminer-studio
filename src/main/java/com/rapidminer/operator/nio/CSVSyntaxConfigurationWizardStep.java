@@ -1,34 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.nio;
-
-import com.rapidminer.gui.tools.CharTextField;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.ProgressThread;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.UpdateQueue;
-import com.rapidminer.gui.tools.dialogs.ButtonDialog;
-import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirection;
-import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
-import com.rapidminer.operator.nio.model.CSVResultSetConfiguration;
-import com.rapidminer.tools.LineParser;
-import com.rapidminer.tools.io.Encoding;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -59,29 +47,42 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
+import com.rapidminer.gui.tools.CharTextField;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.UpdateQueue;
+import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirection;
+import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
+import com.rapidminer.operator.nio.model.CSVResultSetConfiguration;
+import com.rapidminer.tools.LineParser;
+import com.rapidminer.tools.io.Encoding;
+
 
 /**
- * 
+ *
  * @author Sebastian Loh, Simon Fischer
- * 
+ *
  */
 public class CSVSyntaxConfigurationWizardStep extends WizardStep {
 
 	private JPanel panel;
 
 	private final JCheckBox trimLinesBox = new JCheckBox("Trim Lines", true);
-	private final JComboBox encodingComboBox = new JComboBox(Encoding.CHARSETS);
+	private final JComboBox<String> encodingComboBox = new JComboBox<>(Encoding.CHARSETS);
 	private final JCheckBox skipCommentsBox = new JCheckBox("Skip Comments", true); // just temp
-																					// preselection,
-																					// real value is
-																					// defined in
-																					// the
-																					// constructor
+																					 // preselection,
+																					 // real value
+																					 // is
+																					 // defined in
+																					 // the
+																					 // constructor
 	private final JCheckBox useQuotesBox = new JCheckBox("Use Quotes", true); // just temp
-																				// preselection,
-																				// real value is
-																				// defined in the
-																				// constructor
+																				 // preselection,
+																				 // real value is
+																				 // defined in the
+																				 // constructor
 	private final JTextField commentCharacterTextField = new JTextField(LineParser.DEFAULT_COMMENT_CHARACTER_STRING);
 	private final CharTextField quoteCharacterTextField = new CharTextField(LineParser.DEFAULT_QUOTE_CHARACTER);
 	private final JLabel escapeCharacterLabel = new JLabel("Escape Character:");

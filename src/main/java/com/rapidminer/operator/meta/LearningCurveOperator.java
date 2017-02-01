@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.meta;
 
 import java.util.List;
@@ -52,7 +52,7 @@ import com.rapidminer.tools.RandomGenerator;
 public class LearningCurveOperator extends OperatorChain {
 
 	private InputPort exampleSetInput = getInputPorts().createPort("exampleSet", ExampleSet.class);
-	private OutputPort trainigSource = getSubprocess(0).getInnerSources().createPort("training set");
+	private OutputPort trainingSource = getSubprocess(0).getInnerSources().createPort("training set");
 	private OutputPort testSource = getSubprocess(1).getInnerSources().createPort("test set");
 	private PortPairExtender throughExtender = new PortPairExtender("through", getSubprocess(0).getInnerSinks(),
 			getSubprocess(1).getInnerSources());
@@ -94,7 +94,7 @@ public class LearningCurveOperator extends OperatorChain {
 		super(description, "Training", "Test");
 		throughExtender.start();
 
-		getTransformer().addRule(new ExampleSetPassThroughRule(exampleSetInput, trainigSource, SetRelation.EQUAL) {
+		getTransformer().addRule(new ExampleSetPassThroughRule(exampleSetInput, trainingSource, SetRelation.EQUAL) {
 
 			@Override
 			public ExampleSetMetaData modifyExampleSet(ExampleSetMetaData metaData) throws UndefinedParameterError {
@@ -144,6 +144,8 @@ public class LearningCurveOperator extends OperatorChain {
 		double stepFraction = getParameterAsDouble(PARAMETER_STEP_FRACTION);
 		double startFraction = getParameterAsDouble(PARAMETER_START_FRACTION);
 		int samplingType = getParameterAsInt(PARAMETER_SAMPLING_TYPE);
+		boolean useLocalRandomSeed = getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED);
+		int localRandomSeed = getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED);
 
 		// init Operator progress
 		getProgress().setTotal((int) Math.round((1 - startFraction) / stepFraction));
@@ -153,19 +155,17 @@ public class LearningCurveOperator extends OperatorChain {
 
 		// fix training and test set
 		SplittedExampleSet trainTestSplittedExamples = new SplittedExampleSet(originalExampleSet, trainingRatio,
-				samplingType, getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-				getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+				samplingType, useLocalRandomSeed, localRandomSeed);
 		trainTestSplittedExamples.selectSingleSubset(0);
 		this.lastFraction = startFraction;
 		while (lastFraction <= 1.0d) {
 			// learns a model on the growing example set
 			trainTestSplittedExamples.selectSingleSubset(0);
 			SplittedExampleSet growingTrainingSet = new SplittedExampleSet(trainTestSplittedExamples, lastFraction,
-					samplingType, getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+					samplingType, useLocalRandomSeed, localRandomSeed);
 			growingTrainingSet.selectSingleSubset(0);
 			// IOContainer input = new IOContainer(new IOObject[] { growingTrainingSet });
-			trainigSource.deliver(growingTrainingSet);
+			trainingSource.deliver(growingTrainingSet);
 			getSubprocess(0).execute();
 			// input = getOperator(0).apply(input);
 
@@ -189,8 +189,7 @@ public class LearningCurveOperator extends OperatorChain {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeDouble(
-				PARAMETER_TRAINING_RATIO,
+		ParameterType type = new ParameterTypeDouble(PARAMETER_TRAINING_RATIO,
 				"The fraction of examples which shall be maximal used for training (dynamically growing), the rest is used for testing (fixed)",
 				0.0d, 1.0d, 0.05);
 		type.setExpert(false);
@@ -199,12 +198,10 @@ public class LearningCurveOperator extends OperatorChain {
 				"The fraction of examples which would be additionally used in each step.", 0.0d, 1.0d, 0.05);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeDouble(
-				PARAMETER_START_FRACTION,
+		types.add(new ParameterTypeDouble(PARAMETER_START_FRACTION,
 				"Starts with this fraction of the training data and iteratively add step_fraction examples from the training data.",
 				0d, 1.0d, 0.05d));
-		types.add(new ParameterTypeCategory(
-				PARAMETER_SAMPLING_TYPE,
+		types.add(new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE,
 				"Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant)",
 				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.STRATIFIED_SAMPLING));
 

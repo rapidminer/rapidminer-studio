@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.rules;
 
 import java.util.ArrayList;
@@ -59,11 +59,10 @@ public class SingleRuleLearner extends AbstractLearner {
 		// learn all models
 		Collection<RuleModel> models = new ArrayList<>();
 		for (Attribute attribute : exampleSet.getAttributes()) {
-			ExampleSet trainingSet = (ExampleSet) exampleSet.clone();
 			if (attribute.isNominal()) {
-				models.add(createNominalRuleModel(trainingSet, attribute));
+				models.add(createNominalRuleModel(exampleSet, attribute));
 			} else {
-				models.add(createNumericalRuleModel(trainingSet, attribute));
+				models.add(createNumericalRuleModel(exampleSet, attribute));
 			}
 		}
 
@@ -77,11 +76,10 @@ public class SingleRuleLearner extends AbstractLearner {
 		// split by best attribute
 		int oldSize = -1;
 		while (trainingSet.size() > 0 && trainingSet.size() != oldSize) {
-			ExampleSet exampleSet = (ExampleSet) trainingSet.clone();
-			Split bestSplit = splitter.getBestSplit(exampleSet, attribute, null);
+			Split bestSplit = splitter.getBestSplit(trainingSet, attribute, null);
 			double bestSplitValue = bestSplit.getSplitPoint();
 			if (!Double.isNaN(bestSplitValue)) {
-				SplittedExampleSet splittedSet = SplittedExampleSet.splitByAttribute(exampleSet, attribute, bestSplitValue);
+				SplittedExampleSet splittedSet = SplittedExampleSet.splitByAttribute(trainingSet, attribute, bestSplitValue);
 				Attribute label = splittedSet.getAttributes().getLabel();
 				splittedSet.selectSingleSubset(0);
 				SplitCondition condition = new LessEqualsSplitCondition(attribute, bestSplitValue);
