@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator;
 
 import java.util.ArrayList;
@@ -46,8 +46,28 @@ public class GroupedModel extends AbstractModel implements Iterable<Model>, Meta
 	/** Contains all models. */
 	private List<Model> models = new ArrayList<Model>();
 
+	/**
+	 * @deprecated Using this constructor results in a GroupedModel without a training header
+	 *             example set. This can cause NPE in places where the {@link Model} is assumed to
+	 *             have a training header set (for example when the model is connected to the
+	 *             process result port). Use {@link GroupedModel#GroupedModel(ExampleSet)} instead.
+	 */
+	@Deprecated
 	public GroupedModel() {
 		super(null);
+	}
+
+	/**
+	 * Creates a GroupedModel with a training header example set. The training header example set
+	 * should correspond to the last (in the order in which the models are added and will be applied
+	 * to the group model) model.
+	 *
+	 * @param exampleSet
+	 *            The {@link ExampleSet} from which to create the training header example set
+	 * @since 7.4.0
+	 */
+	public GroupedModel(ExampleSet exampleSet) {
+		super(exampleSet);
 	}
 
 	/** Applies all models. */

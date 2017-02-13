@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.security;
 
 import java.awt.AWTPermission;
@@ -242,13 +242,13 @@ public final class PluginSandboxPolicy extends Policy {
 		final Permissions permissions = new Permissions();
 
 		if (ProductConstraintManager.INSTANCE.isInitialized()) {
-
-			if (ProductConstraintManager.INSTANCE.getActiveLicense()
+			boolean isAllowed = ProductConstraintManager.INSTANCE.getActiveLicense()
 					.getPrecedence() >= StudioLicenseConstants.UNLIMITED_LICENSE_PRECEDENCE
-					&& Boolean.parseBoolean(ParameterService
-							.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS))) {
-
-				permissions.add(new ReflectPermission("supressAccessChecks"));
+					|| ProductConstraintManager.INSTANCE.isTrialLicense();
+			boolean isEnabled = Boolean.parseBoolean(
+					ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS));
+			if (isAllowed && isEnabled) {
+				permissions.add(new ReflectPermission("suppressAccessChecks"));
 				permissions.add(new ReflectPermission("newProxyInPackage.*"));
 				permissions.add(new AWTPermission("accessClipboard"));
 				permissions.add(new RuntimePermission("createClassLoader"));
@@ -328,7 +328,8 @@ public final class PluginSandboxPolicy extends Policy {
 	private static PermissionCollection createGroovySourcePermissions() {
 		if (ProductConstraintManager.INSTANCE.isInitialized()) {
 			if (ProductConstraintManager.INSTANCE.getActiveLicense()
-					.getPrecedence() >= StudioLicenseConstants.UNLIMITED_LICENSE_PRECEDENCE) {
+					.getPrecedence() >= StudioLicenseConstants.UNLIMITED_LICENSE_PRECEDENCE
+					|| ProductConstraintManager.INSTANCE.isTrialLicense()) {
 				return createAllPermissions();
 			}
 		}

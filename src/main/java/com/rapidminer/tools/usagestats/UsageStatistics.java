@@ -42,12 +42,14 @@ import org.w3c.dom.Element;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.core.license.ProductConstraintManager;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.dialog.EULADialog;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.license.License;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.WebServiceTools;
@@ -77,8 +79,10 @@ public class UsageStatistics {
 	/** URL to send the statistics values to. */
 	private static final String WEB_SERVICE_URL = "http://stats.rapidminer.com/usage-stats/upload/rapidminer";
 
-	/** Transmit usage statistics daily */
-	private static final long DEFAULT_TRANSMISSION_INTERVAL = 1000 * 60 * 60 * 24;
+	/** Transmit usage statistics every day */
+	private static final long DAILY_TRANSMISSION_INTERVAL = 1000 * 60 * 60 * 24;
+	/** Transmit usage statistics every hour */
+	private static final long HOURLY_TRANSMISSION_INTERVAL = 1000 * 60 * 60;
 
 	/** Schedule extra transmission 10 minutes from now */
 	private static final long SOON_TRANSMISSION_INTERVAL = 1000 * 60 * 10;
@@ -170,7 +174,9 @@ public class UsageStatistics {
 	 * @return the transmission interval to be used (in milliseconds)
 	 */
 	private long getTransmissionInterval() {
-		return DEFAULT_TRANSMISSION_INTERVAL;
+		return RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS_ANSWERS[UsageStatsTransmissionDialog.ALWAYS]
+				.equals(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS))
+						? HOURLY_TRANSMISSION_INTERVAL : DAILY_TRANSMISSION_INTERVAL;
 	}
 
 	/**

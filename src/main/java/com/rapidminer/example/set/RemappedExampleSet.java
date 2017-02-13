@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.set;
 
 import java.util.Iterator;
@@ -58,11 +58,13 @@ public class RemappedExampleSet extends AbstractExampleSet {
 	 * Sorts the regular attributes of parentSet in the order of mappingSet. If additional
 	 * attributes occur and keepAdditional is {@code true}, they are appended on the end of the
 	 * example set. If transformMappings is {@code true} then mapping indices returned by
-	 * {@link Example#getValue} are remapped to the mappings used in mappingSet.
+	 * {@link Example#getValue} are remapped to the mappings used in mappingSet and the attribute
+	 * mappings are changed to those in mappingSet.
 	 * <p>
-	 * Note that {@link Example#getValueAsString} must never be used on such remapped attributes as
-	 * it permutes the values. Therefore, {@link RemappedExampleSet}s with transformMappings
-	 * {@code true} must not be returned at ports unless those attributes are removed.
+	 * Note that {@link Example#getValueAsString} might not return the same as before the remapping
+	 * but a missing value if not all strings in the old attribute mapping are part of the mapping
+	 * from {@link #mappingSet}. Therefore, {@link RemappedExampleSet}s with transformMappings
+	 * {@code true} should not be returned at ports unless those affected attributes are removed.
 	 *
 	 * @param parentSet
 	 *            the example set that should be adjusted to the
@@ -75,6 +77,7 @@ public class RemappedExampleSet extends AbstractExampleSet {
 	 *            if {@code true} an {@link AttributeTransformationRemapping} is added to the
 	 *            nominal attributes of the adjusted example set so that {@code example.getValue(a)}
 	 *            returns the mapping index according to the mapping of the attribute in mappingSet
+	 *            and the nominal mapping of those attributes is adjusted
 	 */
 	public RemappedExampleSet(ExampleSet parentSet, ExampleSet mappingSet, boolean keepAdditional,
 			boolean transformMappings) {
@@ -118,13 +121,13 @@ public class RemappedExampleSet extends AbstractExampleSet {
 					AttributeRole role = a.next();
 					Attribute currentAttribute = role.getAttribute();
 					if (currentAttribute.isNominal()) {
-						NominalMapping mapping = null;
-						mapping = currentAttribute.getMapping();
 						Attribute oldMappingAttribute = clonedMappingSet.getAttributes().get(role.getAttribute().getName());
 						if (oldMappingAttribute != null && oldMappingAttribute.isNominal()) {
-							mapping = oldMappingAttribute.getMapping();
+							NominalMapping currentMapping = currentAttribute.getMapping();
+							NominalMapping overlayedMapping = oldMappingAttribute.getMapping();
+							currentAttribute.setMapping(overlayedMapping);
+							currentAttribute.addTransformation(new FullAttributeTransformationRemapping(currentMapping));
 						}
-						currentAttribute.addTransformation(new AttributeTransformationRemapping(mapping));
 					}
 				}
 			}

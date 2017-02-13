@@ -1,23 +1,24 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing.normalization;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -28,6 +29,7 @@ import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.ParameterService;
 
 
 /**
@@ -60,11 +62,11 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 		for (i = 0; i < newAttributes.length; i++) {
 			newAttributes[i] = oldAttributes[i];
 			if (oldAttributes[i].isNumerical()) {
-					newAttributes[i] = AttributeFactory.createAttribute(Ontology.REAL);
-					exampleSet.getExampleTable().addAttribute(newAttributes[i]);
-					attributes.addRegular(newAttributes[i]);
-				}
+				newAttributes[i] = AttributeFactory.createAttribute(Ontology.REAL);
+				exampleSet.getExampleTable().addAttribute(newAttributes[i]);
+				attributes.addRegular(newAttributes[i]);
 			}
+		}
 
 		// applying on data
 		applyOnData(exampleSet, oldAttributes, newAttributes);
@@ -124,5 +126,13 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 	@Override
 	protected boolean needsRemapping() {
 		return false;
+	}
+
+	@Override
+	protected boolean writesIntoExistingData() {
+		// this model does not write into the data but explodes inside a loop in standard mode
+		// because the number of attributes grows
+		return !Boolean
+				.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES));
 	}
 }
