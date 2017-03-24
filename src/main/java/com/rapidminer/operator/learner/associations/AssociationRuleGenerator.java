@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.associations;
 
 import java.util.Collection;
@@ -88,6 +88,8 @@ public class AssociationRuleGenerator extends Operator {
 		}
 		double theta = getParameterAsDouble(PARAMETER_GAIN_THETA);
 		double laplaceK = getParameterAsDouble(PARAMETER_LAPLACE_K);
+		int criterion = getParameterAsInt(PARAMETER_CRITERION);
+
 		FrequentItemSets sets = itemSetsInput.getData(FrequentItemSets.class);
 		AssociationRules rules = new AssociationRules();
 		HashMap<Collection<Item>, Integer> setFrequencyMap = new HashMap<Collection<Item>, Integer>();
@@ -111,7 +113,7 @@ public class AssociationRuleGenerator extends Operator {
 						int conclusionFrequency = setFrequencyMap.get(conclusion);
 
 						double value = getCriterionValue(totalFrequency, preconditionFrequency, conclusionFrequency,
-								numberOfTransactions, theta, laplaceK);
+								numberOfTransactions, theta, laplaceK, criterion);
 						if (value >= minValue) {
 							AssociationRule rule = new AssociationRule(premises, conclusion,
 									getSupport(totalFrequency, numberOfTransactions));
@@ -141,8 +143,7 @@ public class AssociationRuleGenerator extends Operator {
 	}
 
 	private double getCriterionValue(int totalFrequency, int preconditionFrequency, int conclusionFrequency,
-			int numberOfTransactions, double theta, double laplaceK) throws OperatorException {
-		int criterion = getParameterAsInt(PARAMETER_CRITERION);
+			int numberOfTransactions, double theta, double laplaceK, int criterion) {
 		switch (criterion) {
 			case LIFT:
 				return getLift(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions);

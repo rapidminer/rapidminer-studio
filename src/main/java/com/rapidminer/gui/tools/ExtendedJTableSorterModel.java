@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.tools;
 
 import java.awt.Point;
@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +35,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
@@ -118,9 +116,9 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 		}
 	}
 
-	private static final Comparator COMPARABLE_COMPARATOR = new ComparableComparator();
+	private static final Comparator<? extends Comparable<?>> COMPARABLE_COMPARATOR = new ComparableComparator<>();
 
-	private static final Comparator LEXICAL_COMPARATOR = new LexicalComparator();
+	private static final Comparator<?> LEXICAL_COMPARATOR = new LexicalComparator<>();
 
 	private transient Row[] viewToModel;
 	private int[] modelToView;
@@ -128,7 +126,7 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 	private JTableHeader tableHeader;
 	private transient MouseListener mouseListener = new MouseHandler();
 	private transient TableModelListener tableModelListener = new TableModelHandler();
-	private Map<Class, Comparator> columnComparators = new HashMap<Class, Comparator>();
+	private Map<Class<?>, Comparator<?>> columnComparators = new HashMap<Class<?>, Comparator<?>>();
 	private List<Directive> sortingColumns = new ArrayList<Directive>();
 
 	public ExtendedJTableSorterModel() {
@@ -182,7 +180,6 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 	public void setTableHeader(JTableHeader tableHeader) {
 		if (this.tableHeader != null) {
 			this.tableHeader.removeMouseListener(mouseListener);
-			TableCellRenderer defaultRenderer = this.tableHeader.getDefaultRenderer();
 		}
 		this.tableHeader = tableHeader;
 		if (this.tableHeader != null) {
@@ -232,7 +229,7 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 		sortingStatusChanged();
 	}
 
-	public void setColumnComparator(Class type, Comparator comparator) {
+	public void setColumnComparator(Class<?> type, Comparator<?> comparator) {
 		if (comparator == null) {
 			columnComparators.remove(type);
 		} else {
@@ -240,9 +237,10 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	protected Comparator getComparator(int column) {
-		Class columnType = tableModel.getColumnClass(column);
-		Comparator comparator = columnComparators.get(columnType);
+		Class<?> columnType = tableModel.getColumnClass(column);
+		Comparator<?> comparator = columnComparators.get(columnType);
 		if (comparator != null) {
 			return comparator;
 		}
@@ -326,7 +324,7 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 
 	// Helper classes
 
-	private class Row implements Comparable {
+	private class Row implements Comparable<Row> {
 
 		private int modelIndex;
 
@@ -336,12 +334,11 @@ public class ExtendedJTableSorterModel extends AbstractTableModel {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public int compareTo(Object o) {
+		public int compareTo(Row o) {
 			int row1 = modelIndex;
-			int row2 = ((Row) o).modelIndex;
+			int row2 = o.modelIndex;
 
-			for (Iterator it = sortingColumns.iterator(); it.hasNext();) {
-				Directive directive = (Directive) it.next();
+			for (Directive directive : sortingColumns) {
 				int column = directive.column;
 				Object o1 = tableModel.getValueAt(row1, column);
 				Object o2 = tableModel.getValueAt(row2, column);

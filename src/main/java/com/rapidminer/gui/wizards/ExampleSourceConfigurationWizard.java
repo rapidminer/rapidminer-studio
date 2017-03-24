@@ -1,36 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.wizards;
-
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Attributes;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.operator.io.ExampleSource;
-import com.rapidminer.parameter.Parameters;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.XMLException;
-import com.rapidminer.tools.att.AttributeDataSource;
-import com.rapidminer.tools.io.Encoding;
 
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
@@ -70,13 +56,28 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
+import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.operator.io.ExampleSource;
+import com.rapidminer.parameter.Parameters;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.att.AttributeDataSource;
+import com.rapidminer.tools.io.Encoding;
+
 
 /**
  * This class is the creator for wizard dialogs defining the configuration for {@link ExampleSource}
  * operators.
- * 
+ *
  * @author Ingo Mierswa
  */
+@SuppressWarnings("deprecation")
 public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizard {
 
 	private static final long serialVersionUID = 1261772342282270078L;

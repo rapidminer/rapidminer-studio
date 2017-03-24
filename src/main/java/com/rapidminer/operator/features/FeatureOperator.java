@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features;
 
 import java.io.File;
@@ -32,7 +32,6 @@ import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
 import com.rapidminer.gui.dialog.IndividualSelector;
-import com.rapidminer.gui.dialog.StopDialog;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -76,8 +75,6 @@ public abstract class FeatureOperator extends OperatorChain {
 
 	public static final String PARAMETER_NORMALIZE_WEIGHTS = "normalize_weights";
 
-	public static final String PARAMETER_SHOW_STOP_DIALOG = "show_stop_dialog";
-
 	public static final String PARAMETER_USER_RESULT_INDIVIDUAL_SELECTION = "user_result_individual_selection";
 
 	public static final String PARAMETER_SHOW_POPULATION_PLOTTER = "show_population_plotter";
@@ -98,8 +95,8 @@ public abstract class FeatureOperator extends OperatorChain {
 	private final OutputPort performanceOutput = getOutputPorts().createPort("performance");
 	private final OutputPort subprocessExampleOutput = getSubprocess(0).getInnerSources().createPort("example set");
 	private final InputPort subprocessPerformanceInput = getSubprocess(0).getInnerSinks().createPort("performance");
-	private final PortPairExtender throughExtender = new PortPairExtender("through", getInputPorts(), getSubprocess(0)
-			.getInnerSources());
+	private final PortPairExtender throughExtender = new PortPairExtender("through", getInputPorts(),
+			getSubprocess(0).getInnerSources());
 
 	private ExampleSet exampleSet;
 
@@ -119,8 +116,8 @@ public abstract class FeatureOperator extends OperatorChain {
 
 		throughExtender.start();
 		exampleSetInput.addPrecondition(new SimplePrecondition(exampleSetInput, new ExampleSetMetaData()));
-		subprocessPerformanceInput.addPrecondition(new SimplePrecondition(subprocessPerformanceInput, new MetaData(
-				PerformanceVector.class)));
+		subprocessPerformanceInput
+				.addPrecondition(new SimplePrecondition(subprocessPerformanceInput, new MetaData(PerformanceVector.class)));
 		getTransformer().addRule(new ExampleSetPassThroughRule(exampleSetInput, subprocessExampleOutput, SetRelation.EQUAL) {
 
 			@Override
@@ -325,25 +322,13 @@ public abstract class FeatureOperator extends OperatorChain {
 		List<PopulationOperator> preOps = getPreEvaluationPopulationOperators(es);
 		List<PopulationOperator> postOps = getPostEvaluationPopulationOperators(es);
 
-		// stop dialog
-		boolean userDialogOk = true;
-		StopDialog stopDialog = null;
-		if (getParameterAsBoolean(PARAMETER_SHOW_STOP_DIALOG)) {
-			stopDialog = new StopDialog("Stop Dialog",
-					"<html>Press the stop button to abort the search for best feature space.<br>"
-							+ "The best individual found so far is returned.</html>");
-			stopDialog.setVisible(true);
-		}
-
 		// create initial population
 		population = createInitialPopulation(es);
 		log("Initial population has " + population.getNumberOfIndividuals() + " individuals.");
 
 		// initial evaluation
-		int maxGenerations = getMaximumGenerations();
-		if (maxGenerations >= 0) {
-			getProgress().setTotal(
-					population.getNumberOfIndividuals() + getMaximumGenerations() * population.getNumberOfIndividuals());
+		if (getMaximumGenerations() >= 0) {
+			getProgress().setTotal(getMaximumGenerations() * population.getNumberOfIndividuals());
 		} else {
 			getProgress().setTotal(-1);
 		}
@@ -364,7 +349,7 @@ public abstract class FeatureOperator extends OperatorChain {
 		inApplyLoop();
 
 		// optimization loop
-		while (userDialogOk && !solutionGoodEnough(population) && !isMaximumReached()) {
+		while (!solutionGoodEnough(population) && !isMaximumReached()) {
 			population.nextGeneration();
 
 			applyOpList(preOps, population);
@@ -380,14 +365,7 @@ public abstract class FeatureOperator extends OperatorChain {
 				popPlotter.operate(population);
 			}
 
-			userDialogOk = stopDialog == null ? true : stopDialog.isStillRunning();
-
 			inApplyLoop();
-		}
-
-		if (stopDialog != null) {
-			stopDialog.setVisible(false);
-			stopDialog.dispose();
 		}
 
 		// optimization finished: Check must be made to ensure inner operators did not exite
@@ -563,12 +541,6 @@ public abstract class FeatureOperator extends OperatorChain {
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 
-		ParameterType type = new ParameterTypeBoolean(
-				PARAMETER_SHOW_STOP_DIALOG,
-				"Determines if a dialog with a button should be displayed which stops the run: the best individual is returned.",
-				false);
-		type.setExpert(false);
-		types.add(type);
 		types.add(new ParameterTypeBoolean(PARAMETER_USER_RESULT_INDIVIDUAL_SELECTION,
 				"Determines if the user wants to select the final result individual from the last population.", false));
 
@@ -576,17 +548,20 @@ public abstract class FeatureOperator extends OperatorChain {
 		types.add(new ParameterTypeBoolean(PARAMETER_SHOW_POPULATION_PLOTTER,
 				"Determines if the current population should be displayed in performance space.", false));
 
-		type = new ParameterTypeInt(PARAMETER_PLOT_GENERATIONS, "Update the population plotter in these generations.", 1,
-				Integer.MAX_VALUE, 10);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_SHOW_POPULATION_PLOTTER, false, true));
+		ParameterType type = new ParameterTypeInt(PARAMETER_PLOT_GENERATIONS,
+				"Update the population plotter in these generations.", 1, Integer.MAX_VALUE, 10);
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_SHOW_POPULATION_PLOTTER, false, true));
 		types.add(type);
 		type = new ParameterTypeBoolean(PARAMETER_CONSTRAINT_DRAW_RANGE,
 				"Determines if the draw range of the population plotter should be constrained between 0 and 1.", false);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_SHOW_POPULATION_PLOTTER, false, true));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_SHOW_POPULATION_PLOTTER, false, true));
 		types.add(type);
 		type = new ParameterTypeBoolean(PARAMETER_DRAW_DOMINATED_POINTS,
 				"Determines if only points which are not Pareto dominated should be painted.", true);
-		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_SHOW_POPULATION_PLOTTER, false, true));
+		type.registerDependencyCondition(
+				new BooleanParameterCondition(this, PARAMETER_SHOW_POPULATION_PLOTTER, false, true));
 		types.add(type);
 
 		types.add(new ParameterTypeFile(PARAMETER_POPULATION_CRITERIA_DATA_FILE,

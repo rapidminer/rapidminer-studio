@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.igss;
 
 import com.rapidminer.example.Example;
@@ -83,14 +83,13 @@ public class IGSSResult extends ResultObjectAdapter {
 	}
 
 	/** Calculates the diversity in the predictions of the results for the given example set. */
-	public static double calculateDiversity(ExampleSet exampleSet, LinkedList theResults) {
+	public static double calculateDiversity(ExampleSet exampleSet, LinkedList<Result> theResults) {
 		Iterator<Example> reader = exampleSet.iterator();
 		int[][] predictionMatrix = new int[exampleSet.size()][2];
 		for (int i = 0; reader.hasNext(); i++) { // all examples
 			Example e = reader.next();
-			Iterator it = theResults.iterator();
-			while (it.hasNext()) { // all results
-				Hypothesis hypo = ((Result) it.next()).getHypothesis(); // get hypothesis
+			for (Result res : theResults) {// all results
+				Hypothesis hypo = res.getHypothesis(); // get hypothesis
 				if (hypo.applicable(e)) {
 					predictionMatrix[i][hypo.getPrediction()]++;
 				} else {
@@ -117,11 +116,11 @@ public class IGSSResult extends ResultObjectAdapter {
 	public String toString() {
 		LinkedList<Result> includedResultsForDiversityCalculation = new LinkedList<Result>();
 		StringBuffer result = new StringBuffer("(Rule, Utility)" + Tools.getLineSeparator());
-		Iterator it = this.results.iterator();
+		Iterator<Result> it = this.results.iterator();
 		double cumulativeWeight = 0.0d;
 		for (int i = 1; it.hasNext(); i++) {
 			result.append(i + ") ");
-			Result r = (Result) it.next();
+			Result r = it.next();
 			includedResultsForDiversityCalculation.addLast(r);
 			cumulativeWeight = cumulativeWeight + r.getTotalWeight();
 			result.append(r.getHypothesis().toString() + ", " + r.getUtility() + Tools.getLineSeparator());

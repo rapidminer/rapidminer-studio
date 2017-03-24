@@ -1,36 +1,36 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example;
-
-import com.rapidminer.tools.LogService;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
+import com.rapidminer.tools.LogService;
+
 
 /**
  * This is the abstract superclass for all attribute set implementations. It is sufficient for
  * subclasses to overwrite the method {@link Attributes#allAttributeRoles()} and the corresponding
  * add and remove methods.
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractAttributes implements Attributes {
@@ -42,7 +42,7 @@ public abstract class AbstractAttributes implements Attributes {
 
 	@Override
 	public Iterator<Attribute> iterator() {
-		return new AttributeIterator(allAttributeRoles(), REGULAR);
+		return new RegularAttributeIterator(allAttributeRoles());
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public abstract class AbstractAttributes implements Attributes {
 		return calculateSize(specialAttributes());
 	}
 
-	private int calculateSize(Iterator i) {
+	private int calculateSize(Iterator<?> i) {
 		int counter = 0;
 		while (i.hasNext()) {
 			i.next();
@@ -183,7 +183,8 @@ public abstract class AbstractAttributes implements Attributes {
 			if (!role.isSpecial()) {
 				return role.getAttribute();
 			} else {
-				// LogService.getGlobal().logWarning("No regular attribute with name '"+name+"' found, however, there is a special attribute with the same name.");
+				// LogService.getGlobal().logWarning("No regular attribute with name '"+name+"'
+				// found, however, there is a special attribute with the same name.");
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.example.AbstractAttributes.no_regular_attribute_found", name);
 				return null;

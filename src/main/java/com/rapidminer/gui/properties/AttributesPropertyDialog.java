@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.properties;
 
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -60,13 +60,13 @@ public class AttributesPropertyDialog extends PropertyDialog {
 
 	private final FilterTextField selectedItemSearchField;
 
-	private final FilterableListModel itemListModel;
+	private final FilterableListModel<String> itemListModel;
 
-	private final FilterableListModel selectedItemListModel;
+	private final FilterableListModel<String> selectedItemListModel;
 
-	private final JList itemList;
+	private final JList<String> itemList;
 
-	private final JList selectedItemList;
+	private final JList<String> selectedItemList;
 
 	private final Action selectAttributesAction = new ResourceAction(true, "attributes_select") {
 
@@ -112,8 +112,8 @@ public class AttributesPropertyDialog extends PropertyDialog {
 		items = new ArrayList<>();
 		selectedItems = new ArrayList<>();
 
-		itemListModel = new FilterableListModel();
-		selectedItemListModel = new FilterableListModel();
+		itemListModel = new FilterableListModel<>();
+		selectedItemListModel = new FilterableListModel<>();
 		for (String item : type.getAttributeNames()) {
 			if (!preselectedItems.contains(item)) {
 				items.add(item);
@@ -155,7 +155,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 		c.weightx = 0;
 		itemSearchFieldPanel.add(itemSearchFieldClearButton, c);
 
-		itemList = new JList(itemListModel);
+		itemList = new JList<>(itemListModel);
 		itemList.addMouseListener(new MouseListener() {
 
 			@Override
@@ -247,7 +247,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 		c.weightx = 0;
 		selectedItemSearchFieldPanel.add(selectedItemSearchFieldClearButton, c);
 
-		selectedItemList = new JList(selectedItemListModel);
+		selectedItemList = new JList<>(selectedItemListModel);
 		selectedItemList.addMouseListener(new MouseListener() {
 
 			@Override

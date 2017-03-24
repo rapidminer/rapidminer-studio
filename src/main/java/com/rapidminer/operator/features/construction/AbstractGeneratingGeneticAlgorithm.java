@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.construction;
 
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 public abstract class AbstractGeneratingGeneticAlgorithm extends ExampleSetBasedFeatureOperator {
 
 	public static final String[] SELECTION_SCHEMES = { "uniform", "cut", "roulette wheel", "stochastic universal sampling",
-		"Boltzmann", "rank", "tournament", "non dominated sorting" };
+			"Boltzmann", "rank", "tournament", "non dominated sorting" };
 
 	public static final int UNIFORM_SELECTION = 0;
 
@@ -201,8 +201,8 @@ public abstract class AbstractGeneratingGeneticAlgorithm extends ExampleSetBased
 		// selection
 		this.numberOfIndividuals = getParameterAsInt(PARAMETER_POPULATION_SIZE);
 		this.maxGen = getParameterAsInt(PARAMETER_MAXIMUM_NUMBER_OF_GENERATIONS);
-		this.generationsWithoutImproval = getParameterAsBoolean(PARAMETER_USE_EARLY_STOPPING) ? getParameterAsInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL)
-				: maxGen;
+		this.generationsWithoutImproval = getParameterAsBoolean(PARAMETER_USE_EARLY_STOPPING)
+				? getParameterAsInt(PARAMETER_GENERATIONS_WITHOUT_IMPROVAL) : maxGen;
 		boolean keepBest = getParameterAsBoolean(PARAMETER_KEEP_BEST_INDIVIDUAL);
 		boolean dynamicSelection = getParameterAsBoolean(PARAMETER_DYNAMIC_SELECTION_PRESSURE);
 		postOp.add(new ExampleSetBasedTournamentSelection(numberOfIndividuals,
@@ -228,10 +228,12 @@ public abstract class AbstractGeneratingGeneticAlgorithm extends ExampleSetBased
 	@Override
 	public ExampleSetBasedPopulation createInitialPopulation(ExampleSet es) throws UndefinedParameterError {
 		ExampleSetBasedPopulation initP = new ExampleSetBasedPopulation();
-		while (initP.getNumberOfIndividuals() < getParameterAsInt(PARAMETER_POPULATION_SIZE)) {
+		int populationSize = getParameterAsInt(PARAMETER_POPULATION_SIZE);
+		double p_initialize = getParameterAsDouble(PARAMETER_P_INITIALIZE);
+		while (initP.getNumberOfIndividuals() < populationSize) {
 			AttributeWeightedExampleSet nes = new AttributeWeightedExampleSet(es, null);
 			for (Attribute attribute : nes.getAttributes()) {
-				if (getRandom().nextDouble() > getParameterAsDouble(PARAMETER_P_INITIALIZE)) {
+				if (getRandom().nextDouble() > p_initialize) {
 					nes.flipAttributeUsed(attribute);
 				}
 			}
@@ -316,18 +318,15 @@ public abstract class AbstractGeneratingGeneticAlgorithm extends ExampleSetBased
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_EARLY_STOPPING, true, true));
 		types.add(type);
 
-		types.add(new ParameterTypeDouble(
-				PARAMETER_TOURNAMENT_SIZE,
+		types.add(new ParameterTypeDouble(PARAMETER_TOURNAMENT_SIZE,
 				"The fraction of the current population which should be used as tournament members (only tournament selection).",
 				0.0d, 1.0d, 0.25d));
-		types.add(new ParameterTypeDouble(PARAMETER_START_TEMPERATURE,
-				"The scaling temperature (only Boltzmann selection).", 0.0d, Double.POSITIVE_INFINITY, 1.0d));
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_DYNAMIC_SELECTION_PRESSURE,
+		types.add(new ParameterTypeDouble(PARAMETER_START_TEMPERATURE, "The scaling temperature (only Boltzmann selection).",
+				0.0d, Double.POSITIVE_INFINITY, 1.0d));
+		types.add(new ParameterTypeBoolean(PARAMETER_DYNAMIC_SELECTION_PRESSURE,
 				"If set to true the selection pressure is increased to maximum during the complete optimization run (only Boltzmann and tournament selection).",
 				true));
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_KEEP_BEST_INDIVIDUAL,
+		types.add(new ParameterTypeBoolean(PARAMETER_KEEP_BEST_INDIVIDUAL,
 				"If set to true, the best individual of each generations is guaranteed to be selected for the next generation (elitist selection).",
 				false));
 

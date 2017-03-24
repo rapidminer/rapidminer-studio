@@ -1,22 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.parameter.ParameterType;
@@ -25,11 +30,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -40,14 +40,14 @@ import java.util.Set;
  * the IOObject which was added at last gets the number one, the object added directly before get
  * number two and so on.
  * </p>
- * 
+ *
  * <p>
  * The user can specify with the parameter <code>delete_others</code> what will happen to the
  * non-selected input objects of the specified type: if this parameter is set to true, all other
  * IOObjects of the specified type will be removed by this operator. Otherwise (default), the
  * objects will all be kept and the selected objects will just be brought into front.
  * </p>
- * 
+ *
  * @author Thomas Harzer, Ingo Mierswa
  */
 public class IOSelectOperator extends Operator {
@@ -66,14 +66,16 @@ public class IOSelectOperator extends Operator {
 
 	@Override
 	public void doWork() {
-		getLogger()
-				.info("IOSelector is deprecated and does nothing. It is only used while importing processes from earlier versions. After that, IOSelectors can be deleted.");
+		getLogger().info(
+				"IOSelector is deprecated and does nothing. It is only used while importing processes from earlier versions. After that, IOSelectors can be deleted.");
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected LinkedList<OutputPort> preAutoWire(LinkedList<OutputPort> readyOutputs) throws OperatorException {
 		getLogger().info("Simulating IOSelectOperator with old stack: " + readyOutputs);
 		Class<? extends IOObject> clazz = getSelectedClass();
+		boolean deleteOthers = getParameterAsBoolean(PARAMETER_DELETE_OTHERS);
 		int number = getParameterAsInt(PARAMETER_SELECT_WHICH);
 		int hits = 0;
 		OutputPort myPort = null;
@@ -84,12 +86,12 @@ public class IOSelectOperator extends Operator {
 			if (!port.shouldAutoConnect()) {
 				continue;
 			}
-			if ((port.getMetaData() != null) && clazz.isAssignableFrom(port.getMetaData().getObjectClass())) {
+			if (port.getMetaData() != null && clazz.isAssignableFrom(port.getMetaData().getObjectClass())) {
 				hits++;
 				if (hits == number) {
 					myPort = port;
 					i.remove();
-				} else if (getParameterAsBoolean(PARAMETER_DELETE_OTHERS)) {
+				} else if (deleteOthers) {
 					count++;
 					i.remove();
 				}

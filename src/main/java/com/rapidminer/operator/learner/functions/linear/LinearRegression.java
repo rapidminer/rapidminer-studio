@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.functions.linear;
 
 import java.util.Iterator;
@@ -675,20 +675,22 @@ public class LinearRegression extends AbstractLearner {
 		Matrix independent = null;
 		Matrix dependent = null;
 		double[] weights = null;
+		double[] averages = new double[usedAttributes.length];
+		for (int i = 0; i < usedAttributes.length; i++) {
+			averages[i] = exampleSet.getStatistics(usedAttributes[i], Statistics.AVERAGE);
+		}
 		if (usedAttributes.length > 0) {
 			independent = new Matrix(exampleSet.size(), usedAttributes.length);
 			dependent = new Matrix(exampleSet.size(), 1);
 			int exampleIndex = 0;
-			Iterator<Example> i = exampleSet.iterator();
 			weights = new double[exampleSet.size()];
 			Attribute weightAttribute = exampleSet.getAttributes().getWeight();
-			while (i.hasNext()) {
-				Example example = i.next();
+			for (Example example : exampleSet) {
 				int attributeIndex = 0;
 				dependent.set(exampleIndex, 0, example.getLabel());
+				checkForStop();
 				for (Attribute attribute : usedAttributes) {
-					checkForStop();
-					double value = example.getValue(attribute) - exampleSet.getStatistics(attribute, Statistics.AVERAGE);
+					double value = example.getValue(attribute) - averages[attributeIndex];
 					independent.set(exampleIndex, attributeIndex, value);
 					attributeIndex++;
 				}
@@ -711,7 +713,7 @@ public class LinearRegression extends AbstractLearner {
 
 		for (int i = 0; i < usedAttributes.length; i++) {
 			coefficients[coefficients.length - 1] -= coefficients[i]
-					* exampleSet.getStatistics(usedAttributes[i], Statistics.AVERAGE);
+					* averages[i];
 		}
 
 		return coefficients;

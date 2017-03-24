@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.nio.model;
 
 import java.io.File;
@@ -28,7 +28,6 @@ import java.util.List;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorDescription;
@@ -36,7 +35,6 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.io.AbstractDataReader.AttributeColumn;
 import com.rapidminer.operator.io.AbstractExampleSource;
-import com.rapidminer.operator.io.ExampleSource;
 import com.rapidminer.operator.nio.file.FileInputPortHandler;
 import com.rapidminer.operator.nio.file.FileObject;
 import com.rapidminer.operator.ports.InputPort;
@@ -59,6 +57,7 @@ import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
 
 
 /**
@@ -300,16 +299,14 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 						new ParameterTypeCategory(PARAMETER_COLUMN_VALUE_TYPE, "Indicates the value type of an attribute",
 								Ontology.VALUE_TYPE_NAMES, Ontology.NOMINAL), //
 						new ParameterTypeStringCategory(PARAMETER_COLUMN_ROLE, "Indicates the role of an attribute",
-								Attributes.KNOWN_ATTRIBUTE_TYPES, AttributeColumn.REGULAR)), true);
+								Attributes.KNOWN_ATTRIBUTE_TYPES, AttributeColumn.REGULAR)),
+				true);
 
 		types.add(type);
 		types.add(new ParameterTypeBoolean(PARAMETER_ERROR_TOLERANT,
 				"Values which does not match to the specified value typed are considered as missings.", true, true));
 
-		types.add(new ParameterTypeCategory(ExampleSource.PARAMETER_DATAMANAGEMENT,
-				"Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES,
-				DataRowFactory.TYPE_DOUBLE_ARRAY, true));
-
+		DataManagementParameterHelper.addParameterTypes(types, this);
 		return types;
 	}
 

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.discretization;
 
 import java.util.ArrayList;
@@ -173,9 +173,8 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 		int k1 = 0; // Number of different class labels in class 1.
 		int k2 = 0; // Number of different class labels in class 2.
 
-		Iterator it1 = candidateSplitpoints.iterator();
-		while (it1.hasNext()) { // Test every value as splitpoint
-			double currentSplitpoint = ((Double) it1.next()).doubleValue();
+		for (double currentSplitpoint : candidateSplitpoints) {
+			// Test every value as splitpoint
 			// Initialize.
 			int s1 = 0; // Instances in partition 1.
 			int s2 = 0; // Instances in partition 2.
@@ -187,9 +186,7 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 																			// class 2.
 
 			// Determine the class of each instance and the corresponding label distribution.
-			Iterator it2 = truncatedExamples.iterator();
-			while (it2.hasNext()) {
-				double[] attributeLabelPair = (double[]) it2.next();
+			for (double[] attributeLabelPair : truncatedExamples) {
 				double valueToCompare = attributeLabelPair[0];
 				int labelIndex = (int) attributeLabelPair[1];
 				if (valueToCompare <= currentSplitpoint) {
@@ -273,7 +270,7 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 	 * LinkedList partition consist of double arrays of size 2. array[0]=value of the current
 	 * attribute, array[1]=corresponding label value.
 	 */
-	private ArrayList getSplitpoints(LinkedList<double[]> startPartition, Attribute label) {
+	private ArrayList<Double> getSplitpoints(LinkedList<double[]> startPartition, Attribute label) {
 		LinkedList<LinkedList<double[]>> border = new LinkedList<LinkedList<double[]>>();
 		ArrayList<Double> result = new ArrayList<Double>();
 		border.addLast(startPartition);
@@ -328,11 +325,11 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 					attributeLabelPair[1] = example.getValue(label);
 					startPartition.addLast(attributeLabelPair);
 				}
-				ArrayList splitpointsOfAttribute = getSplitpoints(startPartition, label);
-				Iterator it = splitpointsOfAttribute.iterator();
+				ArrayList<Double> splitpointsOfAttribute = getSplitpoints(startPartition, label);
+				Iterator<Double> it = splitpointsOfAttribute.iterator();
 				ranges[a] = new double[splitpointsOfAttribute.size() + 1];
 				for (int i = 0; it.hasNext(); i++) {
-					ranges[a][i] = ((Double) it.next()).doubleValue();
+					ranges[a][i] = it.next();
 				}
 				ranges[a][ranges[a].length - 1] = exampleSet.getStatistics(attribute, Statistics.MAXIMUM);
 				Arrays.sort(ranges[a]);

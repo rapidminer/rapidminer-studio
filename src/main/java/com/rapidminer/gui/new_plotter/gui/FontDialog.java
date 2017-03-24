@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui;
 
 import java.awt.BorderLayout;
@@ -83,15 +83,15 @@ public class FontDialog extends ButtonDialog {
 	private JLabel styleLabel;
 	private JLabel sizeLabel;
 
-	private JList fontList;
+	private JList<String> fontList;
 
 	private JScrollPane fontScrollPane;
 
-	private JList styleList;
+	private JList<String> styleList;
 
 	private JScrollPane styleScrollPane;
 
-	private JList sizeList;
+	private JList<String> sizeList;
 
 	private JScrollPane sizeScrollPane;
 
@@ -179,8 +179,8 @@ public class FontDialog extends ButtonDialog {
 				fontPanel.add(sizeLabel, itemConstraint);
 
 				// create font list
-				fontList = new JList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(
-						Locale.getDefault()));
+				fontList = new JList<>(
+						GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(Locale.getDefault()));
 				fontLabel.setLabelFor(fontList);
 				fontList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 				fontList.setSelectedValue(font.getFamily(Locale.getDefault()), true);
@@ -208,7 +208,7 @@ public class FontDialog extends ButtonDialog {
 				fontPanel.add(fontScrollPane, itemConstraint);
 
 				// create style list
-				styleList = new JList(new javax.swing.AbstractListModel() {
+				styleList = new JList<String>(new javax.swing.AbstractListModel<String>() {
 
 					private static final long serialVersionUID = 1L;
 					String[] strings = { PLAIN, BOLD, ITALIC, BOLD_ITALIC };
@@ -219,7 +219,7 @@ public class FontDialog extends ButtonDialog {
 					}
 
 					@Override
-					public Object getElementAt(int i) {
+					public String getElementAt(int i) {
 						return strings[i];
 					}
 				});
@@ -251,7 +251,7 @@ public class FontDialog extends ButtonDialog {
 				fontPanel.add(styleScrollPane, itemConstraint);
 
 				// create size list
-				sizeList = new JList(new AbstractListModel() {
+				sizeList = new JList<String>(new AbstractListModel<String>() {
 
 					private static final long serialVersionUID = 1L;
 					String[] strings = { "8", "10", "11", "12", "14", "16", "20", "24", "28", "36", "48", "72", "96" };
@@ -262,7 +262,7 @@ public class FontDialog extends ButtonDialog {
 					}
 
 					@Override
-					public Object getElementAt(int i) {
+					public String getElementAt(int i) {
 						return strings[i];
 					}
 				});
@@ -357,7 +357,7 @@ public class FontDialog extends ButtonDialog {
 		int distance = Integer.MAX_VALUE;
 		int nearestIndex = -1;
 		for (int i = 0; i < sizeListSize; ++i) {
-			int value = Integer.parseInt((String) sizeList.getModel().getElementAt(i));
+			int value = Integer.parseInt(sizeList.getModel().getElementAt(i));
 			int d = Math.abs(value - size);
 			if (d < distance) {
 				nearestIndex = i;
@@ -409,7 +409,7 @@ public class FontDialog extends ButtonDialog {
 	}
 
 	private void fontListValueChanged(ListSelectionEvent e) {
-		font = new Font((String) fontList.getSelectedValue(), font.getStyle(), font.getSize());
+		font = new Font(fontList.getSelectedValue(), font.getStyle(), font.getSize());
 
 		previewLabel.setFont(font);
 	}
@@ -417,7 +417,7 @@ public class FontDialog extends ButtonDialog {
 	private void styleListValueChanged(ListSelectionEvent e) {
 
 		int style = -1;
-		String selectedStyle = (String) styleList.getSelectedValue();
+		String selectedStyle = styleList.getSelectedValue();
 		if (selectedStyle == PLAIN) {
 			style = Font.PLAIN;
 		}
@@ -436,7 +436,7 @@ public class FontDialog extends ButtonDialog {
 	}
 
 	private void sizeListValueChanged(ListSelectionEvent e) {
-		int size = Integer.parseInt((String) sizeList.getSelectedValue());
+		int size = Integer.parseInt(sizeList.getSelectedValue());
 
 		font = new Font(font.getFamily(), font.getStyle(), size);
 

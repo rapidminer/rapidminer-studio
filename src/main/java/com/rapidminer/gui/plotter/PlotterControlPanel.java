@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter;
 
 import java.awt.Component;
@@ -165,7 +165,7 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 		}
 
 		// 3b. Setup axes selection panel (main)
-		final List<JComboBox> axisCombos = new LinkedList<>();
+		final List<JComboBox<String>> axisCombos = new LinkedList<>();
 		for (int axisIndex = 0; axisIndex < plotter.getNumberOfAxes(); axisIndex++) {
 			toolTip = I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.select_column_axis.tip",
 					plotter.getAxisName(axisIndex));
@@ -173,19 +173,11 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 			label.setToolTipText(toolTip);
 			this.add(label, c);
 			final int finalAxisIndex = axisIndex;
-			final ListeningJComboBox axisCombo = new ListeningJComboBox(PlotterAdapter.PARAMETER_SUFFIX_AXIS
-					+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex)), 200) {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void settingChanged(String generalKey, String specificKey, String value) {
-					super.settingChanged(generalKey, specificKey, value);
-				}
-			};
+			final ListeningJComboBox<String> axisCombo = new ListeningJComboBox<String>(PlotterAdapter.PARAMETER_SUFFIX_AXIS
+					+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex)), 200);
 			axisCombo.setToolTipText(toolTip);
-			axisCombo.setPreferredSize(new Dimension(axisCombo.getPreferredSize().width,
-					PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+			axisCombo.setPreferredSize(
+					new Dimension(axisCombo.getPreferredSize().width, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 			axisCombo.putClientProperty(RapidLookTools.PROPERTY_INPUT_BACKGROUND_DARK, true);
 			axisCombo.addItem(I18N.getMessage(I18N.getGUIBundle(), "gui.label.plotter_panel.no_selection.label"));
 			for (int j = 0; j < dataTable.getNumberOfColumns(); j++) {
@@ -201,10 +193,7 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 							+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex));
 					String key = axisCombo.getSelectedItem().toString();
 
-					plotterSettings.setParameterAsString(
-							PlotterAdapter.PARAMETER_SUFFIX_AXIS
-									+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex)), axisCombo
-									.getSelectedItem().toString());
+					plotterSettings.setParameterAsString(value, key);
 				}
 			});
 
@@ -253,19 +242,19 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 
 		switch (plotter.getValuePlotSelectionType()) {
 			case Plotter.MULTIPLE_SELECTION:
-				final ExtendedListModel model = new ExtendedListModel();
+				final ExtendedListModel<String> model = new ExtendedListModel<>();
 				for (String name : dataTable.getColumnNames()) {
 					model.addElement(name,
 							I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.select_column_name", name));
 				}
-				final JList plotList = new ExtendedJList(model, 200);
+				final JList<String> plotList = new ExtendedJList<>(model, 200);
 				ListeningListSelectionModel selectionModel = new ListeningListSelectionModel(
 						PlotterAdapter.PARAMETER_PLOT_COLUMNS, plotList);
 				changeListenerElements.add(selectionModel);
 				plotList.setSelectionModel(selectionModel);
 				plotList.setToolTipText(toolTip);
 
-				plotList.setCellRenderer(new LineStyleCellRenderer(plotter));
+				plotList.setCellRenderer(new LineStyleCellRenderer<>(plotter));
 
 				plotList.addListSelectionListener(new ListSelectionListener() {
 
@@ -295,10 +284,11 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 
 				break;
 			case Plotter.SINGLE_SELECTION:
-				final ListeningJComboBox plotCombo = new ListeningJComboBox(PlotterAdapter.PARAMETER_PLOT_COLUMN, 200);
+				final ListeningJComboBox<String> plotCombo = new ListeningJComboBox<>(PlotterAdapter.PARAMETER_PLOT_COLUMN,
+						200);
 				plotCombo.setToolTipText(toolTip);
-				plotCombo.setPreferredSize(new Dimension(plotCombo.getPreferredSize().width,
-						PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+				plotCombo.setPreferredSize(
+						new Dimension(plotCombo.getPreferredSize().width, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 				plotCombo.putClientProperty(RapidLookTools.PROPERTY_INPUT_BACKGROUND_DARK, true);
 				plotCombo.addItem(I18N.getMessage(I18N.getGUIBundle(), "gui.label.plotter_panel.no_selection.label"));
 

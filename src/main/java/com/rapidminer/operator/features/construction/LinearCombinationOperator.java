@@ -1,22 +1,24 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.construction;
+
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -32,16 +34,13 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 /**
  * <p>
  * This operator applies a linear combination for each vector of the input ExampleSet, i.e. it
  * creates a new feature containing the sum of all numerical values of each row.
  * </p>
- * 
+ *
  * @author Thomas Harzer, Ingo Mierswa, Sebastian Land
  */
 public class LinearCombinationOperator extends AbstractFeatureConstruction {
@@ -70,10 +69,8 @@ public class LinearCombinationOperator extends AbstractFeatureConstruction {
 		exampleSet.getExampleTable().addAttribute(newAttribute);
 		exampleSet.getAttributes().addRegular(newAttribute);
 
-		Iterator i = exampleSet.iterator();
 		// go through the object attributes and sum them up
-		while (i.hasNext()) {
-			Example example = (Example) i.next();
+		for (Example example : exampleSet) {
 			double valueSum = 0.0d;
 			for (Attribute attribute : example.getAttributes()) {
 				if (!attribute.equals(newAttribute) && attribute.isNumerical()) {

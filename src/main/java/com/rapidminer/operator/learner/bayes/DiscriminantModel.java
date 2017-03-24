@@ -1,24 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.bayes;
-
-import Jama.Matrix;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -28,10 +26,12 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.SimplePredictionModel;
 import com.rapidminer.tools.Tools;
 
+import Jama.Matrix;
+
 
 /**
  * This is the model for discriminant analysis based learning schemes.
- * 
+ *
  * @author Sebastian Land
  */
 public class DiscriminantModel extends SimplePredictionModel {
@@ -82,8 +82,7 @@ public class DiscriminantModel extends SimplePredictionModel {
 		double[] labelFunction = new double[labels.length];
 		for (int labelIndex = 0; labelIndex < labels.length; labelIndex++) {
 			labelFunction[labelIndex] = xVector.times(inverseCovariances[labelIndex])
-					.times(meanVectors[labelIndex].transpose()).get(0, 0)
-					+ constClassValues[labelIndex];
+					.times(meanVectors[labelIndex].transpose()).get(0, 0) + constClassValues[labelIndex];
 
 		}
 		double maximalValue = Double.NEGATIVE_INFINITY;
@@ -99,9 +98,9 @@ public class DiscriminantModel extends SimplePredictionModel {
 
 	@Override
 	public String getName() {
-		if (alpha == 0d) {
+		if (alpha == QuadraticDiscriminantAnalysis.QDA_ALPHA) {
 			return "Quadratic Discriminant Model";
-		} else if (alpha == 1d) {
+		} else if (alpha == LinearDiscriminantAnalysis.LDA_ALPHA) {
 			return "Linear Discriminant Model";
 		} else {
 			return "Regularized Discriminant Model";

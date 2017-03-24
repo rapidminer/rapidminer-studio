@@ -1,30 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui.dialog;
-
-import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
-import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -57,6 +49,15 @@ import javax.swing.WindowConstants;
 
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
+
+import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
+import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
 
 
 /**
@@ -95,7 +96,7 @@ public class AddParallelLineDialog extends JDialog {
 	 * the {@link JComboBox} where the {@link RangeAxisConfig} will be selected if horizontal line
 	 * is selected
 	 */
-	private JComboBox rangeAxisSelectionCombobox;
+	private JComboBox<RangeAxisConfig> rangeAxisSelectionCombobox;
 
 	/** this button modifies the line */
 	private JButton modifyLineButton;
@@ -121,6 +122,7 @@ public class AddParallelLineDialog extends JDialog {
 	 * Creates a new {@link AddParallelLineDialog}.
 	 */
 	public AddParallelLineDialog() {
+		super(ApplicationFrame.getApplicationFrame());
 		x = 1.0;
 		y = 1.0;
 
@@ -184,9 +186,9 @@ public class AddParallelLineDialog extends JDialog {
 		gbc.weightx = 1;
 		gbc.gridwidth = 2;
 		gbc.anchor = GridBagConstraints.CENTER;
-		rangeAxisSelectionCombobox = new JComboBox();
-		rangeAxisSelectionCombobox.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.action.add_parallel_line.range_axis_combobox.tip"));
+		rangeAxisSelectionCombobox = new JComboBox<>();
+		rangeAxisSelectionCombobox.setToolTipText(
+				I18N.getMessage(I18N.getGUIBundle(), "gui.action.add_parallel_line.range_axis_combobox.tip"));
 		rangeAxisSelectionCombobox.addActionListener(new ActionListener() {
 
 			@Override
@@ -327,7 +329,7 @@ public class AddParallelLineDialog extends JDialog {
 		// misc settings
 		this.setMinimumSize(new Dimension(300, 250));
 		// center dialog
-		this.setLocationRelativeTo(null);
+		this.setLocationRelativeTo(getOwner());
 		this.setTitle(I18N.getMessage(I18N.getGUIBundle(), "gui.action.add_parallel_line.title.label"));
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.setModal(true);
@@ -401,7 +403,7 @@ public class AddParallelLineDialog extends JDialog {
 		for (RangeAxisConfig config : this.plotConfig.getRangeAxisConfigs()) {
 			rangeConfigsVector.add(config);
 		}
-		rangeAxisSelectionCombobox.setModel(new DefaultComboBoxModel(rangeConfigsVector));
+		rangeAxisSelectionCombobox.setModel(new DefaultComboBoxModel<>(rangeConfigsVector));
 
 		// reselect the previously selected RangeAxisConfig (if it is still there)
 		if (selectedItem != null) {

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.condition;
 
 import com.rapidminer.operator.DefaultIODescription;
@@ -41,9 +41,9 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 	 * The array of classes which must be delivered by the inner chain of operators described by
 	 * this InnerOpDesc object.
 	 */
-	private final Class[] mustDeliver;
+	private final Class<?>[] mustDeliver;
 
-	private final Class[] willGet;
+	private final Class<?>[] willGet;
 
 	private boolean allowEmptyChains = false;
 
@@ -53,7 +53,7 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 	 * operator must provide all classes in the given <code>mustDeliver</code> class array. Empty
 	 * chains are not allowed.
 	 */
-	public LastInnerOperatorCondition(Class[] mustDeliver) {
+	public LastInnerOperatorCondition(Class<?>[] mustDeliver) {
 		this(null, mustDeliver);
 	}
 
@@ -63,7 +63,7 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 	 * able to handle the output of the predecessor. The last operator must provide all classes in
 	 * the given <code>mustDeliver</code> class array. Empty chains are not allowed.
 	 */
-	public LastInnerOperatorCondition(Class[] willGet, Class[] mustDeliver) {
+	public LastInnerOperatorCondition(Class<?>[] willGet, Class<?>[] mustDeliver) {
 		this(willGet, mustDeliver, false);
 	}
 
@@ -73,7 +73,7 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 	 * able to handle the output of the predecessor. The last operator must provide all classes in
 	 * the given <code>mustDeliver</code> class array.
 	 */
-	public LastInnerOperatorCondition(Class[] willGet, Class[] mustDeliver, boolean allowEmptyChains) {
+	public LastInnerOperatorCondition(Class<?>[] willGet, Class<?>[] mustDeliver, boolean allowEmptyChains) {
 		this.willGet = willGet;
 		this.mustDeliver = mustDeliver;
 		this.allowEmptyChains = allowEmptyChains;
@@ -81,14 +81,14 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 
 	/** */
 	@Override
-	public Class[] checkIO(OperatorChain chain, Class[] input) throws IllegalInputException,
-			WrongNumberOfInnerOperatorsException {
-		if ((!allowEmptyChains) && (chain.getNumberOfOperators() == 0)) {
+	public Class<?>[] checkIO(OperatorChain chain, Class<?>[] input)
+			throws IllegalInputException, WrongNumberOfInnerOperatorsException {
+		if (!allowEmptyChains && chain.getNumberOfOperators() == 0) {
 			throw new WrongNumberOfInnerOperatorsException(chain, chain.getMinNumberOfInnerOperators(),
 					chain.getMaxNumberOfInnerOperators(), 0);
 		}
 
-		Class[] output = input;
+		Class<?>[] output = input;
 		if (willGet != null) {
 			output = new Class[input.length + willGet.length];
 			System.arraycopy(input, 0, output, 0, input.length);

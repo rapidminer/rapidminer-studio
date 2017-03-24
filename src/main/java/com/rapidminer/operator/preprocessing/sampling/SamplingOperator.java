@@ -1,22 +1,26 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.sampling;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -55,19 +59,15 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-
 
 /**
  * This operator will sample the given example set without replacement. Three modes are available:
  * Absolute returning a determined number, relative returning a determined fraction of the input set
  * and probability, that will return each example with the same probability.
- * 
+ *
  * The operator offers the possibility to specify sampling parameter per class to re-balance the
  * data.
- * 
+ *
  * @author Sebastian Land, Ingo Mierswa, Tobias Malbrecht
  */
 public class SamplingOperator extends AbstractSamplingOperator {
@@ -103,9 +103,8 @@ public class SamplingOperator extends AbstractSamplingOperator {
 
 		ExampleSetPrecondition needNominalLabelCondition = new ExampleSetPrecondition(getExampleSetInputPort(),
 				Attributes.LABEL_NAME, Ontology.NOMINAL);
-		getExampleSetInputPort().addPrecondition(
-				new ParameterConditionedPrecondition(getExampleSetInputPort(), needNominalLabelCondition,
-						getParameterHandler(), PARAMETER_BALANCE_DATA, Boolean.toString(true)));
+		getExampleSetInputPort().addPrecondition(new ParameterConditionedPrecondition(getExampleSetInputPort(),
+				needNominalLabelCondition, getParameterHandler(), PARAMETER_BALANCE_DATA, Boolean.toString(true)));
 	}
 
 	@Override
@@ -123,11 +122,10 @@ public class SamplingOperator extends AbstractSamplingOperator {
 					absoluteNumber = getParameterAsInt(PARAMETER_SAMPLE_SIZE);
 				}
 				if (emd.getNumberOfExamples().isAtLeast(absoluteNumber) == MetaDataInfo.NO) {
-					getExampleSetInputPort().addError(
-							new SimpleMetaDataError(Severity.ERROR, getExampleSetInputPort(), Collections
-									.singletonList(new ParameterSettingQuickFix(this, PARAMETER_SAMPLE_SIZE, emd
-											.getNumberOfExamples().getValue().toString())), "exampleset.need_more_examples",
-									absoluteNumber + ""));
+					getExampleSetInputPort().addError(new SimpleMetaDataError(Severity.ERROR, getExampleSetInputPort(),
+							Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_SAMPLE_SIZE,
+									emd.getNumberOfExamples().getValue().toString())),
+							"exampleset.need_more_examples", absoluteNumber + ""));
 				}
 				return new MDInteger(absoluteNumber);
 			case SAMPLE_RELATIVE:
@@ -137,8 +135,8 @@ public class SamplingOperator extends AbstractSamplingOperator {
 					return numberOfExamples;
 				}
 				if (emd.getNumberOfExamples().isKnown()) {
-					return new MDInteger((int) ((getParameterAsDouble(PARAMETER_SAMPLE_RATIO) * emd.getNumberOfExamples()
-							.getValue())));
+					return new MDInteger(
+							(int) (getParameterAsDouble(PARAMETER_SAMPLE_RATIO) * emd.getNumberOfExamples().getValue()));
 				}
 				return new MDInteger();
 			case SAMPLE_PROBABILITY:
@@ -148,8 +146,8 @@ public class SamplingOperator extends AbstractSamplingOperator {
 					return numberOfExamples;
 				}
 				if (emd.getNumberOfExamples().isKnown()) {
-					return new MDInteger((int) ((getParameterAsDouble(PARAMETER_SAMPLE_PROBABILITY) * emd
-							.getNumberOfExamples().getValue())));
+					return new MDInteger((int) (getParameterAsDouble(PARAMETER_SAMPLE_PROBABILITY)
+							* emd.getNumberOfExamples().getValue()));
 				}
 				return new MDInteger();
 			default:
@@ -165,6 +163,7 @@ public class SamplingOperator extends AbstractSamplingOperator {
 		SplittedExampleSet perLabelSets = null;
 		int numberOfIterations = 1; // if sampling not per class, just one iteration
 		boolean balanceData = getParameterAsBoolean(PARAMETER_BALANCE_DATA);
+		int sample = getParameterAsInt(PARAMETER_SAMPLE);
 		Attribute label = null;
 		List<String[]> pairs = null;
 		ExampleSet exampleSet = null;
@@ -181,7 +180,7 @@ public class SamplingOperator extends AbstractSamplingOperator {
 				throw new UserError(this, 105);
 			}
 
-			switch (getParameterAsInt(PARAMETER_SAMPLE)) {
+			switch (sample) {
 				case SAMPLE_RELATIVE:
 					pairs = getParameterList(PARAMETER_SAMPLE_RATIO_LIST);
 					break;
@@ -198,12 +197,16 @@ public class SamplingOperator extends AbstractSamplingOperator {
 			if (numberOfSubsets < numberOfIterations) {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.operator.preprocessing.sampling.SamplingOperator.too_few_subsets",
-						new Object[] { (numberOfIterations - numberOfSubsets), numberOfIterations, numberOfSubsets });
+						new Object[] { numberOfIterations - numberOfSubsets, numberOfIterations, numberOfSubsets });
 				numberOfIterations = numberOfSubsets;
 			}
 		} else {
 			exampleSet = originalSet;
 		}
+
+		double sample_ratio = getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
+		int sampleSize = getParameterAsInt(PARAMETER_SAMPLE_SIZE);
+		double sampleProbability = getParameterAsDouble(PARAMETER_SAMPLE_PROBABILITY);
 
 		// now iterate over all subsets
 		for (int i = 0; i < numberOfIterations; i++) {
@@ -227,14 +230,14 @@ public class SamplingOperator extends AbstractSamplingOperator {
 				}
 
 				// now generate sampling sequence for this class's parameter value
-				switch (getParameterAsInt(PARAMETER_SAMPLE)) {
+				switch (sample) {
 					case SAMPLE_RELATIVE:
 						sampleSequence = new RelativeSamplingSequenceGenerator(exampleSet.size(), Double.valueOf(parameter),
 								RandomGenerator.getRandomGenerator(this));
 						break;
 					case SAMPLE_ABSOLUTE:
-						sampleSequence = new AbsoluteSamplingSequenceGenerator(exampleSet.size(),
-								Integer.valueOf(parameter), RandomGenerator.getRandomGenerator(this));
+						sampleSequence = new AbsoluteSamplingSequenceGenerator(exampleSet.size(), Integer.valueOf(parameter),
+								RandomGenerator.getRandomGenerator(this));
 						break;
 					case SAMPLE_PROBABILITY:
 					default:
@@ -245,23 +248,22 @@ public class SamplingOperator extends AbstractSamplingOperator {
 
 			} else {
 				// just retrieve the standard parameters
-				switch (getParameterAsInt(PARAMETER_SAMPLE)) {
+				switch (sample) {
 					case SAMPLE_RELATIVE:
-						sampleSequence = new RelativeSamplingSequenceGenerator(exampleSet.size(),
-								getParameterAsDouble(PARAMETER_SAMPLE_RATIO), RandomGenerator.getRandomGenerator(this));
+						sampleSequence = new RelativeSamplingSequenceGenerator(exampleSet.size(), sample_ratio,
+								RandomGenerator.getRandomGenerator(this));
 						break;
 					case SAMPLE_ABSOLUTE:
-						int size = getParameterAsInt(PARAMETER_SAMPLE_SIZE);
-						if (size > exampleSet.size()) {
-							throw new UserError(this, 110, size);
+						if (sampleSize > exampleSet.size()) {
+							throw new UserError(this, 110, sampleSize);
 						}
-						sampleSequence = new AbsoluteSamplingSequenceGenerator(exampleSet.size(), size,
+						sampleSequence = new AbsoluteSamplingSequenceGenerator(exampleSet.size(), sampleSize,
 								RandomGenerator.getRandomGenerator(this));
 						break;
 					case SAMPLE_PROBABILITY:
 					default:
-						sampleSequence = new ProbabilitySamplingSequenceGenerator(
-								getParameterAsDouble(PARAMETER_SAMPLE_PROBABILITY), RandomGenerator.getRandomGenerator(this));
+						sampleSequence = new ProbabilitySamplingSequenceGenerator(sampleProbability,
+								RandomGenerator.getRandomGenerator(this));
 						break;
 				}
 			}
@@ -299,43 +301,47 @@ public class SamplingOperator extends AbstractSamplingOperator {
 
 		type = new ParameterTypeInt(PARAMETER_SAMPLE_SIZE, "The number of examples which should be sampled", 1,
 				Integer.MAX_VALUE, 100);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_ABSOLUTE));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_ABSOLUTE));
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_BALANCE_DATA, true, false));
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeDouble(PARAMETER_SAMPLE_RATIO, "The fraction of examples which should be sampled", 0.0d,
 				1.0d, 0.1d);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_RELATIVE));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_RELATIVE));
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_BALANCE_DATA, true, false));
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeDouble(PARAMETER_SAMPLE_PROBABILITY, "The sample probability for each example.", 0.0d, 1.0d,
 				0.1d);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true,
-				SAMPLE_PROBABILITY));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_PROBABILITY));
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_BALANCE_DATA, true, false));
 		type.setExpert(false);
 		types.add(type);
 
 		type = new ParameterTypeList(PARAMETER_SAMPLE_SIZE_LIST, "The absolut sample size per class.",
-				new ParameterTypeString("class", "The class name this sample size applies to."), new ParameterTypeInt(
-						"size", "The number of sampled examples of this class.", 0, Integer.MAX_VALUE));
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_ABSOLUTE));
+				new ParameterTypeString("class", "The class name this sample size applies to."),
+				new ParameterTypeInt("size", "The number of sampled examples of this class.", 0, Integer.MAX_VALUE));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_ABSOLUTE));
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_BALANCE_DATA, true, true));
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeList(PARAMETER_SAMPLE_RATIO_LIST, "The fraction per class.", new ParameterTypeString(
-				"class", "The class name this sample size applies to."), new ParameterTypeDouble("ratio",
-				"The fractions of examples of this class.", 0, 1));
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_RELATIVE));
+		type = new ParameterTypeList(PARAMETER_SAMPLE_RATIO_LIST, "The fraction per class.",
+				new ParameterTypeString("class", "The class name this sample size applies to."),
+				new ParameterTypeDouble("ratio", "The fractions of examples of this class.", 0, 1));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_RELATIVE));
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_BALANCE_DATA, true, true));
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeList(PARAMETER_SAMPLE_PROBABILITY_LIST, "The fraction per class.", new ParameterTypeString(
-				"class", "The class name this sample size applies to."), new ParameterTypeDouble("probability",
-				"The probability of examples of this class to belong to the sample.", 0, 1));
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true,
-				SAMPLE_PROBABILITY));
+		type = new ParameterTypeList(PARAMETER_SAMPLE_PROBABILITY_LIST, "The fraction per class.",
+				new ParameterTypeString("class", "The class name this sample size applies to."), new ParameterTypeDouble(
+						"probability", "The probability of examples of this class to belong to the sample.", 0, 1));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_SAMPLE, SAMPLE_MODES, true, SAMPLE_PROBABILITY));
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_BALANCE_DATA, true, true));
 		type.setExpert(false);
 		types.add(type);

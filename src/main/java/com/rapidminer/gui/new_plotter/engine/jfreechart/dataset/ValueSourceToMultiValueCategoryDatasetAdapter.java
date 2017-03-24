@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.engine.jfreechart.dataset;
 
 import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
@@ -78,13 +78,14 @@ public class ValueSourceToMultiValueCategoryDatasetAdapter extends AbstractDatas
 	}
 
 	@Override
-	public Comparable getRowKey(int row) {
+	public String getRowKey(int row) {
 		if (seriesNamesCache == null) {
 			updateSeriesNameCache();
 		}
 		return seriesNamesCache.get(row);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public int getRowIndex(Comparable key) {
 		if (seriesNamesCache == null) {
@@ -103,7 +104,7 @@ public class ValueSourceToMultiValueCategoryDatasetAdapter extends AbstractDatas
 	}
 
 	@Override
-	public List getRowKeys() {
+	public List<String> getRowKeys() {
 		if (seriesNamesCache == null) {
 			updateSeriesNameCache();
 		}
@@ -111,7 +112,7 @@ public class ValueSourceToMultiValueCategoryDatasetAdapter extends AbstractDatas
 	}
 
 	@Override
-	public Comparable getColumnKey(int column) {
+	public String getColumnKey(int column) {
 		if (domainValuesCache == null) {
 			updateValuesCache();
 		}
@@ -120,6 +121,7 @@ public class ValueSourceToMultiValueCategoryDatasetAdapter extends AbstractDatas
 		return plotInstance.getPlotData().getDimensionConfigData(domainConfig).getStringForValue(columnValue);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public int getColumnIndex(Comparable key) {
 		if (domainValuesCache == null) {
@@ -129,13 +131,14 @@ public class ValueSourceToMultiValueCategoryDatasetAdapter extends AbstractDatas
 	}
 
 	@Override
-	public List getColumnKeys() {
+	public List<Double> getColumnKeys() {
 		if (domainValuesCache == null) {
 			updateValuesCache();
 		}
 		return domainValuesCache;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Number getValue(Comparable rowKey, Comparable columnKey) {
 		return null;
@@ -199,8 +202,9 @@ public class ValueSourceToMultiValueCategoryDatasetAdapter extends AbstractDatas
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	public List getValues(Comparable rowKey, Comparable columnKey) {
+	public List<Double> getValues(Comparable rowKey, Comparable columnKey) {
 		Number row = (Number) rowKey;
 		Number column = (Number) columnKey;
 		return getValues(row.intValue(), column.intValue());

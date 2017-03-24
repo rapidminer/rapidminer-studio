@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.associations.gsp;
 
 import java.util.ArrayList;
@@ -138,10 +138,10 @@ public class GSPOperator extends Operator {
 				}
 			}
 		});
-		exampleSetInput.addPrecondition(new AttributeParameterPrecondition(exampleSetInput, this,
-				PARAMETER_CUSTOMER_ATTRIBUTE));
-		exampleSetInput.addPrecondition(new AttributeParameterPrecondition(exampleSetInput, this, PARAMETER_TIME_ATTRIBUTE,
-				Ontology.NUMERICAL));
+		exampleSetInput
+				.addPrecondition(new AttributeParameterPrecondition(exampleSetInput, this, PARAMETER_CUSTOMER_ATTRIBUTE));
+		exampleSetInput.addPrecondition(
+				new AttributeParameterPrecondition(exampleSetInput, this, PARAMETER_TIME_ATTRIBUTE, Ontology.NUMERICAL));
 
 		getTransformer().addPassThroughRule(exampleSetInput, exampleSetOutput);
 		getTransformer().addGenerationRule(patternOutput, GSPSet.class);
@@ -190,9 +190,9 @@ public class GSPOperator extends Operator {
 		Arrays.fill(positiveIndices, 1);
 		if (isParameterSet(PARAMETER_POSITIVE_VALUE)) {
 			int attributeIndex = 0;
+			String positiveValue = getParameterAsString(PARAMETER_POSITIVE_VALUE);
 			for (Attribute attribute : attributes) {
-				positiveIndices[attributeIndex] = attribute.getMapping().getIndex(
-						getParameterAsString(PARAMETER_POSITIVE_VALUE));
+				positiveIndices[attributeIndex] = attribute.getMapping().getIndex(positiveValue);
 				attributeIndex++;
 			}
 		}
@@ -212,7 +212,8 @@ public class GSPOperator extends Operator {
 
 		if (numberOfSequences * minSupport < 5) {
 			// LogService.getGlobal().log("Found only " + numberOfSequences +
-			// " sequences. Together with the small minimal support, this could result in very many patterns and a long calculation time.",
+			// " sequences. Together with the small minimal support, this could result in very many
+			// patterns and a long calculation time.",
 			// LogService.WARNING);
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.operator.learner.associations.gsp.GSPOperator.number_of_sequences_founded",
@@ -262,7 +263,8 @@ public class GSPOperator extends Operator {
 			checkForStop();
 
 			// if new candidates filter them from ones with to small support
-			int[] supportCounter = countSupportingCustomer(candidates, dataSequences, windowSize, maxGap, minGap, minSupport);
+			int[] supportCounter = countSupportingCustomer(candidates, dataSequences, windowSize, maxGap, minGap,
+					minSupport);
 
 			Iterator<Sequence> iterator = candidates.iterator();
 			for (i = 0; i < supportCounter.length; i++) {
@@ -347,10 +349,8 @@ public class GSPOperator extends Operator {
 
 						pruneCheckCounter++;
 						if (pruneCheckCounter % 10000 == 0) {
-							LogService
-									.getGlobal()
-									.log("....................................................................................................",
-											LogService.INIT);
+							LogService.getRoot().info(
+									"....................................................................................................");
 						}
 
 						if (!isPruned(seeds, candidate)) {
@@ -362,10 +362,8 @@ public class GSPOperator extends Operator {
 
 						pruneCheckCounter++;
 						if (pruneCheckCounter % 10000 == 0) {
-							LogService
-									.getGlobal()
-									.log("....................................................................................................",
-											LogService.INIT);
+							LogService.getRoot().info(
+									"....................................................................................................");
 						}
 
 						if (!isPruned(seeds, candidate)) {
@@ -520,7 +518,8 @@ public class GSPOperator extends Operator {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeDouble(PARAMETER_MIN_SUPPORT, "This specifies the minimal support of a pattern", 0, 1, false);
+		type = new ParameterTypeDouble(PARAMETER_MIN_SUPPORT, "This specifies the minimal support of a pattern", 0, 1,
+				false);
 		type.setDefaultValue(0.9);
 		type.setExpert(false);
 		types.add(type);
@@ -540,8 +539,7 @@ public class GSPOperator extends Operator {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeString(
-				PARAMETER_POSITIVE_VALUE,
+		type = new ParameterTypeString(PARAMETER_POSITIVE_VALUE,
 				"This parameter determines, which value of the binominal attributes is treated as positive. Attributes with that value are considered as part of a transaction. If left blank, the example set determines, which is value is used.",
 				getCompatibilityLevel().isAtMost(VERSION_MADE_POSITIVE_CLASS_MANDATORY));
 		types.add(type);

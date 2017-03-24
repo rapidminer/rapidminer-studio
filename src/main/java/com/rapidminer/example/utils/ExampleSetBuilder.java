@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.utils;
 
 import java.util.ArrayList;
@@ -51,10 +51,35 @@ import com.rapidminer.example.table.ExampleTable;
  * other data (set by {@link #withDataRowReader}, {@link #withBlankSize} or
  * {@link #withColumnFiller}) that fills the table is stored and only used on {@link #build}.
  *
+ * If a special data management optimization type should be used
+ * {@link #withOptimizationHint(DataManagment)} must be called before adding any rows.
+ *
  * @author Gisa Schaefer
  * @since 7.3
  */
 public abstract class ExampleSetBuilder {
+
+	/**
+	 * Data management optimization options that can be used with the builder option
+	 * {@link ExampleSetBuilder#withOptimizationHint(DataManagement)}.
+	 */
+	public enum DataManagement {
+
+		/**
+		 * Always use the fastest data representation, regardless of memory usage.
+		 */
+		SPEED_OPTIMIZED,
+
+		/**
+		 * Automatically detects very sparse columns and compress those.
+		 */
+		AUTO,
+
+		/**
+		 * Decreases memory usage by compressing sparse columns as much as possible.
+		 */
+		MEMORY_OPTIMIZED;
+	}
 
 	/** all the attributes in the example set */
 	private final List<Attribute> attributes;
@@ -196,6 +221,18 @@ public abstract class ExampleSetBuilder {
 	public abstract ExampleSetBuilder withColumnFiller(Attribute attribute, IntToDoubleFunction valueForRow);
 
 	/**
+	 * A hint for optimization type to use in the data table. Must be set before
+	 * {@link #addDataRow(DataRow)} or {@link #addRow(double[])} is called. When this method is not
+	 * used, {@link DataManagment#AUTO} is selected by default. May be ignored if not supported by
+	 * the underlying data structure.
+	 *
+	 * @param management
+	 *            the data management optimization to use
+	 * @return the builder
+	 */
+	public abstract ExampleSetBuilder withOptimizationHint(DataManagement management);
+
+	/**
 	 * Builds the example set.
 	 *
 	 * @return the {@link ExampleSet} build from the specified data
@@ -228,5 +265,17 @@ public abstract class ExampleSetBuilder {
 	 * @return the example table to use for the example set
 	 */
 	protected abstract ExampleTable getExampleTable();
+
+	/**
+	 * Sets the table indices so that {@code dataRow.set(attribute,value)} can be used for the
+	 * attributes. Calling {@code new MemoryExampleTable(getAttributes)} or
+	 * {@code new ColumnarExampleTable(getAttribute)} has the same effect.
+	 */
+	protected void setTableIndices() {
+		int i = 0;
+		for (Attribute attribute : getAttributes()) {
+			attribute.setTableIndex(i++);
+		}
+	}
 
 }

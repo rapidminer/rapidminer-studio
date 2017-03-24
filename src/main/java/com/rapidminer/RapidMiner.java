@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer;
 
 import java.awt.Frame;
@@ -353,9 +353,19 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS = "rapidminer.general.number_of_threads";
 
 	/**
+	 * The maximum number of working threads that should be used by processes.
+	 */
+	public static final String PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_PROCESSES = "rapidminer.general.number_of_processes";
+
+	/**
 	 * The name of the property indicating whether beta features should be activated.
 	 */
 	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features";
+
+	/**
+	 * The name of the property indicating whether or not additional permissions should be enabled
+	 */
+	public static final String PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS = "rapidminer.init.additional_permissions";
 
 	// --- INIT PROPERTIES ---
 
@@ -457,6 +467,8 @@ public class RapidMiner {
 		registerParameter(
 				new ParameterTypeBoolean(CapabilityProvider.PROPERTY_RAPIDMINER_GENERAL_CAPABILITIES_WARN, "", false));
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS, "", 0, Integer.MAX_VALUE, 0));
+		registerParameter(
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_PROCESSES, "", 0, Integer.MAX_VALUE, 0));
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_EDITOR, "", true));
 		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD, "",
 				PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_VALUES, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_SMTP));
@@ -483,6 +495,7 @@ public class RapidMiner {
 		registerParameter(new ParameterTypeInt(WebServiceTools.WEB_SERVICE_TIMEOUT, "", 1, Integer.MAX_VALUE, 20000),
 				"system");
 		registerParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, "", false));
+		registerParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS, "", false));
 
 		// initialize the state of IOObjects
 		ioObjectCache = new IOObjectMap();
@@ -627,6 +640,16 @@ public class RapidMiner {
 		// parse settings xml (before plugins are initialized)
 		SettingsItems.INSTANCE.parseStudioXml();
 
+		// generate encryption key if necessary
+		if (!CipherTools.isKeyAvailable()) {
+			RapidMiner.splashMessage("gen_key");
+			try {
+				KeyGeneratorTool.createAndStoreKey();
+			} catch (KeyGenerationException e) {
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.RapidMiner.generating_encryption_key_error", e.getMessage()), e);
+			}
+		}
 		UsageStatistics.getInstance(); // initializes as a side effect
 
 		// registering operators
@@ -642,17 +665,6 @@ public class RapidMiner {
 
 		RapidMiner.splashMessage("xml_transformer");
 		XMLImporter.init();
-
-		// generate encryption key if necessary
-		if (!CipherTools.isKeyAvailable()) {
-			RapidMiner.splashMessage("gen_key");
-			try {
-				KeyGeneratorTool.createAndStoreKey();
-			} catch (KeyGenerationException e) {
-				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-						"com.rapidminer.RapidMiner.generating_encryption_key_error", e.getMessage()), e);
-			}
-		}
 
 		RapidMiner.splashMessage("init_configurables");
 		ConfigurationManager.getInstance().initialize();

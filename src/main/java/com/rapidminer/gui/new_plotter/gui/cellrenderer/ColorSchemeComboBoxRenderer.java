@@ -1,25 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui.cellrenderer;
-
-import com.rapidminer.gui.new_plotter.templates.style.ColorRGB;
-import com.rapidminer.gui.new_plotter.templates.style.ColorScheme;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -37,12 +34,15 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 
+import com.rapidminer.gui.new_plotter.templates.style.ColorRGB;
+import com.rapidminer.gui.new_plotter.templates.style.ColorScheme;
+
 
 /**
  * @author Nils Woehler
- * 
+ *
  */
-public class ColorSchemeComboBoxRenderer extends ComboSeparatorsRenderer {
+public class ColorSchemeComboBoxRenderer extends ComboSeparatorsRenderer<Object> {
 
 	private final static int WIDTH = 130;
 	private final static int HEIGHT = 20;
@@ -114,7 +114,7 @@ public class ColorSchemeComboBoxRenderer extends ComboSeparatorsRenderer {
 	}
 
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+	public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
 			boolean cellHasFocus) {
 
 		Component renderComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
@@ -151,7 +151,7 @@ public class ColorSchemeComboBoxRenderer extends ComboSeparatorsRenderer {
 	}
 
 	@Override
-	protected boolean addSeparatorAfter(JList list, Object value, int index) {
+	protected boolean addSeparatorAfter(JList<?> list, Object value, int index) {
 		if (!(value instanceof ColorScheme)) {
 			return true;
 		}

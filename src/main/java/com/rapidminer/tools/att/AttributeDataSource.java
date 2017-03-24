@@ -1,31 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.att;
-
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Attributes;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.LoggingHandler;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.XMLException;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +37,16 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
+import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.LoggingHandler;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.XMLException;
 
 
 /**
@@ -282,21 +283,19 @@ public class AttributeDataSource {
 					String theName = name;
 					if (lastSourceCol > firstSourceCol) {
 						theName = name + "_" + (col + 1);
-						if ((col == firstSourceCol) && (blockType == Ontology.VALUE_SERIES)) {
+						if (col == firstSourceCol && blockType == Ontology.VALUE_SERIES) {
 							thisBlockType = Ontology.VALUE_SERIES_START;
 						}
-						if ((col == lastSourceCol) && (blockType == Ontology.VALUE_SERIES)) {
+						if (col == lastSourceCol && blockType == Ontology.VALUE_SERIES) {
 							thisBlockType = Ontology.VALUE_SERIES_END;
 						}
 					}
 					Attribute attribute = AttributeFactory.createAttribute(theName, valueType, thisBlockType);
-					if (attribute.isNominal() && (classList != null)) {
-						Iterator c = classList.iterator();
-						while (c.hasNext()) {
-							attribute.getMapping().mapString((String) c.next());
-						}
+					if (attribute.isNominal() && classList != null) {
+						NominalMapping mapping = attribute.getMapping();
+						classList.forEach(mapping::mapString);
 					}
-					if (!attribute.isNominal() && (classList != null) && (classList.size() != 0)) {
+					if (!attribute.isNominal() && classList != null && classList.size() != 0) {
 						// LogService.getGlobal().log("Ignoring classes for non-nominal attribute "
 						// + theName + ".", LogService.WARNING);
 						LogService.getRoot().log(Level.WARNING,

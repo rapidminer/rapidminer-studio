@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui;
 
 import com.rapidminer.datatable.DataTable;
@@ -89,7 +89,7 @@ public class DimensionConfigPanel extends AbstractConfigurationPanel {
 	private JSpinner lowerBoundSpinner;
 	private JLabel logarithmicLabel;
 	private JLabel groupingLabel;
-	private JComboBox groupingComboBox;
+	private JComboBox<GroupingType> groupingComboBox;
 	private JToggleButton groupingConfigButton;
 
 	private GroupingConfigurationPanel groupingConfigurationPanel;
@@ -260,9 +260,9 @@ public class DimensionConfigPanel extends AbstractConfigurationPanel {
 			groupingLabel.setPreferredSize(new Dimension(80, 15));
 
 			// create combo box
-			groupingComboBox = new JComboBox(GroupingType.values());
+			groupingComboBox = new JComboBox<>(GroupingType.values());
 			groupingLabel.setLabelFor(groupingComboBox);
-			groupingComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.grouping_type"));
+			groupingComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.grouping_type"));
 			groupingComboBox.addPopupMenuListener(new PopupMenuListener() {
 
 				@Override
@@ -589,7 +589,7 @@ public class DimensionConfigPanel extends AbstractConfigurationPanel {
 
 			// fill grouping combo box
 			Vector<GroupingType> validGroupings = dimensionConfig.getValidGroupingTypes();
-			DefaultComboBoxModel model = new DefaultComboBoxModel(validGroupings);
+			DefaultComboBoxModel<GroupingType> model = new DefaultComboBoxModel<>(validGroupings);
 			groupingComboBox.setModel(model);
 
 			autoNamingChanged(dimensionConfig.isAutoNaming());

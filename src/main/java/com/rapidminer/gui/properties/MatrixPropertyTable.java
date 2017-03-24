@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.properties;
 
 import com.rapidminer.gui.tools.CellColorProvider;
@@ -150,8 +150,8 @@ public class MatrixPropertyTable extends ExtendedJTable {
 	public void removeColumn(int index) {
 		TableColumn column = getColumnModel().getColumn(index);
 		int modelIndex = column.getModelIndex();
-		Vector modelData = model.getDataVector();
-		Vector columnIdentifiers = model.getColumnIdentifiers();
+		Vector<?> modelData = model.getDataVector();
+		Vector<?> columnIdentifiers = model.getColumnIdentifiers();
 
 		// remove the column from the table
 		removeColumn(column);
@@ -160,16 +160,15 @@ public class MatrixPropertyTable extends ExtendedJTable {
 		columnIdentifiers.removeElementAt(modelIndex);
 
 		// remove the column data
-		for (int i = 0; i < modelData.size(); i++) {
-			Vector row = (Vector) modelData.get(i);
-			row.removeElementAt(modelIndex);
+		for (Object row : modelData) {
+			((Vector<?>) row).removeElementAt(modelIndex);
 		}
 		model.setDataVector(modelData, columnIdentifiers);
 
 		// correct the model indices in the TableColumn objects
-		Enumeration columns = getColumnModel().getColumns();
+		Enumeration<TableColumn> columns = getColumnModel().getColumns();
 		while (columns.hasMoreElements()) {
-			TableColumn currentColumn = (TableColumn) columns.nextElement();
+			TableColumn currentColumn = columns.nextElement();
 			if (currentColumn.getModelIndex() >= modelIndex) {
 				currentColumn.setModelIndex(currentColumn.getModelIndex() - 1);
 			}

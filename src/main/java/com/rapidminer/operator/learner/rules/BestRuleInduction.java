@@ -1,22 +1,28 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.rules;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -33,26 +39,20 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-
 
 /**
  * This operator returns the best rule regarding WRAcc using exhaustive search. Features like the
  * incorporation of other metrics and the search for more than a single rule are prepared.
- * 
+ *
  * The search strategy is BFS, with save pruning whenever applicable. This operator can easily be
  * extended to support other search strategies.
- * 
+ *
  * @author Martin Scholz
  */
 public class BestRuleInduction extends AbstractLearner {
 
 	/** Helper class containing a rule and an upper bound for the score. */
-	public static class RuleWithScoreUpperBound implements Comparable {
+	public static class RuleWithScoreUpperBound implements Comparable<Object> {
 
 		private final ConjunctiveRuleModel rule;
 
@@ -124,6 +124,8 @@ public class BestRuleInduction extends AbstractLearner {
 
 	private double bestScore;
 
+	private int maxDepth;
+
 	// nodes under consideration
 	private final Vector<RuleWithScoreUpperBound> openNodes = new Vector<RuleWithScoreUpperBound>();
 
@@ -163,7 +165,7 @@ public class BestRuleInduction extends AbstractLearner {
 	/**
 	 * Adds a rule to the set of best rules if its score is high enough. Currently just a single
 	 * rule is stored. Additionally it is checked whether the rule is bad enough to be pruned.
-	 * 
+	 *
 	 * @return true iff the rule can be pruned
 	 */
 	protected boolean communicateToHighscore(ConjunctiveRuleModel rule, double[] counts) throws UndefinedParameterError {
@@ -178,8 +180,8 @@ public class BestRuleInduction extends AbstractLearner {
 				this.bestScore = posScore;
 			}
 			if (negScore > this.bestScore) {
-				ConjunctiveRuleModel negRule = new ConjunctiveRuleModel(rule, rule.getLabel().getMapping()
-						.getNegativeIndex());
+				ConjunctiveRuleModel negRule = new ConjunctiveRuleModel(rule,
+						rule.getLabel().getMapping().getNegativeIndex());
 				this.bestRule = negRule;
 				this.bestScore = negScore;
 			}
@@ -220,19 +222,21 @@ public class BestRuleInduction extends AbstractLearner {
 		this.addRulesToOpenNodes(defaultRule.getAllRefinedRules(exampleSet), optimisticScore);
 
 		int length = 1;
+		maxDepth = this.getParameterAsInt(PARAMETER_MAX_DEPTH);
+		int maxCache = this.getParameterAsInt(PARAMETER_MAX_CACHE);
 
-		while (!this.openNodes.isEmpty() && length <= this.getParameterAsInt(PARAMETER_MAX_DEPTH)) {
+		while (!this.openNodes.isEmpty() && length <= maxDepth) {
 			int ignored = 0;
 
 			log("Evaluating " + this.openNodes.size() + " rules of length " + length);
-			if (this.openNodes.size() > this.getParameterAsInt(PARAMETER_MAX_CACHE)) {
-				log("Ignoring all but the " + this.getParameterAsInt(PARAMETER_MAX_CACHE) + " rules with highest support.");
+			if (this.openNodes.size() > maxCache) {
+				log("Ignoring all but the " + maxCache + " rules with highest support.");
 			}
 
 			RuleWithScoreUpperBound[] ruleArray = new RuleWithScoreUpperBound[this.openNodes.size()];
 			this.openNodes.toArray(ruleArray);
 			Arrays.sort(ruleArray);
-			int stopAtIndex = Math.max(0, ruleArray.length - this.getParameterAsInt(PARAMETER_MAX_CACHE));
+			int stopAtIndex = Math.max(0, ruleArray.length - maxCache);
 
 			this.openNodes.clear();
 			for (int i = ruleArray.length - 1; i >= stopAtIndex; i--) {
@@ -271,15 +275,15 @@ public class BestRuleInduction extends AbstractLearner {
 	 * Annotates the collection of ConjunctiveRuleModels with an optimistic score they may achieve
 	 * in the best case and adds them to the collection of open nodes.
 	 */
-	private void addRulesToOpenNodes(Collection rules, double scoreUpperBound) {
+	private void addRulesToOpenNodes(Collection<ConjunctiveRuleModel> rules, double scoreUpperBound) {
 		if (scoreUpperBound <= this.getPruningScore()) {
 			return;
 		}
 
-		Iterator it = rules.iterator();
-		while (it.hasNext()) {
-			this.openNodes.add(new RuleWithScoreUpperBound((ConjunctiveRuleModel) it.next(), scoreUpperBound));
+		for (ConjunctiveRuleModel rule : rules) {
+			this.openNodes.add(new RuleWithScoreUpperBound(rule, scoreUpperBound));
 		}
+
 	}
 
 	/**
@@ -287,7 +291,7 @@ public class BestRuleInduction extends AbstractLearner {
 	 * this rule. If this cannot improve over the currently best rules, then the refinements are
 	 * pruned. Otherwise all refinements plus optimistic estimates are added to the collection of
 	 * open nodes.
-	 * 
+	 *
 	 * If the evaluated rule is good enough, then it is stored toghether with its score.
 	 */
 	private void expandNode(ConjunctiveRuleModel rule, ExampleSet exampleSet) throws OperatorException {
@@ -299,7 +303,7 @@ public class BestRuleInduction extends AbstractLearner {
 		if (pruning == true) {
 			this.prunedNodes.add(rule);
 			// Nothing to add to the collection of open nodes ..
-		} else if (rule.getRuleLength() < this.getParameterAsInt(PARAMETER_MAX_DEPTH)) {
+		} else if (rule.getRuleLength() < maxDepth) {
 			// Store all the refinements for later investigation:
 			this.addRulesToOpenNodes(rule.getAllRefinedRules(exampleSet), this.getOptimisticScore(counts));
 		}
@@ -313,9 +317,7 @@ public class BestRuleInduction extends AbstractLearner {
 	 *         method <code>ConjunctiveRuleModel.isRefinementOf(ConjunctiveRuleModel model)</code>
 	 */
 	public boolean isRefinementOfPrunedRule(ConjunctiveRuleModel rule) {
-		Iterator it = this.prunedNodes.iterator();
-		while (it.hasNext()) {
-			ConjunctiveRuleModel prunedRule = (ConjunctiveRuleModel) it.next();
+		for (ConjunctiveRuleModel prunedRule : prunedNodes) {
 			// In this collection all rules predict positive, but the scores are
 			// computed for the best label. For this reason the following
 			// refinement test is valid.
@@ -335,14 +337,14 @@ public class BestRuleInduction extends AbstractLearner {
 		double p = counts[0];
 		double n = counts[1];
 		double cov = (p + n) / (globalP + globalN);
-		double pnRel = (predictPositives ? p : n);
+		double pnRel = predictPositives ? p : n;
 
 		String function = UTILITY_FUNCTION_LIST[this.getParameterAsInt(PARAMETER_UTILITY_FUNCTION)];
 		UndefinedParameterError upe = new UndefinedParameterError(PARAMETER_UTILITY_FUNCTION, this);
 
 		double score;
 		if (this.getParameterAsBoolean(PARAMETER_RELATIVE_TO_PREDICTIONS) == false || counts.length != 4) {
-			double pnAbs = (predictPositives ? globalP : globalN);
+			double pnAbs = predictPositives ? globalP : globalN;
 
 			if (function.equals(WRACC)) {
 				score = cov * (pnRel / (p + n) - pnAbs / (globalP + globalN));
@@ -354,7 +356,7 @@ public class BestRuleInduction extends AbstractLearner {
 		} else {
 			double estP = counts[2];
 			double estN = counts[3];
-			double pnEst = (predictPositives ? estP : estN);
+			double pnEst = predictPositives ? estP : estN;
 
 			if (function.equals(WRACC)) {
 				score = cov * (pnRel / (p + n) - pnEst / (estP + estN));
@@ -414,7 +416,7 @@ public class BestRuleInduction extends AbstractLearner {
 	protected double[] getCounts(ConjunctiveRuleModel rule, ExampleSet exampleSet) throws OperatorException {
 		Attribute weightAttr = exampleSet.getAttributes().getWeight();
 		Attribute predictedLabel = exampleSet.getAttributes().getPredictedLabel();
-		boolean relToPred = (predictedLabel != null) && this.getParameterAsBoolean(PARAMETER_RELATIVE_TO_PREDICTIONS);
+		boolean relToPred = predictedLabel != null && this.getParameterAsBoolean(PARAMETER_RELATIVE_TO_PREDICTIONS);
 
 		int coveredPart = rule.getConclusion();
 		int posIndex = exampleSet.getAttributes().getLabel().getMapping().getPositiveIndex();
@@ -434,7 +436,7 @@ public class BestRuleInduction extends AbstractLearner {
 		Iterator<Example> reader = exampleSet.iterator();
 		while (reader.hasNext()) {
 			Example example = reader.next();
-			double weight = (weightAttr == null) ? 1 : example.getValue(weightAttr);
+			double weight = weightAttr == null ? 1 : example.getValue(weightAttr);
 			if (rule.predict(example) == coveredPart) {
 				if (example.getValue(example.getAttributes().getLabel()) == posIndex) {
 					p += weight;
@@ -450,7 +452,7 @@ public class BestRuleInduction extends AbstractLearner {
 			}
 		}
 
-		return (relToPred ? new double[] { p, n, estP, estN } : new double[] { p, n });
+		return relToPred ? new double[] { p, n, estP, estN } : new double[] { p, n };
 	}
 
 	@Override
@@ -468,8 +470,7 @@ public class BestRuleInduction extends AbstractLearner {
 				Integer.MAX_VALUE, 2));
 		types.add(new ParameterTypeCategory(PARAMETER_UTILITY_FUNCTION, "The function to be optimized by the rule.",
 				UTILITY_FUNCTION_LIST, 0));
-		types.add(new ParameterTypeInt(
-				PARAMETER_MAX_CACHE,
+		types.add(new ParameterTypeInt(PARAMETER_MAX_CACHE,
 				"Bounds the number of rules considered per depth to avoid high memory consumption, but leads to incomplete search.",
 				1, Integer.MAX_VALUE, 10000));
 		types.add(new ParameterTypeBoolean(PARAMETER_RELATIVE_TO_PREDICTIONS,

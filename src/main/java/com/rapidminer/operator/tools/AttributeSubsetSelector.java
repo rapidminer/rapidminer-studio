@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.tools;
 
 import java.util.Arrays;
@@ -38,6 +38,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.error.AttributeNotFoundError;
+import com.rapidminer.operator.error.AttributeWrongTypeError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
@@ -208,13 +209,13 @@ public class AttributeSubsetSelector {
 			if (errorOnMissing) {
 				if (condition instanceof SingleAttributeFilter) {
 					if (resultSet.getAllAttributes().size() != 1) {
-						inPort.addError(new SimpleMetaDataError(Severity.ERROR, inPort, "missing_attribute", operator
-								.getParameterAsString(SingleAttributeFilter.PARAMETER_ATTRIBUTE)));
+						inPort.addError(new SimpleMetaDataError(Severity.ERROR, inPort, "missing_attribute",
+								operator.getParameterAsString(SingleAttributeFilter.PARAMETER_ATTRIBUTE)));
 					}
 				} else if (condition instanceof SubsetAttributeFilter) {
-					LinkedList<String> shouldBeFound = new LinkedList<>(Arrays.asList(operator.getParameterAsString(
-							SubsetAttributeFilter.PARAMETER_ATTRIBUTES).split(
-							SubsetAttributeFilter.PARAMETER_ATTRIBUTES_SEPERATOR)));
+					LinkedList<String> shouldBeFound = new LinkedList<>(
+							Arrays.asList(operator.getParameterAsString(SubsetAttributeFilter.PARAMETER_ATTRIBUTES)
+									.split(SubsetAttributeFilter.PARAMETER_ATTRIBUTES_SEPERATOR)));
 					if (!shouldBeFound.isEmpty()) {
 						// delete already collected attributes
 						for (AttributeMetaData att : resultSet.getAllAttributes()) {
@@ -227,7 +228,8 @@ public class AttributeSubsetSelector {
 						if (!shouldBeFound.isEmpty()) {
 							// show suitable error
 							for (String attName : shouldBeFound) {
-								inPort.addError(new SimpleMetaDataError(Severity.ERROR, inPort, "missing_attribute", attName));
+								inPort.addError(
+										new SimpleMetaDataError(Severity.ERROR, inPort, "missing_attribute", attName));
 							}
 						}
 					}
@@ -315,8 +317,8 @@ public class AttributeSubsetSelector {
 	 *             condition could not be created or specified Attributes does not exists
 	 *
 	 */
-	public ExampleSet getSubset(ExampleSet parent, boolean keepSpecialIfNotIncluded) throws UndefinedParameterError,
-			UserError {
+	public ExampleSet getSubset(ExampleSet parent, boolean keepSpecialIfNotIncluded)
+			throws UndefinedParameterError, UserError {
 		return getSubset(parent, keepSpecialIfNotIncluded, false);
 	}
 
@@ -373,7 +375,6 @@ public class AttributeSubsetSelector {
 
 			while (iterator.hasNext()) {
 				Attribute attribute = iterator.next();
-				// check if it is allowed anyway
 				if (isOfAllowedType(attribute.getValueType())) {
 					ScanResult result = condition.beforeScanCheck(attribute).invert(invert);
 					switch (result) {
@@ -384,6 +385,9 @@ public class AttributeSubsetSelector {
 						case REMOVE:
 							break;
 					}
+				} else if (condition instanceof SingleAttributeFilter && operator
+						.getParameterAsString(SingleAttributeFilter.PARAMETER_ATTRIBUTE).equals(attribute.getName())) {
+					throw new AttributeWrongTypeError((Operator) operator, attribute, valueTypes);
 				}
 			}
 
@@ -484,13 +488,18 @@ public class AttributeSubsetSelector {
 			if (throwError) {
 				// if include special attributes is NOT selected
 				// that might be the reason why it's not found
-				int errorNumber = includeSpecial ? AttributeNotFoundError.ATTRIBUTE_NOT_FOUND : 164;
-				throw new AttributeNotFoundError((Operator) operator, errorNumber,
-						SingleAttributeFilter.PARAMETER_ATTRIBUTE, shouldBeFound);
+				int errorNumber = includeSpecial ? AttributeNotFoundError.ATTRIBUTE_NOT_FOUND
+						: AttributeNotFoundError.ATTRIBUTE_NOT_FOUND_IN_REGULAR;
+
+				throw new AttributeNotFoundError((Operator) operator, errorNumber, SingleAttributeFilter.PARAMETER_ATTRIBUTE,
+						shouldBeFound);
 			}
-		} else if (condition instanceof SubsetAttributeFilter) {
-			LinkedList<String> shouldBeFound = new LinkedList<>(Arrays.asList(operator.getParameterAsString(
-					SubsetAttributeFilter.PARAMETER_ATTRIBUTES).split(SubsetAttributeFilter.PARAMETER_ATTRIBUTES_SEPERATOR)));
+		} else if (condition instanceof SubsetAttributeFilter)
+
+		{
+			LinkedList<String> shouldBeFound = new LinkedList<>(
+					Arrays.asList(operator.getParameterAsString(SubsetAttributeFilter.PARAMETER_ATTRIBUTES)
+							.split(SubsetAttributeFilter.PARAMETER_ATTRIBUTES_SEPERATOR)));
 			// remove possibly empty entries
 			shouldBeFound.remove("");
 			if (!shouldBeFound.isEmpty()) {
@@ -558,8 +567,8 @@ public class AttributeSubsetSelector {
 			}
 			throw new ConditionCreationException("Cannot find class '" + name + "'. Check your classpath.");
 		} catch (IllegalAccessException e) {
-			throw new ConditionCreationException("'" + name + "' cannot access two argument constructor " + name
-					+ "(ExampleSet, String)!", e);
+			throw new ConditionCreationException(
+					"'" + name + "' cannot access two argument constructor " + name + "(ExampleSet, String)!", e);
 		} catch (InstantiationException e) {
 			throw new ConditionCreationException(name + ": cannot create condition (" + e.getMessage() + ").", e);
 		} catch (Throwable e) {
@@ -615,8 +624,7 @@ public class AttributeSubsetSelector {
 				"Indicates if only attributes should be accepted which would normally filtered.", false);
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeBoolean(
-				PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES,
+		type = new ParameterTypeBoolean(PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES,
 				"Indicate if this operator should also be applied on the special attributes. Otherwise they are always kept.",
 				false);
 		type.setExpert(false);

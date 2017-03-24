@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.nio.model;
 
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.ANNOTATION_NAME;
@@ -44,7 +44,7 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.io.ExampleSource;
+import com.rapidminer.operator.generator.ExampleSetGenerator;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MDInteger;
 import com.rapidminer.operator.preprocessing.filter.AbstractDateDataProcessing;
@@ -125,7 +125,7 @@ public class DataResultSetTranslationConfiguration {
 		// reading parameter settings
 		if (readerOperator != null) {
 			try {
-				dataManagementType = readerOperator.getParameterAsInt(ExampleSource.PARAMETER_DATAMANAGEMENT);
+				dataManagementType = readerOperator.getParameterAsInt(ExampleSetGenerator.PARAMETER_DATAMANAGEMENT);
 			} catch (UndefinedParameterError e1) {
 				dataManagementType = DataRowFactory.TYPE_DOUBLE_ARRAY;
 			}

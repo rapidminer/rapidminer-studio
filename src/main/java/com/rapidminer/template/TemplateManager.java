@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.template;
 
 import java.io.File;
@@ -60,6 +60,8 @@ public enum TemplateManager {
 		registerTemplate("price_risk_clustering");
 		registerTemplate("lift_chart");
 		registerTemplate("operationalization");
+		registerTemplate("anomaly_detection");
+		registerTemplate("geographic_distances");
 
 		// Load templates from .RapidMiner folder to allow sharing
 		File tempDir;
@@ -79,7 +81,8 @@ public enum TemplateManager {
 	/**
 	 * Registers a template that should be loaded from the resources at
 	 * template/[templateName].template. Extensions can add templates to the new process tab of the
-	 * startup dialog via this method within the {@code initGui(MainFrame)} method. </br> </br>
+	 * startup dialog via this method within the {@code initGui(MainFrame)} method. </br>
+	 * </br>
 	 * Given a file called {@code marketing.template} is present at
 	 * {@code src/main/resources/com.rapidminer.resources.template/} the following snippet will
 	 * register the template:

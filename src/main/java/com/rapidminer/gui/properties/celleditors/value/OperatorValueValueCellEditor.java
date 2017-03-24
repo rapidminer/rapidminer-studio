@@ -1,22 +1,34 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.properties.celleditors.value;
+
+import java.awt.Component;
+import java.awt.GridLayout;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.Collections;
+import java.util.Vector;
+
+import javax.swing.AbstractCellEditor;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+import javax.swing.JTable;
 
 import com.rapidminer.Process;
 import com.rapidminer.operator.Operator;
@@ -25,24 +37,11 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeValue;
 import com.rapidminer.parameter.ParameterTypeValue.OperatorValueSelection;
 
-import java.awt.Component;
-import java.awt.GridLayout;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Vector;
-
-import javax.swing.AbstractCellEditor;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JTable;
-
 
 /**
  * Parameter editor for {@link ParameterTypeValue}, i.e. the parameter type for values which are
  * provided by operators.
- * 
+ *
  * @see com.rapidminer.gui.properties.celleditors.value.DefaultPropertyValueCellEditor
  * @author Ingo Mierswa, Simon Fischer
  */
@@ -52,11 +51,11 @@ public class OperatorValueValueCellEditor extends AbstractCellEditor implements 
 
 	private JPanel panel = new JPanel();
 
-	private JComboBox operatorCombo;
+	private JComboBox<String> operatorCombo;
 
-	private JComboBox typeCombo = new JComboBox(new String[] { "value", "parameter" });
+	private JComboBox<String> typeCombo = new JComboBox<>(new String[] { "value", "parameter" });
 
-	private JComboBox valueCombo = new JComboBox();
+	private JComboBox<String> valueCombo = new JComboBox<>();
 
 	private transient Process process;
 
@@ -97,10 +96,10 @@ public class OperatorValueValueCellEditor extends AbstractCellEditor implements 
 		type.setDefaultValue(getCellEditorValue());
 	}
 
-	private JComboBox createOperatorCombo() {
+	private JComboBox<String> createOperatorCombo() {
 		Vector<String> allOps = new Vector<String>(process.getAllOperatorNames());
 		Collections.sort(allOps);
-		JComboBox combo = new JComboBox(allOps);
+		JComboBox<String> combo = new JComboBox<>(allOps);
 		combo.addItemListener(new ItemListener() {
 
 			@Override
@@ -118,18 +117,16 @@ public class OperatorValueValueCellEditor extends AbstractCellEditor implements 
 		if (operator != null) {
 			switch (typeCombo.getSelectedIndex()) {
 				case 0:
-					Iterator i = operator.getValues().iterator();
-					while (i.hasNext()) {
-						valueCombo.addItem(((Value) i.next()).getKey());
+					for (Value value : operator.getValues()) {
+						valueCombo.addItem(value.getKey());
 					}
 					if (valueCombo.getItemCount() == 0) {
 						valueCombo.addItem("no values");
 					}
 					break;
 				case 1:
-					i = operator.getParameters().getParameterTypes().iterator();
-					while (i.hasNext()) {
-						valueCombo.addItem(((ParameterType) i.next()).getKey());
+					for (ParameterType type : operator.getParameters().getParameterTypes()) {
+						valueCombo.addItem(type.getKey());
 					}
 					if (valueCombo.getItemCount() == 0) {
 						valueCombo.addItem("no params");

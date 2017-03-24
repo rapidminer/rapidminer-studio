@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.nio.model;
 
 import java.io.File;
@@ -72,7 +72,7 @@ public class CSVResultSet implements DataResultSet {
 	private int[] valueTypes;
 	private int numColumns = 0;
 	private Operator operator;
-	private final List<ParsingError> errors = new LinkedList<ParsingError>();
+	private final List<ParsingError> errors = new LinkedList<>();
 	private int logCount = 0;
 	private long multiplier;
 	private long lineCounter = 0;
@@ -183,8 +183,40 @@ public class CSVResultSet implements DataResultSet {
 		}
 	}
 
+	/**
+	 * Guesses the column separator of the csv file by counting which {@link ColumnSplitter} appears
+	 * the most in the first rows.
+	 *
+	 * @param csvFile
+	 *            the csv file
+	 * @return the most frequent column separator
+	 */
+	public static String guessColumnSeperator(File csvFile) {
+		return guessColumnSplitter(csvFile).getString();
+	}
+
+	/**
+	 * Guesses the column separator of the csv file by counting which {@link ColumnSplitter} appears
+	 * the most in the first rows.
+	 *
+	 * @param csvFile
+	 *            the path to the file to analyze
+	 * @return the most frequent column separator
+	 */
 	public static String guessColumnSeperator(String csvFile) {
 		return guessColumnSplitter(csvFile).getString();
+	}
+
+	/**
+	 * Guesses the column splitter of the csv file by counting which {@link ColumnSplitter} appears
+	 * the most in the first rows.
+	 *
+	 * @param csvFile
+	 *            the path to the file to analyze
+	 * @return the most frequent {@link ColumnSplitter}
+	 */
+	public static ColumnSplitter guessColumnSplitter(String csvFile) {
+		return guessColumnSplitter(new File(csvFile));
 	}
 
 	/**
@@ -195,8 +227,8 @@ public class CSVResultSet implements DataResultSet {
 	 *            the file to analyze
 	 * @return the most frequent {@link ColumnSplitter}
 	 */
-	public static ColumnSplitter guessColumnSplitter(String csvFile) {
-		try (LineReader tempReader = new LineReader(new File(csvFile), StandardCharsets.UTF_8)) {
+	public static ColumnSplitter guessColumnSplitter(File csvFile) {
+		try (LineReader tempReader = new LineReader(csvFile, StandardCharsets.UTF_8)) {
 
 			/* could be default, apply heuristics to find the column splitter */
 			HashMap<ColumnSplitter, Integer> splitterValues = new HashMap<>();

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.repository.gui;
 
 import java.awt.BorderLayout;
@@ -29,6 +29,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JMenu;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -71,6 +72,14 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		}
 	};
 
+	private static final Action SORT_REPOSITORY_ACTION = new ResourceAction(true, "repository_sort_submenu") {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {}
+	};
+
 	private final RepositoryTree tree;
 
 	public RepositoryBrowser() {
@@ -105,6 +114,11 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		final JPopupMenu furtherActionsMenu = new JPopupMenu();
 		furtherActionsMenu.add(ADD_REPOSITORY_ACTION);
 		furtherActionsMenu.add(tree.CREATE_FOLDER_ACTION);
+		final JMenu sortActionsMenu = new JMenu(SORT_REPOSITORY_ACTION);
+		sortActionsMenu.add(tree.SORT_BY_NAME_ACTION.createMenuItem());
+		sortActionsMenu.add(tree.SORT_BY_LAST_MODIFIED_DATE_ACTION.createMenuItem());
+		furtherActionsMenu.add(sortActionsMenu);
+
 		furtherActionsMenu.add(tree.REFRESH_ACTION);
 		furtherActionsMenu.add(tree.SHOW_PROCESS_IN_REPOSITORY_ACTION);
 

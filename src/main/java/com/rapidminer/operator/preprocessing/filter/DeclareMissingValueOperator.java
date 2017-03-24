@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.util.Arrays;
@@ -150,14 +150,12 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 								new SimpleMetaDataError(Severity.ERROR, getInputPort(), "attribute_selection_empty"));
 					} else {
 						if (mode.equals(NUMERIC)) {
-							getInputPort().addError(
-									new SimpleMetaDataError(Severity.ERROR, getInputPort(),
-											"exampleset.must_contain_numerical_attribute"));
+							getInputPort().addError(new SimpleMetaDataError(Severity.ERROR, getInputPort(),
+									"exampleset.must_contain_numerical_attribute"));
 						}
 						if (mode.equals(NOMINAL)) {
-							getInputPort().addError(
-									new SimpleMetaDataError(Severity.ERROR, getInputPort(),
-											"exampleset.must_contain_nominal_attribute"));
+							getInputPort().addError(new SimpleMetaDataError(Severity.ERROR, getInputPort(),
+									"exampleset.must_contain_nominal_attribute"));
 						}
 					}
 				}
@@ -219,6 +217,10 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 
 		boolean ignoreIncompatibleAttributes = getCompatibilityLevel().isAtMost(VERSION_IGNORE_ATTRIBUTES_OF_WRONG_TYPE);
 		String nominalString = getParameterAsString(PARAMETER_MISSING_VALUE_NOMINAL);
+		double missingValueNumeric = 0;
+		if (mode.equals(NUMERIC)) {
+			missingValueNumeric = getParameterAsDouble(PARAMETER_MISSING_VALUE_NUMERIC);
+		}
 		if (nominalString == null) {
 			nominalString = "";
 		}
@@ -228,7 +230,7 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 				checkForStop();
 				if (mode.equals(NUMERIC)) {
 					if (ignoreIncompatibleAttributes || attribute.isNumerical()) {
-						if (example.getValue(attribute) == getParameterAsDouble(PARAMETER_MISSING_VALUE_NUMERIC)) {
+						if (example.getValue(attribute) == missingValueNumeric) {
 							example.setValue(attribute, Double.NaN);
 						}
 					}
@@ -262,9 +264,8 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 		type.setExpert(false);
 		parameters.add(type);
 
-		type = new ParameterTypeDouble(PARAMETER_MISSING_VALUE_NUMERIC,
-				"This parameter defines the missing numerical value", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
-				true);
+		type = new ParameterTypeDouble(PARAMETER_MISSING_VALUE_NUMERIC, "This parameter defines the missing numerical value",
+				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true);
 		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_MODE, VALUE_TYPES, true, 0));
 		type.setExpert(false);
 		parameters.add(type);
@@ -303,8 +304,8 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		OperatorVersion[] incompatibleVersions = super.getIncompatibleVersionChanges();
-		OperatorVersion[] extendedIncompatibleVersions = Arrays
-				.copyOf(incompatibleVersions, incompatibleVersions.length + 2);
+		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
+				incompatibleVersions.length + 2);
 		extendedIncompatibleVersions[incompatibleVersions.length] = VERSION_IGNORE_ATTRIBUTES_OF_WRONG_TYPE;
 		extendedIncompatibleVersions[incompatibleVersions.length + 1] = VERSION_MAY_WRITE_INTO_DATA;
 

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.dialog;
 
 import java.awt.BorderLayout;
@@ -87,7 +87,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 
 	private OperatorInfoPanel operatorInfo = null;
 
-	private final JList operatorList = new OperatorList();
+	private final JList<OperatorDescription> operatorList = new OperatorList();
 
 	private String searchText = "";
 
@@ -210,7 +210,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 		Collections.sort(allGroups);
 		final String[] groupArray = new String[allGroups.size()];
 		allGroups.toArray(groupArray);
-		final JComboBox groupComboBox = new JComboBox(groupArray);
+		final JComboBox<String> groupComboBox = new JComboBox<>(groupArray);
 		groupComboBox.addActionListener(new ActionListener() {
 
 			@Override
@@ -231,7 +231,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 
 		// input
 		if (inputClass == null) {
-			final JComboBox inputType = new JComboBox(inputObjects);
+			final JComboBox<String> inputType = new JComboBox<>(inputObjects);
 			inputType.addActionListener(new ActionListener() {
 
 				@Override
@@ -253,7 +253,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 
 		// output
 		if (outputClass == null) {
-			final JComboBox outputType = new JComboBox(inputObjects);
+			final JComboBox<String> outputType = new JComboBox<>(inputObjects);
 			outputType.addActionListener(new ActionListener() {
 
 				@Override
@@ -283,7 +283,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 		}
 
 		if (firstCapability == null) {
-			final JComboBox firstCapabilityType = new JComboBox(capabilities);
+			final JComboBox<String> firstCapabilityType = new JComboBox<>(capabilities);
 			firstCapabilityType.addActionListener(new ActionListener() {
 
 				@Override
@@ -304,7 +304,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 		}
 
 		if (secondCapability == null) {
-			final JComboBox secondCapabilityType = new JComboBox(capabilities);
+			final JComboBox<String> secondCapabilityType = new JComboBox<>(capabilities);
 			secondCapabilityType.addActionListener(new ActionListener() {
 
 				@Override
@@ -330,7 +330,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (!e.getValueIsAdjusting()) {
-					OperatorDescription selection = (OperatorDescription) operatorList.getSelectedValue();
+					OperatorDescription selection = operatorList.getSelectedValue();
 					setSelectedOperator(selection);
 				}
 			}

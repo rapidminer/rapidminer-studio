@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.similarity;
 
 import java.util.ArrayList;
@@ -96,13 +96,14 @@ public class CrossDistancesOperator extends Operator {
 					ExampleSetMetaData refMD = (ExampleSetMetaData) referenceSetInput.getMetaData();
 					ExampleSetMetaData requestMD = (ExampleSetMetaData) requestSetInput.getMetaData();
 					AttributeMetaData refId = refMD == null ? null : refMD.getAttributeByRole(Attributes.ID_NAME);
-					AttributeMetaData requestId = requestMD == null ? null : requestMD
-							.getAttributeByRole(Attributes.ID_NAME);
+					AttributeMetaData requestId = requestMD == null ? null
+							: requestMD.getAttributeByRole(Attributes.ID_NAME);
 
 					ExampleSetMetaData emd = new ExampleSetMetaData();
-					emd.addAttribute(new AttributeMetaData("request", requestId == null ? Ontology.REAL : requestId
-							.getValueType()));
-					emd.addAttribute(new AttributeMetaData("document", refId == null ? Ontology.REAL : refId.getValueType()));
+					emd.addAttribute(
+							new AttributeMetaData("request", requestId == null ? Ontology.REAL : requestId.getValueType()));
+					emd.addAttribute(
+							new AttributeMetaData("document", refId == null ? Ontology.REAL : refId.getValueType()));
 					emd.addAttribute(new AttributeMetaData("distance", Ontology.REAL));
 
 					return emd;
@@ -137,11 +138,13 @@ public class CrossDistancesOperator extends Operator {
 
 		double searchModeFactor = getParameterAsInt(PARAMETER_SEARCH_MODE) == MODE_FARTHEST ? -1d : 1d;
 		boolean computeSimilarity = getParameterAsBoolean(PARAMETER_COMPUTE_SIMILARITIES);
+		boolean useK = getParameterAsBoolean(PARAMETER_USE_K);
+		int k = getParameterAsInt(PARAMETER_K);
 
 		for (Example request : requestSet) {
 			Collection<Tupel<Double, Double>> distances;
-			if (getParameterAsBoolean(PARAMETER_USE_K)) {
-				distances = new BoundedPriorityQueue<Tupel<Double, Double>>(getParameterAsInt(PARAMETER_K));
+			if (useK) {
+				distances = new BoundedPriorityQueue<Tupel<Double, Double>>(k);
 			} else {
 				distances = new ArrayList<Tupel<Double, Double>>();
 			}
@@ -149,8 +152,9 @@ public class CrossDistancesOperator extends Operator {
 			// calculating distance
 			for (Example document : documentSet) {
 				if (computeSimilarity) {
-					distances.add(new Tupel<Double, Double>(measure.calculateSimilarity(request, document)
-							* searchModeFactor, document.getValue(oldDocumentId)));
+					distances
+							.add(new Tupel<Double, Double>(measure.calculateSimilarity(request, document) * searchModeFactor,
+									document.getValue(oldDocumentId)));
 				} else {
 					distances.add(new Tupel<Double, Double>(measure.calculateDistance(request, document) * searchModeFactor,
 							document.getValue(oldDocumentId)));
@@ -205,15 +209,13 @@ public class CrossDistancesOperator extends Operator {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeCategory(
-				PARAMETER_SEARCH_MODE,
+		type = new ParameterTypeCategory(PARAMETER_SEARCH_MODE,
 				"Determines if the smallest (nearest) or the largest (farthest) distances or similarities should be selected. Keep in mind that the meaning inverses if you compute the similarity instead the distance between examples!",
 				SEARCH_MODE, MODE_NEAREST, false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_K, true, true));
 		types.add(type);
 
-		types.add(new ParameterTypeBoolean(
-				PARAMETER_COMPUTE_SIMILARITIES,
+		types.add(new ParameterTypeBoolean(PARAMETER_COMPUTE_SIMILARITIES,
 				"If checked the similarities are computed instead of the distances. All measures will still be usable, but measures that are not originally distance or respectively similarity measures are transformed to match optimization direction. This will most likely transform the scale in a non linear way.",
 				false, true));
 		return types;

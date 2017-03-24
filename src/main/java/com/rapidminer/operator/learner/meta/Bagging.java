@@ -1,22 +1,25 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.meta;
+
+import java.util.List;
+import java.util.Vector;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
@@ -31,14 +34,11 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-import java.util.Vector;
-
 
 /**
  * This Bagging implementation can be used with all learners available in RapidMiner, not only the
  * ones which originally are part of the Weka package.
- * 
+ *
  * @author Martin Scholz, Ingo Mierswa
  */
 public class Bagging extends AbstractMetaLearner {
@@ -76,13 +76,13 @@ public class Bagging extends AbstractMetaLearner {
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 		final double splitRatio = this.getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
 		final int numInterations = this.getParameterAsInt(PARAMETER_ITERATIONS);
+		boolean useLocalRandomSeed = getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED);
+		int localRandomSeed = getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED);
 
 		Vector<Model> modelList = new Vector<Model>();
 		for (this.currentIteration = 0; this.currentIteration < numInterations; this.currentIteration++) {
 			SplittedExampleSet splitted = new SplittedExampleSet(exampleSet, splitRatio,
-					SplittedExampleSet.SHUFFLED_SAMPLING,
-					getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+					SplittedExampleSet.SHUFFLED_SAMPLING, useLocalRandomSeed, localRandomSeed);
 			splitted.selectSingleSubset(0);
 			modelList.add(applyInnerLearner(splitted));
 			inApplyLoop();

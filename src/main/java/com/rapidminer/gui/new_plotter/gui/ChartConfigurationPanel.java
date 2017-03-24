@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui;
 
 import java.awt.CardLayout;
@@ -156,7 +156,7 @@ PlotConfigurationProcessingListener, PrintableComponent {
 	private final JFreeChartPlotEngine plotEngine;
 	private final LinkAndBrushChartPanel chartPanel;
 
-	private JList attributeList = new JList();
+	private JList<DataTableColumn> attributeList = new JList<>();
 
 	private ExtendedHTMLJEditorPane statusTextArea;
 
@@ -205,7 +205,7 @@ PlotConfigurationProcessingListener, PrintableComponent {
 
 	private transient DataTable cachedDePivotedDataTable;
 
-	private JComboBox datasetTransformationSelectionComboBox;
+	private JComboBox<DatasetTransformationType> datasetTransformationSelectionComboBox;
 
 	private JButton configureDataSetTransformationButton;
 
@@ -546,7 +546,7 @@ PlotConfigurationProcessingListener, PrintableComponent {
 
 				datasetTranformationContainerPanel.add(datasetTransformationLabel, itemConstraint);
 
-				datasetTransformationSelectionComboBox = new JComboBox(DatasetTransformationType.values());
+				datasetTransformationSelectionComboBox = new JComboBox<>(DatasetTransformationType.values());
 				itemConstraint = new GridBagConstraints();
 				itemConstraint.gridwidth = GridBagConstraints.REMAINDER;
 				itemConstraint.fill = GridBagConstraints.HORIZONTAL;
@@ -579,8 +579,8 @@ PlotConfigurationProcessingListener, PrintableComponent {
 						return;
 					}
 				});
-				datasetTransformationSelectionComboBox.setRenderer(new EnumComboBoxCellRenderer(
-						"plotter.DatasetTransformationType"));
+				datasetTransformationSelectionComboBox
+						.setRenderer(new EnumComboBoxCellRenderer<>("plotter.DatasetTransformationType"));
 
 				itemConstraint = new GridBagConstraints();
 				itemConstraint.gridx = 1;
@@ -724,7 +724,7 @@ PlotConfigurationProcessingListener, PrintableComponent {
 			Vector<DataTableColumn> attributeVector = assembleDataTableColumnList(dataTable);
 
 			// add attribute list to panel
-			attributeList = new JList(attributeVector);
+			attributeList = new JList<>(attributeVector);
 			attributeListLabel.setLabelFor(attributeList);
 			attributeList.setDragEnabled(true);
 			attributeList.setCellRenderer(new DataTableColumnListCellRenderer());
@@ -1276,6 +1276,7 @@ PlotConfigurationProcessingListener, PrintableComponent {
 			case META_CHANGE:
 				adaptGUI();
 				break;
+			default:
 		}
 		return true;
 	}
@@ -1318,7 +1319,7 @@ PlotConfigurationProcessingListener, PrintableComponent {
 		}
 
 		// adapt attribute list to selection
-		DefaultListModel attributeListModel = new DefaultListModel();
+		DefaultListModel<DataTableColumn> attributeListModel = new DefaultListModel<>();
 		for (DataTableColumn column : columnList) {
 			attributeListModel.addElement(column);
 		}

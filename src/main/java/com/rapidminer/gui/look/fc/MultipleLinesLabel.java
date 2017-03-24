@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.look.fc;
 
 import java.awt.Dimension;
@@ -23,7 +23,6 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Insets;
-import java.util.Enumeration;
 import java.util.Vector;
 
 import javax.swing.JComponent;
@@ -105,8 +104,6 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 			w -= 4;
 		}
 
-		int counter = 0;
-
 		char[] ca = this.text.toCharArray();
 		String tempStr = "";
 		Vector<String> sentVec = new Vector<String>();
@@ -137,15 +134,10 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 			sentVec.add(tempStr);
 		}
 
-		Enumeration els = sentVec.elements();
-
 		StringBuffer lineStr = new StringBuffer();
-		while (els.hasMoreElements()) {
-			String str = els.nextElement().toString();
-			counter++;
-
+		for (String str : sentVec) {
 			if (this.fontMetrics.stringWidth(str) <= w) {
-				if ((this.fontMetrics.stringWidth(lineStr + str) <= w)) {
+				if (this.fontMetrics.stringWidth(lineStr + str) <= w) {
 					lineStr.append(str);
 				} else {
 					if (lineStr.length() > 0) {
@@ -208,7 +200,7 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 	}
 
 	public Dimension getMinimumSize1() {
-		if ((this.maxWidth == -1) || (this.textHeight == -1)) {
+		if (this.maxWidth == -1 || this.textHeight == -1) {
 			recalculateDimension();
 		}
 		Insets insets = getInsets();
@@ -248,7 +240,7 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 			if (ha == LEFT) {
 				x = insets.left + (clientAreaWidth - this.maxWidth) / 2;
 			} else if (ha == RIGHT) {
-				x = insets.left + (clientAreaWidth - this.maxWidth) / 2 + (this.maxWidth - ww);
+				x = insets.left + (clientAreaWidth - this.maxWidth) / 2 + this.maxWidth - ww;
 			} else if (ha == CENTER) {
 				x = insets.left + (clientAreaWidth - ww) / 2;
 			}
@@ -274,7 +266,7 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 	@Override
 	protected void paintComponent(Graphics g) {
 
-		if ((this.getWidth() <= 0) || (this.getHeight() <= 0)) {
+		if (this.getWidth() <= 0 || this.getHeight() <= 0) {
 			return;
 		}
 
@@ -291,7 +283,7 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 
 		Dimension d = getSize();
 
-		if ((d.width != this.maxWidth) || (d.height != this.textHeight)) {
+		if (d.width != this.maxWidth || d.height != this.textHeight) {
 			recalculateDimension();
 		}
 

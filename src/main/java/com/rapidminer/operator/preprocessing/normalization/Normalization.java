@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.normalization;
 
 import java.util.ArrayList;
@@ -23,12 +23,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -72,12 +69,6 @@ public class Normalization extends PreprocessingOperator {
 	public static final int METHOD_PROPORTION_TRANSFORMATION = 2;
 
 	public static final String PARAMETER_NORMALIZATION_METHOD = "method";
-
-	/**
-	 * Incompatible version, old version writes into the exampleset, if original output port is not
-	 * connected.
-	 */
-	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
 	/** Creates a new Normalization operator. */
 	public Normalization(OperatorDescription description) {
@@ -134,24 +125,13 @@ public class Normalization extends PreprocessingOperator {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
-			return super.writesIntoExistingData();
-		} else {
-			// old version: true only if original output port is connected
-			return isOriginalOutputConnected() && super.writesIntoExistingData();
-		}
+		return false;
 	}
 
 	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), Normalization.class,
 				attributeSelector);
-	}
-
-	@Override
-	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
-				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
 	}
 
 	/**

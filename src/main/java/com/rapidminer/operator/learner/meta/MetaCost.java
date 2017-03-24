@@ -1,22 +1,25 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.meta;
+
+import java.util.List;
+import java.util.Random;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.MappedExampleSet;
@@ -32,14 +35,11 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeMatrix;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-import java.util.Random;
-
 
 /**
  * This operator uses a given cost matrix to compute label predictions according to classification
  * costs. The method used by this operator is similar to MetaCost as described by Pedro Domingos.
- * 
+ *
  * @author Helge Homburg
  */
 public class MetaCost extends AbstractMetaLearner {
@@ -59,7 +59,9 @@ public class MetaCost extends AbstractMetaLearner {
 	/** The parameter name for &quot;The number of iterations (base models).&quot; */
 	public static final String PARAMETER_ITERATIONS = "iterations";
 
-	/** The parameter name for &quot;Use sampling with replacement (true) or without (false)&quot; */
+	/**
+	 * The parameter name for &quot;Use sampling with replacement (true) or without (false)&quot;
+	 */
 	public static final String PARAMETER_SAMPLING_WITH_REPLACEMENT = "sampling_with_replacement";
 
 	public MetaCost(OperatorDescription description) {
@@ -81,19 +83,18 @@ public class MetaCost extends AbstractMetaLearner {
 			Random randomGenerator = RandomGenerator.getRandomGenerator(this);
 			int size = (int) (inputSet.size() * subsetRatio);
 			for (int i = 0; i < iterations; i++) {
-				ExampleSet exampleSet = (ExampleSet) inputSet.clone();
-				int[] mapping = MappedExampleSet.createBootstrappingMapping(exampleSet, size, randomGenerator);
-				MappedExampleSet currentSampleSet = new MappedExampleSet(exampleSet, mapping);
+				int[] mapping = MappedExampleSet.createBootstrappingMapping(inputSet, size, randomGenerator);
+				MappedExampleSet currentSampleSet = new MappedExampleSet(inputSet, mapping);
 				models[i] = applyInnerLearner(currentSampleSet);
 				inApplyLoop();
 			}
 		} else {
 			// sampling without replacement
+			boolean useLocalRandomSeed = getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED);
+			int localRandomSeed = getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED);
 			for (int i = 0; i < iterations; i++) {
-				SplittedExampleSet splitted = new SplittedExampleSet((ExampleSet) inputSet.clone(), subsetRatio,
-						SplittedExampleSet.SHUFFLED_SAMPLING,
-						getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-						getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+				SplittedExampleSet splitted = new SplittedExampleSet(inputSet, subsetRatio,
+						SplittedExampleSet.SHUFFLED_SAMPLING, useLocalRandomSeed, localRandomSeed);
 				splitted.selectSingleSubset(0);
 				models[i] = applyInnerLearner(splitted);
 				inApplyLoop();
@@ -127,8 +128,8 @@ public class MetaCost extends AbstractMetaLearner {
 				"Cost Matrix", "Predicted Class", "True Class", true, false));
 		types.add(new ParameterTypeDouble(PARAMETER_USE_SUBSET_FOR_TRAINING,
 				"Fraction of examples used for training. Must be greater than 0 and should be lower than 1.", 0, 1, 1.0));
-		types.add(new ParameterTypeInt(PARAMETER_ITERATIONS, "The number of iterations (base models).", 1,
-				Integer.MAX_VALUE, 10));
+		types.add(new ParameterTypeInt(PARAMETER_ITERATIONS, "The number of iterations (base models).", 1, Integer.MAX_VALUE,
+				10));
 		types.add(new ParameterTypeBoolean(PARAMETER_SAMPLING_WITH_REPLACEMENT,
 				"Use sampling with replacement (true) or without (false)", true));
 

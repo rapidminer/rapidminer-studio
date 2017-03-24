@@ -1,22 +1,24 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.functions;
+
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -39,8 +41,6 @@ import com.rapidminer.tools.math.optimization.ec.es.ESOptimization;
 import com.rapidminer.tools.math.optimization.ec.es.Individual;
 import com.rapidminer.tools.math.optimization.ec.es.OptimizationValueType;
 
-import java.util.List;
-
 
 /**
  * <p>
@@ -51,7 +51,7 @@ import java.util.List;
  * <br />
  * will be fitted to the training data.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public class PolynomialRegression extends AbstractLearner {
@@ -74,18 +74,27 @@ public class PolynomialRegression extends AbstractLearner {
 
 		private Attribute label;
 
+		private Attribute[] attributes;
+
 		public RegressionOptimization(ExampleSet exampleSet, int replicationFactor, int maxIterations, int maxDegree,
 				double minCoefficient, double maxCoefficient, RandomGenerator random, LoggingHandler logging,
 				Operator executingOperator) {
 
-			super(getMinVector(exampleSet, replicationFactor, minCoefficient), getMaxVector(exampleSet, replicationFactor,
-					maxDegree, maxCoefficient), 1, exampleSet.getAttributes().size() * 2 * replicationFactor + 1,
-					ESOptimization.INIT_TYPE_RANDOM, maxIterations, maxIterations, ESOptimization.TOURNAMENT_SELECTION, 1.0,
-					true, ESOptimization.GAUSSIAN_MUTATION, 0.01d, 0.0d, false, false, random, logging, executingOperator);
+			super(getMinVector(exampleSet, replicationFactor, minCoefficient),
+					getMaxVector(exampleSet, replicationFactor, maxDegree, maxCoefficient), 1,
+					exampleSet.getAttributes().size() * 2 * replicationFactor + 1, ESOptimization.INIT_TYPE_RANDOM,
+					maxIterations, maxIterations, ESOptimization.TOURNAMENT_SELECTION, 1.0, true,
+					ESOptimization.GAUSSIAN_MUTATION, 0.01d, 0.0d, false, false, random, logging, executingOperator);
 
 			this.replicationFactor = replicationFactor;
 			this.exampleSet = exampleSet;
 			this.label = exampleSet.getAttributes().getLabel();
+			this.attributes = new Attribute[exampleSet.getAttributes().size()];
+			int i = 0;
+			for (Attribute attribute : exampleSet.getAttributes()) {
+				attributes[i] = attribute;
+				i++;
+			}
 
 			int index = 0;
 			for (int a = 0; a < exampleSet.getAttributes().size(); a++) {
@@ -133,7 +142,8 @@ public class PolynomialRegression extends AbstractLearner {
 
 			double error = 0.0d;
 			for (Example example : exampleSet) {
-				double prediction = PolynomialRegressionModel.calculatePrediction(example, coefficients, degrees, offset);
+				double prediction = PolynomialRegressionModel.calculatePrediction(example, attributes, coefficients, degrees,
+						offset);
 				double diff = Math.abs(example.getValue(label) - prediction);
 				error += diff * diff;
 			}

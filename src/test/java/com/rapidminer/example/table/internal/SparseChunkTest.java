@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.table.internal;
 
 import static org.junit.Assert.assertEquals;
@@ -36,8 +36,8 @@ public class SparseChunkTest {
 
 	@Test
 	public void fillWithDefaults() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
 		for (int i = 0; i < 100; i++) {
 			iasc.set(i, 0);
 			dasc.set(i, 0);
@@ -50,8 +50,8 @@ public class SparseChunkTest {
 
 	@Test
 	public void fillWithDefaultsNaN() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(Double.NaN);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(Double.NaN);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(Double.NaN);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(Double.NaN);
 		for (int i = 0; i < 100; i++) {
 			iasc.set(i, Double.NaN);
 			dasc.set(i, Double.NaN);
@@ -64,8 +64,8 @@ public class SparseChunkTest {
 
 	@Test
 	public void fillDense() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
 		for (int i = 0; i < 100; i++) {
 			iasc.set(i, 1);
 			dasc.set(i, 1);
@@ -78,8 +78,8 @@ public class SparseChunkTest {
 
 	@Test
 	public void fillDenseNaN() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
 		for (int i = 0; i < 100; i++) {
 			iasc.set(i, Double.NaN);
 			dasc.set(i, Double.NaN);
@@ -92,8 +92,8 @@ public class SparseChunkTest {
 
 	@Test
 	public void fillSparse() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
 		for (int i = 0; i < 100; i += 10) {
 			iasc.set(i, 1);
 			dasc.set(i, 1);
@@ -106,10 +106,10 @@ public class SparseChunkTest {
 
 	@Test
 	public void fillOverThreshold() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
-		int nonDefaultValues = (int) (100 * AutoColumnUtils.THRESHOLD_SPARSE_MAXIMAL_DENSITY
-				/ (1 - AutoColumnUtils.THRESHOLD_SPARSE_MAXIMAL_DENSITY)) + 1;
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
+		int nonDefaultValues = (int) (100 * AutoColumnUtils.THRESHOLD_HIGH_SPARSITY_MAXIMAL_DENSITY
+				/ (1 - AutoColumnUtils.THRESHOLD_HIGH_SPARSITY_MAXIMAL_DENSITY)) + 1;
 		iasc.ensure(100 + nonDefaultValues);
 		dasc.ensure(100 + nonDefaultValues);
 		for (int i = 0; i < 100; i++) {
@@ -126,8 +126,8 @@ public class SparseChunkTest {
 
 	@Test
 	public void removeIndicesBackToFront() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
 		for (int i = 0; i < 1000; i += 10) {
 			iasc.set(i, 1);
 			dasc.set(i, 1);
@@ -144,8 +144,8 @@ public class SparseChunkTest {
 
 	@Test
 	public void removeIndicesFrontToBack() {
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
 		for (int i = 0; i < 1000; i += 10) {
 			iasc.set(i, 1);
 			dasc.set(i, 1);
@@ -165,8 +165,8 @@ public class SparseChunkTest {
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		int[] indices = new int[1000];
 		Arrays.setAll(indices, i -> random.nextInt(0, 1000));
-		IntegerSparseChunk iasc = new IntegerSparseChunk(0);
-		DoubleSparseChunk dasc = new DoubleSparseChunk(0);
+		IntegerHighSparsityChunk iasc = new IntegerHighSparsityChunk(0);
+		DoubleHighSparsityChunk dasc = new DoubleHighSparsityChunk(0);
 		for (int i : indices) {
 			iasc.set(i, 1);
 			dasc.set(i, 1);

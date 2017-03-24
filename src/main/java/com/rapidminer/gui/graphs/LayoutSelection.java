@@ -1,24 +1,35 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.graphs;
 
+import java.awt.event.ActionEvent;
+import java.lang.reflect.Constructor;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.logging.Level;
+
+import javax.swing.JComboBox;
+
+import org.apache.commons.collections15.Transformer;
+
 import com.rapidminer.tools.LogService;
+
 import edu.uci.ics.jung.algorithms.layout.BalloonLayout;
 import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.FRLayout2;
@@ -31,31 +42,22 @@ import edu.uci.ics.jung.algorithms.layout.TreeLayout;
 import edu.uci.ics.jung.graph.Forest;
 import edu.uci.ics.jung.graph.Graph;
 
-import java.awt.event.ActionEvent;
-import java.lang.reflect.Constructor;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.logging.Level;
-
-import javax.swing.JComboBox;
-
-import org.apache.commons.collections15.Transformer;
-
 
 /**
  * The layout selection for the {@link GraphViewer}.
- * 
+ *
  * @author Ingo Mierswa
  */
-public class LayoutSelection<V, E> extends JComboBox {
+public class LayoutSelection<V, E> extends JComboBox<String> {
 
 	private static final long serialVersionUID = 8924517975475876102L;
 
 	private GraphViewer<V, E> graphViewer;
 
-	private transient Graph graph;
+	private transient Graph<V, E> graph;
 
-	private Map<String, Class> layoutMap = null;
+	@SuppressWarnings("rawtypes")
+	private Map<String, Class<? extends Layout>> layoutMap = null;
 
 	private boolean animate = true;
 
@@ -67,7 +69,7 @@ public class LayoutSelection<V, E> extends JComboBox {
 		this.graph = graph;
 		this.layout = new ISOMLayout<V, E>(graph);
 
-		layoutMap = new java.util.LinkedHashMap<String, Class>();
+		layoutMap = new java.util.LinkedHashMap<>();
 
 		if (graph instanceof Forest) {
 			layoutMap.put("Tree", ShapeBasedTreeLayout.class);
@@ -107,10 +109,10 @@ public class LayoutSelection<V, E> extends JComboBox {
 		return this.animate;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void setLayout() {
 		String layoutName = (String) getSelectedItem();
-		Class<?> layoutClass = null;
+		Class<? extends Layout> layoutClass = null;
 		try {
 			layoutClass = layoutMap.get(layoutName);
 		} catch (Exception e) {
@@ -121,21 +123,22 @@ public class LayoutSelection<V, E> extends JComboBox {
 
 		if (layoutClass != null) {
 			try {
-				Constructor constructor = null;
-				Object o = null;
+				Constructor<? extends Layout> constructor = null;
+				Layout<V, E> layout = null;
 				if (layoutClass == ShapeBasedTreeLayout.class) {
 					constructor = layoutClass.getConstructor(new Class[] { Forest.class, Transformer.class });
-					o = constructor.newInstance(graph, new ExtendedVertexShapeTransformer<V>(graphViewer.getGraphCreator()));
-				} else if ((layoutClass == TreeLayout.class) || (layoutClass == BalloonLayout.class)
-						|| (layoutClass == RadialTreeLayout.class)) {
+					layout = constructor.newInstance(graph,
+							new ExtendedVertexShapeTransformer<V>(graphViewer.getGraphCreator()));
+				} else if (layoutClass == TreeLayout.class || layoutClass == BalloonLayout.class
+						|| layoutClass == RadialTreeLayout.class) {
 					constructor = layoutClass.getConstructor(new Class[] { Forest.class });
-					o = constructor.newInstance(new Object[] { graph });
+					layout = constructor.newInstance(graph);
 				} else {
 					constructor = layoutClass.getConstructor(new Class[] { Graph.class });
-					o = constructor.newInstance(new Object[] { graph });
+					layout = constructor.newInstance(graph);
 				}
-				if (o != null) {
-					this.layout = (Layout) o;
+				if (layout != null) {
+					this.layout = layout;
 					this.graphViewer.changeLayout(layout, animate, 0, 0);
 				}
 			} catch (Exception e) {

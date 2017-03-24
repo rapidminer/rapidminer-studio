@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -144,7 +144,20 @@ public class MultiwayDecisionTree extends AbstractMetaLearner {
 
 			// now apply inner operator on transformed exampleset
 			groupedModel.addModel(applyInnerLearner(exampleSet));
-			return groupedModel;
+
+			// the grouped model to be returned should contain a training header. Get the one from
+			// the last model
+			List<Model> models = groupedModel.getModels();
+
+			ExampleSet trainingHeader = models.get(models.size() - 1).getTrainingHeader();
+
+			// construct the model to be returned
+			GroupedModel groupModelWithTrainingHeader = new GroupedModel(trainingHeader);
+			for (Model m : models) {
+				groupModelWithTrainingHeader.addModel(m);
+			}
+
+			return groupModelWithTrainingHeader;
 		} catch (OperatorCreationException e) {
 			throw new UserError(this, 904, "operators", e.getMessage());
 		}

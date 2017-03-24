@@ -1,33 +1,32 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.generator;
 
-import com.rapidminer.tools.RandomGenerator;
-
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.tools.RandomGenerator;
 
 
 /**
  * Returns a classification function with one major class and a set of dots of the second class.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class RandomDotsClassificationFunction extends ClassificationFunction {
@@ -60,24 +59,14 @@ public class RandomDotsClassificationFunction extends ClassificationFunction {
 		if (att.length != 2) {
 			throw new FunctionException("Random Dot classification function", "needs 2 attributes!");
 		}
-		Iterator p = positiveDots.iterator();
-		while (p.hasNext()) {
-			Dot pDot = (Dot) p.next();
+		for (Dot pDot : positiveDots) {
 			if (pDot.contains(att[0], att[1])) {
-				Iterator n = negativeDots.iterator();
-				boolean negative = false;
-				while (n.hasNext()) {
-					Dot nDot = (Dot) n.next();
+				for (Dot nDot : negativeDots) {
 					if (nDot.contains(att[0], att[1])) {
-						negative = true;
-						break;
+						return getLabel().getMapping().mapString("negative");
 					}
 				}
-				if (negative) {
-					return getLabel().getMapping().mapString("negative");
-				} else {
-					return getLabel().getMapping().mapString("positive");
-				}
+				return getLabel().getMapping().mapString("positive");
 			}
 		}
 		return getLabel().getMapping().mapString("negative");

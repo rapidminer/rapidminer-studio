@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example;
 
 import com.rapidminer.example.table.DataRow;
@@ -89,6 +89,9 @@ public class FastExample2SparseTransform {
 			}
 		}
 
+		// trunkate allIndices array
+		this.allIndices = Arrays.copyOf(this.allIndices, pos);
+
 		// trim is necessary in order to allow fast mapping!
 		for (Example e : es) {
 			e.getDataRow().trim();
@@ -114,15 +117,29 @@ public class FastExample2SparseTransform {
 					tempArray[numberNonDefaultAttributes++] = nextPos;
 				}
 			}
-			// trim the table and sort it
+			// trim the array and sort it
 			int[] finalArray = new int[numberNonDefaultAttributes];
 			System.arraycopy(tempArray, 0, finalArray, 0, numberNonDefaultAttributes);
 			// the positions have to be sorted for the sparse data
 			Arrays.sort(finalArray);
 			return finalArray;
 		} else {
-			// default behaviour for other DataRows
-			return allIndices;
+			int[] tempArray = new int[allIndices.length];
+			for (Attribute a : example.getAttributes()) {
+				int nextPos = mapping[a.getTableIndex()];
+				// check for view attribute and zero value
+				// default value should not be used, since both libsvm and fast large margin solve
+				// LPs, so a value other than 0 would make an impact
+				if (nextPos != -1 && example.getValue(a) != 0) {
+					tempArray[numberNonDefaultAttributes++] = nextPos;
+				}
+			}
+			// trim the array and sort it
+			int[] finalArray = new int[numberNonDefaultAttributes];
+			System.arraycopy(tempArray, 0, finalArray, 0, numberNonDefaultAttributes);
+			// the positions have to be sorted for the sparse data
+			Arrays.sort(finalArray);
+			return finalArray;
 		}
 	}
 

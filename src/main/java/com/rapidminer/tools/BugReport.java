@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools;
 
 import com.rapidminer.Process;
@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,13 +60,13 @@ public class BugReport {
 	private static void getSystemProperties(String prefix, StringBuffer string) {
 		string.append(prefix + " properties:" + Tools.getLineSeparator());
 
-		Enumeration keys = System.getProperties().propertyNames();
-		while (keys.hasMoreElements()) {
-			String key = (String) keys.nextElement();
+		for (Object keyObj : System.getProperties().keySet()) {
+			String key = (String) keyObj;
 			if (key.startsWith(prefix)) {
 				string.append("  " + key + "\t= " + System.getProperty(key) + Tools.getLineSeparator());
 			}
 		}
+
 	}
 
 	private static void getRapidMinerParameters(StringBuffer string) {
@@ -276,7 +275,7 @@ public class BugReport {
 		bugMap.put("severity", severity);
 		bugMap.put("status", "NEW");
 
-		Map createResult = (Map) rpcClient.execute("Bug.create", new Object[] { bugMap });
+		Map<?, ?> createResult = (Map<?, ?>) rpcClient.execute("Bug.create", new Object[] { bugMap });
 		// LogService.getRoot().fine("Bug submitted successfully. Bug ID: " +
 		// createResult.get("id"));
 		LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.BugReport.bug_submitted", createResult.get("id"));
@@ -298,7 +297,7 @@ public class BugReport {
 				attachmentMap.put("summary", "process.xml");
 				attachmentMap.put("content_type", "application/xml");
 
-				createResult = (Map) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
+				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
 			} finally {
 				if (fileInputStream != null) {
@@ -321,7 +320,7 @@ public class BugReport {
 				attachmentMap.put("summary", "system-properties.txt");
 				attachmentMap.put("content_type", "text/plain");
 
-				createResult = (Map) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
+				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
 			} finally {
 				if (fileInputStream != null) {
@@ -344,7 +343,7 @@ public class BugReport {
 				attachmentMap.put("summary", "rm.log");
 				attachmentMap.put("content_type", "text/plain");
 
-				createResult = (Map) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
+				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
 			} finally {
 				if (fileInputStream != null) {
@@ -367,7 +366,7 @@ public class BugReport {
 				attachmentMap.put("summary", file.getName());
 				attachmentMap.put("content_type", "application/data");
 
-				createResult = (Map) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
+				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
 			} finally {
 				if (fileInputStream != null) {

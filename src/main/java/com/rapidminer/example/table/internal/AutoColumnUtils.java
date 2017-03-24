@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.table.internal;
 
 import java.util.Arrays;
@@ -38,11 +38,29 @@ final class AutoColumnUtils {
 	/** determines after how many values the check for sparse is done */
 	static final int THRESHOLD_CHECK_FOR_SPARSE = 2048;
 
-	/** the threshold densitity to change to sparse representation */
-	static final double THRESHOLD_SPARSE_DENSITY = 0.01;
+	/** the threshold densitity to change to sparse representation in auto mode */
+	static final double THRESHOLD_HIGH_SPARSITY_DENSITY = 0.01;
 
-	/** the maximal density a sparse column should have */
-	static final double THRESHOLD_SPARSE_MAXIMAL_DENSITY = 0.02;
+	/**
+	 * the threshold densitity to change to sparse representation in memory-optimized mode for
+	 * double values
+	 */
+	static final double THRESHOLD_DOUBLE_MEDIUM_SPARSITY_DENSITY = 0.5;
+
+	/**
+	 * the threshold densitity to change to sparse representation in memory-optimized mode for
+	 * integer values
+	 */
+	static final double THRESHOLD_INTEGER_MEDIUM_SPARSITY_DENSITY = 0.4;
+
+	/** the maximal density a sparse column in auto mode should have */
+	static final double THRESHOLD_HIGH_SPARSITY_MAXIMAL_DENSITY = 0.02;
+
+	/** the maximal density a sparse double column in memory-optimized mode should have */
+	static final double THRESHOLD_DOUBLE_MEDIUM_SPARSITY_MAXIMAL_DENSITY = 0.55;
+
+	/** the maximal density a sparse integer column in memory-optimized mode should have */
+	static final double THRESHOLD_INTEGER_MEDIUM_SPARSITY_MAXIMAL_DENSITY = 0.45;
 
 	/** empty double array to use for empty chunks */
 	static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
@@ -78,14 +96,15 @@ final class AutoColumnUtils {
 	}
 
 	/**
-	 * Calculates the most frequent value in the data array and the density of the other values.
+	 * Calculates the most frequent value in the first {@link #THRESHOLD_CHECK_FOR_SPARSE} entries
+	 * of the data array and the density of the other values.
 	 *
 	 * @param data
 	 *            the array to check
 	 * @return the density of the other values and the most frequent value
 	 */
 	static DensityResult checkDensity(double[] data) {
-		int length = data.length;
+		int length = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE;
 		double[] sorted = Arrays.copyOf(data, length);
 		Arrays.sort(sorted);
 
@@ -112,14 +131,15 @@ final class AutoColumnUtils {
 	}
 
 	/**
-	 * Calculates the most frequent value in the data array and the density of the other values.
+	 * Calculates the most frequent value in the in the first {@link #THRESHOLD_CHECK_FOR_SPARSE}
+	 * entries of the data array and the density of the other values.
 	 *
 	 * @param data
 	 *            the array to check
 	 * @return the density of the other values and the most frequent value
 	 */
 	static DensityResult checkDensity(int[] data) {
-		int length = data.length;
+		int length = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE;
 		int[] sorted = Arrays.copyOf(data, length);
 		Arrays.sort(sorted);
 
@@ -143,6 +163,34 @@ final class AutoColumnUtils {
 
 		double density = 1.0 - mostFrequentCount / (double) length;
 		return new DensityResult(density, mostFrequent == INTEGER_NAN ? Double.NaN : mostFrequent);
+	}
+
+	/**
+	 * Copies the end of src after srcOff to dest starting at destOff. Copies the beginning of src
+	 * until index to dest until if src and dest are not the same array.
+	 *
+	 * @param src
+	 *            the source array
+	 * @param dest
+	 *            the destination array
+	 * @param index
+	 *            the index until which dest should be the same as source
+	 * @param srcOff
+	 *            from where on to copy the end of src
+	 * @param destOff
+	 *            from where on to paste the end of src into dest
+	 * @param length
+	 *            the length to which src is filled
+	 */
+	static void copy(Object src, Object dest, int index, int srcOff, int destOff, int length) {
+		// copy indices after index if exist
+		if (length - srcOff > 0) {
+			System.arraycopy(src, srcOff, dest, destOff, length - srcOff);
+		}
+		if (src != dest && index != 0) {
+			// copy indices before index
+			System.arraycopy(src, 0, dest, 0, index);
+		}
 	}
 
 }

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.ArrayList;
@@ -62,6 +62,8 @@ public class KernelKMeans extends RMAbstractClusterer {
 	 */
 	public static final String PARAMETER_MAX_OPTIMIZATION_STEPS = "max_optimization_steps";
 
+	private static final int OPERATOR_PROGRESS_STEPS = 200;
+
 	public KernelKMeans(OperatorDescription description) {
 		super(description);
 	}
@@ -74,7 +76,7 @@ public class KernelKMeans extends RMAbstractClusterer {
 		Kernel kernel = Kernel.createKernel(this);
 
 		// init operator progress
-		getProgress().setTotal(maxOptimizationSteps);
+		getProgress().setTotal(100);
 
 		// checking and creating ids if necessary
 		Tools.checkAndCreateIds(exampleSet);
@@ -162,6 +164,12 @@ public class KernelKMeans extends RMAbstractClusterer {
 				}
 				newClusterAssignments[i] = nearestIndex;
 				i++;
+
+				// trigger operator progress
+				if (i % OPERATOR_PROGRESS_STEPS == 0) {
+					getProgress()
+							.setCompleted((int) (100.0 * (step + (double) i / exampleSet.size()) / maxOptimizationSteps));
+				}
 			}
 
 			// finishing assignment
@@ -172,13 +180,11 @@ public class KernelKMeans extends RMAbstractClusterer {
 			clusterAssignments = newClusterAssignments;
 
 			// trigger operator progress
-			getProgress().step();
+			getProgress().setCompleted((int) (100.0 * (step + 1.0) / maxOptimizationSteps));
 		}
 
 		// setting last clustering into model
 		model.setClusterAssignments(clusterAssignments, exampleSet);
-
-		getProgress().complete();
 
 		if (addsClusterAttribute()) {
 			Attribute cluster = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
@@ -190,6 +196,8 @@ public class KernelKMeans extends RMAbstractClusterer {
 				i++;
 			}
 		}
+
+		getProgress().complete();
 		return model;
 	}
 
@@ -206,10 +214,10 @@ public class KernelKMeans extends RMAbstractClusterer {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeBoolean(PARAMETER_USE_WEIGHTS, "Indicates if the weight attribute should be used.",
-				false, false));
-		types.add(new ParameterTypeInt(PARAMETER_K, "The number of clusters which should be detected.", 2,
-				Integer.MAX_VALUE, 2, false));
+		types.add(new ParameterTypeBoolean(PARAMETER_USE_WEIGHTS, "Indicates if the weight attribute should be used.", false,
+				false));
+		types.add(new ParameterTypeInt(PARAMETER_K, "The number of clusters which should be detected.", 2, Integer.MAX_VALUE,
+				2, false));
 		types.add(new ParameterTypeInt(PARAMETER_MAX_OPTIMIZATION_STEPS,
 				"The maximal number of iterations performed for one run of k-Means.", 1, Integer.MAX_VALUE, 100, false));
 

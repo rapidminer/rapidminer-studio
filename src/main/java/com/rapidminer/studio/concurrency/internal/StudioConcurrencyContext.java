@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -114,11 +114,17 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		}
 
 		// submit callables without further checks
-		callUnchecked(callables);
+		collectResults(submit(callables));
 	}
 
 	@Override
-	public <T> List<T> call(List<Callable<T>> callables) throws ExecutionException, ExecutionStoppedException {
+	public <T> List<T> call(List<Callable<T>> callables)
+			throws ExecutionException, ExecutionStoppedException, IllegalArgumentException {
+		return collectResults(submit(callables));
+	}
+
+	@Override
+	public <T> List<Future<T>> submit(List<Callable<T>> callables) throws IllegalArgumentException {
 		if (callables == null) {
 			throw new IllegalArgumentException("callables must not be null");
 		}
@@ -136,26 +142,33 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		}
 
 		// submit callables without further checks
-		List<T> result = callUnchecked(callables);
-		return result;
+		List<Future<T>> futures = new ArrayList<>(callables.size());
+		for (Callable<T> callable : callables) {
+			futures.add(getForkJoinPool().submit(callable));
+		}
+		return futures;
 	}
 
-	/**
-	 * Utility method to submit a list of {@code Callable}s without further checks of the submission
-	 * lock.
-	 *
-	 * @param callables
-	 *            the callables
-	 * @return the callables' results
-	 * @throws ExecutionException
-	 *             if the computation threw an exception
-	 * @throws ExecutionStoppedException
-	 *             if the computation was stopped
-	 */
-	private <T> List<T> callUnchecked(List<Callable<T>> callables) throws ExecutionException, ExecutionStoppedException {
-		// the following line is blocking
-		List<Future<T>> futures = getForkJoinPool().invokeAll(callables);
-		List<T> results = new ArrayList<>(callables.size());
+	@Override
+	public <T> List<T> collectResults(List<Future<T>> futures)
+			throws ExecutionException, ExecutionStoppedException, IllegalArgumentException {
+		if (futures == null) {
+			throw new IllegalArgumentException("futures must not be null");
+		}
+
+		// nothing to do if list is empty
+		if (futures.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		// check for null tasks
+		for (Future<T> future : futures) {
+			if (future == null) {
+				throw new IllegalArgumentException("futures must not contain null");
+			}
+		}
+
+		List<T> results = new ArrayList<>(futures.size());
 		for (Future<T> future : futures) {
 			try {
 				T result = future.get();
@@ -190,15 +203,10 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 
 	@Override
 	public int getParallelism() {
-		READ_LOCK.lock();
-		try {
-			if (pool != null) {
-				return pool.getParallelism();
-			} else {
-				return getDesiredParallelismLevel();
-			}
-		} finally {
-			READ_LOCK.unlock();
+		if (pool != null) {
+			return getForkJoinPool().getParallelism();
+		} else {
+			return getDesiredParallelismLevel();
 		}
 	}
 

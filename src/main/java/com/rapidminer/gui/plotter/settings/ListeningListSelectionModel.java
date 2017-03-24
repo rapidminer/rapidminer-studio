@@ -1,42 +1,42 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter.settings;
-
-import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
-import com.rapidminer.parameter.ParameterTypeEnumeration;
 
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JList;
 import javax.swing.ListModel;
 
+import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
+import com.rapidminer.parameter.ParameterTypeEnumeration;
+
 
 /**
  * @author Sebastian Land
- * 
+ *
  */
 public class ListeningListSelectionModel extends DefaultListSelectionModel implements PlotterSettingsChangedListener {
 
 	private static final long serialVersionUID = -3145893699784702675L;
 	private String generalKey;
-	private JList list;
+	private JList<String> list;
 
-	public ListeningListSelectionModel(String generalKey, JList list) {
+	public ListeningListSelectionModel(String generalKey, JList<String> list) {
 		if (generalKey.startsWith("_")) {
 			this.generalKey = generalKey;
 		} else {
@@ -48,7 +48,7 @@ public class ListeningListSelectionModel extends DefaultListSelectionModel imple
 	@Override
 	public void settingChanged(String generalKey, String specificKey, String value) {
 		if (generalKey.equals(this.generalKey)) {
-			ListModel listModel = list.getModel();
+			ListModel<String> listModel = list.getModel();
 			// searching indices of selected dimensions
 			String names[] = ParameterTypeEnumeration.transformString2Enumeration(value);
 			boolean[] selectedDimensions = new boolean[listModel.getSize()];

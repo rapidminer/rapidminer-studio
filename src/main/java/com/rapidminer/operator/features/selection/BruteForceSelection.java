@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.selection;
 
 import java.util.LinkedList;
@@ -74,8 +74,9 @@ public class BruteForceSelection extends FeatureOperator {
 		int minNumberOfFeatures = getParameterAsInt(PARAMETER_MIN_NUMBER_OF_ATTRIBUTES);
 		int maxNumberOfFeatures = getParameterAsInt(PARAMETER_MAX_NUMBER_OF_ATTRIBUTES);
 		int exactNumberOfFeatures = getParameterAsInt(PARAMETER_EXACT_NUMBER_OF_ATTRIBUTES);
+		boolean useExactNumber = getParameterAsBoolean(PARAMETER_USE_EXACT_NUMBER);
 
-		if (getParameterAsBoolean(PARAMETER_USE_EXACT_NUMBER)) {
+		if (useExactNumber) {
 			logNote("Using exact number of features for feature selection (" + exactNumberOfFeatures
 					+ "), ignoring possibly defined range for the number of features.");
 		} else {
@@ -90,7 +91,7 @@ public class BruteForceSelection extends FeatureOperator {
 
 		Population pop = new Population();
 		double[] weights = new double[es.getAttributes().size()];
-		if (getParameterAsBoolean(PARAMETER_USE_EXACT_NUMBER)) {
+		if (useExactNumber) {
 			addAllWithExactNumber(pop, weights, 0, exactNumberOfFeatures);
 		} else {
 			addAllInRange(pop, weights, 0, minNumberOfFeatures, maxNumberOfFeatures);
@@ -175,8 +176,7 @@ public class BruteForceSelection extends FeatureOperator {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeBoolean(
-				PARAMETER_RESTRICT_NUMBER,
+		type = new ParameterTypeBoolean(PARAMETER_RESTRICT_NUMBER,
 				"If checked the maximal number of attributes might be restricted. Otherwise all combinations of all number of attributes are generated and tested.",
 				false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_EXACT_NUMBER, false, false));

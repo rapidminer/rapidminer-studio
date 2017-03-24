@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui;
 
 import java.awt.BorderLayout;
@@ -157,6 +157,7 @@ import com.vlsolutions.swing.toolbars.ToolBarContainer;
  *
  * @author Ingo Mierswa, Simon Fischer, Sebastian Land, Marius Helf
  */
+@SuppressWarnings("deprecation")
 public class MainFrame extends ApplicationFrame implements WindowListener {
 
 	private static final long serialVersionUID = 1L;
@@ -869,7 +870,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		// ask for confirmation before stopping the currently running process and opening a new one!
 		if (getProcessState() == Process.PROCESS_STATE_RUNNING || getProcessState() == Process.PROCESS_STATE_PAUSED) {
 			if (SwingTools.showConfirmDialog("close_running_process",
-					ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+					ConfirmDialog.YES_NO_OPTION) != ConfirmDialog.YES_OPTION) {
 				return;
 			}
 		}
@@ -1306,7 +1307,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 						if (RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_RUNNING
 								|| RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED) {
 							if (SwingTools.showConfirmDialog("close_running_process",
-									ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+									ConfirmDialog.YES_NO_OPTION) != ConfirmDialog.YES_OPTION) {
 								return false;
 							}
 						}

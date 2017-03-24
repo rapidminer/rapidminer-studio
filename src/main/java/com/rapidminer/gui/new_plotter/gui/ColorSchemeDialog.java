@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui;
 
 import java.awt.Color;
@@ -149,7 +149,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 	private JButton removeCategoryColorButton;
 	private JScrollPane colorListScrollPane;
 	private JPanel categoryAndGradientConfigPanel;
-	private JComboBox<ColorScheme> colorSchemeComboBox;
+	private JComboBox<Object> colorSchemeComboBox;
 
 	private JMenuItem removeMenuItem;
 	private JMenuItem changeColorMenuItem;
@@ -212,7 +212,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 		nominalColorListModel = new DefaultListModel<Color>();
 		gradientStartColorComboBoxModel = new DefaultComboBoxModel<Color>();
 		gradientEndColorComboBoxModel = new DefaultComboBoxModel<Color>();
-		colorSchemeComboBoxModel = new DefaultComboBoxModel<Object>();
+		colorSchemeComboBoxModel = new DefaultComboBoxModel<>();
 
 		this.setResizable(false);
 
@@ -586,7 +586,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 			gradientEndColorComboBox = new JComboBox<Color>(gradientEndColorComboBoxModel);
 			gradientEndLabel.setLabelFor(gradientEndColorComboBox);
 			gradientEndColorComboBox.setPreferredSize(preferredGradientComboBoxSize);
-			gradientEndColorComboBox.setRenderer(new ColorRGBComboBoxCellRenderer());
+			gradientEndColorComboBox.setRenderer(new ColorRGBComboBoxCellRenderer<>());
 			gradientEndColorComboBox.addActionListener(new ActionListener() {
 
 				@Override
@@ -641,7 +641,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 			gradientStartColorComboBox = new JComboBox<Color>(gradientStartColorComboBoxModel);
 			gradientStartLabel.setLabelFor(gradientStartColorComboBox);
 			gradientStartColorComboBox.setPreferredSize(preferredGradientComboBoxSize);
-			gradientStartColorComboBox.setRenderer(new ColorRGBComboBoxCellRenderer());
+			gradientStartColorComboBox.setRenderer(new ColorRGBComboBoxCellRenderer<>());
 			gradientStartColorComboBox.setEditable(false);
 			gradientStartColorComboBox.addActionListener(new ActionListener() {
 
@@ -1026,7 +1026,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 
 			{
 
-				colorSchemeComboBox = new JComboBox(colorSchemeComboBoxModel);
+				colorSchemeComboBox = new JComboBox<>(colorSchemeComboBoxModel);
 				actviceSchemeLabel.setLabelFor(colorSchemeComboBox);
 				colorSchemeComboBox.setRenderer(new ColorSchemeComboBoxRenderer());
 				colorSchemeComboBox.addPopupMenuListener(new PopupMenuListener() {
@@ -1596,6 +1596,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 				PlotConfiguration plotConfig = change.getSource();
 				save(plotConfig.getColorSchemes(), plotConfig.getActiveColorScheme().getName());
 				break;
+			default:
 		}
 		return true;
 	}

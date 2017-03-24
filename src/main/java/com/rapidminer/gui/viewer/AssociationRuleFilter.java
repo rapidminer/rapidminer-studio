@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.viewer;
 
 import java.awt.Dimension;
@@ -65,7 +65,7 @@ public class AssociationRuleFilter extends JPanel {
 
 	private static final int MAX_VALUE = 10000;
 
-	private JComboBox criterionSelectorBox = new JComboBox(AssociationRuleGenerator.CRITERIA);
+	private JComboBox<String> criterionSelectorBox = new JComboBox<>(AssociationRuleGenerator.CRITERIA);
 
 	private JSlider criterionMinSlider = new JSlider(SwingConstants.HORIZONTAL, 0, MAX_VALUE, MAX_VALUE / 10);
 
@@ -73,9 +73,9 @@ public class AssociationRuleFilter extends JPanel {
 
 	private double[] maxValues;
 
-	private JList conclusionList = null;
+	private JList<Item> conclusionList = null;
 
-	private JComboBox conjunctionBox = new JComboBox(AssociationRuleFilterListener.CONJUNCTION_NAMES);
+	private JComboBox<String> conjunctionBox = new JComboBox<>(AssociationRuleFilterListener.CONJUNCTION_NAMES);
 
 	private Item[] itemArray;
 
@@ -170,11 +170,11 @@ public class AssociationRuleFilter extends JPanel {
 		add(conjunctionBox);
 
 		// conclusion list
-		ExtendedListModel model = new ExtendedListModel();
+		ExtendedListModel<Item> model = new ExtendedListModel<>();
 		for (Item item : itemArray) {
 			model.addElement(item, "The item '" + item.toString() + "'.");
 		}
-		this.conclusionList = new ExtendedJList(model, 200);
+		this.conclusionList = new ExtendedJList<>(model, 200);
 		this.conclusionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		conclusionList.addListSelectionListener(new ListSelectionListener() {
 

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter.charts;
 
 import java.awt.Color;
@@ -129,9 +129,9 @@ public class ParetoChartPlotter extends LabelRotatingPlotterAdapter {
 	public static final int VALUES_DESCENDING = 2;
 	public static final int VALUES_ASCENDING = 3;
 
-	private ListeningJComboBox countValues;
+	private ListeningJComboBox<String> countValues;
 
-	private ListeningJComboBox sortingDirection;
+	private ListeningJComboBox<String> sortingDirection;
 
 	private ListeningJCheckBox showCumulativeLabels;
 
@@ -141,9 +141,9 @@ public class ParetoChartPlotter extends LabelRotatingPlotterAdapter {
 		super(settings);
 		setBackground(Color.white);
 
-		countValues = new ListeningJComboBox(PARAMETER_COUNT_VALUE, 200);
-		countValues.setPreferredSize(new Dimension(countValues.getPreferredSize().width,
-				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+		countValues = new ListeningJComboBox<>(PARAMETER_COUNT_VALUE, 200);
+		countValues.setPreferredSize(
+				new Dimension(countValues.getPreferredSize().width, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		countValues.addActionListener(new ActionListener() {
 
 			@Override
@@ -154,9 +154,9 @@ public class ParetoChartPlotter extends LabelRotatingPlotterAdapter {
 			}
 		});
 
-		sortingDirection = new ListeningJComboBox(settings, PARAMETER_SORTING_DIRECTION, SORTING_DIRECTIONS);
-		sortingDirection.setPreferredSize(new Dimension(sortingDirection.getPreferredSize().width,
-				PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
+		sortingDirection = new ListeningJComboBox<>(settings, PARAMETER_SORTING_DIRECTION, SORTING_DIRECTIONS);
+		sortingDirection.setPreferredSize(
+				new Dimension(sortingDirection.getPreferredSize().width, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		sortingDirection.setSelectedIndex(0);
 		sortingDirection.addActionListener(new ActionListener() {
 

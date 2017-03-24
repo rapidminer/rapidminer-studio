@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.set;
 
 import java.io.File;
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -216,6 +217,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * then the special attributes (just like the data write format of {@link Example#toString()}.
 	 * Please note that the given data file will only be used to determine the relative position.
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public void writeAttributeFile(File attFile, File dataFile, Charset encoding) throws IOException {
 		// determine relative path
@@ -257,6 +259,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * {@link Example#toSparseString(int, int, boolean)}. Please note that the given data file is
 	 * only be used to determine the relative position.
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public void writeSparseAttributeFile(File attFile, File dataFile, int format, Charset encoding) throws IOException {
 		if (dataFile == null) {
@@ -380,8 +383,8 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	public ExampleSet clone() {
 		try {
 			Class<? extends AbstractExampleSet> clazz = getClass();
-			java.lang.reflect.Constructor cloneConstructor = clazz.getConstructor(new Class[] { clazz });
-			AbstractExampleSet result = (AbstractExampleSet) cloneConstructor.newInstance(new Object[] { this });
+			Constructor<? extends AbstractExampleSet> cloneConstructor = clazz.getConstructor(new Class[] { clazz });
+			AbstractExampleSet result = cloneConstructor.newInstance(new Object[] { this });
 			result.idMap = this.idMap;
 			return result;
 		} catch (IllegalAccessException e) {

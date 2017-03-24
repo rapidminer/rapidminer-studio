@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example;
 
 import com.rapidminer.RapidMiner;
@@ -37,6 +37,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -132,9 +133,7 @@ public class AttributeWeights extends AverageVector {
 	/** Clone constructor. */
 	private AttributeWeights(AttributeWeights weights) {
 		super();
-		Iterator i = weights.getAttributeNames().iterator();
-		while (i.hasNext()) {
-			String name = (String) i.next();
+		for (String name : weights.getAttributeNames()) {
 			this.setWeight(name, weights.getWeight(name));
 		}
 		cloneAnnotationsFrom(weights);
@@ -281,11 +280,8 @@ public class AttributeWeights extends AverageVector {
 			out = new PrintWriter(new FileWriter(file));
 			out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 			out.println("<attributeweights version=\"" + RapidMiner.getShortVersion() + "\">");
-			Iterator i = weightMap.keySet().iterator();
-			while (i.hasNext()) {
-				String key = (String) i.next();
-				double weight = weightMap.get(key).getWeight();
-				out.println("    <weight name=\"" + key + "\" value=\"" + weight + "\"/>");
+			for (Entry<String, AttributeWeight> entry : weightMap.entrySet()) {
+				out.println("    <weight name=\"" + entry.getKey() + "\" value=\"" + entry.getValue().getWeight() + "\"/>");
 			}
 			out.println("</attributeweights>");
 		} catch (IOException e) {

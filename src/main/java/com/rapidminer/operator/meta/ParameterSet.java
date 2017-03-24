@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.meta;
 
 import com.rapidminer.Process;
@@ -88,10 +88,7 @@ public class ParameterSet extends ResultObjectAdapter {
 		if (performance != null) {
 			str.append(Tools.getLineSeparator() + "Performance: " + performance + Tools.getLineSeparator());
 		}
-		Iterator i = parameterValues.iterator();
-		while (i.hasNext()) {
-			str.append(i.next().toString() + Tools.getLineSeparator());
-		}
+		parameterValues.forEach(pv -> str.append(pv + Tools.getLineSeparator()));
 		return str.toString();
 	}
 
@@ -110,10 +107,7 @@ public class ParameterSet extends ResultObjectAdapter {
 	 * to the name of the operator in the process definition.
 	 */
 	public void applyAll(Process process, Map<String, String> nameTranslation) {
-		Iterator<ParameterValue> i = parameterValues.iterator();
-		while (i.hasNext()) {
-			i.next().apply(process, nameTranslation);
-		}
+		parameterValues.forEach(pv -> pv.apply(process, nameTranslation));
 	}
 
 	public void save(File file) throws IOException {
@@ -145,12 +139,8 @@ public class ParameterSet extends ResultObjectAdapter {
 	public void writeParameterSet(PrintWriter out, Charset encoding) {
 		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 		out.println("<parameterset version=\"" + RapidMiner.getShortVersion() + "\">");
-		Iterator<ParameterValue> i = parameterValues.iterator();
-		while (i.hasNext()) {
-			ParameterValue value = i.next();
-			out.println("    <parameter operator=\"" + value.getOperator() + "\" key=\"" + value.getParameterKey()
-					+ "\" value=\"" + value.getParameterValue() + "\"/>");
-		}
+		parameterValues.forEach(pv -> out.println("    <parameter operator=\"" + pv.getOperator() + "\" key=\""
+				+ pv.getParameterKey() + "\" value=\"" + pv.getParameterValue() + "\"/>"));
 		out.println("</parameterset>");
 	}
 

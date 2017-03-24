@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter.attributes;
 
 import java.text.Collator;
@@ -76,7 +76,8 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 	public static final String ALPHABETICALLY_MODE = "alphabetically";
 	public static final String REFERENCE_DATA = "reference data";
 
-	public static final String[] SORT_MODES = new String[] { USER_SPECIFIED_RULES_MODE, ALPHABETICALLY_MODE, REFERENCE_DATA };
+	public static final String[] SORT_MODES = new String[] { USER_SPECIFIED_RULES_MODE, ALPHABETICALLY_MODE,
+			REFERENCE_DATA };
 	public static final int USER_SPECIFIED_RULES_MODE_INDEX = 0;
 	public static final int ALPHABETICALLY_MODE_INDEX = 1;
 	public static final int REFERENCE_DATA_INDEX = 2;
@@ -88,7 +89,8 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 	public static final String DIRECTION_DESCENDING = "descending";
 	public static final String DIRECTION_NONE = "none";
 
-	public static final String[] SORT_DIRECTIONS = new String[] { DIRECTION_ASCENDING, DIRECTION_DESCENDING, DIRECTION_NONE };
+	public static final String[] SORT_DIRECTIONS = new String[] { DIRECTION_ASCENDING, DIRECTION_DESCENDING,
+			DIRECTION_NONE };
 	public static final int DIRECTION_ASCENDING_INDEX = 0;
 	public static final int DIRECTION_DESCENDING_INDEX = 1;
 	public static final int DIRECTION_NONE_INDEX = 2;
@@ -185,8 +187,8 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 							@Override
 							public boolean match(String rule, String value) {
 								try {
-									return getParameterAsBoolean(PARAMETER_USE_REGEXP) ? value.matches(rule) : value
-											.equals(rule);
+									return getParameterAsBoolean(PARAMETER_USE_REGEXP) ? value.matches(rule)
+											: value.equals(rule);
 								} catch (PatternSyntaxException e) {
 									return false;
 								}
@@ -258,8 +260,8 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 						REFERENCE_DATA_PORT_NAME));
 			}
 			if (!orderMode.equals(REFERENCE_DATA) && referenceDataPort.isConnected()) {
-				addError(new SimpleMetaDataError(Severity.WARNING, referenceDataPort,
-						"port_connected_but_parameter_not_set", REFERENCE_DATA_PORT_NAME, PARAMETER_ORDER_MODE, orderMode));
+				addError(new SimpleMetaDataError(Severity.WARNING, referenceDataPort, "port_connected_but_parameter_not_set",
+						REFERENCE_DATA_PORT_NAME, PARAMETER_ORDER_MODE, orderMode));
 			}
 		} catch (UndefinedParameterError e) {
 			// nothing to do here
@@ -321,6 +323,7 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 					}
 				}
 			} else {
+				boolean useRegexp = getParameterAsBoolean(PARAMETER_USE_REGEXP);
 				String combinedMaskedRules = getParameterAsString(PARAMETER_ORDER_RULES);
 				if (combinedMaskedRules == null || combinedMaskedRules.length() == 0) {
 					throw new UndefinedParameterError(PARAMETER_ORDER_RULES, this);
@@ -336,7 +339,7 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 					while (iterator.hasNext()) {
 						Attribute attr = iterator.next();
 						boolean match = false;
-						if (getParameterAsBoolean(PARAMETER_USE_REGEXP)) {
+						if (useRegexp) {
 							try {
 								if (attr.getName().matches(rule)) {
 									match = true;
@@ -393,8 +396,8 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 			}
 
 		} else {
-			throw new IllegalArgumentException("Order mode " + getParameterAsString(PARAMETER_ORDER_MODE)
-					+ " is not implemented!");
+			throw new IllegalArgumentException(
+					"Order mode " + getParameterAsString(PARAMETER_ORDER_MODE) + " is not implemented!");
 		}
 		return exampleSet;
 	}
@@ -475,11 +478,11 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 
 		// --------------------------- USER SPECIFIED -------------------------
 
-		type = new ParameterTypeAttributeOrderingRules(PARAMETER_ORDER_RULES, "Rules to order attributes.", getInputPorts()
-				.getPortByIndex(0), true);
+		type = new ParameterTypeAttributeOrderingRules(PARAMETER_ORDER_RULES, "Rules to order attributes.",
+				getInputPorts().getPortByIndex(0), true);
 		type.setExpert(false);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_ORDER_MODE, SORT_MODES, true,
-				USER_SPECIFIED_RULES_MODE_INDEX));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_ORDER_MODE, SORT_MODES, true, USER_SPECIFIED_RULES_MODE_INDEX));
 		parameterTypes.add(type);
 
 		type = new ParameterTypeBoolean(PARAMETER_USE_REGEXP,
@@ -489,7 +492,8 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 		parameterTypes.add(type);
 
 		type = new ParameterTypeCategory(PARAMETER_HANDLE_UNMATCHED_ATTRIBUTES,
-				"Defines the behavior for unmatched attributes.", HANDLE_UNMATCHED_MODES, APPEND_UNMATCHED_MODE_INDEX, false);
+				"Defines the behavior for unmatched attributes.", HANDLE_UNMATCHED_MODES, APPEND_UNMATCHED_MODE_INDEX,
+				false);
 		type.setOptional(true);
 		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_ORDER_MODE, SORT_MODES, false,
 				USER_SPECIFIED_RULES_MODE_INDEX, REFERENCE_DATA_INDEX));

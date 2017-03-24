@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.meta;
 
 import java.util.List;
@@ -37,7 +37,6 @@ import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
 import com.rapidminer.operator.ports.metadata.PassThroughRule;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
-import com.rapidminer.operator.validation.XValidation;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
@@ -52,7 +51,8 @@ import com.rapidminer.tools.RandomGenerator;
  * subset. It can be used, for example, in conjunction with
  * {@link GridSearchParameterOptimizationOperator} which sets the fraction parameter to values
  * between 0 and 1. The advantage is, that this operator can then be used inside of a
- * {@link XValidation}, which delivers more stable result estimations.
+ * {@link com.rapidminer.extension.concurrency.operator.validation.CrossValidationOperator
+ * CrossValidationOperator}, which delivers more stable result estimations.
  *
  * @author Martin Mauch, Ingo Mierswa
  */

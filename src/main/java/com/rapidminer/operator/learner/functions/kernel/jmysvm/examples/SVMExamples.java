@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.functions.kernel.jmysvm.examples;
 
 import java.io.IOException;
@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.tools.Tools;
@@ -268,16 +269,14 @@ public class SVMExamples implements Serializable {
 		out.writeInt(getNumberOfSupportVectors());
 		out.writeDouble(b);
 		out.writeInt(dim);
-		if ((meanVarianceMap == null) || (meanVarianceMap.size() == 0)) {
+		if (meanVarianceMap == null || meanVarianceMap.size() == 0) {
 			out.writeUTF("noscale");
 		} else {
 			out.writeUTF("scale");
 			out.writeInt(meanVarianceMap.size());
-			Iterator i = meanVarianceMap.keySet().iterator();
-			while (i.hasNext()) {
-				Integer index = (Integer) i.next();
-				MeanVariance meanVariance = meanVarianceMap.get(index);
-				out.writeInt(index.intValue());
+			for (Entry<Integer, MeanVariance> meanVar : meanVarianceMap.entrySet()) {
+				MeanVariance meanVariance = meanVar.getValue();
+				out.writeInt(meanVar.getKey());
 				out.writeDouble(meanVariance.getMean());
 				out.writeDouble(meanVariance.getVariance());
 			}

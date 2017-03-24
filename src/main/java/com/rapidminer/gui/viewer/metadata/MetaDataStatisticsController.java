@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.viewer.metadata;
 
 import java.util.ArrayList;
@@ -376,11 +376,11 @@ public class MetaDataStatisticsController {
 			// apply filter on non empty string
 			for (AbstractAttributeStatisticsModel statModel : model.getOrderedAttributeStatisticsModels()) {
 				String attName = statModel.getAttribute().getName();
-				boolean show = attName.contains(model.getFilterNameString());
+				boolean show = attName.toLowerCase().contains(model.getFilterNameString().toLowerCase());
 				if (!show) {
 					visibleCount--;
 				}
-				model.setAttributeStatisticsModelVisible(statModel, attName.contains(model.getFilterNameString()));
+				model.setAttributeStatisticsModelVisible(statModel, show);
 			}
 		}
 
@@ -499,8 +499,8 @@ public class MetaDataStatisticsController {
 
 			@Override
 			public int compare(AbstractAttributeStatisticsModel o1, AbstractAttributeStatisticsModel o2) {
-				int sortResult = Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o1.getAttribute().getValueType()).compareTo(
-						Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o2.getAttribute().getValueType()));
+				int sortResult = Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o1.getAttribute().getValueType())
+						.compareTo(Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o2.getAttribute().getValueType()));
 				switch (direction) {
 					case ASCENDING:
 						return -1 * sortResult;

@@ -1,22 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.math.similarity;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOContainer;
@@ -58,10 +63,6 @@ import com.rapidminer.tools.math.similarity.numerical.ManhattanDistance;
 import com.rapidminer.tools.math.similarity.numerical.MaxProductSimilarity;
 import com.rapidminer.tools.math.similarity.numerical.OverlapNumericalSimilarity;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * This is a convenient class for using the distanceMeasures. It offers methods for integrating the
@@ -87,19 +88,23 @@ public class DistanceMeasures {
 
 	private static String[] NOMINAL_MEASURES = new String[] { "NominalDistance", "DiceSimilarity", "JaccardSimilarity",
 			"KulczynskiSimilarity", "RogersTanimotoSimilarity", "RussellRaoSimilarity", "SimpleMatchingSimilarity" };
-	private static Class[] NOMINAL_MEASURE_CLASSES = new Class[] { NominalDistance.class, DiceNominalSimilarity.class,
-			JaccardNominalSimilarity.class, KulczynskiNominalSimilarity.class, RogersTanimotoNominalSimilarity.class,
-			RussellRaoNominalSimilarity.class, SimpleMatchingNominalSimilarity.class };
+	@SuppressWarnings("unchecked")
+	private static Class<? extends DistanceMeasure>[] NOMINAL_MEASURE_CLASSES = new Class[] { NominalDistance.class,
+			DiceNominalSimilarity.class, JaccardNominalSimilarity.class, KulczynskiNominalSimilarity.class,
+			RogersTanimotoNominalSimilarity.class, RussellRaoNominalSimilarity.class,
+			SimpleMatchingNominalSimilarity.class };
 
 	private static String[] MIXED_MEASURES = new String[] { "MixedEuclideanDistance" };
-	private static Class[] MIXED_MEASURE_CLASSES = new Class[] { MixedEuclideanDistance.class };
+	@SuppressWarnings("unchecked")
+	private static Class<? extends DistanceMeasure>[] MIXED_MEASURE_CLASSES = new Class[] { MixedEuclideanDistance.class };
 
 	/* If this changes, the parameter dependencies might need to be updated */
-	private static String[] NUMERICAL_MEASURES = new String[] { "EuclideanDistance", "CamberraDistance",
-			"ChebychevDistance", "CorrelationSimilarity", "CosineSimilarity", "DiceSimilarity",
-			"DynamicTimeWarpingDistance", "InnerProductSimilarity", "JaccardSimilarity", "KernelEuclideanDistance",
-			"ManhattanDistance", "MaxProductSimilarity", "OverlapSimilarity" };
-	private static Class[] NUMERICAL_MEASURE_CLASSES = new Class[] { EuclideanDistance.class,
+	private static String[] NUMERICAL_MEASURES = new String[] { "EuclideanDistance", "CamberraDistance", "ChebychevDistance",
+			"CorrelationSimilarity", "CosineSimilarity", "DiceSimilarity", "DynamicTimeWarpingDistance",
+			"InnerProductSimilarity", "JaccardSimilarity", "KernelEuclideanDistance", "ManhattanDistance",
+			"MaxProductSimilarity", "OverlapSimilarity" };
+	@SuppressWarnings("unchecked")
+	private static Class<? extends DistanceMeasure>[] NUMERICAL_MEASURE_CLASSES = new Class[] { EuclideanDistance.class,
 			CamberraNumericalDistance.class, ChebychevNumericalDistance.class, CorrelationSimilarity.class,
 			CosineSimilarity.class, DiceNumericalSimilarity.class, DTWDistance.class, InnerProductSimilarity.class,
 			JaccardNumericalSimilarity.class, KernelEuclideanDistance.class, ManhattanDistance.class,
@@ -107,15 +112,17 @@ public class DistanceMeasures {
 
 	private static String[] DIVERGENCES = new String[] { "GeneralizedIDivergence", "ItakuraSaitoDistance", "KLDivergence",
 			"LogarithmicLoss", "LogisticLoss", "MahalanobisDistance", "SquaredEuclideanDistance", "SquaredLoss", };
-	private static Class[] DIVERGENCE_CLASSES = new Class[] { GeneralizedIDivergence.class, ItakuraSaitoDistance.class,
-			KLDivergence.class, LogarithmicLoss.class, LogisticLoss.class, MahalanobisDistance.class,
-			SquaredEuclideanDistance.class, SquaredLoss.class, };
+	@SuppressWarnings("unchecked")
+	private static Class<? extends DistanceMeasure>[] DIVERGENCE_CLASSES = new Class[] { GeneralizedIDivergence.class,
+			ItakuraSaitoDistance.class, KLDivergence.class, LogarithmicLoss.class, LogisticLoss.class,
+			MahalanobisDistance.class, SquaredEuclideanDistance.class, SquaredLoss.class, };
 
 	private static String[][] MEASURE_ARRAYS = new String[][] { MIXED_MEASURES, NOMINAL_MEASURES, NUMERICAL_MEASURES,
 			DIVERGENCES };
 
-	private static Class[][] MEASURE_CLASS_ARRAYS = new Class[][] { MIXED_MEASURE_CLASSES, NOMINAL_MEASURE_CLASSES,
-			NUMERICAL_MEASURE_CLASSES, DIVERGENCE_CLASSES };
+	@SuppressWarnings("unchecked")
+	private static Class<? extends DistanceMeasure>[][] MEASURE_CLASS_ARRAYS = new Class[][] { MIXED_MEASURE_CLASSES,
+			NOMINAL_MEASURE_CLASSES, NUMERICAL_MEASURE_CLASSES, DIVERGENCE_CLASSES };
 
 	/**
 	 * This method allows registering distance or similarity measures defined in plugins. There are
@@ -133,23 +140,20 @@ public class DistanceMeasures {
 	 *            The class of the measure, which needs to extend DistanceMeasure
 	 */
 	public static void registerMeasure(int measureType, String measureName, Class<? extends DistanceMeasure> measureClass) {
-		String[] newTypeNames = new String[MEASURE_ARRAYS[measureType].length + 1];
-		System.arraycopy(MEASURE_ARRAYS[measureType], 0, newTypeNames, 0, MEASURE_ARRAYS[measureType].length);
-		newTypeNames[newTypeNames.length - 1] = measureName;
-		MEASURE_ARRAYS[measureType] = newTypeNames;
+		int length = MEASURE_ARRAYS[measureType].length;
+		MEASURE_ARRAYS[measureType] = Arrays.copyOf(MEASURE_ARRAYS[measureType], length + 1);
+		MEASURE_ARRAYS[measureType][length] = measureName;
 
-		Class[] newTypeClasses = new Class[MEASURE_CLASS_ARRAYS[measureType].length + 1];
-		System.arraycopy(MEASURE_CLASS_ARRAYS[measureType], 0, newTypeClasses, 0, MEASURE_CLASS_ARRAYS[measureType].length);
-		newTypeClasses[newTypeClasses.length - 1] = measureClass;
-		MEASURE_CLASS_ARRAYS[measureType] = newTypeClasses;
+		MEASURE_CLASS_ARRAYS[measureType] = Arrays.copyOf(MEASURE_CLASS_ARRAYS[measureType], length + 1);
+		MEASURE_CLASS_ARRAYS[measureType][length] = measureClass;
 	}
 
 	/**
 	 * Creates an uninitialized distance measure. Initialize the distance measure by calling
 	 * {@link DistanceMeasure#init(ExampleSet, ParameterHandler)}.
 	 */
-	public static DistanceMeasure createMeasure(ParameterHandler parameterHandler) throws UndefinedParameterError,
-			OperatorException {
+	public static DistanceMeasure createMeasure(ParameterHandler parameterHandler)
+			throws UndefinedParameterError, OperatorException {
 		return createMeasure(parameterHandler, null, null);
 	}
 
@@ -179,8 +183,8 @@ public class DistanceMeasures {
 				measureType = parameterHandler.getParameterAsInt(PARAMETER_MEASURE_TYPES);
 			}
 		}
-		Class[] classes = MEASURE_CLASS_ARRAYS[measureType];
-		Class measureClass = null;
+		Class<? extends DistanceMeasure>[] classes = MEASURE_CLASS_ARRAYS[measureType];
+		Class<? extends DistanceMeasure> measureClass = null;
 		switch (measureType) {
 			case MIXED_MEASURES_TYPE:
 				measureClass = classes[parameterHandler.getParameterAsInt(PARAMETER_MIXED_MEASURE)];
@@ -198,7 +202,7 @@ public class DistanceMeasures {
 		if (measureClass != null) {
 			DistanceMeasure measure;
 			try {
-				measure = (DistanceMeasure) measureClass.newInstance();
+				measure = measureClass.newInstance();
 				if (exampleSet != null) {
 					measure.init(exampleSet, parameterHandler);
 				}

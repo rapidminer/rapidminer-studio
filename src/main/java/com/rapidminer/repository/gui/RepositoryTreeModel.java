@@ -1,28 +1,28 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.repository.gui;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,7 +43,9 @@ import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryListener;
+import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.RepositorySortingMethod;
 import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -54,7 +56,7 @@ import com.rapidminer.tools.Observer;
 /**
  * Model representing {@link Entry}s as a tree.
  *
- * @author Simon Fischer , Denis Schernov
+ * @author Simon Fischer , Denis Schernov, Marcel Seifert
  *
  */
 public class RepositoryTreeModel implements TreeModel {
@@ -64,7 +66,7 @@ public class RepositoryTreeModel implements TreeModel {
 	// sort the entries every time one of these methods is called.
 	// We're using a HashMap to cache the location of folders as keys while storing their subfolders
 	// and entries as their values in a sorted list.
-	private final HashMap<Object, List<Object>> sortedRepositoryEntriesHashMap = new HashMap<Object, List<Object>>();
+	private final HashMap<RepositoryLocation, List<Entry>> sortedRepositoryEntriesHashMap = new HashMap<>();
 
 	private static final String PENDING_FOLDER_NAME = "Pending...";
 
@@ -226,12 +228,15 @@ public class RepositoryTreeModel implements TreeModel {
 					}
 				});
 			}
+			sortedRepositoryEntriesHashMap.clear();
 		}
 	};
 
 	private boolean onlyFolders = false;
 
 	private boolean onlyWriteableRepositories = false;
+
+	RepositorySortingMethod sortingMethod = RepositorySortingMethod.NAME_ASC;
 
 	public RepositoryTreeModel(final RepositoryManager root) {
 		this(root, false, false);
@@ -343,7 +348,7 @@ public class RepositoryTreeModel implements TreeModel {
 				return PENDING_FOLDER_NAME;
 			} else {
 				try {
-					if (!sortedRepositoryEntriesHashMap.keySet().contains(parent)) {
+					if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())) {
 						updateCachedRepositoryEntries(folder);
 					}
 					int numFolders = folder.getSubfolders().size();
@@ -401,7 +406,7 @@ public class RepositoryTreeModel implements TreeModel {
 			@Override
 			public void run() {
 
-				final List<Entry> children = new LinkedList<>();
+				final List<Entry> children = new ArrayList<>();
 				final AtomicBoolean folderBroken = new AtomicBoolean(false);
 				try {
 					List<Folder> subfolders = folder.getSubfolders();
@@ -514,7 +519,7 @@ public class RepositoryTreeModel implements TreeModel {
 			}
 			Folder folder = (Folder) parent;
 			try {
-				if (!sortedRepositoryEntriesHashMap.keySet().contains(parent)) {
+				if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())) {
 					updateCachedRepositoryEntries(folder);
 				}
 				if (child instanceof Folder || child instanceof Entry) {
@@ -552,11 +557,19 @@ public class RepositoryTreeModel implements TreeModel {
 	 */
 	private void updateCachedRepositoryEntries(Folder parent) throws RepositoryException {
 		sortedRepositoryEntriesHashMap.remove(parent.getLocation());
-		List<Folder> sortedFolders = new LinkedList<Folder>(parent.getSubfolders());
-		List<DataEntry> sortedEntries = new LinkedList<DataEntry>(parent.getDataEntries());
-		Collections.sort(sortedFolders, RepositoryTools.ENTRY_COMPARATOR);
-		Collections.sort(sortedEntries, RepositoryTools.ENTRY_COMPARATOR);
-		List<Object> newList = new LinkedList<Object>(sortedFolders);
+		List<Folder> sortedFolders = new ArrayList<>(parent.getSubfolders());
+		List<DataEntry> sortedEntries = new ArrayList<>(parent.getDataEntries());
+
+		// sort entries depending on sorting method
+		if (sortingMethod == RepositorySortingMethod.LAST_MODIFIED_DATE_DESC) {
+			Collections.sort(sortedEntries, RepositoryTools.ENTRY_COMPARATOR_LAST_MODIFIED);
+			Collections.sort(sortedFolders, RepositoryTools.ENTRY_COMPARATOR_LAST_MODIFIED);
+		} else {
+			Collections.sort(sortedEntries, RepositoryTools.ENTRY_COMPARATOR);
+			Collections.sort(sortedFolders, RepositoryTools.ENTRY_COMPARATOR);
+		}
+
+		List<Entry> newList = new ArrayList<>(sortedFolders);
 		newList.addAll(sortedEntries);
 		sortedRepositoryEntriesHashMap.put(parent.getLocation(), newList);
 	}
@@ -582,7 +595,7 @@ public class RepositoryTreeModel implements TreeModel {
 
 	private List<Repository> getWritableRepositories(RepositoryManager manager) {
 		List<Repository> repositories = manager.getRepositories();
-		List<Repository> writeableRepositories = new LinkedList<>();
+		List<Repository> writeableRepositories = new ArrayList<>();
 		for (Repository repository : repositories) {
 			if (!repository.isReadOnly()) {
 				writeableRepositories.add(repository);
@@ -590,4 +603,50 @@ public class RepositoryTreeModel implements TreeModel {
 		}
 		return writeableRepositories;
 	}
+
+	/**
+	 * Sets the {@link RepositorySortingMethod} with which this {@link RepositoryTreeModel} is
+	 * sorted
+	 *
+	 * @param method
+	 *            The {@link RepositorySortingMethod}
+	 * @since 7.4
+	 */
+	void setSortingMethod(RepositorySortingMethod method) {
+		sortingMethod = method;
+		sortedRepositoryEntriesHashMap.clear();
+
+		// Save expansion state and notify listeners to prevent GUI misbehavior
+		final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
+		if (parentTree != null) {
+			treeUtil.saveExpansionState(parentTree);
+		}
+
+		TreeModelEvent e = new TreeModelEvent(RepositoryTreeModel.this, getPathTo(null), new int[] { 0 },
+				new Object[] { null });
+		for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+			l.treeStructureChanged(e);
+		}
+
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				treeUtil.restoreSelectionPaths(parentTree);
+
+			}
+
+		});
+	}
+
+	/**
+	 * Gets the {@link RepositorySortingMethod} with which this {@link RepositoryTreeModel} is
+	 * sorted
+	 *
+	 * @since 7.4
+	 */
+	RepositorySortingMethod getSortingMethod() {
+		return sortingMethod;
+	}
+
 }

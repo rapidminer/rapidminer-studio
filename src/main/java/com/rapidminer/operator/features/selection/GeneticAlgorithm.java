@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.features.selection;
 
 import java.util.LinkedList;
@@ -184,6 +184,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 		Population initP = new Population();
 
 		double[] initialWeights = null;
+		double p_initialize = getParameterAsDouble(PARAMETER_P_INITIALIZE);
 		if (attributeWeightsInput.isConnected()) {
 			AttributeWeights inputWeights = null;
 			inputWeights = attributeWeightsInput.getData(AttributeWeights.class);
@@ -201,7 +202,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 					weight = 1.0d;
 				}
 				if (weight > 0 && weight < 1.0d) {
-					if (weight < 1.0d - getParameterAsDouble(PARAMETER_P_INITIALIZE)) {
+					if (weight < 1.0d - p_initialize) {
 						weight = 1.0d;
 					} else {
 						weight = 0.0d;
@@ -221,8 +222,9 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 			}
 		}
 
+		int populationSize = getParameterAsInt(PARAMETER_POPULATION_SIZE);
 		if (useExactNumber) { // exact feature number
-			while (initP.getNumberOfIndividuals() < getParameterAsInt(PARAMETER_POPULATION_SIZE)) {
+			while (initP.getNumberOfIndividuals() < populationSize) {
 				double[] weights = new double[numberOfAttributes];
 
 				double prob = 1.0d / weights.length * exactNumber;
@@ -242,7 +244,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 				}
 			}
 		} else { // within range
-			while (initP.getNumberOfIndividuals() < getParameterAsInt(PARAMETER_POPULATION_SIZE)) {
+			while (initP.getNumberOfIndividuals() < populationSize) {
 				double[] weights = new double[numberOfAttributes];
 
 				if (initialWeights != null && getRandom().nextBoolean()) {
@@ -258,7 +260,7 @@ public class GeneticAlgorithm extends AbstractGeneticAlgorithm {
 						}
 					}
 				} else {
-					double p = getParameterAsDouble(PARAMETER_P_INITIALIZE);
+					double p = p_initialize;
 					for (int i = 0; i < weights.length; i++) {
 						if (getRandom().nextDouble() < 1.0d - p) {
 							weights[i] = 1.0d;

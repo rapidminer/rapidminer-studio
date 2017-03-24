@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.meta;
 
 import java.util.List;
@@ -37,7 +37,9 @@ import com.rapidminer.parameter.conditions.BooleanParameterCondition;
  * the output of this operator.
  *
  * @author Ingo Mierswa
+ * @deprecated since 7.4, replaced by the LoopOperator in the Concurrency extension
  */
+@Deprecated
 public class IteratingOperatorChain extends AbstractIteratingOperatorChain {
 
 	/** The parameter name for &quot;Number of iterations&quot; */
@@ -49,6 +51,10 @@ public class IteratingOperatorChain extends AbstractIteratingOperatorChain {
 
 	private long stoptime;
 
+	private boolean limitTime;
+
+	private int iterations;
+
 	public IteratingOperatorChain(OperatorDescription description) {
 		super(description);
 	}
@@ -56,22 +62,24 @@ public class IteratingOperatorChain extends AbstractIteratingOperatorChain {
 	@Override
 	public void doWork() throws OperatorException {
 		stoptime = Long.MAX_VALUE;
-		if (getParameterAsBoolean(PARAMETER_LIMIT_TIME)) {
+		limitTime = getParameterAsBoolean(PARAMETER_LIMIT_TIME);
+		if (limitTime) {
 			stoptime = System.currentTimeMillis() + 60L * 1000 * getParameterAsInt(PARAMETER_TIMEOUT);
 		}
+		iterations = getParameterAsInt(PARAMETER_ITERATIONS);
 		getProgress().setTotal(getParameterAsInt(PARAMETER_ITERATIONS));
 		super.doWork();
 	}
 
 	@Override
 	boolean shouldStop(IOContainer unused) throws OperatorException {
-		if (getParameterAsBoolean(PARAMETER_LIMIT_TIME)) {
+		if (limitTime) {
 			if (System.currentTimeMillis() > stoptime) {
 				getLogger().info("Timeout reached");
 				return true;
 			}
 		}
-		return getIteration() >= getParameterAsInt(PARAMETER_ITERATIONS);
+		return getIteration() >= iterations;
 	}
 
 	@Override

@@ -1,26 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.repository;
 
 import java.util.Comparator;
 
 import com.rapidminer.external.alphanum.AlphanumComparator;
+import com.rapidminer.external.alphanum.AlphanumComparator.AlphanumCaseSensitivity;
 import com.rapidminer.repository.RepositoryManager.RepositoryType;
 
 
@@ -28,13 +29,14 @@ import com.rapidminer.repository.RepositoryManager.RepositoryType;
  * This class contains utility methods to compare {@link Repository}s, {@link Entry}s and
  * {@link Folder}s.
  *
- * @author Denis Schernov
+ * @author Denis Schernov, Marcel Seifert
  *
  * @since 7.3
  */
 public final class RepositoryTools {
 
-	private static final AlphanumComparator ALPHANUMERIC_COMPARATOR = new AlphanumComparator();
+	private static final AlphanumComparator ALPHANUMERIC_COMPARATOR = new AlphanumComparator(
+			AlphanumCaseSensitivity.INSENSITIVE);
 
 	/**
 	 * Private constructor which throws if called.
@@ -97,6 +99,41 @@ public final class RepositoryTools {
 				return 1;
 			} else {
 				return ALPHANUMERIC_COMPARATOR.compare(entry1.getName(), entry2.getName());
+			}
+		}
+
+	};
+
+	/**
+	 * Compares an {@link Entry} to another by comparing their last modified dates {@link String}
+	 * descending from new to old.
+	 *
+	 * @param entry1
+	 *            The {@link Entry} which should be compared to the second {@link Entry}.
+	 * @param entry2
+	 *            The {@link Entry} which should be compared to the first {@link Entry}.
+	 * @return one of -1, 0, or 1 according to whether {@link Entry}1s date as a {@link String} is
+	 *         less, equal or higher than {@link Entry}2s date.
+	 * @since 7.4
+	 */
+	public static final Comparator<Entry> ENTRY_COMPARATOR_LAST_MODIFIED = new Comparator<Entry>() {
+
+		@Override
+		public int compare(Entry entry1, Entry entry2) {
+			if (!(entry1 instanceof DateEntry) && !(entry2 instanceof DateEntry)) {
+				return ALPHANUMERIC_COMPARATOR.compare(entry1.getName(), entry2.getName());
+			} else if (!(entry1 instanceof DateEntry)) {
+				return -1;
+			} else if (!(entry2 instanceof DateEntry)) {
+				return 1;
+			}
+			DateEntry dataEntry1 = (DateEntry) entry1;
+			DateEntry dataEntry2 = (DateEntry) entry2;
+			int compareValue = Long.compare(dataEntry2.getDate(), dataEntry1.getDate());
+			if (compareValue == 0) { // same date
+				return ALPHANUMERIC_COMPARATOR.compare(dataEntry1.getName(), dataEntry2.getName());
+			} else {
+				return compareValue;
 			}
 		}
 

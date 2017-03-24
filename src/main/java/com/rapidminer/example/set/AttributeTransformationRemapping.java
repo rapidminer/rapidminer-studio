@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -25,8 +25,11 @@ import com.rapidminer.example.table.NominalMapping;
 
 
 /**
- * This transformation returns the remapped value.
- * 
+ * This transformation returns the remapped value, remapping from the current nominal mapping of the
+ * attribute to the given {@link #overlayedMapping}. {@link #transform(Attribute, double)} maps the
+ * given double value to a tranformed value that represents the same nominal value in
+ * {@link #overlayedMapping} as the given value represents in the current attribute mapping.
+ *
  * @author Ingo Mierswa
  */
 public class AttributeTransformationRemapping implements AttributeTransformation {

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.meta;
 
 import java.util.List;
@@ -78,7 +78,9 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 	/** The parameter name for &quot;Timeout in minutes (-1 = no timeout)&quot; */
 	public static final String PARAMETER_TIMEOUT = "timeout";
 
-	/** The parameter name for &quot;Stop when performance of inner chain behaves like this.&quot; */
+	/**
+	 * The parameter name for &quot;Stop when performance of inner chain behaves like this.&quot;
+	 */
 	public static final String PARAMETER_PERFORMANCE_CHANGE = "performance_change";
 
 	/**
@@ -99,33 +101,46 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 
 	private double fitness;
 
+	private int maxit;
+	private boolean conditionBefore;
+	private boolean conditionPerformance;
+	private int performanceChange;
+	private double maxCrit;
+	private double minCrit;
+	private boolean conditionExamples;
+	private int maxAttributes;
+	private int minAttributes;
+	private int maxEx;
+	private int minEx;
+
 	private final InputPort performanceConditionInput = getSubprocess(0).getInnerSinks().createPort("performance");
 	private final InputPort exampleSetConditionInput = getSubprocess(0).getInnerSinks().createPort("example set");
 
 	public RepeatUntilOperatorChain(OperatorDescription description) {
 		super(description);
-		performanceConditionInput.addPrecondition(new SimplePrecondition(performanceConditionInput, new MetaData(
-				PerformanceVector.class)) {
+		performanceConditionInput
+				.addPrecondition(new SimplePrecondition(performanceConditionInput, new MetaData(PerformanceVector.class)) {
 
-			@Override
-			protected boolean isMandatory() {
-				return getParameterAsBoolean(PARAMETER_CONDITION_PERFORMANCE);
-			}
-		});
-		exampleSetConditionInput.addPrecondition(new SimplePrecondition(exampleSetConditionInput, new MetaData(
-				ExampleSet.class)) {
+					@Override
+					protected boolean isMandatory() {
+						return getParameterAsBoolean(PARAMETER_CONDITION_PERFORMANCE);
+					}
+				});
+		exampleSetConditionInput
+				.addPrecondition(new SimplePrecondition(exampleSetConditionInput, new MetaData(ExampleSet.class)) {
 
-			@Override
-			protected boolean isMandatory() {
-				return getParameterAsBoolean(PARAMETER_CONDITION_EXAMPLES);
-			}
-		});
+					@Override
+					protected boolean isMandatory() {
+						return getParameterAsBoolean(PARAMETER_CONDITION_EXAMPLES);
+					}
+				});
 	}
 
 	@Override
 	public void performAdditionalChecks() {
 
-		if (!getParameterAsBoolean(PARAMETER_CONDITION_PERFORMANCE) && !getParameterAsBoolean(PARAMETER_CONDITION_EXAMPLES)) {
+		if (!getParameterAsBoolean(PARAMETER_CONDITION_PERFORMANCE)
+				&& !getParameterAsBoolean(PARAMETER_CONDITION_EXAMPLES)) {
 			this.addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), "need_one_parameter",
 					PARAMETER_CONDITION_EXAMPLES, PARAMETER_CONDITION_PERFORMANCE));
 		}
@@ -148,7 +163,8 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 				if (maxAtts < Double.POSITIVE_INFINITY || minAtts > Double.NEGATIVE_INFINITY) {
 					if (maxAtts < minAtts) {
 						this.addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(),
-								"parameter_combination_forbidden_range", PARAMETER_MIN_ATTRIBUTES, PARAMETER_MAX_ATTRIBUTES));
+								"parameter_combination_forbidden_range", PARAMETER_MIN_ATTRIBUTES,
+								PARAMETER_MAX_ATTRIBUTES));
 					}
 				}
 
@@ -170,12 +186,23 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 	@Override
 	public void doWork() throws OperatorException {
 		stoptime = Long.MAX_VALUE;
+		maxit = getParameterAsInt(PARAMETER_MAX_ITERATIONS);
+		conditionBefore = getParameterAsBoolean(PARAMETER_CONDITION_BEFORE);
+		conditionPerformance = getParameterAsBoolean(PARAMETER_CONDITION_PERFORMANCE);
+		performanceChange = getParameterAsInt(PARAMETER_PERFORMANCE_CHANGE);
+		maxCrit = getParameterAsDouble(PARAMETER_MAX_CRITERION);
+		minCrit = getParameterAsDouble(PARAMETER_MIN_CRITERION);
+		conditionExamples = getParameterAsBoolean(PARAMETER_CONDITION_EXAMPLES);
+		maxAttributes = getParameterAsInt(PARAMETER_MAX_ATTRIBUTES);
+		minAttributes = getParameterAsInt(PARAMETER_MIN_ATTRIBUTES);
+		maxEx = getParameterAsInt(PARAMETER_MAX_EXAMPLES);
+		minEx = getParameterAsInt(PARAMETER_MIN_EXAMPLES);
 		if (getParameterAsBoolean(PARAMETER_LIMIT_TIME)) {
 			stoptime = System.currentTimeMillis() + 60L * 1000 * getParameterAsInt(PARAMETER_TIMEOUT);
 		}
 
 		fitness = Double.NEGATIVE_INFINITY;
-		getProgress().setTotal(getParameterAsInt(PARAMETER_MAX_ITERATIONS));
+		getProgress().setTotal(maxit);
 		super.doWork();
 	}
 
@@ -184,12 +211,11 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 	 *
 	 * @throws OperatorException
 	 */
-	private boolean evaluateCondition(IOContainer input) throws OperatorException {
-		if (getIteration() == 0 && !getParameterAsBoolean(PARAMETER_CONDITION_BEFORE)) {
+	private boolean evaluateCondition() throws OperatorException {
+		if (getIteration() == 0 && !conditionBefore) {
 			return false;
 		}
 
-		int maxit = getParameterAsInt(PARAMETER_MAX_ITERATIONS);
 		if (getIteration() >= maxit) {
 			getLogger().fine("Maximum number of iterations met.");
 			return true;
@@ -202,9 +228,9 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 		;
 
 		// NOTE: This is not optional
-		if (getParameterAsBoolean(PARAMETER_CONDITION_PERFORMANCE)) {
+		if (conditionPerformance) {
 			PerformanceVector performanceVector = performanceConditionInput.getData(PerformanceVector.class);
-			int changeType = getParameterAsInt(PARAMETER_PERFORMANCE_CHANGE);
+			int changeType = performanceChange;
 			if (changeType != NONE) {
 				if (getIteration() > 0) {
 					double currentFitness = performanceVector.getMainCriterion().getFitness();
@@ -218,8 +244,6 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 				}
 			}
 
-			double maxCrit = getParameterAsDouble(PARAMETER_MAX_CRITERION);
-			double minCrit = getParameterAsDouble(PARAMETER_MIN_CRITERION);
 			if (maxCrit < Double.POSITIVE_INFINITY || minCrit > Double.NEGATIVE_INFINITY) {
 				double crit = performanceVector.getMainCriterion().getAverage();
 				if (crit > maxCrit || crit < minCrit) {
@@ -227,10 +251,10 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 				}
 			}
 		}
-		if (getParameterAsBoolean(PARAMETER_CONDITION_EXAMPLES)) {
+		if (conditionExamples) {
 			ExampleSet exampleSet = exampleSetConditionInput.getData(ExampleSet.class);
-			int maxAtts = getParameterAsInt(PARAMETER_MAX_ATTRIBUTES);
-			int minAtts = getParameterAsInt(PARAMETER_MIN_ATTRIBUTES);
+			int maxAtts = maxAttributes;
+			int minAtts = minAttributes;
 			if (maxAtts < Integer.MAX_VALUE || minAtts > 0) {
 				int nrAtts = exampleSet.getAttributes().size();
 				if (nrAtts > maxAtts || nrAtts < minAtts) {
@@ -238,8 +262,6 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 				}
 			}
 
-			int maxEx = getParameterAsInt(PARAMETER_MAX_EXAMPLES);
-			int minEx = getParameterAsInt(PARAMETER_MIN_EXAMPLES);
 			if (maxEx < Integer.MAX_VALUE || minEx > 0) {
 				int nrEx = exampleSet.size();
 				if (nrEx > maxEx || nrEx < minEx) {
@@ -254,7 +276,7 @@ public class RepeatUntilOperatorChain extends AbstractIteratingOperatorChain {
 
 	@Override
 	boolean shouldStop(IOContainer iterationResults) throws OperatorException {
-		return evaluateCondition(iterationResults);
+		return evaluateCondition();
 	}
 
 	@Override

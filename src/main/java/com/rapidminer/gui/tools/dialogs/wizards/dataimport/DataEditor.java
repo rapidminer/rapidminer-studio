@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport;
 
 import com.rapidminer.gui.tools.ExtendedJTable;
@@ -53,9 +53,10 @@ public class DataEditor extends ExtendedJTable {
 
 		private static final long serialVersionUID = 7954919612214223430L;
 
+		@SuppressWarnings("unchecked")
 		public ValueTypeCellEditor(final int valueType) {
-			super(new JComboBox());
-			ComboBoxModel model = new DefaultComboBoxModel() {
+			super(new JComboBox<String>());
+			ComboBoxModel<String> model = new DefaultComboBoxModel<String>() {
 
 				private static final long serialVersionUID = 914764579359633239L;
 
@@ -67,7 +68,7 @@ public class DataEditor extends ExtendedJTable {
 				}
 
 				@Override
-				public Object getElementAt(int index) {
+				public String getElementAt(int index) {
 					return valueTypes[index];
 				}
 
@@ -76,8 +77,8 @@ public class DataEditor extends ExtendedJTable {
 					return valueTypes.length;
 				}
 			};
-			((JComboBox) super.getComponent()).setEnabled(editValueTypes);
-			((JComboBox) super.getComponent()).setModel(model);
+			((JComboBox<?>) super.getComponent()).setEnabled(editValueTypes);
+			((JComboBox<String>) super.getComponent()).setModel(model);
 		}
 	}
 

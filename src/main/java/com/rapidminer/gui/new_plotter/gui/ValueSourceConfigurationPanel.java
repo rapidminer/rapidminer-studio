@@ -1,44 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui;
-
-import com.rapidminer.gui.new_plotter.ChartConfigurationException;
-import com.rapidminer.gui.new_plotter.PlotConfigurationError;
-import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.IndicatorType;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
-import com.rapidminer.gui.new_plotter.gui.dnd.DataTableColumnListTransferHandler;
-import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
-import com.rapidminer.gui.tools.ExtendedHTMLJEditorPane;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction;
-import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction.AggregationFunctionType;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -64,38 +42,60 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.tree.TreePath;
 
+import com.rapidminer.gui.new_plotter.ChartConfigurationException;
+import com.rapidminer.gui.new_plotter.PlotConfigurationError;
+import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.IndicatorType;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
+import com.rapidminer.gui.new_plotter.gui.dnd.DataTableColumnListTransferHandler;
+import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
+import com.rapidminer.gui.tools.ExtendedHTMLJEditorPane;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction;
+import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction.AggregationFunctionType;
+
 
 /**
  * @author Nils Woehler
- * 
+ *
  */
 public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependentPanel {
 
 	private static final long serialVersionUID = 1L;
 
 	private JLabel seriesTypeLabel;
-	private JComboBox seriesTypeComboBox;
+	private JComboBox<VisualizationType> seriesTypeComboBox;
 
 	private ResourceLabel formatLabel;
 	private JToggleButton formatConfigureButton;
 
 	private JLabel aggregationLabel;
-	private JComboBox aggregationComboBox;
+	private JComboBox<Object> aggregationComboBox;
 
 	private JLabel windowingLabel;
 	private JToggleButton windowingButton;
 
 	private JLabel utilityIndicatorLabel;
-	private JComboBox utilityIndicatorComboBox;
+	private JComboBox<IndicatorType> utilityIndicatorComboBox;
 	private JCheckBox relativeIndicatorCheckBox;
 
 	private JLabel firstUtilityAttributeLabel;
-	private JComboBox firstUtilityAggregationComboBox;
+	private JComboBox<AggregationFunctionType> firstUtilityAggregationComboBox;
 	private JTextField firstUtilityTextField;
 
 	private JLabel secondUtilityAttributeLabel;
 	private JTextField secondUtilityTextField;
-	private JComboBox secondUtilityAggregationComboBox;
+	private JComboBox<AggregationFunctionType> secondUtilityAggregationComboBox;
 
 	private JButton firstUtilityRemoveAttributeButton;
 	private JButton secondUtilityRemoveAttributeButton;
@@ -103,7 +103,7 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 	private SeriesFormatConfigurationPanel seriesTypeConfigurationPanel;
 	private WindowingConfigurationContainer windowConfigurationPanel;
 
-	private DefaultComboBoxModel aggregationComboBoxModel;
+	private DefaultComboBoxModel<Object> aggregationComboBoxModel;
 
 	private ExtendedHTMLJEditorPane configureGroupingButton;
 
@@ -223,9 +223,9 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 			seriesTypeLabel.setPreferredSize(new Dimension(80, 15));
 
 			// create series type combobox
-			seriesTypeComboBox = new JComboBox(VisualizationType.values());
+			seriesTypeComboBox = new JComboBox<>(VisualizationType.values());
 			seriesTypeLabel.setLabelFor(seriesTypeComboBox);
-			seriesTypeComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.series_type"));
+			seriesTypeComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.series_type"));
 			seriesTypeComboBox.setSelectedIndex(0);
 			seriesTypeComboBox.addPopupMenuListener(new PopupMenuListener() {
 
@@ -271,7 +271,7 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 		{
 			aggregationLabel = new ResourceLabel("plotter.configuration_dialog.aggregate_function");
 
-			aggregationComboBoxModel = new DefaultComboBoxModel();
+			aggregationComboBoxModel = new DefaultComboBoxModel<>();
 			aggregationComboBoxModel.addElement(I18N.getGUILabel("plotter.aggregation_function.NONE.label"));
 			for (AggregationFunctionType type : AggregationFunctionType.values()) {
 				aggregationComboBoxModel.addElement(type);
@@ -281,7 +281,7 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 			{
 
 				// create combo box
-				aggregationComboBox = new JComboBox(aggregationComboBoxModel);
+				aggregationComboBox = new JComboBox<>(aggregationComboBoxModel);
 				aggregationLabel.setLabelFor(aggregationComboBox);
 				aggregationComboBox.addPopupMenuListener(new PopupMenuListener() {
 
@@ -410,9 +410,9 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 			{
 
 				// create combo box
-				utilityIndicatorComboBox = new JComboBox(IndicatorType.values());
+				utilityIndicatorComboBox = new JComboBox<>(IndicatorType.values());
 				utilityIndicatorLabel.setLabelFor(utilityIndicatorComboBox);
-				utilityIndicatorComboBox.setRenderer(new EnumComboBoxCellRenderer("plotter.error_indicator"));
+				utilityIndicatorComboBox.setRenderer(new EnumComboBoxCellRenderer<>("plotter.error_indicator"));
 				utilityIndicatorComboBox.addPopupMenuListener(new PopupMenuListener() {
 
 					@Override
@@ -518,7 +518,7 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 
 			// create aggregation combobox
 			{
-				firstUtilityAggregationComboBox = new JComboBox(AggregationFunctionType.values());
+				firstUtilityAggregationComboBox = new JComboBox<>(AggregationFunctionType.values());
 				firstUtilityAggregationComboBox.addPopupMenuListener(new PopupMenuListener() {
 
 					@Override
@@ -618,7 +618,7 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 
 			// create aggregation combobox
 			{
-				secondUtilityAggregationComboBox = new JComboBox(AggregationFunctionType.values());
+				secondUtilityAggregationComboBox = new JComboBox<>(AggregationFunctionType.values());
 				secondUtilityAggregationComboBox.addPopupMenuListener(new PopupMenuListener() {
 
 					@Override

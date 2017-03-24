@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.datatable;
 
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
@@ -39,7 +39,6 @@ public class DataTableNaturalSortProvider implements DataTableSortProvider {
 	int columnIdx;
 
 	public DataTableNaturalSortProvider(int columnIdx, boolean ascending) {
-		super();
 		this.ascending = ascending;
 		this.columnIdx = columnIdx;
 	}
@@ -48,30 +47,22 @@ public class DataTableNaturalSortProvider implements DataTableSortProvider {
 	public int[] getIndexMapping(DataTable dataTable) {
 		if (columnIdx >= 0 && columnIdx < dataTable.getColumnNumber()) {
 
-			// get list of all values, either nominal or numeric
-			List<Pair<Double, ? extends Comparable>> allValues = new LinkedList<Pair<Double, ? extends Comparable>>();
-			if (dataTable.isNominal(columnIdx)) {
-				double rowIdx = 0;
+			// get list of all values, no matter if nominal or numeric
+			List<Pair<Integer, Double>> allValues = new LinkedList<>();
+			int rowIdx = 0;
 				for (DataTableRow row : dataTable) {
-					allValues.add(new Pair<Double, Comparable>(rowIdx, row.getValue(columnIdx)));
-					rowIdx += 1;
+				allValues.add(new Pair<>(rowIdx, row.getValue(columnIdx)));
+				rowIdx++;
 				}
-			} else {
-				double rowIdx = 0;
-				for (DataTableRow row : dataTable) {
-					allValues.add(new Pair<Double, Comparable>(rowIdx, row.getValue(columnIdx)));
-					rowIdx += 1;
-				}
-			}
 
 			// sort list
-			Collections.sort(allValues, new DataStructureUtils.PairComparator(ascending));
+			Collections.sort(allValues, new DataStructureUtils.PairComparator<>(ascending));
 
 			// create mapping from idx and values
 			int[] indexMapping = new int[allValues.size()];
 			int idx = 0;
-			for (Pair<Double, ? extends Comparable> entry : allValues) {
-				indexMapping[idx] = entry.getFirst().intValue();
+			for (Pair<Integer, Double> entry : allValues) {
+				indexMapping[idx] = entry.getFirst();
 				++idx;
 			}
 			return indexMapping;
@@ -87,7 +78,6 @@ public class DataTableNaturalSortProvider implements DataTableSortProvider {
 
 	@Override
 	public DataTableNaturalSortProvider clone() {
-		DataTableNaturalSortProvider clone = new DataTableNaturalSortProvider(columnIdx, ascending);
-		return clone;
+		return new DataTableNaturalSortProvider(columnIdx, ascending);
 	}
 }

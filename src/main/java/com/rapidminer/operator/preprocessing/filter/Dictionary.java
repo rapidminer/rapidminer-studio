@@ -1,24 +1,26 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.rapidminer.example.Attribute;
@@ -26,10 +28,12 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorProgress;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
+import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.tools.Tools;
 
 
@@ -47,6 +51,8 @@ public class Dictionary extends PreprocessingModel {
 	private List<String[]> replacements;
 	private String[] affectedAttributeNames;
 	private ExampleSet exampleSet;
+
+	private transient Map<NominalMapping, Map<Double, Double>> viewReplacements;
 
 	private boolean regexp = false;
 	private boolean toLowerCase = false;
@@ -69,7 +75,12 @@ public class Dictionary extends PreprocessingModel {
 		}
 	}
 
-	private void remap(Attributes attributes) throws ProcessStoppedException {
+	/**
+	 * Remaps the attributes in the exampleSet or writes into the exampleSet if a remapping is not
+	 * possible.
+	 */
+	private void remap(ExampleSet exampleSet) throws ProcessStoppedException {
+		Attributes attributes = exampleSet.getAttributes();
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
@@ -104,6 +115,77 @@ public class Dictionary extends PreprocessingModel {
 					else {
 						mapping.setMapping(replacement, oldRepr);
 					}
+				}
+
+			}
+			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				progress.setCompleted(progressCounter);
+			}
+		}
+	}
+
+	/**
+	 * Gives the attributes a new mapping if a remapping is possible or stores the value change in
+	 * {@link #viewReplacements} and changes to {@link ViewAttribute}.
+	 */
+	private void remap(Attributes attributes) throws ProcessStoppedException {
+		OperatorProgress progress = null;
+		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
+			progress = getOperator().getProgress();
+			progress.setTotal(affectedAttributeNames.length);
+		}
+		int progressCounter = 0;
+
+		for (String attributeName : affectedAttributeNames) {
+			Attribute attr = attributes.get(attributeName);
+			if (attr.isNominal()) {
+				NominalMapping mapping = attr.getMapping();
+				List<String> mappingValues = mapping.getValues();
+				boolean cloned = false;
+				boolean putReplacement = false;
+
+				for (String string : mappingValues) {
+					String replacement = replace(string);
+					// Nothing to replace
+					if (replacement.equals(string)) {
+						continue;
+					}
+
+					if (!cloned) {
+						// mapping is not cloned on attribute clone so we have to clone it before we
+						// change anything
+						attr.setMapping((NominalMapping) mapping.clone());
+						// get mapping from attributes again because it might be cloned when setting
+						mapping = attr.getMapping();
+						cloned = true;
+					}
+
+					int oldRepr = mapping.getIndex(string);
+
+					// Replacement already present in mapping -> Replace value on the fly
+					if (mappingValues.contains(replacement)) {
+						if (viewReplacements == null) {
+							viewReplacements = new HashMap<>();
+						}
+
+						Map<Double, Double> viewReplacer = viewReplacements.get(mapping);
+						if (viewReplacer == null) {
+							viewReplacer = new HashMap<>();
+							viewReplacements.put(mapping, viewReplacer);
+							putReplacement = true;
+						}
+						int newRepr = mapping.getIndex(replacement);
+						viewReplacer.put((double) oldRepr, (double) newRepr);
+					}
+					// Replacement not present in mapping -> Replace in mapping
+					else {
+						mapping.setMapping(replacement, oldRepr);
+					}
+				}
+
+				if (putReplacement) {
+					// add view attribute to allow replacing on the fly via viewReplacements
+					attributes.replace(attr, new ViewAttribute(this, attr, attr.getName(), attr.getValueType(), mapping));
 				}
 
 			}
@@ -153,7 +235,7 @@ public class Dictionary extends PreprocessingModel {
 
 	@Override
 	public ExampleSet applyOnData(ExampleSet exampleSet) throws OperatorException {
-		remap(exampleSet.getAttributes());
+		remap(exampleSet);
 		return exampleSet;
 	}
 
@@ -163,14 +245,22 @@ public class Dictionary extends PreprocessingModel {
 		try {
 			remap(attributes);
 		} catch (ProcessStoppedException e) {
-			// Cannot happen
-			e.printStackTrace();
+			throw new ProcessStoppedRuntimeException();
 		}
 		return attributes;
 	}
 
 	@Override
 	public double getValue(Attribute targetAttribute, double value) {
+		if (viewReplacements != null) {
+			Map<Double, Double> replacers = viewReplacements.get(targetAttribute.getMapping());
+			if (replacers != null) {
+				Double replacement = replacers.get(value);
+				if (replacement != null) {
+					value = replacement;
+				}
+			}
+		}
 		return value;
 	}
 
@@ -208,5 +298,15 @@ public class Dictionary extends PreprocessingModel {
 
 	public ExampleSet getExampleSet() {
 		return exampleSet;
+	}
+
+	@Override
+	protected boolean needsRemapping() {
+		return false;
+	}
+
+	@Override
+	protected boolean writesIntoExistingData() {
+		return true;
 	}
 }

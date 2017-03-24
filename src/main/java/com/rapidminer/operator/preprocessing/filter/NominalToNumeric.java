@@ -1,24 +1,23 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
-import java.io.ObjectStreamException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -97,7 +96,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 			super(exampleSet, codingType);
 		}
 
-		private Object readResolve() throws ObjectStreamException {
+		private Object readResolve() {
 			return new com.rapidminer.operator.preprocessing.filter.NominalToNumericModel(getTrainingHeader(),
 					INTEGERS_CODING);
 		}
@@ -167,10 +166,11 @@ public class NominalToNumeric extends PreprocessingOperator {
 			Map<String, String> attributeToComparisonGroupMap = getUserEnteredComparisonGroups();
 			String comparisonGroup = attributeToComparisonGroupMap.get(amd.getName());
 			boolean useComparisonGroups = getParameterAsBoolean(PARAMETER_USE_COMPARISON_GROUPS);
+			boolean useUnderscoreInName = getParameterAsBoolean(PARAMETER_USE_UNDERSCORE_IN_NAME);
 			for (String value : amd.getValueSet()) {
 				if (!((useComparisonGroups || codingType == EFFECT_CODING) && value.equals(comparisonGroup))) {
-					AttributeMetaData newAttrib = new AttributeMetaData(getTargetAttributeName(amd.getName(), value,
-							getParameterAsBoolean(PARAMETER_USE_UNDERSCORE_IN_NAME)), Ontology.INTEGER);
+					AttributeMetaData newAttrib = new AttributeMetaData(
+							getTargetAttributeName(amd.getName(), value, useUnderscoreInName), Ontology.INTEGER);
 					double lowerBound = 0;
 					if (codingType == EFFECT_CODING) {
 						lowerBound = -1;
@@ -295,7 +295,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 					if (attributeComparisonGroup[0].equals(attributeName)) {
 						if (found) {
 							throw new UserError(this, "nominal_to_numerical.duplicate_comparison_group", attributeName); 	// duplicate
-																															// entry
+																														 	// entry
 						}
 						found = true;
 
@@ -305,7 +305,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 						if (comparisonGroupValue < 0) {
 							throw new UserError(this, "nominal_to_numerical.illegal_comparison_group", attributeName,
 									attributeComparisonGroup[1]);	// illegal
-																	// value
+																		// value
 						}
 
 						// store comparison group in map:
@@ -316,7 +316,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 				// check if the attribute has been found at all
 				if (!found) {
 					throw new UserError(this, "nominal_to_numerical.illegal_comparison_group", attributeName, "<undefined>");	// no
-																																// value
+																																	// value
 				}
 			}
 		}
@@ -373,17 +373,16 @@ public class NominalToNumeric extends PreprocessingOperator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
-		types.add(new ParameterTypeCategory(PARAMETER_CODING_TYPE, "The coding of the numerical attributes.",
-				ENCODING_TYPES, getCompatibilityLevel().isAtMost(VERSION_5_2_8) ? INTEGERS_CODING : DUMMY_CODING, false));
+		types.add(new ParameterTypeCategory(PARAMETER_CODING_TYPE, "The coding of the numerical attributes.", ENCODING_TYPES,
+				getCompatibilityLevel().isAtMost(VERSION_5_2_8) ? INTEGERS_CODING : DUMMY_CODING, false));
 
 		ParameterType type;
 
-		type = new ParameterTypeBoolean(
-				PARAMETER_USE_COMPARISON_GROUPS,
+		type = new ParameterTypeBoolean(PARAMETER_USE_COMPARISON_GROUPS,
 				"If checked, for each selected attribute in the input set a value has to be specified as comparsion group, which will not appear in the final result set. If not checked, all values of the selected attributes will result in an indicator attribute in the result example set. ",
 				false, true);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_CODING_TYPE, ENCODING_TYPES, true,
-				DUMMY_CODING));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_CODING_TYPE, ENCODING_TYPES, true, DUMMY_CODING));
 		types.add(type);
 
 		type = new ParameterTypeList(PARAMETER_COMPARISON_GROUPS, "The value which becomes the comparison group.",
@@ -392,25 +391,23 @@ public class NominalToNumeric extends PreprocessingOperator {
 				new ParameterTypeString(PARAMETER_COMPARISON_GROUP, "The value which is used as comparison group.", true,
 						false));
 		type.setExpert(false);
-		type.registerDependencyCondition(new OrParameterCondition(this, true, new BooleanParameterCondition(this,
-				PARAMETER_USE_COMPARISON_GROUPS, true, true), new EqualTypeCondition(this, PARAMETER_CODING_TYPE,
-				ENCODING_TYPES, true, EFFECT_CODING)));
+		type.registerDependencyCondition(new OrParameterCondition(this, true,
+				new BooleanParameterCondition(this, PARAMETER_USE_COMPARISON_GROUPS, true, true),
+				new EqualTypeCondition(this, PARAMETER_CODING_TYPE, ENCODING_TYPES, true, EFFECT_CODING)));
 		types.add(type);
 
-		type = new ParameterTypeCategory(
-				PARAMETER_UNEXPECTED_VALUE_HANDLING,
+		type = new ParameterTypeCategory(PARAMETER_UNEXPECTED_VALUE_HANDLING,
 				"Indicates how values are handled, which occur in the example set to which the preprocessing model is applied, but not in the training set. By default all attributes are set to 0 and a warning is logged. However, by the additional checks for the warning some overhead is generated, so you can turn off the logging and just set all attributes to 0.",
 				UNEXPECTED_VALUE_HANDLING, ALL_ZEROES_AND_WARNING, true);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_CODING_TYPE, ENCODING_TYPES, false,
-				EFFECT_CODING, DUMMY_CODING));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_CODING_TYPE, ENCODING_TYPES, false, EFFECT_CODING, DUMMY_CODING));
 		types.add(type);
 
-		type = new ParameterTypeBoolean(
-				PARAMETER_USE_UNDERSCORE_IN_NAME,
+		type = new ParameterTypeBoolean(PARAMETER_USE_UNDERSCORE_IN_NAME,
 				"Indicates if underscores should be used in the new attribute names instead of empty spaces and '='. Although the resulting names are harder to read for humans it might be more appropriate to use these if the data should be written into a database system.",
 				false, true);
-		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_CODING_TYPE, ENCODING_TYPES, true,
-				EFFECT_CODING, DUMMY_CODING));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_CODING_TYPE, ENCODING_TYPES, true, EFFECT_CODING, DUMMY_CODING));
 		types.add(type);
 
 		return types;
@@ -428,7 +425,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(), new OperatorVersion[] {
-				VERSION_5_2_8, VERSION_MAY_WRITE_INTO_DATA });
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[] { VERSION_5_2_8, VERSION_MAY_WRITE_INTO_DATA });
 	}
 }

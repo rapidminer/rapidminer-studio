@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.igss;
 
 import java.util.Iterator;
@@ -249,9 +249,7 @@ public class IteratingGSS extends AbstractLearner {
 		this.maxRest = null;
 
 		// Find n rules with best empirical utility and partition into bestList and restList
-		Iterator it = hypothesisList.iterator();
-		while (it.hasNext()) {
-			Hypothesis hypo = (Hypothesis) it.next();
+		for (Hypothesis hypo : hypothesisList) {
 			if (hypo.getCoveredWeight() > 0.0d) {
 				if (bestList.size() < n) {
 					if (bestList.isEmpty()) {
@@ -302,32 +300,27 @@ public class IteratingGSS extends AbstractLearner {
 		Result r = bestList.getLast();
 		double minimum = r.getUtility() - r.getConfidence();
 		this.minBest = r;
-		it = bestList.iterator();
-		while (it.hasNext()) {
-			r = (Result) it.next();
-			double current = r.getUtility() - r.getConfidence();
+		for (Result res : bestList) {
+			double current = res.getUtility() - res.getConfidence();
 			if (current < minimum) {
 				minimum = current;
-				this.minBest = r;
+				this.minBest = res;
 			}
 		}
 		// Find max(restList)
 		r = restList.getLast();
 		double maximum = r.getUtility() + r.getConfidence();
 		this.maxRest = r;
-		it = restList.iterator();
-		while (it.hasNext()) {
-			r = (Result) it.next();
-			double current = r.getUtility() + r.getConfidence();
+		for (Result res : restList) {
+			double current = res.getUtility() + res.getConfidence();
 			if (current > maximum) {
 				maximum = current;
-				this.maxRest = r;
+				this.maxRest = res;
 			}
 		}
 
-		it = bestList.iterator();
-		while (it.hasNext()) {
-			this.bestList.addLast(((Result) it.next()).getHypothesis()); // Add hypothesis from
+		for (Result res : bestList) {
+			this.bestList.addLast(res.getHypothesis()); // Add hypothesis from
 			// local variable to
 			// global field.
 		}
@@ -371,32 +364,18 @@ public class IteratingGSS extends AbstractLearner {
 			if (r <= e.getWeight()) {
 
 				// Apply the given example to all rules in the hypothesisList.
-				Iterator it = hypothesisList.iterator();
-				while (it.hasNext()) {
-					((Hypothesis) it.next()).apply(e);
-				}
+				hypothesisList.forEach(h -> h.apply(e));
 				totalWeight += weightToAdd;
 				if ((int) e.getLabel() == Hypothesis.POSITIVE_CLASS) {
 					totalPositiveWeight += weightToAdd;
 				}
 
 				// Update rules that already became output. They are needed for pruning.
-				if (!output.isEmpty()) {
-					Iterator iter = output.iterator();
-					while (iter.hasNext()) {
-						Hypothesis hypo = (Hypothesis) iter.next();
-						hypo.apply(e);
-					}
-				}
+				output.forEach(h -> h.apply(e));
 
 				// Update already removed rules. They are needed for pruning.
-				if (!delete.isEmpty()) {
-					Iterator iter = delete.iterator();
-					while (iter.hasNext()) {
-						Hypothesis hypo = (Hypothesis) iter.next();
-						hypo.apply(e);
-					}
-				}
+				delete.forEach(h -> h.apply(e));
+
 				/*
 				 * Update the utility of all rules and determine the best rule and output/delete
 				 * rules that are good/bad enough. Only once per stepsize!
@@ -406,9 +385,9 @@ public class IteratingGSS extends AbstractLearner {
 					updateLists(hypothesisList, n, totalWeight, totalPositiveWeight, delta_h_m);
 
 					// Look for hypothesis to delete/output.
-					ListIterator iter = hypothesisList.listIterator();
+					ListIterator<Hypothesis> iter = hypothesisList.listIterator();
 					while (iter.hasNext() && n > 0 && hypothesisList.size() != n) {
-						Hypothesis hypo = (Hypothesis) iter.next();
+						Hypothesis hypo = iter.next();
 						double util = theUtility.utility(totalWeight, totalPositiveWeight, hypo);
 						double conf = theUtility.confidenceIntervall(totalWeight, totalPositiveWeight, hypo, delta_h_m);
 						if (util >= conf + maxRest.getUtility() + maxRest.getConfidence() - epsilon
@@ -588,11 +567,7 @@ public class IteratingGSS extends AbstractLearner {
 
 		for (int i = 0; i < this.iterations; i++) {
 			// Reset hypothesis space
-			Iterator iter = hypothesisList.iterator();
-			while (iter.hasNext()) {
-				Hypothesis hypo = (Hypothesis) iter.next();
-				hypo.reset();
-			}
+			hypothesisList.forEach(Hypothesis::reset);
 
 			// calculate current delta values
 			double deltaForGSS = 2.0d * this.currentDelta / (3.0d * (this.iterations - i));
@@ -734,9 +709,7 @@ public class IteratingGSS extends AbstractLearner {
 
 				// Calculate average number of examples
 				double sum = 0.0d;
-				Iterator it = otherResults.iterator();
-				while (it.hasNext()) {
-					Result r = (Result) it.next();
+				for (Result r : otherResults) {
 					sum = sum + r.getTotalWeight();
 				}
 				double average = sum / otherResults.size();
@@ -759,9 +732,9 @@ public class IteratingGSS extends AbstractLearner {
 	public LinkedList<Hypothesis> prune(LinkedList<Hypothesis> hypoList, double minUtility, double totalWeight,
 			double totalPositiveWeight, double delta_p) {
 		double delta_hp = delta_p / hypoList.size();
-		ListIterator it = hypoList.listIterator();
+		ListIterator<Hypothesis> it = hypoList.listIterator();
 		while (it.hasNext()) {
-			Hypothesis hypo = (Hypothesis) it.next();
+			Hypothesis hypo = it.next();
 			double upperBound = theUtility.getUpperBound(totalWeight, totalPositiveWeight, hypo, delta_hp);
 			if (upperBound < minUtility) {
 				it.remove();

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.look.fc;
 
 import java.awt.event.InputMethodEvent;
@@ -27,7 +27,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Enumeration;
 import java.util.Vector;
 
 import javax.swing.JList;
@@ -53,7 +52,7 @@ public class AutomaticTextField extends JTextField implements KeyListener, Caret
 
 	private FileChooserUI fileChooserUI;
 
-	private JList itemList = new JList(new Object[] {});
+	private JList<String> itemList = new JList<>(new String[] {});
 
 	private JPopupMenu popupMenu = new JPopupMenu();
 
@@ -70,20 +69,16 @@ public class AutomaticTextField extends JTextField implements KeyListener, Caret
 		this.addKeyListener(this);
 	}
 
-	private Vector findItems() {
+	private Vector<String> findItems() {
 		if (this.mainText == null) {
 			this.mainText = this.getText();
 		}
 
 		this.fileList.removeAllElements();
 
-		Enumeration en = this.fileChooserUI.fileList.visibleItemsList.elements();
-		while (en.hasMoreElements()) {
-			Item vi = (Item) en.nextElement();
-			if (vi.getFileName()
-					.toLowerCase()
-					.startsWith(
-							this.mainText.toLowerCase().substring(0, Math.min(this.caretPosition, this.mainText.length())))) {
+		int minPos = Math.min(this.caretPosition, this.mainText.length());
+		for (Item vi : fileChooserUI.fileList.visibleItemsList) {
+			if (vi.getFileName().toLowerCase().startsWith(this.mainText.toLowerCase().substring(0, minPos))) {
 
 				this.fileList.add(vi.getFileName());
 			}
@@ -108,7 +103,7 @@ public class AutomaticTextField extends JTextField implements KeyListener, Caret
 			}
 		});
 
-		this.itemList = new JList(findItems());
+		this.itemList = new JList<>(findItems());
 		this.itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.itemList.setBorder(null);
 		this.itemList.setAutoscrolls(true);
@@ -161,7 +156,7 @@ public class AutomaticTextField extends JTextField implements KeyListener, Caret
 							.getElementAt(AutomaticTextField.this.itemList.getSelectedIndex()).toString());
 					t.setCaretPosition(AutomaticTextField.this.caretPosition);
 
-					if ((AutomaticTextField.this.caretPosition == 0)
+					if (AutomaticTextField.this.caretPosition == 0
 							|| !t.getText().toLowerCase().startsWith(AutomaticTextField.this.mainText.toLowerCase())) {
 						t.select(0, t.getText().length());
 					} else {
@@ -244,7 +239,7 @@ public class AutomaticTextField extends JTextField implements KeyListener, Caret
 			}
 			this.itemList.setSelectedIndex(n);
 			this.requestFocus();
-		} else if ((e.getKeyCode() == KeyEvent.VK_BACK_SPACE) || (e.getKeyCode() == KeyEvent.VK_DELETE)) {
+		} else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE || e.getKeyCode() == KeyEvent.VK_DELETE) {
 			e.consume();
 			this.mainText = this.getText();
 			this.requestFocus();
@@ -256,7 +251,7 @@ public class AutomaticTextField extends JTextField implements KeyListener, Caret
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		if ((e.getKeyCode() == KeyEvent.VK_ESCAPE) || (e.getKeyCode() == KeyEvent.VK_BACK_SPACE)) {
+		if (e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
 			e.consume();
 		} else if (!e.isActionKey()) {
 			this.mainText = this.getText();
@@ -267,7 +262,7 @@ public class AutomaticTextField extends JTextField implements KeyListener, Caret
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		if ((e.getKeyCode() == KeyEvent.VK_ESCAPE) || (e.getKeyCode() == KeyEvent.VK_BACK_SPACE)) {
+		if (e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
 			e.consume();
 		}
 	}

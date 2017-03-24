@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.util.Arrays;
@@ -59,48 +59,48 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
  * parts according to a split criterion (regular expression). This operator provides two different
  * modes, depending on the setting of the parameter &quot;splitting_mode&quot;.
  * </p>
- * 
+ *
  * <h3>Ordered Splits</h3>
  * <p>
  * In the first split mode, called ordered_split, the resulting attributes get the name of the
  * original attribute together with a number indicating the order. For example, if the original data
  * contained the values<br/>
  * <br/>
- * 
+ *
  * attribute-name <br/>
  * -------------- <br/>
  * value1 <br/>
  * value2, value3 <br/>
  * value3 <br/>
  * <br/>
- * 
+ *
  * and should be divided by the separating commas, the resulting attributes would be
  * attribute-name1, attribute-name2, attribute-name3 with the tuples (value1, ?, ?), (value2,
  * value3, ?), and (value3, ?, ?), respectively. This mode is useful if the original values
  * indicated some order like, for example, a preference.
  * </p>
- * 
+ *
  * <h3>Unordered Splits</h3>
  * <p>
  * In the second split mode, called unordered_split, the resulting attributes get the name of the
  * original attribute together with the value for each of the occurring values. For example, if the
  * original data contained the values<br/>
  * <br/>
- * 
+ *
  * attribute-name <br/>
  * -------------- <br/>
  * value1 <br/>
  * value2, value3 <br/>
  * value3 <br/>
  * <br/>
- * 
+ *
  * and again should be divided by the separating commas, the resulting attributes would be
  * attribute-name-value1, attribute-name-value2, and attribute-name-value3 with the tuples (true,
  * false, false), (false, true, true), and (false, false, true), respectively. This mode is useful
  * if the order is not important but the goal is a basket like data set containing all occurring
  * values.
  * </p>
- * 
+ *
  * @author Ingo Mierswa, Nils Woehler
  */
 public class AttributeValueSplit extends AbstractDataProcessing {
@@ -133,6 +133,7 @@ public class AttributeValueSplit extends AbstractDataProcessing {
 			Pattern splittingPattern = Pattern.compile(splittingRegex);
 			ExampleSetMetaData subset = attributeSubsetSelector.getMetaDataSubset(metaData, false, true);
 			SetRelation attributeSetRelation = SetRelation.EQUAL;
+			int type = getParameterAsInt(PARAMETER_SPLIT_MODE);
 			for (AttributeMetaData amd : subset.getAllAttributes()) {
 				if (!amd.isSpecial() && amd.isNominal()) {
 					attributeSetRelation = attributeSetRelation.merge(amd.getValueSetRelation());
@@ -140,7 +141,6 @@ public class AttributeValueSplit extends AbstractDataProcessing {
 					// removing old attribute
 					metaData.removeAttribute(metaData.getAttributeByName(amd.getName()));
 
-					int type = getParameterAsInt(PARAMETER_SPLIT_MODE);
 					switch (type) {
 						case SPLIT_MODE_ORDERED:
 
@@ -343,8 +343,7 @@ public class AttributeValueSplit extends AbstractDataProcessing {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeCategory(
-				PARAMETER_SPLIT_MODE,
+		type = new ParameterTypeCategory(PARAMETER_SPLIT_MODE,
 				"The split mode of this operator, either ordered splits (keeping the original order) or unordered (keeping basket-like information).",
 				SPLIT_MODES, SPLIT_MODE_ORDERED);
 		type.setExpert(false);

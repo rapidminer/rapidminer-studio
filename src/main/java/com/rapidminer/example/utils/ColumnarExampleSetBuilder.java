@@ -1,9 +1,23 @@
 /**
- * Copyright (C) 2001-2015 RapidMiner GmbH
- */
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
+ * Complete list of developers available at our web site:
+ * 
+ * http://rapidminer.com
+ * 
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
+*/
 package com.rapidminer.example.utils;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +55,12 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	/** stores whether rows were added */
 	private boolean rowsAdded = false;
 
+	/** the data management to use */
+	private DataManagement management = DataManagement.AUTO;
+
+	/** the expected number of rows */
+	private int numberOfRows;
+
 	/**
 	 * Creates a builder that stores values in a {@link ColumnarExampleTable} based on the given
 	 * attributes.
@@ -50,7 +70,7 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	 */
 	ColumnarExampleSetBuilder(List<Attribute> attributes) {
 		super(attributes);
-		table = new ColumnarExampleTable(attributes, true);
+		setTableIndices();
 	}
 
 	/**
@@ -62,7 +82,7 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	 */
 	ColumnarExampleSetBuilder(Attribute... attributes) {
 		super(attributes);
-		table = new ColumnarExampleTable(Arrays.asList(attributes), true);
+		setTableIndices();
 	}
 
 	@Override
@@ -73,7 +93,7 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 
 	@Override
 	public ExampleSetBuilder withExpectedSize(int numberOfRows) {
-		table.setExpectedSize(numberOfRows);
+		this.numberOfRows = numberOfRows;
 		return this;
 	}
 
@@ -85,6 +105,9 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 
 	@Override
 	public ExampleSetBuilder addDataRow(DataRow dataRow) {
+		if (table == null) {
+			table = createTable();
+		}
 		table.addDataRow(dataRow);
 		rowsAdded = true;
 		return this;
@@ -92,6 +115,9 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 
 	@Override
 	public ExampleSetBuilder addRow(double[] row) {
+		if (table == null) {
+			table = createTable();
+		}
 		table.addRow(row);
 		rowsAdded = true;
 		return this;
@@ -104,7 +130,16 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 	}
 
 	@Override
+	public ExampleSetBuilder withOptimizationHint(DataManagement management) {
+		this.management = management;
+		return this;
+	}
+
+	@Override
 	protected ExampleTable getExampleTable() {
+		if (table == null) {
+			table = createTable();
+		}
 		if (reader != null) {
 			rowsAdded = true;
 			while (reader.hasNext()) {
@@ -121,6 +156,12 @@ class ColumnarExampleSetBuilder extends ExampleSetBuilder {
 		table.complete();
 
 		return table;
+	}
+
+	private ColumnarExampleTable createTable() {
+		ColumnarExampleTable newTable = new ColumnarExampleTable(getAttributes(), management, true);
+		newTable.setExpectedSize(numberOfRows);
+		return newTable;
 	}
 
 	/**

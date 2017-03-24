@@ -1,28 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui.dialog;
-
-import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -48,6 +42,13 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+
+import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
 
 
 /**
@@ -75,7 +76,7 @@ public class EditParallelLineDialog extends JDialog {
 	private JButton lineColorButton;
 
 	/** the combobox to chose the {@link LineStyle} */
-	private JComboBox lineStyleCombobox;
+	private JComboBox<LineStyle> lineStyleCombobox;
 
 	/** the line color */
 	private Color lineColor;
@@ -89,6 +90,7 @@ public class EditParallelLineDialog extends JDialog {
 	 * Creates a new {@link EditParallelLineDialog}.
 	 */
 	public EditParallelLineDialog() {
+		super(ApplicationFrame.getApplicationFrame());
 		setupGUI();
 	}
 
@@ -179,8 +181,8 @@ public class EditParallelLineDialog extends JDialog {
 		gbc.gridy = 3;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.weightx = 1;
-		lineStyleCombobox = new JComboBox(LineStyle.values());
-		((DefaultComboBoxModel) lineStyleCombobox.getModel()).removeElement(LineStyle.NONE);
+		lineStyleCombobox = new JComboBox<>(LineStyle.values());
+		((DefaultComboBoxModel<LineStyle>) lineStyleCombobox.getModel()).removeElement(LineStyle.NONE);
 		lineStyleCombobox
 				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.action.edit_parallel_line.line_style.tip"));
 		lineStyleCombobox.setSelectedItem(LineStyle.SOLID);
@@ -254,7 +256,7 @@ public class EditParallelLineDialog extends JDialog {
 		// misc settings
 		this.setMinimumSize(new Dimension(275, 225));
 		// center dialog
-		this.setLocationRelativeTo(null);
+		this.setLocationRelativeTo(getOwner());
 		this.setTitle(I18N.getMessage(I18N.getGUIBundle(), "gui.action.edit_parallel_line.title.label"));
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.setModal(true);
@@ -350,14 +352,14 @@ public class EditParallelLineDialog extends JDialog {
 		}
 		Color newLineColor = JColorChooser.showDialog(null, I18N.getGUILabel("edit_parallel_line.line_color_title.label"),
 				oldColor);
-		if (newLineColor != null && !(newLineColor.equals(oldColor))) {
+		if (newLineColor != null && !newLineColor.equals(oldColor)) {
 			lineColor = newLineColor;
 		}
 	}
 
 	/**
 	 * Edits the line.
-	 * 
+	 *
 	 * @return true if the line has been edited; false otherwise
 	 */
 	private boolean editLine() {

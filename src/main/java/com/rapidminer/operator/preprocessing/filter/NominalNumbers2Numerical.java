@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.text.NumberFormat;
@@ -57,7 +57,7 @@ import com.rapidminer.tools.math.container.Range;
  * (without the corresponding data being part of the example set), the attribute will not be
  * converted. Please use the operator {@link GuessValueTypes} in these cases.
  * </p>
- * 
+ *
  * @author Regina Fritsch, Ingo Mierswa
  */
 public class NominalNumbers2Numerical extends AbstractFilteredDataProcessing {
@@ -135,6 +135,7 @@ public class NominalNumbers2Numerical extends AbstractFilteredDataProcessing {
 
 	@Override
 	public ExampleSet applyOnFiltered(ExampleSet exampleSet) throws OperatorException {
+		int unparsableValueHandling = getParameterAsInt(PARAMETER_UNPARSABLE_VALUE_HANDLING);
 		NumberFormat format = makeFormat();
 
 		List<Attribute> newAttributes = new LinkedList<>();
@@ -144,7 +145,7 @@ public class NominalNumbers2Numerical extends AbstractFilteredDataProcessing {
 			Attribute attribute = a.next();
 			if (attribute.isNominal()) {
 				if (getCompatibilityLevel().isAtMost(CHANGE_6_0_3_UNPARSABLE_VALUES_ACTION)
-						|| getParameterAsInt(PARAMETER_UNPARSABLE_VALUE_HANDLING) == IGNORE) {
+						|| unparsableValueHandling == IGNORE) {
 					try {
 						for (String value : attribute.getMapping().getValues()) {
 							format.parse(value);
@@ -169,7 +170,7 @@ public class NominalNumbers2Numerical extends AbstractFilteredDataProcessing {
 						try {
 							e.setValue(newAttribute, format.parse(value).doubleValue());
 						} catch (ParseException ex) {
-							switch (getParameterAsInt(PARAMETER_UNPARSABLE_VALUE_HANDLING)) {
+							switch (unparsableValueHandling) {
 
 								case IGNORE:
 									continue;

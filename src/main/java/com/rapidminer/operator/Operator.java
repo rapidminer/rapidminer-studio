@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator;
 
 import java.io.File;
@@ -2061,6 +2061,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	private final Observer<Port> delegatingPortObserver = new DelegatingObserver<>(this, this);
 	private final Observer<String> delegatingParameterObserver = new DelegatingObserver<>(this, this);
 	/** Sets the dirty flag on any update. */
+	@SuppressWarnings("rawtypes")
 	private final Observer dirtyObserver = new Observer<Object>() {
 
 		@Override
@@ -2325,6 +2326,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 * Returns true if this operator contains at least one {@link OutputPort} provided that its
 	 * input ports are satisfied.
 	 */
+	@SuppressWarnings("deprecation")
 	public boolean producesOutput(Class<? extends IOObject> outputClass) {
 		assumePreconditionsSatisfied();
 		transformMetaData();

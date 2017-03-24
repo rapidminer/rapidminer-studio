@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.usagestats;
 
 import java.io.File;
@@ -42,12 +42,14 @@ import org.w3c.dom.Element;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.core.license.ProductConstraintManager;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.dialog.EULADialog;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.license.License;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.WebServiceTools;
@@ -77,8 +79,10 @@ public class UsageStatistics {
 	/** URL to send the statistics values to. */
 	private static final String WEB_SERVICE_URL = "http://stats.rapidminer.com/usage-stats/upload/rapidminer";
 
-	/** Transmit usage statistics daily */
-	private static final long DEFAULT_TRANSMISSION_INTERVAL = 1000 * 60 * 60 * 24;
+	/** Transmit usage statistics every day */
+	private static final long DAILY_TRANSMISSION_INTERVAL = 1000 * 60 * 60 * 24;
+	/** Transmit usage statistics every hour */
+	private static final long HOURLY_TRANSMISSION_INTERVAL = 1000 * 60 * 60;
 
 	/** Schedule extra transmission 10 minutes from now */
 	private static final long SOON_TRANSMISSION_INTERVAL = 1000 * 60 * 10;
@@ -170,7 +174,9 @@ public class UsageStatistics {
 	 * @return the transmission interval to be used (in milliseconds)
 	 */
 	private long getTransmissionInterval() {
-		return DEFAULT_TRANSMISSION_INTERVAL;
+		return RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS_ANSWERS[UsageStatsTransmissionDialog.ALWAYS]
+				.equals(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS))
+						? HOURLY_TRANSMISSION_INTERVAL : DAILY_TRANSMISSION_INTERVAL;
 	}
 
 	/**

@@ -1,33 +1,30 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.preprocessing;
 
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -85,12 +82,6 @@ public class NoiseOperator extends PreprocessingOperator {
 	 */
 	public static final String PARAMETER_LINEAR_FACTOR = "linear_factor";
 
-	/**
-	 * Incompatible version, old version writes into the exampleset, if original output port is not
-	 * connected.
-	 */
-	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
-
 	public NoiseOperator(OperatorDescription description) {
 		super(description);
 	}
@@ -98,8 +89,9 @@ public class NoiseOperator extends PreprocessingOperator {
 	@Override
 	public PreprocessingModel createPreprocessingModel(ExampleSet exampleSet) throws OperatorException {
 		exampleSet.recalculateAllAttributeStatistics();
-		String[] attributeNames = new String[getParameterAsInt(PARAMETER_RANDOM_ATTRIBUTES)];
-		for (int i = 0; i < getParameterAsInt(PARAMETER_RANDOM_ATTRIBUTES); i++) {
+		int randomAttributes = getParameterAsInt(PARAMETER_RANDOM_ATTRIBUTES);
+		String[] attributeNames = new String[randomAttributes];
+		for (int i = 0; i < randomAttributes; i++) {
 			attributeNames[i] = AttributeFactory.createName("random");
 		}
 		return new NoiseModel(exampleSet, RandomGenerator.getRandomGenerator(this), getParameterList(PARAMETER_NOISE),
@@ -195,12 +187,8 @@ public class NoiseOperator extends PreprocessingOperator {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
-			return super.writesIntoExistingData();
-		} else {
-			// old version: true only if original output port is connected
-			return isOriginalOutputConnected() && super.writesIntoExistingData();
-		}
+		// model takes care of materialization
+		return false;
 	}
 
 	@Override
@@ -209,9 +197,4 @@ public class NoiseOperator extends PreprocessingOperator {
 				attributeSelector);
 	}
 
-	@Override
-	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
-				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
-	}
 }

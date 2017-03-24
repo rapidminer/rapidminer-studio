@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,12 +18,12 @@
  */
 package de.dfki.madm.operator;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 public class ClusteringAlgorithms {

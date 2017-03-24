@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator;
 
 import java.util.Iterator;
@@ -48,7 +48,7 @@ public class DefaultIODescription implements IODescription {
 	 * outputBehaviour. Both <tt>input</tt> and <tt>output</tt> may be null and may contain a class
 	 * more than once.
 	 */
-	public DefaultIODescription(Class[] input, Class[] output, int outputBehaviour) {
+	public DefaultIODescription(Class<?>[] input, Class<?>[] output, int outputBehaviour) {
 		this.inputClasses = input;
 		this.outputClasses = output;
 		if (inputClasses == null) {
@@ -61,7 +61,7 @@ public class DefaultIODescription implements IODescription {
 	}
 
 	/** Assumes PASS_UNUSED_INPUT_TO_OUTPUT. */
-	public DefaultIODescription(Class[] input, Class[] output) {
+	public DefaultIODescription(Class<?>[] input, Class<?>[] output) {
 		this(input, output, PASS_UNUSED_INPUT_TO_OUTPUT);
 	}
 
@@ -108,7 +108,7 @@ public class DefaultIODescription implements IODescription {
 					outputList.add(outputClasses[i]);
 				}
 
-				Class[] outputArray = new Class[outputList.size()];
+				Class<?>[] outputArray = new Class[outputList.size()];
 				outputList.toArray(outputArray);
 				return outputArray;
 			case DELETE_UNUSED_INPUT:

@@ -1,33 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.dialog;
-
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.Tools;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.viewer.MetaDataViewer;
-import com.rapidminer.operator.features.FeatureOperator;
-import com.rapidminer.operator.features.Individual;
-import com.rapidminer.operator.features.Population;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
@@ -52,12 +41,24 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.viewer.MetaDataViewer;
+import com.rapidminer.operator.features.FeatureOperator;
+import com.rapidminer.operator.features.Individual;
+import com.rapidminer.operator.features.Population;
+
 
 /**
  * This dialog can be used to select an individual from a population.
- * 
+ *
  * @author Ingo Mierswa
  */
+@SuppressWarnings("deprecation")
 public class IndividualSelector extends JDialog implements ListSelectionListener {
 
 	private static final long serialVersionUID = -6512675217777454316L;

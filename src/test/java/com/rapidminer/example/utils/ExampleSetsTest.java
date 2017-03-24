@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.example.utils;
 
 import static org.junit.Assert.assertEquals;
@@ -41,6 +41,7 @@ import com.rapidminer.example.table.DataRowReader;
 import com.rapidminer.example.table.DoubleArrayDataRow;
 import com.rapidminer.example.table.IntArrayDataRow;
 import com.rapidminer.example.test.ExampleTestTools;
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 import com.rapidminer.tools.ParameterService;
 
 
@@ -125,6 +126,74 @@ public class ExampleSetsTest {
 		assertEquals(2, testSet.size());
 		assertEquals(0, testSet.getExample(0).getValue(attribute), 0);
 		assertEquals(0, testSet.getExample(1).getValue(attribute), 0);
+	}
+
+	@Test
+	public void createSpeedOptimizationHintTest() {
+		Attribute attribute = ExampleTestTools.attributeInt();
+
+		ExampleSet testSet = ExampleSets.from(attribute)//
+				.withOptimizationHint(DataManagement.SPEED_OPTIMIZED)//
+				.withBlankSize(2)//
+				.build();
+
+		assertEquals(1, testSet.getAttributes().allSize());
+		assertEquals(2, testSet.size());
+		assertEquals(0, testSet.getExample(0).getValue(attribute), 0);
+		assertEquals(0, testSet.getExample(1).getValue(attribute), 0);
+	}
+
+	@Test
+	public void creatememoryOptimizationHintTest() {
+		Attribute attribute = ExampleTestTools.attributeInt();
+
+		ExampleSet testSet = ExampleSets.from(attribute)//
+				.withOptimizationHint(DataManagement.MEMORY_OPTIMIZED)//
+				.withBlankSize(2)//
+				.build();
+
+		assertEquals(1, testSet.getAttributes().allSize());
+		assertEquals(2, testSet.size());
+		assertEquals(0, testSet.getExample(0).getValue(attribute), 0);
+		assertEquals(0, testSet.getExample(1).getValue(attribute), 0);
+	}
+
+	@Test
+	public void createSpeedOptimizationHintAndRowsTest() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		Attribute attribute2 = ExampleTestTools.attributeReal();
+
+		ExampleSet testSet = ExampleSets.from(attribute1, attribute2)//
+				.withOptimizationHint(DataManagement.SPEED_OPTIMIZED)//
+				.addRow(new double[] { 1, 2.5 })//
+				.addRow(new double[] { 7, 11.5 })//
+				.build();
+
+		assertEquals(2, testSet.getAttributes().allSize());
+		assertEquals(2, testSet.size());
+		assertEquals(1, testSet.getExample(0).getValue(attribute1), 0);
+		assertEquals(7, testSet.getExample(1).getValue(attribute1), 0);
+		assertEquals(2.5, testSet.getExample(0).getValue(attribute2), 1.0e-12);
+		assertEquals(11.5, testSet.getExample(1).getValue(attribute2), 1.0e-12);
+	}
+
+	@Test
+	public void createMemoryOptimizationHintAndRowsTest() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		Attribute attribute2 = ExampleTestTools.attributeReal();
+
+		ExampleSet testSet = ExampleSets.from(attribute1, attribute2)//
+				.withOptimizationHint(DataManagement.MEMORY_OPTIMIZED)//
+				.addRow(new double[] { 1, 2.5 })//
+				.addRow(new double[] { 7, 11.5 })//
+				.build();
+
+		assertEquals(2, testSet.getAttributes().allSize());
+		assertEquals(2, testSet.size());
+		assertEquals(1, testSet.getExample(0).getValue(attribute1), 0);
+		assertEquals(7, testSet.getExample(1).getValue(attribute1), 0);
+		assertEquals(2.5, testSet.getExample(0).getValue(attribute2), 1.0e-12);
+		assertEquals(11.5, testSet.getExample(1).getValue(attribute2), 1.0e-12);
 	}
 
 	@Test
@@ -230,6 +299,26 @@ public class ExampleSetsTest {
 		ExampleSet testSet = ExampleSets.from(attribute1, attribute2)//
 				.withBlankSize(10)//
 				.withColumnFiller(attribute1, i -> 42)//
+				.withColumnFiller(attribute2, i -> 2 * i)//
+				.build();
+
+		assertEquals(2, testSet.getAttributes().allSize());
+		assertEquals(10, testSet.size());
+		assertEquals(42, testSet.getExample(0).getValue(attribute1), 0);
+		assertEquals(42, testSet.getExample(9).getValue(attribute1), 0);
+		assertEquals(0, testSet.getExample(0).getValue(attribute2), 0);
+		assertEquals(2 * 9, testSet.getExample(9).getValue(attribute2), 0);
+	}
+
+	@Test
+	public void createfillColumnsAndOptimizationTest() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		Attribute attribute2 = ExampleTestTools.attributeReal();
+
+		ExampleSet testSet = ExampleSets.from(attribute1, attribute2)//
+				.withBlankSize(10)//
+				.withColumnFiller(attribute1, i -> 42)//
+				.withOptimizationHint(DataManagement.MEMORY_OPTIMIZED)//
 				.withColumnFiller(attribute2, i -> 2 * i)//
 				.build();
 

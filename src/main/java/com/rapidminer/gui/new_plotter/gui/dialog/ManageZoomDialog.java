@@ -1,35 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.new_plotter.gui.dialog;
-
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
-import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection.SelectionType;
-import com.rapidminer.gui.new_plotter.utility.ContinuousColorProvider;
-import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.container.Pair;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -67,6 +54,20 @@ import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.Range;
 
+import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
+import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection.SelectionType;
+import com.rapidminer.gui.new_plotter.utility.ContinuousColorProvider;
+import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.container.Pair;
+
 
 /**
  * This dialog allows the user to manually zoom in/do a selection on the chart.
@@ -89,7 +90,7 @@ public class ManageZoomDialog extends JDialog {
 	 * the {@link JComboBox} where the {@link RangeAxisConfig} will be selected for y axis
 	 * zoom/selection
 	 */
-	private JComboBox rangeAxisSelectionCombobox;
+	private JComboBox<RangeAxisConfig> rangeAxisSelectionCombobox;
 
 	/** the {@link JTextField} for the x value */
 	private JTextField domainRangeLowerBoundField;
@@ -142,6 +143,7 @@ public class ManageZoomDialog extends JDialog {
 	 * Creates a new {@link AddParallelLineDialog}.
 	 */
 	public ManageZoomDialog() {
+		super(ApplicationFrame.getApplicationFrame());
 		domainRangeLowerBound = 0.0;
 		domainRangeUpperBound = 0.0;
 		valueRangeLowerBound = 0.0;
@@ -200,9 +202,9 @@ public class ManageZoomDialog extends JDialog {
 		gbc.weightx = 1;
 		gbc.gridwidth = 3;
 		gbc.anchor = GridBagConstraints.CENTER;
-		rangeAxisSelectionCombobox = new JComboBox();
-		rangeAxisSelectionCombobox.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-				"gui.action.manage_zoom.range_axis_combobox.tip"));
+		rangeAxisSelectionCombobox = new JComboBox<>();
+		rangeAxisSelectionCombobox
+				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.action.manage_zoom.range_axis_combobox.tip"));
 		rangeAxisSelectionCombobox.addActionListener(new ActionListener() {
 
 			@Override
@@ -501,7 +503,7 @@ public class ManageZoomDialog extends JDialog {
 		// misc settings
 		this.setMinimumSize(new Dimension(375, 360));
 		// center dialog
-		this.setLocationRelativeTo(null);
+		this.setLocationRelativeTo(getOwner());
 		this.setTitle(I18N.getMessage(I18N.getGUIBundle(), "gui.action.manage_zoom.title.label"));
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.setModal(true);
@@ -544,7 +546,7 @@ public class ManageZoomDialog extends JDialog {
 		for (RangeAxisConfig config : plotConfig.getRangeAxisConfigs()) {
 			rangeConfigsVector.add(config);
 		}
-		rangeAxisSelectionCombobox.setModel(new DefaultComboBoxModel(rangeConfigsVector));
+		rangeAxisSelectionCombobox.setModel(new DefaultComboBoxModel<>(rangeConfigsVector));
 
 		// reselect the previously selected RangeAxisConfig (if it is still there)
 		if (selectedItem != null) {

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.plotter;
 
 import java.awt.BasicStroke;
@@ -34,7 +34,6 @@ import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -133,7 +132,7 @@ public class ScatterPlotter extends PlotterAdapter {
 
 	private String key = null;
 
-	private JComboBox pointTypeSelection;
+	private JComboBox<String> pointTypeSelection;
 
 	private int pointType = LINES_AND_POINTS;
 
@@ -147,7 +146,7 @@ public class ScatterPlotter extends PlotterAdapter {
 	public ScatterPlotter(PlotterConfigurationModel settings) {
 		super(settings);
 		setBackground(Color.white);
-		this.pointTypeSelection = new JComboBox(POINT_TYPES);
+		this.pointTypeSelection = new JComboBox<>(POINT_TYPES);
 		this.pointTypeSelection.setToolTipText("Indicates which type of points should be used for plotting.");
 		this.pointTypeSelection.addActionListener(new ActionListener() {
 
@@ -504,12 +503,8 @@ public class ScatterPlotter extends PlotterAdapter {
 
 	private synchronized ColorPlotterPoint getPlotterPointForPos(int x, int y) {
 		synchronized (plots) {
-			Iterator i = plots.iterator();
-			while (i.hasNext()) {
-				Collection plot = (Collection) i.next();
-				Iterator p = plot.iterator();
-				while (p.hasNext()) {
-					ColorPlotterPoint current = (ColorPlotterPoint) p.next();
+			for (Plot plot : plots) {
+				for (ColorPlotterPoint current : plot) {
 					try {
 						if (current.contains(x, y)) {
 							return current;

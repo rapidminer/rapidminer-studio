@@ -1,28 +1,22 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.dialog;
-
-import com.rapidminer.example.AttributeWeights;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.Tools;
 
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
@@ -48,6 +42,13 @@ import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
+import com.rapidminer.example.AttributeWeights;
+import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.Tools;
+
 
 /**
  * This weights dialog is used to show attribute weights created by the process, by the user, or
@@ -71,7 +72,7 @@ public class AttributeWeightsDialog extends JDialog {
 
 	/** Creates a new dialog for the given feature weights. */
 	public AttributeWeightsDialog(AttributeWeights weights) {
-		super((java.awt.Frame) null, "Attribute Weights", true);
+		super(ApplicationFrame.getApplicationFrame(), "Attribute Weights", true);
 		getContentPane().setLayout(new BorderLayout());
 
 		// buttons
@@ -143,7 +144,7 @@ public class AttributeWeightsDialog extends JDialog {
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(11, 11, 11, 11);
 
-		final JComboBox viewModes = new JComboBox(AttributeWeightsTableModel.VIEW_MODES);
+		final JComboBox<String> viewModes = new JComboBox<>(AttributeWeightsTableModel.VIEW_MODES);
 		viewModes.addItemListener(new ItemListener() {
 
 			@Override
@@ -248,7 +249,7 @@ public class AttributeWeightsDialog extends JDialog {
 		getContentPane().add(controlPanel, BorderLayout.WEST);
 
 		pack();
-		setLocationRelativeTo(null);
+		setLocationRelativeTo(getOwner());
 	}
 
 	private void updateSelectionCounter() {

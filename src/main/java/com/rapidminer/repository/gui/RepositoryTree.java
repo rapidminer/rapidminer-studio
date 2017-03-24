@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.repository.gui;
 
 import java.awt.Color;
@@ -35,6 +35,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,6 +58,7 @@ import javax.swing.tree.TreeSelectionModel;
 import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.OpenAction;
+import com.rapidminer.gui.actions.ToggleAction;
 import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
 import com.rapidminer.gui.dnd.DragListener;
 import com.rapidminer.gui.dnd.RepositoryLocationList;
@@ -84,6 +86,8 @@ import com.rapidminer.repository.RepositoryActionConditionImplStandardNoReposito
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.RepositorySortingMethod;
+import com.rapidminer.repository.RepositorySortingMethodListener;
 import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
 import com.rapidminer.repository.gui.actions.ConfigureRepositoryAction;
 import com.rapidminer.repository.gui.actions.CopyEntryRepositoryAction;
@@ -97,6 +101,8 @@ import com.rapidminer.repository.gui.actions.PasteEntryRepositoryAction;
 import com.rapidminer.repository.gui.actions.RefreshRepositoryEntryAction;
 import com.rapidminer.repository.gui.actions.RenameRepositoryEntryAction;
 import com.rapidminer.repository.gui.actions.ShowProcessInRepositoryAction;
+import com.rapidminer.repository.gui.actions.SortByLastModifiedAction;
+import com.rapidminer.repository.gui.actions.SortByNameAction;
 import com.rapidminer.repository.gui.actions.StoreProcessAction;
 import com.rapidminer.repository.local.LocalRepository;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
@@ -700,7 +706,7 @@ public class RepositoryTree extends JTree {
 	 */
 	private static class RepositoryActionEntry {
 
-		private Class<? extends AbstractRepositoryAction> actionClass;
+		private Class<? extends AbstractRepositoryAction<?>> actionClass;
 
 		private RepositoryActionCondition condition;
 
@@ -708,7 +714,7 @@ public class RepositoryTree extends JTree {
 
 		private boolean hasSeparatorAfter;
 
-		public RepositoryActionEntry(Class<? extends AbstractRepositoryAction> actionClass,
+		public RepositoryActionEntry(Class<? extends AbstractRepositoryAction<?>> actionClass,
 				RepositoryActionCondition condition, boolean hasSeparatorBefore, boolean hasSeparatorAfter) {
 			this.actionClass = actionClass;
 			this.condition = condition;
@@ -728,7 +734,7 @@ public class RepositoryTree extends JTree {
 			return condition;
 		}
 
-		public Class<? extends AbstractRepositoryAction> getRepositoryActionClass() {
+		public Class<? extends AbstractRepositoryAction<?>> getRepositoryActionClass() {
 			return actionClass;
 		}
 	}
@@ -747,16 +753,20 @@ public class RepositoryTree extends JTree {
 
 	private final Dialog owner;
 
-	private List<AbstractRepositoryAction> listToEnable = new LinkedList<>();
+	private List<AbstractRepositoryAction<?>> listToEnable = new LinkedList<>();
 
 	private EventListenerList listenerList = new EventListenerList();
+
+	final ToggleAction SORT_BY_NAME_ACTION = new SortByNameAction(this);
+
+	final ToggleAction SORT_BY_LAST_MODIFIED_DATE_ACTION = new SortByLastModifiedAction(this);
 
 	private static final long serialVersionUID = -6613576606220873341L;
 
 	private static final List<RepositoryActionEntry> REPOSITORY_ACTIONS = new LinkedList<>();
 
 	/** List of actions available for multiple entries selected in menu */
-	private static final LinkedList<RepositoryActionEntry> REPOSITORY_MULTIPLE_ENTRIES_ACTIONS = new LinkedList<>();
+	private static final List<RepositoryActionEntry> REPOSITORY_MULTIPLE_ENTRIES_ACTIONS = new LinkedList<>();
 
 	/** Configuration: List of actions available for multiple entries selected in menu */
 	private static final List<String> multipleMenuEntriesActionClasses = new LinkedList<>(
@@ -1059,9 +1069,7 @@ public class RepositoryTree extends JTree {
 	}
 
 	public void enableActions() {
-		for (AbstractRepositoryAction action : listToEnable) {
-			action.enable();
-		}
+		listToEnable.forEach(AbstractRepositoryAction::enable);
 	}
 
 	public void addRepositorySelectionListener(RepositorySelectionListener listener) {
@@ -1070,6 +1078,24 @@ public class RepositoryTree extends JTree {
 
 	public void removeRepositorySelectionListener(RepositorySelectionListener listener) {
 		listenerList.remove(RepositorySelectionListener.class, listener);
+	}
+
+	/**
+	 * Adds a {@link RepositorySortingMethodListener}
+	 *
+	 * @since 7.4
+	 */
+	public void addRepostorySortingMethodListener(RepositorySortingMethodListener l) {
+		listenerList.add(RepositorySortingMethodListener.class, l);
+	}
+
+	/**
+	 * Removes a {@link RepositorySortingMethodListener}
+	 *
+	 * @since 7.4
+	 */
+	public void removeRepostorySortingMethodListener(RepositorySortingMethodListener l) {
+		listenerList.remove(RepositorySortingMethodListener.class, l);
 	}
 
 	private void fireLocationSelected(Entry entry) {
@@ -1197,8 +1223,7 @@ public class RepositoryTree extends JTree {
 			}
 
 			// Get possible actions of selected entries
-			LinkedList<RepositoryActionEntry> evaluatedActions = (LinkedList<RepositoryActionEntry>) REPOSITORY_MULTIPLE_ENTRIES_ACTIONS
-					.clone();
+			List<RepositoryActionEntry> evaluatedActions = new LinkedList<>(REPOSITORY_MULTIPLE_ENTRIES_ACTIONS);
 			for (int i = 0; i < REPOSITORY_MULTIPLE_ENTRIES_ACTIONS.size(); i++) {
 				RepositoryActionEntry actionEntry = REPOSITORY_MULTIPLE_ENTRIES_ACTIONS.get(i);
 				if (!actionEntry.getRepositoryActionCondition().evaluateCondition(selectedEntries)) {
@@ -1211,9 +1236,9 @@ public class RepositoryTree extends JTree {
 			for (RepositoryActionEntry actionEntry : evaluatedActions) {
 
 				try {
-					Constructor constructor = actionEntry.getRepositoryActionClass()
+					Constructor<? extends AbstractRepositoryAction<?>> constructor = actionEntry.getRepositoryActionClass()
 							.getConstructor(new Class[] { RepositoryTree.class });
-					AbstractRepositoryAction createdAction = (AbstractRepositoryAction) constructor.newInstance(this);
+					AbstractRepositoryAction<?> createdAction = constructor.newInstance(this);
 					createdAction.enable();
 
 					if (actionEntry.hasSeparatorBefore && !lastWasSeparator) {
@@ -1320,7 +1345,7 @@ public class RepositoryTree extends JTree {
 	 *            if true, a separator will be added after the action
 	 * @return true if the action was successfully added; false otherwise
 	 */
-	public static void addRepositoryAction(Class<? extends AbstractRepositoryAction> actionClass,
+	public static void addRepositoryAction(Class<? extends AbstractRepositoryAction<?>> actionClass,
 			RepositoryActionCondition condition, boolean hasSeparatorBefore, boolean hasSeparatorAfter) {
 		addRepositoryAction(actionClass, condition, null, hasSeparatorBefore, hasSeparatorAfter);
 	}
@@ -1347,7 +1372,7 @@ public class RepositoryTree extends JTree {
 	 *            if true, a separator will be added after the action
 	 * @return true if the action was successfully added; false otherwise
 	 */
-	public static void addRepositoryAction(Class<? extends AbstractRepositoryAction> actionClass,
+	public static void addRepositoryAction(Class<? extends AbstractRepositoryAction<?>> actionClass,
 			RepositoryActionCondition condition, Class<? extends Action> insertAfterThisAction, boolean hasSeparatorBefore,
 			boolean hasSeparatorAfter) {
 		if (actionClass == null || condition == null) {
@@ -1390,7 +1415,7 @@ public class RepositoryTree extends JTree {
 	 * @param actionClass
 	 *            the class of the {@link AbstractRepositoryAction} to remove
 	 */
-	public static void removeRepositoryAction(Class<? extends AbstractRepositoryAction> actionClass) {
+	public static void removeRepositoryAction(Class<? extends AbstractRepositoryAction<?>> actionClass) {
 		Iterator<RepositoryActionEntry> iterator = REPOSITORY_ACTIONS.iterator();
 
 		while (iterator.hasNext()) {
@@ -1419,10 +1444,9 @@ public class RepositoryTree extends JTree {
 						// add null element which means a separator will be added in the menu
 						listOfActions.add(null);
 					}
-					Constructor constructor = actionEntry.getRepositoryActionClass()
+					Constructor<? extends AbstractRepositoryAction<?>> constructor = actionEntry.getRepositoryActionClass()
 							.getConstructor(new Class[] { RepositoryTree.class });
-					AbstractRepositoryAction createdAction = (AbstractRepositoryAction) constructor
-							.newInstance(repositoryTree);
+					AbstractRepositoryAction<?> createdAction = constructor.newInstance(repositoryTree);
 					createdAction.enable();
 					listOfActions.add(createdAction);
 					if (actionEntry.hasSeperatorAfter()) {
@@ -1439,6 +1463,48 @@ public class RepositoryTree extends JTree {
 			}
 		}
 		return listOfActions;
+	}
+
+	/**
+	 * Sets the {@link RepositorySortingMethod} with which the {@link RepositoryTreeModel} is sorted
+	 *
+	 * @param method
+	 *            The {@link RepositorySortingMethod}
+	 * @since 7.4
+	 */
+	public void setSortingMethod(RepositorySortingMethod method) {
+		if (getModel() instanceof RepositoryTreeModel) {
+			// Remember expansion state before setting new RepositorySortingMethod
+			Enumeration<TreePath> expandedDescendants = getExpandedDescendants(new TreePath(treeModel.getRoot()));
+			List<TreePath> oldExpanded = new ArrayList<>();
+			if (expandedDescendants != null) {
+				while (expandedDescendants.hasMoreElements()) {
+					oldExpanded.add(expandedDescendants.nextElement());
+				}
+			}
+
+			((RepositoryTreeModel) getModel()).setSortingMethod(method);
+
+			for (TreePath oldEx : oldExpanded) {
+				setExpandedState(oldEx, true);
+			}
+			for (RepositorySortingMethodListener l : listenerList.getListeners(RepositorySortingMethodListener.class)) {
+				l.changedRepositorySortingMethod(method);
+			}
+		}
+	}
+
+	/**
+	 * Gets the {@link RepositorySortingMethod} with which this {@link RepositoryTreeModel} is
+	 * sorted
+	 *
+	 * @since 7.4
+	 */
+	public RepositorySortingMethod getSortingMethod() {
+		if (getModel() instanceof RepositoryTreeModel) {
+			return ((RepositoryTreeModel) getModel()).getSortingMethod();
+		}
+		return null;
 	}
 
 }

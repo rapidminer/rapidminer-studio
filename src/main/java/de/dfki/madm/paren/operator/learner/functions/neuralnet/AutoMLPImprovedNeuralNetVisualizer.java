@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,14 +18,6 @@
  */
 package de.dfki.madm.paren.operator.learner.functions.neuralnet;
 
-import com.rapidminer.gui.actions.export.AbstractPrintableIOObjectPanel;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.learner.functions.neuralnet.InnerNode;
-import com.rapidminer.operator.learner.functions.neuralnet.InputNode;
-import com.rapidminer.operator.learner.functions.neuralnet.Node;
-import com.rapidminer.report.Renderable;
-import com.rapidminer.tools.Tools;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -43,11 +35,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.rapidminer.gui.actions.export.AbstractPrintableIOObjectPanel;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.learner.functions.neuralnet.InnerNode;
+import com.rapidminer.operator.learner.functions.neuralnet.InputNode;
+import com.rapidminer.operator.learner.functions.neuralnet.Node;
+import com.rapidminer.report.Renderable;
+import com.rapidminer.tools.Tools;
+
 
 /**
  * Visualizes the improved neural net. The nodes can be selected by clicking. The next tool tip will
  * then show the input weights for the selected node.
- * 
+ *
  * @author Ingo Mierswa, modified by Syed Atif Mehdi (01/09/2010)
  */
 // modified by atif
@@ -207,7 +207,7 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 			List<Node> layer = this.layers.get(layerIndex);
 
 			int offset = layerIndex == layers.size() - 1 ? 0 : 1; // last layer no threshold
-			int outputY = (height / 2) - ((layer.size() + offset) * ROW_HEIGHT / 2);
+			int outputY = height / 2 - (layer.size() + offset) * ROW_HEIGHT / 2;
 			for (Node node : layer) {
 				if (node instanceof InnerNode) {
 					Node[] inputNodes = node.getInputNodes();
@@ -218,15 +218,15 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 					// int inputRows = matrix.getRows();
 					// int outputRows = matrix.getCols();
 
-					int inputY = (height / 2) - ((inputNodes.length + 1) * ROW_HEIGHT / 2);
+					int inputY = height / 2 - (inputNodes.length + 1) * ROW_HEIGHT / 2;
 
 					for (int j = 0; j < inputNodes.length; j++) {
 						// Node inputNode = inputNodes[j];
 						float weight = 1.0f - (float) (Math.abs(weights[j + 1]) / this.maxAbsoluteWeight);
 						Color color = new Color(weight, weight, weight);
 						g.setColor(color);
-						g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH, outputY
-								+ NODE_RADIUS / 2);
+						g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH,
+								outputY + NODE_RADIUS / 2);
 						inputY += ROW_HEIGHT;
 					}
 
@@ -234,8 +234,8 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 					float weight = 1.0f - (float) (Math.abs(weights[0]) / this.maxAbsoluteWeight);
 					Color color = new Color(weight, weight, weight);
 					g.setColor(color);
-					g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH, outputY
-							+ NODE_RADIUS / 2);
+					g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH,
+							outputY + NODE_RADIUS / 2);
 				}
 				outputY += ROW_HEIGHT;
 			}
@@ -264,12 +264,12 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 
 			Rectangle2D stringBounds = LABEL_FONT.getStringBounds(layerName, g.getFontRenderContext());
 			g.setColor(Color.BLACK);
-			g.drawString(layerName, (int) (((-1) * stringBounds.getWidth() / 2) + NODE_RADIUS / 2), 0);
-			int yPos = (height / 2) - (nodes * ROW_HEIGHT / 2);
+			g.drawString(layerName, (int) (-1 * stringBounds.getWidth() / 2 + NODE_RADIUS / 2), 0);
+			int yPos = height / 2 - nodes * ROW_HEIGHT / 2;
 			for (int r = 0; r < nodes; r++) {
 				Shape node = new Ellipse2D.Double(0, yPos, NODE_RADIUS, NODE_RADIUS);
-				if ((layerIndex == 0) || (layerIndex == layers.size() - 1)) {
-					if ((r < nodes - 1) || (layerIndex == layers.size() - 1)) {
+				if (layerIndex == 0 || layerIndex == layers.size() - 1) {
+					if (r < nodes - 1 || layerIndex == layers.size() - 1) {
 						g.setPaint(SwingTools.makeYellowPaint(NODE_RADIUS, NODE_RADIUS));
 					} else {
 						g.setPaint(new Color(233, 233, 233));
@@ -282,7 +282,7 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 					}
 				}
 				g.fill(node);
-				if ((layerIndex == this.selectedLayerIndex) && (r == this.selectedRowIndex)) {
+				if (layerIndex == this.selectedLayerIndex && r == this.selectedRowIndex) {
 					g.setColor(Color.RED);
 				} else {
 					g.setColor(Color.BLACK);
@@ -306,13 +306,13 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 		this.selectedLayerIndex = layerIndex;
 		this.selectedRowIndex = rowIndex;
 
-		if ((this.selectedLayerIndex < 0) || (this.selectedRowIndex < 0)) {
+		if (this.selectedLayerIndex < 0 || this.selectedRowIndex < 0) {
 			setKey(null, -1, -1);
 			return;
 		}
 
 		if (layerIndex == 0) { // input layer
-			if ((rowIndex >= 0) && (rowIndex < this.attributeNames.length)) {
+			if (rowIndex >= 0 && rowIndex < this.attributeNames.length) {
 				setKey(this.attributeNames[rowIndex], xPos, yPos);
 			} else {
 				if (rowIndex == this.attributeNames.length) {
@@ -323,7 +323,7 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 			}
 		} else {
 			List<Node> currentLayer = layers.get(selectedLayerIndex);
-			if ((rowIndex >= 0) && (rowIndex < currentLayer.size())) {
+			if (rowIndex >= 0 && rowIndex < currentLayer.size()) {
 				StringBuffer toolTip = new StringBuffer("Weights:" + Tools.getLineSeparator());
 				Node node = currentLayer.get(this.selectedRowIndex);
 				if (node instanceof InnerNode) {
@@ -348,18 +348,18 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 		int y = yPos - MARGIN;
 		int layerIndex = x / LAYER_WIDTH;
 		int layerMod = x % LAYER_WIDTH;
-		boolean layerHit = ((layerMod > 0) && (layerMod < NODE_RADIUS));
-		if ((layerHit) && (layerIndex >= 0) && (layerIndex < this.layers.size())) {
+		boolean layerHit = layerMod > 0 && layerMod < NODE_RADIUS;
+		if (layerHit && layerIndex >= 0 && layerIndex < this.layers.size()) {
 			List<Node> layer = layers.get(layerIndex);
 			int rows = layer.size();
 			if (layerIndex < layers.size() - 1) {
 				rows++;
 			}
-			int yMargin = (getPreferredSize().height / 2) - (rows * ROW_HEIGHT / 2);
+			int yMargin = getPreferredSize().height / 2 - rows * ROW_HEIGHT / 2;
 			if (y > yMargin) {
 				for (int i = 0; i < rows; i++) {
-					if ((y > yMargin) && (y < yMargin + NODE_RADIUS)) {
-						if ((this.selectedLayerIndex == layerIndex) && (this.selectedRowIndex == i)) {
+					if (y > yMargin && y < yMargin + NODE_RADIUS) {
+						if (this.selectedLayerIndex == layerIndex && this.selectedRowIndex == i) {
 							setSelectedNode(-1, -1, -1, -1);
 						} else {
 							setSelectedNode(layerIndex, i, xPos, yPos);

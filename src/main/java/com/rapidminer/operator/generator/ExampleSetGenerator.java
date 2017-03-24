@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.generator;
 
 import java.util.ArrayList;
@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -45,7 +46,6 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
@@ -56,8 +56,10 @@ import com.rapidminer.parameter.conditions.EqualStringCondition;
 import com.rapidminer.parameter.conditions.NonEqualStringCondition;
 import com.rapidminer.parameter.conditions.OrParameterCondition;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
 
 
 /**
@@ -111,7 +113,9 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 
 	};
 
-	private static final Class[] KNOWN_FUNCTION_IMPLEMENTATIONS = new Class[] { RandomFunction.class, // regression
+	@SuppressWarnings("unchecked")
+	private static final Class<? extends TargetFunction>[] KNOWN_FUNCTION_IMPLEMENTATIONS = new Class[] {
+			RandomFunction.class, // regression
 			SumFunction.class, PolynomialFunction.class, NonLinearFunction.class, OneVariableNonLinearFunction.class,
 			ComplicatedFunction.class, ComplicatedFunction2.class, SimpleSinusFunction.class, SinusFunction.class,
 			SimpleSuperpositionFunction.class, SinusFrequencyFunction.class, SinusWithTrendFunction.class,
@@ -172,7 +176,14 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
-		DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
+
+		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
+			builder.withOptimizationHint(DataManagementParameterHelper.getSelectedDataManagement(this));
+		}
+
+		DataRowFactory factory = new DataRowFactory(datamanagement, '.');
 		try {
 			function.init(random);
 			getProgress().setTotal(numberOfExamples);
@@ -277,15 +288,16 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 
 	// ================================================================================
 
+	@SuppressWarnings("unchecked")
 	public static TargetFunction getFunctionForName(String functionName)
 			throws IllegalAccessException, InstantiationException, ClassNotFoundException {
 		for (int i = 0; i < KNOWN_FUNCTION_NAMES.length; i++) {
 			if (KNOWN_FUNCTION_NAMES[i].equals(functionName)) {
-				return (TargetFunction) KNOWN_FUNCTION_IMPLEMENTATIONS[i].newInstance();
+				return KNOWN_FUNCTION_IMPLEMENTATIONS[i].newInstance();
 			}
 		}
-		Class clazz = Tools.classForName(functionName);
-		return (TargetFunction) clazz.newInstance();
+		Class<? extends TargetFunction> clazz = (Class<? extends TargetFunction>) Tools.classForName(functionName);
+		return clazz.newInstance();
 	}
 
 	// ================================================================================
@@ -308,40 +320,37 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 		NonEqualStringCondition useTwoBounds = new NonEqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false,
 				(String[]) ArrayUtils.addAll(FUCTIONS_IGNORING_BOUND, FUNCTIONS_USING_SINGLE_BOUND));
 
-		type = new ParameterTypeDouble(
-				PARAMETER_ATTRIBUTES_LOWER_BOUND,
+		type = new ParameterTypeDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND,
 				"The minimum value for the attributes. In case of target functions using Gaussian distribution, the attribute values may exceed this value.",
 				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, -10);
-		type.registerDependencyCondition(new OrParameterCondition(this, false, new BelowOrEqualOperatorVersionCondition(
-				this, VERSION_TARGET_PARAMETERS_CHANGED), useTwoBounds));
+		type.registerDependencyCondition(new OrParameterCondition(this, false,
+				new BelowOrEqualOperatorVersionCondition(this, VERSION_TARGET_PARAMETERS_CHANGED), useTwoBounds));
 		types.add(type);
-		type = new ParameterTypeDouble(
-				PARAMETER_ATTRIBUTES_UPPER_BOUND,
+		type = new ParameterTypeDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND,
 				"The maximum value for the attributes. In case of target functions using Gaussian distribution, the attribute values may exceed this value.",
 				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 10);
-		type.registerDependencyCondition(new OrParameterCondition(this, false, new BelowOrEqualOperatorVersionCondition(
-				this, VERSION_TARGET_PARAMETERS_CHANGED), useTwoBounds));
+		type.registerDependencyCondition(new OrParameterCondition(this, false,
+				new BelowOrEqualOperatorVersionCondition(this, VERSION_TARGET_PARAMETERS_CHANGED), useTwoBounds));
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_ATTRIBUTES_GAUSSIAN_STDDEV,
 				"Standard deviation of the Gaussian distribution used for generating attributes.", Double.MIN_VALUE,
 				Double.POSITIVE_INFINITY, 10);
 		type.registerDependencyCondition(new AboveOperatorVersionCondition(this, VERSION_TARGET_PARAMETERS_CHANGED));
-		type.registerDependencyCondition(new EqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false,
-				FUNCTIONS_USING_GAUSSIAN_STDDEV));
+		type.registerDependencyCondition(
+				new EqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false, FUNCTIONS_USING_GAUSSIAN_STDDEV));
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_ATTRIBUTES_LARGEST_RADIUS, "The radius of the outermost ring cluster.",
 				10.0, Double.POSITIVE_INFINITY, 10);
 		type.registerDependencyCondition(new AboveOperatorVersionCondition(this, VERSION_TARGET_PARAMETERS_CHANGED));
-		type.registerDependencyCondition(new EqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false,
-				FUNCTIONS_USING_LARGEST_RADIUS));
+		type.registerDependencyCondition(
+				new EqualStringCondition(this, PARAMETER_TARGET_FUNCTION, false, FUNCTIONS_USING_LARGEST_RADIUS));
 		types.add(type);
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 
-		types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.",
-				DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
+		DataManagementParameterHelper.addParameterTypes(types, this);
 		return types;
 	}
 

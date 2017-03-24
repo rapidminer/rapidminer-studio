@@ -1,22 +1,27 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.generator;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
@@ -30,17 +35,11 @@ import com.rapidminer.tools.math.PeakFinder;
 import com.rapidminer.tools.math.SpectrumFilter;
 import com.rapidminer.tools.math.WindowFunction;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
 
 /**
  * Factory class to produce new attributes based on the fourier synthesis of the label mapped on an
  * attribute dimension.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SinusFactory {
@@ -135,24 +134,23 @@ public class SinusFactory {
 		average /= spectrum.length;
 		List<Peak> peaks = peakFinder.getPeaks(spectrum);
 		Collections.sort(peaks);
+		if (maxPeaks < peaks.size()) {
+			peaks = peaks.subList(0, maxPeaks);
+		}
 
 		// remember highest peaks
 		double inputDeviation = Math.sqrt(exampleSet.getStatistics(second, Statistics.VARIANCE))
-				/ (exampleSet.getStatistics(second, Statistics.MAXIMUM) - exampleSet.getStatistics(second,
-						Statistics.MINIMUM));
-		Iterator p = peaks.iterator();
+				/ (exampleSet.getStatistics(second, Statistics.MAXIMUM)
+						- exampleSet.getStatistics(second, Statistics.MINIMUM));
 		double maxEvidence = Double.NaN;
 		List<AttributePeak> attributes = new LinkedList<AttributePeak>();
-		for (int k = 0; k < maxPeaks; k++) {
-			if (p.hasNext()) {
-				Peak peak = (Peak) p.next();
-				double evidence = (peak.getMagnitude() / average) * (1.0d / inputDeviation);
-				if (Double.isNaN(maxEvidence)) {
-					maxEvidence = evidence;
-				}
-				if (evidence > (MIN_EVIDENCE * maxEvidence)) {
-					attributes.add(new AttributePeak(second, peak.getIndex(), evidence));
-				}
+		for (Peak peak : peaks) {
+			double evidence = peak.getMagnitude() / average * (1.0d / inputDeviation);
+			if (Double.isNaN(maxEvidence)) {
+				maxEvidence = evidence;
+			}
+			if (evidence > MIN_EVIDENCE * maxEvidence) {
+				attributes.add(new AttributePeak(second, peak.getIndex(), evidence));
 			}
 		}
 		return attributes;
@@ -166,50 +164,49 @@ public class SinusFactory {
 	 */
 	public void generateSinusFunctions(ExampleSet exampleSet, List<AttributePeak> attributes, Random random)
 			throws GenerationException {
-		if (attributes.size() > 0) {
-			Collections.sort(attributes);
-			double totalMaxEvidence = attributes.get(0).getEvidence();
+		if (attributes.isEmpty()) {
+			return;
+		}
+		Collections.sort(attributes);
+		double totalMaxEvidence = attributes.get(0).getEvidence();
 
-			Iterator<AttributePeak> a = attributes.iterator();
-			while (a.hasNext()) {
-				AttributePeak ae = a.next();
-				if (ae.getEvidence() > MIN_EVIDENCE * totalMaxEvidence) {
-					for (int i = 0; i < attributesPerPeak; i++) {
-						double frequency = ae.getFrequency();
-						switch (adaptionType) {
-							case UNIFORMLY:
-								if (attributesPerPeak != 1) {
-									frequency = (double) i / (double) (attributesPerPeak - 1) * 2.0d * epsilon * frequency
-											+ (frequency - epsilon * frequency);
-								}
-								break;
-							case UNIFORMLY_WITHOUT_NU:
-								if (attributesPerPeak != 1) {
-									frequency = (double) i / (double) (attributesPerPeak - 1) * 2.0d * epsilon
-											+ (frequency - epsilon);
-								}
-								break;
-							case GAUSSIAN:
-								frequency = random.nextGaussian() * epsilon + frequency;
-								break;
-						}
+		for (AttributePeak ae : attributes) {
+			if (ae.getEvidence() > MIN_EVIDENCE * totalMaxEvidence) {
+				for (int i = 0; i < attributesPerPeak; i++) {
+					double frequency = ae.getFrequency();
+					switch (adaptionType) {
+						case UNIFORMLY:
+							if (attributesPerPeak != 1) {
+								frequency = (double) i / (double) (attributesPerPeak - 1) * 2.0d * epsilon * frequency
+										+ (frequency - epsilon * frequency);
+							}
+							break;
+						case UNIFORMLY_WITHOUT_NU:
+							if (attributesPerPeak != 1) {
+								frequency = (double) i / (double) (attributesPerPeak - 1) * 2.0d * epsilon
+										+ (frequency - epsilon);
+							}
+							break;
+						case GAUSSIAN:
+							frequency = random.nextGaussian() * epsilon + frequency;
+							break;
+					}
 
-						// frequency constant
-						List frequencyResult = generateAttribute(exampleSet, new ConstantGenerator(frequency));
+					// frequency constant
+					List<Attribute> frequencyResult = generateAttribute(exampleSet, new ConstantGenerator(frequency));
 
-						// scaling with frequency
-						FeatureGenerator scale = new BasicArithmeticOperationGenerator(
-								BasicArithmeticOperationGenerator.PRODUCT);
-						scale.setArguments(new Attribute[] { (Attribute) frequencyResult.get(0), ae.getAttribute() });
-						List scaleResult = generateAttribute(exampleSet, scale);
+					// scaling with frequency
+					FeatureGenerator scale = new BasicArithmeticOperationGenerator(
+							BasicArithmeticOperationGenerator.PRODUCT);
+					scale.setArguments(new Attribute[] { frequencyResult.get(0), ae.getAttribute() });
+					List<Attribute> scaleResult = generateAttribute(exampleSet, scale);
 
-						// calc sin
-						FeatureGenerator sin = new TrigonometricFunctionGenerator(TrigonometricFunctionGenerator.SINUS);
-						sin.setArguments(new Attribute[] { (Attribute) scaleResult.get(0) });
-						List<Attribute> sinResult = generateAttribute(exampleSet, sin);
-						for (Attribute attribute : sinResult) {
-							exampleSet.getAttributes().addRegular(attribute);
-						}
+					// calc sin
+					FeatureGenerator sin = new TrigonometricFunctionGenerator(TrigonometricFunctionGenerator.SINUS);
+					sin.setArguments(new Attribute[] { scaleResult.get(0) });
+					List<Attribute> sinResult = generateAttribute(exampleSet, sin);
+					for (Attribute attribute : sinResult) {
+						exampleSet.getAttributes().addRegular(attribute);
 					}
 				}
 			}

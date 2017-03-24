@@ -1368,7 +1368,7 @@
     </tags>
   </operator>
     <operator>
-        <name>Loop Attributes</name>
+        <name>Loop Attributes (Deprecated)</name>
         <synopsis>Iterates over the given features and applies the inner
             operators for each feature where the inner operators can access the
             current feature name by a macro.</synopsis>
@@ -3262,7 +3262,7 @@
     </tags>
   </operator>
     <operator>
-        <name>Loop Values</name>
+        <name>Loop Values (Deprecated)</name>
         <synopsis>Iterates over the values of the specified attributes and
             applies the inner operators on the input example set while the
             current value can be accessed via a macro. In contrast to the
@@ -4754,7 +4754,7 @@
             may be included.</help>
     </operator>
     <operator>
-        <name>Loop Files</name>
+        <name>Loop Files (Deprecated)</name>
         <synopsis>This operator iterates over all files in a directory and
             delivers their paths and names as macro to the inner operators.
         </synopsis>
@@ -8236,7 +8236,7 @@
   </group>
   <group>
     <key>process_control.loop</key>
-    <name>Loop</name>
+    <name>Loop (Deprecated)</name>
   </group>
   <group>
     <key>process_control.branch</key>
@@ -8683,38 +8683,5 @@ Thomas Breuel, Faisal Shafait. The Learning Workshop, Cliff Lodge, Snowbird, Uta
      <name>Extract Macro from Annotation</name>
      <key>extract_macro_from_annotation</key>
    </operator>
-   
-   <operator>
-     <name>Decision Tree</name>
-     <key>parallel_decision_tree</key>
-     <tags>
-         <tag>Supervised</tag>
-         <tag>Classification</tag>
-         <tag>Model</tag>
-         <tag>Id3</tag>
-         <tag>J48</tag>
-         <tag>J4.8</tag>
-         <tag>C45</tag>
-         <tag>C4.5</tag>
-         <tag>C50</tag>
-         <tag>C5.0</tag>
-         <tag>Cart</tag>
-         <tag>Chaid</tag>
-     </tags>
-   </operator>
-   
-   <operator>
-     <name>Random Forest</name>
-     <key>parallel_random_forest</key>
-     <tags>
-         <tag>Supervised</tag>
-         <tag>Classification</tag>
-         <tag>Model</tag>
-         <tag>Ensembles</tag>
-         <tag>Decision</tag>
-         <tag>Trees</tag>
-         <tag>Breiman</tag>
-         <tag>Bagging</tag>
-     </tags>
-   </operator>
+
 </operatorHelp>

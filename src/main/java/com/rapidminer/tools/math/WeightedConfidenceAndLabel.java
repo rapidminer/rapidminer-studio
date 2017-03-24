@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.math;
 
 import java.util.Comparator;
@@ -27,7 +27,7 @@ import java.util.Comparator;
  * 
  * @author Martin Scholz, Ingo Mierswa ingomierswa Exp $
  */
-public class WeightedConfidenceAndLabel implements Comparable {
+public class WeightedConfidenceAndLabel implements Comparable<WeightedConfidenceAndLabel> {
 
 	public static class WCALComparator implements Comparator<WeightedConfidenceAndLabel> {
 
@@ -72,11 +72,11 @@ public class WeightedConfidenceAndLabel implements Comparable {
 	}
 
 	@Override
-	public int compareTo(Object obj) {
+	public int compareTo(WeightedConfidenceAndLabel obj) {
 		// We need to sort the examples by *decreasing* confidence:
-		int compi = (-1) * Double.compare(this.confidence, ((WeightedConfidenceAndLabel) obj).confidence);
+		int compi = -1 * Double.compare(this.confidence, obj.confidence);
 		if (compi == 0) {
-			return -Double.compare(this.label, ((WeightedConfidenceAndLabel) obj).label);
+			return -Double.compare(this.label, obj.label);
 		} else {
 			return compi;
 		}
@@ -84,11 +84,14 @@ public class WeightedConfidenceAndLabel implements Comparable {
 
 	@Override
 	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
 		if (!(o instanceof WeightedConfidenceAndLabel)) {
 			return false;
 		} else {
 			WeightedConfidenceAndLabel l = (WeightedConfidenceAndLabel) o;
-			return (this.label == l.label) && (this.confidence == l.confidence);
+			return this.label == l.label && this.confidence == l.confidence;
 		}
 	}
 

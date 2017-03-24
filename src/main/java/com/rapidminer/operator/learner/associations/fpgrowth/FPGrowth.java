@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.learner.associations.fpgrowth;
 
 import java.util.ArrayList;
@@ -37,7 +37,6 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessStoppedException;
-import com.rapidminer.operator.io.ExampleSource;
 import com.rapidminer.operator.learner.associations.BooleanAttributeItem;
 import com.rapidminer.operator.learner.associations.FrequentItemSet;
 import com.rapidminer.operator.learner.associations.FrequentItemSets;
@@ -75,8 +74,9 @@ import com.rapidminer.tools.Ontology;
  * <p>
  * The frequent item sets are mined for the positive entries in your data base, i.e. for those
  * nominal values which are defined as positive in your data base. If you use an attribute
- * description file (.aml) for the {@link ExampleSource} operator this corresponds to the second
- * value which is defined via the classes attribute or inner value tags.
+ * description file (.aml) for the {@link com.rapidminer.operator.io.ExampleSource ExampleSource}
+ * operator this corresponds to the second value which is defined via the classes attribute or inner
+ * value tags.
  * </p>
  *
  * <p>
@@ -145,6 +145,7 @@ public class FPGrowth extends Operator {
 
 		int maxItems = getParameterAsInt(PARAMETER_MAX_ITEMS);
 		double currentSupport = getParameterAsDouble(PARAMETER_MIN_SUPPORT);
+		String mustContainItems = getParameterAsString(PARAMETER_MUST_CONTAIN);
 
 		// determine frequent items sets
 		FrequentItemSets sets = null;
@@ -163,14 +164,15 @@ public class FPGrowth extends Operator {
 			Attribute[] attributes = new Attribute[workingSet.getAttributes().size()];
 			double[] positiveIndices = new double[workingSet.getAttributes().size()];
 			int i = 0;
+			String positiveValueString = null;
+			try {
+				positiveValueString = getParameterAsString(PARAMETER_POSITIVE_VALUE);
+			} catch (UndefinedParameterError err) {
+			}
 			for (Attribute attribute : workingSet.getAttributes()) {
 				attributes[i] = attribute;
 				positiveIndices[i] = attribute.getMapping().getPositiveIndex();
-				String positiveValueString = null;
-				try {
-					positiveValueString = getParameterAsString(PARAMETER_POSITIVE_VALUE);
-				} catch (UndefinedParameterError err) {
-				}
+
 				if (positiveValueString != null) {
 					if (!positiveValueString.equals("")) {
 						positiveIndices[i] = attribute.getMapping().mapString(positiveValueString);
@@ -191,7 +193,6 @@ public class FPGrowth extends Operator {
 
 			// mine tree
 			sets = new FrequentItemSets(workingSet.size());
-			String mustContainItems = getParameterAsString(PARAMETER_MUST_CONTAIN);
 			if (mustContainItems == null || mustContainItems.isEmpty()) {
 				mineTree(tree, sets, 0, new FrequentItemSet(), currentMinTotalSupport, maxItems, !shouldFindMinimumNumber);
 			} else {

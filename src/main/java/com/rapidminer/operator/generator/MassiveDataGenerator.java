@@ -1,32 +1,34 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.generator;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DoubleSparseArrayDataRow;
 import com.rapidminer.example.utils.ExampleSetBuilder;
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -41,6 +43,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.container.Range;
 
@@ -68,6 +71,8 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 	 * sparse format.&quot;
 	 */
 	public static final String PARAMETER_SPARSE_REPRESENTATION = "sparse_representation";
+
+	private static final int OPERATOR_PROGRESS_STEPS = 1_000_000;
 
 	public MassiveDataGenerator(OperatorDescription description) {
 		super(description);
@@ -117,13 +122,17 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 		int numberOfAttributes = getParameterAsInt(PARAMETER_NUMBER_ATTRIBUTES);
 		double sparseFraction = getParameterAsDouble(PARAMETER_SPARSE_FRACTION);
 		boolean sparseRepresentation = getParameterAsBoolean(PARAMETER_SPARSE_REPRESENTATION);
-		getProgress().setTotal(numberOfAttributes + numberOfExamples * numberOfAttributes);
+		getProgress().setTotal(100);
+		int progressCounter = 0;
 
 		// create table
 		List<Attribute> attributes = new ArrayList<>();
 		for (int m = 0; m < numberOfAttributes; m++) {
 			attributes.add(AttributeFactory.createAttribute("att" + (m + 1), Ontology.REAL));
-			getProgress().step();
+			if (++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+				getProgress()
+						.setCompleted((int) (100.0 * progressCounter / ((1.0 + numberOfExamples) * numberOfAttributes)));
+			}
 		}
 		Attribute label = AttributeFactory.createAttribute("label", Ontology.NOMINAL);
 		label.getMapping().mapString("positive");
@@ -131,8 +140,15 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 		attributes.add(label);
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
+		if (sparseRepresentation && Boolean
+				.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+			builder.withOptimizationHint(DataManagement.MEMORY_OPTIMIZED);
+			sparseRepresentation = false;
+		}
+
 		// create data
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
+		progressCounter = 0;
 		for (int n = 0; n < numberOfExamples; n++) {
 			int counter = 0;
 			if (sparseRepresentation) {
@@ -143,7 +159,10 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 					if (value == 0.0d) {
 						counter++;
 					}
-					getProgress().step();
+					if (++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+						getProgress().setCompleted((int) (100.0 * (numberOfAttributes * (n + 1.0) + i + 1.0)
+								/ ((1.0 + numberOfExamples) * numberOfAttributes)));
+					}
 				}
 				if (counter < sparseFraction * numberOfAttributes) {
 					dataRow.set(label, label.getMapping().mapString("positive"));
@@ -160,7 +179,10 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 					if (value == 0.0d) {
 						counter++;
 					}
-					getProgress().step();
+					if (++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+						getProgress().setCompleted((int) (100.0 * (numberOfAttributes * (n + 1.0) + i + 1.0)
+								/ ((1.0 + numberOfExamples) * numberOfAttributes)));
+					}
 				}
 				if (counter < sparseFraction * numberOfAttributes) {
 					dataRow[dataRow.length - 1] = label.getMapping().mapString("positive");

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -30,11 +30,11 @@ import com.rapidminer.tools.math.similarity.DistanceMeasure;
 
 
 /**
- * This algorithm is the first part of K-Means++ descried in the paper
- * "k-means++: The Advantages of Careful Seeding" by David Arther and Sergei Vassilvitskii
- * 
+ * This algorithm is the first part of K-Means++ descried in the paper "k-means++: The Advantages of
+ * Careful Seeding" by David Arther and Sergei Vassilvitskii
+ *
  * @author Patrick Kalka
- * 
+ *
  */
 public class KMeanspp extends RMAbstractClusterer {
 
@@ -56,7 +56,7 @@ public class KMeanspp extends RMAbstractClusterer {
 
 	/**
 	 * Initialization of K-Means++
-	 * 
+	 *
 	 * @param description
 	 * @param anz
 	 *            initial Cluster count
@@ -79,7 +79,7 @@ public class KMeanspp extends RMAbstractClusterer {
 
 	/**
 	 * start the algorithm
-	 * 
+	 *
 	 * @return array with Ids of the centroids
 	 * @throws ProcessStoppedException
 	 */

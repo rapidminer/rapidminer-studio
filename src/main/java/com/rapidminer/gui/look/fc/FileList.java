@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.look.fc;
 
 import java.awt.BorderLayout;
@@ -46,6 +46,7 @@ import java.util.Enumeration;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -131,7 +132,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 
 	private final BookmarkListModel bookmarkListModel = new BookmarkListModel();
 
-	private final JList bookmarkList = new BookmarkList(bookmarkListModel, this);
+	private final JList<Bookmark> bookmarkList = new BookmarkList(bookmarkListModel, this);
 
 	private final JSplitPane mainSplitPane = new JSplitPane();
 
@@ -149,7 +150,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 
 	protected ItemPanelKeyboardListener keyListener = new ItemPanelKeyboardListener();
 
-	protected Vector<Object> completeItemsList = new Vector<Object>(20);
+	protected Vector<Item> completeItemsList = new Vector<>(20);
 
 	protected Vector<Item> visibleItemsList = new Vector<Item>(20);
 
@@ -177,18 +178,18 @@ public class FileList extends JPanel implements PropertyChangeListener {
 
 	private File[] selectedFilesArray;
 
-	protected Vector<Object> selectedFilesVector = new Vector<Object>();
+	protected Vector<Item> selectedFilesVector = new Vector<>();
 
 	private boolean tempFlag = false;
 
-	public static String ORDER_BY_FILE_NAME = I18N
-			.getMessage(I18N.getGUIBundle(), "gui.menu.file_chooser.sort_by.file_name");
+	public static String ORDER_BY_FILE_NAME = I18N.getMessage(I18N.getGUIBundle(),
+			"gui.menu.file_chooser.sort_by.file_name");
 
-	public static String ORDER_BY_FILE_TYPE = I18N
-			.getMessage(I18N.getGUIBundle(), "gui.menu.file_chooser.sort_by.file_type");
+	public static String ORDER_BY_FILE_TYPE = I18N.getMessage(I18N.getGUIBundle(),
+			"gui.menu.file_chooser.sort_by.file_type");
 
-	public static String ORDER_BY_FILE_SIZE = I18N
-			.getMessage(I18N.getGUIBundle(), "gui.menu.file_chooser.sort_by.file_size");
+	public static String ORDER_BY_FILE_SIZE = I18N.getMessage(I18N.getGUIBundle(),
+			"gui.menu.file_chooser.sort_by.file_size");
 
 	public static String ORDER_BY_FILE_MODIFIED = I18N.getMessage(I18N.getGUIBundle(),
 			"gui.menu.file_chooser.sort_by.last_modified");
@@ -300,7 +301,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 	private void updateViewMenuItemsGroup() {
 		JRadioButtonMenuItem rbm;
 
-		Enumeration en = this.viewButtonGroup.getElements();
+		Enumeration<AbstractButton> en = this.viewButtonGroup.getElements();
 		while (en.hasMoreElements()) {
 			rbm = (JRadioButtonMenuItem) en.nextElement();
 
@@ -577,9 +578,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 
 		File[] files = this.fc.getFileSystemView().getFiles(this.tempFile, false);
 		TreeMap<File, File> filesMap = new TreeMap<File, File>();
-		Enumeration en = this.completeItemsList.elements();
-		while (en.hasMoreElements()) {
-			Item item = (Item) en.nextElement();
+		for (Item item : completeItemsList) {
 			filesMap.put(item.getFile(), item.getFile());
 		}
 
@@ -603,7 +602,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		}
 
 		// deleted items
-		Vector<Object> removingItems = new Vector<Object>();
+		Vector<Item> removingItems = new Vector<>();
 		filesMap.clear();
 
 		for (File element : files) {
@@ -615,16 +614,13 @@ public class FileList extends JPanel implements PropertyChangeListener {
 			filesMap.put(this.tempFile, this.tempFile);
 		}
 
-		for (int j = 0; j < this.completeItemsList.size(); j++) {
-			Item item = (Item) this.completeItemsList.elementAt(j);
+		for (Item item : completeItemsList) {
 			if (!filesMap.containsKey(item.getFile())) {
 				removingItems.add(item);
 			}
 		}
 
-		Enumeration n = removingItems.elements();
-		while (n.hasMoreElements()) {
-			Item item = (Item) n.nextElement();
+		for (Item item : removingItems) {
 			this.completeItemsList.remove(item);
 			this.visibleItemsList.remove(item);
 			this.itemPanel.remove(item);
@@ -709,20 +705,14 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		// this.fc.setSelectedFiles(new File[] {});
 		this.completeItemsList.removeAllElements();
 
-		Enumeration en = this.completeItemsList.elements();
-		Item t;
-		while (en.hasMoreElements()) {
-			t = (Item) en.nextElement();
+		for (Item t : completeItemsList) {
 			t.finalizeAll();
 			t = null;
 		}
 	}
 
 	public void clearSelectedItemsList() {
-		Enumeration en = this.selectedFilesVector.elements();
-
-		while (en.hasMoreElements()) {
-			Item item = (Item) en.nextElement();
+		for (Item item : selectedFilesVector) {
 			item.updateSelectionMode(false);
 			item.repaint();
 		}
@@ -739,9 +729,8 @@ public class FileList extends JPanel implements PropertyChangeListener {
 
 	protected void updateFilechooserSelectedItems(Item t, boolean ctrl) {
 		if (!ctrl || !this.fc.isMultiSelectionEnabled()) {
-			Enumeration en = this.completeItemsList.elements();
-			while (en.hasMoreElements()) {
-				((Item) en.nextElement()).updateSelectionMode(false);
+			for (Item item : completeItemsList) {
+				item.updateSelectionMode(false);
 			}
 			this.selectedFilesVector.removeAllElements();
 		}
@@ -776,23 +765,20 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		int counter = 0;
 		this.selectedFilesArray = new File[this.selectedFilesVector.size()];
 
-		Vector<Object> tempVector = new Vector<Object>();
+		Vector<Item> tempVector = new Vector<>();
 
-		Enumeration en = this.selectedFilesVector.elements();
-		while (en.hasMoreElements()) {
-			Item item = (Item) en.nextElement();
-			if (this.fc.isDirectorySelectionEnabled() && item.isDirectory() || this.fc.isFileSelectionEnabled()
-					&& !item.isDirectory()) {
+		for (Item item : selectedFilesVector) {
+			if (this.fc.isDirectorySelectionEnabled() && item.isDirectory()
+					|| this.fc.isFileSelectionEnabled() && !item.isDirectory()) {
 				tempVector.add(item);
 			}
 		}
 
 		this.selectedFilesArray = new File[tempVector.size()];
 
-		en = tempVector.elements();
 		counter = 0;
-		while (en.hasMoreElements()) {
-			this.selectedFilesArray[counter] = ((Item) en.nextElement()).getFile();
+		for (Item item : tempVector) {
+			this.selectedFilesArray[counter] = item.getFile();
 			counter++;
 		}
 
@@ -907,23 +893,21 @@ public class FileList extends JPanel implements PropertyChangeListener {
 				this.tempList.add(this.completeItemsList.elementAt(i));
 			}
 			this.completeItemsList.clear();
-			this.completeItemsList = (Vector<Object>) this.tempList.clone();
+			this.completeItemsList = (Vector<Item>) this.tempList.clone();
 		} else {
 			this.tempCompareTree.clear();
-			Enumeration en = this.completeItemsList.elements();
-			while (en.hasMoreElements()) {
-				Item item = (Item) en.nextElement();
+			for (Item item : completeItemsList) {
 				item.setCompare_type(str);
 				this.tempCompareTree.put(item, item);
 			}
 
 			this.completeItemsList.clear();
-			this.completeItemsList = new Vector<Object>(this.tempCompareTree.values());
+			this.completeItemsList = new Vector<>(this.tempCompareTree.values());
 		}
 		this.ORDER_BY = str;
 
 		JRadioButtonMenuItem rbm;
-		Enumeration en = this.orderButtonGroup.getElements();
+		Enumeration<AbstractButton> en = this.orderButtonGroup.getElements();
 		while (en.hasMoreElements()) {
 			rbm = (JRadioButtonMenuItem) en.nextElement();
 
@@ -957,9 +941,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 				this.tablePanel.selectAll();
 			} else {
 				clearSelectedItemsList();
-				Enumeration tempEn = this.visibleItemsList.elements();
-				while (tempEn.hasMoreElements()) {
-					Item item = (Item) tempEn.nextElement();
+				for (Item item : visibleItemsList) {
 					item.updateSelectionMode(true);
 					this.selectedFilesVector.add(item);
 					item.repaint();
@@ -981,10 +963,8 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		this.visibleItemsList.clear();
 		this.itemPanel.removeAll();
 
-		Enumeration en = this.completeItemsList.elements();
-		while (en.hasMoreElements()) {
+		for (Item item : completeItemsList) {
 			this.tempFlag = true;
-			Item item = (Item) en.nextElement();
 
 			if (item.getFile().isHidden()) {
 				if (this.fc.isFileHidingEnabled()) {
@@ -1012,8 +992,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 	}
 
 	protected void updateTableData() {
-		Enumeration els = this.visibleItemsList.elements();
-		Vector<Object> vec2 = new Vector<Object>();
+		Vector<Object[]> vec2 = new Vector<>();
 
 		int ni = 0;
 		int si = 1;
@@ -1041,11 +1020,8 @@ public class FileList extends JPanel implements PropertyChangeListener {
 			// do nothing
 		}
 
-		Object[] arr;
-
-		while (els.hasMoreElements()) {
-			Item tc = (Item) els.nextElement();
-			arr = new Object[4];
+		for (Item tc : visibleItemsList) {
+			Object[] arr = new Object[4];
 			arr[ni] = new FileTableLabel(tc.getFileName(), tc.getSmallSystemIcon(), SwingConstants.LEFT);
 			arr[si] = tc.convertToCorrectFormat(tc.getFileSize());
 			arr[ti] = tc.getFileType();
@@ -1058,25 +1034,14 @@ public class FileList extends JPanel implements PropertyChangeListener {
 			vec2.add(arr.clone());
 		}
 
-		Object[][] res = new Object[vec2.size()][];
-
-		Enumeration en = vec2.elements();
-		int c = 0;
-		while (en.hasMoreElements()) {
-			res[c] = (Object[]) en.nextElement();
-			c++;
-		}
+		Object[][] res = vec2.toArray(new Object[vec2.size()][]);
 
 		updateTablePanelSize();
 		this.tablePanel.updateData(res);
 		updateTablePanelSize();
 
-		en = this.selectedFilesVector.elements();
-		int i = 0;
-		while (en.hasMoreElements()) {
-			Item item = (Item) en.nextElement();
+		for (Item item : selectedFilesVector) {
 			this.tablePanel.updateSelectionInterval(this.visibleItemsList.indexOf(item), true);
-			i++;
 		}
 	}
 

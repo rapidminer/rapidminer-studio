@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.ports;
 
 import com.rapidminer.gui.renderer.RendererService;
@@ -111,21 +111,22 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 	 *            If true, collections are added as individual objects rather than as a collection.
 	 *            The unfolding is done recursively.
 	 * @throws UserError
-	 * */
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends IOObject> List<T> getData(Class<T> desiredClass, boolean unfold) throws UserError {
 		List<T> results = new LinkedList<T>();
 		for (InputPort port : getManagedPorts()) {
 			IOObject data = port.getAnyDataOrNull();
 			if (data != null) {
-				if (unfold && (data instanceof IOObjectCollection)) {
-					unfold((IOObjectCollection) data, results, desiredClass, port);
+				if (unfold && data instanceof IOObjectCollection) {
+					unfold((IOObjectCollection<?>) data, results, desiredClass, port);
 				} else {
 					if (desiredClass.isInstance(data)) {
 						results.add((T) data);
 					} else {
-						throw new UserError(getPorts().getOwner().getOperator(), 156, RendererService.getName(data
-								.getClass()), port.getName(), RendererService.getName(desiredClass));
+						throw new UserError(getPorts().getOwner().getOperator(), 156,
+								RendererService.getName(data.getClass()), port.getName(),
+								RendererService.getName(desiredClass));
 					}
 				}
 			}
@@ -144,7 +145,7 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 			Port port) throws UserError {
 		for (IOObject obj : collection.getObjects()) {
 			if (obj instanceof IOObjectCollection) {
-				unfold((IOObjectCollection) obj, results, desiredClass, port);
+				unfold((IOObjectCollection<?>) obj, results, desiredClass, port);
 			} else {
 				if (desiredClass.isInstance(obj)) {
 					results.add((T) obj);

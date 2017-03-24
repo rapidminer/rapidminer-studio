@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator.generator;
 
 import java.util.List;
@@ -227,14 +227,17 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 				"This parameter defines the attributes and their values in the single example returned.",
 				new ParameterTypeString(PARAMETER_ATTRIBUTE_NAME, "This is the name of the generated attribute.", false),
 				new ParameterTypeExpression(PARAMETER_ATTRIBUTE_VALUE,
-						"An expression that is parsed to derive the value of this attribute.", new OperatorVersionCallable(
-								this)), false));
+						"An expression that is parsed to derive the value of this attribute.",
+						new OperatorVersionCallable(this)),
+				false));
 
 		types.add(new ParameterTypeList(PARAMETER_ROLES, "This parameter defines additional attribute role combinations.",
 				new ParameterTypeString(PARAMETER_NAME, "The name of the attribute whose role should be changed.", false,
-						false), new ParameterTypeStringCategory(PARAMETER_TARGET_ROLE,
+						false),
+				new ParameterTypeStringCategory(PARAMETER_TARGET_ROLE,
 						"The target role of the attribute (only changed if parameter change_attribute_type is true).",
-								TARGET_ROLES, TARGET_ROLES[0]), false));
+						TARGET_ROLES, TARGET_ROLES[0]),
+				false));
 		return types;
 	}
 

@@ -1,26 +1,25 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.operator;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -55,6 +54,7 @@ import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.MailUtilities;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.io.Encoding;
 
@@ -99,9 +99,9 @@ public final class ProcessRootOperator extends OperatorChain {
 	public static final String PARAMETER_NOTIFICATION_EMAIL = "notification_email";
 
 	static {
-		ParameterService.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_RANDOMSEED, I18N
-				.getSettingsMessage(PROPERTY_RAPIDMINER_GENERAL_RANDOMSEED, I18N.SettingsType.DESCRIPTION), -1,
-				Integer.MAX_VALUE, 2001));
+		ParameterService.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_RANDOMSEED,
+				I18N.getSettingsMessage(PROPERTY_RAPIDMINER_GENERAL_RANDOMSEED, I18N.SettingsType.DESCRIPTION), -1,
+				Integer.MAX_VALUE, RandomGenerator.DEFAULT_SEED));
 	}
 
 	/** The list of listeners for process events. */
@@ -237,24 +237,17 @@ public final class ProcessRootOperator extends OperatorChain {
 	@Override
 	public void processStarts() throws OperatorException {
 		super.processStarts();
-		Iterator i = getListenerListCopy().iterator();
-		while (i.hasNext()) {
-			((ProcessListener) i.next()).processStarts(this.process);
-		}
+		getListenerListCopy().forEach(l -> l.processStarts(process));
 	}
 
 	/** Counts the step and notifies all process listeners. */
 	public void processStartedOperator(Operator op) {
-		for (ProcessListener listener : getListenerListCopy()) {
-			listener.processStartedOperator(this.process, op);
-		}
+		getListenerListCopy().forEach(l -> l.processStartedOperator(process, op));
 	}
 
 	/** Counts the step and notifies all process listeners. */
 	public void processFinishedOperator(Operator op) {
-		for (ProcessListener listener : getListenerListCopy()) {
-			listener.processFinishedOperator(this.process, op);
-		}
+		getListenerListCopy().forEach(l -> l.processFinishedOperator(process, op));
 	}
 
 	/**
@@ -264,10 +257,7 @@ public final class ProcessRootOperator extends OperatorChain {
 	@Override
 	public void processFinished() throws OperatorException {
 		super.processFinished();
-		Iterator i = getListenerListCopy().iterator();
-		while (i.hasNext()) {
-			((ProcessListener) i.next()).processEnded(this.process);
-		}
+		getListenerListCopy().forEach(l -> l.processEnded(process));
 	}
 
 	/**
@@ -344,14 +334,15 @@ public final class ProcessRootOperator extends OperatorChain {
 		types.add(type);
 		types.add(new ParameterTypeFile(PARAMETER_RESULTFILE, "File to write inputs of the ResultWriter operators to.",
 				"res", true));
-		int seed = 2001;
+		int seed = RandomGenerator.DEFAULT_SEED;
 		String seedProperty = ParameterService.getParameterValue(PROPERTY_RAPIDMINER_GENERAL_RANDOMSEED);
 		try {
 			if (seedProperty != null) {
 				seed = Integer.parseInt(seedProperty);
 			}
 		} catch (NumberFormatException e) {
-			logWarning("Bad integer in property 'rapidminer.general.randomseed', using default seed (2001).");
+			logWarning("Bad integer in property 'rapidminer.general.randomseed', using default seed ("
+					+ RandomGenerator.DEFAULT_SEED + ").");
 		}
 		types.add(new ParameterTypeInt(PARAMETER_RANDOM_SEED,
 				"Global random seed for random generators (-1 for initialization by system time).", Integer.MIN_VALUE,

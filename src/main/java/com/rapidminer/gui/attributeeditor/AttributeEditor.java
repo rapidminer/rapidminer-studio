@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.gui.attributeeditor;
 
 import java.awt.Component;
@@ -93,9 +93,10 @@ import com.rapidminer.tools.io.Encoding;
 /**
  * A table for creating an attribute description file. Data can be read from files as single columns
  * or as a value series. The value types are guessed and can be edited by the user.
- * 
+ *
  * @author Simon Fischer, Ingo Mierswa
  */
+@SuppressWarnings("deprecation")
 public class AttributeEditor extends ExtendedJTable implements MouseListener, DataControlListener {
 
 	private static final long serialVersionUID = -3312532913749370288L;
@@ -284,11 +285,11 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 	}
 
 	private String getDatum(int row, int column) {
-		Vector col = dataColumnVector.get(column);
+		Vector<String> col = dataColumnVector.get(column);
 		if (row >= col.size()) {
 			return "?";
 		}
-		return (String) col.get(row);
+		return col.get(row);
 	}
 
 	private void setDatum(int row, int column, String value) {
@@ -336,9 +337,10 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		cellEditors.add(NAME_ROW, new DefaultCellEditor(nameField));
 
 		// type
-		JComboBox typeBox = new JComboBox(Attributes.KNOWN_ATTRIBUTE_TYPES);
+		JComboBox<String> typeBox = new JComboBox<>(Attributes.KNOWN_ATTRIBUTE_TYPES);
 		typeBox.setEditable(true);
-		typeBox.setToolTipText("The type of the attribute ('attribute' for regular learning attributes or a special attribute name).");
+		typeBox.setToolTipText(
+				"The type of the attribute ('attribute' for regular learning attributes or a special attribute name).");
 		cellEditors.add(TYPE_ROW, new DefaultCellEditor(typeBox));
 
 		// value type
@@ -354,12 +356,12 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		for (String type : usedTypes) {
 			valueTypes[vCounter++] = type;
 		}
-		JComboBox valueTypeBox = new JComboBox(valueTypes);
+		JComboBox<String> valueTypeBox = new JComboBox<>(valueTypes);
 		valueTypeBox.setToolTipText("The value type of the attribute.");
 		cellEditors.add(VALUE_TYPE_ROW, new DefaultCellEditor(valueTypeBox));
 
 		// block type
-		JComboBox blockTypeBox = new JComboBox(Ontology.ATTRIBUTE_BLOCK_TYPE.getNames());
+		JComboBox<String> blockTypeBox = new JComboBox<>(Ontology.ATTRIBUTE_BLOCK_TYPE.getNames());
 		blockTypeBox.setToolTipText("The block type of this attribute.");
 		cellEditors.add(BLOCK_TYPE_ROW, new DefaultCellEditor(blockTypeBox));
 
@@ -420,13 +422,17 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		try {
 			reader = new RapidMinerLineReader(exampleSource.getParameterAsString(ExampleSource.PARAMETER_COLUMN_SEPARATORS),
 					exampleSource.getParameterAsString(ExampleSource.PARAMETER_COMMENT_CHARS).toCharArray(),
-					exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES), exampleSource
-							.getParameterAsString(ExampleSource.PARAMETER_QUOTE_CHARACTER).charAt(0), exampleSource
-							.getParameterAsString(ExampleSource.PARAMETER_QUOTING_ESCAPE_CHARACTER).charAt(0),
+					exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES),
+					exampleSource.getParameterAsString(ExampleSource.PARAMETER_QUOTE_CHARACTER).charAt(0),
+					exampleSource.getParameterAsString(ExampleSource.PARAMETER_QUOTING_ESCAPE_CHARACTER).charAt(0),
 					exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_TRIM_LINES),
 					exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_SKIP_ERROR_LINES));
 		} catch (UndefinedParameterError e) {
 			// cannot happen since all parameters are optional
+			try {
+				in.close();
+			} catch (IOException ioe) {
+			}
 			throw new IOException("Cannot create RapidMiner line reader: " + e.getMessage());
 		}
 
@@ -706,13 +712,13 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 					JOptionPane.WARNING_MESSAGE, null, names, names[0]);
 			if (selection != null) {
 				i = columns.iterator();
-				Iterator k = columnNumbers.iterator();
+				Iterator<Integer> k = columnNumbers.iterator();
 				while (i.hasNext()) {
 					AttributeDataSource source = i.next();
-					Integer number = (Integer) k.next();
+					int number = k.next();
 					if (!source.getAttribute().getName().equals(selection)) {
 						source.setType("attribute");
-						model.fireTableCellUpdated(TYPE_ROW, number.intValue());
+						model.fireTableCellUpdated(TYPE_ROW, number);
 					}
 				}
 			}
@@ -835,14 +841,10 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 					SwingTools.showSimpleErrorMessage("cannot_load_attr_descr", e);
 				}
 				if (builder != null) {
-					Iterator<Example> e = builder.build().iterator();
 					rowCount = 0;
-					while (e.hasNext()) {
-						Example example = e.next();
-						Iterator adsIterator = sourceList.iterator();
+					for (Example example : builder.build()) {
 						int n = 0;
-						while (adsIterator.hasNext()) {
-							AttributeDataSource ads = (AttributeDataSource) adsIterator.next();
+						for (AttributeDataSource ads : sourceList) {
 							setDatum(rowCount, n++, example.getValueAsString(ads.getAttribute()));
 						}
 						rowCount++;

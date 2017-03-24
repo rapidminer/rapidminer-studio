@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
- *
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * 
  * Complete list of developers available at our web site:
- *
+ * 
  * http://rapidminer.com
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
- */
+*/
 package com.rapidminer.tools.plugin;
 
 import java.awt.Frame;
@@ -297,8 +297,8 @@ public class Plugin {
 		PLUGIN_BLACKLIST.put("rmx_r_scripting", upToRm711);
 		PLUGIN_BLACKLIST.put("rmx_python_scripting", upToRm711);
 
-		// Radoop uses an outdated signature of getAllPlugins() method
-		PLUGIN_BLACKLIST.put("rmx_radoop", upToRm711);
+		// Radoop depends on Parallel Decision Tree in Concurrency Extension
+		PLUGIN_BLACKLIST.put("rmx_radoop", new Pair<>(null, new VersionNumber(7, 3, 0)));
 
 		// RapidLabs / 3rd party extensions causing problems since Studio 7.2
 		PLUGIN_BLACKLIST.put("rmx_rapidprom", new Pair<>(null, new VersionNumber(3, 0, 7)));
@@ -1334,7 +1334,7 @@ public class Plugin {
 
 			String identifier;
 			if (plugin != null) {
-			LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time",
+				LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time",
 						new Object[] { plugin.getName(), value });
 				identifier = plugin.getExtensionId();
 			} else {

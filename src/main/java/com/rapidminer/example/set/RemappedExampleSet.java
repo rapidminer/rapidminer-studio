@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2016 by RapidMiner and the contributors
+ * Copyright (C) 2001-2017 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -37,7 +37,7 @@ import com.rapidminer.operator.Annotations;
  * nominal values according to the given set. It also sorts the regular attributes in the order of
  * the other exampleSet if possible. If additional attributes occur, they are appended on the end of
  * the example set, if keepAdditional is selected.
- * 
+ *
  * @author Ingo Mierswa, Sebastian Land
  */
 public class RemappedExampleSet extends AbstractExampleSet {
@@ -51,11 +51,41 @@ public class RemappedExampleSet extends AbstractExampleSet {
 	}
 
 	public RemappedExampleSet(ExampleSet parentSet, ExampleSet _mappingSet, boolean keepAdditional) {
+		this(parentSet, _mappingSet, keepAdditional, true);
+	}
+
+	/**
+	 * Sorts the regular attributes of parentSet in the order of mappingSet. If additional
+	 * attributes occur and keepAdditional is {@code true}, they are appended on the end of the
+	 * example set. If transformMappings is {@code true} then mapping indices returned by
+	 * {@link Example#getValue} are remapped to the mappings used in mappingSet and the attribute
+	 * mappings are changed to those in mappingSet.
+	 * <p>
+	 * Note that {@link Example#getValueAsString} might not return the same as before the remapping
+	 * but a missing value if not all strings in the old attribute mapping are part of the mapping
+	 * from {@link #mappingSet}. Therefore, {@link RemappedExampleSet}s with transformMappings
+	 * {@code true} should not be returned at ports unless those affected attributes are removed.
+	 *
+	 * @param parentSet
+	 *            the example set that should be adjusted to the
+	 * @param mappingSet
+	 *            the example set to which we want to adjust the parent set
+	 * @param keepAdditional
+	 *            if {@code true} attributes from the parentSet that are not in the mappingSet are
+	 *            kept
+	 * @param transformMappings
+	 *            if {@code true} an {@link AttributeTransformationRemapping} is added to the
+	 *            nominal attributes of the adjusted example set so that {@code example.getValue(a)}
+	 *            returns the mapping index according to the mapping of the attribute in mappingSet
+	 *            and the nominal mapping of those attributes is adjusted
+	 */
+	public RemappedExampleSet(ExampleSet parentSet, ExampleSet mappingSet, boolean keepAdditional,
+			boolean transformMappings) {
 		this.parent = (ExampleSet) parentSet.clone();
-		ExampleSet mappingSet = (ExampleSet) _mappingSet.clone();
+		ExampleSet clonedMappingSet = (ExampleSet) mappingSet.clone();
 
 		// check for a missing mappingSet because of compatibility
-		if (mappingSet != null) {
+		if (clonedMappingSet != null) {
 			Attributes attributes = parent.getAttributes();
 
 			// copying attributes into name map
@@ -68,7 +98,7 @@ public class RemappedExampleSet extends AbstractExampleSet {
 			attributes.clearRegular();
 
 			// adding again in mappingSets's order
-			for (Attribute mapAttribute : mappingSet.getAttributes()) {
+			for (Attribute mapAttribute : clonedMappingSet.getAttributes()) {
 				String name = mapAttribute.getName();
 				Attribute attribute = attributeMap.get(name);
 				if (attribute != null) {
@@ -84,19 +114,21 @@ public class RemappedExampleSet extends AbstractExampleSet {
 				}
 			}
 
-			// mapping nominal values
-			Iterator<AttributeRole> a = this.parent.getAttributes().allAttributeRoles();
-			while (a.hasNext()) {
-				AttributeRole role = a.next();
-				Attribute currentAttribute = role.getAttribute();
-				if (currentAttribute.isNominal()) {
-					NominalMapping mapping = null;
-					mapping = currentAttribute.getMapping();
-					Attribute oldMappingAttribute = mappingSet.getAttributes().get(role.getAttribute().getName());
-					if (oldMappingAttribute != null && oldMappingAttribute.isNominal()) {
-						mapping = oldMappingAttribute.getMapping();
+			if (transformMappings) {
+				// mapping nominal values
+				Iterator<AttributeRole> a = this.parent.getAttributes().allAttributeRoles();
+				while (a.hasNext()) {
+					AttributeRole role = a.next();
+					Attribute currentAttribute = role.getAttribute();
+					if (currentAttribute.isNominal()) {
+						Attribute oldMappingAttribute = clonedMappingSet.getAttributes().get(role.getAttribute().getName());
+						if (oldMappingAttribute != null && oldMappingAttribute.isNominal()) {
+							NominalMapping currentMapping = currentAttribute.getMapping();
+							NominalMapping overlayedMapping = oldMappingAttribute.getMapping();
+							currentAttribute.setMapping(overlayedMapping);
+							currentAttribute.addTransformation(new FullAttributeTransformationRemapping(currentMapping));
+						}
 					}
-					currentAttribute.addTransformation(new AttributeTransformationRemapping(mapping));
 				}
 			}
 		}
