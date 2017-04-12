@@ -18,14 +18,14 @@
 */
 package com.rapidminer.tools;
 
+import java.text.SimpleDateFormat;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.text.SimpleDateFormat;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

@@ -18,12 +18,6 @@
 */
 package com.rapidminer.gui.actions;
 
-import com.rapidminer.gui.tools.NotificationPopup;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.RMUrlHandler;
-
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.util.concurrent.ExecutionException;
@@ -31,6 +25,12 @@ import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+
+import com.rapidminer.gui.tools.NotificationPopup;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.RMUrlHandler;
 
 
 /**

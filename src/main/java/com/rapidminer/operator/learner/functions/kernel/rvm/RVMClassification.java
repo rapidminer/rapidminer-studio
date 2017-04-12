@@ -18,13 +18,14 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.rvm;
 
-import Jama.Matrix;
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelBasisFunction;
 import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelRadial;
 import com.rapidminer.operator.learner.functions.kernel.rvm.util.SECholeskyDecomposition;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import Jama.Matrix;
 
 
 /**

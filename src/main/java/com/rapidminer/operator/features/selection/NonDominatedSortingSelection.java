@@ -18,17 +18,17 @@
 */
 package com.rapidminer.operator.features.selection;
 
-import com.rapidminer.operator.features.Individual;
-import com.rapidminer.operator.features.Population;
-import com.rapidminer.operator.features.PopulationOperator;
-import com.rapidminer.operator.performance.PerformanceVector;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import com.rapidminer.operator.features.Individual;
+import com.rapidminer.operator.features.Population;
+import com.rapidminer.operator.features.PopulationOperator;
+import com.rapidminer.operator.performance.PerformanceVector;
 
 
 /**

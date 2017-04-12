@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.datatable.DataTable;
-
 import java.util.List;
+
+import com.rapidminer.datatable.DataTable;
 
 
 /**

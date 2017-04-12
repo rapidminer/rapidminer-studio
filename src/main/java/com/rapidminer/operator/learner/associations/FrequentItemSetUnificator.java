@@ -18,13 +18,6 @@
 */
 package com.rapidminer.operator.learner.associations;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.ports.PortPairExtender;
-import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.tools.container.Tupel;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,6 +26,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ports.PortPairExtender;
+import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.tools.container.Tupel;
 
 
 /**

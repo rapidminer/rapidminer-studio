@@ -18,12 +18,12 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.tools.LogService;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.tools.LogService;
 
 
 /**

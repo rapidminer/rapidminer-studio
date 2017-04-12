@@ -18,16 +18,16 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.att.AttributeSet;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.att.AttributeSet;
 
 
 /**

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.Process;
 import com.rapidminer.ProcessContext;
 import com.rapidminer.gui.RapidMinerGUI;
@@ -26,8 +28,6 @@ import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
-
-import java.awt.event.ActionEvent;
 
 
 /**

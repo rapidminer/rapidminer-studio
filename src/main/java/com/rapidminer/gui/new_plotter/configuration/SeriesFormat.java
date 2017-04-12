@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
-import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
-import com.rapidminer.gui.new_plotter.listener.SeriesFormatListener;
-import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent.SeriesFormatChangeType;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-import com.rapidminer.tools.I18N;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -43,6 +36,13 @@ import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
+import com.rapidminer.gui.new_plotter.listener.SeriesFormatListener;
+import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent.SeriesFormatChangeType;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
+import com.rapidminer.tools.I18N;
 
 
 /**

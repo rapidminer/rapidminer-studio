@@ -18,7 +18,6 @@
 */
 package com.rapidminer.operator.learner.functions;
 
-import Jama.Matrix;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -30,6 +29,8 @@ import com.rapidminer.tools.LoggingHandler;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.optimization.ec.es.ESOptimization;
 import com.rapidminer.tools.math.optimization.ec.es.Individual;
+
+import Jama.Matrix;
 
 
 /**

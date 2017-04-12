@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener;
 
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.tools.container.Pair;
-
 import java.util.List;
 
 import org.jfree.data.Range;
+
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.tools.container.Pair;
 
 
 /**

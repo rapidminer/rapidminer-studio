@@ -18,10 +18,10 @@
 */
 package com.rapidminer.tools.math.function.aggregation;
 
+import java.lang.reflect.InvocationTargetException;
+
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.tools.Ontology;
-
-import java.lang.reflect.InvocationTargetException;
 
 
 /**

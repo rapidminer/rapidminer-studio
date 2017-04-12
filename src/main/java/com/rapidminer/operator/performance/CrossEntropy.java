@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.performance;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.math.Averagable;
 import com.rapidminer.tools.math.MathFunctions;
-
-import java.util.Iterator;
 
 
 /**

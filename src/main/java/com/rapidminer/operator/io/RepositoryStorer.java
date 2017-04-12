@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.io;
 
+import java.util.List;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -27,8 +29,6 @@ import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
-
-import java.util.List;
 
 
 /**

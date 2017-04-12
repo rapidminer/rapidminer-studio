@@ -18,11 +18,11 @@
 */
 package com.rapidminer.datatable;
 
-import com.rapidminer.tools.math.container.Range;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import com.rapidminer.tools.math.container.Range;
 
 
 /**

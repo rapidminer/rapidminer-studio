@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.dialogs.DecisionRememberingConfirmDialog;
-
-import java.awt.event.ActionEvent;
 
 
 /**

@@ -18,6 +18,12 @@
 */
 package com.rapidminer.tools.io;
 
+import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.RapidMiner;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
@@ -26,12 +32,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.ParameterService;
-
-import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

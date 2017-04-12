@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.learner.meta;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -43,10 +47,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
 
 
 /**

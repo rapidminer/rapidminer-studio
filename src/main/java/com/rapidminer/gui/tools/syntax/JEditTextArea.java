@@ -18,18 +18,6 @@
 */
 package com.rapidminer.gui.tools.syntax;
 
-/*
- * JEditTextArea.java - jEdit's text component Copyright (C) 1999 Slava Pestov
- * 
- * You may use and modify this package for any purpose. Redistribution is permitted, in both source
- * and binary form, provided that this notice remains intact in all source distributions of this
- * package.
- */
-
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceActionTransmitter;
-import com.rapidminer.tools.Tools;
-
 import java.awt.AWTEvent;
 import java.awt.Adjustable;
 import java.awt.Component;
@@ -77,6 +65,18 @@ import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoableEdit;
+
+/*
+ * JEditTextArea.java - jEdit's text component Copyright (C) 1999 Slava Pestov
+ * 
+ * You may use and modify this package for any purpose. Redistribution is permitted, in both source
+ * and binary form, provided that this notice remains intact in all source distributions of this
+ * package.
+ */
+
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceActionTransmitter;
+import com.rapidminer.tools.Tools;
 
 
 /**

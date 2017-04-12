@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.attributeeditor.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.attributeeditor.AttributeEditorDialog;
 import com.rapidminer.gui.tools.ResourceAction;
-
-import java.awt.event.ActionEvent;
 
 
 /**

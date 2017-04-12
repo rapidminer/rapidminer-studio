@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.ports.quickfix;
 
-import com.rapidminer.parameter.ParameterHandler;
-
 import java.util.Arrays;
+
+import com.rapidminer.parameter.ParameterHandler;
 
 
 /**

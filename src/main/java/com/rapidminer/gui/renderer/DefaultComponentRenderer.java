@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.renderer;
 
+import java.awt.Component;
+
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

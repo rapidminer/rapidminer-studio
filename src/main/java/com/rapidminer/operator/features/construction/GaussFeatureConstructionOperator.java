@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.features.construction;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -35,9 +38,6 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

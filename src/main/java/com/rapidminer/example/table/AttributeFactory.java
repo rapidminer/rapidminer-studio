@@ -18,12 +18,12 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.tools.Ontology;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.tools.Ontology;
 
 
 /**

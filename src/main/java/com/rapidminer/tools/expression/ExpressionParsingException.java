@@ -21,6 +21,12 @@ package com.rapidminer.tools.expression;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.expression.internal.UnknownResolverVariableException;
+import com.rapidminer.tools.expression.internal.antlr.UnknownDynamicVariableException;
+import com.rapidminer.tools.expression.internal.antlr.UnknownFunctionException;
+import com.rapidminer.tools.expression.internal.antlr.UnknownScopeConstantException;
+import com.rapidminer.tools.expression.internal.antlr.UnknownVariableException;
+import com.rapidminer.tools.expression.internal.function.eval.SubexpressionEvaluationException;
 
 
 /**

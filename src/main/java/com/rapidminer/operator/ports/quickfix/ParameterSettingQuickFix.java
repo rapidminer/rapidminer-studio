@@ -18,6 +18,11 @@
 */
 package com.rapidminer.operator.ports.quickfix;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.properties.AttributesPropertyDialog;
 import com.rapidminer.gui.properties.ListPropertyDialog;
 import com.rapidminer.gui.tools.dialogs.SetParameterDialog;
@@ -28,11 +33,6 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeConfiguration;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

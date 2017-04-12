@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.plots;
 
-import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.axis.LinkAndBrushAxis;
-import com.rapidminer.tools.container.Pair;
-
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +26,9 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.Range;
+
+import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.axis.LinkAndBrushAxis;
+import com.rapidminer.tools.container.Pair;
 
 
 /**

@@ -18,9 +18,9 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Tools;
-
 import java.util.Arrays;
+
+import com.rapidminer.example.Tools;
 
 
 /**

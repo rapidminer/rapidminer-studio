@@ -18,6 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.utility;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.regex.Pattern;
+
 import com.rapidminer.Process;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOContainer;
@@ -28,13 +35,6 @@ import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 
 /**

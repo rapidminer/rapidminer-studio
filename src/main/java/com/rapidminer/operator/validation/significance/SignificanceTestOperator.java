@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.validation.significance;
 
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -30,8 +32,6 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.tools.math.SignificanceTestResult;
-
-import java.util.List;
 
 
 /**

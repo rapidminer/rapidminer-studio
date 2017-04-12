@@ -18,6 +18,11 @@
 */
 package com.rapidminer.operator.features.construction;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -39,11 +44,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.NumberParser;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 
 /**

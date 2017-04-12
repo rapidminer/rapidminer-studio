@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.operator.OperatorDescription;
@@ -25,8 +27,6 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.tools.Ontology;
-
-import java.util.List;
 
 
 /**

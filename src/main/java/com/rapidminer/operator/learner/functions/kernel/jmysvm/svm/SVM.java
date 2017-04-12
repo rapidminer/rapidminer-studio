@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.jmysvm.svm;
 
+import java.util.Iterator;
+import java.util.logging.Level;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.learner.functions.kernel.AbstractMySVMLearner;
@@ -33,9 +36,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.WrapperLoggingHandler;
-
-import java.util.Iterator;
-import java.util.logging.Level;
 
 
 /**

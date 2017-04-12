@@ -18,10 +18,10 @@
 */
 package com.rapidminer.operator.preprocessing.outlier;
 
-import com.rapidminer.tools.math.similarity.DistanceMeasure;
-
 import java.util.ArrayList;
 import java.util.PriorityQueue;
+
+import com.rapidminer.tools.math.similarity.DistanceMeasure;
 
 
 /**

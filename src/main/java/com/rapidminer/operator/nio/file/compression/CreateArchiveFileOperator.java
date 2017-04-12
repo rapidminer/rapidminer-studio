@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.nio.file.compression;
 
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -28,8 +30,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
-
-import java.util.List;
 
 
 /**

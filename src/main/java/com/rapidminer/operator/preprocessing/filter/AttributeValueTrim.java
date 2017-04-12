@@ -18,6 +18,11 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -31,11 +36,6 @@ import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.preprocessing.AbstractValueProcessing;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
 
 
 /**

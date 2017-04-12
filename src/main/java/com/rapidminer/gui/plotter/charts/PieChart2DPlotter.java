@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.gui.plotter.PlotterConfigurationModel;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.PieDataset;
+
+import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 
 
 /**

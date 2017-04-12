@@ -18,11 +18,11 @@
 */
 package com.rapidminer.parameter;
 
-import com.rapidminer.MacroHandler;
-import com.rapidminer.operator.ports.InputPort;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.rapidminer.MacroHandler;
+import com.rapidminer.operator.ports.InputPort;
 
 
 /**

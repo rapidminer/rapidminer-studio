@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator.tools;
 
-import com.rapidminer.tools.plugin.Plugin;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
+
+import com.rapidminer.tools.plugin.Plugin;
 
 
 /**

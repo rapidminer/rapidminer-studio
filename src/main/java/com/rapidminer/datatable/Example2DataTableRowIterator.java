@@ -18,11 +18,11 @@
 */
 package com.rapidminer.datatable;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-
 import java.util.Iterator;
 import java.util.List;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
 
 
 /**

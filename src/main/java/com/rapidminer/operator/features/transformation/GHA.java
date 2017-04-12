@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -47,6 +45,8 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.matrix.CovarianceMatrix;
+
+import Jama.Matrix;
 
 
 /**

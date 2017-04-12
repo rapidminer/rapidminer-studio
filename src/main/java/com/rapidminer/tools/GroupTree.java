@@ -18,11 +18,6 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.tools.OperatorService.OperatorServiceListener;
-import com.rapidminer.tools.documentation.OperatorDocBundle;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,6 +30,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.ImageIcon;
+
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.tools.OperatorService.OperatorServiceListener;
+import com.rapidminer.tools.documentation.OperatorDocBundle;
 
 
 /**

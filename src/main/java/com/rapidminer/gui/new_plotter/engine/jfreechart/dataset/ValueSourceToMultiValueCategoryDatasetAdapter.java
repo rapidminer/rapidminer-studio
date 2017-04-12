@@ -18,17 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.dataset;
 
-import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.GroupCellKey;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
-import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
-import com.rapidminer.gui.new_plotter.data.GroupCellData;
-import com.rapidminer.gui.new_plotter.data.GroupCellKeyAndData;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.data.ValueSourceData;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.ChartDatasetFactory;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -40,6 +29,17 @@ import org.jfree.data.Range;
 import org.jfree.data.RangeInfo;
 import org.jfree.data.general.AbstractDataset;
 import org.jfree.data.statistics.MultiValueCategoryDataset;
+
+import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.GroupCellKey;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
+import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
+import com.rapidminer.gui.new_plotter.data.GroupCellData;
+import com.rapidminer.gui.new_plotter.data.GroupCellKeyAndData;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.data.ValueSourceData;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.ChartDatasetFactory;
 
 
 /**

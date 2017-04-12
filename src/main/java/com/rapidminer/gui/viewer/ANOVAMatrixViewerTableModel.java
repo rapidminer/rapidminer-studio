@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.viewer;
 
+import javax.swing.table.AbstractTableModel;
+
 import com.rapidminer.operator.visualization.dependencies.ANOVAMatrix;
 import com.rapidminer.tools.Tools;
-
-import javax.swing.table.AbstractTableModel;
 
 
 /**

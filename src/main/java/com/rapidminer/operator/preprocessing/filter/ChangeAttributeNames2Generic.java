@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -32,9 +35,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.List;
-import java.util.Set;
 
 
 /**

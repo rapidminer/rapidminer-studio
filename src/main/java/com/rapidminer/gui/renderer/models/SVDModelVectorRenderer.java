@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.renderer.models;
 
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.gui.renderer.AbstractTableModelTableRenderer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.features.transformation.SVDModel;
 import com.rapidminer.tools.Tools;
-
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
 
 
 /**

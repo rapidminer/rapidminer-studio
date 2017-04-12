@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeSuggestion;
-import com.rapidminer.tools.ProgressListener;
-
 import java.util.List;
 
 import javax.swing.JButton;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeSuggestion;
+import com.rapidminer.tools.ProgressListener;
 
 
 /**

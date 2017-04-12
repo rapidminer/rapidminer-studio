@@ -18,9 +18,9 @@
 */
 package com.rapidminer.tools.config.gui.event;
 
-import com.rapidminer.tools.config.gui.model.ConfigurableModel;
-
 import java.util.EventListener;
+
+import com.rapidminer.tools.config.gui.model.ConfigurableModel;
 
 
 /**

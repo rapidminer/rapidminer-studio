@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.features.selection;
 
-import com.rapidminer.operator.features.Individual;
-import com.rapidminer.operator.features.IndividualOperator;
-
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.operator.features.Individual;
+import com.rapidminer.operator.features.IndividualOperator;
 
 
 /**

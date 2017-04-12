@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.tools.table;
 
-import com.rapidminer.gui.look.ui.TableHeaderUI;
-
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
@@ -28,6 +26,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
 import javax.swing.plaf.basic.BasicTableHeaderUI;
 import javax.swing.table.TableColumnModel;
+
+import com.rapidminer.gui.look.ui.TableHeaderUI;
 
 
 /**

@@ -18,15 +18,6 @@
 */
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport;
 
-import com.rapidminer.gui.tools.ProgressThread;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.dialogs.ButtonDialog;
-import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirection;
-import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
-import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.io.AbstractDataReader;
-
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,6 +29,15 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
+import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirection;
+import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.io.AbstractDataReader;
 
 
 /**

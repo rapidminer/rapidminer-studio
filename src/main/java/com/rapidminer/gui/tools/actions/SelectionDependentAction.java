@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.tools.actions;
 
-import com.rapidminer.gui.tools.ResourceAction;
-
 import java.awt.event.ActionEvent;
+
+import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**

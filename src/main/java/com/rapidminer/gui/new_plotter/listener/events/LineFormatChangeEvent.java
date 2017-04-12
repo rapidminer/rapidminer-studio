@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.new_plotter.listener.events;
 
+import java.awt.Color;
+
 import com.rapidminer.gui.new_plotter.configuration.LineFormat;
 import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
-
-import java.awt.Color;
 
 
 /**

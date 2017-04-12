@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Tools;
-
 import java.awt.Image;
 import java.io.IOException;
 import java.net.URL;
@@ -29,6 +26,9 @@ import java.util.List;
 import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
+
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Tools;
 
 
 /**

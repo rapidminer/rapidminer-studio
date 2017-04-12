@@ -18,6 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.jfree.data.Range;
+
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
 import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
@@ -27,15 +36,6 @@ import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.
 import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelectionListener;
 import com.rapidminer.gui.new_plotter.utility.ContinuousColorProvider;
 import com.rapidminer.tools.container.Pair;
-
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.jfree.data.Range;
 
 
 /**

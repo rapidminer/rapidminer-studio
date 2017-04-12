@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.clustering.clusterer;
 
-import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Map;
+
+import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples;
 
 
 /**

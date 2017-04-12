@@ -18,9 +18,10 @@
 */
 package com.rapidminer.operator.visualization.dependencies;
 
-import Jama.Matrix;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
+
+import Jama.Matrix;
 
 
 /**

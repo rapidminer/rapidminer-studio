@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.preprocessing.normalization;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
@@ -31,9 +34,6 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.preprocessing.normalization.DenormalizationOperator.LinearTransformation;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
-
-import java.util.Iterator;
-import java.util.Map;
 
 
 /**

@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.features.aggregation;
 
-import com.rapidminer.tools.RandomGenerator;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import com.rapidminer.tools.RandomGenerator;
 
 
 /**

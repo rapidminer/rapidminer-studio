@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.operatortree.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.gui.actions.Actions;
 import com.rapidminer.gui.actions.ToggleAction;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
-
-import java.awt.event.ActionEvent;
 
 
 /**

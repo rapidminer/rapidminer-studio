@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.renderer;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.viewer.AverageVectorViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.report.Reportable;
 import com.rapidminer.tools.math.AverageVector;
-
-import java.awt.Component;
 
 
 /**

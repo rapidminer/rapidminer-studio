@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.postprocessing;
 
+import java.util.List;
+
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractReader;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeString;
-
-import java.util.List;
 
 
 /**

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.learner.lazy;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -39,8 +41,6 @@ import com.rapidminer.tools.math.container.LinearList;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
 import com.rapidminer.tools.math.similarity.DistanceMeasureHelper;
 import com.rapidminer.tools.math.similarity.DistanceMeasures;
-
-import java.util.List;
 
 
 /**

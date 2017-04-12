@@ -18,10 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorChain;
-import com.rapidminer.parameter.ParameterTypeInnerOperator;
-
 import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -33,6 +29,10 @@ import java.util.Vector;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JTable;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.parameter.ParameterTypeInnerOperator;
 
 
 /**

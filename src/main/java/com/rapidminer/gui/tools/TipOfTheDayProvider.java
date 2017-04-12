@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Tools;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -28,6 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
+
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Tools;
 
 
 /**

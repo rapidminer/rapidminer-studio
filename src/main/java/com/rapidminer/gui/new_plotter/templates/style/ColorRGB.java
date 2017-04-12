@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.new_plotter.templates.style;
 
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.tools.AbstractObservable;
-import com.rapidminer.tools.XMLException;
-
 import java.awt.Color;
 import java.util.UUID;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.tools.AbstractObservable;
+import com.rapidminer.tools.XMLException;
 
 
 /**

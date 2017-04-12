@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.gui.properties.ListPropertyDialog;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeList;
-
 import java.awt.Component;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -32,6 +27,11 @@ import java.util.List;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JTable;
+
+import com.rapidminer.gui.properties.ListPropertyDialog;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeList;
 
 
 /**

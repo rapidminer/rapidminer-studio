@@ -18,10 +18,10 @@
 */
 package com.rapidminer.example;
 
-import com.rapidminer.tools.LogService;
-
 import java.util.Arrays;
 import java.util.logging.Level;
+
+import com.rapidminer.tools.LogService;
 
 
 /**

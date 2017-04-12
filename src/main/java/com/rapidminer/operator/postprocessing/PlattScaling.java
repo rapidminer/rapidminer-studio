@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.postprocessing;
 
+import java.util.Iterator;
+import java.util.logging.Level;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -31,9 +34,6 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.ModelApplicationRule;
 import com.rapidminer.tools.LogService;
-
-import java.util.Iterator;
-import java.util.logging.Level;
 
 
 /**

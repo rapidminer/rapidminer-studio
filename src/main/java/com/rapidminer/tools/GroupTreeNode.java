@@ -18,10 +18,10 @@
 */
 package com.rapidminer.tools;
 
+import java.util.logging.Level;
+
 import com.rapidminer.tools.documentation.GroupDocumentation;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
-
-import java.util.logging.Level;
 
 
 /**

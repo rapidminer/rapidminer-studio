@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.vlsolutions.swing.docking.DockingSelectorDialog;
-
-import java.awt.event.ActionEvent;
 
 
 /**

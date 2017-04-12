@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.viewer;
 
+import javax.swing.table.AbstractTableModel;
+
 import com.rapidminer.operator.learner.subgroups.RuleSet;
 import com.rapidminer.operator.learner.subgroups.hypothesis.Rule;
 import com.rapidminer.operator.learner.subgroups.utility.Accuracy;
@@ -30,8 +32,6 @@ import com.rapidminer.operator.learner.subgroups.utility.OddsRatio;
 import com.rapidminer.operator.learner.subgroups.utility.Precision;
 import com.rapidminer.operator.learner.subgroups.utility.Squared;
 import com.rapidminer.operator.learner.subgroups.utility.WRAcc;
-
-import javax.swing.table.AbstractTableModel;
 
 
 /**

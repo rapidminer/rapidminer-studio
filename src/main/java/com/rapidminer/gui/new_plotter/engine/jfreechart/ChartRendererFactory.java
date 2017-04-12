@@ -18,6 +18,24 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart;
 
+import java.awt.Color;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import org.jfree.chart.renderer.category.AreaRenderer;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.renderer.category.ScatterRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.chart.renderer.xy.StandardXYBarPainter;
+import org.jfree.chart.renderer.xy.XYAreaRenderer2;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYDataset;
+
 import com.rapidminer.gui.new_plotter.ChartPlottimeException;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
@@ -47,24 +65,6 @@ import com.rapidminer.gui.new_plotter.engine.jfreechart.renderer.FormattedXYErro
 import com.rapidminer.gui.new_plotter.engine.jfreechart.renderer.FormattedXYLineAndShapeRenderer;
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.tools.LogService;
-
-import java.awt.Color;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-
-import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import org.jfree.chart.renderer.category.AreaRenderer;
-import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.renderer.category.LineAndShapeRenderer;
-import org.jfree.chart.renderer.category.ScatterRenderer;
-import org.jfree.chart.renderer.category.StandardBarPainter;
-import org.jfree.chart.renderer.xy.StandardXYBarPainter;
-import org.jfree.chart.renderer.xy.XYAreaRenderer2;
-import org.jfree.chart.renderer.xy.XYBarRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.xy.XYDataset;
 
 
 /**

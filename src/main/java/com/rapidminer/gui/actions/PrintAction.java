@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.print.PrinterException;
+
 import com.rapidminer.gui.actions.export.ComponentPrinter;
 import com.rapidminer.gui.actions.export.SimplePrintableComponent;
 import com.rapidminer.gui.tools.PrintingTools;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
-
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.print.PrinterException;
 
 
 /**

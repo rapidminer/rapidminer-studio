@@ -18,10 +18,10 @@
 */
 package com.rapidminer.operator.clustering;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
 import java.util.Collection;
+
+import com.rapidminer.tools.Tools;
 
 
 /**

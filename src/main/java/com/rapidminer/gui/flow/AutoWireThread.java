@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.flow;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.EditBlockingProgressThread;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

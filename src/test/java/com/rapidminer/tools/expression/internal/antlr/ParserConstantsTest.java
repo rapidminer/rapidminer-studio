@@ -34,7 +34,6 @@ import com.rapidminer.tools.expression.ExpressionType;
 import com.rapidminer.tools.expression.UnknownValue;
 import com.rapidminer.tools.expression.internal.ExpressionParserConstants;
 import com.rapidminer.tools.expression.internal.StandardFunctionsWithConstants;
-import com.rapidminer.tools.expression.internal.antlr.AntlrParser;
 
 
 /**

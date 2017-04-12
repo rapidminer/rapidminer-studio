@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.operator.visualization.dependencies.NumericalMatrix;
-
 import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.operator.visualization.dependencies.NumericalMatrix;
 
 
 /**

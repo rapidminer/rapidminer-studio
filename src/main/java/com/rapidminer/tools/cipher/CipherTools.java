@@ -18,11 +18,6 @@
 */
 package com.rapidminer.tools.cipher;
 
-import com.rapidminer.io.Base64;
-//
-// import sun.misc.BASE64Decoder;
-// import sun.misc.BASE64Encoder;
-
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -33,6 +28,11 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.xml.bind.DatatypeConverter;
+
+import com.rapidminer.io.Base64;
+//
+// import sun.misc.BASE64Decoder;
+// import sun.misc.BASE64Encoder;
 
 
 /**

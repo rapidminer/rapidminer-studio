@@ -18,6 +18,15 @@
 */
 package com.rapidminer.operator.nio;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.table.TableModel;
+
 import com.rapidminer.gui.tools.CellColorProviderAlternating;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
@@ -27,15 +36,6 @@ import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirecti
 import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.nio.model.WizardState;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableModel;
 
 
 /**

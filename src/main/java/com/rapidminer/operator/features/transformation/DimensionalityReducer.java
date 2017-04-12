@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.features.transformation;
 
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Model;
@@ -40,8 +42,6 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
-
-import java.util.List;
 
 
 /**

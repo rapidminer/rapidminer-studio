@@ -18,15 +18,6 @@
 */
 package com.rapidminer.gui.viewer.metadata.model;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.Statistics;
-import com.rapidminer.gui.tools.AttributeGuiTools;
-import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.container.ValueAndCount;
-
 import java.awt.Color;
 import java.util.Collections;
 import java.util.Iterator;
@@ -41,6 +32,15 @@ import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Statistics;
+import com.rapidminer.gui.tools.AttributeGuiTools;
+import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.container.ValueAndCount;
 
 
 /**

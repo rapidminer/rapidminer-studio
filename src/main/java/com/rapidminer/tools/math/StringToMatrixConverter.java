@@ -18,10 +18,10 @@
 */
 package com.rapidminer.tools.math;
 
-import com.rapidminer.operator.OperatorException;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.rapidminer.operator.OperatorException;
 
 
 /**

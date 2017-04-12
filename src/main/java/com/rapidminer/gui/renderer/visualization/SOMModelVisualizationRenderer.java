@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.renderer.visualization;
 
+import java.awt.Component;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableExampleSetAdapter;
 import com.rapidminer.gui.plotter.Plotter;
@@ -28,8 +30,6 @@ import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.visualization.SOMModelPlotter;
 import com.rapidminer.operator.visualization.SOMModelVisualization.SOMModelVisualizationResult;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

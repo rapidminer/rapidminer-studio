@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.clustering;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -37,8 +39,6 @@ import com.rapidminer.operator.ports.metadata.PassThroughRule;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.tools.Ontology;
-
-import java.util.List;
 
 
 /**

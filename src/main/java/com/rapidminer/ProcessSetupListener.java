@@ -18,10 +18,10 @@
 */
 package com.rapidminer;
 
+import java.util.EventListener;
+
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
-
-import java.util.EventListener;
 
 
 /**

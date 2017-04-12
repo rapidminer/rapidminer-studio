@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
-import com.rapidminer.example.Attribute;
-
 import java.util.List;
+
+import com.rapidminer.example.Attribute;
 
 
 /**

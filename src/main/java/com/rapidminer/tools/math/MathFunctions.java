@@ -18,13 +18,14 @@
 */
 package com.rapidminer.tools.math;
 
-import Jama.Matrix;
+import java.util.Collection;
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 
-import java.util.Collection;
-import java.util.Iterator;
+import Jama.Matrix;
 
 
 /**

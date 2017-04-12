@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport;
 
-import com.rapidminer.example.Attributes;
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.dialogs.ButtonDialog;
-import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
-import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-
 import java.awt.Component;
 import java.util.LinkedList;
 
@@ -36,6 +29,13 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+
+import com.rapidminer.example.Attributes;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 
 
 /**

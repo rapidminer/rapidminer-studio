@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator.features.weighting;
 
-import com.rapidminer.operator.features.Individual;
-import com.rapidminer.operator.features.IndividualOperator;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+
+import com.rapidminer.operator.features.Individual;
+import com.rapidminer.operator.features.IndividualOperator;
 
 
 /**

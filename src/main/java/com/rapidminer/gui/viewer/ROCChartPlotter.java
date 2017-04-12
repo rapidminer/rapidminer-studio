@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.gui.actions.export.PrintableComponent;
-import com.rapidminer.gui.plotter.ColorProvider;
-import com.rapidminer.gui.plotter.PlotterAdapter;
-import com.rapidminer.report.Renderable;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.math.ROCData;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
@@ -54,6 +47,13 @@ import org.jfree.data.xy.YIntervalSeriesCollection;
 import org.jfree.ui.HorizontalAlignment;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
+
+import com.rapidminer.gui.actions.export.PrintableComponent;
+import com.rapidminer.gui.plotter.ColorProvider;
+import com.rapidminer.gui.plotter.PlotterAdapter;
+import com.rapidminer.report.Renderable;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.math.ROCData;
 
 
 /**

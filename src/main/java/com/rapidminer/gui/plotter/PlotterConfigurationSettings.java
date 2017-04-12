@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.operator.IOObject;
-
 import java.util.HashMap;
+
+import com.rapidminer.operator.IOObject;
 
 
 /**

@@ -18,8 +18,6 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +25,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.tools.Tools;
 
 
 /**

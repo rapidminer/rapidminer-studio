@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.renderer.models;
 
+import javax.swing.table.TableModel;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.renderer.AbstractTableModelTableRenderer;
 import com.rapidminer.gui.viewer.DataTableViewerTableModel;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.functions.kernel.KernelModel;
-
-import javax.swing.table.TableModel;
 
 
 /**

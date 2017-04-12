@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.listener.events;
 
+import java.text.DateFormat;
+
 import com.rapidminer.gui.new_plotter.configuration.AggregationWindowing;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
 import com.rapidminer.gui.new_plotter.configuration.ValueGrouping;
-
-import java.text.DateFormat;
 
 
 /**

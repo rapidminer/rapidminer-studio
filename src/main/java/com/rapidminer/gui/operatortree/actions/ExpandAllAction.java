@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.operatortree.actions;
 
-import com.rapidminer.gui.operatortree.OperatorTree;
-import com.rapidminer.gui.tools.IconSize;
-import com.rapidminer.gui.tools.SwingTools;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
+
+import com.rapidminer.gui.operatortree.OperatorTree;
+import com.rapidminer.gui.tools.IconSize;
+import com.rapidminer.gui.tools.SwingTools;
 
 
 /**

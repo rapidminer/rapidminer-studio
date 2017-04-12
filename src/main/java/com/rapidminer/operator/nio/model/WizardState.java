@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.nio.model;
 
+import java.util.logging.Level;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.nio.ImportWizardUtils;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ProgressListener;
-
-import java.util.logging.Level;
 
 
 /**

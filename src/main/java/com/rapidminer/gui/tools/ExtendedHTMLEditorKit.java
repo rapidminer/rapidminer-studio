@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,6 +26,9 @@ import java.util.logging.Level;
 
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
+
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
 
 
 /**

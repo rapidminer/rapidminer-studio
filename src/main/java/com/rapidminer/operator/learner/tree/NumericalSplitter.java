@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.learner.tree;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -25,8 +27,6 @@ import com.rapidminer.example.set.SortedExampleSet;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.tree.criterions.Criterion;
 import com.rapidminer.tools.Tools;
-
-import java.util.Iterator;
 
 
 /**

@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.viewer.metadata.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.MetaDataStatisticsModel;
-
-import java.awt.event.ActionEvent;
 
 
 /**

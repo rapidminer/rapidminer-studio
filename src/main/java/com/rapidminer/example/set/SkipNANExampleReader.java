@@ -18,10 +18,10 @@
 */
 package com.rapidminer.example.set;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
-
-import java.util.Iterator;
 
 
 /**

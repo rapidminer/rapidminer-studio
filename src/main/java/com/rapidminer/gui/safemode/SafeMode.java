@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.safemode;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
 
 
 /**

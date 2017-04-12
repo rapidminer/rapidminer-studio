@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.actions.export;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.actions.export.ImageExporter.ExportStatus;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
-
-import java.awt.event.ActionEvent;
 
 
 /**

@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.tools.math.MathFunctions;
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,6 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Icon;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**

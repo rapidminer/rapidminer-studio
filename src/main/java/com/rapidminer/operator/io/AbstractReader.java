@@ -18,6 +18,14 @@
 */
 package com.rapidminer.operator.io;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.Process;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
@@ -37,14 +45,6 @@ import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.io.Encoding;
-
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.new_plotter.listener.events;
 
+import java.awt.Color;
+
 import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
 import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
 import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle;
@@ -25,8 +27,6 @@ import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.IndicatorType;
 import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.ItemShape;
 import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.StackingMode;
 import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
-
-import java.awt.Color;
 
 
 /**

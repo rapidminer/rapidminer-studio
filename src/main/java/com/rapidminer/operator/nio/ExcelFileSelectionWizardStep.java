@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.nio;
 
+import java.io.File;
+
+import javax.swing.filechooser.FileFilter;
+
 import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard;
 import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirection;
 import com.rapidminer.gui.tools.dialogs.wizards.dataimport.FileSelectionWizardStep;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
-
-import java.io.File;
-
-import javax.swing.filechooser.FileFilter;
 
 
 /**

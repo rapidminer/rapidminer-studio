@@ -18,6 +18,17 @@
 */
 package com.rapidminer.tools;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.logging.Level;
+
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.NominalStatistics;
 import com.rapidminer.example.NumericalStatistics;
@@ -35,17 +46,6 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.performance.AbstractPerformanceEvaluator;
 import com.rapidminer.operator.performance.PerformanceCriterion;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Constructor;
-import java.util.List;
-import java.util.logging.Level;
 
 
 /**

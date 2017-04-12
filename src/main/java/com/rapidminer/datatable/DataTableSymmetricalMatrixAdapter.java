@@ -18,11 +18,11 @@
 */
 package com.rapidminer.datatable;
 
-import com.rapidminer.operator.visualization.dependencies.NumericalMatrix;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import com.rapidminer.operator.visualization.dependencies.NumericalMatrix;
 
 
 /**

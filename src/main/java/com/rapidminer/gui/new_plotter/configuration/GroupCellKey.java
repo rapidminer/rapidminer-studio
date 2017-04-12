@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
+import com.rapidminer.gui.new_plotter.utility.ValueRange;
 
 
 /**

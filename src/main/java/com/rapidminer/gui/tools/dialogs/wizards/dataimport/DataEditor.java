@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport;
 
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.tools.Ontology;
-
 import java.awt.Component;
 import java.util.List;
 
@@ -34,6 +29,11 @@ import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
+
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.tools.Ontology;
 
 
 /**

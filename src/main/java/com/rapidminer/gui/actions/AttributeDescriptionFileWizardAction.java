@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.Process;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.gui.wizards.ExampleSourceConfigurationWizard;
 import com.rapidminer.parameter.Parameters;
-
-import java.awt.event.ActionEvent;
 
 
 /**

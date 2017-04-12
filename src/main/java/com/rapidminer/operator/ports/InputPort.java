@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator.ports;
 
+import java.util.Collection;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.Precondition;
-
-import java.util.Collection;
 
 
 /**

@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.new_plotter.gui.treenodes;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-
-import javax.swing.tree.DefaultMutableTreeNode;
 
 
 /**

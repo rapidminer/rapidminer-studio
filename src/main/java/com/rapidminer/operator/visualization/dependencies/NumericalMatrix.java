@@ -18,7 +18,8 @@
 */
 package com.rapidminer.operator.visualization.dependencies;
 
-import Jama.Matrix;
+import java.text.NumberFormat;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTablePairwiseMatrixExtractionAdapter;
 import com.rapidminer.datatable.DataTableSymmetricalMatrixAdapter;
@@ -27,7 +28,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.tools.Tools;
 
-import java.text.NumberFormat;
+import Jama.Matrix;
 
 
 /**

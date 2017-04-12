@@ -18,6 +18,12 @@
 */
 package com.rapidminer.operator.libraries;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.w3c.dom.Element;
+
 import com.rapidminer.OperatorLibraryService;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.operator.Operator;
@@ -25,12 +31,6 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
 import com.rapidminer.tools.plugin.Plugin;
-
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.w3c.dom.Element;
 
 
 /**

@@ -18,16 +18,6 @@
 */
 package com.rapidminer.gui.properties.tablepanel.cells.implementations;
 
-import com.rapidminer.gui.properties.tablepanel.TablePanel;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldInteger;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldTime;
-import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -42,6 +32,16 @@ import javax.swing.text.DefaultFormatterFactory;
 
 import org.jdesktop.swingx.prompt.PromptSupport;
 import org.jdesktop.swingx.prompt.PromptSupport.FocusBehavior;
+
+import com.rapidminer.gui.properties.tablepanel.TablePanel;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldInteger;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldTime;
+import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
 
 
 /**

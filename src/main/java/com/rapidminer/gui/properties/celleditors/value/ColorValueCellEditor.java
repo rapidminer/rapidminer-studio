@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.tools.components.ColorIcon;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeColor;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -32,6 +27,11 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JTable;
+
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.components.ColorIcon;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeColor;
 
 
 /**

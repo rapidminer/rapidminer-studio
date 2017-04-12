@@ -18,11 +18,11 @@
 */
 package com.rapidminer.tools.math;
 
-import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.tools.Tools;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.tools.Tools;
 
 
 /**

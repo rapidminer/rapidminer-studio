@@ -18,6 +18,14 @@
 */
 package com.rapidminer.gui.operatortree.actions;
 
+import java.awt.event.ActionEvent;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.swing.JMenuItem;
+
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.Actions;
 import com.rapidminer.gui.actions.ToggleAction;
@@ -28,14 +36,6 @@ import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.rapidminer.tools.ParameterService;
-
-import java.awt.event.ActionEvent;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.swing.JMenuItem;
 
 
 /**

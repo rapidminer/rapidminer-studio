@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.operator.ports.ProcessingStep;
-import com.rapidminer.tools.LoggingHandler;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.List;
+
+import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.ProcessingStep;
+import com.rapidminer.tools.LoggingHandler;
 
 
 /**

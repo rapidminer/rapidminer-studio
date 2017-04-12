@@ -18,6 +18,9 @@
 */
 package com.rapidminer.gui.renderer.performance;
 
+import java.awt.Component;
+import java.util.List;
+
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.viewer.PerformanceVectorViewer;
 import com.rapidminer.operator.IOContainer;
@@ -28,9 +31,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
-import java.util.List;
 
 
 /**

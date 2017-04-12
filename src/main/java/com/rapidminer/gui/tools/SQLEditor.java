@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.parameter.TextType;
-
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.LanguageAwareCompletionProvider;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+
+import com.rapidminer.parameter.TextType;
 
 
 /**

@@ -20,9 +20,9 @@ package com.rapidminer.gui.actions;
 
 import java.awt.event.ActionEvent;
 
-import com.rapidminer.gui.PerspectiveController;
 import com.rapidminer.gui.ApplicationPerspectives;
 import com.rapidminer.gui.Perspective;
+import com.rapidminer.gui.PerspectiveController;
 import com.rapidminer.gui.tools.ResourceAction;
 
 

@@ -18,18 +18,18 @@
 */
 package com.rapidminer.operator.features.aggregation;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
 import com.rapidminer.generator.FeatureGenerator;
 import com.rapidminer.generator.GenerationException;
 import com.rapidminer.operator.performance.PerformanceVector;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 
 /**

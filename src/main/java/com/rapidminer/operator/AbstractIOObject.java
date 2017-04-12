@@ -18,12 +18,6 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.operator.ports.ProcessingStep;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.LoggingHandler;
-import com.rapidminer.tools.XMLSerialization;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +29,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
+
+import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.ProcessingStep;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.LoggingHandler;
+import com.rapidminer.tools.XMLSerialization;
 
 
 /**

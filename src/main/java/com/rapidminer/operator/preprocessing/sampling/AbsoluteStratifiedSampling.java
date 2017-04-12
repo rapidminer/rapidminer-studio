@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.preprocessing.sampling;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -30,10 +34,6 @@ import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

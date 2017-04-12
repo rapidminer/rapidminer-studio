@@ -18,9 +18,9 @@
 */
 package com.rapidminer.io.process.rules;
 
-import com.rapidminer.tools.OperatorService;
-
 import java.util.List;
+
+import com.rapidminer.tools.OperatorService;
 
 
 /**

@@ -18,9 +18,9 @@
 */
 package com.rapidminer.tools.math.container;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
+
+import com.rapidminer.tools.Tools;
 
 
 /**

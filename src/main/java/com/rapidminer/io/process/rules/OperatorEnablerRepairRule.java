@@ -18,6 +18,9 @@
 */
 package com.rapidminer.io.process.rules;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.operator.ExecutionUnit;
@@ -27,9 +30,6 @@ import com.rapidminer.operator.meta.OperatorEnabler;
 import com.rapidminer.operator.meta.OperatorSelector;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.Collections;
-import java.util.List;
 
 
 /**

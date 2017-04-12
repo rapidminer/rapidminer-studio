@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport.excel;
 
-import com.rapidminer.gui.properties.DefaultRMCellEditor;
-import com.rapidminer.operator.Annotations;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.util.Vector;
 
 import javax.swing.JComboBox;
 import javax.swing.JTable;
+
+import com.rapidminer.gui.properties.DefaultRMCellEditor;
+import com.rapidminer.operator.Annotations;
 
 
 /**

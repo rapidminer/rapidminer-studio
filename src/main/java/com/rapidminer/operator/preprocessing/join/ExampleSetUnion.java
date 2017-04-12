@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.preprocessing.join;
 
+import java.util.Arrays;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -30,8 +32,6 @@ import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetUnionRule;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.Arrays;
 
 
 /**

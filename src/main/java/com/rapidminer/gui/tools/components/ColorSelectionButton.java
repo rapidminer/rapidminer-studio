@@ -18,10 +18,6 @@
 */
 package com.rapidminer.gui.tools.components;
 
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.HeadlessException;
@@ -36,6 +32,10 @@ import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
+
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.tools.I18N;
 
 
 /**

@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.learner.functions.kernel;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorCapability;
@@ -29,9 +32,6 @@ import com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel.Kernel;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.svm.SVMInterface;
 import com.rapidminer.operator.learner.functions.kernel.logistic.KLR;
 import com.rapidminer.parameter.ParameterType;
-
-import java.util.Iterator;
-import java.util.List;
 
 
 /**

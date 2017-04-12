@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.learner.meta;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
@@ -39,9 +42,6 @@ import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.GeneratePredictionModelTransformationRule;
 import com.rapidminer.operator.ports.metadata.PredictionModelMetaData;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

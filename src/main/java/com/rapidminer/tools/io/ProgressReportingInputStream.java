@@ -18,11 +18,11 @@
 */
 package com.rapidminer.tools.io;
 
-import com.rapidminer.tools.ProgressListener;
-import com.rapidminer.tools.Tools;
-
 import java.io.IOException;
 import java.io.InputStream;
+
+import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.Tools;
 
 
 /**

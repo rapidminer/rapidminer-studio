@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.properties.tablepanel.cells.implementations;
 
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
-import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
-import com.rapidminer.gui.tools.ScrollableJPopupMenu;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -46,6 +39,13 @@ import javax.swing.KeyStroke;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
+import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
+import com.rapidminer.gui.tools.ScrollableJPopupMenu;
+import com.rapidminer.tools.I18N;
 
 
 /**

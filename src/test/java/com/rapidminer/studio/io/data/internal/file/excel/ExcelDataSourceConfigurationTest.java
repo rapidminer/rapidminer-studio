@@ -31,7 +31,6 @@ import org.junit.Test;
 
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.source.DataSourceConfiguration;
-import com.rapidminer.studio.io.data.internal.file.excel.ExcelDataSource;
 
 
 /**

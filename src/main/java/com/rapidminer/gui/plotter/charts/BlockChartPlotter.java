@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.plotter.ColorProvider;
-import com.rapidminer.gui.plotter.PlotterConfigurationModel;
-
 import java.awt.Paint;
 
 import org.jfree.chart.renderer.PaintScale;
 import org.jfree.chart.renderer.xy.AbstractXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYBlockRenderer;
 import org.jfree.ui.RectangleAnchor;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.plotter.ColorProvider;
+import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 
 
 /**

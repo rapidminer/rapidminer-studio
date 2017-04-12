@@ -18,6 +18,10 @@
 */
 package com.rapidminer.gui.operatormenu;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ExecutionUnit;
@@ -27,10 +31,6 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**

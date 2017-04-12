@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.features.selection;
 
-import com.rapidminer.operator.features.Population;
-
 import java.util.Random;
+
+import com.rapidminer.operator.features.Population;
 
 
 /**

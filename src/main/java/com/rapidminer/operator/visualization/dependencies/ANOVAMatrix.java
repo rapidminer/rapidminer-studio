@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.visualization.dependencies;
 
-import com.rapidminer.operator.ResultObjectAdapter;
-
 import java.util.List;
+
+import com.rapidminer.operator.ResultObjectAdapter;
 
 
 /**

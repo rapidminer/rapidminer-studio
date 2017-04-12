@@ -18,9 +18,9 @@
 */
 package com.rapidminer.test.asserter;
 
-import com.rapidminer.test_utils.Asserter;
-
 import java.util.List;
+
+import com.rapidminer.test_utils.Asserter;
 
 
 /**

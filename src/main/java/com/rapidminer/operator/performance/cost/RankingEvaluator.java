@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.performance.cost;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -38,8 +40,6 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.tools.Ontology;
-
-import java.util.List;
 
 
 /**

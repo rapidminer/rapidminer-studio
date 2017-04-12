@@ -18,12 +18,6 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.operator.annotation.PolynomialExampleSetResourceConsumptionEstimator;
-import com.rapidminer.operator.annotation.PolynomialFunction;
-import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.tools.AttributeSubsetSelector;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -32,6 +26,12 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import com.rapidminer.operator.annotation.PolynomialExampleSetResourceConsumptionEstimator;
+import com.rapidminer.operator.annotation.PolynomialFunction;
+import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.tools.AttributeSubsetSelector;
 
 
 /**

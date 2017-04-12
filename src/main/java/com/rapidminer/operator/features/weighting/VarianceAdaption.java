@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.features.weighting;
 
-import com.rapidminer.operator.features.Population;
-import com.rapidminer.operator.features.PopulationOperator;
-
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import com.rapidminer.operator.features.Population;
+import com.rapidminer.operator.features.PopulationOperator;
 
 
 /**

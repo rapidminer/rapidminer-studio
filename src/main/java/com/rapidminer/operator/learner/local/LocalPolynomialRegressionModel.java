@@ -21,8 +21,6 @@ package com.rapidminer.operator.learner.local;
 import java.io.Serializable;
 import java.util.Collection;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -37,6 +35,8 @@ import com.rapidminer.tools.math.LinearRegression;
 import com.rapidminer.tools.math.VectorMath;
 import com.rapidminer.tools.math.container.GeometricDataCollection;
 import com.rapidminer.tools.math.smoothing.SmoothingKernel;
+
+import Jama.Matrix;
 
 
 /**

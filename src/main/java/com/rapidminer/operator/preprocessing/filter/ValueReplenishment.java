@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -32,10 +36,6 @@ import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 
 /**

@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.learner.associations;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
+
+import com.rapidminer.tools.Tools;
 
 
 /**

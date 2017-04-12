@@ -18,13 +18,13 @@
 */
 package com.rapidminer.datatable;
 
-import com.rapidminer.Process;
-import com.rapidminer.gui.plotter.charts.AbstractChartPanel.Selection;
-import com.rapidminer.report.Tableable;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
+
+import com.rapidminer.Process;
+import com.rapidminer.gui.plotter.charts.AbstractChartPanel.Selection;
+import com.rapidminer.report.Tableable;
 
 
 /**

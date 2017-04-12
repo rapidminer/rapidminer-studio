@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.learner.functions.neuralnet;
 
-import com.rapidminer.example.Example;
-
 import java.io.Serializable;
+
+import com.rapidminer.example.Example;
 
 
 /**

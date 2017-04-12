@@ -18,10 +18,10 @@
 */
 package com.rapidminer.tools.math.distribution.kernel;
 
-import com.rapidminer.tools.math.distribution.NormalDistribution;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import com.rapidminer.tools.math.distribution.NormalDistribution;
 
 
 /**

@@ -18,6 +18,15 @@
 */
 package com.rapidminer.gui.plotter;
 
+import java.awt.Point;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.geom.Point2D;
+import java.util.List;
+
+import javax.swing.Icon;
+import javax.swing.JComponent;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.actions.export.PrintableComponent;
 import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterChangedListener;
@@ -27,15 +36,6 @@ import com.rapidminer.gui.plotter.conditions.PlotterCondition;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.report.Renderable;
-
-import java.awt.Point;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
-import java.util.List;
-
-import javax.swing.Icon;
-import javax.swing.JComponent;
 
 
 /**

@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.RapidMinerGUI;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -30,6 +27,9 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.RapidMinerGUI;
 
 
 /**

@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.Collections;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
-
-import java.util.Collections;
 
 
 /**

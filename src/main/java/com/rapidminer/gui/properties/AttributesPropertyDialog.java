@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.properties;
 
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.FilterTextField;
-import com.rapidminer.gui.tools.FilterableListModel;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.parameter.ParameterTypeAttributes;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -41,6 +34,13 @@ import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.FilterTextField;
+import com.rapidminer.gui.tools.FilterableListModel;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.parameter.ParameterTypeAttributes;
+import com.rapidminer.tools.I18N;
 
 
 /**

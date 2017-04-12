@@ -18,12 +18,6 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.RandomGenerator;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.att.AttributeDataSource;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.att.AttributeDataSource;
 
 
 /**

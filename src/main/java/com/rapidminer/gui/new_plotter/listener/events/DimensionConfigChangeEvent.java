@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.new_plotter.listener.events;
 
+import java.text.DateFormat;
+
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
@@ -26,8 +28,6 @@ import com.rapidminer.gui.new_plotter.configuration.event.AxisParallelLinesConfi
 import com.rapidminer.gui.new_plotter.utility.ColorProvider;
 import com.rapidminer.gui.new_plotter.utility.ShapeProvider;
 import com.rapidminer.gui.new_plotter.utility.SizeProvider;
-
-import java.text.DateFormat;
 
 
 /**

@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.gui.plotter.LocalNormalizationPlotterAdapter;
-import com.rapidminer.gui.plotter.PlotterConfigurationModel;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.math.MathFunctions;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
@@ -52,6 +45,13 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.HorizontalAlignment;
 import org.jfree.ui.RectangleEdge;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.gui.plotter.LocalNormalizationPlotterAdapter;
+import com.rapidminer.gui.plotter.PlotterConfigurationModel;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**

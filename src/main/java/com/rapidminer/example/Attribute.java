@@ -18,12 +18,12 @@
 */
 package com.rapidminer.example;
 
+import java.io.Serializable;
+import java.util.Iterator;
+
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.Annotations;
-
-import java.io.Serializable;
-import java.util.Iterator;
 
 
 /**

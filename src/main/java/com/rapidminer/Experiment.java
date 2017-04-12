@@ -18,12 +18,12 @@
 */
 package com.rapidminer;
 
-import com.rapidminer.tools.XMLException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+
+import com.rapidminer.tools.XMLException;
 
 
 /**

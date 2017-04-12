@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.rvm;
 
-import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelBasisFunction;
-
 import java.io.Serializable;
+
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelBasisFunction;
 
 
 /**

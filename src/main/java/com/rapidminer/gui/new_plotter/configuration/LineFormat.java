@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
-import com.rapidminer.gui.new_plotter.listener.events.LineFormatChangeEvent;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-import com.rapidminer.tools.I18N;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.gui.new_plotter.listener.events.LineFormatChangeEvent;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
+import com.rapidminer.tools.I18N;
 
 
 /**

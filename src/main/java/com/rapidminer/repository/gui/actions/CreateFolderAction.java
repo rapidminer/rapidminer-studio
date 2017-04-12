@@ -18,14 +18,14 @@
 */
 package com.rapidminer.repository.gui.actions;
 
+import javax.swing.SwingUtilities;
+
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryTree;
-
-import javax.swing.SwingUtilities;
 
 
 /**

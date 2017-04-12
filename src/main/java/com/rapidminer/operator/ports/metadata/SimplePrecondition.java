@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
-import com.rapidminer.operator.ports.InputPort;
-
 import java.util.Collection;
+
+import com.rapidminer.operator.ports.InputPort;
 
 
 /**

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.collections;
 
+import java.util.List;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.Operator;
@@ -32,8 +34,6 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
-
-import java.util.List;
 
 
 /**

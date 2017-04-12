@@ -18,6 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.new_plotter.ChartConfigurationException;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
 import com.rapidminer.gui.new_plotter.StaticDebug;
@@ -38,11 +43,6 @@ import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.ListUtility;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.tools.I18N;
-
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

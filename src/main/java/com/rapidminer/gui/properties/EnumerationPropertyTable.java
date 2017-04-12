@@ -18,18 +18,18 @@
 */
 package com.rapidminer.gui.properties;
 
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.util.List;
+
+import javax.swing.table.DefaultTableModel;
+
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
-
-import java.awt.Point;
-import java.awt.event.MouseEvent;
-import java.util.List;
-
-import javax.swing.table.DefaultTableModel;
 
 
 /**

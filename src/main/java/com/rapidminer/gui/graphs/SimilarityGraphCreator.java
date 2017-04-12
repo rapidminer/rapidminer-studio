@@ -18,15 +18,6 @@
 */
 package com.rapidminer.gui.graphs;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.math.similarity.DistanceMeasure;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.UndirectedSparseGraph;
-import edu.uci.ics.jung.graph.util.EdgeType;
-
 import java.awt.Dimension;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +35,16 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.commons.collections15.Factory;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.math.similarity.DistanceMeasure;
+
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.UndirectedSparseGraph;
+import edu.uci.ics.jung.graph.util.EdgeType;
 
 
 /**

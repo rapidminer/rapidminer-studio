@@ -18,6 +18,14 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart;
 
+import java.awt.Color;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
+
 import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
 import com.rapidminer.gui.new_plotter.configuration.GroupCellKey;
@@ -36,14 +44,6 @@ import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.ShapeProvider;
 import com.rapidminer.gui.new_plotter.utility.SizeProvider;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
-import java.awt.Color;
-import java.awt.Paint;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Vector;
 
 
 /**

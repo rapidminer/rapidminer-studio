@@ -18,17 +18,17 @@
 */
 package com.rapidminer.gui.new_plotter.utility;
 
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent.SeriesFormatChangeType;
-import com.rapidminer.gui.new_plotter.templates.style.ColorRGB;
-import com.rapidminer.gui.new_plotter.templates.style.ColorScheme;
-
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent.SeriesFormatChangeType;
+import com.rapidminer.gui.new_plotter.templates.style.ColorRGB;
+import com.rapidminer.gui.new_plotter.templates.style.ColorScheme;
 
 
 /**

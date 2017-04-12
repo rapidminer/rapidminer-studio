@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.learner.tree;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-
-import java.util.Iterator;
 
 
 /**

@@ -23,8 +23,8 @@ import java.awt.event.ActionEvent;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.studio.internal.NoStartupDialogRegistreredException;
-import com.rapidminer.studio.internal.StartupDialogRegistry;
 import com.rapidminer.studio.internal.StartupDialogProvider.ToolbarButton;
+import com.rapidminer.studio.internal.StartupDialogRegistry;
 
 
 /**

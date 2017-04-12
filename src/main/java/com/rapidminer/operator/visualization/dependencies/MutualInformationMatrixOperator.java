@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.visualization.dependencies;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -30,8 +32,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.math.MathFunctions;
-
-import java.util.List;
 
 
 /**

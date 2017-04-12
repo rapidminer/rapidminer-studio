@@ -18,6 +18,14 @@
 */
 package com.rapidminer.operator.features;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
 import com.rapidminer.ObjectVisualizer;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
@@ -30,14 +38,6 @@ import com.rapidminer.gui.viewer.DataTableViewer;
 import com.rapidminer.operator.features.selection.NonDominatedSortingSelection;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.tools.Tools;
-
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
 
 
 /**

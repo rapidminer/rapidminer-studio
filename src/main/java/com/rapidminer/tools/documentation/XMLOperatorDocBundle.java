@@ -18,11 +18,6 @@
 */
 package com.rapidminer.tools.documentation;
 
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.XMLException;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -38,6 +33,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.XMLException;
 
 
 /**

@@ -18,14 +18,6 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.plotter.conditions.ColumnsPlotterCondition;
-import com.rapidminer.gui.plotter.conditions.PlotterCondition;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ParameterService;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -41,6 +33,14 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JProgressBar;
 import javax.swing.filechooser.FileFilter;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.plotter.conditions.ColumnsPlotterCondition;
+import com.rapidminer.gui.plotter.conditions.PlotterCondition;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 
 
 /**

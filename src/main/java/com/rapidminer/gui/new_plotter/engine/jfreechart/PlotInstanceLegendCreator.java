@@ -18,29 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart;
 
-import com.rapidminer.gui.new_plotter.ChartPlottimeException;
-import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.DistinctValueGrouping;
-import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
-import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource;
-import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.legend.CustomLegendItem;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.legend.FlankedShapeLegendItem;
-import com.rapidminer.gui.new_plotter.utility.ColorProvider;
-import com.rapidminer.gui.new_plotter.utility.ContinuousColorProvider;
-import com.rapidminer.gui.new_plotter.utility.ContinuousSizeProvider;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-import com.rapidminer.gui.new_plotter.utility.ShapeProvider;
-import com.rapidminer.gui.new_plotter.utility.SizeProvider;
-import com.rapidminer.tools.I18N;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -74,6 +51,29 @@ import java.util.Set;
 
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
+
+import com.rapidminer.gui.new_plotter.ChartPlottimeException;
+import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.DistinctValueGrouping;
+import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
+import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.FillStyle;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource;
+import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.legend.CustomLegendItem;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.legend.FlankedShapeLegendItem;
+import com.rapidminer.gui.new_plotter.utility.ColorProvider;
+import com.rapidminer.gui.new_plotter.utility.ContinuousColorProvider;
+import com.rapidminer.gui.new_plotter.utility.ContinuousSizeProvider;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
+import com.rapidminer.gui.new_plotter.utility.ShapeProvider;
+import com.rapidminer.gui.new_plotter.utility.SizeProvider;
+import com.rapidminer.tools.I18N;
 
 
 /**

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.meta;
 
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -28,8 +30,6 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.tools.math.Averagable;
 import com.rapidminer.tools.math.AverageVector;
 import com.rapidminer.tools.math.RunVector;
-
-import java.util.List;
 
 
 /**

@@ -18,13 +18,13 @@
 */
 package com.rapidminer.example.set;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
 
 
 /**

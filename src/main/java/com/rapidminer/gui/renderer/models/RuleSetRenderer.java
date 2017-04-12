@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.renderer.models;
 
+import javax.swing.table.TableModel;
+
 import com.rapidminer.gui.renderer.AbstractTableModelTableRenderer;
 import com.rapidminer.gui.viewer.RuleSetTableModel;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.subgroups.RuleSet;
-
-import javax.swing.table.TableModel;
 
 
 /**

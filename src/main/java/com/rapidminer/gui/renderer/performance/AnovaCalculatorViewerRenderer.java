@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.renderer.performance;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.viewer.AnovaCalculatorViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.report.Reportable;
 import com.rapidminer.tools.math.AnovaCalculator.AnovaSignificanceTestResult;
-
-import java.awt.Component;
 
 
 /**

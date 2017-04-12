@@ -18,10 +18,6 @@
 */
 package com.rapidminer.gui.look.ui;
 
-import com.rapidminer.gui.look.ButtonListener;
-import com.rapidminer.gui.look.RapidLookTools;
-import com.vlsolutions.swing.toolbars.VLToolBar;
-
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -31,6 +27,10 @@ import javax.swing.JComponent;
 import javax.swing.JToolBar;
 import javax.swing.plaf.basic.BasicButtonListener;
 import javax.swing.plaf.basic.BasicButtonUI;
+
+import com.rapidminer.gui.look.ButtonListener;
+import com.rapidminer.gui.look.RapidLookTools;
+import com.vlsolutions.swing.toolbars.VLToolBar;
 
 
 /**

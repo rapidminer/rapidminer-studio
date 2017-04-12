@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.properties;
 
-import com.rapidminer.parameter.ParameterTypeList;
-
 import java.util.List;
+
+import com.rapidminer.parameter.ParameterTypeList;
 
 
 /**

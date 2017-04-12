@@ -18,10 +18,10 @@
 */
 package com.rapidminer.operator;
 
+import java.util.List;
+
 import com.rapidminer.operator.ports.PortOwner;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
-
-import java.util.List;
 
 
 /**

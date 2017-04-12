@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui;
 
-import com.rapidminer.gui.tools.SwingTools;
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -34,6 +32,8 @@ import javax.swing.JLayer;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.plaf.LayerUI;
+
+import com.rapidminer.gui.tools.SwingTools;
 
 
 /**

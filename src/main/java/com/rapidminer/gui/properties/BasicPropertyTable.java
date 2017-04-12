@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.properties;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.Parameters;
-import com.rapidminer.parameter.UndefinedParameterError;
-
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.Parameters;
+import com.rapidminer.parameter.UndefinedParameterError;
 
 
 /**

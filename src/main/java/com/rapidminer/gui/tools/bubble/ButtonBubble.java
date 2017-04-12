@@ -26,6 +26,8 @@ import java.awt.event.ActionListener;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 
+import org.hamcrest.Condition.Step;
+
 
 /**
  * This class creates a speech bubble-shaped JDialog, which can is attached to Buttons by using its

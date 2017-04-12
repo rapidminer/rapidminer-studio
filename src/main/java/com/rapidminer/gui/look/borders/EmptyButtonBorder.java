@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.look.borders;
 
-import com.rapidminer.gui.look.RapidLookTools;
-
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -27,6 +25,8 @@ import java.awt.Insets;
 import javax.swing.JComponent;
 import javax.swing.border.AbstractBorder;
 import javax.swing.plaf.UIResource;
+
+import com.rapidminer.gui.look.RapidLookTools;
 
 
 /**

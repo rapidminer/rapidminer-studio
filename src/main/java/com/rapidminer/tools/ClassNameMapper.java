@@ -18,11 +18,11 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.operator.UserError;
-
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.rapidminer.operator.UserError;
 
 
 /**

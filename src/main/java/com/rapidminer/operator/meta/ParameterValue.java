@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.meta;
 
-import com.rapidminer.Process;
-import com.rapidminer.operator.Operator;
-
 import java.io.Serializable;
 import java.util.Map;
+
+import com.rapidminer.Process;
+import com.rapidminer.operator.Operator;
 
 
 /**

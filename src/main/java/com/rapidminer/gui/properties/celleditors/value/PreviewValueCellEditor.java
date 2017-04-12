@@ -18,10 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.gui.wizards.PreviewCreator;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypePreview;
-
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,6 +25,10 @@ import java.awt.event.ActionListener;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JTable;
+
+import com.rapidminer.gui.wizards.PreviewCreator;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypePreview;
 
 
 /**

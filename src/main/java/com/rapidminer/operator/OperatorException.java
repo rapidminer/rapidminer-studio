@@ -18,10 +18,10 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.tools.I18N;
-
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
+
+import com.rapidminer.tools.I18N;
 
 
 /**

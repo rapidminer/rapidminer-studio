@@ -18,9 +18,9 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Attribute;
-
 import java.util.Iterator;
+
+import com.rapidminer.example.Attribute;
 
 
 /**

@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ModelApplier;
@@ -33,9 +36,6 @@ import com.rapidminer.operator.preprocessing.IdTagging;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

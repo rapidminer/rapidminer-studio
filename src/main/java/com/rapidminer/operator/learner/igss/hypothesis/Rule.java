@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.learner.igss.hypothesis;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-
 import java.util.Arrays;
 import java.util.LinkedList;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
 
 
 /**

@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.plotter;
 
+import java.util.LinkedList;
+
 import com.rapidminer.gui.plotter.PlotterAdapter.LineStyle;
 import com.rapidminer.gui.plotter.PlotterAdapter.PointStyle;
-
-import java.util.LinkedList;
 
 
 /**

@@ -18,18 +18,6 @@
 */
 package com.rapidminer.operator.ports.impl;
 
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.IOMultiplier;
-import com.rapidminer.operator.OperatorCreationException;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.operator.ports.Port;
-import com.rapidminer.operator.ports.PortException;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.OperatorService;
-
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -45,6 +33,18 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.IOMultiplier;
+import com.rapidminer.operator.OperatorCreationException;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.PortException;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.OperatorService;
 
 
 /**

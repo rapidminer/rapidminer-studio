@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.gui.tools.SwingTools;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Paint;
@@ -31,6 +29,8 @@ import org.jfree.chart.HashUtilities;
 import org.jfree.chart.renderer.xy.XYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.ui.RectangleEdge;
+
+import com.rapidminer.gui.tools.SwingTools;
 
 
 /**

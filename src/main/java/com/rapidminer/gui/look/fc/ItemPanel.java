@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.look.fc;
 
-import com.rapidminer.gui.look.RapidLookTools;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -36,6 +34,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JViewport;
 import javax.swing.SwingConstants;
+
+import com.rapidminer.gui.look.RapidLookTools;
 
 
 /**

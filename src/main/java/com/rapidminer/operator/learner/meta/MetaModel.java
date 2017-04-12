@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.learner.meta;
 
-import com.rapidminer.operator.Model;
-
 import java.util.List;
+
+import com.rapidminer.operator.Model;
 
 
 /**

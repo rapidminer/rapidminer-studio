@@ -18,15 +18,15 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.PortOwner;
 import com.rapidminer.operator.ports.quickfix.DisconnectQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
-
-import java.util.Collections;
-import java.util.List;
 
 
 /**

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.visualization;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
@@ -26,8 +28,6 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.GenerateNewMDRule;
-
-import java.util.Iterator;
 
 
 /**

@@ -18,13 +18,6 @@
 */
 package com.rapidminer;
 
-import com.rapidminer.io.process.XMLImporter;
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ProgressListener;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.XMLException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,6 +27,13 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
+
+import com.rapidminer.io.process.XMLImporter;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.XMLException;
 
 
 /**

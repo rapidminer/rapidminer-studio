@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.flow;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.swing.Icon;
+
 import com.rapidminer.Process;
 import com.rapidminer.gui.tools.ParentButtonModel;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
-
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.swing.Icon;
 
 
 /**

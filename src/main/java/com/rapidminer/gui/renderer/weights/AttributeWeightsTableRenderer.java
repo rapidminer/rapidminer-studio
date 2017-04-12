@@ -18,6 +18,10 @@
 */
 package com.rapidminer.gui.renderer.weights;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Pattern;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.gui.renderer.AbstractDataTableTableRenderer;
@@ -26,10 +30,6 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeRegexp;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Pattern;
 
 
 /**

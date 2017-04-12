@@ -18,10 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.renderer;
 
-import com.rapidminer.gui.new_plotter.engine.jfreechart.RenderFormatDelegate;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.dataset.ValueSourceToMultiValueCategoryDatasetAdapter;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Paint;
@@ -37,6 +33,10 @@ import org.jfree.chart.renderer.category.CategoryItemRendererState;
 import org.jfree.chart.renderer.category.ScatterRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.util.ShapeUtilities;
+
+import com.rapidminer.gui.new_plotter.engine.jfreechart.RenderFormatDelegate;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.dataset.ValueSourceToMultiValueCategoryDatasetAdapter;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 
 
 /**

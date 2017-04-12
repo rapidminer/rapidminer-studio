@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.new_plotter.configuration.LineFormat.LineStyle;
 import com.rapidminer.gui.new_plotter.configuration.event.AxisParallelLinesConfigurationChangeEvent;
 import com.rapidminer.gui.new_plotter.configuration.event.AxisParallelLinesConfigurationChangeEvent.AxisParallelLineConfigurationsChangeType;
 import com.rapidminer.gui.new_plotter.event.AxisParallelLineConfigurationChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.AxisParallelLineConfigurationListener;
-
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

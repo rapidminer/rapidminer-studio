@@ -18,13 +18,13 @@
 */
 package com.rapidminer.tools.math.matrix;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessStoppedException;
+
+import Jama.Matrix;
 
 
 /**

@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.visualization;
 
+import java.awt.Graphics;
+import java.io.ObjectStreamException;
+import java.util.Collections;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.gui.plotter.Plotter;
@@ -26,10 +30,6 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.report.Renderable;
 import com.rapidminer.tools.OperatorService;
-
-import java.awt.Graphics;
-import java.io.ObjectStreamException;
-import java.util.Collections;
 
 
 /**

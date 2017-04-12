@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.features.selection;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.Attributes;
@@ -35,9 +38,6 @@ import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
-
-import java.util.Iterator;
-import java.util.List;
 
 
 /**

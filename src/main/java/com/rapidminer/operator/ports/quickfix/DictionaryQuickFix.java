@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.ports.quickfix;
 
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.math.similarity.nominal.LevenshteinDistance;
-
 import java.util.Arrays;
 import java.util.Collection;
+
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.math.similarity.nominal.LevenshteinDistance;
 
 
 /**

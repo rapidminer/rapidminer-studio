@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.features.transformation;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -45,9 +48,6 @@ import com.rapidminer.tools.math.container.Range;
 import com.rapidminer.tools.math.som.KohonenNet;
 import com.rapidminer.tools.math.som.RandomDataContainer;
 import com.rapidminer.tools.math.som.RitterAdaptation;
-
-import java.util.Iterator;
-import java.util.List;
 
 
 /**

@@ -18,14 +18,6 @@
 */
 package com.rapidminer.gui.viewer.metadata.model;
 
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
-import com.rapidminer.gui.viewer.metadata.MetaDataStatisticsViewer;
-import com.rapidminer.gui.viewer.metadata.event.MetaDataStatisticsEvent;
-import com.rapidminer.gui.viewer.metadata.event.MetaDataStatisticsEvent.EventType;
-import com.rapidminer.gui.viewer.metadata.event.MetaDataStatisticsEventListener;
-import com.rapidminer.tools.Ontology;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +26,14 @@ import java.util.Map;
 
 import javax.swing.SwingWorker;
 import javax.swing.event.EventListenerList;
+
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
+import com.rapidminer.gui.viewer.metadata.MetaDataStatisticsViewer;
+import com.rapidminer.gui.viewer.metadata.event.MetaDataStatisticsEvent;
+import com.rapidminer.gui.viewer.metadata.event.MetaDataStatisticsEvent.EventType;
+import com.rapidminer.gui.viewer.metadata.event.MetaDataStatisticsEventListener;
+import com.rapidminer.tools.Ontology;
 
 
 /**

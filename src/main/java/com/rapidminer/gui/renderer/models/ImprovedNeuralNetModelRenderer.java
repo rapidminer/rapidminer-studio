@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.renderer.models;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.functions.neuralnet.ImprovedNeuralNetModel;
 import com.rapidminer.operator.learner.functions.neuralnet.ImprovedNeuralNetVisualizer;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

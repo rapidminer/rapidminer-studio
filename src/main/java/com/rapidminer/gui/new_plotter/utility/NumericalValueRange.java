@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter.utility;
 
+import java.sql.Date;
+import java.text.DateFormat;
+
 import com.rapidminer.RapidMiner;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.new_plotter.listener.events.ValueRangeChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.events.ValueRangeChangeEvent.ValueRangeChangeType;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
-
-import java.sql.Date;
-import java.text.DateFormat;
 
 
 /**

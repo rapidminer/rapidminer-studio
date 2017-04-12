@@ -18,18 +18,6 @@
 */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.ObjectVisualizer;
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.gui.plotter.LabelRotatingPlotterAdapter;
-import com.rapidminer.gui.plotter.PlotterConfigurationModel;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeBoolean;
-import com.rapidminer.parameter.ParameterTypeList;
-import com.rapidminer.tools.ObjectVisualizerService;
-import com.rapidminer.tools.Tools;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -69,6 +57,18 @@ import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.HorizontalAlignment;
 import org.jfree.ui.RectangleEdge;
+
+import com.rapidminer.ObjectVisualizer;
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.gui.plotter.LabelRotatingPlotterAdapter;
+import com.rapidminer.gui.plotter.PlotterConfigurationModel;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeList;
+import com.rapidminer.tools.ObjectVisualizerService;
+import com.rapidminer.tools.Tools;
 
 
 /**

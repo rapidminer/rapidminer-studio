@@ -18,10 +18,10 @@
 */
 package com.rapidminer.parameter.conditions;
 
+import org.w3c.dom.Element;
+
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.tools.XMLException;
-
-import org.w3c.dom.Element;
 
 
 /**

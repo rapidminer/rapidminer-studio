@@ -39,8 +39,6 @@ import com.rapidminer.operator.nio.model.CSVResultSetConfiguration;
 import com.rapidminer.operator.nio.model.DataResultSet;
 import com.rapidminer.studio.io.data.internal.ResultSetAdapter;
 import com.rapidminer.studio.io.data.internal.file.FileDataSourceTestUtils;
-import com.rapidminer.studio.io.data.internal.file.csv.CSVDataSource;
-import com.rapidminer.studio.io.data.internal.file.csv.CSVResultSetAdapter;
 
 
 /**

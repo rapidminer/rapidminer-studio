@@ -18,6 +18,17 @@
 */
 package com.rapidminer.operator.libraries;
 
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.io.process.XMLTools;
@@ -30,17 +41,6 @@ import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
 import com.rapidminer.tools.plugin.Plugin;
-
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 
 /**

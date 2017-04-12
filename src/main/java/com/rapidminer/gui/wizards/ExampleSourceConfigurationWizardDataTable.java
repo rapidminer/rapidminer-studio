@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.wizards;
 
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.tools.att.AttributeDataSource;
-
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.tools.att.AttributeDataSource;
 
 
 /**

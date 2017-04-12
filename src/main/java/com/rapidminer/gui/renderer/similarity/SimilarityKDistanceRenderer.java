@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.renderer.similarity;
 
+import java.awt.Component;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.plotter.Plotter;
 import com.rapidminer.gui.plotter.PlotterAdapter;
@@ -26,8 +28,6 @@ import com.rapidminer.gui.viewer.SimilarityKDistanceVisualization;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.similarity.SimilarityMeasureObject;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

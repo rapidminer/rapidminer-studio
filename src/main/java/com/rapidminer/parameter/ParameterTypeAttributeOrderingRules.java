@@ -18,12 +18,12 @@
 */
 package com.rapidminer.parameter;
 
+import org.w3c.dom.Element;
+
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.XMLException;
-
-import org.w3c.dom.Element;
 
 
 /**

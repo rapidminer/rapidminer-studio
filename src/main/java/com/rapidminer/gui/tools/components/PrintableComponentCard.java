@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.tools.components;
 
-import com.rapidminer.gui.actions.export.PrintableComponent;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.LogService;
-
 import java.util.UUID;
 import java.util.logging.Level;
 
 import javax.swing.Icon;
+
+import com.rapidminer.gui.actions.export.PrintableComponent;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.LogService;
 
 
 /**

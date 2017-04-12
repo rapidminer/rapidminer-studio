@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.clustering.clusterer;
 
-import com.rapidminer.operator.clustering.HierarchicalClusterNode;
-
 import java.util.Map;
+
+import com.rapidminer.operator.clustering.HierarchicalClusterNode;
 
 
 /**

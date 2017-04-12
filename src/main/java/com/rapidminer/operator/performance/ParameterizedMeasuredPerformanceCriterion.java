@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.performance;
 
+import java.util.List;
+
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
-
-import java.util.List;
 
 
 /**

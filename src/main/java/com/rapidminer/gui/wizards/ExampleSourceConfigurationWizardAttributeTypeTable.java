@@ -18,12 +18,6 @@
 */
 package com.rapidminer.gui.wizards;
 
-import com.rapidminer.example.Attributes;
-import com.rapidminer.gui.EditorCellRenderer;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.att.AttributeDataSource;
-
 import java.util.List;
 
 import javax.swing.DefaultCellEditor;
@@ -33,6 +27,12 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+
+import com.rapidminer.example.Attributes;
+import com.rapidminer.gui.EditorCellRenderer;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.att.AttributeDataSource;
 
 
 /**

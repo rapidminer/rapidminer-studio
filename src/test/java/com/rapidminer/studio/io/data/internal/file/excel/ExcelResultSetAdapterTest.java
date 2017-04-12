@@ -38,7 +38,6 @@ import com.rapidminer.operator.nio.model.DataResultSet;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.studio.io.data.internal.ResultSetAdapter;
 import com.rapidminer.studio.io.data.internal.file.FileDataSourceTestUtils;
-import com.rapidminer.studio.io.data.internal.file.excel.ExcelResultSetAdapter;
 
 
 /**

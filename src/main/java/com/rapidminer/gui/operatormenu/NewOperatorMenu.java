@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.operatormenu;
 
+import java.util.Collections;
+
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.Collections;
 
 
 /**

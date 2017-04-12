@@ -18,6 +18,9 @@
 */
 package com.rapidminer.gui.new_plotter.data;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.new_plotter.MasterOfDesaster;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
@@ -25,9 +28,6 @@ import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
 import com.rapidminer.gui.new_plotter.engine.PlotEngine;
 import com.rapidminer.gui.new_plotter.listener.PlotConfigurationListener;
 import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel;
 
+import java.io.Serializable;
+
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExample;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.util.Cache;
-
-import java.io.Serializable;
 
 
 /**

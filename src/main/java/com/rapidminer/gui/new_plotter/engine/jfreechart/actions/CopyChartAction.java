@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.actions;
 
-import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.tools.io.TransferableImage;
-
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+
+import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.tools.io.TransferableImage;
 
 
 /**

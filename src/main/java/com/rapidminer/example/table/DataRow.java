@@ -18,9 +18,9 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Attribute;
-
 import java.io.Serializable;
+
+import com.rapidminer.example.Attribute;
 
 
 /**

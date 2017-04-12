@@ -18,15 +18,15 @@
 */
 package com.rapidminer.operator.io;
 
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

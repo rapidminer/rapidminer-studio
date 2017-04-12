@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.repository;
 
+import java.util.List;
+
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
@@ -30,8 +32,6 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
-
-import java.util.List;
 
 
 /**

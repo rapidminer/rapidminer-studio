@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.gui.cellrenderer;
 
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +27,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
 
 
 /**

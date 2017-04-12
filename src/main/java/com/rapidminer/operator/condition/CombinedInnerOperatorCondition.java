@@ -18,13 +18,13 @@
 */
 package com.rapidminer.operator.condition;
 
-import com.rapidminer.operator.IllegalInputException;
-import com.rapidminer.operator.OperatorChain;
-import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.operator.IllegalInputException;
+import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 
 
 /**

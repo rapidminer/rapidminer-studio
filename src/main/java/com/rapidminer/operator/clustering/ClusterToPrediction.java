@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.clustering;
 
+import java.util.HashMap;
+import java.util.Vector;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -36,9 +39,6 @@ import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
-
-import java.util.HashMap;
-import java.util.Vector;
 
 
 /**

@@ -18,15 +18,15 @@
 */
 package com.rapidminer.io.process.rules;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 
 /**

@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.look.ui;
 
-import com.rapidminer.gui.look.RapidLookTools;
-
 import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
@@ -35,6 +33,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.MouseInputListener;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicToolBarUI;
+
+import com.rapidminer.gui.look.RapidLookTools;
 
 
 /**

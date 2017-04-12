@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SortedExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -27,10 +31,6 @@ import com.rapidminer.operator.preprocessing.AbstractDataProcessing;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 
 /**

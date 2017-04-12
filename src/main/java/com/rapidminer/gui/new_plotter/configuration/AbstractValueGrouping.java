@@ -18,6 +18,10 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.text.DateFormat;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
@@ -26,10 +30,6 @@ import com.rapidminer.gui.new_plotter.listener.events.ValueGroupingChangeEvent;
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
-import java.text.DateFormat;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

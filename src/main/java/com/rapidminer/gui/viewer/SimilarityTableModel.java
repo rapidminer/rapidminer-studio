@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.viewer;
 
+import javax.swing.table.AbstractTableModel;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
-
-import javax.swing.table.AbstractTableModel;
 
 
 /**

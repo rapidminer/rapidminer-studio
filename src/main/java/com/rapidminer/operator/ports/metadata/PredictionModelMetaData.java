@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attributes;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

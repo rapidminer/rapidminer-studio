@@ -18,9 +18,9 @@
 */
 package com.rapidminer.example.set;
 
-import com.rapidminer.tools.RandomGenerator;
-
 import java.util.Random;
+
+import com.rapidminer.tools.RandomGenerator;
 
 
 /**

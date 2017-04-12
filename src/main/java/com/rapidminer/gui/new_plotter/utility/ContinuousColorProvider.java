@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.utility;
 
+import java.awt.Color;
+
 import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
 import com.rapidminer.gui.new_plotter.data.PlotInstance;
 import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.events.SeriesFormatChangeEvent.SeriesFormatChangeType;
 import com.rapidminer.gui.new_plotter.templates.style.ColorRGB;
-
-import java.awt.Color;
 
 
 /**
