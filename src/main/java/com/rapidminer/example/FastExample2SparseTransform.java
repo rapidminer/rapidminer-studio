@@ -18,11 +18,11 @@
 */
 package com.rapidminer.example;
 
+import java.util.Arrays;
+
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.SparseDataRow;
 import com.rapidminer.operator.UserError;
-
-import java.util.Arrays;
 
 
 /**

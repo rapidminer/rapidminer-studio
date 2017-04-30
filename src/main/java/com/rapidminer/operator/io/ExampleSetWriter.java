@@ -18,6 +18,12 @@
 */
 package com.rapidminer.operator.io;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.NumericalAttribute;
 import com.rapidminer.example.table.SparseFormatDataRowReader;
@@ -29,12 +35,6 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.tools.io.Encoding;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

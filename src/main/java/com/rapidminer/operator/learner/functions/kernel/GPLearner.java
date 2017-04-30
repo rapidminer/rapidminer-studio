@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.learner.functions.kernel;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -44,9 +47,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
-
-import java.util.Iterator;
-import java.util.List;
 
 
 /**

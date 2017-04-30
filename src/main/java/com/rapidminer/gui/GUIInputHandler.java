@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui;
 
-import com.rapidminer.InputHandler;
-
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
@@ -27,6 +25,8 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.SwingUtilities;
+
+import com.rapidminer.InputHandler;
 
 
 /**

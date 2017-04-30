@@ -18,6 +18,9 @@
 */
 package com.rapidminer.gui.viewer.metadata.actions;
 
+import java.awt.event.ActionEvent;
+import java.util.List;
+
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.DateTimeAttributeStatisticsModel;
@@ -26,9 +29,6 @@ import com.rapidminer.gui.viewer.metadata.model.NominalAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.NumericalAttributeStatisticsModel;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
-
-import java.awt.event.ActionEvent;
-import java.util.List;
 
 
 /**

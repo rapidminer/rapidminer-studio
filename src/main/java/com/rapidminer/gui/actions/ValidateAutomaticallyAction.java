@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.tools.ParameterService;
-
-import java.awt.event.ActionEvent;
 
 
 /**

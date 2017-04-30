@@ -18,13 +18,13 @@
 */
 package com.rapidminer.operator.features.construction;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.set.AttributeWeightedExampleSet;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.set.AttributeWeightedExampleSet;
 
 
 /**

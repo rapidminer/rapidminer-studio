@@ -18,6 +18,13 @@
 */
 package com.rapidminer.operator.preprocessing.normalization;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
@@ -25,13 +32,6 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.SimpleAttributes;
 import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.tools.Ontology;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 
 /**

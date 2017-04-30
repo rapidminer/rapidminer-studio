@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.Collection;
+
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.OutputPorts;
-
-import java.util.Collection;
 
 
 /**

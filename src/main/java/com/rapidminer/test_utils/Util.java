@@ -18,19 +18,19 @@
 */
 package com.rapidminer.test_utils;
 
-import com.rapidminer.Process;
-import com.rapidminer.operator.IOObject;
-import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.IOObjectEntry;
-import com.rapidminer.repository.RepositoryException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.rapidminer.Process;
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.repository.DataEntry;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.RepositoryException;
 
 
 /**

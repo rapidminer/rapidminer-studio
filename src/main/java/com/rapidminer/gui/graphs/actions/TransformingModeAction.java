@@ -18,16 +18,17 @@
 */
 package com.rapidminer.gui.graphs.actions;
 
-import com.rapidminer.gui.graphs.GraphViewer;
-import com.rapidminer.gui.tools.IconSize;
-import com.rapidminer.gui.tools.SwingTools;
-import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
+
+import com.rapidminer.gui.graphs.GraphViewer;
+import com.rapidminer.gui.tools.IconSize;
+import com.rapidminer.gui.tools.SwingTools;
+
+import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 
 
 /**

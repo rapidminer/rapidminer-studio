@@ -18,8 +18,6 @@
 */
 package com.rapidminer.operator.visualization.dependencies;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
@@ -34,6 +32,8 @@ import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.math.matrix.CovarianceMatrix;
+
+import Jama.Matrix;
 
 
 /**

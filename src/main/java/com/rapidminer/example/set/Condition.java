@@ -18,11 +18,11 @@
 */
 package com.rapidminer.example.set;
 
+import java.io.Serializable;
+
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.tools.ExpressionEvaluationException;
-
-import java.io.Serializable;
 
 
 /**

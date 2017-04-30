@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator;
 
+import java.util.List;
+
 import com.rapidminer.operator.meta.FeatureIterator;
 import com.rapidminer.operator.ports.DummyPortPairExtender;
 import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.util.List;
 
 
 /**

@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.gui.dialog.CronEditorDialog;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeCronExpression;
-
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -37,6 +32,11 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+
+import com.rapidminer.gui.dialog.CronEditorDialog;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeCronExpression;
 
 
 /**

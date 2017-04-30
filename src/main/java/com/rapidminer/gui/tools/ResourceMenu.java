@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.gui.ConditionalAction;
-
 import javax.swing.JMenu;
+
+import com.rapidminer.gui.ConditionalAction;
 
 
 /**

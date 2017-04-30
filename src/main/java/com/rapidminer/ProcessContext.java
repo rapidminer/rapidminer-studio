@@ -18,17 +18,17 @@
 */
 package com.rapidminer;
 
-import com.rapidminer.operator.OperatorCreationException;
-import com.rapidminer.operator.libraries.OperatorLibrary;
-import com.rapidminer.repository.RepositoryLocation;
-import com.rapidminer.tools.AbstractObservable;
-import com.rapidminer.tools.container.Pair;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.operator.OperatorCreationException;
+import com.rapidminer.operator.libraries.OperatorLibrary;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.AbstractObservable;
+import com.rapidminer.tools.container.Pair;
 
 
 /**

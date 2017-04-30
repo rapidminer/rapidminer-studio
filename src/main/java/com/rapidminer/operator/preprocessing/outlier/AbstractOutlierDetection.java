@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.preprocessing.outlier;
 
+import java.util.Set;
+
 import com.rapidminer.example.Attributes;
 import com.rapidminer.operator.AbstractExampleSetProcessing;
 import com.rapidminer.operator.OperatorDescription;
@@ -26,8 +28,6 @@ import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.tools.Ontology;
-
-import java.util.Set;
 
 
 /**

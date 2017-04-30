@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.properties;
 
-import com.rapidminer.gui.tools.CellColorProvider;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.Operator;
-
 import java.awt.Color;
 import java.util.Enumeration;
 import java.util.Vector;
 
 import javax.swing.table.TableColumn;
+
+import com.rapidminer.gui.tools.CellColorProvider;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.Operator;
 
 
 /**

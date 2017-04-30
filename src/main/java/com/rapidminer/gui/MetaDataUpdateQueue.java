@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+
+import javax.swing.SwingUtilities;
+
 import com.rapidminer.Process;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.UpdateQueue;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.logging.Level;
-
-import javax.swing.SwingUtilities;
 
 
 /**

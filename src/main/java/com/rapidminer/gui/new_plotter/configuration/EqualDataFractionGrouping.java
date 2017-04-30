@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.gui.new_plotter.ChartConfigurationException;
-import com.rapidminer.gui.new_plotter.listener.events.ValueGroupingChangeEvent;
-import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
-import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
 import java.text.DateFormat;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +25,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.gui.new_plotter.ChartConfigurationException;
+import com.rapidminer.gui.new_plotter.listener.events.ValueGroupingChangeEvent;
+import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
+import com.rapidminer.gui.new_plotter.utility.ValueRange;
 
 
 /**

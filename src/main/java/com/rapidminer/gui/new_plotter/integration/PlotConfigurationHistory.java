@@ -18,6 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.integration;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
@@ -29,11 +34,6 @@ import com.rapidminer.gui.new_plotter.data.DataTableColumnIndex;
 import com.rapidminer.gui.new_plotter.gui.AbstractConfigurationPanel.DatasetTransformationType;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ports.ProcessingStep;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
 
 
 /**

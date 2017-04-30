@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.text.DateFormat;
+import java.util.List;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.new_plotter.ChartConfigurationException;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
 import com.rapidminer.gui.new_plotter.listener.ValueGroupingListener;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
 import com.rapidminer.tools.I18N;
-
-import java.text.DateFormat;
-import java.util.List;
 
 
 /**

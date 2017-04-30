@@ -18,13 +18,13 @@
 */
 package com.rapidminer.tools.math.similarity.divergences;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.math.matrix.CovarianceMatrix;
 import com.rapidminer.tools.math.similarity.BregmanDivergence;
+
+import Jama.Matrix;
 
 
 /**

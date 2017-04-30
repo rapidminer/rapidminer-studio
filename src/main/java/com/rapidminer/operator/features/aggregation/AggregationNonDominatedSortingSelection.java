@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.features.aggregation;
 
-import com.rapidminer.operator.performance.PerformanceVector;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import com.rapidminer.operator.performance.PerformanceVector;
 
 
 /**

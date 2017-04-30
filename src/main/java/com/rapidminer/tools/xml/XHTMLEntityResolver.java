@@ -18,8 +18,6 @@
 */
 package com.rapidminer.tools.xml;
 
-import com.rapidminer.tools.container.Pair;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -32,6 +30,8 @@ import java.util.regex.Pattern;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import com.rapidminer.tools.container.Pair;
 
 
 /**

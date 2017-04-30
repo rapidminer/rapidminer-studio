@@ -18,9 +18,9 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.tools.Ontology;
-
 import java.util.Iterator;
+
+import com.rapidminer.tools.Ontology;
 
 
 /**

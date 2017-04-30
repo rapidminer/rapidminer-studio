@@ -18,6 +18,15 @@
 */
 package com.rapidminer.operator.nio.file;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -41,15 +50,6 @@ import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

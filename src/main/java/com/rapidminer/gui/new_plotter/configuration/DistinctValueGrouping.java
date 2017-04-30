@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-import com.rapidminer.gui.new_plotter.utility.SingleValueValueRange;
-import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
 import java.text.DateFormat;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
+import com.rapidminer.gui.new_plotter.utility.SingleValueValueRange;
+import com.rapidminer.gui.new_plotter.utility.ValueRange;
 
 
 /**

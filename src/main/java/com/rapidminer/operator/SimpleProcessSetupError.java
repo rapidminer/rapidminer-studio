@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.operator.ports.PortOwner;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.tools.I18N;
-
-import java.util.Collections;
-import java.util.List;
 
 
 /**

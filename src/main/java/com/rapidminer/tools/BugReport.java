@@ -18,11 +18,6 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.Process;
-import com.rapidminer.RapidMiner;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.tools.plugin.Plugin;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,6 +37,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
+
+import com.rapidminer.Process;
+import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.tools.plugin.Plugin;
 
 
 /**

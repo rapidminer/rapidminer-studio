@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.preprocessing.normalization;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
@@ -27,9 +30,6 @@ import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.util.Collection;
-import java.util.List;
 
 
 /**

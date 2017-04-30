@@ -18,6 +18,9 @@
 */
 package com.rapidminer.gui.new_plotter.data;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableNaturalSortProvider;
 import com.rapidminer.datatable.SortedDataTableView;
@@ -29,9 +32,6 @@ import com.rapidminer.gui.new_plotter.configuration.DomainConfigManager;
 import com.rapidminer.gui.new_plotter.listener.DimensionConfigListener;
 import com.rapidminer.gui.new_plotter.listener.events.DimensionConfigChangeEvent;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

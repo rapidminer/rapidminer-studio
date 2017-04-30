@@ -18,15 +18,15 @@
 */
 package com.rapidminer.tools.math;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.container.Tupel;
-
-import java.util.ArrayList;
-import java.util.Collections;
 
 
 /**

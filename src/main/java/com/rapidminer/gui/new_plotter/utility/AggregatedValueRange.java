@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.new_plotter.utility;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.new_plotter.listener.events.ValueRangeChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.events.ValueRangeChangeEvent.ValueRangeChangeType;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

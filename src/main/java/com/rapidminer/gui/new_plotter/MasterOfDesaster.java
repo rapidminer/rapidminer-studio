@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter;
 
-import com.rapidminer.gui.new_plotter.listener.MasterOfDesasterListener;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.Tools;
-
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.gui.new_plotter.listener.MasterOfDesasterListener;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.Tools;
 
 
 /**

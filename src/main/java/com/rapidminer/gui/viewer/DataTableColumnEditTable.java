@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableListener;
-import com.rapidminer.gui.tools.CellColorProvider;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.container.Pair;
-
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -37,6 +30,13 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import org.jfree.ui.DateCellRenderer;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableListener;
+import com.rapidminer.gui.tools.CellColorProvider;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.container.Pair;
 
 
 /**

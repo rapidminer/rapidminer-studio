@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.renderer.performance;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.viewer.ROCViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.performance.AreaUnderCurve;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

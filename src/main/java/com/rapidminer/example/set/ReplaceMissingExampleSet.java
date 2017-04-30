@@ -18,6 +18,10 @@
 */
 package com.rapidminer.example.set;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.AttributeTransformation;
@@ -27,10 +31,6 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.Annotations;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 
 /**

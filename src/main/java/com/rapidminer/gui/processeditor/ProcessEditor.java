@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.processeditor;
 
-import com.rapidminer.Process;
-import com.rapidminer.operator.Operator;
-
 import java.util.EventListener;
 import java.util.List;
+
+import com.rapidminer.Process;
+import com.rapidminer.operator.Operator;
 
 
 /**

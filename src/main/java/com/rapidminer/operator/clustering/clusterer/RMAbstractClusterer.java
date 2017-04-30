@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.clustering.clusterer;
 
+import java.util.List;
+
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
-
-import java.util.List;
 
 
 /**

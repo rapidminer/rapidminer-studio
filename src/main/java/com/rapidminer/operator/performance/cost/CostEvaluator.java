@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.performance.cost;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -38,10 +42,6 @@ import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.parameter.ParameterTypeMatrix;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**

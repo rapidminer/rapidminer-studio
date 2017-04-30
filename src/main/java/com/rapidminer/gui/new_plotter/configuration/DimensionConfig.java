@@ -18,6 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.text.DateFormat;
+import java.util.List;
+import java.util.Set;
+import java.util.Vector;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
@@ -26,11 +31,6 @@ import com.rapidminer.gui.new_plotter.listener.DimensionConfigListener;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
 import com.rapidminer.tools.I18N;
-
-import java.text.DateFormat;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
 
 
 /**

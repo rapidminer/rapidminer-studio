@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.meta;
 
+import java.util.Collection;
+
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -27,8 +29,6 @@ import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.operator.ports.metadata.GenerateNewMDRule;
-
-import java.util.Collection;
 
 
 /**

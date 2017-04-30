@@ -18,17 +18,17 @@
 */
 package com.rapidminer.io.process.rules;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.w3c.dom.Element;
+
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.tools.XMLException;
-
-import java.util.LinkedList;
-import java.util.List;
-
-import org.w3c.dom.Element;
 
 
 /**

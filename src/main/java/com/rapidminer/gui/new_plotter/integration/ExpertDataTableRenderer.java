@@ -18,6 +18,9 @@
 */
 package com.rapidminer.gui.new_plotter.integration;
 
+import java.awt.Component;
+import java.util.Map;
+
 import com.rapidminer.datatable.DataTableExampleSetAdapter;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
@@ -29,9 +32,6 @@ import com.rapidminer.gui.renderer.DefaultReadable;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.report.Reportable;
 import com.rapidminer.tools.I18N;
-
-import java.awt.Component;
-import java.util.Map;
 
 
 /**

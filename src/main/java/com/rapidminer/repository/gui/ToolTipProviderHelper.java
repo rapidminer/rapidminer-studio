@@ -18,6 +18,9 @@
 */
 package com.rapidminer.repository.gui;
 
+import java.awt.Component;
+import java.util.logging.Level;
+
 import com.rapidminer.gui.metadata.MetaDataRendererFactoryRegistry;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
@@ -27,9 +30,6 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-
-import java.awt.Component;
-import java.util.logging.Level;
 
 
 /**

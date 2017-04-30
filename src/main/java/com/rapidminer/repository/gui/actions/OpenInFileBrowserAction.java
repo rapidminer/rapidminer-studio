@@ -18,6 +18,11 @@
 */
 package com.rapidminer.repository.gui.actions;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
+import java.util.LinkedList;
+
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.DecisionRememberingConfirmDialog;
@@ -26,11 +31,6 @@ import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.gui.RepositoryTree;
 import com.rapidminer.repository.local.LocalRepository;
 import com.rapidminer.repository.local.SimpleFolder;
-
-import java.awt.Desktop;
-import java.io.File;
-import java.io.IOException;
-import java.util.LinkedList;
 
 
 /**

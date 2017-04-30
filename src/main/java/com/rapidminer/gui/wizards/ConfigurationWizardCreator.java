@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.wizards;
 
-import com.rapidminer.parameter.ParameterType;
-
 import java.io.Serializable;
 import java.util.Map;
+
+import com.rapidminer.parameter.ParameterType;
 
 
 /**

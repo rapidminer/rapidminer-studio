@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.clustering;
 
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.tools.Tools;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.tools.Tools;
 
 
 /**

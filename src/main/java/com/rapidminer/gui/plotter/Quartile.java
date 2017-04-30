@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.gui.tools.SwingTools;
-
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.gui.tools.SwingTools;
 
 
 /**

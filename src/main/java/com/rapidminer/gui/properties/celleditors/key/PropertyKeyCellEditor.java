@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.properties.celleditors.key;
 
-import com.rapidminer.gui.properties.PropertyTable;
-import com.rapidminer.operator.Operator;
-
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+
+import com.rapidminer.gui.properties.PropertyTable;
+import com.rapidminer.operator.Operator;
 
 
 /**

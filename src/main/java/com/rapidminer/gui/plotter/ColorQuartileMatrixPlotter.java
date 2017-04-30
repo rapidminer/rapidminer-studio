@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.plotter.conditions.ColumnsPlotterCondition;
-import com.rapidminer.gui.plotter.conditions.PlotterCondition;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ParameterService;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -32,6 +25,13 @@ import java.awt.Graphics2D;
 import java.util.logging.Level;
 
 import javax.swing.Icon;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.plotter.conditions.ColumnsPlotterCondition;
+import com.rapidminer.gui.plotter.conditions.PlotterCondition;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 
 
 /**

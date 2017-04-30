@@ -18,14 +18,6 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
-import com.rapidminer.gui.renderer.RendererService;
-import com.rapidminer.operator.Annotations;
-import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.ProcessSetupError.Severity;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.tools.RMUrlHandler;
-
 import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -35,6 +27,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import com.rapidminer.gui.renderer.RendererService;
+import com.rapidminer.operator.Annotations;
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.ProcessSetupError.Severity;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.tools.RMUrlHandler;
 
 
 /**

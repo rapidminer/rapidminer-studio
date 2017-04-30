@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.new_plotter.listener.AggregationWindowingListener;
 import com.rapidminer.gui.new_plotter.utility.AggregatedValueRange;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.operatortree.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.dialog.OperatorInfoScreen;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.Operator;
-
-import java.awt.event.ActionEvent;
 
 
 /**

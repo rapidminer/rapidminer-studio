@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.new_plotter.gui.treenodes;
 
-import com.rapidminer.gui.new_plotter.configuration.ValueSource;
-
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import com.rapidminer.gui.new_plotter.configuration.ValueSource;
 
 
 /**

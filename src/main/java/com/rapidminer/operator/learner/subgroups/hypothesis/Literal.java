@@ -18,10 +18,10 @@
 */
 package com.rapidminer.operator.learner.subgroups.hypothesis;
 
+import java.io.Serializable;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
-
-import java.io.Serializable;
 
 
 /**

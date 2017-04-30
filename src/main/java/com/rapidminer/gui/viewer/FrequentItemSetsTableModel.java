@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.operator.learner.associations.FrequentItemSet;
-import com.rapidminer.operator.learner.associations.FrequentItemSets;
-import com.rapidminer.operator.learner.associations.Item;
-import com.rapidminer.tools.Tools;
-
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.operator.learner.associations.FrequentItemSet;
+import com.rapidminer.operator.learner.associations.FrequentItemSets;
+import com.rapidminer.operator.learner.associations.Item;
+import com.rapidminer.tools.Tools;
 
 
 /**

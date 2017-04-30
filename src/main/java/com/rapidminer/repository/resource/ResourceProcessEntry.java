@@ -18,13 +18,13 @@
 */
 package com.rapidminer.repository.resource;
 
-import com.rapidminer.repository.ProcessEntry;
-import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.tools.Tools;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import com.rapidminer.repository.ProcessEntry;
+import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.tools.Tools;
 
 
 /**

@@ -18,9 +18,9 @@
 */
 package com.rapidminer.tools.plugin;
 
-import com.rapidminer.RapidMiner;
-
 import java.net.URL;
+
+import com.rapidminer.RapidMiner;
 
 
 /**

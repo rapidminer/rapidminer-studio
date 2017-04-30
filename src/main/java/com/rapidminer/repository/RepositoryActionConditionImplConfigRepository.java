@@ -18,9 +18,9 @@
 */
 package com.rapidminer.repository;
 
-import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
-
 import java.util.List;
+
+import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
 
 
 /**

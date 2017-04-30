@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.util.annotations;
 
+import java.util.List;
+
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -30,8 +32,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
-
-import java.util.List;
 
 
 /**

@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.preprocessing.filter.attributes;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.set.ConditionCreationException;
 import com.rapidminer.operator.UserError;
@@ -27,9 +30,6 @@ import com.rapidminer.operator.ports.metadata.MetaDataInfo;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttributes;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

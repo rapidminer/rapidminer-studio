@@ -18,16 +18,16 @@
 */
 package com.rapidminer.example.set;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.tools.Tools;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.regex.PatternSyntaxException;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.tools.Tools;
 
 
 /**

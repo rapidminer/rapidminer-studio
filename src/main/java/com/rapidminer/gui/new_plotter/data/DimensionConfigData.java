@@ -18,6 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.data;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.new_plotter.ConfigurationChangeResponse;
@@ -43,13 +50,6 @@ import com.rapidminer.gui.new_plotter.utility.SizeProvider;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
 
 
 /**

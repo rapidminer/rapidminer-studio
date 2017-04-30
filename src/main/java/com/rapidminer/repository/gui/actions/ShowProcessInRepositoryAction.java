@@ -18,13 +18,13 @@
 */
 package com.rapidminer.repository.gui.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.ConditionalAction;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryTree;
-
-import java.awt.event.ActionEvent;
 
 
 /**

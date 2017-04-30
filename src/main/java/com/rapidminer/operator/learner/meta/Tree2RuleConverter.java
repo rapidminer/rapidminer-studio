@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.learner.meta;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorCapability;
@@ -32,8 +34,6 @@ import com.rapidminer.operator.learner.tree.Tree;
 import com.rapidminer.operator.learner.tree.TreeModel;
 import com.rapidminer.operator.ports.metadata.PredictionModelMetaData;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
-
-import java.util.Iterator;
 
 
 /**

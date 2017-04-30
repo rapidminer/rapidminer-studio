@@ -18,19 +18,19 @@
 */
 package com.rapidminer.gui.properties;
 
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeCategory;
-import com.rapidminer.parameter.ParameterTypeList;
-import com.rapidminer.parameter.ParameterTypeStringCategory;
-
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.event.ChangeEvent;
+
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeCategory;
+import com.rapidminer.parameter.ParameterTypeList;
+import com.rapidminer.parameter.ParameterTypeStringCategory;
 
 
 /**

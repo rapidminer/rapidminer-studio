@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator.preprocessing.outlier;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ProcessStoppedException;
-
 import java.util.Enumeration;
 import java.util.ListIterator;
 import java.util.Vector;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.ProcessStoppedException;
 
 
 /**

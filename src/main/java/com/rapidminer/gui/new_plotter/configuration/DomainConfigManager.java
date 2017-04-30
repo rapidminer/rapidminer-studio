@@ -18,6 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.text.DateFormat;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.Vector;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.new_plotter.ChartConfigurationException;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
@@ -30,13 +37,6 @@ import com.rapidminer.gui.new_plotter.listener.events.DimensionConfigChangeEvent
 import com.rapidminer.gui.new_plotter.listener.events.DimensionConfigChangeEvent.DimensionConfigChangeType;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
-import java.text.DateFormat;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
 
 
 /**

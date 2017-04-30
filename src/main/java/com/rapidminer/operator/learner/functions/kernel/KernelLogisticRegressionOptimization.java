@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.learner.functions.kernel;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -31,10 +35,6 @@ import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.kernels.Kernel;
 import com.rapidminer.tools.math.optimization.ec.es.ESOptimization;
 import com.rapidminer.tools.math.optimization.ec.es.Individual;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 
 /**

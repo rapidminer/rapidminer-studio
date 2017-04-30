@@ -18,11 +18,6 @@
 */
 package com.rapidminer.tools.att;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.operator.UserError;
-import com.rapidminer.tools.LoggingHandler;
-import com.rapidminer.tools.XMLException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +31,11 @@ import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.tools.LoggingHandler;
+import com.rapidminer.tools.XMLException;
 
 
 /**

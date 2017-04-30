@@ -18,6 +18,12 @@
 */
 package com.rapidminer.tools.math;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Iterator;
+
+import javax.swing.JDialog;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
@@ -29,12 +35,6 @@ import com.rapidminer.example.Statistics;
 import com.rapidminer.gui.plotter.ScatterPlotter;
 import com.rapidminer.gui.plotter.SimplePlotterDialog;
 import com.rapidminer.gui.viewer.ROCChartPlotter;
-
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Iterator;
-
-import javax.swing.JDialog;
 
 
 /**

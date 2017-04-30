@@ -18,15 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.key;
 
-import com.rapidminer.Process;
-import com.rapidminer.gui.properties.ParameterChangeListener;
-import com.rapidminer.gui.properties.PropertyTable;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorChain;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeParameterValue;
-import com.rapidminer.parameter.ParameterTypeValue;
-
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
@@ -40,6 +31,15 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+
+import com.rapidminer.Process;
+import com.rapidminer.gui.properties.ParameterChangeListener;
+import com.rapidminer.gui.properties.PropertyTable;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeParameterValue;
+import com.rapidminer.parameter.ParameterTypeValue;
 
 
 /**

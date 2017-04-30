@@ -27,8 +27,6 @@ import java.util.Locale;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import com.rapidminer.studio.io.data.internal.file.excel.ExcelDataSource;
-
 
 /**
  * Unit tests for the {@link ExcelDataSource#getData()} method with XLS files.

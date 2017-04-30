@@ -18,12 +18,6 @@
 */
 package com.rapidminer.example;
 
-import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.example.table.NumericalAttribute;
-import com.rapidminer.example.table.SparseFormatDataRowReader;
-import com.rapidminer.tools.Ontology;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -31,6 +25,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import com.rapidminer.example.table.DataRow;
+import com.rapidminer.example.table.ExampleTable;
+import com.rapidminer.example.table.NumericalAttribute;
+import com.rapidminer.example.table.SparseFormatDataRowReader;
+import com.rapidminer.tools.Ontology;
 
 
 /**

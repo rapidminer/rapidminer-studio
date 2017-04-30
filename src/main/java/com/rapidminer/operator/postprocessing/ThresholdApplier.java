@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.postprocessing;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeTypeException;
 import com.rapidminer.example.Attributes;
@@ -31,8 +33,6 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
 import com.rapidminer.tools.Ontology;
-
-import java.util.Iterator;
 
 
 /**

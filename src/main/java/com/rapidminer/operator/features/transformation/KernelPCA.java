@@ -21,9 +21,6 @@ package com.rapidminer.operator.features.transformation;
 import java.util.ArrayList;
 import java.util.List;
 
-import Jama.EigenvalueDecomposition;
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -46,6 +43,9 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.kernels.Kernel;
+
+import Jama.EigenvalueDecomposition;
+import Jama.Matrix;
 
 
 /**

@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.new_plotter.gui.dnd;
 
-import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
-
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
+
+import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
 
 
 /**

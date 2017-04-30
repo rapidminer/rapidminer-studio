@@ -18,15 +18,15 @@
 */
 package com.rapidminer.operator.learner.local;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.container.Tupel;
 import com.rapidminer.tools.math.container.GeometricDataCollection;
-
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
 
 
 /**

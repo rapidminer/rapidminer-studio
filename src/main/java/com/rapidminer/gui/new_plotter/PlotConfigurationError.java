@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter;
 
-import com.rapidminer.RapidMiner;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.ParameterService;
-
 import java.text.MessageFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
+
+import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.ParameterService;
 
 
 /**

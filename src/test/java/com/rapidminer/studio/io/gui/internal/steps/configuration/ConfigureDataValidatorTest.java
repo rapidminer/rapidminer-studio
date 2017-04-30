@@ -35,11 +35,8 @@ import org.junit.Test;
 
 import com.rapidminer.core.io.data.ColumnMetaData;
 import com.rapidminer.core.io.data.ColumnMetaData.ColumnType;
-import com.rapidminer.studio.io.data.DefaultColumnMetaData;
-import com.rapidminer.studio.io.gui.internal.steps.configuration.ColumnError;
-import com.rapidminer.studio.io.gui.internal.steps.configuration.ConfigureDataValidator;
-import com.rapidminer.studio.io.gui.internal.steps.configuration.ParsingError;
 import com.rapidminer.core.io.data.DataSetException;
+import com.rapidminer.studio.io.data.DefaultColumnMetaData;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 

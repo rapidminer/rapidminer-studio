@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.clustering.clusterer;
 
+import java.util.Collection;
+import java.util.LinkedList;
+
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.ExampleVisualizer;
@@ -37,9 +40,6 @@ import com.rapidminer.operator.ports.metadata.SimplePrecondition;
 import com.rapidminer.tools.ObjectVisualizerService;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.metadata.MetaDataTools;
-
-import java.util.Collection;
-import java.util.LinkedList;
 
 
 /**

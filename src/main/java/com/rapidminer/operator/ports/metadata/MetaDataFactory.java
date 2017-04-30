@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
@@ -25,10 +29,6 @@ import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.Model;
 import com.rapidminer.tools.DominatingClassFinder;
 import com.rapidminer.tools.LogService;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
 
 
 /**

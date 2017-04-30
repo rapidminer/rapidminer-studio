@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.tools.I18N;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.FocusEvent;
@@ -34,6 +32,8 @@ import javax.swing.text.Document;
 
 import org.jdesktop.swingx.prompt.PromptSupport;
 import org.jdesktop.swingx.prompt.PromptSupport.FocusBehavior;
+
+import com.rapidminer.tools.I18N;
 
 
 /**

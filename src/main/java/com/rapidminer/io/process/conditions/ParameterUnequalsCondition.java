@@ -18,9 +18,9 @@
 */
 package com.rapidminer.io.process.conditions;
 
-import com.rapidminer.operator.Operator;
-
 import org.w3c.dom.Element;
+
+import com.rapidminer.operator.Operator;
 
 
 /**

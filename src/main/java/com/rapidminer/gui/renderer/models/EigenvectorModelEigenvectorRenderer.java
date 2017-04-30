@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.renderer.models;
 
+import java.util.List;
+
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
+
 import com.rapidminer.gui.renderer.AbstractTableModelTableRenderer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.features.transformation.AbstractEigenvectorModel;
 import com.rapidminer.operator.features.transformation.ComponentVector;
 import com.rapidminer.tools.Tools;
-
-import java.util.List;
-
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
 
 
 /**

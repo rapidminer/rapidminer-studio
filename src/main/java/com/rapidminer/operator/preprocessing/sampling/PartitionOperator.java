@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.preprocessing.sampling;
 
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.Operator;
@@ -41,8 +43,6 @@ import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.List;
 
 
 /**

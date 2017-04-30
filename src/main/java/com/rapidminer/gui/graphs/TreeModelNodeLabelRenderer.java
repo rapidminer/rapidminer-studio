@@ -18,6 +18,14 @@
 */
 package com.rapidminer.gui.graphs;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
@@ -29,14 +37,6 @@ import edu.uci.ics.jung.visualization.transform.BidirectionalTransformer;
 import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 import edu.uci.ics.jung.visualization.transform.shape.ShapeTransformer;
 import edu.uci.ics.jung.visualization.transform.shape.TransformingGraphics;
-
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 
 
 /**

@@ -44,8 +44,6 @@ import com.rapidminer.core.io.data.ParseException;
 import com.rapidminer.core.io.data.source.DataSource;
 import com.rapidminer.core.io.data.source.DataSourceConfiguration;
 import com.rapidminer.studio.io.data.DefaultColumnMetaData;
-import com.rapidminer.studio.io.gui.internal.steps.configuration.ConfigureDataTableModel;
-import com.rapidminer.studio.io.gui.internal.steps.configuration.ParsingError;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
 

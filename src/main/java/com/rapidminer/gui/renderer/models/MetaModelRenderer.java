@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.renderer.models;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.viewer.collection.CollectionViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.meta.MetaModel;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

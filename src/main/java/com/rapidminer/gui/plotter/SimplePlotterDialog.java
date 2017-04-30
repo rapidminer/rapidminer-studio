@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.ObjectVisualizer;
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.tools.ResourceAction;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -39,6 +34,11 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+
+import com.rapidminer.ObjectVisualizer;
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**

@@ -31,7 +31,6 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.IntArrayDataRow;
-import com.rapidminer.example.table.internal.ColumnarExampleTable;
 import com.rapidminer.example.test.ExampleTestTools;
 import com.rapidminer.tools.Ontology;
 

@@ -18,6 +18,12 @@
 */
 package com.rapidminer.gui.new_plotter.data;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableListener;
 import com.rapidminer.datatable.DataTableView;
@@ -43,12 +49,6 @@ import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent
 import com.rapidminer.gui.new_plotter.listener.events.ValueSourceChangeEvent;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 
 /**

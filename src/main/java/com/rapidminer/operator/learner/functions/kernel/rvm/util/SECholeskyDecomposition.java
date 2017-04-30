@@ -18,10 +18,11 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.rvm.util;
 
-import Jama.Matrix;
+import java.util.LinkedList;
+
 import com.rapidminer.tools.Tools;
 
-import java.util.LinkedList;
+import Jama.Matrix;
 
 
 /**

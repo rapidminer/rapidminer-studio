@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.graphs;
 
+import javax.swing.JComponent;
+
 import com.rapidminer.ObjectVisualizer;
 import com.rapidminer.tools.ObjectVisualizerService;
-
-import javax.swing.JComponent;
 
 
 /**

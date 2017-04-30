@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.performance;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.Averagable;
 import com.rapidminer.tools.math.AverageVector;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
 
 
 /**

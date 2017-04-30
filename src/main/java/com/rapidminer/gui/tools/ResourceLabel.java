@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.tools.I18N;
-
 import java.text.MessageFormat;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+
+import com.rapidminer.tools.I18N;
 
 
 /**

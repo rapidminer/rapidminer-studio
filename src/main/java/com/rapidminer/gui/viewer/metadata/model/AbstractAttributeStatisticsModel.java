@@ -18,14 +18,6 @@
 */
 package com.rapidminer.gui.viewer.metadata.model;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
-import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
-import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent.EventType;
-import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEventListener;
-
 import java.awt.Font;
 import java.lang.ref.WeakReference;
 
@@ -34,6 +26,14 @@ import javax.swing.event.EventListenerList;
 import org.jfree.chart.ChartTheme;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
+import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
+import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent.EventType;
+import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEventListener;
 
 
 /**

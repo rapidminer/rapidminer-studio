@@ -18,10 +18,10 @@
 */
 package com.rapidminer.tools.math.container;
 
-import com.rapidminer.tools.container.Tupel;
-
 import java.io.Serializable;
 import java.util.Collection;
+
+import com.rapidminer.tools.container.Tupel;
 
 
 /**

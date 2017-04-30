@@ -18,15 +18,15 @@
 */
 package com.rapidminer.operator.learner.meta;
 
+import java.util.Iterator;
+import java.util.logging.Level;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
-
-import java.util.Iterator;
-import java.util.logging.Level;
 
 
 /**

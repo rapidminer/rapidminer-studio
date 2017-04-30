@@ -18,17 +18,6 @@
 */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
-import com.rapidminer.example.AttributeTypeException;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.Statistics;
-import com.rapidminer.example.Tools;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.operator.Annotations;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.ParameterService;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +28,17 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
+import com.rapidminer.example.AttributeTypeException;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Statistics;
+import com.rapidminer.example.Tools;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.operator.Annotations;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.ParameterService;
 
 
 /**

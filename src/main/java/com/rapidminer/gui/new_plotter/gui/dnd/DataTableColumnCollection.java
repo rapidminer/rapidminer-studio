@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.new_plotter.gui.dnd;
 
-import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
-
 import java.awt.datatransfer.DataFlavor;
 import java.util.List;
+
+import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
 
 
 /**

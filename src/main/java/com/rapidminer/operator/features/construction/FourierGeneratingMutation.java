@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.features.construction;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
@@ -27,10 +31,6 @@ import com.rapidminer.generator.GenerationException;
 import com.rapidminer.generator.SinusFactory;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

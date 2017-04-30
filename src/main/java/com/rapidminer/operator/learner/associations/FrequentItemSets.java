@@ -18,13 +18,13 @@
 */
 package com.rapidminer.operator.learner.associations;
 
-import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.tools.Tools;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+
+import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.tools.Tools;
 
 
 /**

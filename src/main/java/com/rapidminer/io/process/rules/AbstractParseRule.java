@@ -18,12 +18,12 @@
 */
 package com.rapidminer.io.process.rules;
 
+import org.w3c.dom.Element;
+
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.XMLException;
-
-import org.w3c.dom.Element;
 
 
 /**

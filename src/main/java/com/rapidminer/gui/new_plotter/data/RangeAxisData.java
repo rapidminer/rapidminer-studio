@@ -18,6 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.data;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
 import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
@@ -30,11 +35,6 @@ import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.tools.container.Pair;
-
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 
 /**

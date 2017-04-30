@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
-import com.rapidminer.gui.new_plotter.listener.LegendConfigurationListener;
-import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent.LegendConfigurationChangeType;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.lang.ref.WeakReference;
@@ -31,6 +26,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.jfree.ui.RectangleEdge;
+
+import com.rapidminer.gui.new_plotter.listener.LegendConfigurationListener;
+import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent.LegendConfigurationChangeType;
+import com.rapidminer.tools.I18N;
 
 
 /**

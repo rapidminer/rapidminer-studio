@@ -42,8 +42,6 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
-import com.rapidminer.studio.io.data.DataSetReader;
-import com.rapidminer.studio.io.data.DefaultColumnMetaData;
 
 
 /**

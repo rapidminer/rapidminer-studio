@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.properties;
 
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeMatrix;
-
 import java.awt.event.ActionEvent;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -30,6 +25,11 @@ import java.util.LinkedList;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
+
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeMatrix;
 
 
 /**

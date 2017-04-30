@@ -18,6 +18,11 @@
 */
 package com.rapidminer.gui.renderer.data;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.viewer.metadata.MetaDataStatisticsViewer;
@@ -27,11 +32,6 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
-import java.awt.Dimension;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

@@ -18,11 +18,6 @@
 */
 package com.rapidminer.parameter;
 
-import com.rapidminer.tools.AbstractObservable;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observer;
-import com.rapidminer.tools.Tools;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,6 +28,11 @@ import java.util.logging.Level;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.rapidminer.tools.AbstractObservable;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observer;
+import com.rapidminer.tools.Tools;
 
 
 /**

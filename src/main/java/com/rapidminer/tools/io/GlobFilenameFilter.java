@@ -18,11 +18,11 @@
 */
 package com.rapidminer.tools.io;
 
-import com.rapidminer.tools.GlobCompiler;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.regex.Pattern;
+
+import com.rapidminer.tools.GlobCompiler;
 
 
 /**

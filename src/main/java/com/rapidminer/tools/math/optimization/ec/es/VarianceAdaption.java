@@ -18,10 +18,10 @@
 */
 package com.rapidminer.tools.math.optimization.ec.es;
 
-import com.rapidminer.tools.LoggingHandler;
-
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import com.rapidminer.tools.LoggingHandler;
 
 
 /**

@@ -18,6 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.rapidminer.gui.new_plotter.ChartConfigurationException;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
@@ -39,15 +48,6 @@ import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction;
 import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction.AggregationFunctionType;
 import com.rapidminer.tools.math.function.aggregation.AggregationFunction;
-
-import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 
 /**

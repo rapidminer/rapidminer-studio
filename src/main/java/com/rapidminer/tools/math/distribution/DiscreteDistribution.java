@@ -18,9 +18,9 @@
 */
 package com.rapidminer.tools.math.distribution;
 
-import com.rapidminer.tools.Tools;
-
 import java.util.ArrayList;
+
+import com.rapidminer.tools.Tools;
 
 
 /**

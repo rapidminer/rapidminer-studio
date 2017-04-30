@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.io;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -29,9 +32,6 @@ import com.rapidminer.operator.ports.metadata.PassThroughRule;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.tools.io.Encoding;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

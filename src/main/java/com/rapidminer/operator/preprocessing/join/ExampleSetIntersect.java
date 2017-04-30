@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.preprocessing.join;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -35,9 +38,6 @@ import com.rapidminer.operator.preprocessing.AbstractDataProcessing;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

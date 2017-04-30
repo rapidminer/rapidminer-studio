@@ -18,10 +18,10 @@
 */
 package com.rapidminer;
 
+import java.io.IOException;
+
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.XMLException;
-
-import java.io.IOException;
 
 
 /**

@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.math.MathFunctions;
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -46,6 +41,11 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**

@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator.learner.functions.linear;
 
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.util.List;
 
 
 /**

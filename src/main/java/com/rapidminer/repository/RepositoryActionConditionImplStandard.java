@@ -18,10 +18,10 @@
 */
 package com.rapidminer.repository;
 
-import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
-
 import java.util.Arrays;
 import java.util.List;
+
+import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
 
 
 /**

@@ -18,6 +18,12 @@
 */
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport.csv;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MDInteger;
@@ -25,12 +31,6 @@ import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.container.Range;
-
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 
 /**

@@ -18,12 +18,12 @@
 */
 package com.rapidminer.tools.math.similarity.numerical;
 
+import java.util.ArrayList;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
-
-import java.util.ArrayList;
 
 
 /**

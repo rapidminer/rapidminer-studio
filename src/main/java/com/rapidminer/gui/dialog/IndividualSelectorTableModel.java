@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.dialog;
 
-import com.rapidminer.operator.features.Individual;
-import com.rapidminer.operator.features.Population;
-import com.rapidminer.operator.performance.PerformanceCriterion;
-import com.rapidminer.operator.performance.PerformanceVector;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.operator.features.Individual;
+import com.rapidminer.operator.features.Population;
+import com.rapidminer.operator.performance.PerformanceCriterion;
+import com.rapidminer.operator.performance.PerformanceVector;
 
 
 /**

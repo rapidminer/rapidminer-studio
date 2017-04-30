@@ -18,14 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush;
 
-import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection.SelectionType;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelectionListener;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.plots.LinkAndBrushPlot;
-import com.rapidminer.gui.plotter.CoordinateTransformation;
-import com.rapidminer.gui.plotter.NullCoordinateTransformation;
-import com.rapidminer.tools.container.Pair;
-
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -61,6 +53,14 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.Range;
+
+import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection.SelectionType;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelectionListener;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.plots.LinkAndBrushPlot;
+import com.rapidminer.gui.plotter.CoordinateTransformation;
+import com.rapidminer.gui.plotter.NullCoordinateTransformation;
+import com.rapidminer.tools.container.Pair;
 
 
 /**

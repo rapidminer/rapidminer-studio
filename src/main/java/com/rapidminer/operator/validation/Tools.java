@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.validation;
 
+import java.util.List;
+
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.MissingIOObjectException;
@@ -27,8 +29,6 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.tools.math.AverageVector;
-
-import java.util.List;
 
 
 /**

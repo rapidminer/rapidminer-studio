@@ -18,6 +18,17 @@
 */
 package com.rapidminer.gui.viewer;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Random;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
@@ -29,17 +40,6 @@ import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.plotter.charts.HistogramChart;
 import com.rapidminer.operator.similarity.SimilarityMeasureObject;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
-
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Random;
-
-import javax.swing.ButtonGroup;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 
 
 /**

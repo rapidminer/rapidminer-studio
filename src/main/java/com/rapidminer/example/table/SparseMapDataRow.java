@@ -18,10 +18,10 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Tools;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.rapidminer.example.Tools;
 
 
 /**

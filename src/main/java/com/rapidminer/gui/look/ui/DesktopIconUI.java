@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.look.ui;
 
-import com.rapidminer.gui.look.InternalFrameTitlePane;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 
 import javax.swing.JComponent;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicDesktopIconUI;
+
+import com.rapidminer.gui.look.InternalFrameTitlePane;
 
 
 /**

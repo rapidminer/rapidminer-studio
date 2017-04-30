@@ -18,11 +18,12 @@
 */
 package com.rapidminer.tools.math.matrix;
 
-import Jama.Matrix;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+
+import Jama.Matrix;
 
 
 /**

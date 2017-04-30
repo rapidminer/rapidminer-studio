@@ -18,13 +18,6 @@
 */
 package com.rapidminer.example;
 
-import com.rapidminer.RapidMiner;
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.SimpleDataTable;
-import com.rapidminer.datatable.SimpleDataTableRow;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.math.AverageVector;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -48,6 +41,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.rapidminer.RapidMiner;
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.SimpleDataTable;
+import com.rapidminer.datatable.SimpleDataTableRow;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.math.AverageVector;
 
 
 /**

@@ -18,15 +18,15 @@
 */
 package com.rapidminer.parameter;
 
-import com.rapidminer.MacroHandler;
-import com.rapidminer.gui.wizards.PreviewCreator;
-import com.rapidminer.gui.wizards.PreviewListener;
-import com.rapidminer.tools.LogService;
-
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.rapidminer.MacroHandler;
+import com.rapidminer.gui.wizards.PreviewCreator;
+import com.rapidminer.gui.wizards.PreviewListener;
+import com.rapidminer.tools.LogService;
 
 
 /**

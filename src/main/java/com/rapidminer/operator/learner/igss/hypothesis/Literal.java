@@ -18,9 +18,9 @@
 */
 package com.rapidminer.operator.learner.igss.hypothesis;
 
-import com.rapidminer.example.Attribute;
-
 import java.io.Serializable;
+
+import com.rapidminer.example.Attribute;
 
 
 /**

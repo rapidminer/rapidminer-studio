@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator.ports;
 
+import java.util.List;
+import java.util.Observer;
+
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.Observable;
-
-import java.util.List;
-import java.util.Observer;
 
 
 /**

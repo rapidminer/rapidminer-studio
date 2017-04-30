@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.actions;
 
+import java.awt.event.ActionEvent;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
 import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
 import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
 import com.rapidminer.gui.tools.ResourceAction;
-
-import java.awt.event.ActionEvent;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

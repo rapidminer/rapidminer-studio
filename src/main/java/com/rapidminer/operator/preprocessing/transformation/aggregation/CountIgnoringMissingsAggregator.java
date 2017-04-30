@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
+import java.util.HashSet;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.table.DataRow;
-
-import java.util.HashSet;
 
 
 /**

@@ -18,6 +18,10 @@
 */
 package com.rapidminer.gui.docking;
 
+import java.awt.Dialog;
+import java.awt.Frame;
+import java.awt.Window;
+
 import com.vlsolutions.swing.docking.DockViewAsTab;
 import com.vlsolutions.swing.docking.Dockable;
 import com.vlsolutions.swing.docking.FloatingDockableContainer;
@@ -25,10 +29,6 @@ import com.vlsolutions.swing.docking.MaximizedDockViewAsTab;
 import com.vlsolutions.swing.docking.SingleDockableContainer;
 import com.vlsolutions.swing.docking.TabFactory;
 import com.vlsolutions.swing.docking.TabbedDockView;
-
-import java.awt.Dialog;
-import java.awt.Frame;
-import java.awt.Window;
 
 
 /**

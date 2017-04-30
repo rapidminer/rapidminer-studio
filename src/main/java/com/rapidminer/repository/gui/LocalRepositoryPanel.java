@@ -18,17 +18,6 @@
 */
 package com.rapidminer.repository.gui;
 
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.ResourceActionAdapter;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.repository.Repository;
-import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryLocation;
-import com.rapidminer.repository.RepositoryManager;
-import com.rapidminer.repository.local.LocalRepository;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -49,6 +38,17 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.ResourceActionAdapter;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.local.LocalRepository;
+import com.rapidminer.tools.I18N;
 
 
 /**

@@ -18,19 +18,6 @@
 */
 package com.rapidminer.gui.graphs;
 
-import com.rapidminer.gui.plotter.ColorProvider;
-import com.rapidminer.operator.learner.tree.Tree;
-import com.rapidminer.operator.learner.tree.TreeModel;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.util.Context;
-import edu.uci.ics.jung.visualization.Layer;
-import edu.uci.ics.jung.visualization.RenderContext;
-import edu.uci.ics.jung.visualization.renderers.Renderer;
-import edu.uci.ics.jung.visualization.transform.MutableTransformer;
-import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
-import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Paint;
@@ -44,6 +31,20 @@ import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.JComponent;
+
+import com.rapidminer.gui.plotter.ColorProvider;
+import com.rapidminer.operator.learner.tree.Tree;
+import com.rapidminer.operator.learner.tree.TreeModel;
+
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.Context;
+import edu.uci.ics.jung.visualization.Layer;
+import edu.uci.ics.jung.visualization.RenderContext;
+import edu.uci.ics.jung.visualization.renderers.Renderer;
+import edu.uci.ics.jung.visualization.transform.MutableTransformer;
+import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
+import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 
 
 /**

@@ -18,6 +18,15 @@
 */
 package com.rapidminer.gui.operatormenu;
 
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Iterator;
+
+import javax.swing.Icon;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+
 import com.rapidminer.gui.tools.ResourceMenu;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
@@ -27,15 +36,6 @@ import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.OperatorService.OperatorServiceListener;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
-
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Iterator;
-
-import javax.swing.Icon;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 
 
 /**

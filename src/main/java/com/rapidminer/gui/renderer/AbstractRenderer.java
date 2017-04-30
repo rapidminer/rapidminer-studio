@@ -18,6 +18,16 @@
 */
 package com.rapidminer.gui.renderer;
 
+import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.parameter.ParameterType;
@@ -29,16 +39,6 @@ import com.rapidminer.parameter.Parameters;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.math.StringToMatrixConverter;
-
-import java.awt.Color;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

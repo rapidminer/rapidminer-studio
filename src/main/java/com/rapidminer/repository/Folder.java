@@ -18,11 +18,11 @@
 */
 package com.rapidminer.repository;
 
+import java.util.List;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.ProgressListener;
-
-import java.util.List;
 
 
 /**

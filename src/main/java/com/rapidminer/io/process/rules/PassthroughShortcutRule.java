@@ -18,6 +18,9 @@
 */
 package com.rapidminer.io.process.rules;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.operator.Operator;
@@ -27,9 +30,6 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.InputPorts;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.OutputPorts;
-
-import java.util.Collections;
-import java.util.List;
 
 
 /**

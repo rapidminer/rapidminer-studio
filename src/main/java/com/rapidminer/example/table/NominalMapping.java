@@ -18,10 +18,10 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.example.Example;
-
 import java.io.Serializable;
 import java.util.List;
+
+import com.rapidminer.example.Example;
 
 
 /**

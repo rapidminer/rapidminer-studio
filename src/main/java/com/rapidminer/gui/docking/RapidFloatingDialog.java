@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.docking;
 
-import com.vlsolutions.swing.docking.FloatingDialog;
-
 import java.awt.Dialog;
 import java.awt.Frame;
+
+import com.vlsolutions.swing.docking.FloatingDialog;
 
 
 /**

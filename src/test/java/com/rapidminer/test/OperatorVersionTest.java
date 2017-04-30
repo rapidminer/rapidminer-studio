@@ -18,7 +18,8 @@
 */
 package com.rapidminer.test;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 import org.junit.Test;
 

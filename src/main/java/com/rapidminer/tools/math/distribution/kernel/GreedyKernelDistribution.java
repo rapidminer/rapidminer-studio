@@ -18,9 +18,9 @@
 */
 package com.rapidminer.tools.math.distribution.kernel;
 
-import com.rapidminer.tools.math.distribution.NormalDistribution;
-
 import java.util.TreeSet;
+
+import com.rapidminer.tools.math.distribution.NormalDistribution;
 
 
 /**

@@ -19,6 +19,7 @@
 package com.rapidminer.gui.flow;
 
 import java.awt.Container;
+import java.awt.ScrollPane;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseWheelEvent;

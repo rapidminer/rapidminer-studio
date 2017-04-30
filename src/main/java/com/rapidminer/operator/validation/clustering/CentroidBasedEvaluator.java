@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.validation.clustering;
 
+import java.util.List;
+
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
@@ -40,8 +42,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
 import com.rapidminer.tools.math.similarity.divergences.SquaredEuclideanDistance;
 import com.rapidminer.tools.math.similarity.numerical.EuclideanDistance;
-
-import java.util.List;
 
 
 /**

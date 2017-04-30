@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.look;
 
-import com.rapidminer.gui.look.borders.Borders;
-import com.rapidminer.gui.look.borders.DummyBorder;
-import com.rapidminer.gui.look.borders.PopupBorder;
-import com.rapidminer.gui.look.borders.ShadowedPopupMenuBorder;
-
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -40,6 +35,11 @@ import javax.swing.JMenu;
 import javax.swing.JRootPane;
 import javax.swing.Popup;
 import javax.swing.SwingUtilities;
+
+import com.rapidminer.gui.look.borders.Borders;
+import com.rapidminer.gui.look.borders.DummyBorder;
+import com.rapidminer.gui.look.borders.PopupBorder;
+import com.rapidminer.gui.look.borders.ShadowedPopupMenuBorder;
 
 
 /**

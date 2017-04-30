@@ -18,10 +18,6 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.gui.renderer.RendererService;
-import com.rapidminer.tools.LoggingHandler;
-import com.rapidminer.tools.Tools;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.LinkedList;
@@ -29,6 +25,10 @@ import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.Icon;
+
+import com.rapidminer.gui.renderer.RendererService;
+import com.rapidminer.tools.LoggingHandler;
+import com.rapidminer.tools.Tools;
 
 
 /**

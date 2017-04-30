@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.validation.clustering.exampledistribution;
 
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -33,8 +35,6 @@ import com.rapidminer.operator.ports.metadata.PassThroughOrGenerateRule;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.tools.ClassNameMapper;
-
-import java.util.List;
 
 
 /**

@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.flow;
 
+import java.util.LinkedList;
+
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.tools.container.Triple;
-
-import java.util.LinkedList;
 
 
 /**

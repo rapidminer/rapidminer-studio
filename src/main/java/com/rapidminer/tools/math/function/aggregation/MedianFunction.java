@@ -18,10 +18,10 @@
 */
 package com.rapidminer.tools.math.function.aggregation;
 
-import com.rapidminer.example.Attribute;
-
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.rapidminer.example.Attribute;
 
 
 /**

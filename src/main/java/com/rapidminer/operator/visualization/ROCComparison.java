@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.visualization;
 
-import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.tools.math.ROCData;
-
 import java.util.List;
 import java.util.Map;
+
+import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.tools.math.ROCData;
 
 
 /**

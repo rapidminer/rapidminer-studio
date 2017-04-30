@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.learner.tree;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
@@ -49,9 +52,6 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

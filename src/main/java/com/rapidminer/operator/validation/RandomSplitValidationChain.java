@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.validation;
 
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.OperatorCapability;
@@ -36,8 +38,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.List;
 
 
 /**

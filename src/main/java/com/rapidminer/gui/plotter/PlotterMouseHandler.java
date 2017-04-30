@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.ObjectVisualizer;
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.tools.ObjectVisualizerService;
-
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
+
+import com.rapidminer.ObjectVisualizer;
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.tools.ObjectVisualizerService;
 
 
 /**

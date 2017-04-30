@@ -18,25 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.gui;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.new_plotter.ChartConfigurationException;
-import com.rapidminer.gui.new_plotter.PlotConfigurationError;
-import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.DomainConfigManager;
-import com.rapidminer.gui.new_plotter.configuration.DomainConfigManager.Sorting;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.ValueGroupingFactory;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
-import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
-
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
@@ -61,6 +42,25 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.new_plotter.ChartConfigurationException;
+import com.rapidminer.gui.new_plotter.PlotConfigurationError;
+import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.DomainConfigManager;
+import com.rapidminer.gui.new_plotter.configuration.DomainConfigManager.Sorting;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.ValueGroupingFactory;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
+import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.gui.tools.ResourceLabel;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.I18N;
 
 
 /**

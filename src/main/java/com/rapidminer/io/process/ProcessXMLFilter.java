@@ -18,10 +18,10 @@
 */
 package com.rapidminer.io.process;
 
+import org.w3c.dom.Element;
+
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
-
-import org.w3c.dom.Element;
 
 
 /**

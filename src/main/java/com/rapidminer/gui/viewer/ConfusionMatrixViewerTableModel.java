@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.viewer;
 
-import com.rapidminer.tools.Tools;
-
 import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.tools.Tools;
 
 
 /**

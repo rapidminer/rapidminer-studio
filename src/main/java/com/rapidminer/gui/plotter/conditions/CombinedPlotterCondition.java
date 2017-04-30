@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.plotter.conditions;
 
-import com.rapidminer.datatable.DataTable;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.datatable.DataTable;
 
 
 /**

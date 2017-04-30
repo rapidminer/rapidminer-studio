@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.utility;
 
-import com.rapidminer.gui.new_plotter.listener.ValueRangeListener;
-import com.rapidminer.gui.new_plotter.listener.events.ValueRangeChangeEvent;
-
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.gui.new_plotter.listener.ValueRangeListener;
+import com.rapidminer.gui.new_plotter.listener.events.ValueRangeChangeEvent;
 
 
 /**

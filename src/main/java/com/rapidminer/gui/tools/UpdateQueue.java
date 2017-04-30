@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.tools;
 
+import java.util.logging.Level;
+
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-
-import java.util.logging.Level;
 
 
 /**

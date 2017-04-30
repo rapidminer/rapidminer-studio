@@ -18,6 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.listener.events;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.jfree.chart.plot.PlotOrientation;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
@@ -25,13 +32,6 @@ import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
 import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
 import com.rapidminer.gui.new_plotter.engine.jfreechart.link_and_brush.listener.LinkAndBrushSelection;
 import com.rapidminer.gui.new_plotter.templates.style.ColorScheme;
-
-import java.awt.Color;
-import java.awt.Font;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.jfree.chart.plot.PlotOrientation;
 
 
 /**

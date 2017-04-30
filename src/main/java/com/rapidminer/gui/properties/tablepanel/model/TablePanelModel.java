@@ -18,6 +18,12 @@
 */
 package com.rapidminer.gui.properties.tablepanel.model;
 
+import java.util.Collection;
+import java.util.List;
+
+import javax.swing.event.TableModelEvent;
+import javax.swing.table.TableModel;
+
 import com.rapidminer.gui.properties.tablepanel.TablePanel;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeCheckBox;
@@ -27,12 +33,6 @@ import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeDateTim
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldTime;
-
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.event.TableModelEvent;
-import javax.swing.table.TableModel;
 
 
 /**

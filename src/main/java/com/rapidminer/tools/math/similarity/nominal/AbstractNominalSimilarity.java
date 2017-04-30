@@ -18,6 +18,11 @@
 */
 package com.rapidminer.tools.math.similarity.nominal;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -26,11 +31,6 @@ import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.similarity.SimilarityMeasure;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 
 /**

@@ -18,12 +18,12 @@
 */
 package com.rapidminer.tools.math;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import com.rapidminer.tools.Tools;
 
 
 /**

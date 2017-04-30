@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.plotter.settings;
 
-import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
-
 import javax.swing.JSlider;
+
+import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
 
 
 /**

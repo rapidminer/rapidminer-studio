@@ -18,6 +18,11 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -32,11 +37,6 @@ import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.quickfix.OperatorInsertionQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

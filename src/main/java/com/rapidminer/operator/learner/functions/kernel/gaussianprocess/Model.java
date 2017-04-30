@@ -18,10 +18,11 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.gaussianprocess;
 
-import Jama.Matrix;
+import java.io.Serializable;
+
 import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.Kernel;
 
-import java.io.Serializable;
+import Jama.Matrix;
 
 
 /**

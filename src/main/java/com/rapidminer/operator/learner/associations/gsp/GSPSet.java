@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.learner.associations.gsp;
 
+import java.util.TreeSet;
+
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.Tupel;
-
-import java.util.TreeSet;
 
 
 /**

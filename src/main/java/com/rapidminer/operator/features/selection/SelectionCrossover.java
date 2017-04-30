@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.features.selection;
 
-import com.rapidminer.operator.features.Individual;
-import com.rapidminer.operator.features.Population;
-import com.rapidminer.operator.features.PopulationOperator;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+
+import com.rapidminer.operator.features.Individual;
+import com.rapidminer.operator.features.Population;
+import com.rapidminer.operator.features.PopulationOperator;
 
 
 /**

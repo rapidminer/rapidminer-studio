@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.gui;
 
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-
 import java.awt.CardLayout;
 
 import javax.swing.JTree;
+
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
 
 
 /**

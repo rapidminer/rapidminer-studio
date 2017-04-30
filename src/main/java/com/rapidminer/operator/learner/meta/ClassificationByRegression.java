@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.learner.meta;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -38,8 +40,6 @@ import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.Iterator;
 
 
 /**

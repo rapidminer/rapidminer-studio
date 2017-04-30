@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.viewer.metadata.event;
 
-import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel;
-
 import java.util.EventListener;
+
+import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel;
 
 
 /**

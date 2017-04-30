@@ -31,8 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import Jama.Matrix;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -58,6 +56,8 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.container.Pair;
 import com.rapidminer.tools.math.matrix.CovarianceMatrix;
+
+import Jama.Matrix;
 
 
 /**

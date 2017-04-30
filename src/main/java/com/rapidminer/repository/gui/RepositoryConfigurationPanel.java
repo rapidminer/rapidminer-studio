@@ -18,15 +18,15 @@
 */
 package com.rapidminer.repository.gui;
 
-import com.rapidminer.repository.Repository;
-import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryManager;
-
 import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryManager;
 
 
 /**

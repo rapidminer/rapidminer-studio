@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.renderer.itemsets;
 
+import java.awt.Component;
+
+import javax.swing.table.TableModel;
+
 import com.rapidminer.gui.renderer.AbstractTableModelTableRenderer;
 import com.rapidminer.gui.viewer.AssociationRuleTableModel;
 import com.rapidminer.gui.viewer.AssociationRuleTableViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.learner.associations.AssociationRules;
-
-import java.awt.Component;
-
-import javax.swing.table.TableModel;
 
 
 /**

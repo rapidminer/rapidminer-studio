@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.listener.events;
 
+import java.awt.Color;
+
 import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
 import com.rapidminer.gui.new_plotter.configuration.ValueSource;
 import com.rapidminer.gui.new_plotter.configuration.event.AxisParallelLinesConfigurationChangeEvent;
-
-import java.awt.Color;
 
 
 /**

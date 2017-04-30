@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.learner.meta;
 
+import java.util.List;
+
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ExecutionUnit;
@@ -34,8 +36,6 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
-
-import java.util.List;
 
 
 /**

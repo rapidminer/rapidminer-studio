@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.IOException;
+
 import com.rapidminer.FileProcessLocation;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
-
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.IOException;
 
 
 /**

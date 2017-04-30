@@ -18,6 +18,8 @@
 */
 package com.rapidminer.example.set;
 
+import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -31,8 +33,6 @@ import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.similarity.ExampleSet2SimilarityExampleSet;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
-
-import java.util.Iterator;
 
 
 /**

@@ -18,13 +18,13 @@
 */
 package com.rapidminer.example.table;
 
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Tools;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
+
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Tools;
 
 
 /**

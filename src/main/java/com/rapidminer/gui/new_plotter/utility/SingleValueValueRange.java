@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter.utility;
 
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.Tools;
-
 import java.sql.Date;
 import java.text.DateFormat;
 import java.util.Formatter;
 import java.util.Locale;
+
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.Tools;
 
 
 /**

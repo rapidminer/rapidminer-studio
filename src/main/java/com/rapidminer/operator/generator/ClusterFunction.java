@@ -18,14 +18,14 @@
 */
 package com.rapidminer.operator.generator;
 
+import java.util.Set;
+
 import com.rapidminer.example.Attributes;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.Set;
 
 
 /**

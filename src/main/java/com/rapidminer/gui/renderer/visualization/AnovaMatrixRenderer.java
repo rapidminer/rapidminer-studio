@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.renderer.visualization;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.renderer.AbstractRenderer;
 import com.rapidminer.gui.viewer.ANOVAMatrixViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.visualization.dependencies.ANOVAMatrix;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

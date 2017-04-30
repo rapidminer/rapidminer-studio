@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.gui.new_plotter.engine.jfreechart.JFreeChartPlotEngine;
 import com.rapidminer.gui.new_plotter.gui.dialog.AddParallelLineDialog;
 import com.rapidminer.gui.new_plotter.gui.dialog.ManageZoomDialog;
 import com.rapidminer.gui.tools.ResourceAction;
-
-import java.awt.event.ActionEvent;
 
 
 /**

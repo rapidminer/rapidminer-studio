@@ -18,8 +18,6 @@
 */
 package com.rapidminer.tools.parameter;
 
-import com.rapidminer.tools.FileSystemService;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +26,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.rapidminer.tools.FileSystemService;
 
 
 /**

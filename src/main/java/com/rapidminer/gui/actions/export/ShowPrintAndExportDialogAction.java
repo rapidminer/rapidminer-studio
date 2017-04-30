@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.actions.export;
 
-import com.rapidminer.gui.tools.PrintingTools;
-import com.rapidminer.gui.tools.ResourceAction;
-
 import java.awt.event.ActionEvent;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.gui.tools.PrintingTools;
+import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**

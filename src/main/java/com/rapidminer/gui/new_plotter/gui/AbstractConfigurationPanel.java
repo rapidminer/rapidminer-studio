@@ -18,13 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.gui;
 
-import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.listener.PlotConfigurationListener;
-import com.rapidminer.gui.new_plotter.listener.PlotInstanceChangedListener;
-import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
-import com.rapidminer.gui.tools.SwingTools;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -44,6 +37,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
+
+import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.listener.PlotConfigurationListener;
+import com.rapidminer.gui.new_plotter.listener.PlotInstanceChangedListener;
+import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
+import com.rapidminer.gui.tools.SwingTools;
 
 
 /**

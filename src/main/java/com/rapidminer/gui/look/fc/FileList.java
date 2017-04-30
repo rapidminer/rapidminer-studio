@@ -65,8 +65,6 @@ import javax.swing.JSplitPane;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileSystemView;
 
-import sun.awt.shell.ShellFolder;
-
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.look.ui.TableHeaderUI;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -74,6 +72,8 @@ import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.remote.RemoteFileSystemView;
 import com.rapidminer.tools.I18N;
+
+import sun.awt.shell.ShellFolder;
 
 
 /**

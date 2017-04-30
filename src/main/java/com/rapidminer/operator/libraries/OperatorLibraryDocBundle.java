@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.libraries;
 
-import com.rapidminer.tools.documentation.GroupDocumentation;
-import com.rapidminer.tools.documentation.OperatorDocBundle;
-
 import java.util.Enumeration;
 import java.util.Vector;
+
+import com.rapidminer.tools.documentation.GroupDocumentation;
+import com.rapidminer.tools.documentation.OperatorDocBundle;
 
 
 /**

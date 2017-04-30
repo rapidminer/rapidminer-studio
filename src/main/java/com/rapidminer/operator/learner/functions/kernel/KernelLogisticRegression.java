@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.learner.functions.kernel;
 
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorCapability;
@@ -32,8 +34,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.kernels.Kernel;
 import com.rapidminer.tools.math.optimization.ec.es.ESOptimization;
-
-import java.util.List;
 
 
 /**

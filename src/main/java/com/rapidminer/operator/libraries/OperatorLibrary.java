@@ -18,6 +18,11 @@
 */
 package com.rapidminer.operator.libraries;
 
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -26,11 +31,6 @@ import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
 import com.rapidminer.tools.documentation.OperatorDocumentation;
-
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
 
 
 /**

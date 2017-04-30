@@ -18,12 +18,6 @@
 */
 package com.rapidminer.gui.tools.components;
 
-import com.rapidminer.gui.actions.ToggleAction;
-import com.rapidminer.gui.actions.ToggleAction.ToggleActionListener;
-import com.rapidminer.gui.tools.ArrowButton;
-import com.rapidminer.gui.tools.ViewToolBar;
-import com.vlsolutions.swing.toolbars.VLToolBar;
-
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -41,6 +35,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+
+import com.rapidminer.gui.actions.ToggleAction;
+import com.rapidminer.gui.actions.ToggleAction.ToggleActionListener;
+import com.rapidminer.gui.tools.ArrowButton;
+import com.rapidminer.gui.tools.ViewToolBar;
+import com.vlsolutions.swing.toolbars.VLToolBar;
 
 
 /**

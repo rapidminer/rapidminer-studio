@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.renderer.weights;
 
+import java.util.LinkedHashMap;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.gui.plotter.Plotter;
 import com.rapidminer.gui.plotter.PlotterConfigurationModel;
 import com.rapidminer.gui.renderer.AbstractDataTablePlotterRenderer;
 import com.rapidminer.operator.IOContainer;
-
-import java.util.LinkedHashMap;
 
 
 /**

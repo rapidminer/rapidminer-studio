@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.ports.impl;
 
+import java.util.List;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.InputPort;
@@ -26,8 +28,6 @@ import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.PortOwner;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
-
-import java.util.List;
 
 
 /**

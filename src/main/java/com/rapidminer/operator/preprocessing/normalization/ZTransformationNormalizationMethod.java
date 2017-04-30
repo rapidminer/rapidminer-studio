@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.preprocessing.normalization;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
@@ -32,10 +36,6 @@ import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.container.Tupel;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 
 
 /**

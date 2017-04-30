@@ -18,6 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.gui.groupingpanel;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JCheckBox;
+
 import com.rapidminer.gui.new_plotter.configuration.AbstractValueGrouping;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
@@ -30,11 +35,6 @@ import com.rapidminer.gui.new_plotter.listener.events.DimensionConfigChangeEvent
 import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
 import com.rapidminer.gui.tools.ResourceLabel;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JCheckBox;
 
 
 /**

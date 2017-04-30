@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.renderer;
 
+import java.awt.Component;
+
 import com.rapidminer.gui.actions.export.PrintableComponent;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.report.Reportable;
-
-import java.awt.Component;
 
 
 /**

@@ -18,14 +18,14 @@
 */
 package com.rapidminer.tools.math.container;
 
-import com.rapidminer.tools.container.Tupel;
-import com.rapidminer.tools.math.similarity.DistanceMeasure;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.RandomAccess;
+
+import com.rapidminer.tools.container.Tupel;
+import com.rapidminer.tools.math.similarity.DistanceMeasure;
 
 
 /**

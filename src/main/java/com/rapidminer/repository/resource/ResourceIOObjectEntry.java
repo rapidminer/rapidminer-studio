@@ -18,6 +18,10 @@
 */
 package com.rapidminer.repository.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -28,10 +32,6 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 
 
 /**

@@ -18,15 +18,15 @@
 */
 package com.rapidminer.operator.learner.tree;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.tools.math.MathFunctions;
-
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 
 /**

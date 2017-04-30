@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.properties;
 
-import com.rapidminer.parameter.ParameterType;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
+
+import com.rapidminer.parameter.ParameterType;
 
 
 /**

@@ -18,15 +18,15 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.quickfix.AddCompatibleOperatorQuickFix;
 import com.rapidminer.operator.ports.quickfix.ConnectToQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

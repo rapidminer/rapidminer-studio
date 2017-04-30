@@ -18,12 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.key;
 
-import com.rapidminer.gui.properties.DefaultRMCellEditor;
-import com.rapidminer.gui.properties.PropertyTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterType;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -32,6 +26,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+
+import com.rapidminer.gui.properties.DefaultRMCellEditor;
+import com.rapidminer.gui.properties.PropertyTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterType;
 
 
 /**

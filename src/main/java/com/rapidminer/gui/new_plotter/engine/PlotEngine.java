@@ -18,10 +18,10 @@
 */
 package com.rapidminer.gui.new_plotter.engine;
 
+import java.util.List;
+
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
 import com.rapidminer.gui.new_plotter.data.PlotInstance;
-
-import java.util.List;
 
 
 /**

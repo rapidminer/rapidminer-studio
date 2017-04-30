@@ -18,13 +18,6 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.Process;
-import com.rapidminer.operator.ProcessRootOperator;
-import com.rapidminer.operator.ResultObject;
-import com.rapidminer.operator.UserError;
-import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.io.Encoding;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,6 +26,13 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import com.rapidminer.Process;
+import com.rapidminer.operator.ProcessRootOperator;
+import com.rapidminer.operator.ResultObject;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.io.Encoding;
 
 
 /**

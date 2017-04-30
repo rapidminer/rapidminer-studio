@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.performance;
 
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -25,8 +27,6 @@ import com.rapidminer.operator.ValueDouble;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
-
-import java.util.List;
 
 
 /**

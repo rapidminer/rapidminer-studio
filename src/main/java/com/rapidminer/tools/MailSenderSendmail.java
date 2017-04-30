@@ -18,11 +18,11 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.RapidMiner;
-
 import java.io.PrintStream;
 import java.util.Map;
 import java.util.logging.Level;
+
+import com.rapidminer.RapidMiner;
 
 
 /**

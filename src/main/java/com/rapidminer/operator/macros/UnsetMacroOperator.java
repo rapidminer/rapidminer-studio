@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.macros;
 
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -26,8 +28,6 @@ import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.parameter.ParameterTypeString;
-
-import java.util.List;
 
 
 /**

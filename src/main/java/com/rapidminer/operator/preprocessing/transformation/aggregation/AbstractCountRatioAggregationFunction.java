@@ -18,10 +18,10 @@
 */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.tools.Ontology;
-
-import java.util.List;
 
 
 /**

@@ -18,17 +18,17 @@
 */
 package com.rapidminer.gui.plotter;
 
-import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
-import com.rapidminer.gui.plotter.settings.ListeningJCheckBox;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeBoolean;
-
 import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import com.rapidminer.gui.plotter.PlotterConfigurationModel.PlotterSettingsChangedListener;
+import com.rapidminer.gui.plotter.settings.ListeningJCheckBox;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 
 
 /**

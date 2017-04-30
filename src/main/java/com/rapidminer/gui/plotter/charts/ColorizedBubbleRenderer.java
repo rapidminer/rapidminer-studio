@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui.plotter.charts;
 
-import com.rapidminer.gui.plotter.ColorProvider;
-import com.rapidminer.tools.math.MathFunctions;
-
 import java.awt.Color;
 import java.awt.Paint;
 
 import org.jfree.chart.renderer.xy.XYBubbleRenderer;
+
+import com.rapidminer.gui.plotter.ColorProvider;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**

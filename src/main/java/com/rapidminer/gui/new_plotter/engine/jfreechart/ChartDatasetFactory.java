@@ -18,24 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart;
 
-import com.rapidminer.gui.new_plotter.ChartPlottimeException;
-import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.GroupCellKey;
-import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.IndicatorType;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
-import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
-import com.rapidminer.gui.new_plotter.data.GroupCellData;
-import com.rapidminer.gui.new_plotter.data.GroupCellKeyAndData;
-import com.rapidminer.gui.new_plotter.data.GroupCellSeriesData;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.data.ValueSourceData;
-import com.rapidminer.gui.new_plotter.utility.ValueRange;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.container.Pair;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -53,6 +35,24 @@ import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
+import com.rapidminer.gui.new_plotter.ChartPlottimeException;
+import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.GroupCellKey;
+import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.IndicatorType;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
+import com.rapidminer.gui.new_plotter.data.DimensionConfigData;
+import com.rapidminer.gui.new_plotter.data.GroupCellData;
+import com.rapidminer.gui.new_plotter.data.GroupCellKeyAndData;
+import com.rapidminer.gui.new_plotter.data.GroupCellSeriesData;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.data.ValueSourceData;
+import com.rapidminer.gui.new_plotter.utility.ValueRange;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.container.Pair;
 
 
 /**

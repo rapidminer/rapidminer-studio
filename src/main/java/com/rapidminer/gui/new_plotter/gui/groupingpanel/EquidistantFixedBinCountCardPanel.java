@@ -18,15 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.gui.groupingpanel;
 
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.EquidistantFixedBinCountBinning;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-import com.rapidminer.gui.tools.ResourceLabel;
-
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,6 +29,15 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.EquidistantFixedBinCountBinning;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
+import com.rapidminer.gui.tools.ResourceLabel;
 
 
 /**

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.evosvm;
 
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -40,8 +42,6 @@ import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.kernels.Kernel;
 import com.rapidminer.tools.math.optimization.ec.es.ESOptimization;
-
-import java.util.List;
 
 
 /**

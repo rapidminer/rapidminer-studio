@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.tools.table;
 
-import com.rapidminer.gui.tools.ExtendedJTable;
-
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
+
+import com.rapidminer.gui.tools.ExtendedJTable;
 
 
 /**

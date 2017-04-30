@@ -18,15 +18,6 @@
 */
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport;
 
-import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.UpdateQueue;
-import com.rapidminer.operator.io.AbstractDataReader;
-import com.rapidminer.operator.io.AbstractDataReader.AttributeColumn;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.Tools;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -57,6 +48,15 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
+
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.UpdateQueue;
+import com.rapidminer.operator.io.AbstractDataReader;
+import com.rapidminer.operator.io.AbstractDataReader.AttributeColumn;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.Tools;
 
 
 /**

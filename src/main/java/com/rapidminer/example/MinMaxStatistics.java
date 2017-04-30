@@ -18,9 +18,9 @@
 */
 package com.rapidminer.example;
 
-import com.rapidminer.tools.LogService;
-
 import java.util.logging.Level;
+
+import com.rapidminer.tools.LogService;
 
 
 /**

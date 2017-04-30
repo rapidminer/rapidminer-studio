@@ -18,14 +18,14 @@
 */
 package com.rapidminer.parameter;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
 import com.rapidminer.Process;
 import com.rapidminer.gui.renderer.Renderer;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 
 
 /**

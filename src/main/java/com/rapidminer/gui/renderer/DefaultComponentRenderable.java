@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.renderer;
 
-import com.rapidminer.gui.plotter.PlotterPanel;
-import com.rapidminer.report.Renderable;
-
 import java.awt.Component;
 import java.awt.Graphics;
+
+import com.rapidminer.gui.plotter.PlotterPanel;
+import com.rapidminer.report.Renderable;
 
 
 /**

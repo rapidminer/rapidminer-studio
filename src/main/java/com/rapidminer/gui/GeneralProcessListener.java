@@ -18,13 +18,13 @@
 */
 package com.rapidminer.gui;
 
+import java.util.List;
+
 import com.rapidminer.Process;
 import com.rapidminer.ProcessListener;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.operator.Operator;
-
-import java.util.List;
 
 
 /**

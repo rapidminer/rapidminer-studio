@@ -18,16 +18,16 @@
 */
 package com.rapidminer.example.table;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.att.AttributeSet;
-
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
 
 
 /**

@@ -18,14 +18,14 @@
 */
 package com.rapidminer.gui.attributeeditor.actions;
 
-import com.rapidminer.gui.attributeeditor.AttributeEditor;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
-
 import java.awt.event.ActionEvent;
 import java.io.File;
 
 import javax.swing.JOptionPane;
+
+import com.rapidminer.gui.attributeeditor.AttributeEditor;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.SwingTools;
 
 
 /**

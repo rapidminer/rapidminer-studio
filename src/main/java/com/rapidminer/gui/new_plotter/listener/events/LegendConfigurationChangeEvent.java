@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.new_plotter.listener.events;
 
-import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration.LegendPosition;
-
 import java.awt.Color;
 import java.awt.Font;
+
+import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.LegendConfiguration.LegendPosition;
 
 
 /**

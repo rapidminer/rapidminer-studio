@@ -29,8 +29,6 @@ import com.rapidminer.tools.expression.ExpressionEvaluator;
 import com.rapidminer.tools.expression.ExpressionException;
 import com.rapidminer.tools.expression.ExpressionParser;
 import com.rapidminer.tools.expression.ExpressionParsingException;
-import com.rapidminer.tools.expression.internal.antlr.FunctionExpressionLexer;
-import com.rapidminer.tools.expression.internal.antlr.FunctionExpressionParser;
 
 
 /**

@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.io;
 
+import java.util.List;
+import java.util.logging.Level;
+
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorDescription;
@@ -35,9 +38,6 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
-
-import java.util.List;
-import java.util.logging.Level;
 
 
 /**

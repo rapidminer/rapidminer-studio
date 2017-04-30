@@ -18,15 +18,15 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.renderer;
 
-import com.rapidminer.gui.new_plotter.StaticDebug;
-import com.rapidminer.gui.new_plotter.engine.jfreechart.RenderFormatDelegate;
-import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
-
 import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
 
 import org.jfree.chart.renderer.xy.XYDifferenceRenderer;
+
+import com.rapidminer.gui.new_plotter.StaticDebug;
+import com.rapidminer.gui.new_plotter.engine.jfreechart.RenderFormatDelegate;
+import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 
 
 /**

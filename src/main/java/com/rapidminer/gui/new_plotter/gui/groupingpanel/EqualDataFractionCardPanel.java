@@ -18,14 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.gui.groupingpanel;
 
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.EqualDataFractionGrouping;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
-import com.rapidminer.gui.new_plotter.data.PlotInstance;
-import com.rapidminer.gui.tools.ResourceLabel;
-
 import java.awt.GridBagConstraints;
 
 import javax.swing.JLabel;
@@ -34,6 +26,14 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.EqualDataFractionGrouping;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
+import com.rapidminer.gui.new_plotter.data.PlotInstance;
+import com.rapidminer.gui.tools.ResourceLabel;
 
 
 /**

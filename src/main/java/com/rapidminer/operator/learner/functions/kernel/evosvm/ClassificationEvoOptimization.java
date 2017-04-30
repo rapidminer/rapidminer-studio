@@ -18,6 +18,12 @@
 */
 package com.rapidminer.operator.learner.functions.kernel.evosvm;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
@@ -40,12 +46,6 @@ import com.rapidminer.tools.math.optimization.ec.es.ESOptimization;
 import com.rapidminer.tools.math.optimization.ec.es.Individual;
 import com.rapidminer.tools.math.optimization.ec.es.NonDominatedSortingSelection;
 import com.rapidminer.tools.math.optimization.ec.es.Population;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**

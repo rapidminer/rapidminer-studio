@@ -18,16 +18,16 @@
 */
 package com.rapidminer.gui.graphs;
 
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.renderers.Renderer.EdgeLabel;
-import edu.uci.ics.jung.visualization.renderers.Renderer.Vertex;
-import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel;
-
 import java.awt.Paint;
 
 import javax.swing.JComponent;
 
 import org.apache.commons.collections15.Transformer;
+
+import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.renderers.Renderer.EdgeLabel;
+import edu.uci.ics.jung.visualization.renderers.Renderer.Vertex;
+import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel;
 
 
 /**

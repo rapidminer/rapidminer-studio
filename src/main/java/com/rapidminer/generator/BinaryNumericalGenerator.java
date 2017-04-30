@@ -18,6 +18,10 @@
 */
 package com.rapidminer.generator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
@@ -25,10 +29,6 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Ontology;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
 
 
 /**
