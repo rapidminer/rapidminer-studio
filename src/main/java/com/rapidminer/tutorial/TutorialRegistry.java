@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tutorial;
 
 import java.io.File;
@@ -55,6 +55,8 @@ public enum TutorialRegistry {
 		register("Basics");
 		register("Data Handling");
 		register("Modeling, Scoring, and Validation");
+		register("RapidMiner Server");
+		register("RapidMiner Radoop");
 
 		// Load tutorials from .RapidMiner folder to allow sharing
 		File tempDir = new File(FileSystemService.getUserRapidMinerDir(), FOLDER_NAME_TUTORIALS);
@@ -111,7 +113,7 @@ public enum TutorialRegistry {
 
 	/**
 	 * Gets a {@link TutorialGroup} by name.
-	 * 
+	 *
 	 * @param tutorialGroupName
 	 *            the name the tutorial group
 	 * @return the found tutorial group or {@code null}

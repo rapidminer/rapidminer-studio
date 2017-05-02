@@ -99,6 +99,12 @@
 				<class>com.rapidminer.operator.meta.ValueIteration</class>
 				<replaces>ValueIterator</replaces>
 			</operator>
+			<operator>
+			<deprecatedSince>7.5</deprecatedSince>
+				<key>create_learning_curve</key>
+				<class>com.rapidminer.operator.meta.LearningCurveOperator</class>
+				<replaces>LearningCurve</replaces>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -1837,11 +1843,6 @@
 					<class>com.rapidminer.operator.visualization.ROCBasedComparisonOperator
 					</class>
 					<replaces>ROCComparator</replaces>
-				</operator>
-				<operator>
-					<key>create_learning_curve</key>
-					<class>com.rapidminer.operator.meta.LearningCurveOperator</class>
-					<replaces>LearningCurve</replaces>
 				</operator>
 				<operator>
 					<key>visualize_model_by_som</key>

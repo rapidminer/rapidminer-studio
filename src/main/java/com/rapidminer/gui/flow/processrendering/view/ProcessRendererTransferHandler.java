@@ -19,6 +19,7 @@
 package com.rapidminer.gui.flow.processrendering.view;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
@@ -95,7 +96,8 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 			if (model.getCurrentMousePosition() != null) {
 				loc = new Point(model.getCurrentMousePosition());
 			} else {
-				loc = new Point(0, 0);
+				Rectangle viewing = RapidMinerGUI.getMainFrame().getProcessPanel().getViewPort().getViewRect();
+				loc = new Point((int) viewing.getCenterX(), (int) viewing.getCenterY());
 			}
 		}
 

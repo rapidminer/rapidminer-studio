@@ -135,11 +135,12 @@ public class SVMExamples implements Serializable {
 		double[] sum = new double[exampleSet.getAttributes().size()];
 		double[] squaredSum = new double[sum.length];
 
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		Iterator<com.rapidminer.example.Example> reader = exampleSet.iterator();
 		while (reader.hasNext()) {
 			com.rapidminer.example.Example example = reader.next();
 			int a = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = example.getValue(attribute);
 				sum[a] += value;
 				squaredSum[a] += value * value;
@@ -170,6 +171,7 @@ public class SVMExamples implements Serializable {
 		this(exampleSet.size(), 0.0d);
 		this.meanVarianceMap = meanVariances;
 
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		Iterator<com.rapidminer.example.Example> reader = exampleSet.iterator();
 		Attribute idAttribute = exampleSet.getAttributes().getId();
 		int exampleCounter = 0;
@@ -177,13 +179,13 @@ public class SVMExamples implements Serializable {
 			com.rapidminer.example.Example current = reader.next();
 			Map<Integer, Double> attributeMap = new LinkedHashMap<Integer, Double>();
 			int a = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = current.getValue(attribute);
 				if (!com.rapidminer.example.Tools.isDefault(attribute.getDefault(), value)) {
 					attributeMap.put(a, value);
 				}
-				if ((a + 1) > dim) {
-					dim = (a + 1);
+				if (a + 1 > dim) {
+					dim = a + 1;
 				}
 				a++;
 			}

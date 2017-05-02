@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Learn more about RapidMiner Radoop.">
+		<text>RapidMiner Radoop is the component that combines RapidMiner's design interface with all the power of Hadoop's clusters. </text>
+		<info>You will be able to design, execute and run analytics processes that cover data ingestion, data transformation, machine learning algorithms, validation, performance and everything you already know from the standard RapidMiner toolkit.</info>
+	</step>
+	<step name="Check your installation.">
+		<text>Before you start this tutorial, make sure you have the Radoop extension installed and your Radoop connection is set up.
+<point>Check in <ui>Extensions->Manage Extensions</ui> that RapidMiner Radoop appears on the list.</point>	
+<point>Check in <ui>Connections->Manage Radoop Connections</ui> that you have at least one connection defined. <activity>Click</activity> on the connection to check the details. <activity>Click</activity> on the <ui>Quick Test</ui> button for a quick check and <ui>Full test...</ui> for a thorough one that tests all the aspects of the Radoop connection.</point>	
+</text>
+		<info>If you don't have the extension, please download and install from <ui>Extensions->Marketplace</ui>. If you want to create your own connection, please see our  <link url="http://docs.rapidminer.com/radoop/installation/">documentation on the topic</link>. </info>
+	</step>
+	<step name="Import data into Hadoop">
+	<text>Let's start by adding some data into the Hadoop cluster.</text>
+		<tasks>
+			<task>In the repository, <activity>find</activity> the <ui>Samples</ui> data folder and <activity>drag</activity> the Iris dataset into the canvas.</task>
+			<task>Then <activity>drag</activity> the <ui>Radoop Nest</ui> operator and configure it by selecting your connection. Also, connect the output of the <ui>Retrieve</ui> operator to the input of the <ui>Radoop Nest</ui>. When the time comes to run the process, that link will automatically move the data from your repository to the Hadoop cluster.</task>
+			<task>Next, <activity>double-click</activity> on the <ui>Radoop Nest</ui> to get inside: we can now design the in-Hadoop process.</task>
+			<task><activity>Drag</activity> Radoop's <ui>Store in Hive</ui> operator and connect the input port ("inp") of the <ui>Nest</ui> to the input port ("inp") of the <ui>Store</ui> operator. Then configure it by adding the name of the Hive table you want to create.</task>
+			<task>You are ready to run it using the <icon>16/media_play.png</icon> <ui>Run</ui> button. Data will be moved from your repository into a Hive table.</task>
+		</tasks>
+		<info>Good job! You have just created your first Radoop process and moved data into your Hadoop cluster.</info>
+	</step>
+	<step name="View data">
+	<text>Now that we have data, we can take a look.</text>
+		<tasks>
+			<task>When you installed Radoop, a new view was created. To the right of <ui>Design</ui> and <ui>Results</ui>, another button is now available: <ui>Hadoop Data</ui>. <activity>Click</activity> on it to see what's there. This tutorial will remain in the <ui>Design</ui> view, so get back to it when you're done.</task>
+			<task>The left panel is a list of available connections. You can <activity>click</activity> on yours to see a list of tables, including the one you created in the previous step.</task>
+			<task><activity>Double-click</activity> on the table: the right panel will show the same view panel as in the regular Studio. You can see the table, check statistics and view graphs.</task>
+			<task>Beware! Data from Radoop is big data. It's always sampled, even statistics are based on sampled data. If you want full-data statistics, you have to aggregate data in a process.</task>
+		</tasks>
+		<info>You have inspected your newly created data in Hadoop.</info>
+	</step>
+	<step name="Modeling in Hadoop">
+	<text>Let's create a process now!</text>
+		<tasks>
+			<task>Remove the <ui>Retrieve</ui> operator from outside the <ui>Nest</ui> and also the <ui>Store</ui> from inside to start a new in-Hadoop process.</task>
+			<task><activity>Drag</activity> in the <ui>Retrieve from Hive</ui> operator inside the <ui>Nest</ui> and, in the parameter's pane, type the name of the table you have created. Optionally, you may add some "where" clause to filter data if needed.</task>
+			<task><activity>Drag</activity> in Radoop's <ui>Set Role</ui> operator and connect the output of the <ui>Retrieve</ui> to the ("exa") port of the <ui>Set Role</ui>. We'll configure it as we would do with the standard <ui>Set Role</ui>. In this case, we want to predict the flower type, the "label", so we set the attribute "label" to have target role <ui>label</ui>. </task>
+			<task>Now we are ready for the machine learning algorithm. <activity>Drag</activity> in and <activity>connect</activity> Radoop's <ui>Decision Tree</ui> operator. You can change the configuration of the tree. For example, setting the minimal gain to 0.01 will produce better results in this case.</task>
+			<task>Now, connect the model port ("mod") of the <ui>Decision Tree</ui> to the output port ("out") of the <ui>Nest</ui> process. Also, go back to the outer process (<activity>Click</activity> on Process just above the canvas) and connect the output port of the <ui>Nest</ui> to the port ("res") of the process.</task>
+		</tasks>
+		<info>Now press <icon>16/media_play.png</icon> <ui>Run</ui> to run it. If your cluster is a quickstart environment, it may take a few minutes. After that, you'll see the decision tree you have trained.</info>
+	</step>
+	<step name="Validating in Hadoop">
+		<text>We have already trained our model, but we need to properly validate it and check its accuracy.</text>
+		<tasks>
+			<task><activity>Remove</activity> your <ui>Decision Tree</ui> operator and <activity>drag</activity> in Radoop's <ui>Split Validation</ui> instead (connecting the ("exa") port of the <ui>Set Role</ui> to the ("tra") port of the <ui>Validation</ui>, and the ("mod") port and the first ("ave") port to the two first outputs of the <ui>Nest</ui>. At the <ui>Nest</ui> level, also connect both outputs to the general output of the process.</task>
+			<task><activity>Double-click</activity> on the <ui>Validation</ui> to see the subprocesses. </task> 
+			<task><activity>Drag</activity> in the <ui>Decision Tree</ui> to the left panel and connect ("tra") with ("tra") and ("mod") with ("mod").</task>
+			<task>Then <activity>drag</activity> in Radoop's <ui>Apply Model</ui> and Radoop's <ui>Performance (Binominal Classification)</ui> to the right panel. Connect ("mod")-("mod"), ("tes")-("unl"), ("lab")-("lab") and ("per")-("ave"). Also, configure the <ui>Performance</ui> operator to use your favorite criterion: accuracy, lift, etc.</task>
+			<task>Now press <icon>16/media_play.png</icon> <ui>Run</ui> to run it. After that, you'll see the decision tree you have trained and an honest estimation of the performance. </task>
+		</tasks>
+		<info>You have designed and run a full process to train and validate a model in Hadoop.</info>
+	</step>	
+	<step name="SparkRM">
+		<text>Radoop's training operators are based on Hive or Spark. However, all the other regular RapidMiner's operators (including extensions like Text and others) are also available for use in Hadoop. Let's see how.</text>
+		<tasks>
+			<task><activity>Remove</activity> the <ui>Validation</ui> operator and <activity>drag</activity> in the <ui>SparkRM</ui> operator instead. Connect the ("exa") output port of the <ui>Set Role</ui> with the input ("exa") port of the <ui>SparkRM</ui> and the ("out") port of <ui>SparkRM</ui> to the output of the Nest.</task>
+			<task><activity>Double-click</activity> on the <ui>SparkRM</ui> operator to get inside. Now add a regular RapidMiner operator, like the Deep Learning one. Connect ("exa")-("tra") and ("mod")-("out"). </task>
+			<task>Now press <icon>16/media_play.png</icon> <ui>Run</ui> to run it. This time, you'll get a collection of Deep Learning models based on your data distributions. </task>
+		</tasks>
+		<info>You have run non-Radoop operators in-Hadoop. SparkRM splits the data according to the criterion defined as <ui>partitioning mode</ui>, then it pushes the Rapidminer sub-process (the <ui>Deep Learning</ui> model in this case) as Spark code into the cluster. The result is a collection of models where each individual model has been trained with one part of the data. The models in the collection can be aggregated in a voting ensemble model using the <ui>Combine Models</ui> operator.</info>
+	</step>	
+	<step name="Congratulations!">
+		<text>Well done! - you have gone through the RapidMiner Radoop tutorial. To quickly review:
+			<point>You have connected to a Hadoop cluster</point>
+			<point>You have moved data into and out of the cluster and you have reviewed it with RapidMiner's viewing tools</point>
+			<point>You have run a training process, including validation</point>
+			<point>You have run a process with a non-Radoop operator in Hadoop</point>
+		</text>
+			<text>Before you celebrate too much, try some of the following challenges:</text>
+		<questions>
+			<question>Can you run a full cross-validation process with SparkRM?</question>
+			<question>Can you create a complex ETL process?</question>
+			<question>Can you generate data within Hadoop?</question>
+		</questions>
+	</step>
+</steps>

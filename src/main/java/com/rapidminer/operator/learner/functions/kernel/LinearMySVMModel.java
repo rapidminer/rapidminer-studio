@@ -78,10 +78,11 @@ public class LinearMySVMModel extends PredictionModel {
 			progress.setTotal(exampleSet.size());
 		}
 		int progressCounter = 0;
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			double prediction = bias;
 			int a = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = example.getValue(attribute);
 				MeanVariance meanVariance = meanVariances.get(a);
 				if (meanVariance != null) {

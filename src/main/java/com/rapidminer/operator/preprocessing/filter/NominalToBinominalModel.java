@@ -144,34 +144,34 @@ public class NominalToBinominalModel extends PreprocessingModel {
 		binominalAttributeValueMap = new LinkedHashMap<Attribute, Double>(binominalAttributeValueMap);
 
 		// initialize progress
-		int progressCompletedCounter = 0;
-		long workloadForEachLoop = dichotomizationMap.size() + changeTypeMap.size();
-		long progressTriggerCounter = 0;
+		long progressCompletedCounter = 0;
+		long progressTotal = ((long) dichotomizationMap.size() + changeTypeMap.size()) * exampleSet.size();
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
-			progress.setTotal(exampleSet.size());
+			progress.setTotal(1000);
 		}
 
+		
 		// fill new attributes with values
-		for (Example example : exampleSet) {
-			// perform dichotomization
-			for (Map.Entry<Attribute, Attribute> entry : dichotomizationMap.entrySet()) {
+		for (Map.Entry<Attribute, Attribute> entry : dichotomizationMap.entrySet()) {
+			for (Example example : exampleSet) {
 				double sourceValue = example.getValue(entry.getValue());
 				example.setValue(entry.getKey(), getValue(entry.getKey(), sourceValue));
+				if (progress != null && ++progressCompletedCounter % OPERATOR_PROGRESS_STEPS == 0) {
+					progress.setCompleted((int) (1000.0d * progressCompletedCounter / progressTotal));
+				}
 			}
+		}
 
-			// perform simple copy for binominal attributes
-			for (Map.Entry<Attribute, Attribute> entry : changeTypeMap.entrySet()) {
+		// perform simple copy for binominal attributes
+		for (Map.Entry<Attribute, Attribute> entry : changeTypeMap.entrySet()) {
+			for (Example example : exampleSet) {
 				double sourceValue = example.getValue(entry.getValue());
 				example.setValue(entry.getKey(), sourceValue);
-			}
-
-			// trigger progress
-			++progressCompletedCounter;
-			if (progress != null && ++progressTriggerCounter * workloadForEachLoop > OPERATOR_PROGRESS_STEPS) {
-				progressTriggerCounter = 0;
-				progress.setCompleted(progressCompletedCounter);
+				if (progress != null && ++progressCompletedCounter % OPERATOR_PROGRESS_STEPS == 0) {
+					progress.setCompleted((int) (1000.0d * progressCompletedCounter /progressTotal));
+				}
 			}
 		}
 

@@ -112,8 +112,8 @@ public class ExampleSetSuperset extends Operator {
 		}
 
 		// set all values to missing for ES 1
-		for (Example example : exampleSet1) {
-			for (Attribute attribute : newAttributesForES1) {
+		for (Attribute attribute : newAttributesForES1) {
+			for (Example example : exampleSet1) {
 				example.setValue(attribute, Double.NaN);
 			}
 		}

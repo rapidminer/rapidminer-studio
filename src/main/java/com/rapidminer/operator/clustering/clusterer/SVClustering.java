@@ -235,11 +235,12 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 		double maxRadius = paramR < 0 ? clustering.getR() : paramR;
 
 		int i = 0;
+		Attribute[] regularAttributes = centroid.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			if (i != centroidIndex && assignments[i] == UNASSIGNED) {
-				double[] directions = new double[centroid.getAttributes().size()];
+				double[] directions = new double[regularAttributes.length];
 				int x = 0;
-				for (Attribute attribute : centroid.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					directions[x++] = example.getValue(attribute) - centroid.getValue(attribute);
 				}
 				boolean addAsNeighbor = true;
@@ -247,7 +248,7 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 					if (addAsNeighbor) {
 						double[] virtualExample = new double[directions.length];
 						x = 0;
-						for (Attribute attribute : centroid.getAttributes()) {
+						for (Attribute attribute : regularAttributes) {
 							virtualExample[x] = centroid.getValue(attribute)
 									+ (j + 1) * directions[x] / (numSamplePoints + 1);
 							x++;

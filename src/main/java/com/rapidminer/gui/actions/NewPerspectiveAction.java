@@ -59,7 +59,7 @@ public class NewPerspectiveAction extends ResourceAction {
 				ok = true;
 				dispose();
 			} else {
-				SwingTools.showVerySimpleErrorMessage("invalid_perspective_name");
+				SwingTools.showVerySimpleErrorMessage(this, "invalid_perspective_name");
 			}
 		}
 	}

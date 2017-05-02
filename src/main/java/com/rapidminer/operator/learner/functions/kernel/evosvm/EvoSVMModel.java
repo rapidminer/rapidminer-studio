@@ -150,7 +150,7 @@ public class EvoSVMModel extends KernelModel implements FormulaProvider {
 
 	/**
 	 * Applies the model to each example of the example set.
-	 * 
+	 *
 	 * @throws ProcessStoppedException
 	 */
 	@Override
@@ -166,13 +166,13 @@ public class EvoSVMModel extends KernelModel implements FormulaProvider {
 			progress.setTotal(exampleSet.size());
 		}
 		int progressCounter = 0;
-
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		if (kernel instanceof DotKernel) {
 			if (weights != null) {
 				for (Example example : exampleSet) {
 					double sum = getBias();
 					int a = 0;
-					for (Attribute attribute : exampleSet.getAttributes()) {
+					for (Attribute attribute : regularAttributes) {
 						sum += weights[a] * example.getValue(attribute);
 						a++;
 					}
@@ -201,7 +201,7 @@ public class EvoSVMModel extends KernelModel implements FormulaProvider {
 			Example current = reader.next();
 			double[] currentX = new double[exampleSet.getAttributes().size()];
 			int x = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				currentX[x++] = current.getValue(attribute);
 			}
 			double sum = bias + kernel.getSum(supportVectors, currentX);

@@ -46,13 +46,14 @@ import com.rapidminer.tools.RandomGenerator;
  * @author Ingo Mierswa, modified by Syed Atif Mehdi (01/09/2010)
  */
 
-// modified by atif
 public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 
 	// hidden layers have been removed. - atif
 
-	// /** The parameter name for &quot;The number of training cycles used for the neural network
-	// training.&quot; */
+	/**
+	 * The parameter name for &quot;The number of training cycles used for the neural network
+	 * training.&quot;
+	 */
 	public static final String PARAMETER_TRAINING_CYCLES = "training_cycles";
 
 	private static final String PARAMETER_MAX_GENERATIONS = "number_of_generations";
@@ -90,11 +91,10 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 		boolean shuffle = true;
 		boolean normalize = true;
 
-		int hidden_lo = 20;// 20;
-		int hidden_hi = 80;// 80;
+		int hidden_lo = 20;
+		int hidden_hi = 80;
 
 		double cv_split = 0.8;
-		// double cv_max = 5000;
 
 		randomGenerator = RandomGenerator.getRandomGenerator(this);
 
@@ -125,15 +125,6 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 			}
 		} // initialization complete
 
-		// Split the ExampleSet into training Data Set and Validation Data Set
-		/*
-		 * // shuffle data int[] exampleIndices = null; if (shuffle) { List<Integer> indices = new
-		 * ArrayList<Integer>(exampleSet.size()); for (int i = 0; i < exampleSet.size(); i++)
-		 * indices.add(i); Collections.shuffle(indices, randomGenerator); exampleIndices = new
-		 * int[indices.size()]; int index = 0; for (int current : indices) { exampleIndices[index++]
-		 * = current; } }
-		 */
-
 		SplittedExampleSet splittedES = new SplittedExampleSet(exampleSet, cv_split,
 				1 /*
 					 * samplingType = 1 for shuffeled split
@@ -142,8 +133,6 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 									 */);
 
 		// NOTE the following -atif
-		// splittedES.selectSingleSubset(0); // training data 0.8
-		// splittedES.selectSingleSubset(1); // validation data 0.2
 
 		AutoMlpThreaded autoMlpThread;
 
@@ -157,6 +146,10 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 
 			// wait until the training stops.
 			while (autoMlpThread.isAlive() == true) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+				}
 			}
 			// stores the trained NN.
 			for (int i = 0; i < nensemble; i++) {
@@ -237,7 +230,7 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 		} while (generations < max_generations);
 
 		// old model is sorted based on the error.. therefore 0th index will have the least error
-		model = old_models[0]; // autoMlpThread.GetModel(index);
+		model = old_models[0];
 		return model;
 	}
 
@@ -260,10 +253,6 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 		if (lc == OperatorCapability.BINOMINAL_LABEL) {
 			return true;
 		}
-		// if (lc == OperatorCapability.NUMERICAL_LABEL)
-		// return true;
-		// if (lc == OperatorCapability.WEIGHTED_EXAMPLES)
-		// return true;
 		return false;
 	}
 
@@ -285,42 +274,6 @@ public class AutoMLPImprovedNeuralNetLearner extends AbstractLearner {
 				Integer.MAX_VALUE, 4);
 		type3.setExpert(true);
 		types.add(type3);
-		/*
-		 * //hidden layers have been removed. - atif ParameterType type = new
-		 * ParameterTypeList(PARAMETER_HIDDEN_LAYERS,
-		 * "Describes the name and the size of all hidden layers.", new
-		 * ParameterTypeString("hidden_layer_name", "The name of the hidden layer."), new
-		 * ParameterTypeInt("hidden_layer_sizes",
-		 * "The size of the hidden layers. A size of < 0 leads to a layer size of (number_of_attributes + number of classes) / 2 + 1."
-		 * , -1, Integer.MAX_VALUE, -1)); type.setExpert(false); types.add(type);
-		 *
-		 *
-		 *
-		 * type = new ParameterTypeDouble(PARAMETER_LEARNING_RATE,
-		 * "The learning rate determines by how much we change the weights at each step.", 0.0d,
-		 * 1.0d, 0.3d); type.setExpert(true); types.add(type);
-		 *
-		 * types.add(new ParameterTypeDouble(PARAMETER_MOMENTUM,
-		 * "The momentum simply adds a fraction of the previous weight update to the current one (prevent local maxima and smoothes optimization directions)."
-		 * , 0.0d, 1.0d, 0.2d));
-		 *
-		 * types.add(new ParameterTypeBoolean(PARAMETER_DECAY,
-		 * "Indicates if the learning rate should be decreased during learningh", false));
-		 *
-		 * types.add(new ParameterTypeBoolean(PARAMETER_SHUFFLE,
-		 * "Indicates if the input data should be shuffled before learning (increases memory usage but is recommended if data is sorted before)"
-		 * , true));
-		 *
-		 * types.add(new ParameterTypeBoolean(PARAMETER_NORMALIZE,
-		 * "Indicates if the input data should be normalized between -1 and +1 before learning (increases runtime but is in most cases necessary)"
-		 * , true));
-		 *
-		 * types.add(new ParameterTypeDouble(PARAMETER_ERROR_EPSILON,
-		 * "The optimization is stopped if the training error gets below this epsilon value.", 0.0d,
-		 * Double.POSITIVE_INFINITY, 0.00001d));
-		 *
-		 * //types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
-		 */
 		return types;
 	}
 
@@ -502,14 +455,9 @@ class AutoMlpThreaded extends Thread {
 
 	@Override
 	public void run() {
-		try {
-			for (int i = 0; i < nensembles; i++) {
-				model[i].train(exampleSet, hiddenLayers[i], maxCycles, maxError, learningRate[i], momentum, decay, shuffle,
-						normalize, randomGenerator, isOldModels[i], oldModels[i]);
-				// Let the thread sleep for a while.
-				Thread.sleep(500);
-			}
-		} catch (InterruptedException e) {
+		for (int i = 0; i < nensembles; i++) {
+			model[i].train(exampleSet, hiddenLayers[i], maxCycles, maxError, learningRate[i], momentum, decay, shuffle,
+					normalize, randomGenerator, isOldModels[i], oldModels[i]);
 		}
 	}
 

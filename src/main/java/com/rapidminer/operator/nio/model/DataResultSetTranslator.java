@@ -152,7 +152,7 @@ public class DataResultSetTranslator {
 		dataResultSet.reset(listener);
 
 		int datamanagement = configuration.getDataManagementType();
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+		if (!Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
 			// TODO: move to DataResultSetTranslationConfiguration if beta mode becomes standard
 			if (operator != null) {

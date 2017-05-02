@@ -146,7 +146,7 @@ public class OpenAction extends ResourceAction {
 
 						@Override
 						public void run() {
-							RapidMinerGUI.getMainFrame().setOpenedProcess(process, showInfo, processLocation.toString());
+							RapidMinerGUI.getMainFrame().setOpenedProcess(process);
 						}
 					});
 				} catch (XMLException ex) {

@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.table.internal;
 
 import static org.junit.Assert.assertEquals;
@@ -31,8 +31,8 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.IntArrayDataRow;
-import com.rapidminer.example.table.internal.ColumnarExampleTable;
 import com.rapidminer.example.test.ExampleTestTools;
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 import com.rapidminer.tools.Ontology;
 
 
@@ -75,10 +75,47 @@ public class ColumnarExampleTableTest {
 		assertEquals(0, table.getDataRow(0).get(attribute), 0);
 	}
 
-	@Test(expected = OutOfMemoryError.class)
-	public void createMaxExpectedTest() {
+	@Test
+	public void createManyExpectedTest() {
 		ColumnarExampleTable table = new ColumnarExampleTable(Arrays.asList(ExampleTestTools.attributeInt()));
-		table.setExpectedSize(Integer.MAX_VALUE);
+		table.setExpectedSize(2 * AutoColumnUtils.CHUNK_SIZE + 1);
+	}
+
+	@Test
+	public void createManyExpectedTestCompletable() {
+		ColumnarExampleTable table = new ColumnarExampleTable(Arrays.asList(ExampleTestTools.attributeInt()),
+				DataManagement.AUTO, true);
+		table.setExpectedSize(2 * AutoColumnUtils.CHUNK_SIZE + 1);
+		table.complete();
+	}
+
+	@Test
+	public void createManyExpectedTestNom() {
+		ColumnarExampleTable table = new ColumnarExampleTable(Arrays.asList(ExampleTestTools.attributeDogCatMouse()));
+		table.setExpectedSize(2 * AutoColumnUtils.CHUNK_SIZE + 1);
+	}
+
+	@Test
+	public void createManyExpectedTestNomCompletable() {
+		ColumnarExampleTable table = new ColumnarExampleTable(Arrays.asList(ExampleTestTools.attributeDogCatMouse()),
+				DataManagement.AUTO, true);
+		table.setExpectedSize(2 * AutoColumnUtils.CHUNK_SIZE + 1);
+		table.complete();
+	}
+
+	@Test
+	public void createManyExpectedTestBinom() {
+		Attribute a = AttributeFactory.createAttribute(Ontology.BINOMINAL);
+		ColumnarExampleTable table = new ColumnarExampleTable(Arrays.asList(a));
+		table.setExpectedSize(2 * AutoColumnUtils.CHUNK_SIZE + 1);
+	}
+
+	@Test
+	public void createManyExpectedTestBinomCompletable() {
+		Attribute a = AttributeFactory.createAttribute(Ontology.BINOMINAL);
+		ColumnarExampleTable table = new ColumnarExampleTable(Arrays.asList(a), DataManagement.AUTO, true);
+		table.setExpectedSize(2 * AutoColumnUtils.CHUNK_SIZE + 1);
+		table.complete();
 	}
 
 	@Test

@@ -229,15 +229,15 @@ public class ConfigurableController {
 			try {
 				String value = parameters.getParameter(key);
 
-				// if we are an AbstractConfigurable, the parameter needs to be converted to its XML
-				// format again
+				// If we are an AbstractConfigurable, toString must be invoked. This is necessary
+				// e.g. to save passwords encrypted.
 				if (configurable instanceof AbstractConfigurable) {
 					AbstractConfigurator<? extends Configurable> configurator = ConfigurationManager.getInstance()
-					        .getAbstractConfigurator(configurable.getTypeId());
+							.getAbstractConfigurator(configurable.getTypeId());
 					for (ParameterType type : configurator
-					        .getParameterTypes(configurator.getParameterHandler(configurable))) {
+							.getParameterTypes(configurator.getParameterHandler(configurable))) {
 						if (type.getKey().equals(key)) {
-							value = type.toXMLString(value);
+							value = type.toString(value);
 							break;
 						}
 					}

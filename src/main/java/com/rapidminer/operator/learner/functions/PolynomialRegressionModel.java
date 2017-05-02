@@ -94,6 +94,11 @@ public class PolynomialRegressionModel extends SimplePredictionModel {
 	}
 
 	@Override
+	protected boolean supportsConfidences(Attribute label) {
+		return false;
+	}
+
+	@Override
 	public String toString() {
 		StringBuffer result = new StringBuffer();
 		boolean first = true;

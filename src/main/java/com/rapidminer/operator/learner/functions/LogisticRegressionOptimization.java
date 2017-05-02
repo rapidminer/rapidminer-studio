@@ -94,10 +94,11 @@ public class LogisticRegressionOptimization extends ESOptimization {
 		double[] beta = individual.getValues();
 
 		double fitness = 0.0d;
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			double eta = 0.0d;
 			int i = 0;
-			for (Attribute attribute : example.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = example.getValue(attribute);
 				eta += beta[i] * value;
 				i++;
@@ -130,11 +131,12 @@ public class LogisticRegressionOptimization extends ESOptimization {
 		double[] beta = getBestValuesEver();
 
 		Matrix hessian = new Matrix(beta.length, beta.length);
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			double[] values = new double[beta.length];
 			double eta = 0.0d;
 			int j = 0;
-			for (Attribute attribute : example.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = example.getValue(attribute);
 				values[j] = value;
 				eta += beta[j] * value;
@@ -214,10 +216,11 @@ public class LogisticRegressionOptimization extends ESOptimization {
 
 		double weightSum = 0.0d;
 		double positiveSum = 0.0d;
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			double eta = 0.0d;
 			int i = 0;
-			for (Attribute attribute : example.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = example.getValue(attribute);
 				eta += beta[i] * value;
 				i++;

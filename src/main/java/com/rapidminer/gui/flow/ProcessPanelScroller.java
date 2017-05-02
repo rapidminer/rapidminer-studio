@@ -103,7 +103,7 @@ class ProcessPanelScroller {
 	 * @param view
 	 *            the {@link ProcessRendererView}
 	 * @param scrollPane
-	 *            the {@link ScrollPane} containing the view
+	 *            the {@link JScrollPane} containing the view
 	 */
 	ProcessPanelScroller(final ProcessRendererView view, final JScrollPane scrollPane) {
 		this.scrollPane = scrollPane;

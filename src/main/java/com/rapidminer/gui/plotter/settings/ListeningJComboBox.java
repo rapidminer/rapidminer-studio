@@ -56,6 +56,15 @@ public class ListeningJComboBox<E> extends ExtendedJComboBox<E> implements Plott
 		}
 	}
 
+	/*
+	 * This constructor is here for compatibility reasons (e.g. SOM extension). It is used by all
+	 * instances at this moment, because all the combo boxes use strings.
+	 */
+	@SuppressWarnings("unchecked")
+	public ListeningJComboBox(PlotterConfigurationModel settings, String generalKey, String[] values) {
+		this(settings, generalKey, (E[]) values);
+	}
+
 	@Override
 	public void settingChanged(String generalKey, String specificKey, String value) {
 		if (generalKey.equals(this.generalKey)) {

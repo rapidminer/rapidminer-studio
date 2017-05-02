@@ -53,11 +53,12 @@ public class AttributeBasedVotingModel extends PredictionModel {
 
 	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabelAttribute) throws OperatorException {
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			if (predictedLabelAttribute.isNominal()) {
 				// classification
 				Map<String, Double> counter = new HashMap<String, Double>();
-				for (Attribute attribute : example.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					if (!attribute.isNominal()) {
 						throw new UserError(null, 103, "nominal voting");
 					}
@@ -79,7 +80,7 @@ public class AttributeBasedVotingModel extends PredictionModel {
 					if (sumObject == null) {
 						example.setConfidence(labelValue, 0.0d);
 					} else {
-						example.setConfidence(labelValue, sumObject / exampleSet.getAttributes().size());
+						example.setConfidence(labelValue, sumObject / regularAttributes.length);
 						if (sumObject > best) {
 							best = sumObject;
 							bestClass = labelValue;
@@ -96,7 +97,7 @@ public class AttributeBasedVotingModel extends PredictionModel {
 			} else {
 				// regression
 				double average = 0.0d;
-				for (Attribute attribute : example.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					average += example.getValue(attribute);
 				}
 				average /= example.getAttributes().size();

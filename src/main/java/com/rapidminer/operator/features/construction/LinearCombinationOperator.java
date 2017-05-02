@@ -69,10 +69,11 @@ public class LinearCombinationOperator extends AbstractFeatureConstruction {
 		exampleSet.getExampleTable().addAttribute(newAttribute);
 		exampleSet.getAttributes().addRegular(newAttribute);
 
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		// go through the object attributes and sum them up
 		for (Example example : exampleSet) {
 			double valueSum = 0.0d;
-			for (Attribute attribute : example.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				if (!attribute.equals(newAttribute) && attribute.isNumerical()) {
 					valueSum += example.getValue(attribute);
 				}

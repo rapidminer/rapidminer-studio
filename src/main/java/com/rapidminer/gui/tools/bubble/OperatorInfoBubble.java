@@ -231,9 +231,8 @@ public class OperatorInfoBubble extends BubbleWindow {
 		// if we need to ensure that the bubble is visible:
 		if (ensureVisible) {
 			// switch to correct subprocess
-			if (!renderer.getModel().getDisplayedChain().equals(operatorChain) && operatorChain != null) {
-				renderer.getModel().setDisplayedChain(operatorChain);
-				renderer.getModel().fireDisplayedChainChanged();
+			if (operatorChain != null && !renderer.getModel().getDisplayedChain().equals(operatorChain)) {
+				renderer.getModel().setDisplayedChainAndFire(operatorChain);
 			}
 			// switch to correct perspective
 			if (!RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName()
@@ -263,14 +262,6 @@ public class OperatorInfoBubble extends BubbleWindow {
 		getRootPane().registerKeyboardAction(closeOnEscape, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 				JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-		// try to scroll to operator
-		Rectangle2D targetRect = renderer.getModel().getOperatorRect(operator);
-		if (targetRect == null) {
-			Point opLoc = getObjectLocation();
-			targetRect = new Rectangle2D.Double(opLoc.getX(), opLoc.getY(), getObjectWidth(), getObjectHeight()).getBounds();
-
-		}
-		renderer.scrollRectToVisible(targetRect.getBounds());
 		super.paint(false);
 	}
 
@@ -299,6 +290,7 @@ public class OperatorInfoBubble extends BubbleWindow {
 						OperatorInfoBubble.this.paint(false);
 						break;
 					case MISC_CHANGED:
+					case DISPLAYED_CHAIN_WILL_CHANGE:
 					default:
 						break;
 				}

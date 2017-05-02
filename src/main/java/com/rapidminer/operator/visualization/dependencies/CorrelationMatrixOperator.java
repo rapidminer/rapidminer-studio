@@ -83,9 +83,10 @@ public class CorrelationMatrixOperator extends Operator {
 		long progressCounter = 0;
 		getProgress().setTotal(100);
 		long batch = Math.max(1L, exampleSet.getAttributes().size() * (long) exampleSet.getAttributes().size() / 100);
-		for (Attribute firstAttribute : exampleSet.getAttributes()) {
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
+		for (Attribute firstAttribute : regularAttributes) {
 			int l = 0;
-			for (Attribute secondAttribute : exampleSet.getAttributes()) {
+			for (Attribute secondAttribute : regularAttributes) {
 				matrix.setValue(k, l,
 						MathFunctions.correlation(exampleSet, firstAttribute, secondAttribute, squared || createWeights));
 				l++;
@@ -102,7 +103,7 @@ public class CorrelationMatrixOperator extends Operator {
 		// be able to use both positively and negatively high correlated
 		// values
 		int i = 0;
-		for (Attribute attribute : exampleSet.getAttributes()) {
+		for (Attribute attribute : regularAttributes) {
 			double sum = 0.0d;
 			for (int j = 0; j < numberOfAttributes; j++) {
 				sum += 1.0d - matrix.getValue(i, j); // actually the

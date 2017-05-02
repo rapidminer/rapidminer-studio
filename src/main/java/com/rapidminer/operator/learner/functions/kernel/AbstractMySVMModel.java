@@ -195,10 +195,11 @@ public abstract class AbstractMySVMModel extends KernelModel implements FormulaP
 					progress.setTotal(exampleSet.size());
 				}
 				int progressCounter = 0;
+				Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 				for (Example example : exampleSet) {
 					double prediction = getBias();
 					int a = 0;
-					for (Attribute attribute : exampleSet.getAttributes()) {
+					for (Attribute attribute : regularAttributes) {
 						double value = example.getValue(attribute);
 						MeanVariance meanVariance = meanVariances.get(a);
 						if (meanVariance != null) {

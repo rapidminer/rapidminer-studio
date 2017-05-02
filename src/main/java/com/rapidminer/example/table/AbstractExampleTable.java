@@ -114,9 +114,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 		if (name == null) {
 			return null;
 		}
-		Iterator<Attribute> i = attributes.iterator();
-		while (i.hasNext()) {
-			Attribute att = i.next();
+		for (Attribute att : attributes) {
 			if (att != null) {
 				if (att.getName().equals(name)) {
 					return att;
@@ -132,9 +130,8 @@ public abstract class AbstractExampleTable implements ExampleTable {
 	 */
 	@Override
 	public void addAttributes(Collection<Attribute> newAttributes) {
-		Iterator<Attribute> i = newAttributes.iterator();
-		while (i.hasNext()) {
-			addAttribute(i.next());
+		for (Attribute att : newAttributes) {
+			addAttribute(att);
 		}
 	}
 

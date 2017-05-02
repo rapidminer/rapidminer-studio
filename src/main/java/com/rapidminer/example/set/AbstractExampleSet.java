@@ -478,20 +478,22 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 			if (weightAttribute != null && !weightAttribute.isNumerical()) {
 				weightAttribute = null;
 			}
-			for (Example example : this) {
-				for (Attribute attribute : attributeList) {
-					double value = example.getValue(attribute);
-					double weight = 1.0d;
-					if (weightAttribute != null) {
-						weight = example.getValue(weightAttribute);
+			
+			for (Attribute attribute : attributeList) {
+				if (weightAttribute == null) {
+					for (Example example : this) {
+						double value = example.getValue(attribute);
+						attribute.getAllStatistics().forEachRemaining(s -> s.count(value, 1.0d));
 					}
-					for (Iterator<Statistics> stats = attribute.getAllStatistics(); stats.hasNext();) {
-						Statistics statistics = stats.next();
-						statistics.count(value, weight);
+				} else {
+					for (Example example : this) {
+						double value = example.getValue(attribute);
+						double weight = example.getValue(weightAttribute);
+						attribute.getAllStatistics().forEachRemaining(s -> s.count(value, weight));
 					}
 				}
 				if (Thread.currentThread().isInterrupted()) {
-					// statistics is only partly calculated, reset
+					// statistics is only partly calculated
 					resetAttributeStatistics(attributeList);
 					return;
 				}

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.actions;
 
+import com.rapidminer.Process;
+import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.tools.ParameterService;
@@ -44,12 +46,12 @@ public class ValidateAutomaticallyAction extends ToggleAction {
 
 	@Override
 	public void actionToggled(ActionEvent e) {
+		MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 		if (isSelected()) {
-			RapidMinerGUI.getMainFrame().validateProcess(false);
+			mainFrame.validateProcess(mainFrame.getProcessState() != Process.PROCESS_STATE_RUNNING);
 		} else {
-			RapidMinerGUI.getMainFrame().getProcess().getRootOperator()
-					.clear(Port.CLEAR_ALL_ERRORS | Port.CLEAR_ALL_METADATA);
-			RapidMinerGUI.getMainFrame().fireProcessUpdated();
+			mainFrame.getProcess().getRootOperator().clear(Port.CLEAR_ALL_ERRORS | Port.CLEAR_ALL_METADATA);
+			mainFrame.fireProcessUpdated();
 		}
 		ParameterService.setParameterValue(PROPERTY_VALIDATE_AUTOMATICALLY, Boolean.toString(isSelected()));
 		ParameterService.saveParameters();

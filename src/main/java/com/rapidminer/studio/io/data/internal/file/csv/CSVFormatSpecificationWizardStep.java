@@ -124,7 +124,8 @@ public class CSVFormatSpecificationWizardStep extends AbstractWizardStep {
 					calculateMetaData = true;
 					throw new InvalidConfigurationException();
 				} catch (DataSetException e) {
-					SwingTools.showSimpleErrorMessage("csv_format_specification.read_failure", e, e.getMessage());
+					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "csv_format_specification.read_failure", e,
+							e.getMessage());
 					calculateMetaData = true;
 					throw new InvalidConfigurationException();
 				}

@@ -198,10 +198,7 @@ public class ExtendedErrorDialog extends ButtonDialog {
 				public void actionPerformed(ActionEvent e) {
 					MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 					mainFrame.getPerspectiveController().showPerspective(PerspectiveModel.DESIGN);
-					mainFrame.selectOperator(mainFrame.getProcess().getOperator(opName));
-					mainFrame.getProcessPanel().getProcessRenderer().getModel()
-							.setDisplayedChain(mainFrame.getProcess().getOperator(opName).getParent());
-					mainFrame.getProcessPanel().getProcessRenderer().getModel().fireDisplayedChainChanged();
+					mainFrame.selectAndShowOperator(mainFrame.getProcess().getOperator(opName), true);
 				}
 			}), BorderLayout.NORTH);
 		}
@@ -361,7 +358,7 @@ public class ExtendedErrorDialog extends ButtonDialog {
 					// in case of UserError, ask if the user really wants to send a bugreport
 					// because it's likely not a bug
 					if (error instanceof UserError) {
-						if (SwingTools.showConfirmDialog("send_bugreport.confirm",
+						if (SwingTools.showConfirmDialog(ExtendedErrorDialog.this, "send_bugreport.confirm",
 								ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
 							return;
 						}
@@ -383,7 +380,8 @@ public class ExtendedErrorDialog extends ButtonDialog {
 								getProgressListener().setCompleted(20);
 								bugAst = new BugZillaAssistant(this, error, rpcClient);
 							} catch (Exception e) {
-								SwingTools.showVerySimpleErrorMessage("bugreport_xmlrpc_init_error");
+								SwingTools.showVerySimpleErrorMessage(ExtendedErrorDialog.this,
+										"bugreport_xmlrpc_init_error");
 								return;
 							} finally {
 								for (int i = 0; i < pw.length; i++) {
@@ -405,7 +403,8 @@ public class ExtendedErrorDialog extends ButtonDialog {
 												if (op.getOperatorDescription().getGroup().toLowerCase(Locale.ENGLISH)
 														.contains("import")
 														|| op.getName().toLowerCase(Locale.ENGLISH).equals("retrieve")) {
-													SwingTools.showMessageDialog("send_bugreport.import_operator_message");
+													SwingTools.showMessageDialog(ExtendedErrorDialog.this,
+															"send_bugreport.import_operator_message");
 													break;
 												}
 											}

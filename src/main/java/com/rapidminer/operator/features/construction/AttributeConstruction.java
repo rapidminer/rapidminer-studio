@@ -18,6 +18,7 @@
 */
 package com.rapidminer.operator.features.construction;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -257,9 +258,8 @@ public class AttributeConstruction extends AbstractFeatureConstruction {
 					} else {
 						// in all other cases abort meta data generation, add an error and return
 						// empty meta data
-						getExampleSetOutputPort().addError(
-								new SimpleMetaDataError(Severity.ERROR, this.getExampleSetOutputPort(),
-										"cannot_create_exampleset_metadata", e.getShortMessage()));
+						getExampleSetOutputPort().addError(new SimpleMetaDataError(Severity.ERROR,
+								this.getExampleSetOutputPort(), "cannot_create_exampleset_metadata", e.getShortMessage()));
 						return new ExampleSetMetaData();
 					}
 				}
@@ -281,7 +281,7 @@ public class AttributeConstruction extends AbstractFeatureConstruction {
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
-		List<Attribute> originalAttributes = new LinkedList<>();
+		List<Attribute> originalAttributes = new ArrayList<>();
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			originalAttributes.add(attribute);
 		}

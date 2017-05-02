@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.concurrency.internal;
 
 import java.util.List;
@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import com.rapidminer.Process;
+import com.rapidminer.RapidMiner;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
@@ -31,6 +32,7 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.studio.concurrency.internal.util.BackgroundExecution;
 import com.rapidminer.studio.concurrency.internal.util.BackgroundExecutionServiceListener;
 import com.rapidminer.studio.concurrency.internal.util.ProcessBackgroundExecution;
+import com.rapidminer.studio.internal.ParameterServiceRegistry;
 
 
 /**
@@ -43,6 +45,31 @@ import com.rapidminer.studio.concurrency.internal.util.ProcessBackgroundExecutio
  * @since 7.4
  */
 public interface ConcurrencyExecutionService {
+
+	/**
+	 * Calculates the recommended batch size for parallel operators. Use when deciding how many
+	 * tasks to submit to
+	 * {@link ConcurrencyExecutionService#executeOperatorTasks(Operator, java.util.List)}
+	 * simultaneously.
+	 *
+	 * @return the recommended batch size. Will never be less than the user setting of
+	 *         {@link RapidMiner#PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS}
+	 * @since 7.5
+	 */
+	public static int getRecommendedConcurrencyBatchSize() {
+		String threadSettingString = ParameterServiceRegistry.INSTANCE
+				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
+		int threadSetting = 0;
+		try {
+			threadSetting = Integer.parseInt(threadSettingString);
+		} catch (NumberFormatException e) {
+			// do nothing
+		}
+		if (threadSetting == 0) {
+			threadSetting = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+		}
+		return Math.max(2_000, threadSetting);
+	}
 
 	/**
 	 * This method executes the given process in the background. This method does

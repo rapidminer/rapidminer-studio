@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer;
 
 import java.awt.Frame;
@@ -26,6 +26,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -361,7 +362,7 @@ public class RapidMiner {
 	 * The name of the property indicating whether beta features should be activated.
 	 */
 	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features";
-
+	
 	/**
 	 * The name of the property indicating whether or not additional permissions should be enabled
 	 */
@@ -373,6 +374,11 @@ public class RapidMiner {
 	 * this property can be used to limit the maximum amount of memory RM Studio will use (in MB)
 	 */
 	public static final String PROPERTY_RAPIDMINER_MAX_MEMORY = "maxMemory";
+	
+	/**
+	 * The name of the property indicating whether the row based legacy data management should be used.
+	 */
+	public static final String PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT = "rapidminer.system.legacy_data_mgmt";
 
 	public static final String PROPERTY_RAPIDMINER_PROXY_MODE = "rapidminer.proxy.mode";
 	public static final String PROPERTY_RAPIDMINER_PROXY_EXCLUDE = "rapidminer.proxy.exclude";
@@ -409,7 +415,19 @@ public class RapidMiner {
 	 */
 	private static IOObjectMap ioObjectCache;
 
+	/**
+	 * This list contains the Protected Parameters that cannot be changed by extensions without
+	 * enough permissions
+	 */
+	private static final Set<String> PROTECTED_PARAMETERS;
 	static {
+		Set<String> protectedParameters = new HashSet<>();
+
+		// add Protected Preferences to the List
+		protectedParameters.add(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS);
+
+		PROTECTED_PARAMETERS = Collections.unmodifiableSet(protectedParameters);
+
 		System.setProperty(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getLongVersion());
 		ParameterService.setParameterValue(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getLongVersion());
 
@@ -491,6 +509,8 @@ public class RapidMiner {
 
 		// System parameter types
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_MAX_MEMORY, "", 384, Integer.MAX_VALUE, true), "system");
+		
+		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, "", false), "system");
 
 		registerParameter(new ParameterTypeInt(WebServiceTools.WEB_SERVICE_TIMEOUT, "", 1, Integer.MAX_VALUE, 20000),
 				"system");
@@ -499,6 +519,19 @@ public class RapidMiner {
 
 		// initialize the state of IOObjects
 		ioObjectCache = new IOObjectMap();
+	}
+
+	/**
+	 * This method checks if the given parameter is protected
+	 *
+	 * @param key
+	 *            The key of the parameter to check
+	 * @return True if it is protected, false if it is not
+	 * @since 7.4.1
+	 */
+	public static boolean isParameterProtected(String key) {
+
+		return PROTECTED_PARAMETERS.contains(key);
 	}
 
 	private static InputHandler inputHandler = new ConsoleInputHandler();

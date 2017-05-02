@@ -33,8 +33,10 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
+import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.PassThroughRule;
 import com.rapidminer.operator.preprocessing.AbstractDataProcessing;
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
 import com.rapidminer.parameter.ParameterType;
@@ -54,10 +56,35 @@ public class RemoveDuplicates extends AbstractDataProcessing {
 	/** parameter to define the handling of missing values */
 	private static final String PARAMETER_TREAT_MISSING_VALUES_AS_DUPLICATES = "treat_missing_values_as_duplicates";
 
+	/** The first of their kind */
+	private static final int NO_DUPLICATE = 0;
+
+	/** Duplicate entries are marked with this */
+	private static final int DUPLICATE = 1;
+
+	/** The duplicates */
+	private final OutputPort duplicateSetOutput = getOutputPorts().createPort("duplicates");
+
 	private AttributeSubsetSelector subsetSelector = new AttributeSubsetSelector(this, getExampleSetInputPort());
 
 	public RemoveDuplicates(OperatorDescription description) {
 		super(description);
+		// add metadata to the duplicate output
+		getTransformer().addRule(new PassThroughRule(getExampleSetInputPort(), duplicateSetOutput, false) {
+
+			@Override
+			public MetaData modifyMetaData(MetaData metaData) {
+				if (metaData instanceof ExampleSetMetaData) {
+					try {
+						return RemoveDuplicates.this.modifyMetaData((ExampleSetMetaData) metaData);
+					} catch (UndefinedParameterError e) {
+						return metaData;
+					}
+				} else {
+					return metaData;
+				}
+			}
+		});
 	}
 
 	@Override
@@ -108,7 +135,7 @@ public class RemoveDuplicates extends AbstractDataProcessing {
 						}
 					}
 					if (equal) {
-						partition[i] = 1;
+						partition[i] = DUPLICATE;
 					}
 				}
 				if (partition[i] == 0) { // then it is unequal with same hash value
@@ -128,8 +155,16 @@ public class RemoveDuplicates extends AbstractDataProcessing {
 		}
 
 		SplittedExampleSet result = new SplittedExampleSet(exampleSet, new Partition(partition, 2));
-		result.selectSingleSubset(0);
 
+		// Create duplicates
+		if (duplicateSetOutput.isConnected()) {
+			SplittedExampleSet duplicates = (SplittedExampleSet) result.clone();
+			duplicates.selectSingleSubset(DUPLICATE);
+			duplicates.recalculateAllAttributeStatistics();
+			duplicateSetOutput.deliver(duplicates);
+		}
+
+		result.selectSingleSubset(NO_DUPLICATE);
 		return result;
 	}
 

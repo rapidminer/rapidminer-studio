@@ -18,13 +18,12 @@
 */
 package com.rapidminer.operator.features.transformation;
 
-import Jama.Matrix;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 
-import java.util.Iterator;
+import Jama.Matrix;
 
 
 /**
@@ -52,15 +51,13 @@ public abstract class JamaDimensionalityReduction extends DimensionalityReducer 
 	protected double[][] dimensionalityReduction(ExampleSet es, int dimensions) {
 		// encode matrix
 		Matrix in = new Matrix(es.size(), es.getAttributes().size());
-		Iterator<Example> er = es.iterator();
-		int count = 0;
-		while (er.hasNext()) {
-			Example e = er.next();
-			int i = 0;
-			for (Attribute attribute : e.getAttributes()) {
-				in.set(count, i++, e.getValue(attribute));
-			}
 
+		int count = 0;
+		Attribute[] regularAttributes = es.getAttributes().createRegularAttributeArray();
+		for (Example e : es) {
+			for (int i = 0; i < regularAttributes.length; i++) {
+				in.set(count, i, e.getValue(regularAttributes[i]));
+			}
 			count++;
 		}
 		Matrix result = callMatrixMethod(es, dimensions, in);

@@ -1095,7 +1095,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 					parameterValueGrid.setMin(value);
 				} else {
 					minValueTextField.setText(parameterValueGrid.getMin());
-					SwingTools.showVerySimpleErrorMessage("parameter_grid", "minimum value", value);
+					SwingTools.showVerySimpleErrorMessage(this, "parameter_grid", "minimum value", value);
 					return false;
 				}
 				value = maxValueTextField.getText();
@@ -1103,7 +1103,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 					parameterValueGrid.setMax(value);
 				} else {
 					maxValueTextField.setText(parameterValueGrid.getMax());
-					SwingTools.showVerySimpleErrorMessage("parameter_grid", "maximum value", value);
+					SwingTools.showVerySimpleErrorMessage(this, "parameter_grid", "maximum value", value);
 					return false;
 				}
 				value = stepsValueTextField.getText();
@@ -1111,7 +1111,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 					parameterValueGrid.setSteps(value);
 				} else {
 					stepsValueTextField.setText(parameterValueGrid.getSteps());
-					SwingTools.showVerySimpleErrorMessage("parameter_grid", "number of steps", value);
+					SwingTools.showVerySimpleErrorMessage(this, "parameter_grid", "number of steps", value);
 					return false;
 				}
 				parameterValueGrid.setScale(gridScaleValueComboBox.getSelectedIndex());
@@ -1124,7 +1124,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 					parameterValueRange.setMin(value);
 				} else {
 					minValueTextField.setText(parameterValueRange.getMin());
-					SwingTools.showVerySimpleErrorMessage("parameter_range", "minimum value", value);
+					SwingTools.showVerySimpleErrorMessage(this, "parameter_range", "minimum value", value);
 					return false;
 				}
 				value = maxValueTextField.getText();
@@ -1132,7 +1132,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 					parameterValueRange.setMax(value);
 				} else {
 					maxValueTextField.setText(parameterValueRange.getMax());
-					SwingTools.showVerySimpleErrorMessage("parameter_range", "maximum value", value);
+					SwingTools.showVerySimpleErrorMessage(this, "parameter_range", "maximum value", value);
 					return false;
 				}
 			}

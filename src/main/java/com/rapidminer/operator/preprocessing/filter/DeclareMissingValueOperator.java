@@ -186,14 +186,15 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 				throw ExpressionParserUtils.convertToUserError(this, expression, e);
 			}
 
-			for (Example example : exampleSet) {
-				// assign values to the variables
-				resolver.bind(example);
-
-				try {
-					checkForStop();
-
-					if (result.getExpressionType() == ExpressionType.BOOLEAN) {
+			if (result.getExpressionType() == ExpressionType.BOOLEAN) {
+				int exampleCounter = 0;
+				for (Example example : exampleSet) {
+					// assign values to the variables
+					resolver.bind(example);
+					try {
+						if (++exampleCounter % 1000 == 0) {
+							checkForStop();
+						}
 						Boolean resultBoolean;
 						try {
 							resultBoolean = result.evaluateBoolean();
@@ -206,13 +207,12 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 								example.setValue(attribute, Double.NaN);
 							}
 						}
+					} finally {
+						// avoid memory leak
+						resolver.unbind();
 					}
-				} finally {
-					// avoid memory leak
-					resolver.unbind();
 				}
 			}
-
 		}
 
 		boolean ignoreIncompatibleAttributes = getCompatibilityLevel().isAtMost(VERSION_IGNORE_ATTRIBUTES_OF_WRONG_TYPE);
@@ -225,8 +225,8 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 			nominalString = "";
 		}
 
-		for (Example example : subset) {
-			for (Attribute attribute : attributes) {
+		for (Attribute attribute : attributes) {
+			for (Example example : subset) {
 				checkForStop();
 				if (mode.equals(NUMERIC)) {
 					if (ignoreIncompatibleAttributes || attribute.isNumerical()) {

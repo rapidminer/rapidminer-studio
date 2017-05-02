@@ -18,15 +18,7 @@
 */
 package com.rapidminer.operator.learner.bayes;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.OperatorException;
-import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.math.matrix.CovarianceMatrix;
-
-import Jama.Matrix;
 
 
 /**
@@ -37,10 +29,13 @@ import Jama.Matrix;
  * identical.
  * </p>
  *
- * @author Sebastian Land
+ * @see RegularizedDiscriminantAnalysis
+ * @see LinearDiscriminantAnalysis
+ * @author Sebastian Land, Jan Czogalla
  */
-public class QuadraticDiscriminantAnalysis extends LinearDiscriminantAnalysis {
+public class QuadraticDiscriminantAnalysis extends RegularizedDiscriminantAnalysis {
 
+	/** The special alpha value for QDA */
 	static final double QDA_ALPHA = 0d;
 
 	public QuadraticDiscriminantAnalysis(OperatorDescription description) {
@@ -48,32 +43,13 @@ public class QuadraticDiscriminantAnalysis extends LinearDiscriminantAnalysis {
 	}
 
 	@Override
-	protected DiscriminantModel getModel(ExampleSet exampleSet, String[] labels, Matrix[] meanVectors,
-			Matrix[] inverseCovariances, double[] aprioriProbabilities) {
-		return new DiscriminantModel(exampleSet, labels, meanVectors, inverseCovariances, aprioriProbabilities, QDA_ALPHA);
+	protected boolean useAlphaParameter() {
+		return false;
 	}
 
 	@Override
-	protected Matrix[] getInverseCovarianceMatrices(ExampleSet exampleSet, String[] labels)
-			throws UndefinedParameterError, OperatorException {
-		Matrix[] classInverseCovariances = new Matrix[labels.length];
-		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
-		SplittedExampleSet labelSet = SplittedExampleSet.splitByAttribute(exampleSet, exampleSet.getAttributes().getLabel());
-		int labelIndex = 0;
-		for (String label : labels) {
-			this.checkForStop();
-			// select appropriate subset
-			for (int i = 0; i < labels.length; i++) {
-				labelSet.selectSingleSubset(i);
-				if (labelSet.getExample(0).getNominalValue(labelAttribute).equals(label)) {
-					break;
-				}
-			}
-			// calculate inverse matrix
-			Matrix inverse = CovarianceMatrix.getCovarianceMatrix(labelSet, this).inverse();
-			classInverseCovariances[labelIndex] = inverse;
-			labelIndex++;
-		}
-		return classInverseCovariances;
+	protected double getAlpha() {
+		return QDA_ALPHA;
 	}
+
 }

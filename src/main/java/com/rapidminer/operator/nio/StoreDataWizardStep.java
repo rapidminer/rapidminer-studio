@@ -75,17 +75,18 @@ public final class StoreDataWizardStep extends RepositoryLocationSelectionWizard
 				if (entry != null) {
 					if (entry instanceof SimpleIOObjectEntry) {
 						// could overwrite, ask for permission
-						if (SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION, entry.getLocation()) == ConfirmDialog.NO_OPTION) {
+						if (SwingTools.showConfirmDialog(getOwner(), "overwrite", ConfirmDialog.YES_NO_OPTION,
+								entry.getLocation()) == ConfirmDialog.NO_OPTION) {
 							return false;
 						}
 					} else {
 						// cannot overwrite, inform user
-						SwingTools.showSimpleErrorMessage("cannot_save_data_no_dataentry", "", entry.getName());
+						SwingTools.showSimpleErrorMessage(getOwner(), "cannot_save_data_no_dataentry", "", entry.getName());
 						return false;
 					}
 				}
 			} catch (Exception e) {
-				SwingTools.showSimpleErrorMessage("malformed_rep_location", e, repositoryLocationPath);
+				SwingTools.showSimpleErrorMessage(getOwner(), "malformed_rep_location", e, repositoryLocationPath);
 				return false;
 			}
 			state.setSelectedLocation(location);
@@ -124,11 +125,11 @@ public final class StoreDataWizardStep extends RepositoryLocationSelectionWizard
 								}
 							});
 						} catch (RepositoryException ex) {
-							SwingTools.showSimpleErrorMessage("cannot_store_obj_at_location", ex, location);
+							SwingTools.showSimpleErrorMessage(getOwner(), "cannot_store_obj_at_location", ex, location);
 							return;
 						}
 					} catch (Exception e) {
-						SwingTools.showSimpleErrorMessage("cannot_store_obj_at_location", e, location);
+						SwingTools.showSimpleErrorMessage(getOwner(), "cannot_store_obj_at_location", e, location);
 					} finally {
 						state.getDataResultSetFactory().close();
 						getProgressListener().complete();

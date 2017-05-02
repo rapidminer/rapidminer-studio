@@ -499,7 +499,8 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 				if (fileOk) {
 					resultFileField.setText(file.getAbsolutePath());
 				} else {
-					SwingTools.showVerySimpleErrorMessage("same_output_as_input_file");
+					SwingTools.showVerySimpleErrorMessage(ExampleSourceConfigurationWizard.this,
+							"same_output_as_input_file");
 					resultFileField.setText("");
 				}
 			}
@@ -591,13 +592,14 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 				counter++;
 			}
 		} catch (IOException e) {
-			SwingTools.showSimpleErrorMessage("cannot_load_data", e);
+			SwingTools.showSimpleErrorMessage(ExampleSourceConfigurationWizard.this, "cannot_load_data", e);
 		} finally {
 			if (in != null) {
 				try {
 					in.close();
 				} catch (IOException e) {
-					SwingTools.showSimpleErrorMessage("cannot_close_stream_to_data_file", e);
+					SwingTools.showSimpleErrorMessage(ExampleSourceConfigurationWizard.this,
+							"cannot_close_stream_to_data_file", e);
 				}
 			}
 		}
@@ -715,11 +717,11 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 
 		// sanity checks
 		if (!outputFileOk) {
-			SwingTools.showVerySimpleErrorMessage("same_output_as_input_file");
-		} else if ((sources.size() == 0) || ((data.size() == 0))) {
-			SwingTools.showVerySimpleErrorMessage("no_data_file_and_proper_settings");
+			SwingTools.showVerySimpleErrorMessage(ExampleSourceConfigurationWizard.this, "same_output_as_input_file");
+		} else if (sources.size() == 0 || data.size() == 0) {
+			SwingTools.showVerySimpleErrorMessage(ExampleSourceConfigurationWizard.this, "no_data_file_and_proper_settings");
 		} else if (resultFileName.length() == 0) {
-			SwingTools.showVerySimpleErrorMessage("no_file_name_for_attr_desc");
+			SwingTools.showVerySimpleErrorMessage(ExampleSourceConfigurationWizard.this, "no_file_name_for_attr_desc");
 		} else {
 			// everything is OK --> write files and dispose
 			Charset encoding = Tools.getDefaultEncoding();
@@ -734,7 +736,8 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 				writeData(dataFile, encoding);
 				writeAttributeDescriptions(attributeFile, encoding);
 			} catch (IOException e) {
-				SwingTools.showSimpleErrorMessage("es_conf_wizard_was_not_able_to_write_file", e);
+				SwingTools.showSimpleErrorMessage(ExampleSourceConfigurationWizard.this,
+						"es_conf_wizard_was_not_able_to_write_file", e);
 			}
 			Parameters parameters = listener.getParameters();
 			parameters.setParameter(ExampleSource.PARAMETER_ATTRIBUTES, attributeFile.getAbsolutePath());
@@ -793,14 +796,14 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 					}
 				}
 			} catch (IOException e) {
-				SwingTools.showSimpleErrorMessage("cannot_re_write_data", e);
+				SwingTools.showSimpleErrorMessage(ExampleSourceConfigurationWizard.this, "cannot_re_write_data", e);
 			} finally {
 				if (in != null) {
 					in.close();
 				}
 			}
 		} catch (IOException e) {
-			SwingTools.showSimpleErrorMessage("cannot_re_write_data", e);
+			SwingTools.showSimpleErrorMessage(ExampleSourceConfigurationWizard.this, "cannot_re_write_data", e);
 		} finally {
 			if (out != null) {
 				out.close();

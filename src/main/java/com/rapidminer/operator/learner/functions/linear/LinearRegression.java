@@ -1,24 +1,24 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.functions.linear;
 
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -233,7 +233,7 @@ public class LinearRegression extends AbstractLearner {
 		getProgress().step();
 
 		// remove collinear attributes
-		double[] coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
+		double[] coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge, useBias);
 		if (removeColinearAttributes) {
 			boolean eliminateMore = true;
 			while (eliminateMore) {
@@ -268,10 +268,10 @@ public class LinearRegression extends AbstractLearner {
 						getProgress().setIndeterminate(false);
 					}
 				}
-				coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
+				coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge, useBias);
 			}
 		} else {
-			coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
+			coefficientsOnFullData = performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge, useBias);
 		}
 
 		getProgress().setCompleted(14);
@@ -340,145 +340,165 @@ public class LinearRegression extends AbstractLearner {
 
 		getProgress().step();
 
+		// the shift for indices or number to add to the total considered columns
+		int interceptShift = 1;
+		if (!useBias) {
+			interceptShift = 0;
+		}
+
 		// calculating standard error matrix, (containing the error of
-		// intercept and estimated coefficients)
-		int degreeOfFreedom = finalNumberOfAttributes + 1;
+		// intercept (if used) and estimated coefficients)
+		int degreeOfFreedom = finalNumberOfAttributes + interceptShift;
 
 		double mse = result.error / (exampleSet.size() - degreeOfFreedom);
 
-		// add a additional column of 1s to the design matrix for the intercept
-		double[][] data = new double[exampleSet.size()][finalNumberOfAttributes + 1];
+		// only calculate further if there are selected attributes or intercept
+		if (degreeOfFreedom > 0) {
+			double[][] data = new double[exampleSet.size()][degreeOfFreedom];
 
-		for (int i = 0; i < exampleSet.size(); i++) {
-			data[i][0] = 1;
-		}
+			if (useBias) {
+				// add an additional column of 1s to the design matrix for the intercept
+				for (int i = 0; i < exampleSet.size(); i++) {
+					data[i][0] = 1;
+				}
+			}
 
-		int eIndex = 0;
-		for (Example e : exampleSet) {
-			int aIndex = 0;
-			int aCounter = 1;
+			int attributeIndex = 0;
+			int dataColumnCounter = interceptShift;
 			for (Attribute a : exampleSet.getAttributes()) {
-				if (result.isUsedAttribute[aIndex]) {
-					data[eIndex][aCounter] = e.getValue(a);
-					aCounter++;
-				}
-				aIndex++;
-			}
-			eIndex++;
-		}
-
-		getProgress().step();
-
-		RealMatrix matrix = MatrixUtils.createRealMatrix(data);
-		RealMatrix matrixT = matrix.transpose();
-		RealMatrix productMatrix = matrixT.multiply(matrix);
-		RealMatrix invertedMatrix = null;
-		try {
-			// try to invert matrix
-			invertedMatrix = new LUDecomposition(productMatrix).getSolver().getInverse();
-
-			int index = 0;
-			for (int i = 0; i < result.isUsedAttribute.length; i++) {
-				if (result.isUsedAttribute[i]) {
-
-					tolerances[index] = getTolerance(exampleSet, result.isUsedAttribute, i, ridge, useBias);
-					standardErrors[index] = Math.sqrt(mse * invertedMatrix.getEntry(index + 1, index + 1));
-					// calculate standardized Coefficients
-
-					// Be careful, use in the calculation of standardizedCoefficients the i instead
-					// of index for standardDeviations, because all other arrays refer to the
-					// selected attributes, whereas standardDeviations refers to all attributes
-					standardizedCoefficients[index] = result.coefficients[index]
-							* (standardDeviations[i] / labelStandardDeviation);
-
-					if (!Tools.isZero(standardErrors[index]) && fdistribution != null) {
-						tStatistics[index] = result.coefficients[index] / standardErrors[index];
-						double probability = fdistribution.cumulativeProbability(tStatistics[index] * tStatistics[index]);
-						pValues[index] = 1.0d - probability;
-					} else {
-						if (Tools.isZero(result.coefficients[index])) {
-							tStatistics[index] = 0.0d;
-							pValues[index] = 1.0d;
-						} else {
-							tStatistics[index] = Double.POSITIVE_INFINITY;
-							pValues[index] = 0.0d;
-						}
+				if (result.isUsedAttribute[attributeIndex]) {
+					int exampleIndex = 0;
+					for (Example e : exampleSet) {
+						data[exampleIndex][dataColumnCounter] = e.getValue(a);
+						exampleIndex++;
 					}
-					index++;
+					dataColumnCounter++;
 				}
-				if (i % 5 == 0) {
-					getProgress().setCompleted((int) (28 + (float) i / result.isUsedAttribute.length * 20));
-				}
+				attributeIndex++;
 			}
-		} catch (Throwable e) {
 
-			// calculate approximate value if matrix can not be inverted
-			double generalCorrelation = getCorrelation(exampleSet, isUsedAttribute, coefficientsOnFullData, useBias);
-			generalCorrelation = Math.min(generalCorrelation * generalCorrelation, 1.0d);
+			getProgress().step();
 
-			int index = 0;
-			for (int i = 0; i < result.isUsedAttribute.length; i++) {
-				if (result.isUsedAttribute[i]) {
-					// calculating standard error and tolerance
-					double tolerance = getTolerance(exampleSet, result.isUsedAttribute, i, ridge, useBias);
-					standardErrors[index] = Math
-							.sqrt((1.0d - generalCorrelation)
-									/ (tolerance * (exampleSet.size() - exampleSet.getAttributes().size() - 1.0d)))
-							* labelStandardDeviation / standardDeviations[i];
-					tolerances[index] = tolerance;
+			RealMatrix matrix = MatrixUtils.createRealMatrix(data);
+			RealMatrix matrixT = matrix.transpose();
+			RealMatrix productMatrix = matrixT.multiply(matrix);
+			RealMatrix invertedMatrix = null;
+			try {
+				// try to invert matrix
+				invertedMatrix = new LUDecomposition(productMatrix).getSolver().getInverse();
 
-					// calculating beta and test statistics
-					// calculate standardized coefficients
+				int index = 0;
+				for (int i = 0; i < result.isUsedAttribute.length; i++) {
+					if (result.isUsedAttribute[i]) {
 
-					// Be careful, use in the calculation of standardizedCoefficients the i instead
-					// of index for standardDeviations, because all other arrays refer to the
-					// selected attributes, whereas standardDeviations refers to all attributes
-					standardizedCoefficients[index] = result.coefficients[index]
-							* (standardDeviations[i] / labelStandardDeviation);
+						tolerances[index] = getTolerance(exampleSet, result.isUsedAttribute, i, ridge, useBias);
+						standardErrors[index] = Math
+								.sqrt(mse * invertedMatrix.getEntry(index + interceptShift, index + interceptShift));
+						// calculate standardized Coefficients
 
-					if (!Tools.isZero(standardErrors[index]) && fdistribution != null) {
-						tStatistics[index] = result.coefficients[index] / standardErrors[index];
-						double probability = fdistribution.cumulativeProbability(tStatistics[index] * tStatistics[index]);
-						pValues[index] = 1.0d - probability;
-					} else {
-						if (Tools.isZero(result.coefficients[index])) {
-							tStatistics[index] = 0.0d;
-							pValues[index] = 1.0d;
+						/**
+						 * Be careful, use in the calculation of standardizedCoefficients the i
+						 * instead of index for standardDeviations, because all other arrays refer
+						 * to the selected attributes, whereas standardDeviations refers to all
+						 * attributes
+						 */
+						standardizedCoefficients[index] = result.coefficients[index]
+								* (standardDeviations[i] / labelStandardDeviation);
+
+						if (!Tools.isZero(standardErrors[index]) && fdistribution != null) {
+							tStatistics[index] = result.coefficients[index] / standardErrors[index];
+							double probability = fdistribution
+									.cumulativeProbability(tStatistics[index] * tStatistics[index]);
+							pValues[index] = 1.0d - probability;
 						} else {
-							tStatistics[index] = Double.POSITIVE_INFINITY;
-							pValues[index] = 0.0d;
+							if (Tools.isZero(result.coefficients[index])) {
+								tStatistics[index] = 0.0d;
+								pValues[index] = 1.0d;
+							} else {
+								tStatistics[index] = Double.POSITIVE_INFINITY;
+								pValues[index] = 0.0d;
+							}
 						}
+						index++;
 					}
-					index++;
+					if (i % 5 == 0) {
+						getProgress().setCompleted((int) (28 + (float) i / result.isUsedAttribute.length * 20));
+					}
 				}
-				if (i % 5 == 0) {
-					getProgress().setCompleted((int) (28 + (float) i / result.isUsedAttribute.length * 20));
+			} catch (Throwable e) {
+
+				// calculate approximate value if matrix can not be inverted
+				double generalCorrelation = getCorrelation(exampleSet, isUsedAttribute, coefficientsOnFullData, useBias);
+				generalCorrelation = Math.min(generalCorrelation * generalCorrelation, 1.0d);
+
+				int index = 0;
+				for (int i = 0; i < result.isUsedAttribute.length; i++) {
+					if (result.isUsedAttribute[i]) {
+						// calculating standard error and tolerance
+						double tolerance = getTolerance(exampleSet, result.isUsedAttribute, i, ridge, useBias);
+						standardErrors[index] = Math
+								.sqrt((1.0d - generalCorrelation)
+										/ (tolerance * (exampleSet.size() - exampleSet.getAttributes().size() - 1.0d)))
+								* labelStandardDeviation / standardDeviations[i];
+						tolerances[index] = tolerance;
+
+						// calculating beta and test statistics
+						// calculate standardized coefficients
+
+						/**
+						 * Be careful, use in the calculation of standardizedCoefficients the i
+						 * instead of index for standardDeviations, because all other arrays refer
+						 * to the selected attributes, whereas standardDeviations refers to all
+						 * attributes
+						 */
+						standardizedCoefficients[index] = result.coefficients[index]
+								* (standardDeviations[i] / labelStandardDeviation);
+
+						if (!Tools.isZero(standardErrors[index]) && fdistribution != null) {
+							tStatistics[index] = result.coefficients[index] / standardErrors[index];
+							double probability = fdistribution
+									.cumulativeProbability(tStatistics[index] * tStatistics[index]);
+							pValues[index] = 1.0d - probability;
+						} else {
+							if (Tools.isZero(result.coefficients[index])) {
+								tStatistics[index] = 0.0d;
+								pValues[index] = 1.0d;
+							} else {
+								tStatistics[index] = Double.POSITIVE_INFINITY;
+								pValues[index] = 0.0d;
+							}
+						}
+						index++;
+					}
+					if (i % 5 == 0) {
+						getProgress().setCompleted((int) (28 + (float) i / result.isUsedAttribute.length * 20));
+					}
 				}
 			}
-		}
-		getProgress().setCompleted(47);
+			getProgress().setCompleted(47);
 
-		// Set all values for intercept
-		if (invertedMatrix == null) {
-			standardErrors[standardErrors.length - 1] = Double.POSITIVE_INFINITY;
-		} else {
-			standardErrors[standardErrors.length - 1] = Math.sqrt(mse * invertedMatrix.getEntry(0, 0));
-		}
-		tolerances[tolerances.length - 1] = Double.NaN;
-		standardizedCoefficients[standardizedCoefficients.length - 1] = Double.NaN;
-		if (!Tools.isZero(standardErrors[standardErrors.length - 1]) && fdistribution != null) {
-			tStatistics[tStatistics.length - 1] = result.coefficients[result.coefficients.length - 1]
-					/ standardErrors[standardErrors.length - 1];
-			double probability = fdistribution
-					.cumulativeProbability(tStatistics[tStatistics.length - 1] * tStatistics[tStatistics.length - 1]);
-			pValues[pValues.length - 1] = 1.0d - probability;
-		} else {
-			if (Tools.isZero(result.coefficients[result.coefficients.length - 1])) {
-				tStatistics[tStatistics.length - 1] = 0.0d;
-				pValues[pValues.length - 1] = 1.0d;
+			// Set all values for intercept
+			if (invertedMatrix == null) {
+				standardErrors[standardErrors.length - 1] = Double.POSITIVE_INFINITY;
 			} else {
-				tStatistics[tStatistics.length - 1] = Double.POSITIVE_INFINITY;
-				pValues[pValues.length - 1] = 0.0d;
+				standardErrors[standardErrors.length - 1] = Math.sqrt(mse * invertedMatrix.getEntry(0, 0));
+			}
+			tolerances[tolerances.length - 1] = Double.NaN;
+			standardizedCoefficients[standardizedCoefficients.length - 1] = Double.NaN;
+			if (!Tools.isZero(standardErrors[standardErrors.length - 1]) && fdistribution != null) {
+				tStatistics[tStatistics.length - 1] = result.coefficients[result.coefficients.length - 1]
+						/ standardErrors[standardErrors.length - 1];
+				double probability = fdistribution
+						.cumulativeProbability(tStatistics[tStatistics.length - 1] * tStatistics[tStatistics.length - 1]);
+				pValues[pValues.length - 1] = 1.0d - probability;
+			} else {
+				if (Tools.isZero(result.coefficients[result.coefficients.length - 1])) {
+					tStatistics[tStatistics.length - 1] = 0.0d;
+					pValues[pValues.length - 1] = 1.0d;
+				} else {
+					tStatistics[tStatistics.length - 1] = Double.POSITIVE_INFINITY;
+					pValues[pValues.length - 1] = 0.0d;
+				}
 			}
 		}
 
@@ -507,38 +527,38 @@ public class LinearRegression extends AbstractLearner {
 			boolean useIntercept) throws UndefinedParameterError, ProcessStoppedException {
 		List<Attribute> attributeList = new LinkedList<>();
 		Attribute currentAttribute = null;
-		int resultAIndex = 0;
+		int resultAttributeIndex = 0;
 		for (Attribute a : exampleSet.getAttributes()) {
-			if (isUsedAttribute[resultAIndex]) {
-				if (resultAIndex != testAttributeIndex) {
+			if (isUsedAttribute[resultAttributeIndex]) {
+				if (resultAttributeIndex != testAttributeIndex) {
 					attributeList.add(a);
 				} else {
 					currentAttribute = a;
 				}
 			}
-			resultAIndex++;
+			resultAttributeIndex++;
 		}
 
 		Attribute[] usedAttributes = new Attribute[attributeList.size()];
 		attributeList.toArray(usedAttributes);
 
-		double[] localCoefficients = performRegression(exampleSet, usedAttributes, currentAttribute, ridge);
+		double[] localCoefficients = performRegression(exampleSet, usedAttributes, currentAttribute, ridge, useIntercept);
 		double[] attributeValues = new double[exampleSet.size()];
 		double[] predictedValues = new double[exampleSet.size()];
-		int eIndex = 0;
+		int exampleIndex = 0;
 		for (Example e : exampleSet) {
-			attributeValues[eIndex] = e.getValue(currentAttribute);
-			int aIndex = 0;
+			attributeValues[exampleIndex] = e.getValue(currentAttribute);
+			int attributeIndex = 0;
 			double prediction = 0.0d;
 			for (Attribute a : usedAttributes) {
-				prediction += localCoefficients[aIndex] * e.getValue(a);
-				aIndex++;
+				prediction += localCoefficients[attributeIndex] * e.getValue(a);
+				attributeIndex++;
 			}
 			if (useIntercept) {
 				prediction += localCoefficients[localCoefficients.length - 1];
 			}
-			predictedValues[eIndex] = prediction;
-			eIndex++;
+			predictedValues[exampleIndex] = prediction;
+			exampleIndex++;
 		}
 
 		double correlation = MathFunctions.correlation(attributeValues, predictedValues);
@@ -554,10 +574,8 @@ public class LinearRegression extends AbstractLearner {
 	double getSquaredError(ExampleSet exampleSet, boolean[] selectedAttributes, double[] coefficients, boolean useIntercept)
 			throws ProcessStoppedException {
 		double error = 0;
-		Iterator<Example> i = exampleSet.iterator();
-		while (i.hasNext()) {
+		for (Example example : exampleSet) {
 			checkForStop();
-			Example example = i.next();
 			double prediction = regressionPrediction(example, selectedAttributes, coefficients, useIntercept);
 			double diff = prediction - example.getLabel();
 			error += diff * diff;
@@ -601,10 +619,13 @@ public class LinearRegression extends AbstractLearner {
 	 * Calculate a linear regression only from the selected attributes. The method returns the
 	 * calculated coefficients.
 	 *
+	 * @param means
+	 *            the means of all regular attributes
 	 * @throws ProcessStoppedException
 	 */
 	double[] performRegression(ExampleSet exampleSet, boolean[] selectedAttributes, double[] means, double labelMean,
-			double ridge) throws UndefinedParameterError, ProcessStoppedException {
+			double ridge, boolean useBias) throws UndefinedParameterError, ProcessStoppedException {
+
 		int currentlySelectedAttributes = 0;
 		for (int i = 0; i < selectedAttributes.length; i++) {
 			if (selectedAttributes[i]) {
@@ -612,94 +633,99 @@ public class LinearRegression extends AbstractLearner {
 			}
 		}
 
-		Matrix independent = null;
-		Matrix dependent = null;
-		double[] weights = null;
-		if (currentlySelectedAttributes > 0) {
-			independent = new Matrix(exampleSet.size(), currentlySelectedAttributes);
-			dependent = new Matrix(exampleSet.size(), 1);
-			int exampleIndex = 0;
-			Iterator<Example> i = exampleSet.iterator();
-			weights = new double[exampleSet.size()];
-			Attribute weightAttribute = exampleSet.getAttributes().getWeight();
-			while (i.hasNext()) {
-				Example example = i.next();
-				int attributeIndex = 0;
-				dependent.set(exampleIndex, 0, example.getLabel());
-				int counter = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
-					checkForStop();
-					if (selectedAttributes[counter]) {
-						double value = example.getValue(attribute) - means[counter];
-						independent.set(exampleIndex, attributeIndex, value);
-						attributeIndex++;
-					}
-					counter++;
-				}
-				if (weightAttribute != null) {
-					weights[exampleIndex] = example.getValue(weightAttribute);
-				} else {
-					weights[exampleIndex] = 1.0d;
-				}
-				exampleIndex++;
+		double[] usedMeans = new double[currentlySelectedAttributes];
+		Attribute[] usedAttributes = new Attribute[currentlySelectedAttributes];
+
+		int selectedAttributeIndex = 0;
+		int attributeIndex = 0;
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			if (selectedAttributes[attributeIndex]) {
+				usedAttributes[selectedAttributeIndex] = attribute;
+				usedMeans[selectedAttributeIndex] = means[attributeIndex];
+				selectedAttributeIndex++;
 			}
+			attributeIndex++;
 		}
 
-		double[] coefficients = new double[currentlySelectedAttributes + 1];
-		if (currentlySelectedAttributes > 0) {
-			double[] coefficientsWithoutIntercept = com.rapidminer.tools.math.LinearRegression.performRegression(independent,
-					dependent, weights, ridge);
-			System.arraycopy(coefficientsWithoutIntercept, 0, coefficients, 0, currentlySelectedAttributes);
-		}
-		coefficients[currentlySelectedAttributes] = labelMean;
-
-		int coefficientIndex = 0;
-		for (int i = 0; i < selectedAttributes.length; i++) {
-			if (selectedAttributes[i]) {
-				coefficients[coefficients.length - 1] -= coefficients[coefficientIndex] * means[i];
-				coefficientIndex++;
-			}
-		}
-
-		return coefficients;
+		return performRegression(exampleSet, usedAttributes, exampleSet.getAttributes().getLabel(), usedMeans, labelMean,
+				ridge, useBias);
 	}
 
 	/**
-	 * Calculate a linear regression only from the selected attributes. The method returns the
+	 * Calculate a linear regression only from the used attributes. The method returns the
 	 * calculated coefficients.
 	 *
 	 * @throws ProcessStoppedException
 	 */
-	double[] performRegression(ExampleSet exampleSet, Attribute[] usedAttributes, Attribute label, double ridge)
-			throws UndefinedParameterError, ProcessStoppedException {
+	double[] performRegression(ExampleSet exampleSet, Attribute[] usedAttributes, Attribute label, double ridge,
+			boolean useBias) throws UndefinedParameterError, ProcessStoppedException {
+		double labelMean = exampleSet.getStatistics(label, Statistics.AVERAGE);
+		double[] means = new double[usedAttributes.length];
+		for (int i = 0; i < usedAttributes.length; i++) {
+			means[i] = exampleSet.getStatistics(usedAttributes[i], Statistics.AVERAGE);
+		}
+
+		return performRegression(exampleSet, usedAttributes, label, means, labelMean, ridge, useBias);
+
+	}
+
+	/**
+	 * Calculate a linear regression only from the used attributes. The method returns the
+	 * calculated coefficients.
+	 *
+	 * @param means
+	 *            means of the usedAttributes with same indices
+	 *
+	 * @throws ProcessStoppedException
+	 */
+	double[] performRegression(ExampleSet exampleSet, Attribute[] usedAttributes, Attribute label, double[] means,
+			double labelMean, double ridge, boolean useBias) throws UndefinedParameterError, ProcessStoppedException {
+
 		Matrix independent = null;
 		Matrix dependent = null;
 		double[] weights = null;
-		double[] averages = new double[usedAttributes.length];
-		for (int i = 0; i < usedAttributes.length; i++) {
-			averages[i] = exampleSet.getStatistics(usedAttributes[i], Statistics.AVERAGE);
-		}
 		if (usedAttributes.length > 0) {
-			independent = new Matrix(exampleSet.size(), usedAttributes.length);
-			dependent = new Matrix(exampleSet.size(), 1);
-			int exampleIndex = 0;
 			weights = new double[exampleSet.size()];
 			Attribute weightAttribute = exampleSet.getAttributes().getWeight();
-			for (Example example : exampleSet) {
-				int attributeIndex = 0;
-				dependent.set(exampleIndex, 0, example.getLabel());
-				checkForStop();
-				for (Attribute attribute : usedAttributes) {
-					double value = example.getValue(attribute) - averages[attributeIndex];
-					independent.set(exampleIndex, attributeIndex, value);
-					attributeIndex++;
-				}
-				if (weightAttribute != null) {
+			if (weightAttribute == null) {
+				Arrays.fill(weights, 1.0);
+			} else {
+				int exampleIndex = 0;
+				for (Example example : exampleSet) {
 					weights[exampleIndex] = example.getValue(weightAttribute);
-				} else {
-					weights[exampleIndex] = 1.0d;
+					exampleIndex++;
 				}
+			}
+
+			dependent = new Matrix(exampleSet.size(), 1);
+			int exampleIndex = 0;
+			for (Example example : exampleSet) {
+				dependent.set(exampleIndex, 0, example.getLabel());
 				exampleIndex++;
+			}
+
+			independent = new Matrix(exampleSet.size(), usedAttributes.length);
+
+			int attributeIndex = 0;
+			for (Attribute attribute : usedAttributes) {
+				checkForStop();
+				exampleIndex = 0;
+				for (Example example : exampleSet) {
+					double value = example.getValue(attribute);
+					if (useBias) {
+						/**
+						 * Shift all values by the mean such that the regression line goes through
+						 * the origin. Note that the label values do not need to be shifted because
+						 * any shift is cancelled out in the calculation of xTy in the regression
+						 * calculation.
+						 */
+						value -= means[attributeIndex];
+					}
+					independent.set(exampleIndex, attributeIndex, value);
+					exampleIndex++;
+				}
+				attributeIndex++;
+
 			}
 		}
 
@@ -709,11 +735,14 @@ public class LinearRegression extends AbstractLearner {
 					dependent, weights, ridge);
 			System.arraycopy(coefficientsWithoutIntercept, 0, coefficients, 0, usedAttributes.length);
 		}
-		coefficients[usedAttributes.length] = exampleSet.getStatistics(label, Statistics.AVERAGE);
 
-		for (int i = 0; i < usedAttributes.length; i++) {
-			coefficients[coefficients.length - 1] -= coefficients[i]
-					* averages[i];
+		if (useBias) {
+			// Reversing the shift from above yields the intersect.
+			coefficients[usedAttributes.length] = labelMean;
+
+			for (int i = 0; i < usedAttributes.length; i++) {
+				coefficients[coefficients.length - 1] -= coefficients[i] * means[i];
+			}
 		}
 
 		return coefficients;

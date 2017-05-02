@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.concurrency.internal.util;
 
 import java.io.IOException;
@@ -49,8 +49,7 @@ import com.rapidminer.tools.Tools;
  * @author Sebastian Land
  * @since 7.4
  */
-public class ProcessBackgroundExecutionState extends SimpleObservable<ProcessBackgroundExecutionState.State>
-		implements ProcessListener, LoggingListener {
+public class ProcessBackgroundExecutionState extends SimpleObservable<ProcessBackgroundExecutionState.State> {
 
 	public enum State {
 		FAILED, CANCELED, PENDING, RUNNING, FINISHED;
@@ -59,38 +58,58 @@ public class ProcessBackgroundExecutionState extends SimpleObservable<ProcessBac
 	private LinkedList<ProcessExecutionStackEntry> operatorStack = new LinkedList<>();
 	private LinkedList<DataTable> processLogs = new LinkedList<>();
 
+	private ProcessListener processListener;
+	private LoggingListener loggingListener;
+
 	private State state = State.PENDING;
 	private Future<IOContainer> futureResults;
 	private List<IOObject> results;
 	private Path logFilePath;
+	private Process process;
 
 	public ProcessBackgroundExecutionState(Process process) {
+		this.process = process;
 		// adding listeners
-		process.getRootOperator().addProcessListener(this);
-		process.addLoggingListener(this);
-	}
 
-	@Override
-	public void processStarts(Process process) {
-		this.setState(State.RUNNING);
-	}
+		processListener = new ProcessListener() {
 
-	@Override
-	public void processStartedOperator(Process process, Operator op) {
-		operatorStack.push(new ProcessExecutionStackEntry(op));
-	}
+			@Override
+			public void processStarts(Process process) {
+				ProcessBackgroundExecutionState.this.setState(State.RUNNING);
+			}
 
-	@Override
-	public void processFinishedOperator(Process process, Operator op) {
-		operatorStack.pop();
-	}
+			@Override
+			public void processStartedOperator(Process process, Operator op) {
+				operatorStack.push(new ProcessExecutionStackEntry(op));
+			}
 
-	@Override
-	public void processEnded(Process process) {
-		operatorStack.clear();
-		if (state != State.CANCELED) {
-			this.setState(State.FINISHED);
-		}
+			@Override
+			public void processFinishedOperator(Process process, Operator op) {
+				operatorStack.pop();
+			}
+
+			@Override
+			public void processEnded(Process process) {
+				operatorStack.clear();
+				if (state != State.CANCELED) {
+					ProcessBackgroundExecutionState.this.setState(State.FINISHED);
+				}
+			}
+		};
+		loggingListener = new LoggingListener() {
+
+			@Override
+			public void addDataTable(DataTable dataTable) {
+				processLogs.add(dataTable);
+			}
+
+			@Override
+			public void removeDataTable(DataTable dataTable) {
+				processLogs.remove(dataTable);
+			}
+		};
+		this.process.getRootOperator().addProcessListener(processListener);
+		this.process.addLoggingListener(loggingListener);
 	}
 
 	public boolean isStarted() {
@@ -197,16 +216,6 @@ public class ProcessBackgroundExecutionState extends SimpleObservable<ProcessBac
 		this.setState(State.CANCELED);
 	}
 
-	@Override
-	public void addDataTable(DataTable dataTable) {
-		processLogs.add(dataTable);
-	}
-
-	@Override
-	public void removeDataTable(DataTable dataTable) {
-		processLogs.remove(dataTable);
-	}
-
 	public List<DataTable> getProcessLogs() {
 		return processLogs;
 	}
@@ -227,9 +236,22 @@ public class ProcessBackgroundExecutionState extends SimpleObservable<ProcessBac
 		boolean changed = false;
 		if (state != newState) {
 			state = newState;
+			if (state == State.FINISHED || state == State.CANCELED || state == State.FAILED) {
+				cleanup();
+			}
 			changed = true;
 			this.fireUpdate(newState);
 		}
 		return changed;
+	}
+
+	/**
+	 * Clean up by removing listeners and reference to process. Call when the state is in any final
+	 * state.
+	 */
+	private void cleanup() {
+		this.process.getRootOperator().removeProcessListener(processListener);
+		this.process.removeLoggingListener(loggingListener);
+		this.process = null;
 	}
 }

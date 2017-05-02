@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -194,6 +195,12 @@ public abstract class PropertyPanel extends JPanel {
 
 	/** Color for the lines separating the entries */
 	private static final Color SEPARATION_LINE_COLOR = Colors.PANEL_SEPARATOR;
+
+	/** Initial size of the tooltip string builder */
+	private static final int TOOLTIP_INITIAL_SIZE = 512;
+
+	/** Closing tags that would stop the Swing HTML parser */
+	private static final Pattern CLOSING_TAGS = Pattern.compile("</(body|html)>", Pattern.CASE_INSENSITIVE);
 
 	private static final Border PANEL_BORDER = BorderFactory.createCompoundBorder(
 			BorderFactory.createMatteBorder(0, 0, 1, 0, SEPARATION_LINE_COLOR), BorderFactory.createEmptyBorder(0, 0, 3, 0));
@@ -551,14 +558,15 @@ public abstract class PropertyPanel extends JPanel {
 	protected String getToolTipText(String key, String title, String description, String range, boolean isOptional) {
 
 		// Title
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder(TOOLTIP_INITIAL_SIZE);
 		sb.append("<h3 style=\"padding-bottom:4px\">" + title + "</h3>");
 
 		// Description
 		if (description != null && !description.isEmpty()) {
 			sb.append("<p style=\"padding-bottom:4px\">");
 			sb.append("<b>" + I18N.getGUIMessage("gui.dialog.settings.description") + "</b>: ");
-			sb.append(description);
+			// prevent the Swing HTML parser from stopping here
+			sb.append(CLOSING_TAGS.matcher(description).replaceAll(""));
 			sb.append("</p>");
 		}
 

@@ -97,6 +97,11 @@ public class DiscriminantModel extends SimplePredictionModel {
 	}
 
 	@Override
+	protected boolean supportsConfidences(Attribute label) {
+		return false;
+	}
+
+	@Override
 	public String getName() {
 		if (alpha == QuadraticDiscriminantAnalysis.QDA_ALPHA) {
 			return "Quadratic Discriminant Model";

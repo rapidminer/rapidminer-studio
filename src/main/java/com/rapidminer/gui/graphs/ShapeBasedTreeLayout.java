@@ -1,27 +1,22 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
-
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.Forest;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.Tree;
 
 import java.awt.Dimension;
 import java.awt.Shape;
@@ -37,11 +32,16 @@ import java.util.Set;
 import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.map.LazyMap;
 
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.Forest;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.Tree;
+
 
 /**
  * This layout algorithm takes the shapes of the trees into account and performs a non-overlapping
  * layout.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ShapeBasedTreeLayout<V, E> implements Layout<V, E> {
@@ -50,7 +50,7 @@ public class ShapeBasedTreeLayout<V, E> implements Layout<V, E> {
 
 	private static final int DEFAULT_HEIGHT = 70;
 
-	private static final int MARGIN = 5;
+	private static final int MARGIN = 15;
 
 	private Dimension size = new Dimension(600, 600);
 
@@ -104,7 +104,7 @@ public class ShapeBasedTreeLayout<V, E> implements Layout<V, E> {
 	}
 
 	private void calculateLocations() {
-		double xOffset = 100;
+		double xOffset = 20;
 		double yOffset = 30;
 
 		if (roots.size() > 0 && graph != null) {
@@ -119,11 +119,15 @@ public class ShapeBasedTreeLayout<V, E> implements Layout<V, E> {
 
 	void calculateLocations(V v, double xOffset, double yOffset) {
 		double currentWidth = calculateWidth(v);
+		double currentHeight = calculateHeight(v);
 
-		setPosition(v, xOffset + currentWidth / 2, yOffset);
+		setPosition(v, xOffset + currentWidth / 2, yOffset + currentHeight / 2);
 
 		// handle children
 		yOffset += DEFAULT_HEIGHT;
+		if (currentHeight > DEFAULT_HEIGHT) {
+			yOffset += currentHeight;
+		}
 
 		int childrenNum = graph.getSuccessors(v).size();
 		if (childrenNum != 0) {
@@ -169,6 +173,17 @@ public class ShapeBasedTreeLayout<V, E> implements Layout<V, E> {
 		return size;
 	}
 
+	private double calculateHeight(V v) {
+		double height = DEFAULT_HEIGHT;
+		if (this.shapeTransformer != null) {
+			Shape shape = this.shapeTransformer.transform(v);
+			if (shape != null) {
+				height = shape.getBounds().getHeight();
+			}
+		}
+		return height;
+	}
+
 	@Override
 	public void setSize(Dimension size) {
 		this.size = size;
@@ -209,7 +224,7 @@ public class ShapeBasedTreeLayout<V, E> implements Layout<V, E> {
 			this.graph = (Forest<V, E>) graph;
 			calculateLocations();
 		} else {
-			throw new IllegalArgumentException("graph must be a Forest");
+			throw new IllegalArgumentException("graph must be a forest");
 		}
 	}
 

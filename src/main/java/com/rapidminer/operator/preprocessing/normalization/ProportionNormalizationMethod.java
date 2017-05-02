@@ -73,25 +73,16 @@ public class ProportionNormalizationMethod extends AbstractNormalizationMethod {
 	public AbstractNormalizationModel getNormalizationModel(ExampleSet exampleSet, Operator operator) {
 		// calculating attribute sums
 		Attributes attributes = exampleSet.getAttributes();
-		double[] attributeSum = new double[attributes.size()];
-		for (Example example : exampleSet) {
-			int i = 0;
-			for (Attribute attribute : attributes) {
-				if (attribute.isNumerical()) {
-					attributeSum[i] += example.getValue(attribute);
-				}
-				i++;
-			}
-		}
 		HashMap<String, Double> attributeSums = new HashMap<String, Double>();
-		int i = 0;
-		for (Attribute attribute : exampleSet.getAttributes()) {
+		for (Attribute attribute : attributes) {
 			if (attribute.isNumerical()) {
-				attributeSums.put(attribute.getName(), attributeSum[i]);
+				double sum = 0.0;
+				for (Example example : exampleSet) {
+					sum += example.getValue(attribute);
+				}
+				attributeSums.put(attribute.getName(), sum);
 			}
-			i++;
 		}
-
 		return new ProportionNormalizationModel(exampleSet, attributeSums);
 	}
 

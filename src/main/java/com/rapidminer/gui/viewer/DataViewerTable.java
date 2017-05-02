@@ -117,9 +117,7 @@ public class DataViewerTable extends ExtendedJTable {
 			index++;
 		}
 
-		Iterator<Attribute> a = exampleSet.getAttributes().iterator();
-		while (a.hasNext()) {
-			Attribute attribute = a.next();
+		for (Attribute attribute : exampleSet.getAttributes()) {
 			mappingAttributeNamesToColor.put(attribute.getName(), Colors.WHITE);
 			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE)) {
 				dateColumns[index] = DATE_FORMAT;

@@ -109,7 +109,7 @@ public final class StoreToRepositoryStep extends AbstractToRepositoryStep<Reposi
 							dataSource.getMetadata().isFaultTolerant());
 				} catch (DataSetException e) {
 					error = true;
-					SwingTools.showSimpleErrorMessage("cannot_read_data_set", e);
+					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_read_data_set", e);
 					return;
 				}
 
@@ -124,14 +124,15 @@ public final class StoreToRepositoryStep extends AbstractToRepositoryStep<Reposi
 					}
 					error = true;
 					if (columnName != null) {
-						SwingTools.showSimpleErrorMessage("cannot_parse_data_set", e, columnName, e.getMessage());
+						SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_parse_data_set", e, columnName,
+								e.getMessage());
 					} else {
-						SwingTools.showSimpleErrorMessage("cannot_read_data_set", e);
+						SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_read_data_set", e);
 					}
 					return;
 				} catch (OperatorException | DataSetException e) {
 					error = true;
-					SwingTools.showSimpleErrorMessage("cannot_read_data_set", e);
+					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_read_data_set", e);
 					return;
 				}
 
@@ -153,14 +154,15 @@ public final class StoreToRepositoryStep extends AbstractToRepositoryStep<Reposi
 										OpenAction.showAsResult((IOObjectEntry) entry);
 									}
 								} catch (RepositoryException e) {
-									SwingTools.showSimpleErrorMessage("cannot_open_imported_data", e);
+									SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_open_imported_data", e);
 								}
 							}
 						}
 					});
 				} catch (RepositoryException ex) {
 					error = true;
-					SwingTools.showSimpleErrorMessage("cannot_store_obj_at_location", ex, entryLocation.getPath());
+					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_store_obj_at_location", ex,
+							entryLocation.getPath());
 					return;
 				}
 

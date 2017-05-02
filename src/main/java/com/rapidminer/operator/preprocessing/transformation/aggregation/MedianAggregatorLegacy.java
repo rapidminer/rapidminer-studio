@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
 import java.util.ArrayList;
@@ -26,11 +26,11 @@ import java.util.List;
  * This is an {@link Aggregator} for the {@link MeanAggregationFunction} It uses a linear time
  * algorithm for computing the median, but also the memory consumption will grow (double) linearly
  * with the size of the dataset.
- * 
- * 
+ *
+ *
  * @author Sebastian Land
  */
-public class MedianAggregatorNew extends NumericalAggregator {
+public class MedianAggregatorLegacy extends NumericalAggregator {
 
 	private static final int BUFFER_SIZE = 65536;
 
@@ -49,11 +49,10 @@ public class MedianAggregatorNew extends NumericalAggregator {
 	private List<WeightedMedianListElement> weightedElements = null;
 	private int currentIndex = 0;
 	private int count = 0;
-	private int weightSum = 0;
 	private MedianListElement currentElement = null;
 	private WeightedMedianListElement currentWeightedElement = null;
 
-	public MedianAggregatorNew(AggregationFunction function) {
+	public MedianAggregatorLegacy(AggregationFunction function) {
 		super(function);
 	}
 
@@ -91,8 +90,6 @@ public class MedianAggregatorNew extends NumericalAggregator {
 
 		currentWeightedElement.elements[currentIndex] = value;
 		currentWeightedElement.weights[currentIndex] = weight;
-
-		weightSum += weight;
 
 		count++;
 	}
@@ -139,22 +136,8 @@ public class MedianAggregatorNew extends NumericalAggregator {
 					(weightedElements.size() - 1) * BUFFER_SIZE, numberOfValues);
 		}
 
-		return calculateMedian(allValues, allWeights, useWeights);
-	}
-
-	private double calculateMedian(double[] allValues, double[] allWeights, boolean useWeights) {
-
-		// Set flag for even length.
-		boolean hasEvenLength = false;
-		if (useWeights) {
-			hasEvenLength = weightSum % 2 == 0 ? true : false;
-		} else {
-			hasEvenLength = allValues.length % 2 == 0 ? true : false;
-		}
-
 		// now going through
-		int pivotIndex = allValues.length / 2;
-		double pivotValue = allValues[pivotIndex];
+		double pivotValue = allValues[allValues.length / 2];
 		int cutWeightLeft = 0;
 		int cutWeightRight = 0;
 		int countLeft = 0;
@@ -221,8 +204,7 @@ public class MedianAggregatorNew extends NumericalAggregator {
 				allWeights = newWeights;
 			}
 			allValues = newValues;
-			pivotIndex = allValues.length / 2;
-			pivotValue = allValues[pivotIndex];
+			pivotValue = allValues[allValues.length / 2];
 			if (useLeft) {
 				cutWeightRight += weightRight + weightEqual;
 			} else {
@@ -235,19 +217,6 @@ public class MedianAggregatorNew extends NumericalAggregator {
 			weightEqual = 0;
 		}
 
-		if (useWeights) {
-			if (hasEvenLength) {
-				return ((pivotValue * allWeights[pivotIndex]) + (allValues[pivotIndex + 1] * allWeights[pivotIndex + 1]))
-						/ (allWeights[pivotIndex] + allWeights[pivotIndex + 1]);
-			} else {
-				return pivotValue;
-			}
-		} else {
-			if (hasEvenLength) {
-				return (pivotValue + allValues[pivotIndex - 1]) / 2;
-			} else {
-				return pivotValue;
-			}
-		}
+		return pivotValue;
 	}
 }

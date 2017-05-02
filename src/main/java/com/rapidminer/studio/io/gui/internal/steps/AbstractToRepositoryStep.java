@@ -268,7 +268,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 
 			// Ask user whether to override existing file (if any).
 			if (oldEntry != null) {
-				if (SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION,
+				if (SwingTools.showConfirmDialog(wizard.getDialog(), "overwrite", ConfirmDialog.YES_NO_OPTION,
 						oldEntry.getName()) == ConfirmDialog.NO_OPTION) {
 					fireStateChanged();
 					throw new InvalidConfigurationException();
@@ -283,7 +283,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 						oldEntry.delete();
 						retryDelete = false;
 					} catch (RepositoryException e) {
-						if (SwingTools.showConfirmDialog("error_in_delete_entry",
+						if (SwingTools.showConfirmDialog(wizard.getDialog(), "error_in_delete_entry",
 								ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
 							fireStateChanged();
 							chooser.addChangeListener(changeListener);

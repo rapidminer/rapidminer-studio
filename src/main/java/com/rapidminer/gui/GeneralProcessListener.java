@@ -18,13 +18,14 @@
 */
 package com.rapidminer.gui;
 
+import java.util.List;
+
 import com.rapidminer.Process;
 import com.rapidminer.ProcessListener;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.operator.Operator;
-
-import java.util.List;
 
 
 /**
@@ -42,20 +43,23 @@ public abstract class GeneralProcessListener implements ProcessListener {
 		register(mainFrame);
 	}
 
-	public GeneralProcessListener() {
-		this(null);
+	public GeneralProcessListener(ProcessRendererModel processModel) {
+		register(processModel);
 	}
 
-	@SuppressWarnings("deprecation")
-	private void register(MainFrame mainFrame) {
+	public GeneralProcessListener() {
+		this((MainFrame) null);
+	}
+
+	private void register(Object processProvider) {
 		if (!RapidMiner.getExecutionMode().isHeadless()) {
 			final ProcessEditor processEditor = new ProcessEditor() {
 
 				@Override
 				public void processChanged(Process process) {
 					if (GeneralProcessListener.this.process != null) {
-						GeneralProcessListener.this.process.getRootOperator().removeProcessListener(
-								GeneralProcessListener.this);
+						GeneralProcessListener.this.process.getRootOperator()
+								.removeProcessListener(GeneralProcessListener.this);
 					}
 					GeneralProcessListener.this.process = process;
 					if (GeneralProcessListener.this.process != null) {
@@ -71,11 +75,16 @@ public abstract class GeneralProcessListener implements ProcessListener {
 				public void setSelection(List<Operator> selection) {}
 
 			};
-			if (mainFrame == null) {
-				RapidMinerGUI.getMainFrame().addProcessEditor(processEditor);
-			} else {
-				mainFrame.addProcessEditor(processEditor);
+			if (processProvider == null) {
+				processProvider = RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer().getModel();
 			}
+			ProcessRendererModel processModel;
+			if (processProvider instanceof MainFrame) {
+				processModel = ((MainFrame) processProvider).getProcessPanel().getProcessRenderer().getModel();
+			} else {
+				processModel = (ProcessRendererModel) processProvider;
+			}
+			processModel.addProcessEditor(processEditor);
 		}
 	}
 

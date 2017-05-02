@@ -19,6 +19,7 @@
 package com.rapidminer.generator;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
@@ -82,12 +83,13 @@ public abstract class BinaryNumericalGenerator extends FeatureGenerator {
 	@Override
 	public List<Attribute[]> getInputCandidates(ExampleSet exampleSet, String[] functions) {
 		List<Attribute[]> result = new ArrayList<Attribute[]>();
+		Attributes attributes = exampleSet.getAttributes();
 		if (getSelectionMode() == SELECTION_MODE_ALL) {
-			for (Attribute first : exampleSet.getAttributes()) {
+			for (Attribute first : attributes) {
 				if (!checkCompatibility(first, INPUT_ATTR[0], functions)) {
 					continue;
 				}
-				for (Attribute second : exampleSet.getAttributes()) {
+				for (Attribute second : attributes) {
 					if (checkCompatibility(second, INPUT_ATTR[1], functions)) {
 						result.add(new Attribute[] { first, second });
 					}
@@ -96,10 +98,10 @@ public abstract class BinaryNumericalGenerator extends FeatureGenerator {
 		} else {
 			if (isCommutative() && isSelfApplicable()) {
 				int firstCounter = 0;
-				for (Attribute first : exampleSet.getAttributes()) {
+				for (Attribute first : attributes) {
 					if (checkCompatibility(first, INPUT_ATTR[0], functions)) {
 						int secondCounter = 0;
-						for (Attribute second : exampleSet.getAttributes()) {
+						for (Attribute second : attributes) {
 							if (secondCounter >= firstCounter) {
 								if (checkCompatibility(second, INPUT_ATTR[1], functions)) {
 									result.add(new Attribute[] { first, second });
@@ -112,10 +114,10 @@ public abstract class BinaryNumericalGenerator extends FeatureGenerator {
 				}
 			} else if (isCommutative() && !isSelfApplicable()) {
 				int firstCounter = 0;
-				for (Attribute first : exampleSet.getAttributes()) {
+				for (Attribute first : attributes) {
 					if (checkCompatibility(first, INPUT_ATTR[0], functions)) {
 						int secondCounter = 0;
-						for (Attribute second : exampleSet.getAttributes()) {
+						for (Attribute second : attributes) {
 							if (secondCounter > firstCounter) {
 								if (checkCompatibility(second, INPUT_ATTR[1], functions)) {
 									result.add(new Attribute[] { first, second });
@@ -127,11 +129,11 @@ public abstract class BinaryNumericalGenerator extends FeatureGenerator {
 					firstCounter++;
 				}
 			} else if (!isCommutative() && isSelfApplicable()) {
-				for (Attribute first : exampleSet.getAttributes()) {
+				for (Attribute first : attributes) {
 					if (!checkCompatibility(first, INPUT_ATTR[0], functions)) {
 						continue;
 					}
-					for (Attribute second : exampleSet.getAttributes()) {
+					for (Attribute second : attributes) {
 						if (checkCompatibility(second, INPUT_ATTR[1], functions)) {
 							result.add(new Attribute[] { first, second });
 						}
@@ -139,10 +141,10 @@ public abstract class BinaryNumericalGenerator extends FeatureGenerator {
 				}
 			} else if (!isCommutative() && !isSelfApplicable()) {
 				int firstCounter = 0;
-				for (Attribute first : exampleSet.getAttributes()) {
+				for (Attribute first : attributes) {
 					if (checkCompatibility(first, INPUT_ATTR[0], functions)) {
 						int secondCounter = 0;
-						for (Attribute second : exampleSet.getAttributes()) {
+						for (Attribute second : attributes) {
 							if (firstCounter != secondCounter) {
 								if (checkCompatibility(second, INPUT_ATTR[1], functions)) {
 									result.add(new Attribute[] { first, second });

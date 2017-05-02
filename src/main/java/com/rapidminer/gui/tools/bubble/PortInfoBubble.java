@@ -23,7 +23,6 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.List;
 
@@ -259,8 +258,7 @@ public class PortInfoBubble extends BubbleWindow {
 			// if it belongs to a different process, don't switch displayed process
 			boolean belongsToSameRoot = portParent == null || portParent.equals(displayedParent);
 			if (belongsToSameRoot && !renderer.getModel().getDisplayedChain().equals(portChain)) {
-				renderer.getModel().setDisplayedChain(portChain);
-				renderer.getModel().fireDisplayedChainChanged();
+				renderer.getModel().setDisplayedChainAndFire(portChain);
 			}
 			// switch to correct perspective
 			if (!RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName()
@@ -284,14 +282,10 @@ public class PortInfoBubble extends BubbleWindow {
 				JComponent.WHEN_IN_FOCUSED_WINDOW);
 
 		// try to scroll to operator. If not possible, scroll to port
-		Rectangle2D targetRect = renderer.getModel().getOperatorRect(port.getPorts().getOwner().getOperator());
-		if (targetRect == null) {
-			Point portLoc = getObjectLocation();
-			targetRect = new Rectangle2D.Double(portLoc.getX(), portLoc.getY(), getObjectWidth(), getObjectHeight())
-					.getBounds();
-
+		ProcessPanel processPanel = RapidMinerGUI.getMainFrame().getProcessPanel();
+		if (!processPanel.scrollToOperator(port.getPorts().getOwner().getOperator())) {
+			processPanel.scrollToViewPosition(getObjectLocation());
 		}
-		renderer.scrollRectToVisible(targetRect.getBounds());
 		super.paint(false);
 	}
 
@@ -320,6 +314,7 @@ public class PortInfoBubble extends BubbleWindow {
 						PortInfoBubble.this.paint(false);
 						break;
 					case MISC_CHANGED:
+					case DISPLAYED_CHAIN_WILL_CHANGE:
 					default:
 						break;
 				}

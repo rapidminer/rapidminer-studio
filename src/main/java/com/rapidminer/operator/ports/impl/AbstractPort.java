@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports.impl;
 
 import java.util.Collection;
@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.PortUserError;
@@ -69,7 +71,12 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 	}
 
 	protected final void setData(IOObject object) {
-		this.weakDataReference = IOO_REFERENCE_CACHE.newReference(object);
+		// if there is a (G)UI and it is not in background => cache
+		if (!RapidMiner.getExecutionMode().isHeadless() && ports.getOwner() != null && ports.getOwner().getOperator() != null
+				&& ports.getOwner().getOperator().getProcess() != null && ports.getOwner().getOperator().getProcess()
+						.getRootOperator().getUserData(RapidMinerGUI.IS_GUI_PROCESS) != null) {
+			this.weakDataReference = IOO_REFERENCE_CACHE.newReference(object);
+		}
 		this.hardDataReference = object;
 	}
 

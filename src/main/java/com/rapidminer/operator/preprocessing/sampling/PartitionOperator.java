@@ -23,6 +23,7 @@ import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
@@ -57,6 +58,8 @@ public class PartitionOperator extends Operator {
 	public static final String PARAMETER_RATIO = "ratio";
 
 	public static final String PARAMETER_SAMPLING_TYPE = "sampling_type";
+
+	private static final OperatorVersion DEFAULT_MODE_AUTO = new OperatorVersion("7.5.0-SNAPSHOT");
 
 	private InputPort exampleSetInput = getInputPorts().createPort("example set", ExampleSet.class);
 	private OutputPortExtender outExtender = new OutputPortExtender("partition", getOutputPorts());
@@ -173,8 +176,13 @@ public class PartitionOperator extends Operator {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeEnumeration(PARAMETER_PARTITIONS, "The partitions that should be created.",
 				new ParameterTypeDouble(PARAMETER_RATIO, "The relative size of this partition.", 0, 1), false));
+		int samplingType = SplittedExampleSet.SHUFFLED_SAMPLING;
+		// Since 7.5.0 automatic is the default sampling type
+		if (getCompatibilityLevel().isAtLeast(DEFAULT_MODE_AUTO)) {
+			samplingType = SplittedExampleSet.AUTOMATIC;
+		}
 		types.add(new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE, "Defines the sampling type of this operator.",
-				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.SHUFFLED_SAMPLING, false));
+				SplittedExampleSet.SAMPLING_NAMES, samplingType, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
 	}

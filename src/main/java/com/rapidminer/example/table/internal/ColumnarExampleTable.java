@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.table.internal;
 
 import java.util.Arrays;
@@ -36,7 +36,7 @@ import com.rapidminer.tools.Ontology;
 
 
 /**
- * {@linkplain Column} oriented, dense example table. <br/>
+ * {@linkplain Column} oriented example table. <br/>
  * Caution: This class is not part of the official API. Please do not use it, instead use methods
  * provided in {@link ExampleSets}.
  *
@@ -241,10 +241,9 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	public void addDataRow(DataRow dataRow) {
 		ensureHeight(size + 1);
 		int numberOfAttributes = super.getNumberOfAttributes();
-		// prevent index out of bounds if row size does not match
 		for (int i = 0; i < numberOfAttributes; i++) {
 			Attribute attribute = getAttribute(i);
-			columns[i].append(dataRow.get(attribute));
+			columns[i].setLast(size, dataRow.get(attribute));
 		}
 		size++;
 	}
@@ -259,7 +258,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 		ensureHeight(size + 1);
 		int min = Math.min(super.getNumberOfAttributes(), row.length);
 		for (int i = 0; i < min; i++) {
-			columns[i].append(row[i]);
+			columns[i].setLast(size, row[i]);
 		}
 		size++;
 	}
@@ -292,7 +291,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 	public void fillColumn(Attribute attribute, IntToDoubleFunction function) {
 		Column column = columns[attribute.getTableIndex()];
 		for (int i = 0; i < size; i++) {
-			column.append(function.applyAsDouble(i));
+			column.setLast(i, function.applyAsDouble(i));
 		}
 	}
 

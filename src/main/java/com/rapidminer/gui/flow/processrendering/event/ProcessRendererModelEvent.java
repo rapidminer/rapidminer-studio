@@ -24,7 +24,7 @@ import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 /**
  * An event for the {@link ProcessRendererModel}.
  *
- * @author Marco Boeck
+ * @author Marco Boeck, Jan Czogalla
  * @since 6.4.0
  *
  */
@@ -48,7 +48,10 @@ public final class ProcessRendererModelEvent {
 		PROCESS_ZOOM_CHANGED,
 
 		/** fired when something minor changes which only requires a repaint */
-		MISC_CHANGED;
+		MISC_CHANGED,
+
+		/** fired before the displayed operator chain will change */
+		DISPLAYED_CHAIN_WILL_CHANGE;
 	}
 
 	private final ModelEvent type;

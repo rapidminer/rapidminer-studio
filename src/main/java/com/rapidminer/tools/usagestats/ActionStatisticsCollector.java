@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools.usagestats;
 
 import java.awt.AWTEvent;
@@ -23,6 +23,7 @@ import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.MouseEvent;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,6 +167,11 @@ public enum ActionStatisticsCollector {
 
 	/** extension initialization (since 7.3) */
 	public static final String VALUE_EXTENSION_INITIALIZATION = "extension_initialization";
+
+	/** type cta (since 7.5) */
+	public static final String TYPE_CTA = "cta";
+	public static final String VALUE_CTA_FAILURE = "failure";
+	public static final String VALUE_RULE_TRIGGERED = "cta_triggered";
 
 	/**
 	 * added to a key arg to indicated that this stores the maximum amount of all the amounts stored
@@ -416,7 +422,7 @@ public enum ActionStatisticsCollector {
 		}
 		// remove listener for operator port volume logging
 		process.getRootOperator().removeProcessListener(operatorVolumeListener);
-		List<Operator> allInnerOperators = process.getRootOperator().getAllInnerOperators();
+		Collection<Operator> allInnerOperators = process.getAllOperators();
 		for (Operator op : allInnerOperators) {
 			// only log if the operator finished
 			if (!op.isDirty()) {
@@ -437,6 +443,11 @@ public enum ActionStatisticsCollector {
 			rowLimitExceeded = true;
 			UsageStatistics.getInstance().scheduleTransmissionSoon();
 		}
+	}
+
+	public void logCtaRuleTriggered(String ruleID, String result) {
+		log(ActionStatisticsCollector.VALUE_RULE_TRIGGERED, ruleID, result);
+		UsageStatistics.getInstance().scheduleTransmissionSoon();
 	}
 
 	/**
@@ -531,6 +542,7 @@ public enum ActionStatisticsCollector {
 
 	private void log(String type, String value, String arg, long count) {
 		Key key = new Key(type, value, arg);
+		CtaEventAggregator.INSTANCE.log(key, count);
 		synchronized (counts) {
 			Long oldAggregate = counts.get(key);
 			if (oldAggregate == null) {

@@ -1,28 +1,26 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.features.transformation;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-
-import Jama.Matrix;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -47,6 +45,8 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.matrix.CovarianceMatrix;
+
+import Jama.Matrix;
 
 
 /**
@@ -116,9 +116,10 @@ public class GHA extends Operator {
 		exampleSet.recalculateAllAttributeStatistics();
 
 		// 1) check whether all attributes are numerical
-		double[] means = new double[exampleSet.getAttributes().size()];
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
+		double[] means = new double[regularAttributes.length];
 		int a = 0;
-		for (Attribute attribute : exampleSet.getAttributes()) {
+		for (Attribute attribute : regularAttributes) {
 			if (!attribute.isNumerical()) {
 				throw new UserError(this, 104, "GHA", attribute.getName());
 			}
@@ -130,16 +131,15 @@ public class GHA extends Operator {
 		log("Initialising the weight matrix...");
 		double[][] data = new double[exampleSet.size()][exampleSet.getAttributes().size()];
 
-		Iterator<Example> reader = exampleSet.iterator();
-		Example example;
-		for (int sample = 0; sample < exampleSet.size(); sample++) {
-			example = reader.next();
-			int d = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+		int d = 0;
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			Iterator<Example> reader = exampleSet.iterator();
+			for (int sample = 0; sample < exampleSet.size(); sample++) {
+				Example example = reader.next();
 				data[sample][d] = example.getValue(attribute) - means[d];
-				d++;
 			}
 			checkForStop();
+			d++;
 		}
 
 		// init

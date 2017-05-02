@@ -106,7 +106,7 @@ public class ReliefWeighting extends AbstractWeighting {
 	private double[] differentLabelAndAttributesWeights;
 
 	private double[] classProbabilities;
-	
+
 	private static final int PROGRESS_UPDATE_STEPS = 1_000;
 
 	public ReliefWeighting(OperatorDescription description) {
@@ -116,7 +116,7 @@ public class ReliefWeighting extends AbstractWeighting {
 	@Override
 	protected AttributeWeights calculateWeights(ExampleSet inputSet) throws OperatorException {
 		inputSet.recalculateAllAttributeStatistics();
-		
+
 		// checks
 		Attribute label = inputSet.getAttributes().getLabel();
 
@@ -166,12 +166,12 @@ public class ReliefWeighting extends AbstractWeighting {
 			}
 			exampleCounter++;
 			progressCounter += attributeNumber;
-			if(progressCounter > PROGRESS_UPDATE_STEPS){
+			if (progressCounter > PROGRESS_UPDATE_STEPS) {
 				progressCounter = 0;
 				getProgress().setCompleted(exampleCounter);
 			}
 		}
-		
+
 		// calculate final weights for regression
 		if (!label.isNominal()) {
 			int attributeCounter = 0;
@@ -179,17 +179,18 @@ public class ReliefWeighting extends AbstractWeighting {
 				double weight = differentLabelAndAttributesWeights[attributeCounter]
 						/ differentLabelWeight
 						- (differentAttributesWeights[attributeCounter] - differentLabelAndAttributesWeights[attributeCounter])
-						/ (exampleSet.size() - differentLabelWeight);
+								/ (exampleSet.size() - differentLabelWeight);
 				weights.setWeight(attribute.getName(), weight);
 				attributeCounter++;
 			}
 		}
-		
+
 		return weights;
 	}
 
 	private void updateWeightsRegression(Map<String, SortedSet<IndexDistance>> neighborSets, ExampleSet exampleSet,
 			Example example, AttributeWeights weights, Attribute label, int numberOfNeighbors) {
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		Iterator<IndexDistance> i = neighborSets.get("regression").iterator();
 		while (i.hasNext()) {
 			IndexDistance indexDistance = i.next();
@@ -200,7 +201,7 @@ public class ReliefWeighting extends AbstractWeighting {
 				differentLabelWeight += labelDiff / numberOfNeighbors;
 
 				int attributeCounter = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					int unknownCount = (int) exampleSet.getStatistics(attribute, Statistics.UNKNOWN);
 					if (unknownCount < exampleSet.size()) {
 						double diff = normedDifference(example, neighbor, exampleSet, attribute);
@@ -220,10 +221,11 @@ public class ReliefWeighting extends AbstractWeighting {
 			Example example, AttributeWeights weights, Attribute label) {
 		double classProbabilityNormalization = 1.0d - classProbabilities[(int) example.getValue(label)];
 		int classCounter = 0;
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (String classValue : label.getMapping().getValues()) {
 			for (IndexDistance indexDistance : neighborSets.get(classValue)) {
 				Example neighbor = exampleSet.getExample(indexDistance.getIndex());
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					double weight = weights.getWeight(attribute.getName());
 					int unknownCount = (int) exampleSet.getStatistics(attribute, Statistics.UNKNOWN);
 					if (unknownCount < exampleSet.size()) {

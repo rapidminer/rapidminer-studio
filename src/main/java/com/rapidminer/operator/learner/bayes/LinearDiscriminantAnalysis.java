@@ -18,23 +18,7 @@
 */
 package com.rapidminer.operator.learner.bayes;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.Statistics;
-import com.rapidminer.example.set.SplittedExampleSet;
-import com.rapidminer.example.table.NominalMapping;
-import com.rapidminer.operator.Model;
-import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
-import com.rapidminer.operator.learner.AbstractLearner;
-import com.rapidminer.operator.learner.PredictionModel;
-import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.math.MathFunctions;
-import com.rapidminer.tools.math.matrix.CovarianceMatrix;
-
-import Jama.Matrix;
 
 
 /**
@@ -55,10 +39,13 @@ import Jama.Matrix;
  * into account any difference in class.
  * </p>
  *
- * @author Sebastian Land
+ * @see RegularizedDiscriminantAnalysis
+ * @see QuadraticDiscriminantAnalysis
+ * @author Sebastian Land, Jan Czogalla
  */
-public class LinearDiscriminantAnalysis extends AbstractLearner {
+public class LinearDiscriminantAnalysis extends RegularizedDiscriminantAnalysis {
 
+	/** The special alpha value for LDA */
 	static final double LDA_ALPHA = 1d;
 
 	public LinearDiscriminantAnalysis(OperatorDescription description) {
@@ -66,117 +53,13 @@ public class LinearDiscriminantAnalysis extends AbstractLearner {
 	}
 
 	@Override
-	public Model learn(ExampleSet exampleSet) throws OperatorException {
-		int numberOfNumericalAttributes = 0;
-		for (Attribute attribute : exampleSet.getAttributes()) {
-			this.checkForStop();
-			if (attribute.isNumerical()) {
-				numberOfNumericalAttributes++;
-			}
-		}
-
-		NominalMapping labelMapping = exampleSet.getAttributes().getLabel().getMapping();
-		String[] labelValues = new String[labelMapping.size()];
-		for (int i = 0; i < labelMapping.size(); i++) {
-			this.checkForStop();
-			labelValues[i] = labelMapping.mapIndex(i);
-		}
-
-		Matrix[] meanVectors = getMeanVectors(exampleSet, numberOfNumericalAttributes, labelValues);
-		Matrix[] inverseCovariance = getInverseCovarianceMatrices(exampleSet, labelValues);
-
-		return getModel(exampleSet, labelValues, meanVectors, inverseCovariance,
-				getAprioriProbabilities(exampleSet, labelValues));
-	}
-
-	protected DiscriminantModel getModel(ExampleSet exampleSet, String[] labels, Matrix[] meanVectors,
-			Matrix[] inverseCovariances, double[] aprioriProbabilities) throws UndefinedParameterError {
-		return new DiscriminantModel(exampleSet, labels, meanVectors, inverseCovariances, aprioriProbabilities, LDA_ALPHA);
-	}
-
-	private double[] getAprioriProbabilities(ExampleSet exampleSet, String[] labels) {
-		double[] aprioriProbabilites = new double[labels.length];
-		double totalSize = exampleSet.size();
-		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
-		SplittedExampleSet labelSet = SplittedExampleSet.splitByAttribute(exampleSet, exampleSet.getAttributes().getLabel());
-		int labelIndex = 0;
-		for (String label : labels) {
-			// select appropriate subset
-			for (int i = 0; i < labels.length; i++) {
-				labelSet.selectSingleSubset(i);
-				if (labelSet.getExample(0).getNominalValue(labelAttribute).equals(label)) {
-					break;
-				}
-			}
-			// calculate apriori Prob
-			aprioriProbabilites[labelIndex] = labelSet.size() / totalSize;
-			labelIndex++;
-		}
-		return aprioriProbabilites;
-	}
-
-	protected Matrix[] getMeanVectors(ExampleSet exampleSet, int numberOfAttributes, String[] labels)
-			throws OperatorException {
-		Matrix[] classMeanVectors = new Matrix[labels.length];
-		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
-		SplittedExampleSet labelSet = SplittedExampleSet.splitByAttribute(exampleSet, exampleSet.getAttributes().getLabel());
-		if (labelSet.getNumberOfSubsets() != labels.length) {
-			throw new UserError(this, 118, labelAttribute, labelSet.getNumberOfSubsets(), 2);
-		}
-		int labelIndex = 0;
-		for (String label : labels) {
-			// select apropriate subset
-			for (int i = 0; i < labels.length; i++) {
-				this.checkForStop();
-				labelSet.selectSingleSubset(i);
-				if (labelSet.getExample(0).getNominalValue(labelAttribute).equals(label)) {
-					break;
-				}
-			}
-			// calculate mean
-			this.checkForStop();
-			labelSet.recalculateAllAttributeStatistics();
-			double[] meanValues = new double[numberOfAttributes];
-			int i = 0;
-			for (Attribute attribute : labelSet.getAttributes()) {
-				if (attribute.isNumerical()) {
-					meanValues[i] = labelSet.getStatistics(attribute, Statistics.AVERAGE);
-				}
-				i++;
-			}
-			classMeanVectors[labelIndex] = new Matrix(meanValues, 1);
-			labelIndex++;
-		}
-		return classMeanVectors;
-	}
-
-	protected Matrix[] getInverseCovarianceMatrices(ExampleSet exampleSet, String[] labels) throws OperatorException {
-		Matrix[] classInverseCovariances = new Matrix[labels.length];
-		Matrix inverse = MathFunctions.invertMatrix(CovarianceMatrix.getCovarianceMatrix(exampleSet, this));
-		for (int i = 0; i < labels.length; i++) {
-			this.checkForStop();
-			classInverseCovariances[i] = inverse;
-		}
-		return classInverseCovariances;
-	}
-
-	@Override
-	public Class<? extends PredictionModel> getModelClass() {
-		return DiscriminantModel.class;
-	}
-
-	@Override
-	public boolean supportsCapability(OperatorCapability capability) {
-		if (capability.equals(OperatorCapability.NUMERICAL_ATTRIBUTES)) {
-			return true;
-		}
-		if (capability.equals(OperatorCapability.BINOMINAL_LABEL)) {
-			return true;
-		}
-		if (capability.equals(OperatorCapability.POLYNOMINAL_LABEL)) {
-			return true;
-		}
+	protected boolean useAlphaParameter() {
 		return false;
+	}
+
+	@Override
+	protected double getAlpha() {
+		return LDA_ALPHA;
 	}
 
 }

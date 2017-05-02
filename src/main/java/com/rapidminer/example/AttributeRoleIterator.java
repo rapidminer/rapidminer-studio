@@ -42,7 +42,7 @@ public class AttributeRoleIterator implements Iterator<AttributeRole> {
 
 	@Override
 	public boolean hasNext() {
-		while ((current == null) && (parent.hasNext())) {
+		while (current == null && parent.hasNext()) {
 			AttributeRole candidate = parent.next();
 			switch (type) {
 				case Attributes.REGULAR:
@@ -67,7 +67,9 @@ public class AttributeRoleIterator implements Iterator<AttributeRole> {
 
 	@Override
 	public AttributeRole next() {
-		hasNext();
+		if (current == null) {
+			hasNext();
+		}
 		AttributeRole returnValue = current;
 		current = null;
 		return returnValue;

@@ -178,7 +178,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
 
 		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+		if (!Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
 			builder.withOptimizationHint(DataManagementParameterHelper.getSelectedDataManagement(this));
 		}

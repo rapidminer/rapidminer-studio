@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.utils;
 
 import java.util.List;
@@ -27,6 +27,7 @@ import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.GrowingExampleTable;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.internal.ColumnarExampleTable;
+import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 import com.rapidminer.tools.ParameterService;
 
 
@@ -49,10 +50,10 @@ public final class ExampleSets {
 	 * @return the {@link ExampleSetBuilder} to build the example set
 	 */
 	public static ExampleSetBuilder from(List<Attribute> attributes) {
-		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
-			return new ColumnarExampleSetBuilder(attributes);
-		} else {
+		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			return new MemoryExampleSetBuilder(attributes);
+		} else {
+			return new ColumnarExampleSetBuilder(attributes);
 		}
 	}
 
@@ -64,10 +65,10 @@ public final class ExampleSets {
 	 * @return the {@link ExampleSetBuilder} to build the example set
 	 */
 	public static ExampleSetBuilder from(Attribute... attributes) {
-		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
-			return new ColumnarExampleSetBuilder(attributes);
-		} else {
+		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			return new MemoryExampleSetBuilder(attributes);
+		} else {
+			return new ColumnarExampleSetBuilder(attributes);
 		}
 	}
 
@@ -81,10 +82,29 @@ public final class ExampleSets {
 	 */
 	@SuppressWarnings("deprecation")
 	public static GrowingExampleTable createTableFrom(List<Attribute> attributes) {
-		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
-			return new ColumnarExampleTable(attributes);
-		} else {
+		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			return new MemoryExampleTable(attributes);
+		} else {
+			return new ColumnarExampleTable(attributes);
+		}
+	}
+
+	/**
+	 * Creates an {@link ExampleTable} to which rows can be added. Only use this if it is not
+	 * possible to use an {@link ExampleSetBuilder}.
+	 *
+	 * @param attributes
+	 *            the attributes for the new {@link ExampleTable}
+	 * @param management
+	 *            the {@link DataManagement} to use for the table if supported
+	 * @return a table that can grow
+	 */
+	@SuppressWarnings("deprecation")
+	public static GrowingExampleTable createTableFrom(List<Attribute> attributes, DataManagement management) {
+		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
+			return new MemoryExampleTable(attributes);
+		} else {
+			return new ColumnarExampleTable(attributes, management, false);
 		}
 	}
 

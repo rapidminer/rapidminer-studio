@@ -93,22 +93,32 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 	 */
 	protected void applyOnData(ExampleSet exampleSet, Attribute[] oldAttributes, Attribute[] newAttributes) throws ProcessStoppedException {
 		// initialize progress
+		long progressCounter = 0;
+		long progressTotal = 0;
+		for (Attribute attribute : oldAttributes) {
+			if (attribute.isNumerical()) {
+				progressTotal++;
+			}
+		}
+		progressTotal *= exampleSet.size();
+
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
-			progress.setTotal(exampleSet.size());
+			progress.setTotal(1000);
 		}
-		int progressCounter = 0;
 
 		// copying data
-		for (Example example : exampleSet) {
-			for (int i = 0; i < oldAttributes.length; i++) {
-				if (oldAttributes[i].isNumerical()) {
-					example.setValue(newAttributes[i], computeValue(oldAttributes[i], example.getValue(oldAttributes[i])));
+		for (int i = 0; i < oldAttributes.length; i++) {
+			Attribute oldAttribute = oldAttributes[i];
+			if (oldAttribute.isNumerical()) {
+				Attribute newAttribute = newAttributes[i];
+				for (Example example : exampleSet) {
+					example.setValue(newAttribute, computeValue(oldAttribute, example.getValue(oldAttribute)));
+					if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+						progress.setCompleted((int) (1000.0d * progressCounter / progressTotal));
+					}
 				}
-			}
-			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
-				progress.setCompleted(progressCounter);
 			}
 		}
 	}
@@ -130,9 +140,6 @@ public abstract class AbstractNormalizationModel extends PreprocessingModel {
 
 	@Override
 	protected boolean writesIntoExistingData() {
-		// this model does not write into the data but explodes inside a loop in standard mode
-		// because the number of attributes grows
-		return !Boolean
-				.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES));
+		return false;
 	}
 }

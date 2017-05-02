@@ -18,9 +18,10 @@
 */
 package com.rapidminer;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,20 +46,21 @@ import com.rapidminer.tools.Tools;
  */
 public class MacroHandler extends Observable {
 
-	private static final String PROCESS_NAME = "process_name";
-	private static final String PROCESS_FILE = "process_file";
-	private static final String PROCESS_PATH = "process_path";
+	public static final String PROCESS_NAME = "process_name";
+	public static final String PROCESS_FILE = "process_file";
+	public static final String PROCESS_PATH = "process_path";
+	public static final String PROCESS_START = "process_start";
 
 	/**
 	 * Remaining problem is that predefined macros that are overridden by custom macros are
 	 * evaluated first. The result is the predefined value.
 	 */
-	private static final String[] ALL_PREDEFINED_MACROS = { "process_name", "process_file", "process_path", "a",
+	private static final String[] ALL_PREDEFINED_MACROS = { PROCESS_NAME, PROCESS_FILE, PROCESS_PATH, PROCESS_START, "a",
 			"execution_count", "b", "c", "n", "operator_name", "t", "p[]", "v[]" };
 
 	/** all predefined macros that do not depend on an operator except for v[] */
-	private static final Set<String> PREDEFINED_OPERATOR_INDEPENDENT_MACROS = new HashSet<>(
-			Arrays.asList(new String[] { PROCESS_NAME, PROCESS_FILE, PROCESS_PATH, Operator.STRING_EXPANSION_MACRO_TIME }));
+	private static final Set<String> PREDEFINED_OPERATOR_INDEPENDENT_MACROS = new HashSet<>(Arrays.asList(
+			new String[] { PROCESS_NAME, PROCESS_FILE, PROCESS_PATH, PROCESS_START, Operator.STRING_EXPANSION_MACRO_TIME }));
 
 	/** all predefined macros that depend on an operator except for p[] */
 	private static final Set<String> PREDEFINED_OPERATOR_DEPENDENT_MACROS = new HashSet<>(
@@ -67,8 +69,8 @@ public class MacroHandler extends Observable {
 					Operator.STRING_EXPANSION_MACRO_OPERATORCLASS, Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES,
 					Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_PLUS_ONE }));
 
-	private static final String[] ALL_USER_FRIENDLY_PREDEFINED_MACROS = { "process_name", "process_file", "process_path",
-			Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_USER_FRIENDLY,
+	private static final String[] ALL_USER_FRIENDLY_PREDEFINED_MACROS = { PROCESS_NAME, PROCESS_FILE, PROCESS_PATH,
+			PROCESS_START, Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_USER_FRIENDLY,
 			Operator.STRING_EXPANSION_MACRO_OPERATORNAME_USER_FRIENDLY };
 
 	private static final OperatorVersion THROW_ERROR_ON_UNDEFINED_MACRO = new OperatorVersion(6, 0, 3);
@@ -92,6 +94,21 @@ public class MacroHandler extends Observable {
 		LEGACY_STRING_EXPANSION_MACRO_KEYS
 				.add(Operator.STRING_EXPANSION_MACRO_OPERATORVALUE + Operator.STRING_EXPANSION_MACRO_PARAMETER_START);
 	}
+
+	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
+	// EXTREMELY expensive
+	/**
+	 * Used for formatting the %{process_start} and current time %{t} macro
+	 */
+	private static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
+
+		@Override
+		protected DateFormat initialValue() {
+			// clone because getDateInstance uses an internal pool which can return the same
+			// instance for multiple threads
+			return new SimpleDateFormat("yyyy_MM_dd-a_KK_mm_ss");
+		}
+	};
 
 	/**
 	 * This HashSet contains the keys of macros which will be replaced while string expansion. Each
@@ -211,10 +228,11 @@ public class MacroHandler extends Observable {
 					return process.getProcessLocation() != null ? process.getProcessLocation().getShortName() : null;
 				case PROCESS_PATH:
 					return process.getProcessLocation() != null ? process.getProcessLocation().toString() : null;
+				case PROCESS_START:
+					return macroMap.containsKey(macro) ? macroMap.get(macro)
+							: DATE_FORMAT.get().format(new Date(process.getRootOperator().getStartTime()));
 				case Operator.STRING_EXPANSION_MACRO_TIME:
-					StringBuffer buffer = new StringBuffer();
-					resolveTimeMacro(buffer);
-					return buffer.toString();
+					return DATE_FORMAT.get().format(new Date());
 				default:
 					return null;
 			}
@@ -374,7 +392,7 @@ public class MacroHandler extends Observable {
 					}
 					result.append(operator.getApplyCount() + number);
 				} else if (Operator.STRING_EXPANSION_MACRO_TIME.equals(command)) {
-					resolveTimeMacro(result);
+					result.append(DATE_FORMAT.get().format(new Date()));
 				} else if (command.startsWith(
 						Operator.STRING_EXPANSION_MACRO_OPERATORVALUE + Operator.STRING_EXPANSION_MACRO_PARAMETER_START)) {
 					int openNumberIndex = command.indexOf(Operator.STRING_EXPANSION_MACRO_PARAMETER_START);
@@ -428,52 +446,6 @@ public class MacroHandler extends Observable {
 		}
 		result.append(str.substring(totalStart));
 		return result.toString();
-	}
-
-	/**
-	 * Resolves the macro t by writing the current date and time in the result buffer.
-	 */
-	private void resolveTimeMacro(StringBuffer result) {
-		// Please note that Date and DateFormat cannot be used since Windows does not
-		// support the resulting file names
-		// TODO: Well, it can and should be used. Just use a custom SimpleDateFormat
-		Calendar calendar = new GregorianCalendar();
-		// year
-		result.append(calendar.get(Calendar.YEAR) + "_");
-		// month
-		String month = calendar.get(Calendar.MONTH) + 1 + "";
-		if (month.length() < 2) {
-			month = "0" + month;
-		}
-		result.append(month + "_");
-		// day
-		String day = calendar.get(Calendar.DAY_OF_MONTH) + "";
-		if (day.length() < 2) {
-			day = "0" + day;
-		}
-		result.append(day + "-");
-		// am - pm
-		int amPm = calendar.get(Calendar.AM_PM);
-		String amPmString = amPm == Calendar.AM ? "AM" : "PM";
-		result.append(amPmString + "_");
-		// hour
-		String hour = calendar.get(Calendar.HOUR) + "";
-		if (hour.length() < 2) {
-			hour = "0" + hour;
-		}
-		result.append(hour + "_");
-		// minute
-		String minute = calendar.get(Calendar.MINUTE) + "";
-		if (minute.length() < 2) {
-			minute = "0" + minute;
-		}
-		result.append(minute + "_");
-		// second
-		String second = calendar.get(Calendar.SECOND) + "";
-		if (second.length() < 2) {
-			second = "0" + second;
-		}
-		result.append(second);
 	}
 
 	/**

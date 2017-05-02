@@ -498,7 +498,7 @@ public final class NewOperatorDialog extends ButtonDialog {
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			SwingTools.showSimpleErrorMessage("cannot_create_operator", ex);
+			SwingTools.showSimpleErrorMessage(this, "cannot_create_operator", ex);
 		}
 	}
 

@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.features.weighting;
 
 import java.util.List;
@@ -106,27 +106,28 @@ public class ChiSquaredWeighting extends AbstractWeighting {
 		getProgress().setTotal(100);
 		long progressCounter = 0;
 		double totalProgress = exampleSet.size() * exampleSet.getAttributes().size();
-		for (Example example : exampleSet) {
-			int labelIndex = (int) example.getLabel();
-			double weight = 1.0d;
-			if (weightAttribute != null) {
-				weight = example.getValue(weightAttribute);
-			}
-			int attributeCounter = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+
+		int attributeCounter = 0;
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Example example : exampleSet) {
+				int labelIndex = (int) example.getLabel();
+				double weight = 1.0d;
+				if (weightAttribute != null) {
+					weight = example.getValue(weightAttribute);
+				}
 				int attributeIndex = (int) example.getValue(attribute);
 				counters[attributeCounter][attributeIndex][labelIndex] += weight;
 				counters[attributeCounter][0][labelIndex] -= weight;
-				attributeCounter++;
 				if (++progressCounter % PROGRESS_UPDATE_STEPS == 0) {
 					getProgress().setCompleted((int) (100 * (progressCounter / totalProgress)));
 				}
 			}
+			attributeCounter++;
 		}
 
 		// calculate the actual chi-squared values and assign them to weights
 		AttributeWeights weights = new AttributeWeights(exampleSet);
-		int attributeCounter = 0;
+		attributeCounter = 0;
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			double weight = ContingencyTableTools
 					.getChiSquaredStatistics(ContingencyTableTools.deleteEmpty(counters[attributeCounter]), false);

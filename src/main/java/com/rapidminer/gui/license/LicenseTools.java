@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.license;
 
 import java.io.File;
@@ -53,6 +53,8 @@ public class LicenseTools {
 	private static final String LAST_ACTIVE_LICENSE_PRECEDENCE_FOR_PRODUCT = "license.last_active.%s.precedence";
 	private static final String LAST_ACTIVE_LICENSE_PRODUCT_EDITION_FOR_PRODUCT = "license.last_active.%s.product_edition";
 	private static final String LAST_ACTIVE_LICENSE_EXPIRATION_DATE_FOR_PRODUCT = "license.last_active.%s.expiration_date";
+
+	private static final String FREE_TIER_PREFIX = "free";
 
 	/**
 	 * @deprecated use {@link #getPrecedenceKey(License)} instead.
@@ -335,5 +337,14 @@ public class LicenseTools {
 
 	public static String getEditionKey(License license) {
 		return String.format(LAST_ACTIVE_LICENSE_PRODUCT_EDITION_FOR_PRODUCT, license.getProductId());
+	}
+
+	public static boolean isLicenseFree(License license) {
+		return isLicenseFree(license.getProductEdition());
+	}
+
+	public static boolean isLicenseFree(String edition) {
+		// Compare the beginning of the edition String to the prefix of free tier licenses.
+		return edition.startsWith(FREE_TIER_PREFIX);
 	}
 }

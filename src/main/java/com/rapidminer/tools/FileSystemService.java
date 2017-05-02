@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools;
 
 import static com.rapidminer.tools.ParameterService.PROPERTY_RAPIDMINER_SRC_ROOT;
@@ -40,6 +40,9 @@ public class FileSystemService {
 	private static final String RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER = "workspace";
 	/** folder which can be used to share data between extensions */
 	private static final String RAPIDMINER_SHARED_DATA = "shared data";
+
+	/** folder which can be used to load additional building blocks */
+	public static final String RAPIDMINER_BUILDINGBLOCKS = "buildingblocks";
 
 	public static final String RAPIDMINER_USER_FOLDER = ".RapidMiner";
 
@@ -72,6 +75,7 @@ public class FileSystemService {
 		File extensionsWorkspaceRootFolder = new File(userHomeDir, RAPIDMINER_EXTENSIONS_FOLDER);
 		File extensionsWorkspaceFolder = new File(extensionsWorkspaceRootFolder, RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER);
 		File sharedDataDir = new File(userHomeDir, RAPIDMINER_SHARED_DATA);
+		File buildingBlocksFolder = new File(userHomeDir, RAPIDMINER_BUILDINGBLOCKS);
 
 		if (!userHomeDir.exists()) {
 			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory", userHomeDir);
@@ -107,6 +111,15 @@ public class FileSystemService {
 			if (!result) {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", sharedDataDir);
+			}
+		}
+		if (!buildingBlocksFolder.exists()) {
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
+					buildingBlocksFolder);
+			boolean result = buildingBlocksFolder.mkdir();
+			if (!result) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", buildingBlocksFolder);
 			}
 		}
 		return userHomeDir;

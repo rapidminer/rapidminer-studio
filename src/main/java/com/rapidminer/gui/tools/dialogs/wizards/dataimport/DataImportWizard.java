@@ -58,18 +58,19 @@ public class DataImportWizard extends AbstractWizard {
 			if (entry != null) {
 				if (entry instanceof SimpleIOObjectEntry) {
 					// could overwrite, ask for permission
-					if (SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION,
+					if (SwingTools.showConfirmDialog(DataImportWizard.this, "overwrite", ConfirmDialog.YES_NO_OPTION,
 							entry.getLocation()) == ConfirmDialog.NO_OPTION) {
 						return false;
 					}
 				} else {
 					// cannot overwrite, inform user
-					SwingTools.showSimpleErrorMessage("cannot_save_data_no_dataentry", "", entry.getName());
+					SwingTools.showSimpleErrorMessage(DataImportWizard.this, "cannot_save_data_no_dataentry", "",
+							entry.getName());
 					return false;
 				}
 			}
 		} catch (Exception e) {
-			SwingTools.showSimpleErrorMessage("malformed_rep_location", e, repositoryLocationPath);
+			SwingTools.showSimpleErrorMessage(DataImportWizard.this, "malformed_rep_location", e, repositoryLocationPath);
 			return false;
 		}
 
@@ -84,7 +85,7 @@ public class DataImportWizard extends AbstractWizard {
 				try {
 					exampleSet = reader.createExampleSet();
 				} catch (OperatorException e) {
-					SwingTools.showSimpleErrorMessage("could not read from access file", e);
+					SwingTools.showSimpleErrorMessage(DataImportWizard.this, "could not read from access file", e);
 					return;
 				}
 
@@ -93,7 +94,8 @@ public class DataImportWizard extends AbstractWizard {
 					RepositoryManager.getInstance(null).store(exampleSet, location, null);
 					l.setCompleted(95);
 				} catch (RepositoryException ex) {
-					SwingTools.showSimpleErrorMessage("cannot_store_obj_at_location", ex, repositoryLocationPath);
+					SwingTools.showSimpleErrorMessage(DataImportWizard.this, "cannot_store_obj_at_location", ex,
+							repositoryLocationPath);
 					return;
 				}
 				l.setCompleted(100);

@@ -29,6 +29,7 @@
 	</group>
 	<group key="system">
 		<property key="maxMemory" />
+		<property key="rapidminer.system.legacy_data_mgmt" />
 		<property key="connection.timeout" />
 		<property key="account_server_url" />
 	</group>

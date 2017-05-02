@@ -270,7 +270,8 @@ public class SearchDialog extends ButtonDialog {
 
 	private void noMoreHits() {
 		String restartAt = backwardRadioButton.isSelected() ? "end" : "beginning";
-		switch (SwingTools.showConfirmDialog("editor.search_replace.no_more_hits", ConfirmDialog.YES_NO_OPTION, restartAt)) {
+		switch (SwingTools.showConfirmDialog(SearchDialog.this, "editor.search_replace.no_more_hits",
+				ConfirmDialog.YES_NO_OPTION, restartAt)) {
 			case ConfirmDialog.YES_OPTION:
 				textComponent.setCaretPosition(
 						backwardRadioButton.isSelected() ? textComponent.getText().replaceAll("\r", "").length() : 0);

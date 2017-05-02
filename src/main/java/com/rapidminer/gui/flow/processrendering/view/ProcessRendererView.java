@@ -137,7 +137,7 @@ import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
  * {@link #addProcessInteractionListener(ProcessInteractionListener)}.
  * </p>
  *
- * @author Simon Fischer, Marco Boeck
+ * @author Simon Fischer, Marco Boeck, Jan Czogalla
  * @since 6.4.0
  *
  */
@@ -529,9 +529,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					if (!abortedConnection && model.getDisplayedChain().getRoot() != model.getDisplayedChain()) {
 						OperatorChain parent = model.getDisplayedChain().getParent();
 						if (parent != null) {
-							model.setDisplayedChain(parent);
-							model.fireDisplayedChainChanged();
-							ProcessRendererView.this.mainFrame.addViewSwitchToUndo();
+							model.setDisplayedChainAndFire(parent);
 						}
 						e.consume();
 						return;
@@ -565,9 +563,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					if (!model.getSelectedOperators().isEmpty()) {
 						Operator selected = model.getSelectedOperators().get(0);
 						if (selected instanceof OperatorChain) {
-							model.setDisplayedChain((OperatorChain) selected);
-							model.fireDisplayedChainChanged();
-							ProcessRendererView.this.mainFrame.addViewSwitchToUndo();
+							model.setDisplayedChainAndFire((OperatorChain) selected);
 						}
 					}
 					e.consume();
@@ -593,9 +589,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					} else if (model.getDisplayedChain().getRoot() != model.getDisplayedChain()) {
 						OperatorChain parent = model.getDisplayedChain().getParent();
 						if (parent != null) {
-							model.setDisplayedChain(parent);
-							model.fireDisplayedChainChanged();
-							ProcessRendererView.this.mainFrame.addViewSwitchToUndo();
+							model.setDisplayedChainAndFire(parent);
 						}
 					}
 					// operator phase event, no more decorator processing afterwards
@@ -710,7 +704,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		this.repaintFilter = new RepaintFilter(this);
 
 		// initialize process listener for animations
-		new OperatorAnimationProcessListener(mainFrame);
+		new OperatorAnimationProcessListener(model);
 
 		// prepare event decorators for each phase
 		decorators = new HashMap<>();
@@ -759,6 +753,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					case MISC_CHANGED:
 						repaint();
 						break;
+					case DISPLAYED_CHAIN_WILL_CHANGE:
 					default:
 						break;
 				}
@@ -769,15 +764,14 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			public void operatorsChanged(ProcessRendererOperatorEvent e, Collection<Operator> operators) {
 				switch (e.getEventType()) {
 					case SELECTED_OPERATORS_CHANGED:
-						Operator firstOp = operators.iterator().hasNext() ? operators.iterator().next() : null;
+						Operator firstOp = !operators.isEmpty() ? operators.iterator().next() : null;
 						if (firstOp != null) {
 							// only switch displayed chain if not in selected chain and selected op
 							// is not visible
 							OperatorChain displayChain = (OperatorChain) (firstOp instanceof ProcessRootOperator ? firstOp
 									: model.getDisplayedChain() == firstOp ? firstOp : firstOp.getParent());
 							if (displayChain != null && model.getDisplayedChain() != displayChain) {
-								model.setDisplayedChain(displayChain);
-								model.fireDisplayedChainChanged();
+								model.setDisplayedChainAndFire(displayChain);
 								return;
 							}
 						}
@@ -928,11 +922,12 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	}
 
 	/**
-	 * Return the index of the process under the given {@link Point2D}.
+	 * Return the index of the process under the given {@link Point2D view point}.
 	 *
 	 * @param p
 	 *            the point
 	 * @return the index or -1 if no process is under the point
+	 * @see #getProcessIndexOfOperator(Operator)
 	 */
 	public int getProcessIndexUnder(final Point2D p) {
 		if (p == null) {
@@ -954,25 +949,79 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	}
 
 	/**
-	 * Converts a {@link Point} to a point relative to the specified process.
+	 * Converts a {@link Point view point} to a point relative to the specified process.
 	 *
 	 * @param p
 	 *            the original point
 	 * @param processIndex
 	 *            the index of the process
 	 * @return the relative point or {@code null} if no process exists for the specified index
+	 * @see ProcessRendererView#fromProcessSpace(Point, int)
 	 */
 	public Point toProcessSpace(final Point p, final int processIndex) {
-		int xOffset = 0;
-		for (int i = 0; i < model.getProcesses().size(); i++) {
-			if (i == processIndex) {
-				return new Point((int) (p.getX() * (1 / model.getZoomFactor()) - xOffset),
-						(int) (p.getY() * (1 / model.getZoomFactor())));
-			}
-			xOffset += (ProcessDrawer.WALL_WIDTH * 2 + model.getProcessWidth(model.getProcess(i)))
-					* (1 / model.getZoomFactor());
+		if (processIndex == -1 || processIndex >= model.getProcesses().size()) {
+			return null;
 		}
-		return null;
+		int xOffset = getXOffset(processIndex);
+		double zoomFactor = model.getZoomFactor();
+		return new Point((int) ((p.getX() - xOffset) * (1 / zoomFactor)), (int) (p.getY() * (1 / zoomFactor)));
+	}
+
+	/**
+	 * Returns the index of the process of the given {@link Operator}.
+	 *
+	 * @param op
+	 *            the operator
+	 * @return the index or -1 if the process is not currently shown
+	 * @since 7.5
+	 * @see #getProcessIndexUnder(Point2D)
+	 */
+	public int getProcessIndexOfOperator(Operator op) {
+		if (op == null) {
+			return -1;
+		}
+		ExecutionUnit eu = op.getExecutionUnit();
+		return model.getProcessIndex(eu);
+	}
+
+	/**
+	 * Converts a {@link Point} from the process to a point relative to the current view.
+	 *
+	 * @param p
+	 *            the process point
+	 * @param processIndex
+	 *            the index of the process
+	 * @return the view point or {@code null} if no process exists for the specified index
+	 * @since 7.5
+	 * @see #toProcessSpace(Point, int)
+	 */
+	public Point fromProcessSpace(final Point p, final int processIndex) {
+		if (processIndex == -1 || processIndex >= model.getProcesses().size()) {
+			return null;
+		}
+		int xOffset = getXOffset(processIndex);
+		double zoomFactor = model.getZoomFactor();
+		return new Point((int) (p.x * zoomFactor) + xOffset, (int) (p.y * zoomFactor));
+	}
+
+	/**
+	 * Calculates the (absolute/view) x offset for the given process index. The index must be
+	 * between 0 (inclusive) and the number of processes currently in the model (exclusive).
+	 *
+	 * @param processIndex
+	 *            the index of the process
+	 * @return the x offset before the specified process
+	 * @since 7.5
+	 * @see #toProcessSpace(Point, int)
+	 * @see #fromProcessSpace(Point, int)
+	 */
+	private int getXOffset(final int processIndex) {
+		List<ExecutionUnit> processes = model.getProcesses();
+		int xOffset = processIndex * ProcessDrawer.WALL_WIDTH * 2;
+		for (int i = 0; i < processIndex; i++) {
+			xOffset += model.getProcessWidth(processes.get(i));
+		}
+		return xOffset;
 	}
 
 	/**

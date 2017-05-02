@@ -1,23 +1,24 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -30,13 +31,15 @@ import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.Paint;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -46,13 +49,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
+import javax.swing.text.StyleContext;
 
 import org.apache.commons.collections15.Transformer;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.actions.export.PrintableComponent;
-import com.rapidminer.gui.graphs.actions.PickingModeAction;
-import com.rapidminer.gui.graphs.actions.TransformingModeAction;
 import com.rapidminer.gui.graphs.actions.ZoomInAction;
 import com.rapidminer.gui.graphs.actions.ZoomOutAction;
 import com.rapidminer.gui.look.Colors;
@@ -70,15 +72,15 @@ import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.algorithms.layout.StaticLayout;
 import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.visualization.MultiLayerTransformer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
-import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.GraphMouseListener;
-import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ScalingControl;
 import edu.uci.ics.jung.visualization.decorators.ConstantDirectionalEdgeValueTransformer;
+import edu.uci.ics.jung.visualization.decorators.DirectionalEdgeArrowTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 import edu.uci.ics.jung.visualization.layout.LayoutTransition;
 import edu.uci.ics.jung.visualization.renderers.BasicVertexRenderer;
@@ -86,27 +88,40 @@ import edu.uci.ics.jung.visualization.renderers.EdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
 import edu.uci.ics.jung.visualization.renderers.VertexLabelRenderer;
 import edu.uci.ics.jung.visualization.util.Animator;
+import edu.uci.ics.jung.visualization.util.ArrowFactory;
 
 
 /**
- * The basic graph viewer component for graphs.
+ * The basic graph viewer component for graph display.
  *
- * @author Ingo Mierswa
+ * @author Ingo Mierswa, Marco Boeck
  */
 public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableComponent {
 
 	private static final long serialVersionUID = -7501422172633548861L;
 
-	public static final int MARGIN = 10;
+	private static final Color EDGE_LIGHT_GRAY = new Color(230, 230, 230);
 
-	public static final Font EDGE_FONT = new Font("Dialog", Font.PLAIN, 10);
+	private static final Color LEAF_BACKGROUND = new Color(230, 230, 230);
 
-	public static final Font VERTEX_BOLD_FONT = new Font("Dialog", Font.BOLD, 11);
+	private static final Color BORDER_INVIS = new Color(0, 0, 0, 0);
 
-	public static final Font VERTEX_PLAIN_FONT = new Font("Dialog", Font.PLAIN, 11);
+	public static final Color NODE_SELECTED = Colors.TEXT_HIGHLIGHT_BACKGROUND;
 
-	private final transient Action transformAction = new TransformingModeAction<>(this, IconSize.SMALL);
-	private final transient Action pickingAction = new PickingModeAction<>(this, IconSize.SMALL);
+	public static final Color NODE_BACKGROUND = new Color(230, 230, 230);
+
+	public static final Color NODE_ON_PATH = NODE_SELECTED;
+
+	public static final Font EDGE_FONT = StyleContext.getDefaultStyleContext().getFont("Open Sans", Font.PLAIN, 12);
+
+	public static final Font EDGE_FONT_ON_PATH = StyleContext.getDefaultStyleContext().getFont("Open Sans Semibold",
+			Font.BOLD, 13);
+
+	public static final Font VERTEX_BOLD_FONT = StyleContext.getDefaultStyleContext().getFont("Open Sans Semibold",
+			Font.BOLD, 14);
+
+	public static final Font VERTEX_PLAIN_FONT = StyleContext.getDefaultStyleContext().getFont("Open Sans Semibold",
+			Font.BOLD, 14);
 
 	private VisualizationViewer<V, E> vv;
 
@@ -118,7 +133,7 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 	private transient ScalingControl scaler = new CrossoverScalingControl();
 
-	private transient DefaultModalGraphMouse<V, E> graphMouse;
+	private transient SingleDefaultGraphMouse<V, E> graphMouse;
 
 	private boolean showEdgeLabels = true;
 
@@ -126,12 +141,10 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 	private transient JSplitPane objectViewerSplitPane;
 
-	private transient ModalGraphMouse.Mode currentMode = ModalGraphMouse.Mode.TRANSFORMING;
-
 	public GraphViewer(final GraphCreator<V, E> graphCreator) {
 		try {
 			if (!RapidMiner.getExecutionMode().isHeadless()) {
-				graphMouse = new DefaultModalGraphMouse<>(1 / 1.1f, 1.1f);
+				graphMouse = new SingleDefaultGraphMouse<>(1 / 1.1f, 1.1f);
 			}
 		} catch (HeadlessException e) {
 		}
@@ -167,219 +180,16 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 				}
 			}
 		};
+		vv.getRenderingHints().put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		vv.getRenderingHints().put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		vv.getRenderingHints().put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		vv.setBorder(BorderFactory.createEmptyBorder());
 		vv.setBackground(Colors.WHITE);
+		SwingTools.disableClearType(vv);
 
 		// === design ===
 
-		// ## edge layout ##
-		// EDGE SHAPE
-		int edgeShapeType = graphCreator.getEdgeShape();
-		switch (edgeShapeType) {
-			case GraphCreator.EDGE_SHAPE_LINE:
-				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<V, E>());
-				break;
-			case GraphCreator.EDGE_SHAPE_QUAD_CURVE:
-				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<V, E>());
-				break;
-			case GraphCreator.EDGE_SHAPE_CUBIC_CURVE:
-				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.CubicCurve<V, E>());
-				break;
-			case GraphCreator.EDGE_SHAPE_BENT_LINE:
-				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.BentLine<V, E>());
-				break;
-			case GraphCreator.EDGE_SHAPE_WEDGE:
-				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Wedge<V, E>(5));
-				break;
-			default:
-				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<V, E>());
-				break;
-		}
-
-		// EDGE FONT
-		vv.getRenderContext().setEdgeFontTransformer(new Transformer<E, Font>() {
-
-			@Override
-			public Font transform(E arg0) {
-				return EDGE_FONT;
-			}
-		});
-
-		// EDGE COLORS
-		vv.getRenderContext().setEdgeDrawPaintTransformer(new Transformer<E, Paint>() {
-
-			@Override
-			public Paint transform(E edge) {
-				double edgeStrength = graphCreator.getEdgeStrength(edge);
-				int value = (int) Math.max(140, Math.min(230, 230 - edgeStrength * 90));
-				return new Color(value, value, value);
-			}
-		});
-		vv.getRenderContext().setArrowDrawPaintTransformer(new Transformer<E, Paint>() {
-
-			@Override
-			public Paint transform(E edge) {
-				double edgeStrength = graphCreator.getEdgeStrength(edge);
-				int value = (int) Math.max(140, Math.min(230, 230 - edgeStrength * 90));
-				return new Color(value, value, value).darker();
-			}
-		});
-		vv.getRenderContext().setArrowFillPaintTransformer(new Transformer<E, Paint>() {
-
-			@Override
-			public Paint transform(E edge) {
-				double edgeStrength = graphCreator.getEdgeStrength(edge);
-				int value = (int) Math.max(140, Math.min(230, 230 - edgeStrength * 90));
-				return new Color(value, value, value);
-			}
-		});
-
-		// EDGE LABEL POSITION
-		vv.getRenderContext()
-		.setEdgeLabelClosenessTransformer(new ConstantDirectionalEdgeValueTransformer<V, E>(0.5d, 0.5d));
-		int labelOffset = graphCreator.getLabelOffset();
-		if (labelOffset >= 0) {
-			vv.getRenderContext().setLabelOffset(labelOffset);
-		}
-
-		// EDGE LABELS
-		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<E, String>() {
-
-			@Override
-			public String transform(E object) {
-				return graphCreator.getEdgeName(object);
-			}
-		});
-		// EDGE LABEL RENDERER
-		Renderer.EdgeLabel<V, E> edgeLabelRenderer = graphCreator.getEdgeLabelRenderer();
-		if (edgeLabelRenderer != null) {
-			vv.getRenderer().setEdgeLabelRenderer(edgeLabelRenderer); // renderer...
-		}
-		vv.getRenderContext().setEdgeLabelRenderer(new EdgeLabelRenderer() { // ...context!
-
-			private JLabel renderer = new JLabel();
-
-			@Override
-			public <T> Component getEdgeLabelRendererComponent(JComponent parent, Object value, Font font,
-					boolean isSelected, T edge) {
-				this.renderer.setFont(font);
-				if (graphCreator.isEdgeLabelDecorating()) {
-					this.renderer.setOpaque(true);
-					renderer.setBackground(Color.WHITE);
-					// use this for a more fancy look and feel
-					// renderer.setBackground(SwingTools.TRANSPARENT_YELLOW);
-					// this.renderer.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(SwingTools.DARK_BLUE),
-					// BorderFactory.createEmptyBorder(1,1,1,1)));
-				}
-				this.renderer.setText(value.toString());
-				return this.renderer;
-			}
-
-			/** Let the graph model decide. */
-			@Override
-			public boolean isRotateEdgeLabels() {
-				return graphCreator.isRotatingEdgeLabels();
-			}
-
-			/** Does nothing. */
-			@Override
-			public void setRotateEdgeLabels(boolean rotate) {}
-		});
-
-		// ## vertex layout ##
-
-		// VERTEX FONT
-		vv.getRenderContext().setVertexFontTransformer(new Transformer<V, Font>() {
-
-			@Override
-			public Font transform(V vertex) {
-				if (graphCreator.isBold(vertex)) {
-					return VERTEX_BOLD_FONT;
-				} else {
-					return VERTEX_PLAIN_FONT;
-				}
-			}
-		});
-		// VERTEX NAME
-		vv.getRenderContext().setVertexLabelTransformer(new Transformer<V, String>() {
-
-			@Override
-			public String transform(V object) {
-				return graphCreator.getVertexName(object);
-			}
-		});
-		// VERTEX FILL PAINT
-		Transformer<V, Paint> paintTransformer = graphCreator.getVertexPaintTransformer(vv);
-		if (paintTransformer == null) {
-			paintTransformer = new Transformer<V, Paint>() {
-
-				@Override
-				public Paint transform(V vertex) {
-					if (vv.getPickedVertexState().isPicked(vertex)) {
-						return SwingTools.LIGHT_YELLOW;
-					} else {
-						return SwingTools.LIGHT_BLUE;
-					}
-				}
-			};
-		}
-		vv.getRenderContext().setVertexFillPaintTransformer(paintTransformer);
-
-		// VERTEX DRAW PAINT
-		vv.getRenderContext().setVertexDrawPaintTransformer(new Transformer<V, Paint>() {
-
-			@Override
-			public Paint transform(V vertex) {
-				if (vv.getPickedVertexState().isPicked(vertex)) {
-					return SwingTools.DARKEST_YELLOW.darker();
-				} else {
-					return SwingTools.DARKEST_BLUE.darker();
-				}
-			}
-		});
-		// VERTEX TOOL TIP
-		this.vv.setVertexToolTipTransformer(new Transformer<V, String>() {
-
-			@Override
-			public String transform(V vertex) {
-				return graphCreator.getVertexToolTip(vertex);
-			}
-		});
-		// VERTEX SHAPE
-		vv.getRenderContext().setVertexShapeTransformer(new ExtendedVertexShapeTransformer<>(graphCreator));
-
-		// VERTEX RENDERER
-		Renderer.Vertex<V, E> vertexRenderer = graphCreator.getVertexRenderer();
-		if (vertexRenderer != null) {
-			vv.getRenderer().setVertexRenderer(vertexRenderer);
-		}
-
-		// VERTEX LABEL RENDERER
-		setDefaultLabelPosition();
-		// custom renderer?
-		Renderer.VertexLabel<V, E> customVertexLabelRenderer = graphCreator.getVertexLabelRenderer();
-		if (customVertexLabelRenderer != null) {
-			vv.getRenderer().setVertexLabelRenderer(customVertexLabelRenderer);
-		}
-
-		// context
-		vv.getRenderContext().setVertexLabelRenderer(new VertexLabelRenderer() {
-
-			private JLabel label = new JLabel();
-
-			@Override
-			public <T> Component getVertexLabelRendererComponent(JComponent parent, Object object, Font font,
-					boolean isSelection, T vertex) {
-				label.setFont(font);
-				if (object != null) {
-					label.setText(object.toString());
-				} else {
-					label.setText("");
-				}
-				return label;
-			}
-
-		});
+		setupRendering(graphCreator);
 
 		// === end of design ===
 
@@ -427,30 +237,24 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		// === mouse behaviour ===
 		if (graphMouse != null) {
 			vv.setGraphMouse(graphMouse);
-			vv.addKeyListener(graphMouse.getModeKeyListener());
-			graphMouse.setMode(ModalGraphMouse.Mode.TRANSFORMING);
 		}
-		transformAction.setEnabled(false);
-		pickingAction.setEnabled(true);
 
 		vv.addGraphMouseListener(new GraphMouseListener<V>() {
 
 			@Override
-			public void graphClicked(V vertex, MouseEvent arg1) {}
+			public void graphClicked(V vertex, MouseEvent arg1) {
+				if (graphCreator.getObjectViewer() != null) {
+					vv.getPickedVertexState().clear();
+					vv.getPickedVertexState().pick(vertex, true);
+					graphCreator.getObjectViewer().showObject(graphCreator.getObject(vertex));
+				}
+			}
 
 			@Override
 			public void graphPressed(V arg0, MouseEvent arg1) {}
 
 			@Override
-			public void graphReleased(V vertex, MouseEvent arg1) {
-				if (currentMode.equals(ModalGraphMouse.Mode.TRANSFORMING)) {
-					if (graphCreator.getObjectViewer() != null) {
-						vv.getPickedVertexState().clear();
-						vv.getPickedVertexState().pick(vertex, true);
-						graphCreator.getObjectViewer().showObject(graphCreator.getObject(vertex));
-					}
-				}
-			}
+			public void graphReleased(V vertex, MouseEvent arg1) {}
 		});
 
 		JPanel controls = new JPanel();
@@ -481,23 +285,6 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		gbLayout.setConstraints(zoomBar, c);
 		controls.add(zoomBar);
-
-		// mode
-		JToolBar modeBar = new ExtendedJToolBar();
-		modeBar.setLayout(new FlowLayout(FlowLayout.CENTER));
-		modeBar.setBackground(Colors.WHITE);
-		JButton transformButton = new JButton(transformAction);
-		transformButton.setContentAreaFilled(false);
-		transformButton.setText("");
-		modeBar.add(transformButton);
-		JButton pickingButton = new JButton(pickingAction);
-		pickingButton.setContentAreaFilled(false);
-		pickingButton.setText("");
-		modeBar.add(pickingButton);
-		modeBar.setBorder(BorderFactory.createTitledBorder("Mode"));
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		gbLayout.setConstraints(modeBar, c);
-		controls.add(modeBar);
 
 		// layout selection
 		c.gridwidth = GridBagConstraints.REMAINDER;
@@ -567,7 +354,6 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 					// do nothing - some layouts do not support setting of size
 				}
 			} else {
-				// vv.setSize(600, 600);
 				int layoutWidth = (int) (vv.getWidth() / scale);
 				int layoutHeight = (int) (vv.getHeight() / scale);
 				try {
@@ -617,7 +403,6 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 						// do nothing
 					}
 					// change to static
-					// change to static
 					if (GraphViewer.this.layout.equals(newLayout)) { // still the same layout?
 						vv.setGraphLayout(new StaticLayout<>(layout.getGraph(), layout));
 					}
@@ -641,20 +426,6 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 	public void zoomOut() {
 		scaler.scale(vv, 1 / 1.1f, vv.getCenter());
-	}
-
-	public void changeMode(ModalGraphMouse.Mode mode) {
-		if (graphMouse != null) {
-			graphMouse.setMode(mode);
-		}
-		this.currentMode = mode;
-		if (mode.equals(ModalGraphMouse.Mode.PICKING)) {
-			pickingAction.setEnabled(false);
-			transformAction.setEnabled(true);
-		} else {
-			pickingAction.setEnabled(true);
-			transformAction.setEnabled(false);
-		}
 	}
 
 	private void togglePaintEdgeLabels() {
@@ -725,7 +496,16 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 	}
 
 	@Override
-	public void prepareRendering() {}
+	public void prepareRendering() {
+		// this dirty hack was copied from the AbstractGraphRenderer
+		// this method is NOT used by Studio, only by the reporting extension
+		try {
+			// necessary to give layout (thread!) time to finish its work before reporting
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// do nothing
+		}
+	}
 
 	@Override
 	public void finishRendering() {}
@@ -778,5 +558,272 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 	@Override
 	public String getExportIconName() {
 		return I18N.getGUIMessage("gui.cards.result_view.graph_view.icon");
+	}
+
+	/**
+	 * Setup rendering for tree models.
+	 *
+	 * @param graphCreator
+	 *            the creator instance
+	 */
+	private void setupRendering(final GraphCreator<V, E> graphCreator) {
+		// ## edge layout ##
+		// EDGE SHAPE
+		int edgeShapeType = graphCreator.getEdgeShape();
+		switch (edgeShapeType) {
+			case GraphCreator.EDGE_SHAPE_LINE:
+				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<V, E>());
+				break;
+			case GraphCreator.EDGE_SHAPE_QUAD_CURVE:
+				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<V, E>());
+				break;
+			case GraphCreator.EDGE_SHAPE_CUBIC_CURVE:
+				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.CubicCurve<V, E>());
+				break;
+			case GraphCreator.EDGE_SHAPE_BENT_LINE:
+				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.BentLine<V, E>());
+				break;
+			case GraphCreator.EDGE_SHAPE_WEDGE:
+				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Wedge<V, E>(5));
+				break;
+			default:
+				vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<V, E>());
+				break;
+		}
+
+		// EDGE FONT
+		vv.getRenderContext().setEdgeFontTransformer(new Transformer<E, Font>() {
+
+			@Override
+			public Font transform(E edge) {
+				if (graphCreator.isEdgeOnSelectedPath(vv.getPickedVertexState().getPicked(), edge)) {
+					return EDGE_FONT_ON_PATH;
+				} else {
+					return EDGE_FONT;
+				}
+			}
+		});
+
+		// EDGE COLORS
+		vv.getRenderContext().setEdgeDrawPaintTransformer(new Transformer<E, Paint>() {
+
+			@Override
+			public Paint transform(E edge) {
+				if (graphCreator.isEdgeOnSelectedPath(vv.getPickedVertexState().getPicked(), edge)) {
+					return NODE_ON_PATH;
+				} else {
+					return EDGE_LIGHT_GRAY;
+				}
+			}
+		});
+		vv.getRenderContext().setArrowDrawPaintTransformer(new Transformer<E, Paint>() {
+
+			@Override
+			public Paint transform(E edge) {
+				if (graphCreator.isEdgeOnSelectedPath(vv.getPickedVertexState().getPicked(), edge)) {
+					return NODE_ON_PATH;
+				} else {
+					return EDGE_LIGHT_GRAY;
+				}
+			}
+		});
+		vv.getRenderContext().setArrowFillPaintTransformer(new Transformer<E, Paint>() {
+
+			@Override
+			public Paint transform(E edge) {
+				if (graphCreator.isEdgeOnSelectedPath(vv.getPickedVertexState().getPicked(), edge)) {
+					return NODE_ON_PATH;
+				} else {
+					return EDGE_LIGHT_GRAY;
+				}
+			}
+		});
+
+		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<V, E>(8, 7, 0));
+
+		// only change edge thickness for tree models for now
+		if (graphCreator instanceof TreeModelGraphCreator) {
+			vv.getRenderContext().setEdgeStrokeTransformer(new Transformer<E, Stroke>() {
+
+				@Override
+				public Stroke transform(E edge) {
+					float edgeStrength = Math.max(0.4f, 10f * (float) graphCreator.getEdgeStrength(edge));
+					return new BasicStroke(edgeStrength);
+				}
+
+			});
+			int length = 8;
+			int width = 7;
+			int notch = 0;
+			vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<V, E>(length, width, notch) {
+
+				@Override
+				public Shape transform(Context<Graph<V, E>, E> context) {
+					// yes, the order is correct and differs from the transformer constructor order
+					float edgeStrength = (float) graphCreator.getEdgeStrength(context.element);
+					float arrowWidth = Math.max(7f, 24f * edgeStrength);
+					float arrowLength = Math.max(8f, 16f * edgeStrength);
+					return ArrowFactory.getNotchedArrow(arrowWidth, arrowLength, notch);
+				}
+			});
+		}
+
+		// EDGE LABEL POSITION
+		vv.getRenderContext()
+				.setEdgeLabelClosenessTransformer(new ConstantDirectionalEdgeValueTransformer<V, E>(0.5d, 0.5d));
+		int labelOffset = graphCreator.getLabelOffset();
+		if (labelOffset >= 0) {
+			vv.getRenderContext().setLabelOffset(labelOffset);
+		}
+
+		// EDGE LABELS
+		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<E, String>() {
+
+			@Override
+			public String transform(E object) {
+				return graphCreator.getEdgeName(object);
+			}
+		});
+		// EDGE LABEL RENDERER
+		Renderer.EdgeLabel<V, E> edgeLabelRenderer = graphCreator.getEdgeLabelRenderer();
+		if (edgeLabelRenderer != null) {
+			vv.getRenderer().setEdgeLabelRenderer(edgeLabelRenderer); // renderer...
+		}
+		vv.getRenderContext().setEdgeLabelRenderer(new EdgeLabelRenderer() { // ...context!
+
+			private JLabel renderer = new JLabel();
+
+			@Override
+			public <T> Component getEdgeLabelRendererComponent(JComponent parent, Object value, Font font,
+					boolean isSelected, T edge) {
+				renderer.setFont(font);
+				if (graphCreator.isEdgeLabelDecorating()) {
+					renderer.setOpaque(false);
+					renderer.setBackground(new Color(0, 0, 0, 0));
+				}
+				renderer.setText(value.toString());
+				return renderer;
+			}
+
+			/** Let the graph model decide. */
+			@Override
+			public boolean isRotateEdgeLabels() {
+				return graphCreator.isRotatingEdgeLabels();
+			}
+
+			/** Does nothing. */
+			@Override
+			public void setRotateEdgeLabels(boolean rotate) {}
+		});
+
+		// ## vertex layout ##
+
+		// VERTEX FONT
+		vv.getRenderContext().setVertexFontTransformer(new Transformer<V, Font>() {
+
+			@Override
+			public Font transform(V vertex) {
+				if (graphCreator.isBold(vertex)
+						|| graphCreator.isVertexOnSelectedPath(vv.getPickedVertexState().getPicked(), vertex)) {
+					return VERTEX_BOLD_FONT;
+				} else {
+					return VERTEX_PLAIN_FONT;
+				}
+			}
+		});
+		// VERTEX NAME
+		vv.getRenderContext().setVertexLabelTransformer(new Transformer<V, String>() {
+
+			@Override
+			public String transform(V object) {
+				return graphCreator.getVertexName(object);
+			}
+		});
+		// VERTEX FILL PAINT
+		Transformer<V, Paint> paintTransformer = graphCreator.getVertexPaintTransformer(vv);
+		if (paintTransformer == null) {
+			paintTransformer = new Transformer<V, Paint>() {
+
+				@Override
+				public Paint transform(V vertex) {
+					if (vv.getPickedVertexState().isPicked(vertex)) {
+						return NODE_SELECTED;
+					} else if (graphCreator.isVertexOnSelectedPath(vv.getPickedVertexState().getPicked(), vertex)) {
+						return NODE_ON_PATH;
+					} else {
+						if (graphCreator.isLeaf(vertex)) {
+							return LEAF_BACKGROUND;
+						} else {
+							return NODE_BACKGROUND;
+						}
+					}
+				}
+			};
+		}
+		vv.getRenderContext().setVertexFillPaintTransformer(paintTransformer);
+
+		// VERTEX DRAW PAINT
+		vv.getRenderContext().setVertexDrawPaintTransformer(new Transformer<V, Paint>() {
+
+			@Override
+			public Paint transform(V vertex) {
+				if (vv.getPickedVertexState().isPicked(vertex)) {
+					if (graphCreator.isLeaf(vertex)) {
+						return BORDER_INVIS;
+					} else {
+						return BORDER_INVIS;
+					}
+				} else {
+					if (graphCreator.isLeaf(vertex)) {
+						return BORDER_INVIS;
+					} else {
+						return BORDER_INVIS;
+					}
+				}
+			}
+		});
+		// VERTEX TOOL TIP
+		this.vv.setVertexToolTipTransformer(new Transformer<V, String>() {
+
+			@Override
+			public String transform(V vertex) {
+				return graphCreator.getVertexToolTip(vertex);
+			}
+		});
+		// VERTEX SHAPE
+		vv.getRenderContext().setVertexShapeTransformer(new ExtendedVertexShapeTransformer<>(graphCreator));
+
+		// VERTEX RENDERER
+		Renderer.Vertex<V, E> vertexRenderer = graphCreator.getVertexRenderer();
+		if (vertexRenderer != null) {
+			vv.getRenderer().setVertexRenderer(vertexRenderer);
+		}
+
+		// VERTEX LABEL RENDERER
+		setDefaultLabelPosition();
+		// custom renderer?
+		Renderer.VertexLabel<V, E> customVertexLabelRenderer = graphCreator.getVertexLabelRenderer();
+		if (customVertexLabelRenderer != null) {
+			vv.getRenderer().setVertexLabelRenderer(customVertexLabelRenderer);
+		}
+
+		// context
+		vv.getRenderContext().setVertexLabelRenderer(new VertexLabelRenderer() {
+
+			private JLabel label = new JLabel();
+
+			@Override
+			public <T> Component getVertexLabelRendererComponent(JComponent parent, Object object, Font font,
+					boolean isSelection, T vertex) {
+				label.setFont(font);
+				if (object != null) {
+					label.setText(object.toString());
+				} else {
+					label.setText("");
+				}
+				return label;
+			}
+
+		});
 	}
 }

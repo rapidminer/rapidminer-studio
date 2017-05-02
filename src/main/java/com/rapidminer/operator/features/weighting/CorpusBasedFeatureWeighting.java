@@ -18,7 +18,6 @@
 */
 package com.rapidminer.operator.features.weighting;
 
-import java.util.Iterator;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
@@ -41,13 +40,13 @@ import com.rapidminer.parameter.ParameterTypeString;
  * importance of this feature for an example (e.g. TFIDF or others). Therefore, this operator is
  * mainly used on textual data based on TFIDF weighting schemes. To extract such feature values from
  * text collections you can use the Text plugin.
- * 
+ *
  * @author Michael Wurst, Ingo Mierswa
  */
 public class CorpusBasedFeatureWeighting extends AbstractWeighting {
 
 	private static final int PROGRESS_UPDATE_STEPS = 200_000;
-	/* 
+	/*
 	 * The parameter name for &quot;The target class for which to find characteristic feature
 	 * weights.&quot;
 	 */
@@ -84,24 +83,23 @@ public class CorpusBasedFeatureWeighting extends AbstractWeighting {
 	}
 
 	private double[] generateWeightsForClass(ExampleSet es, String value) throws ProcessStoppedException {
-		double[] result = new double[es.getAttributes().size()];
-		for (int i = 0; i < es.getAttributes().size(); i++) {
+		Attribute[] regularAttributes = es.getAttributes().createRegularAttributeArray();
+		double[] result = new double[regularAttributes.length];
+		for (int i = 0; i < regularAttributes.length; i++) {
 			result[i] = 0.0;
 		}
-		Iterator<Example> er = es.iterator();
 		Attribute labelAttribute = es.getAttributes().getLabel();
 		int counter = 0;
 		getProgress().setTotal(es.size());
-		while (er.hasNext()) {
-			Example e = er.next();
+		for (Example e : es) {
 			if (e.getValueAsString(labelAttribute).equalsIgnoreCase(value)) {
 				int index = 0;
-				for (Attribute attribute : es.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					result[index] += e.getValue(attribute);
 					index++;
 				}
 			}
-			if(++counter % PROGRESS_UPDATE_STEPS == 0){
+			if (++counter % PROGRESS_UPDATE_STEPS == 0) {
 				getProgress().setCompleted(counter);
 			}
 		}

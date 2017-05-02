@@ -406,16 +406,17 @@ public class Tools {
 				throw new UserError(operator, "113", specialAttributes[i]);
 			}
 		}
-
-		for (Example example : exampleSet) {
+		
+		Iterator<AttributeRole> allRoles = exampleSet.getAttributes().allAttributeRoles();
+		while (allRoles.hasNext()) {
 			if (operator != null) {
 				operator.checkForStop();
 			}
-			Iterator<AttributeRole> allAttributes = example.getAttributes().allAttributeRoles();
-			while (allAttributes.hasNext()) {
-				AttributeRole att = allAttributes.next();
-				if (!att.isSpecial() || specialToCheck.contains(att.getAttribute())) {
-					if (Double.isNaN(example.getValue(att.getAttribute()))) {
+			AttributeRole role = allRoles.next();
+			if (!role.isSpecial() || specialToCheck.contains(role.getAttribute())) {
+				Attribute attribute = role.getAttribute();
+				for (Example example : exampleSet) {
+					if (Double.isNaN(example.getValue(attribute))) {
 						throw new UserError(operator, 139, task);
 					}
 				}

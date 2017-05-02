@@ -34,51 +34,34 @@ public class RegularAttributeIterator implements Iterator<Attribute> {
 
 	private Attribute current = null;
 
-	private boolean hasNextInvoked = false;
-
-	private AttributeRole currentRole = null;
-
 	public RegularAttributeIterator(Iterator<AttributeRole> parent) {
 		this.parent = parent;
 	}
 
 	@Override
 	public boolean hasNext() {
-		this.hasNextInvoked = true;
-		if (!parent.hasNext() && currentRole == null) {
-			current = null;
-			return false;
-		} else {
-			AttributeRole role;
-			if (currentRole == null) {
-				role = parent.next();
-			} else {
-				role = currentRole;
-			}
-			if (!role.isSpecial()) {
-				current = role.getAttribute();
-				currentRole = role;
-				return true;
-			} else {
-				return hasNext();
+		while (current == null && parent.hasNext()) {
+			AttributeRole candidate = parent.next();
+			if (!candidate.isSpecial()) {
+				current = candidate.getAttribute();
+				break;
 			}
 		}
+		return current != null;
 	}
 
 	@Override
 	public Attribute next() {
-		if (!this.hasNextInvoked) {
+		if (current == null) {
 			hasNext();
 		}
-		this.hasNextInvoked = false;
-		this.currentRole = null;
-		return current;
+		Attribute returnValue = current;
+		this.current = null;
+		return returnValue;
 	}
 
 	@Override
 	public void remove() {
 		parent.remove();
-		this.currentRole = null;
-		this.hasNextInvoked = false;
 	}
 }

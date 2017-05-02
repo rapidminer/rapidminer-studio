@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.features.transformation;
 
 import java.util.Collections;
@@ -239,12 +239,11 @@ public class FastICA extends Operator {
 
 		// get the centered data
 		data = new double[numberOfSamples][numberOfAttributes];
-		Iterator<Example> reader = set.iterator();
-		Example example;
 
-		for (int sample = 0; sample < numberOfSamples; sample++) {
-			example = reader.next();
-			for (int d = 0; d < numberOfAttributes; d++) {
+		for (int d = 0; d < numberOfAttributes; d++) {
+			Iterator<Example> reader = set.iterator();
+			for (int sample = 0; sample < numberOfSamples; sample++) {
+				Example example = reader.next();
 				data[sample][d] = example.getValue(attributes[d]) - means[d];
 			}
 		}

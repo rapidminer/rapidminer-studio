@@ -1,30 +1,22 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.plotter;
-
-import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.plotter.conditions.ColumnsPlotterCondition;
-import com.rapidminer.gui.plotter.conditions.PlotterCondition;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ParameterService;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -42,10 +34,18 @@ import javax.swing.JFileChooser;
 import javax.swing.JProgressBar;
 import javax.swing.filechooser.FileFilter;
 
+import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.plotter.conditions.ColumnsPlotterCondition;
+import com.rapidminer.gui.plotter.conditions.PlotterCondition;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
+
 
 /**
  * A scatter plot matrix which uses the {@link ScatterPlotter} for each of the plots.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ScatterMatrixPlotter extends PlotterAdapter {
@@ -74,7 +74,8 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
 		super(settings);
 		setBackground(Color.white);
 
-		plotter = new ScatterPlotter(new PlotterConfigurationModel(settings.getAvailablePlotters(), settings.getDataTable()));
+		plotter = new ScatterPlotter(
+				new PlotterConfigurationModel(settings.getAvailablePlotters(), settings.getDataTable()));
 
 		String sizeProperty = ParameterService.getParameterValue(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_MATRIXPLOT_SIZE);
 		this.plotterSize = 200;
@@ -137,9 +138,12 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
 		if (calculationThread == null) {
 			for (int x = 0; x < images.length; x++) {
 				for (int y = 0; y < images[x].length; y++) {
-					Graphics2D newSpace = (Graphics2D) graphics.create();
-					newSpace.translate(x * plotterSize, y * plotterSize + MARGIN);
-					newSpace.drawImage(images[x][y], null, 0, 0);
+					BufferedImage img = images[x][y];
+					if (img != null) {
+						Graphics2D newSpace = (Graphics2D) graphics.create();
+						newSpace.translate(x * plotterSize, y * plotterSize + MARGIN);
+						newSpace.drawImage(img, 0, 0, null);
+					}
 				}
 			}
 		}
@@ -225,8 +229,8 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
 	@Override
 	public Dimension getPreferredSize() {
 		if (images.length > 0) {
-			return new Dimension((images.length - 1) * plotterSize + 2 * MARGIN, (images.length - 1) * plotterSize + 2
-					* MARGIN);
+			return new Dimension((images.length - 1) * plotterSize + 2 * MARGIN,
+					(images.length - 1) * plotterSize + 2 * MARGIN);
 		} else {
 			return new Dimension(2 * MARGIN, 2 * MARGIN);
 		}

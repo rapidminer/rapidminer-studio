@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.meta;
 
 import java.util.Iterator;
@@ -242,13 +242,12 @@ public class AdaBoostModel extends PredictionModel implements MetaModel {
 			if (Double.isInfinite(sum) || Double.isNaN(sum)) {
 				int best = (int) example.getPredictedLabel();
 				for (int k = 0; k < confidences.length; k++) {
-					confidences[k] = 0;
+					example.setConfidence(predictedLabel.getMapping().mapIndex(k), 0);
 				}
-				confidences[best] = 1;
+				example.setConfidence(predictedLabel.getMapping().mapIndex(best), 1);
 			} else {
 				for (int k = 0; k < confidences.length; k++) {
-					confidences[k] /= sum;
-					example.setConfidence(predictedLabel.getMapping().mapIndex(k), confidences[k]);
+					example.setConfidence(predictedLabel.getMapping().mapIndex(k), confidences[k] / sum);
 				}
 			}
 		}

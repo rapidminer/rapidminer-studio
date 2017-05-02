@@ -27,7 +27,7 @@ import java.util.Iterator;
 
 /**
  * Stores all distances in a matrix (attention: should only be used for smaller data sets).
- * 
+ *
  * @author Ingo Mierswa
  */
 public class FullCache implements KernelCache {
@@ -38,21 +38,22 @@ public class FullCache implements KernelCache {
 		int size = exampleSet.size();
 		this.distances = new double[size][size];
 		Iterator<Example> reader = exampleSet.iterator();
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		int i = 0;
 		while (reader.hasNext()) {
 			Example example1 = reader.next();
-			double[] x1 = new double[exampleSet.getAttributes().size()];
+			double[] x1 = new double[regularAttributes.length];
 			int x = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				x1[x++] = example1.getValue(attribute);
 			}
 			Iterator<Example> innerReader = exampleSet.iterator();
 			int j = 0;
 			while (innerReader.hasNext()) {
 				Example example2 = innerReader.next();
-				double[] x2 = new double[exampleSet.getAttributes().size()];
+				double[] x2 = new double[regularAttributes.length];
 				x = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					x2[x++] = example2.getValue(attribute);
 				}
 				double distance = kernel.calculateDistance(x1, x2);

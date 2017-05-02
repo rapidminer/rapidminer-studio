@@ -353,7 +353,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 							try {
 								MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 								Process tutorialProcess = nextTutorial.makeProcess();
-								mainFrame.setOpenedProcess(tutorialProcess, false, null);
+								mainFrame.setOpenedProcess(tutorialProcess);
 								TutorialManager.INSTANCE.completedTutorial(nextTutorial.getIdentifier());
 								tutorialSelector.setSelectedTutorial(nextTutorial);
 							} catch (RuntimeException | MalformedRepositoryLocationException | IOException

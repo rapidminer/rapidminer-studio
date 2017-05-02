@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing.sampling;
 
 import java.util.Collections;
@@ -321,7 +321,7 @@ public class SamplingOperator extends AbstractSamplingOperator {
 		type.setExpert(false);
 		types.add(type);
 
-		type = new ParameterTypeList(PARAMETER_SAMPLE_SIZE_LIST, "The absolut sample size per class.",
+		type = new ParameterTypeList(PARAMETER_SAMPLE_SIZE_LIST, "The absolute sample size per class.",
 				new ParameterTypeString("class", "The class name this sample size applies to."),
 				new ParameterTypeInt("size", "The number of sampled examples of this class.", 0, Integer.MAX_VALUE));
 		type.registerDependencyCondition(

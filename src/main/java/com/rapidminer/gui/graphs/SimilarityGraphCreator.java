@@ -1,33 +1,25 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.math.similarity.DistanceMeasure;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.UndirectedSparseGraph;
-import edu.uci.ics.jung.graph.util.EdgeType;
-
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,10 +37,23 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.commons.collections15.Factory;
 
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.math.similarity.DistanceMeasure;
+
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.UndirectedSparseGraph;
+import edu.uci.ics.jung.graph.util.EdgeType;
+import edu.uci.ics.jung.visualization.renderers.Renderer.EdgeLabel;
+
 
 /**
  * The graph model creator for similarity measurements.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class SimilarityGraphCreator extends GraphCreatorAdaptor {
@@ -89,9 +94,11 @@ public class SimilarityGraphCreator extends GraphCreatorAdaptor {
 
 	private ExampleSet exampleSet;
 
-	private Map<String, String> edgeLabelMap = new HashMap<String, String>();
+	private Map<String, String> edgeLabelMap = new HashMap<>();
 
-	private Map<String, Double> edgeStrengthMap = new HashMap<String, Double>();
+	private Map<String, Double> edgeStrengthMap = new HashMap<>();
+
+	private Map<String, List<Pair<String, Double>>> adjacencyMap = new HashMap<>();
 
 	private DefaultObjectViewer objectViewer;
 
@@ -127,7 +134,7 @@ public class SimilarityGraphCreator extends GraphCreatorAdaptor {
 
 	@Override
 	public String getVertexToolTip(String id) {
-		return id;
+		return createTooltip(id);
 	}
 
 	/**
@@ -172,6 +179,7 @@ public class SimilarityGraphCreator extends GraphCreatorAdaptor {
 			graph.removeEdge(e.next());
 		}
 		edgeLabelMap.clear();
+		adjacencyMap.clear();
 
 		boolean isDistance = measure.isDistance();
 		Attribute id = exampleSet.getAttributes().getId();
@@ -206,6 +214,19 @@ public class SimilarityGraphCreator extends GraphCreatorAdaptor {
 			graph.addEdge(idString, sortableEdge.getFirstVertex(), sortableEdge.getSecondVertex(), EdgeType.UNDIRECTED);
 			edgeLabelMap.put(idString, Tools.formatIntegerIfPossible(sortableEdge.getEdgeValue()));
 
+			List<Pair<String, Double>> edgesFirstList = adjacencyMap.get(sortableEdge.getFirstVertex());
+			if (edgesFirstList == null) {
+				edgesFirstList = new ArrayList<>();
+				adjacencyMap.put(sortableEdge.getFirstVertex(), edgesFirstList);
+			}
+			edgesFirstList.add(new Pair<>(sortableEdge.getSecondVertex(), sortableEdge.getEdgeValue()));
+			List<Pair<String, Double>> edgesSecondList = adjacencyMap.get(sortableEdge.getSecondVertex());
+			if (edgesSecondList == null) {
+				edgesSecondList = new ArrayList<>();
+				adjacencyMap.put(sortableEdge.getSecondVertex(), edgesSecondList);
+			}
+			edgesSecondList.add(new Pair<>(sortableEdge.getFirstVertex(), sortableEdge.getEdgeValue()));
+
 			double strength = sortableEdge.getEdgeValue();
 
 			minStrength = Math.min(minStrength, strength);
@@ -221,10 +242,10 @@ public class SimilarityGraphCreator extends GraphCreatorAdaptor {
 		}
 	}
 
-	/** Returns false. */
+	/** Returns true. */
 	@Override
 	public boolean showEdgeLabelsDefault() {
-		return false;
+		return true;
 	}
 
 	/** Returns false. */
@@ -261,5 +282,63 @@ public class SimilarityGraphCreator extends GraphCreatorAdaptor {
 	@Override
 	public GraphObjectViewer getObjectViewer() {
 		return objectViewer;
+	}
+
+	@Override
+	public EdgeLabel<String, String> getEdgeLabelRenderer() {
+		return new TreeModelEdgeLabelRenderer<String, String>();
+	}
+
+	/**
+	 * Create the tooltip for a node.
+	 *
+	 * @param id
+	 *            the id of the node for which to create the tooltip
+	 * @return the HTML-formatted tooltip string
+	 */
+	private String createTooltip(String id) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<html><div style=\"font-size: 10px; font-family: 'Open Sans'\">");
+		sb.append("<p style=\"font-size: 110%; text-align: center; font-family: 'Open Sans Semibold'\"><b>" + id
+				+ "</b><hr NOSHADE style=\"color: '#000000'; width: 95%; \"/></p><br/>");
+		sb.append("Top adjacent items:&nbsp;"
+				+ SwingTools.transformToolTipText(formatAdjacencyMap(adjacencyMap.get(id)), false, 200, false, false));
+		sb.append("</div></html>");
+
+		return sb.toString();
+	}
+
+	/**
+	 * Displays the rule premise/conclusion list contents nicely formatted for humans.
+	 *
+	 * @param dependencyList
+	 *            the list of premises/conclusions of the rule to format
+	 * @return the formatted string
+	 */
+	private String formatAdjacencyMap(List<Pair<String, Double>> list) {
+		StringBuilder sb = new StringBuilder();
+
+		if (list == null) {
+			sb.append('-');
+			return sb.toString();
+		}
+
+		int counter = 0;
+		for (Pair<String, Double> edge : list) {
+			sb.append("<br/>");
+			sb.append(edge.getFirst());
+			sb.append(' ');
+			sb.append('-');
+			sb.append(' ');
+			sb.append("<i>");
+			sb.append(Tools.formatNumber(edge.getSecond(), 2));
+			sb.append("</i>");
+			if (counter++ >= 2) {
+				break;
+			}
+		}
+
+		return sb.toString();
 	}
 }

@@ -219,11 +219,10 @@ public class AutoSave {
 
 		// if process successfully restored, open it in Studio
 		if (process != null) {
-			if (actualProcessLocation != null) {
 				process.setProcessLocation(actualProcessLocation);
-				RapidMinerGUI.getMainFrame().setOpenedProcess(process, false, actualProcessLocation.toString());
+			if (actualProcessLocation != null) {
+				RapidMinerGUI.getMainFrame().setOpenedProcess(process);
 			} else {
-				process.setProcessLocation(null);
 				RapidMinerGUI.getMainFrame().setProcess(process, true);
 			}
 			process.updateNotify();

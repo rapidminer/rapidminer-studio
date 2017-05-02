@@ -244,6 +244,11 @@ public class ConjunctiveRuleModel extends SimplePredictionModel {
 		return true;
 	}
 
+	@Override
+	protected boolean supportsConfidences(Attribute label) {
+		return false;
+	}
+
 	/**
 	 * Two rules are equal, if they are both permutations of the same set of literals and predict
 	 * the same label.

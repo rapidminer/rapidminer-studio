@@ -1183,14 +1183,15 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 	}
 
 	private String createNameDialog(String oldName) {
-		String newName = SwingTools.showInputDialog("plotter.configuration_dialog.color_scheme_dialog.rename", oldName);
+		String newName = SwingTools.showInputDialog(ColorSchemeDialog.this,
+				"plotter.configuration_dialog.color_scheme_dialog.rename", oldName);
 		if (newName != null) {
 			boolean success = currentColorSchemes.get(newName) == null;
 			if (newName.equals(oldName)) {
 				success = true;
 			}
 			if (!success) {
-				SwingTools.showVerySimpleErrorMessage("cannot_rename_entry", oldName, newName);
+				SwingTools.showVerySimpleErrorMessage(ColorSchemeDialog.this, "cannot_rename_entry", oldName, newName);
 				return oldName;
 			}
 			return newName;

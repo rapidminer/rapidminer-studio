@@ -99,18 +99,18 @@ public class TFIDFFilter extends AbstractDataProcessing {
 		int[] documentFrequencies = new int[attributes.size()];
 
 		// calculate frequencies
-		int exampleCounter = 0;
-		for (Example example : exampleSet) {
-			int i = 0;
-			for (Attribute attribute : attributes) {
+		int index = 0;
+		for (Attribute attribute : attributes) {
+			int exampleCounter = 0;
+			for (Example example : exampleSet) {
 				double value = example.getValue(attribute);
 				termFrequencySum[exampleCounter] += value;
 				if (value > 0) {
-					documentFrequencies[i]++;
+					documentFrequencies[index]++;
 				}
-				i++;
+				exampleCounter++;
 			}
-			exampleCounter++;
+			index++;
 			checkForStop();
 		}
 
@@ -122,24 +122,24 @@ public class TFIDFFilter extends AbstractDataProcessing {
 
 		// set values
 		boolean calculateTermFrequencies = getParameterAsBoolean(PARAMETER_CALCULATE_TERM_FREQUENCIES);
-		exampleCounter = 0;
-		for (Example example : exampleSet) {
-			int i = 0;
-			for (Attribute attribute : attributes) {
+		index = 0;
+		for (Attribute attribute : attributes) {
+			int exampleCounter = 0;
+			for (Example example : exampleSet) {
 				double value = example.getValue(attribute);
-				if (termFrequencySum[exampleCounter] == 0.0d || Double.isNaN(inverseDocumentFrequencies[i])) {
+				if (termFrequencySum[exampleCounter] == 0.0d || Double.isNaN(inverseDocumentFrequencies[index])) {
 					example.setValue(attribute, 0.0d);
 				} else {
 					double tf = value;
 					if (calculateTermFrequencies) {
 						tf /= termFrequencySum[exampleCounter];
 					}
-					double idf = inverseDocumentFrequencies[i];
+					double idf = inverseDocumentFrequencies[index];
 					example.setValue(attribute, (tf * idf));
 				}
-				i++;
+				exampleCounter++;
 			}
-			exampleCounter++;
+			index++;
 			checkForStop();
 		}
 		return exampleSet;

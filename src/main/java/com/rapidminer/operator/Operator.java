@@ -689,7 +689,6 @@ public abstract class Operator extends AbstractObservable<Operator>
 				}
 			}
 		}
-		// TODO: Simon: Clone port's contents? What for?
 
 		if (forParallelExecution) {
 			clone.applyCount = this.applyCount;

@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.table.internal;
 
 import java.io.Serializable;
@@ -42,13 +42,18 @@ interface Column extends Serializable {
 	double get(int row);
 
 	/**
-	 * Appends the given value to the column. Note that this operation is unchecked, make sure to
-	 * {@link #ensure(int)} a sufficient size before.
+	 * Sets the value at the specified row to the given value. It does the same as
+	 * {@link #set(int, double)} but with the additional information that the highest row that was
+	 * set before is smaller than row. This additional information is used for autodetection of
+	 * column densitiy. Note that this operation is unchecked, make sure to {@link #ensure(int)} a
+	 * sufficient size before.
 	 *
+	 * @param row
+	 *            the row that should be set
 	 * @param value
-	 *            the value to append
+	 *            the value that should be set at the row
 	 */
-	void append(double value);
+	void setLast(int row, double value);
 
 	/**
 	 * Sets the value at the specified row to the given value.

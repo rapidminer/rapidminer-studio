@@ -98,7 +98,7 @@ public class DumpToRepositoryStep extends AbstractToRepositoryStep<BinaryImportD
 					}
 				} catch (RepositoryException | IOException e) {
 					error = true;
-					SwingTools.showSimpleErrorMessage("import_blob_failed", e, e.getMessage());
+					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "import_blob_failed", e, e.getMessage());
 				}
 			}
 

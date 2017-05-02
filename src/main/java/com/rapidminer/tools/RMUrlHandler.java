@@ -85,7 +85,7 @@ public class RMUrlHandler {
 			if (suffix.startsWith("operator/")) {
 				String opName = suffix.substring("operator/".length());
 				MainFrame mainFrame = RapidMinerGUI.getMainFrame();
-				mainFrame.selectOperator(mainFrame.getProcess().getOperator(opName));
+				mainFrame.selectAndShowOperator(mainFrame.getProcess().getOperator(opName), true);
 				return true;
 			}
 			Action action = ACTION_MAP.get(suffix);

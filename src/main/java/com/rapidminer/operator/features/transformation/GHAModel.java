@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.features.transformation;
 
 import java.util.ArrayList;
@@ -55,8 +55,6 @@ import Jama.Matrix;
 public class GHAModel extends AbstractEigenvectorModel implements ComponentWeightsCreatable {
 
 	private static final long serialVersionUID = -5204076842779376622L;
-
-	private static final int OPERATOR_PROGRESS_STEPS = 40000;
 
 	/**
 	 * The progress of this operator is split into 5 part-progresses. These values define how many
@@ -132,24 +130,21 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 		// 1) prepare data
 		double[][] data = new double[exampleSet.size()][exampleSet.getAttributes().size()];
 
-		Iterator<Example> reader = exampleSet.iterator();
-		Example example;
-
-		int progressCounter = 0;
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
 			progress.setTotal(100);
 		}
-		for (int sample = 0; sample < exampleSet.size(); sample++) {
-			example = reader.next();
-			int d = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
-				data[sample][d] = example.getValue(attribute) - means[d];
-				d++;
+		int index = 0;
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			Iterator<Example> reader = exampleSet.iterator();
+			for (int sample = 0; sample < exampleSet.size(); sample++) {
+				Example example = reader.next();
+				data[sample][index] = example.getValue(attribute) - means[index];
 			}
-			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
-				progress.setCompleted((int) ((double) INTERMEDIATE_PROGRESS_1 * sample / exampleSet.size()));
+			index++;
+			if (progress != null) {
+				progress.setCompleted((int) ((double) INTERMEDIATE_PROGRESS_1 * index / exampleSet.getAttributes().size()));
 			}
 		}
 		Matrix dataMatrix = new Matrix(data);
@@ -190,15 +185,15 @@ public class GHAModel extends AbstractEigenvectorModel implements ComponentWeigh
 			}
 		}
 
-		reader = exampleSet.iterator();
-		for (int sample = 0; sample < exampleSet.size(); sample++) {
-			example = reader.next();
-			for (int d = 0; d < numberOfComponents; d++) {
+		for (int d = 0; d < numberOfComponents; d++) {
+			Iterator<Example> reader = exampleSet.iterator();
+			for (int sample = 0; sample < exampleSet.size(); sample++) {
+				Example example = reader.next();
 				example.setValue(principalComponentAttributes[d], finaldata[sample][d]);
 			}
-			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+			if (progress != null) {
 				progress.setCompleted(
-						(int) ((100.0 - INTERMEDIATE_PROGRESS_4) * sample / exampleSet.size() + INTERMEDIATE_PROGRESS_4));
+						(int) ((100.0 - INTERMEDIATE_PROGRESS_4) * d / numberOfComponents + INTERMEDIATE_PROGRESS_4));
 			}
 		}
 

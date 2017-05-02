@@ -228,6 +228,7 @@ public class KernelDistributionModel extends DistributionModel {
 	@Override
 	public void update(ExampleSet exampleSet) {
 		Attribute weightAttribute = exampleSet.getAttributes().getWeight();
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			double weight = weightAttribute == null ? 1.0d : example.getWeight();
 			totalWeight += weight;
@@ -236,7 +237,7 @@ public class KernelDistributionModel extends DistributionModel {
 				int classIndex = (int) example.getLabel();
 				classWeights[classIndex] += weight;
 				int attributeIndex = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					double attributeValue = example.getValue(attribute);
 					if (nominal[attributeIndex]) {
 						if (!Double.isNaN(attributeValue)) {
@@ -320,7 +321,7 @@ public class KernelDistributionModel extends DistributionModel {
 
 	/**
 	 * Perform predictions based on the distribution properties.
-	 * 
+	 *
 	 * @throws ProcessStoppedException
 	 */
 	@Override
@@ -336,7 +337,7 @@ public class KernelDistributionModel extends DistributionModel {
 			progress.setTotal(exampleSet.size());
 		}
 		int progressCounter = 0;
-
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			double[] probabilities = new double[numberOfClasses];
 			double maxLogProbability = Double.NEGATIVE_INFINITY;
@@ -345,7 +346,7 @@ public class KernelDistributionModel extends DistributionModel {
 			for (int i = 0; i < numberOfClasses; i++) {
 				double logProbability = priors[i];
 				int j = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					double value = example.getValue(attribute);
 					if (nominal[j]) {
 						if (!Double.isNaN(value) && (int) value < distributionProperties[j][i].length) {

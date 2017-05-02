@@ -115,6 +115,11 @@ public class MultiCriterionDecisionStumps extends AbstractLearner {
 			}
 		}
 
+		@Override
+		protected boolean supportsConfidences(Attribute label) {
+			return false;
+		}
+
 		/** @return a <code>String</code> representation of this rule model. */
 		@Override
 		public String toString() {

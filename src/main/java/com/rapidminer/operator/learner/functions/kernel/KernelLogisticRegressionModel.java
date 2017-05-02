@@ -131,7 +131,7 @@ public class KernelLogisticRegressionModel extends KernelModel {
 
 	/**
 	 * Applies the model to each example of the example set.
-	 * 
+	 *
 	 * @throws ProcessStoppedException
 	 */
 	@Override
@@ -143,11 +143,12 @@ public class KernelLogisticRegressionModel extends KernelModel {
 			progress.setTotal(exampleSet.size());
 		}
 		int progressCounter = 0;
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		while (reader.hasNext()) {
 			Example current = reader.next();
-			double[] currentX = new double[exampleSet.getAttributes().size()];
+			double[] currentX = new double[regularAttributes.length];
 			int x = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				currentX[x++] = current.getValue(attribute);
 			}
 			double sum = bias + kernel.getSum(supportVectors, currentX);

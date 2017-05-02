@@ -158,7 +158,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 				chooser.getRepositoryLocation();
 				super.ok();
 			} catch (MalformedRepositoryLocationException e) {
-				SwingTools.showSimpleErrorMessage("malformed_repository_location", e, e.getMessage());
+				SwingTools.showSimpleErrorMessage(this, "malformed_repository_location", e, e.getMessage());
 			}
 		}
 	}

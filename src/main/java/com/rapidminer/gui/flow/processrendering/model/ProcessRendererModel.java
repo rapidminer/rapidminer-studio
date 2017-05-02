@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.flow.processrendering.model;
 
 import java.awt.Dimension;
@@ -32,8 +32,12 @@ import java.util.WeakHashMap;
 
 import javax.swing.event.EventListenerList;
 
+import com.rapidminer.Process;
+import com.rapidminer.ProcessLocation;
+import com.rapidminer.ProcessStorageListener;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.flow.NewProcessUndoManager;
 import com.rapidminer.gui.flow.processrendering.annotations.model.OperatorAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.ProcessAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
@@ -48,17 +52,20 @@ import com.rapidminer.gui.flow.processrendering.event.ProcessRendererModelEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererModelEvent.ModelEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEvent.OperatorEvent;
-import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
+import com.rapidminer.gui.processeditor.ExtendedProcessEditor;
+import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.io.process.AnnotationProcessXMLFilter;
 import com.rapidminer.io.process.BackgroundImageProcessXMLFilter;
 import com.rapidminer.io.process.GUIProcessXMLFilter;
 import com.rapidminer.io.process.ProcessLayoutXMLFilter;
 import com.rapidminer.io.process.ProcessXMLFilterRegistry;
 import com.rapidminer.operator.ExecutionUnit;
+import com.rapidminer.operator.FlagUserData;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
 
@@ -70,7 +77,9 @@ import com.rapidminer.tools.parameter.ParameterChangeListener;
  * <ul>
  * <li>{@link #setDisplayedChain(OperatorChain)}</li>
  * <li>{@link #setProcesses(ExecutionUnit[])}</li>
- * <li>{@link #setProcessSize(ExecutionUnit, Dimension)}</li>
+ * <li>{@link #setProcessSize(ExecutionUnit, Dimension)} (see
+ * {@link ProcessDrawUtils#calculatePreferredSize(ProcessRendererModel, ExecutionUnit, int, int)} to
+ * automatically create the correct dimensions for each {@link ExecutionUnit} of a process)</li>
  * </ul>
  * <p>
  * Note that the model itself does not fire any events. To trigger events, call any of the fireXYZ
@@ -78,7 +87,7 @@ import com.rapidminer.tools.parameter.ParameterChangeListener;
  * events when really needed.
  * </p>
  *
- * @author Marco Boeck
+ * @author Marco Boeck, Jan Czogalla
  * @since 6.4.0
  *
  */
@@ -108,6 +117,27 @@ public final class ProcessRendererModel {
 
 	/** event listener for this model */
 	private final EventListenerList eventListener;
+
+	/**
+	 * list of {@link ProcessEditor ProcessEditors}; can also contain {@link ExtendedProcessEditor}
+	 * instances
+	 */
+	private final EventListenerList processEditors = new EventListenerList();
+
+	/** list of {@link ProcessStorageListener ProcessStorageListeners} */
+	private final LinkedList<ProcessStorageListener> storageListeners = new LinkedList<>();
+
+	/** underlying process for this model */
+	private Process process;
+
+	/** {@link NewProcessUndoManager} associated with the underlying process */
+	private NewProcessUndoManager undoManager = new NewProcessUndoManager();
+
+	/** the current position in the undo stack */
+	private int undoIndex = 0;
+
+	/** indicator whether the process has changed */
+	private boolean hasChanged = false;
 
 	/** a list of the currently selected operators */
 	private List<Operator> selectedOperators;
@@ -163,6 +193,7 @@ public final class ProcessRendererModel {
 	/** the position the mouse is currently at */
 	private Point currentMousePosition;
 
+	/** the current zoom index */
 	private int zoomIndex = ORIGINAL_ZOOM_INDEX;
 
 	/**
@@ -208,6 +239,203 @@ public final class ProcessRendererModel {
 				}
 			}
 		});
+
+		// listen for selection changes in the ProcessRendererView and notify all registered process
+		// editors
+		registerEventListener(new ProcessRendererEventListener() {
+
+			@Override
+			public void modelChanged(ProcessRendererModelEvent e) {
+				// ignore
+			}
+
+			@Override
+			public void operatorsChanged(ProcessRendererOperatorEvent e, Collection<Operator> operators) {
+				if (e.getEventType() == OperatorEvent.SELECTED_OPERATORS_CHANGED) {
+					for (ProcessEditor editor : processEditors.getListeners(ProcessEditor.class)) {
+						editor.setSelection(new LinkedList<Operator>(operators));
+					}
+					for (ExtendedProcessEditor editor : processEditors.getListeners(ExtendedProcessEditor.class)) {
+						editor.setSelection(new LinkedList<Operator>(operators));
+					}
+				}
+			}
+
+			@Override
+			public void annotationsChanged(ProcessRendererAnnotationEvent e, Collection<WorkflowAnnotation> annotations) {
+				// ignore
+			}
+
+		});
+
+		// listen for process change and set the GUI flag
+		addProcessEditor(new ProcessEditor() {
+
+			@Override
+			public void setSelection(List<Operator> selection) {
+				// don't care
+
+			}
+
+			@Override
+			public void processUpdated(Process process) {
+				// don't care
+
+			}
+
+			@Override
+			public void processChanged(Process process) {
+				if (process != null) {
+					if (!RapidMiner.getExecutionMode().isHeadless()) {
+						process.getRootOperator().setUserData(RapidMinerGUI.IS_GUI_PROCESS, new FlagUserData());
+					}
+				}
+			}
+		});
+	}
+
+	/**
+	 * Returns the underlying {@link Process} or {@code null} if none is set.
+	 *
+	 * @since 7.5
+	 */
+	public Process getProcess() {
+		return process;
+	}
+
+	/**
+	 * Sets the underlying process and informs listeners that the displayed chain and the process
+	 * have changed. If the given process should be handled as a new one, the undo list will be
+	 * reset. Will also inform listeners that the process was loaded if so indicated.
+	 *
+	 * @param process
+	 *            the process to be set
+	 * @param isNew
+	 *            indicates if the process should be handled as a new process
+	 * @param open
+	 *            whether the process was newly opened e.g. from a file
+	 *
+	 * @since 7.5
+	 */
+	public void setProcess(Process process, boolean isNew, boolean open) {
+		this.process = process;
+		if (isNew) {
+			// prevent addToUndoList from process editor
+			undoManager.clearSnapshot();
+		}
+		fireProcessChanged();
+
+		displayedChain = process.getRootOperator();
+		fireDisplayedChainChanged();
+
+		List<Operator> newList = new ArrayList<>(1);
+		newList.add(displayedChain);
+		this.selectedOperators = Collections.unmodifiableList(newList);
+		fireOperatorSelectionChanged(getSelectedOperators());
+
+		if (isNew) {
+			// reset undo manager because this is a new process
+			resetUndo();
+		}
+		if (open) {
+			fireProcessLoaded();
+		}
+	}
+
+	/**
+	 * Informs listeners that the process was saved.
+	 *
+	 * @since 7.5
+	 */
+	public void processHasBeenSaved() {
+		hasChanged = false;
+		fireProcessStored();
+	}
+
+	/**
+	 * Returns whether the process has been altered since the last save.
+	 *
+	 * @since 7.5
+	 */
+	public boolean hasChanged() {
+		return hasChanged;
+	}
+
+	/**
+	 * Restores the previous state of the process if there are previous steps. Returns an Exception
+	 * if a problem occurred, {@code null} otherwise.
+	 *
+	 * @return an exception if a problem occurred
+	 * @see #setToStep(int)
+	 *
+	 * @since 7.5
+	 */
+	public Exception undo() {
+		if (!hasUndoSteps()) {
+			return null;
+		}
+		if (!hasRedoSteps()) {
+			// add redo step from current state
+			takeSnapshot();
+			undoManager.add(true);
+		}
+		undoIndex--;
+		return setToStep(undoIndex);
+	}
+
+	/**
+	 * Returns whether there are undo steps available.
+	 *
+	 * @since 7.5
+	 */
+	public boolean hasUndoSteps() {
+		return undoIndex > 0;
+	}
+
+	/**
+	 * Restores the next state of the process if there are next steps. Returns an Exception if a
+	 * problem occurred, {@code null} otherwise.
+	 *
+	 * @return an exception if a problem occurred
+	 * @see #setToStep(int)
+	 * @since 7.5
+	 */
+	public Exception redo() {
+		if (!hasRedoSteps()) {
+			return null;
+		}
+		undoIndex++;
+		Exception result = setToStep(undoIndex);
+		if (!hasRedoSteps()) {
+			// remove last step since we are at the end of stack
+			// undo will create a redo step that represents the state at the time of undo
+			undoManager.removeLast();
+		}
+		return result;
+	}
+
+	/**
+	 * Returns whether there are redo steps available.
+	 *
+	 * @since 7.5
+	 */
+	public boolean hasRedoSteps() {
+		return undoIndex < undoManager.getNumberOfUndos() - 1;
+	}
+
+	/**
+	 * Checks whether there was a change in the process and if so, adds a new undo step. Will return
+	 * true if a new undo step was created.
+	 *
+	 * @since 7.5
+	 */
+	public boolean checkForNewUndoStep() {
+		takeSnapshot();
+		if (undoManager.snapshotDiffers()) {
+			addToUndoList(false);
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -277,7 +505,26 @@ public final class ProcessRendererModel {
 		if (displayedChain == null) {
 			throw new IllegalArgumentException("displayedChain must not be null!");
 		}
+		addViewSwitchToUndo(displayedChain);
 		this.displayedChain = displayedChain;
+		fireProcessViewChanged();
+	}
+
+	/**
+	 * Sets the displayed operator chain to the specified one and triggers updates before and after
+	 * the change. Will do nothing if the operator chain is already displayed. Convenience method.
+	 *
+	 * @param displayedChain
+	 *            the new chain to display
+	 * @since 7.5
+	 */
+	public void setDisplayedChainAndFire(OperatorChain displayedChain) {
+		if (getDisplayedChain() == displayedChain) {
+			return;
+		}
+		fireDisplayedChainWillChange();
+		setDisplayedChain(displayedChain);
+		fireDisplayedChainChanged();
 	}
 
 	/**
@@ -718,10 +965,9 @@ public final class ProcessRendererModel {
 	 * nothing.
 	 */
 	public void zoomIn() {
-		if (zoomIndex >= ZOOM_FACTORS.length - 1) {
-			return;
+		if (canZoomIn()) {
+			this.zoomIndex += 1;
 		}
-		this.zoomIndex += 1;
 	}
 
 	/**
@@ -729,14 +975,15 @@ public final class ProcessRendererModel {
 	 * nothing.
 	 */
 	public void zoomOut() {
-		if (zoomIndex <= 0) {
-			return;
+		if (canZoomOut()) {
+			this.zoomIndex -= 1;
 		}
-		this.zoomIndex -= 1;
 	}
 
 	public void resetZoom() {
-		this.zoomIndex = ORIGINAL_ZOOM_INDEX;
+		if (canZoomReset()) {
+			this.zoomIndex = ORIGINAL_ZOOM_INDEX;
+		}
 	}
 
 	/**
@@ -824,7 +1071,8 @@ public final class ProcessRendererModel {
 	 * @param op
 	 *            the operator in question
 	 * @return the rectangle. Can return {@code null} but only if the operator has not been added to
-	 *         the {@link ProcessRendererView}.
+	 *         the {@link com.rapidminer.gui.flow.processrendering.view.ProcessRendererView
+	 *         ProcessRendererView}.
 	 */
 	public Rectangle2D getOperatorRect(Operator op) {
 		return ProcessLayoutXMLFilter.lookupOperatorRectangle(op);
@@ -1012,6 +1260,201 @@ public final class ProcessRendererModel {
 	}
 
 	/**
+	 * Looks up the view position of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @return The position or null.
+	 * @since 7.5
+	 */
+	public Point getOperatorChainPosition(OperatorChain chain) {
+		return ProcessLayoutXMLFilter.lookupOperatorChainPosition(chain);
+	}
+
+	/**
+	 * Sets the view position of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @param position
+	 *            The center position.
+	 * @since 7.5
+	 */
+	public void setOperatorChainPosition(OperatorChain chain, Point position) {
+		if (chain == null) {
+			throw new IllegalArgumentException("operator chain must not be null!");
+		}
+		ProcessLayoutXMLFilter.setOperatorChainPosition(chain, position);
+	}
+
+	/**
+	 * Resets the view position of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @since 7.5
+	 */
+	public void resetOperatorChainPosition(OperatorChain chain) {
+		if (chain == null) {
+			throw new IllegalArgumentException("operator chain must not be null!");
+		}
+		ProcessLayoutXMLFilter.resetOperatorChainPosition(chain);
+	}
+
+	/**
+	 * Looks up the zoom of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @return The position or null.
+	 * @since 7.5
+	 */
+	public Double getOperatorChainZoom(OperatorChain chain) {
+		return ProcessLayoutXMLFilter.lookupOperatorChainZoom(chain);
+	}
+
+	/**
+	 * Sets the zoom of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @param position
+	 *            The zoom.
+	 * @since 7.5
+	 */
+	public void setOperatorChainZoom(OperatorChain chain, Double zoom) {
+		if (chain == null) {
+			throw new IllegalArgumentException("operator chain must not be null!");
+		}
+		ProcessLayoutXMLFilter.setOperatorChainZoom(chain, zoom);
+	}
+
+	/**
+	 * Resets the zoom of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @since 7.5
+	 */
+	public void resetOperatorChainZoom(OperatorChain chain) {
+		if (chain == null) {
+			throw new IllegalArgumentException("operator chain must not be null!");
+		}
+		ProcessLayoutXMLFilter.resetOperatorChainZoom(chain);
+	}
+
+	/**
+	 * Looks up the scroll position of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @return The scroll position or null
+	 * @since 7.5
+	 */
+	public Point getScrollPosition(OperatorChain operatorChain) {
+		return ProcessLayoutXMLFilter.lookupScrollPosition(operatorChain);
+	}
+
+	/**
+	 * Sets the scroll position of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator.
+	 * @param scrollPos
+	 *            The scroll position.
+	 * @since 7.5
+	 */
+	public void setScrollPosition(OperatorChain operatorChain, Point scrollPos) {
+		ProcessLayoutXMLFilter.setScrollPosition(operatorChain, scrollPos);
+	}
+
+	/**
+	 * Resets the scroll position of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @since 7.5
+	 */
+	public void resetScrollPosition(OperatorChain operatorChain) {
+		ProcessLayoutXMLFilter.resetScrollPosition(operatorChain);
+	}
+
+	/**
+	 * Looks up the scroll process index of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @return The index or null
+	 * @since 7.5
+	 */
+	public Double getScrollIndex(OperatorChain operatorChain) {
+		return ProcessLayoutXMLFilter.lookupScrollIndex(operatorChain);
+	}
+
+	/**
+	 * Sets the scroll process index of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator.
+	 * @param index
+	 *            The process index.
+	 * @since 7.5
+	 */
+	public void setScrollIndex(OperatorChain operatorChain, Double index) {
+		ProcessLayoutXMLFilter.setScrollIndex(operatorChain, index);
+	}
+
+	/**
+	 * Resets the scroll process index of the specified {@link OperatorChain}.
+	 *
+	 * @param operatorChain
+	 *            The operator chain.
+	 * @since 7.5
+	 */
+	public void resetScrollIndex(OperatorChain operatorChain) {
+		ProcessLayoutXMLFilter.resetScrollIndex(operatorChain);
+	}
+
+	/**
+	 * Looks up the restore flag of the specified {@link Operator}. Indicates if this operator was
+	 * restored via undo/redo and should not be scrolled to.
+	 *
+	 * @param operator
+	 *            the operator
+	 * @return if the flag was set
+	 * @since 7.5
+	 */
+	public boolean getRestore(Operator operator) {
+		return ProcessLayoutXMLFilter.lookupRestore(operator);
+	}
+
+	/**
+	 * Sets the restore flag of the specified {@link Operator}. Indicates that this operator was
+	 * restored via undo/redo and should not be scrolled to.
+	 *
+	 * @param operator
+	 *            the operator
+	 * @param restore
+	 *            The restore flag
+	 * @since 7.5
+	 */
+	public void setRestore(Operator operator) {
+		ProcessLayoutXMLFilter.setRestore(operator);
+	}
+
+	/**
+	 * Resets the restore flag of the specified {@link OperatorChain}. Indicates that this operator
+	 * should be scrolled to when selected.
+	 *
+	 * @param operator
+	 *            The operator
+	 * @since 7.5
+	 */
+	public void resetRestore(Operator operator) {
+		ProcessLayoutXMLFilter.resetRestore(operator);
+	}
+
+	/**
 	 * Returns the {@link Point} the mouse is at relative to the process it currently is over.
 	 *
 	 * @return the location or {@code null}
@@ -1058,6 +1501,77 @@ public final class ProcessRendererModel {
 	}
 
 	/**
+	 * Adds the given {@link ProcessEditor} listener. Automatically detects
+	 * {@link ExtendedProcessEditor}.
+	 */
+	public void addProcessEditor(final ProcessEditor p) {
+		if (p instanceof ExtendedProcessEditor) {
+			processEditors.add(ExtendedProcessEditor.class, (ExtendedProcessEditor) p);
+		} else {
+			processEditors.add(ProcessEditor.class, p);
+		}
+	}
+
+	/**
+	 * Removes the given {@link ProcessEditor} listener. Automatically detects
+	 * {@link ExtendedProcessEditor}.
+	 */
+	public void removeProcessEditor(final ProcessEditor p) {
+		if (p instanceof ExtendedProcessEditor) {
+			processEditors.remove(ExtendedProcessEditor.class, (ExtendedProcessEditor) p);
+		} else {
+			processEditors.remove(ProcessEditor.class, p);
+		}
+	}
+
+	/**
+	 * Adds the given {@link ProcessStorageListener}.
+	 *
+	 * @since 7.5
+	 */
+	public void addProcessStorageListener(final ProcessStorageListener listener) {
+		synchronized (storageListeners) {
+			storageListeners.add(listener);
+		}
+	}
+
+	/**
+	 * Removes the given {@link ProcessStorageListener}.
+	 *
+	 * @since 7.5
+	 */
+	public void removeProcessStorageListener(final ProcessStorageListener listener) {
+		synchronized (storageListeners) {
+			storageListeners.remove(listener);
+		}
+	}
+
+	/**
+	 * Informs the {@link ProcessEditor ProcessEditors} that the process was updated. Usually fired
+	 * on validation or when the undo stack was altered or accessed.
+	 *
+	 * @since 7.5
+	 */
+	public void fireProcessUpdated() {
+		Process process = getProcess();
+		for (ProcessEditor editor : processEditors.getListeners(ProcessEditor.class)) {
+			editor.processUpdated(process);
+		}
+		for (ExtendedProcessEditor editor : processEditors.getListeners(ExtendedProcessEditor.class)) {
+			editor.processUpdated(process);
+		}
+	}
+
+	/**
+	 * Fire before displayed operator chain will changed.
+	 *
+	 * @since 7.5
+	 */
+	public void fireDisplayedChainWillChange() {
+		fireModelChanged(ModelEvent.DISPLAYED_CHAIN_WILL_CHANGE);
+	}
+
+	/**
 	 * Fire when the displayed operator chain has changed.
 	 */
 	public void fireDisplayedChainChanged() {
@@ -1076,6 +1590,21 @@ public final class ProcessRendererModel {
 	 */
 	public void fireProcessSizeChanged() {
 		fireModelChanged(ModelEvent.PROCESS_SIZE_CHANGED);
+	}
+
+	/**
+	 * Called before the process zoom level will change. The given point and index indicate which
+	 * process position should be the (new) center position.
+	 *
+	 * @param center
+	 *            the (new) center point
+	 * @param index
+	 *            the (new) process index
+	 * @since 7.5
+	 */
+	public void prepareProcessZoomWillChange(Point center, int index) {
+		setScrollIndex(displayedChain, (double) index);
+		setScrollPosition(displayedChain, center);
 	}
 
 	/**
@@ -1182,6 +1711,109 @@ public final class ProcessRendererModel {
 	}
 
 	/**
+	 * Adds the last snapshot state of the process to the undo list. Sets the model to changed if it
+	 * was not a simple view switch.
+	 */
+	private void addToUndoList(final boolean viewSwitch) {
+		while (undoIndex < undoManager.getNumberOfUndos()) {
+			undoManager.removeLast();
+		}
+		if (!undoManager.add(viewSwitch)) {
+			return;
+		}
+		String maxSizeProperty = ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_UNDOLIST_SIZE);
+		int maxSize = 20;
+		try {
+			if (maxSizeProperty != null) {
+				maxSize = Integer.parseInt(maxSizeProperty);
+			}
+		} catch (NumberFormatException e) {
+			LogService.getRoot().warning("com.rapidminer.gui.main_frame_warning");
+		}
+		while (undoManager.getNumberOfUndos() > maxSize) {
+			undoManager.removeFirst();
+		}
+		undoIndex = undoManager.getNumberOfUndos();
+
+		// mark as changed only if the XML has changed
+		if (!viewSwitch) {
+			hasChanged = true;
+		}
+		fireProcessUpdated();
+	}
+
+	/**
+	 * Adds the current view to the undo stack. Called before the actual displyed chain will change.
+	 */
+	private void addViewSwitchToUndo(OperatorChain newChain) {
+		takeSnapshot();
+		addToUndoList(true);
+	}
+
+	/**
+	 * Takes a snapshot of the current process.
+	 */
+	private void takeSnapshot() {
+		Process process = getProcess();
+		if (process == null) {
+			return;
+		}
+		fireDisplayedChainWillChange();
+		undoManager.takeSnapshot(process.getRootOperator().getXML(true), getDisplayedChain(), getSelectedOperators(),
+				process.getAllOperators());
+	}
+
+	/**
+	 * Restores the state of the process according to the given index. Will return a thrown
+	 * exception if a problem occurs.
+	 */
+	private Exception setToStep(int index) {
+		String stateXML = undoManager.getXML(index);
+		synchronized (process) {
+			undoManager.clearSnapshot();
+			try {
+				String currentXML = process.getRootOperator().getXML(true);
+				ProcessLocation procLoc = process.getProcessLocation();
+				if (!stateXML.equals(currentXML)) {
+					process = undoManager.restoreProcess(index);
+					process.setProcessLocation(procLoc);
+					hasChanged = true;
+					fireProcessChanged();
+				}
+
+				// restore displayed chain
+				OperatorChain restoredOperatorChain = undoManager.restoreDisplayedChain(process, index);
+				if (restoredOperatorChain != null) {
+					displayedChain = restoredOperatorChain;
+					fireDisplayedChainChanged();
+				}
+
+				// restore selected operator
+				List<Operator> restoredOperators = undoManager.restoreSelectedOperators(process, index);
+				if (restoredOperators != null) {
+					setRestore(restoredOperators.get(0));
+					selectedOperators = Collections.unmodifiableList(restoredOperators);
+					fireOperatorSelectionChanged(selectedOperators);
+				}
+				fireProcessUpdated();
+			} catch (Exception e) {
+				return e;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Resets the undo stack.
+	 */
+	private void resetUndo() {
+		undoManager.reset();
+		takeSnapshot();
+		undoIndex = 0;
+		hasChanged = false;
+	}
+
+	/**
 	 * Fires the given {@link ModelEvent}.
 	 *
 	 * @param type
@@ -1233,6 +1865,70 @@ public final class ProcessRendererModel {
 				ProcessRendererAnnotationEvent e = new ProcessRendererAnnotationEvent(type);
 				((ProcessRendererEventListener) listeners[i + 1]).annotationsChanged(e, annotations);
 			}
+		}
+	}
+
+	/**
+	 * Informs the {@link ProcessEditor ProcessEditors} that the process was updated. Fired when the
+	 * process view has changed, e.g. when the user enters/leaves a subprocess in the process design
+	 * panel.
+	 *
+	 * @see #setDisplayedChain(OperatorChain)
+	 */
+	private void fireProcessViewChanged() {
+		Process process = getProcess();
+		for (ExtendedProcessEditor editor : processEditors.getListeners(ExtendedProcessEditor.class)) {
+			editor.processViewChanged(process);
+		}
+	}
+
+	/**
+	 * Informs the {@link ProcessEditor ProcessEditors} that the process was changed. Fired when the
+	 * process was replaced.
+	 *
+	 * @see #setProcess(Process)
+	 */
+	private void fireProcessChanged() {
+		Process process = getProcess();
+		for (ProcessEditor editor : processEditors.getListeners(ProcessEditor.class)) {
+			editor.processChanged(process);
+		}
+		for (ExtendedProcessEditor editor : processEditors.getListeners(ExtendedProcessEditor.class)) {
+			editor.processChanged(process);
+		}
+	}
+
+	/**
+	 * Informs the {@link ProcessStorageListener ProcessStorageListeners} that the process was
+	 * loaded.
+	 *
+	 * @see #openProcess(Process)
+	 */
+	private void fireProcessLoaded() {
+		Process process = getProcess();
+		LinkedList<ProcessStorageListener> list;
+		synchronized (storageListeners) {
+			list = new LinkedList<>(storageListeners);
+		}
+		for (ProcessStorageListener l : list) {
+			l.opened(process);
+		}
+	}
+
+	/**
+	 * Informs the {@link ProcessStorageListener ProcessStorageListeners} that the process was
+	 * saved.
+	 *
+	 * @see #processHasBeenSaved()
+	 */
+	private void fireProcessStored() {
+		Process process = getProcess();
+		LinkedList<ProcessStorageListener> list;
+		synchronized (storageListeners) {
+			list = new LinkedList<>(storageListeners);
+		}
+		for (ProcessStorageListener l : list) {
+			l.stored(process);
 		}
 	}
 }

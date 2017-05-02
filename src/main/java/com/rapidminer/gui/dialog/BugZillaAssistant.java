@@ -472,11 +472,11 @@ public class BugZillaAssistant extends ButtonDialog {
 				final String version = RapidMiner.getShortVersion();
 				if (!useAnonymousLogin.isSelected()) {
 					if (email.length() <= 0) {
-						SwingTools.showVerySimpleErrorMessage("enter_email");
+						SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "enter_email");
 						return;
 					}
 					if (!email.matches("(.+?)@(.+?)[.](.+?)")) {
-						SwingTools.showVerySimpleErrorMessage("enter_correct_email");
+						SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "enter_correct_email");
 						return;
 					}
 					boolean noPW = true;
@@ -487,7 +487,7 @@ public class BugZillaAssistant extends ButtonDialog {
 						}
 					}
 					if (noPW) {
-						SwingTools.showVerySimpleErrorMessage("enter_password");
+						SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "enter_password");
 						return;
 					}
 				} else {
@@ -495,17 +495,17 @@ public class BugZillaAssistant extends ButtonDialog {
 					pawo = new char[] { '!', 'z', '4', '8', '#', 'H', 'c', '2', '$', '%', 'm', ')', '9', '+', '*', '*' };
 				}
 				if (summary.length() <= 0) {
-					SwingTools.showVerySimpleErrorMessage("enter_summary");
+					SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "enter_summary");
 					return;
 				}
 				// more than a single word for a descriptive summary required!
 				String[] splitResult = summary.trim().split("\\s");
 				if (splitResult.length < 2) {
-					SwingTools.showVerySimpleErrorMessage("enter_descriptive_summary");
+					SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "enter_descriptive_summary");
 					return;
 				}
 				if (description.length() <= 0 || description.equals(descriptionText)) {
-					SwingTools.showVerySimpleErrorMessage("enter_description");
+					SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "enter_description");
 					return;
 				}
 
@@ -526,8 +526,8 @@ public class BugZillaAssistant extends ButtonDialog {
 							URI bugzillaURI = new URI(bugzillaURL.getProtocol(), bugzillaURL.getHost(),
 									bugzillaURL.getPath(), bugzillaURL.getQuery(), null);
 							desktop.browse(bugzillaURI);
-							int returnVal = SwingTools.showConfirmDialog("send_bugreport.check_browser_for_duplicates",
-									ConfirmDialog.YES_NO_OPTION);
+							int returnVal = SwingTools.showConfirmDialog(BugZillaAssistant.this,
+									"send_bugreport.check_browser_for_duplicates", ConfirmDialog.YES_NO_OPTION);
 							// user clicked no, don't submit
 							if (returnVal == ConfirmDialog.NO_OPTION) {
 								return;
@@ -565,13 +565,14 @@ public class BugZillaAssistant extends ButtonDialog {
 									attachments, addProcessCheckBox.isSelected(), addSysPropsCheckBox.isSelected(), true);
 
 							getProgressListener().setCompleted(100);
-							SwingTools.showMessageDialog("bugreport_successful");
+							SwingTools.showMessageDialog(BugZillaAssistant.this, "bugreport_successful");
 							dispose();
 						} catch (XmlRpcException e1) {
-							SwingTools.showVerySimpleErrorMessage("bugreport_xmlrpc_error", e1.getLocalizedMessage());
+							SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "bugreport_xmlrpc_error",
+									e1.getLocalizedMessage());
 						} catch (Exception e2) {
 							LogService.getRoot().warning(e2.getLocalizedMessage());
-							SwingTools.showVerySimpleErrorMessage("bugreport_creation_failed");
+							SwingTools.showVerySimpleErrorMessage(BugZillaAssistant.this, "bugreport_creation_failed");
 						} finally {
 							getProgressListener().complete();
 							for (int i = 0; i < pawo.length; i++) {

@@ -915,7 +915,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 			}
 
 			Element paramElement = doc.createElement(key);
-			paramElement.appendChild(doc.createTextNode(value));
+			paramElement.appendChild(doc.createTextNode(value)); // This escapes the value
 			element.appendChild(paramElement);
 		}
 		return element;

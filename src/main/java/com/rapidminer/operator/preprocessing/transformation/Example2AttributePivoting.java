@@ -265,7 +265,7 @@ public class Example2AttributePivoting extends ExampleSetTransformationOperator 
 		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
 
 		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+		if (!Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
 			builder.withOptimizationHint(DataManagementParameterHelper.getSelectedDataManagement(this));
 		}

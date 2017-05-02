@@ -5193,6 +5193,11 @@
             may access Java code. Scripts may hence become incompatible in future
             releases of RapidMiner.&lt;/p&gt;</help>
     <key>execute_script</key>
+    <tags>
+         <tag>Java</tag>
+         <tag>Groovy</tag>
+         <tag>Code</tag>
+    </tags>
   </operator>
     <operator>
         <name>AttributeValueMapper</name>

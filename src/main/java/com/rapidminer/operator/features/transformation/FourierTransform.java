@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.example.table.AttributeFactory;
@@ -122,7 +123,9 @@ public class FourierTransform extends AbstractFeatureTransformation {
 		Attribute frequencyAttribute = AttributeFactory.createAttribute("frequency", Ontology.REAL);
 		allAttributes.add(frequencyAttribute);
 
-		for (Attribute current : exampleSet.getAttributes()) {
+		Attributes attributes = exampleSet.getAttributes();
+		Attribute[] regularAttributes = attributes.createRegularAttributeArray();
+		for (Attribute current : regularAttributes) {
 			if (current.isNumerical()) {
 				// create new attribute
 				Attribute newAttribute = AttributeFactory.createAttribute("fft(" + current.getName() + ")", Ontology.REAL);
@@ -136,13 +139,13 @@ public class FourierTransform extends AbstractFeatureTransformation {
 				.build();
 
 		// create FFT values
-		Attribute label = exampleSet.getAttributes().getLabel();
+		Attribute label = attributes.getLabel();
 
 		// add FFT values
 		FastFourierTransform fft = new FastFourierTransform(WindowFunction.BLACKMAN_HARRIS);
 		SpectrumFilter filter = new SpectrumFilter(SpectrumFilter.NONE);
 		int index = 1;
-		for (Attribute current : exampleSet.getAttributes()) {
+		for (Attribute current : regularAttributes) {
 			if (current.isNumerical()) {
 				Complex[] result = fft.getFourierTransform(exampleSet, label, current);
 				Peak[] spectrum = filter.filter(result, exampleSet.size());

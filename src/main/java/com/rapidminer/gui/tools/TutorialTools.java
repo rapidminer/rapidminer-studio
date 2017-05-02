@@ -55,7 +55,7 @@ public class TutorialTools {
 				try {
 					MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 					Process tutorialProcess = tutorial.makeProcess();
-					mainFrame.setOpenedProcess(tutorialProcess, false, null);
+					mainFrame.setOpenedProcess(tutorialProcess);
 					mainFrame.getTutorialSelector().setSelectedTutorial(tutorial);
 					TutorialManager.INSTANCE.completedTutorial(tutorial.getIdentifier());
 

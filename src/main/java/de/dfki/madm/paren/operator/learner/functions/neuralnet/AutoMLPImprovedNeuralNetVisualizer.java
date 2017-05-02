@@ -25,6 +25,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.rapidminer.gui.actions.export.AbstractPrintableIOObjectPanel;
+import com.rapidminer.gui.graphs.GraphViewer;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.learner.functions.neuralnet.InnerNode;
 import com.rapidminer.operator.learner.functions.neuralnet.InputNode;
@@ -48,12 +50,11 @@ import com.rapidminer.tools.Tools;
  * Visualizes the improved neural net. The nodes can be selected by clicking. The next tool tip will
  * then show the input weights for the selected node.
  *
- * @author Ingo Mierswa, modified by Syed Atif Mehdi (01/09/2010)
+ * @author Ingo Mierswa, Syed Atif Mehdi
  */
-// modified by atif
 public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel implements MouseListener, Renderable {
 
-	private static final long serialVersionUID = -26826681541601736L;
+	private static final long serialVersionUID = 1L;
 
 	private static final int ROW_HEIGHT = 36;
 
@@ -63,7 +64,11 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 
 	private static final int NODE_RADIUS = 24;
 
-	private static final Font LABEL_FONT = new Font("SansSerif", Font.PLAIN, 11);
+	private static final Font LABEL_FONT = GraphViewer.VERTEX_PLAIN_FONT;
+
+	private static final Font LAYER_FONT = GraphViewer.VERTEX_BOLD_FONT;
+
+	private static final Color NODE_ALMOST_WHITE = new Color(233, 233, 233);
 
 	private AutoMLPImprovedNeuralNetModel neuralNet;
 
@@ -156,9 +161,10 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 		int height = dim.height;
 
 		Graphics2D g = (Graphics2D) graphics;
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setFont(LABEL_FONT);
 		Graphics2D translated = (Graphics2D) g.create();
 		translated.translate(MARGIN, MARGIN);
-		translated.setFont(LABEL_FONT);
 
 		Graphics2D synapsesG = (Graphics2D) translated.create();
 		paintSynapses(synapsesG, height);
@@ -185,9 +191,9 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 			totalHeight += (lines.length - 1) * 3;
 
 			Rectangle frame = new Rectangle(keyX - 4, keyY, (int) maxWidth + 8, (int) totalHeight + 6);
-			g.setColor(SwingTools.LIGHTEST_YELLOW);
+			g.setColor(Color.WHITE);
 			g.fill(frame);
-			g.setColor(SwingTools.DARK_YELLOW);
+			g.setColor(Color.BLACK);
 			g.draw(frame);
 			g.setColor(Color.BLACK);
 			int xPos = keyX;
@@ -211,17 +217,11 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 			for (Node node : layer) {
 				if (node instanceof InnerNode) {
 					Node[] inputNodes = node.getInputNodes();
-					// int[] indices = node.getInputNodeOutputIndices();
 					double[] weights = ((InnerNode) node).getWeights();
-
-					// Matrix matrix = layer.getMatrix();
-					// int inputRows = matrix.getRows();
-					// int outputRows = matrix.getCols();
 
 					int inputY = height / 2 - (inputNodes.length + 1) * ROW_HEIGHT / 2;
 
 					for (int j = 0; j < inputNodes.length; j++) {
-						// Node inputNode = inputNodes[j];
 						float weight = 1.0f - (float) (Math.abs(weights[j + 1]) / this.maxAbsoluteWeight);
 						Color color = new Color(weight, weight, weight);
 						g.setColor(color);
@@ -262,8 +262,9 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 				layerName = "Hidden " + layerIndex;
 			}
 
-			Rectangle2D stringBounds = LABEL_FONT.getStringBounds(layerName, g.getFontRenderContext());
 			g.setColor(Color.BLACK);
+			g.setFont(LAYER_FONT);
+			Rectangle2D stringBounds = g.getFontMetrics().getStringBounds(layerName, g);
 			g.drawString(layerName, (int) (-1 * stringBounds.getWidth() / 2 + NODE_RADIUS / 2), 0);
 			int yPos = height / 2 - nodes * ROW_HEIGHT / 2;
 			for (int r = 0; r < nodes; r++) {
@@ -272,13 +273,13 @@ public class AutoMLPImprovedNeuralNetVisualizer extends AbstractPrintableIOObjec
 					if (r < nodes - 1 || layerIndex == layers.size() - 1) {
 						g.setPaint(SwingTools.makeYellowPaint(NODE_RADIUS, NODE_RADIUS));
 					} else {
-						g.setPaint(new Color(233, 233, 233));
+						g.setPaint(NODE_ALMOST_WHITE);
 					}
 				} else {
 					if (r < nodes - 1) {
 						g.setPaint(SwingTools.makeBluePaint(NODE_RADIUS, NODE_RADIUS));
 					} else {
-						g.setPaint(new Color(233, 233, 233));
+						g.setPaint(NODE_ALMOST_WHITE);
 					}
 				}
 				g.fill(node);

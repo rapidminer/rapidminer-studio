@@ -18,7 +18,10 @@
 */
 package com.rapidminer.operator.learner.functions;
 
-import Jama.Matrix;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
@@ -35,18 +38,16 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import Jama.Matrix;
 
 
 /**
  * This operator performs a vector linear regression. It regresses all regular attributes upon a
  * vector of labels. The attributes forming the vector have to be marked as special, the special
  * role names of all label attributes have to start with <code>label</code>.
- * 
+ *
  * TODO: Adapt meta data of model, but needs change of complete construction...
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class VectorLinearRegression extends AbstractLearner {
@@ -68,7 +69,8 @@ public class VectorLinearRegression extends AbstractLearner {
 		double ridge = getParameterAsDouble(PARAMETER_RIDGE);
 
 		List<Attribute> labels = new LinkedList<>();
-		for (Iterator<AttributeRole> roleIterator = exampleSet.getAttributes().allAttributeRoles(); roleIterator.hasNext();) {
+		for (Iterator<AttributeRole> roleIterator = exampleSet.getAttributes().allAttributeRoles(); roleIterator
+				.hasNext();) {
 			AttributeRole role = roleIterator.next();
 			if (role.getSpecialName() != null && role.getSpecialName().startsWith("label")) {
 				labels.add(role.getAttribute());
@@ -80,12 +82,13 @@ public class VectorLinearRegression extends AbstractLearner {
 		Matrix x = new Matrix(exampleSet.size(), width);
 		Matrix y = new Matrix(exampleSet.size(), labels.size());
 		int j = 0;
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			if (useBias) {
 				x.set(j, 0, 1);
 			}
 			int i = biasOffset;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				x.set(j, i, example.getValue(attribute));
 				i++;
 			}

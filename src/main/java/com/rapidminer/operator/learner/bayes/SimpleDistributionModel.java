@@ -66,7 +66,7 @@ public class SimpleDistributionModel extends DistributionModel {
 	public static final int INDEX_STANDARD_DEVIATION = 1;
 
 	public static final int INDEX_LOG_FACTOR = 2;
-	
+
 	private static final int OPERATOR_PROGRESS_STEPS = 200;
 
 	/** The number of classes. */
@@ -315,6 +315,7 @@ public class SimpleDistributionModel extends DistributionModel {
 		if (opProg != null) {
 			opProg.setTotal(exampleSet.size());
 		}
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			double weight = weightAttribute == null ? 1.0d : example.getWeight();
@@ -324,7 +325,7 @@ public class SimpleDistributionModel extends DistributionModel {
 				int classIndex = (int) example.getLabel();
 				classWeights[classIndex] += weight;
 				int attributeIndex = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					double attributeValue = example.getValue(attribute);
 					if (nominal[attributeIndex]) {
 						// the check of the value is needed because the mapping returns -1 for
@@ -444,11 +445,12 @@ public class SimpleDistributionModel extends DistributionModel {
 			progress.setTotal(exampleSet.size());
 		}
 		int progressCounter = 0;
-		
+
 		if (modelRecentlyUpdated) {
 			updateDistributionProperties();
 		}
 		double[] probabilities = new double[numberOfClasses];
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		for (Example example : exampleSet) {
 			double maxLogProbability = Double.NEGATIVE_INFINITY;
 			double probabilitySum = 0;
@@ -457,7 +459,7 @@ public class SimpleDistributionModel extends DistributionModel {
 			for (int i = 0; i < numberOfClasses; i++) {
 				probabilities[i] = priors[i];
 			}
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = example.getValue(attribute);
 				if (nominal[j]) {
 					if (!Double.isNaN(value)) {

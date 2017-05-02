@@ -122,10 +122,11 @@ public class WeightGuidedSelectionOperator extends FeatureOperator {
 						: AttributeWeights.ORIGINAL_WEIGHTS);
 
 		int[] attributeIndices = new int[input.getAttributes().size()];
+		Attribute[] regularAttributes = input.getAttributes().createRegularAttributeArray();
 		int counter = 0;
 		for (String name : attributeNames) {
 			int index = 0;
-			for (Attribute attribute : input.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				if (attribute.getName().equals(name)) {
 					attributeIndices[counter] = index;
 					break;

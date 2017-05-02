@@ -1,23 +1,24 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -60,15 +61,15 @@ public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements
 
 	private final AssociationRules rules;
 
-	private final Map<String, String> toolTipInfos = new HashMap<String, String>();
+	private final Map<String, String> toolTipInfos = new HashMap<>();
 
-	private final List<String> nodeList = new LinkedList<String>();
+	private final List<String> nodeList = new LinkedList<>();
 
-	private final List<String> edgeList = new LinkedList<String>();
+	private final List<String> edgeList = new LinkedList<>();
 
-	private final Map<String, List<String>> asPremise = new HashMap<String, List<String>>();
+	private final Map<String, List<String>> asPremise = new HashMap<>();
 
-	private final Map<String, List<String>> asConclusion = new HashMap<String, List<String>>();
+	private final Map<String, List<String>> asConclusion = new HashMap<>();
 
 	private final AssociationRuleFilter filter;
 
@@ -120,14 +121,7 @@ public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements
 				// define conjunction node
 				String conjunctionNode = "Rule " + ruleIndex + " (" + Tools.formatNumber(rule.getTotalSupport()) + " / "
 						+ Tools.formatNumber(rule.getConfidence()) + ")";
-				toolTipInfos.put(
-						conjunctionNode,
-						"<html><b>Rule " + ruleIndex + "</b><br>"
-								+ SwingTools.addLinebreaks(rule.toPremiseString() + " --> " + rule.toConclusionString())
-								+ "<br><b>Support:</b> " + rule.getTotalSupport() + "<br><b>Confidence:</b> "
-								+ rule.getConfidence() + "<br><b>Lift:</b> " + rule.getLift() + "<br><b>Gain:</b> "
-								+ rule.getGain() + "<br><b>Conviction:</b> " + rule.getConviction() + "<br><b>Laplace:</b> "
-								+ rule.getLaplace() + "<br><b>Ps:</b> " + rule.getPs() + "</html>");
+				toolTipInfos.put(conjunctionNode, createTooltip(rule, ruleIndex));
 				nodeList.add(conjunctionNode);
 
 				// add premise nodes
@@ -185,11 +179,7 @@ public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements
 		if (toolTip != null) {
 			return toolTip;
 		} else {
-			return "<html><b>Item:</b> " + id + "<br><b>Premise in Rules:</b> "
-					+ (asPremise.get(id) == null || asPremise.get(id).size() == 0 ? "none" : asPremise.get(id))
-					+ "<br><b>Conclusion in Rules:</b> "
-					+ (asConclusion.get(id) == null || asConclusion.get(id).size() == 0 ? "none" : asConclusion.get(id))
-					+ "</html>";
+			return createTooltip(id);
 		}
 	}
 
@@ -255,5 +245,102 @@ public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements
 	public void setFilter(boolean[] filter) {
 		addRuleNodes(filter);
 		viewer.updateLayout();
+	}
+
+	/**
+	 * Create the tooltip for a rule.
+	 *
+	 * @param id
+	 *            the id of a rule for which to create the tooltip
+	 * @return the HTML-formatted tooltip string
+	 */
+	private String createTooltip(String id) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(
+				"<html><div style=\"font-size: 10px; font-family: 'Open Sans'\"><p style=\"font-size: 110%; text-align: center; font-family: 'Open Sans Semibold'\"><b>"
+						+ id + "</b><hr NOSHADE style=\"color: '#000000'; width: 95%; \"/></p><br/>");
+		sb.append("Premise:&nbsp;"
+				+ (asPremise.get(id) == null || asPremise.get(id).size() == 0 ? "-" : formatDependencies(asPremise.get(id)))
+				+ "<br/>");
+		sb.append("Conclusion:&nbsp;" + (asConclusion.get(id) == null || asConclusion.get(id).size() == 0 ? "-"
+				: formatDependencies(asConclusion.get(id))));
+		sb.append("</div></html>");
+
+		return sb.toString();
+	}
+
+	/**
+	 * Create the tooltip for a rule.
+	 *
+	 * @param rule
+	 *            the rule for which to create the tooltip
+	 * @param ruleIndex
+	 *            the index of the rule
+	 * @return the HTML-formatted tooltip string
+	 */
+	private String createTooltip(AssociationRule rule, int ruleIndex) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<html><div style=\"font-size: 10px; font-family: 'Open Sans'\">");
+		sb.append("<p style=\"font-size: 110%; text-align: center; font-family: 'Open Sans Semibold'\"><b>Rule " + ruleIndex
+				+ "</b><hr NOSHADE style=\"color: '#000000'; width: 95%; \"/></p>");
+		sb.append(SwingTools.transformToolTipText(
+				formatDependencies(rule.getPremiseItems()) + " \u2794 " + formatDependencies(rule.getConclusionItems()),
+				false, 200, false, false) + "<br/>");
+		sb.append("Support:&nbsp;" + Tools.formatNumber(rule.getTotalSupport(), 2) + "<br/>");
+		sb.append("Confidence:&nbsp;" + Tools.formatNumber(rule.getConfidence(), 2) + "<br/>");
+		sb.append("Lift:&nbsp;" + Tools.formatNumber(rule.getLift(), 2) + "<br/>");
+		sb.append("Gain:&nbsp;" + Tools.formatNumber(rule.getGain(), 2) + "<br/>");
+		sb.append("Conviction:&nbsp;" + Tools.formatNumber(rule.getConviction(), 2) + "<br/>");
+		sb.append("Laplace:&nbsp;" + Tools.formatNumber(rule.getLaplace(), 2) + "<br/>");
+		sb.append("Ps:&nbsp;" + Tools.formatNumber(rule.getPs(), 2));
+		sb.append("</div></html>");
+
+		return sb.toString();
+	}
+
+	/**
+	 * Displays the rule premise/conclusion list contents nicely formatted for humans.
+	 *
+	 * @param dependencyList
+	 *            the list of premises/conclusions of the rule to format
+	 * @return the formatted string
+	 */
+	private static String formatDependencies(Iterator<Item> dependencyIterator) {
+		StringBuilder sb = new StringBuilder();
+
+		while (dependencyIterator.hasNext()) {
+			sb.append("<i>");
+			sb.append(dependencyIterator.next());
+			sb.append("</i>");
+			if (dependencyIterator.hasNext()) {
+				sb.append(',').append(' ');
+			}
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Displays the rule premise/conclusion list contents nicely formatted for humans.
+	 *
+	 * @param dependencyList
+	 *            the list of premises/conclusions of the rule to format
+	 * @return the formatted string
+	 */
+	private static String formatDependencies(Collection<String> dependencyList) {
+		StringBuilder sb = new StringBuilder();
+
+		int size = dependencyList.size();
+		for (String item : dependencyList) {
+			sb.append("<i>");
+			sb.append(item);
+			sb.append("</i>");
+			if (--size > 0) {
+				sb.append(',').append(' ');
+			}
+		}
+
+		return sb.toString();
 	}
 }

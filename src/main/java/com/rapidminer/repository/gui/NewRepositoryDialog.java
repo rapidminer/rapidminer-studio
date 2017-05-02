@@ -110,7 +110,7 @@ public class NewRepositoryDialog extends MultiPageDialog {
 			}
 			super.finish();
 		} catch (RepositoryException e) {
-			SwingTools.showSimpleErrorMessage("cannot_create_repository", e);
+			SwingTools.showSimpleErrorMessage(this, "cannot_create_repository", e);
 		}
 	}
 

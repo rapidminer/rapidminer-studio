@@ -62,11 +62,11 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		int dataManagement;
 		DataManagement newDataManagement = DataManagement.AUTO;
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
+			dataManagement = getParameterAsInt(ExampleSetGenerator.PARAMETER_DATAMANAGEMENT);
+		} else {
 			dataManagement = DataRowFactory.TYPE_COLUMN_VIEW;
 			newDataManagement = DataManagementParameterHelper.getSelectedDataManagement(this);
-		} else {
-			dataManagement = getParameterAsInt(ExampleSetGenerator.PARAMETER_DATAMANAGEMENT);
 		}
 		ExampleSet createdSet = materialize(exampleSet, dataManagement, newDataManagement);
 		return createdSet;
@@ -173,20 +173,12 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 		// column view
 		// if datamanagement is not one of the two then there can be value changes when copying to a
 		// "smaller" row which we need to keep
-		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))
-				&& (dataManagement == DataRowFactory.TYPE_DOUBLE_ARRAY
-						|| dataManagement == DataRowFactory.TYPE_COLUMN_VIEW)) {
-			builder.withBlankSize(exampleSet.size());
-			builder.withOptimizationHint(newDataManagement);
-			for (int i = 0; i < sourceAttributes.length; i++) {
-				final int index = i;
-				builder.withColumnFiller(targetAttributes[i],
-						j -> exampleSet.getExample(j).getValue(sourceAttributes[index]));
-			}
-		} else {
+		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))
+				|| (dataManagement != DataRowFactory.TYPE_DOUBLE_ARRAY
+						&& dataManagement != DataRowFactory.TYPE_COLUMN_VIEW)) {
 			builder.withExpectedSize(exampleSet.size());
 			DataRowFactory rowFactory = new DataRowFactory(dataManagement, '.');
-
+			
 			// copying data differently for sparse and non sparse for speed reasons
 			if (isSparseType(dataManagement)) {
 				for (Example example : exampleSet) {
@@ -211,6 +203,14 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 					}
 					builder.addDataRow(targetRow);
 				}
+			}
+		} else {
+			builder.withBlankSize(exampleSet.size());
+			builder.withOptimizationHint(newDataManagement);
+			for (int i = 0; i < sourceAttributes.length; i++) {
+				final int index = i;
+				builder.withColumnFiller(targetAttributes[i],
+						j -> exampleSet.getExample(j).getValue(sourceAttributes[index]));
 			}
 		}
 

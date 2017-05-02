@@ -83,11 +83,11 @@ public class GuessValueTypes extends AbstractDataProcessing {
 		Set<Attribute> attributeSet = attributeSelector.getAttributeSubset(exampleSet, false);
 		int size = attributeSet.size();
 
-		int[] valueTypes = new int[size];
+		int[] inputValueTypes = new int[size];
 
 		int index = 0;
 		for (Attribute attribute : attributeSet) {
-			valueTypes[index++] = attribute.getValueType();
+			inputValueTypes[index++] = attribute.getValueType();
 		}
 
 		// init progress
@@ -97,19 +97,19 @@ public class GuessValueTypes extends AbstractDataProcessing {
 
 		// guessed value types
 		int[] guessedValueTypes = new int[size];
-		int checkedCounter = 0;
-		for (Example example : exampleSet) {
-			index = 0;
-			for (Attribute attribute : attributeSet) {
+		index = 0;
+		for (Attribute attribute : attributeSet) {
+			progressCounter = exampleSet.size() * index;
+			getProgress().setCompleted((int) (50 * ((progressCounter - 1) / totalProgress)));
+			if (!attribute.isNominal() && !attribute.isNumerical()) {
+				index++;
+				continue;
+			}
+			for (Example example : exampleSet) {
 				// trigger progress
 				if (progressCounter++ % 500_000 == 0) {
 					getProgress().setCompleted((int) (50 * ((progressCounter - 1) / totalProgress)));
 				}
-
-				if (!attribute.isNominal() && !attribute.isNumerical()) {
-					continue;
-				}
-
 				double originalValue = example.getValue(attribute);
 				if (!Double.isNaN(originalValue)) {
 					if (guessedValueTypes[index] != Ontology.NOMINAL) {
@@ -131,21 +131,18 @@ public class GuessValueTypes extends AbstractDataProcessing {
 							}
 						} catch (NumberFormatException e) {
 							guessedValueTypes[index] = Ontology.NOMINAL;
-							checkedCounter++;
+							break;
 						}
 					}
 				}
-				index++;
 			}
-			if (checkedCounter >= guessedValueTypes.length) {
-				break;
-			}
+			index++;
 		}
 
 		// if we could not guess any type, use the default one
 		for (int i = 0; i < size; i++) {
 			if (guessedValueTypes[i] == 0) {
-				guessedValueTypes[i] = valueTypes[i];
+				guessedValueTypes[i] = inputValueTypes[i];
 			}
 		}
 
@@ -154,19 +151,18 @@ public class GuessValueTypes extends AbstractDataProcessing {
 
 		// the example set contains at least one example and the guessing was performed
 		if (exampleSet.size() > 0) {
-			valueTypes = guessedValueTypes;
-
 			// new attributes
 			List<AttributeRole> newAttributes = new LinkedList<AttributeRole>();
 			index = 0;
 			for (Attribute attribute : attributeSet) {
 				if (!attribute.isNominal() && !attribute.isNumerical()) {
+					index++;
 					continue;
 				}
 
 				AttributeRole role = exampleSet.getAttributes().getRole(attribute);
 
-				Attribute newAttribute = AttributeFactory.createAttribute(valueTypes[index]);
+				Attribute newAttribute = AttributeFactory.createAttribute(guessedValueTypes[index]);
 				exampleSet.getExampleTable().addAttribute(newAttribute);
 				AttributeRole newRole = new AttributeRole(newAttribute);
 				newRole.setSpecial(role.getSpecialName());
@@ -175,7 +171,7 @@ public class GuessValueTypes extends AbstractDataProcessing {
 				// copy data
 				for (Example e : exampleSet) {
 					double oldValue = e.getValue(attribute);
-					if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueTypes[index], Ontology.NUMERICAL)) {
+					if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(guessedValueTypes[index], Ontology.NUMERICAL)) {
 						if (!Double.isNaN(oldValue)) {
 							String valueString = e.getValueAsString(attribute);
 							if (Attribute.MISSING_NOMINAL_VALUE.equals(valueString)) {
@@ -205,9 +201,6 @@ public class GuessValueTypes extends AbstractDataProcessing {
 					}
 				}
 
-				// delete attribute and rename the new attribute (due to deletion and data scans: no
-				// more memory used :-)
-				exampleSet.getExampleTable().removeAttribute(attribute);
 				exampleSet.getAttributes().remove(role);
 				newAttribute.setName(attribute.getName());
 
@@ -242,9 +235,8 @@ public class GuessValueTypes extends AbstractDataProcessing {
 
 	@Override
 	public boolean writesIntoExistingData() {
-		// TODO: Can be changed if attribute would not be removed from table.
 		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
-			return true;
+			return false;
 		} else {
 			// old version: true only if original output port is connected
 			return isOriginalOutputConnected();

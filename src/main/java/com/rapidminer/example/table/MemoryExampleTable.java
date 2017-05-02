@@ -235,9 +235,8 @@ public class MemoryExampleTable extends AbstractExampleTable implements GrowingE
 			}
 		}
 		// adding attributes
-		Iterator<Attribute> i = newAttributes.iterator();
-		while (i.hasNext()) {
-			addAttribute(i.next());
+		for (Attribute att : newAttributes) {
+			addAttribute(att);
 		}
 	}
 

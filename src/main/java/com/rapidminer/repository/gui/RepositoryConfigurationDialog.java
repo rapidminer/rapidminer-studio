@@ -72,7 +72,7 @@ public class RepositoryConfigurationDialog extends ButtonDialog {
 			repository.refresh();
 			super.ok();
 		} catch (RepositoryException e) {
-			SwingTools.showSimpleErrorMessage("repository_configuration_dialog.cannot_refresh_folder", e);
+			SwingTools.showSimpleErrorMessage(this, "repository_configuration_dialog.cannot_refresh_folder", e);
 		}
 	}
 

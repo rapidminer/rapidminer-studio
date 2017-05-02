@@ -25,6 +25,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DateFormat;
@@ -150,6 +151,7 @@ final class ConfigureDataView extends JPanel {
 	private final ErrorWarningTableModel errorTableModel;
 	private final CollapsibleErrorTable collapsibleErrorTable;
 	private final JComboBox<String> dateFormatField;
+	private Window owner;
 
 	private boolean fatalError;
 
@@ -157,6 +159,7 @@ final class ConfigureDataView extends JPanel {
 	 * The constructor that creates a new {@link ConfigureDataView} instance.
 	 */
 	public ConfigureDataView(JDialog owner) {
+		this.owner = owner;
 		validator = new ConfigureDataValidator();
 		errorTableModel = new ErrorWarningTableModel(validator);
 		errorTableModel.addTableModelListener(new TableModelListener() {
@@ -255,8 +258,8 @@ final class ConfigureDataView extends JPanel {
 		try {
 			dataSetMetaData = dataSource.getMetadata().copy();
 		} catch (DataSetException e) {
-			SwingTools.showSimpleErrorMessage("io.dataimport.step.data_column_configuration.error_configuring_metadata",
-					e.getMessage());
+			SwingTools.showSimpleErrorMessage(owner,
+					"io.dataimport.step.data_column_configuration.error_configuring_metadata", e.getMessage());
 			throw new InvalidConfigurationException();
 		}
 

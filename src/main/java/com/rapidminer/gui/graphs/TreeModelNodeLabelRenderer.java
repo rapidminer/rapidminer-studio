@@ -1,22 +1,30 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
+
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
@@ -30,20 +38,12 @@ import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 import edu.uci.ics.jung.visualization.transform.shape.ShapeTransformer;
 import edu.uci.ics.jung.visualization.transform.shape.TransformingGraphics;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-
 
 /**
  * This renderer is used for rendering the labels of the tree model nodes.
- * 
+ *
  * @author Ingo Mierswa
- * 
+ *
  * @param <V>
  *            the type for vertices
  * @param <E>
@@ -91,7 +91,7 @@ public class TreeModelNodeLabelRenderer<V, E> implements Renderer.VertexLabel<V,
 		}
 	}
 
-	private static final int LABEL_OFFSET_Y = -7;
+	private static final int LEAF_LABEL_OFFSET_Y = -15;
 
 	protected Position position = Position.CNTR;
 	private Positioner positioner = new OutsidePositioner();
@@ -172,7 +172,7 @@ public class TreeModelNodeLabelRenderer<V, E> implements Renderer.VertexLabel<V,
 		}
 
 		if (graphCreator.isLeaf((String) v)) {
-			p.setLocation(p.x, p.y + LABEL_OFFSET_Y);
+			p.setLocation(p.x, p.y + LEAF_LABEL_OFFSET_Y);
 		}
 		g.draw(component, rc.getRendererPane(), p.x, p.y, d.width, d.height, true);
 	}

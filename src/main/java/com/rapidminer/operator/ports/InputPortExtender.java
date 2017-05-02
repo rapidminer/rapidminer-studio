@@ -18,6 +18,11 @@
 */
 package com.rapidminer.operator.ports;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
@@ -32,10 +37,6 @@ import com.rapidminer.operator.ports.metadata.ManyToOnePassThroughRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataError;
 import com.rapidminer.operator.ports.metadata.Precondition;
-
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -114,7 +115,7 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends IOObject> List<T> getData(Class<T> desiredClass, boolean unfold) throws UserError {
-		List<T> results = new LinkedList<T>();
+		List<T> results = new ArrayList<T>();
 		for (InputPort port : getManagedPorts()) {
 			IOObject data = port.getAnyDataOrNull();
 			if (data != null) {

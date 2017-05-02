@@ -340,7 +340,7 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 						default:
 							ProcessSetupError error = errors.get(table.getSelectedRow());
 							Operator op = error.getOwner().getOperator();
-							ErrorTable.this.mainFrame.selectOperator(op);
+							ErrorTable.this.mainFrame.selectAndShowOperator(op, true);
 							// other
 					}
 				}

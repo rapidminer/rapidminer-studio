@@ -1,27 +1,28 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.utils;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.DataRowReader;
 import com.rapidminer.example.table.DoubleArrayDataRow;
+import com.rapidminer.example.table.GrowingExampleTable;
 import com.rapidminer.example.table.IntArrayDataRow;
 import com.rapidminer.example.test.ExampleTestTools;
 import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
@@ -54,12 +56,12 @@ import com.rapidminer.tools.ParameterService;
 @RunWith(value = Parameterized.class)
 public class ExampleSetsTest {
 
-	public ExampleSetsTest(boolean columnarTable) {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES,
-				String.valueOf(columnarTable));
+	public ExampleSetsTest(boolean legacyMode) {
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT,
+				String.valueOf(legacyMode));
 	}
 
-	@Parameters(name = "betaFeatures={0}")
+	@Parameters(name = "legacyMode={0}")
 	public static Collection<Object> params() {
 		return Arrays.asList(true, false);
 	}
@@ -377,6 +379,105 @@ public class ExampleSetsTest {
 			assertEquals(testSet1.getExample(i).getValue(attribute1), testSet2.getExample(i).getValue(attribute1), 1.0e-12);
 			assertEquals(testSet1.getExample(i).getValue(attribute2), testSet2.getExample(i).getValue(attribute2), 1.0e-12);
 		}
+	}
+
+	@Test
+	public void growingTableTestRowSetColumnRow() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		GrowingExampleTable table = ExampleSets.createTableFrom(Collections.emptyList());
+		table.addDataRow(new DoubleArrayDataRow(new double[0]));
+		table.addAttribute(attribute1);
+		table.getDataRow(0).set(attribute1, -1);
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 1 }));
+
+		assertEquals(-1, table.getDataRow(0).get(attribute1), 0);
+		assertEquals(1, table.getDataRow(1).get(attribute1), 0);
+	}
+
+	@Test
+	public void growingTableTestRowColumnRow() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		GrowingExampleTable table = ExampleSets.createTableFrom(Collections.emptyList());
+		table.addDataRow(new DoubleArrayDataRow(new double[0]));
+		table.addAttribute(attribute1);
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 1 }));
+
+		assertEquals(0, table.getDataRow(0).get(attribute1), 0);
+		assertEquals(1, table.getDataRow(1).get(attribute1), 0);
+	}
+
+	@Test
+	public void growingTableTestColumnRowRowColumn() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		Attribute attribute2 = ExampleTestTools.attributeReal();
+		GrowingExampleTable table = ExampleSets.createTableFrom(Collections.emptyList());
+		table.addAttribute(attribute1);
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 1 }));
+		table.addDataRow(new DoubleArrayDataRow(new double[] { -1 }));
+
+		assertEquals(1, table.getDataRow(0).get(attribute1), 0);
+		assertEquals(-1, table.getDataRow(1).get(attribute1), 0);
+
+		table.addAttribute(attribute2);
+
+		assertEquals(1, table.getDataRow(0).get(attribute1), 0);
+		assertEquals(-1, table.getDataRow(1).get(attribute1), 0);
+		assertEquals(0, table.getDataRow(0).get(attribute2), 0);
+		assertEquals(0, table.getDataRow(1).get(attribute2), 0);
+	}
+
+	@Test
+	public void growingTableTestColumnRowColumnRow() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		Attribute attribute2 = ExampleTestTools.attributeReal();
+		GrowingExampleTable table = ExampleSets.createTableFrom(Arrays.asList(new Attribute[] { attribute1 }));
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 5 }));
+		table.addAttribute(attribute2);
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 6, 1 }));
+
+		assertEquals(0, table.getDataRow(0).get(attribute2), 0);
+		assertEquals(1, table.getDataRow(1).get(attribute2), 0);
+		assertEquals(5, table.getDataRow(0).get(attribute1), 0);
+		assertEquals(6, table.getDataRow(1).get(attribute1), 0);
+	}
+
+	@Test
+	public void castingTestOneAttributeAndBlankSize() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+
+		ExampleSet set = ExampleSets.from(attribute1).withBlankSize(3).build();
+		set.getExample(1).setValue(attribute1, 3);
+
+		GrowingExampleTable table = (GrowingExampleTable) set.getExampleTable();
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 7 }));
+
+		assertEquals(0, set.getExample(0).getValue(attribute1), 0);
+		assertEquals(3, set.getExample(1).getValue(attribute1), 0);
+		assertEquals(0, set.getExample(2).getValue(attribute1), 0);
+		assertEquals(7, set.getExample(3).getValue(attribute1), 0);
+	}
+
+	@Test
+	public void castingTestOneAttributeAndAddSecond() {
+		Attribute attribute1 = ExampleTestTools.attributeInt();
+		Attribute attribute2 = ExampleTestTools.attributeReal();
+
+		ExampleSet set = ExampleSets.from(attribute1).withBlankSize(2).withColumnFiller(attribute1, i -> i + 1).build();
+
+		GrowingExampleTable table = (GrowingExampleTable) set.getExampleTable();
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 3 }));
+
+		table.addAttribute(attribute2);
+		table.addDataRow(new DoubleArrayDataRow(new double[] { 4, -1 }));
+
+		assertEquals(1, set.getExample(0).getValue(attribute1), 0);
+		assertEquals(2, set.getExample(1).getValue(attribute1), 0);
+		assertEquals(3, set.getExample(2).getValue(attribute1), 0);
+		assertEquals(4, set.getExample(3).getValue(attribute1), 0);
+		assertEquals(0, set.getExample(0).getValue(attribute2), 0);
+		assertEquals(0, set.getExample(1).getValue(attribute2), 0);
+		assertEquals(0, set.getExample(2).getValue(attribute2), 0);
+		assertEquals(-1, set.getExample(3).getValue(attribute2), 0);
 	}
 
 }

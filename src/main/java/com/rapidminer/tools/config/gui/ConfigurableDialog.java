@@ -1142,7 +1142,8 @@ public class ConfigurableDialog extends ButtonDialog {
 					// show input while user enters invalid values, if user clicks cancel or
 					// finished correctly, abort loop
 					do {
-						String name = SwingTools.showInputDialog("configurable_dialog.rename", config.getName());
+						String name = SwingTools.showInputDialog(ConfigurableDialog.this, "configurable_dialog.rename",
+								config.getName());
 						if (name == null) {
 							// user cancelled dialog
 							break;
@@ -1152,14 +1153,16 @@ public class ConfigurableDialog extends ButtonDialog {
 							break;
 						}
 						if ("".equals(name.trim())) {
-							SwingTools.showVerySimpleErrorMessage("configurable_creation_dialog.invalid_name");
+							SwingTools.showVerySimpleErrorMessage(ConfigurableDialog.this,
+									"configurable_creation_dialog.invalid_name");
 							continue;
 						}
 						ConfigurableController controller = config.getSource() == null ? localController
 								: remoteControllers.get(config.getSource().getName());
 						boolean isUnique = controller.isNameUniqueForType(config.getTypeId(), name);
 						if (!isUnique) {
-							SwingTools.showVerySimpleErrorMessage("configurable_creation_dialog.invalid_duplicate_name");
+							SwingTools.showVerySimpleErrorMessage(ConfigurableDialog.this,
+									"configurable_creation_dialog.invalid_duplicate_name");
 							continue;
 						} else {
 							controller.renameConfigurable(config, name);
@@ -1789,11 +1792,12 @@ public class ConfigurableDialog extends ButtonDialog {
 		if (Result.SUCCESS.equals(result.getResult())) {
 			icon = SUCCESS_ICON;
 			testLabel.setIcon(icon);
-			// SwingTools.showMessageDialog("configuration.test.success", result.getMessage());
+			// SwingTools.showMessageDialog(ConfigurableDialog.this, "configuration.test.success",
+			// result.getMessage());
 		} else if (Result.FAILURE.equals(result.getResult())) {
 			icon = FAILURE_ICON;
 			testLabel.setIcon(icon);
-			SwingTools.showVerySimpleErrorMessage("configuration.test.fail", result.getMessage());
+			SwingTools.showVerySimpleErrorMessage(ConfigurableDialog.this, "configuration.test.fail", result.getMessage());
 		}
 
 		testLabel.setToolTipText(result.getMessage());
@@ -1813,7 +1817,7 @@ public class ConfigurableDialog extends ButtonDialog {
 	 * Displays an error dialog indicating that saving has failed.
 	 */
 	protected void displaySaveErrorDialog() {
-		SwingTools.showVerySimpleErrorMessage("configurable_dialog.save_configurable");
+		SwingTools.showVerySimpleErrorMessage(ConfigurableDialog.this, "configurable_dialog.save_configurable");
 	}
 
 	/**
@@ -1821,22 +1825,24 @@ public class ConfigurableDialog extends ButtonDialog {
 	 * up-to-date.
 	 */
 	protected void displaySaveUploadErrorDialogServerNotUpToDate(String serverName) {
-		SwingTools.showVerySimpleErrorMessage("configurable_controller_upload_error_server_not_up_to_date", serverName);
+		SwingTools.showVerySimpleErrorMessage(ConfigurableDialog.this,
+				"configurable_controller_upload_error_server_not_up_to_date", serverName);
 	}
 
 	/**
 	 * Displays an error dialog indicating that saving for a specific typeId has failed.
 	 */
 	protected void displaySaveUploadErrorDialog(String typeId, String repositoryName, String repositoryURL) {
-		SwingTools.showVerySimpleErrorMessage("configurable_controller_upload_error_server", typeId, repositoryName,
-				repositoryURL);
+		SwingTools.showVerySimpleErrorMessage(ConfigurableDialog.this, "configurable_controller_upload_error_server", typeId,
+				repositoryName, repositoryURL);
 	}
 
 	/**
 	 * Displays an error dialog indicating that the connection to the server has failed.
 	 */
 	protected void displayConnectionErrorDialog(String repositoryName, String repositoryURL) {
-		SwingTools.showVerySimpleErrorMessage("configurable_controller_connection_failed", repositoryName, repositoryURL);
+		SwingTools.showVerySimpleErrorMessage(ConfigurableDialog.this, "configurable_controller_connection_failed",
+				repositoryName, repositoryURL);
 	}
 
 	/**

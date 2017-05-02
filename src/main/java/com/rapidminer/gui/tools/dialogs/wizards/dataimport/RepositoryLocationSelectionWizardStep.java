@@ -18,14 +18,16 @@
 */
 package com.rapidminer.gui.tools.dialogs.wizards.dataimport;
 
+import java.awt.Window;
+
+import javax.swing.JComponent;
+
 import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard;
 import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirection;
 import com.rapidminer.gui.tools.dialogs.wizards.WizardStep;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
-
-import javax.swing.JComponent;
 
 
 /**
@@ -36,6 +38,7 @@ import javax.swing.JComponent;
 public class RepositoryLocationSelectionWizardStep extends WizardStep {
 
 	private final RepositoryLocationChooser locationChooser;
+	private AbstractWizard owner;
 
 	/**
 	 * This constructor is only left for compatibility issues with the paren extension. Hence it
@@ -66,6 +69,7 @@ public class RepositoryLocationSelectionWizardStep extends WizardStep {
 	public RepositoryLocationSelectionWizardStep(AbstractWizard parent, String initialValue, boolean storeWizard,
 			boolean onlyWriteableRepositories) {
 		super("select_repository_location");
+		this.owner = parent;
 		this.locationChooser = new RepositoryLocationChooser(parent, null, initialValue, true, false, false,
 				onlyWriteableRepositories);
 		this.locationChooser.addChangeListener(parent);
@@ -91,6 +95,10 @@ public class RepositoryLocationSelectionWizardStep extends WizardStep {
 	@Override
 	protected JComponent getComponent() {
 		return locationChooser;
+	}
+
+	public Window getOwner() {
+		return owner;
 	}
 
 	public String getRepositoryLocation() {

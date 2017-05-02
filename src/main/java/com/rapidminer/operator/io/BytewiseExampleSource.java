@@ -79,7 +79,7 @@ public abstract class BytewiseExampleSource extends AbstractExampleSource {
 	@Override
 	public ExampleSet createExampleSet() throws OperatorException {
 		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+		if (!Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
 		}
 		DataRowFactory dataRowFactory = new DataRowFactory(datamanagement, '.');

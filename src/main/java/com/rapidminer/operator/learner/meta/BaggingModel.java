@@ -1,24 +1,23 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.meta;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -80,19 +79,16 @@ public class BaggingModel extends PredictionModel implements MetaModel {
 			final int numLabels = predictedLabel.getMapping().size();
 			final Attribute[] specialAttributes = new Attribute[numLabels];
 			for (int i = 0; i < numLabels; i++) {
-				specialAttributes[i] = com.rapidminer.example.Tools.createSpecialAttribute(origExampleSet, attributePrefix
-						+ i, Ontology.NUMERICAL);
+				specialAttributes[i] = com.rapidminer.example.Tools.createSpecialAttribute(origExampleSet,
+						attributePrefix + i, Ontology.NUMERICAL);
 			}
 
-			Iterator<Example> reader = origExampleSet.iterator();
-			while (reader.hasNext()) {
-				Example example = reader.next();
-				for (int i = 0; i < specialAttributes.length; i++) {
+			for (int i = 0; i < specialAttributes.length; i++) {
+				for (Example example : origExampleSet) {
 					example.setValue(specialAttributes[i], 0);
 				}
 			}
 
-			reader = origExampleSet.iterator();
 			OperatorProgress progress = null;
 			if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 				progress = getOperator().getProgress();

@@ -100,28 +100,23 @@ public abstract class NumericToNominal extends AbstractFilteredDataProcessing {
 		init();
 
 		// initialize progress
-		getProgress().setTotal(exampleSet.size());
-		int numberOfAttributes = exampleSet.getAttributes().allSize();
-		int progressTriggerCounter = 0;
-		int progressCompletedCounter = 0;
+		long progress = 0;
+		long totalProgress = (long) translationMap.size() * exampleSet.size();
+		getProgress().setTotal(1000);
 
 		// over all examples change attribute values
-		for (Example example : exampleSet) {
-			for (Entry<Attribute, Attribute> replacement : translationMap.entrySet()) {
-				Attribute oldAttribute = replacement.getKey();
-				Attribute newAttribute = replacement.getValue();
+		for (Entry<Attribute, Attribute> replacement : translationMap.entrySet()) {
+			Attribute oldAttribute = replacement.getKey();
+			Attribute newAttribute = replacement.getValue();
+			for (Example example : exampleSet) {
 				double oldValue = example.getValue(oldAttribute);
 				setValue(example, newAttribute, oldValue);
-			}
-			++progressCompletedCounter;
-			++progressTriggerCounter;
-			if (getProgress().getProgress() / 20 < (int) (progressCompletedCounter * 5L / exampleSet.size())
-					|| progressTriggerCounter * numberOfAttributes > 500000) {
-				progressTriggerCounter = 0;
-				getProgress().setCompleted(progressCompletedCounter);
+				if (++progress % 100_000 == 0) {
+					getProgress().setCompleted((int) (1000.0d * progress / totalProgress));
+				}
 			}
 		}
-
+		
 		// clean up
 		cleanUp();
 

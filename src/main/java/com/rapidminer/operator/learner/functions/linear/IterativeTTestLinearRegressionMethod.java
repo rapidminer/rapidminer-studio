@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.functions.linear;
 
 import java.util.LinkedList;
@@ -87,7 +87,7 @@ public class IterativeTTestLinearRegressionMethod extends TTestLinearRegressionM
 					// check if this not selected one will receive significant coefficient
 					isUsedAttribute[i] = true;
 					double[] coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean,
-							ridge);
+							ridge, useBias);
 					// only if it is possible to calculate the probabilities, the p-value for this
 					// attribute is checked
 					if (fdistribution != null) {
@@ -112,7 +112,8 @@ public class IterativeTTestLinearRegressionMethod extends TTestLinearRegressionM
 
 			// now we have to deselect all that do not fulfill t-test in combination
 			{
-				double[] coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
+				double[] coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge,
+						useBias);
 				isUsedAttribute = filterByPValue(regression, useBias, ridge, exampleSet, isUsedAttribute, means, labelMean,
 						standardDeviations, labelStandardDeviation, coefficients, alphaBackward).isUsedAttribute;
 			}
@@ -123,7 +124,7 @@ public class IterativeTTestLinearRegressionMethod extends TTestLinearRegressionM
 		// calculate result
 		LinearRegressionResult result = new LinearRegressionResult();
 		result.isUsedAttribute = isUsedAttribute;
-		result.coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
+		result.coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge, useBias);
 		result.error = regression.getSquaredError(exampleSet, isUsedAttribute, result.coefficients, useBias);
 		return result;
 	}

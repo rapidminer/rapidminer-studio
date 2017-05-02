@@ -115,7 +115,7 @@ public class DiscretizationModel extends PreprocessingModel {
 		}
 
 		// creating mapping and adding to table and exampleSet
-		int progressCounter = 0;
+		long progressCounter = 0;
 		for (Entry<Attribute, Attribute> replacement : replacements) {
 			SortedSet<Tupel<Double, String>> ranges = rangesMap.get(replacement.getKey().getName());
 			Attribute newAttribute = replacement.getValue();
@@ -127,14 +127,15 @@ public class DiscretizationModel extends PreprocessingModel {
 				}
 			}
 			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
-				progress.setCompleted((int) (50.0 * progressCounter / replacements.size()));
+				progress.setCompleted((int) (50.0d * progressCounter / replacements.size()));
 			}
 		}
 
 		// copying data
 		progressCounter = 0;
-		for (Example example : exampleSet) {
-			for (Entry<Attribute, Attribute> replacement : replacements) {
+		long totalProgress = (long) replacements.size() * exampleSet.size();
+		for (Entry<Attribute, Attribute> replacement : replacements) {
+			for (Example example : exampleSet) {
 				Attribute originalAttribute = replacement.getKey();
 				Attribute newAttribute = replacement.getValue();
 				SortedSet<Tupel<Double, String>> ranges = rangesMap.get(originalAttribute.getName());
@@ -153,9 +154,9 @@ public class DiscretizationModel extends PreprocessingModel {
 						example.setValue(newAttribute, Double.NaN);
 					}
 				}
-			}
-			if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
-				progress.setCompleted((int) (50.0 * progressCounter / exampleSet.size() + 50));
+				if (progress != null && ++progressCounter % OPERATOR_PROGRESS_STEPS == 0) {
+					progress.setCompleted((int) (50.0d * progressCounter / totalProgress + 50));
+				}
 			}
 		}
 

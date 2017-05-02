@@ -35,6 +35,9 @@ final class AutoColumnUtils {
 	static final int CHUNK_SIZE = 1 << CHUNK_SIZE_EXP;
 	static final int CHUNK_MODULO_MASK = -1 >>> 32 - CHUNK_SIZE_EXP;
 
+	/** the maximal number of chunks per column */
+	static final int MAXIMAL_CHUNKS = Integer.MAX_VALUE / CHUNK_SIZE + 1;
+
 	/** determines after how many values the check for sparse is done */
 	static final int THRESHOLD_CHECK_FOR_SPARSE = 2048;
 

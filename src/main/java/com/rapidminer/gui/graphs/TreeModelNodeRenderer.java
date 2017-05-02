@@ -1,35 +1,22 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
-
-import com.rapidminer.gui.plotter.ColorProvider;
-import com.rapidminer.operator.learner.tree.Tree;
-import com.rapidminer.operator.learner.tree.TreeModel;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.util.Context;
-import edu.uci.ics.jung.visualization.Layer;
-import edu.uci.ics.jung.visualization.RenderContext;
-import edu.uci.ics.jung.visualization.renderers.Renderer;
-import edu.uci.ics.jung.visualization.transform.MutableTransformer;
-import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
-import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -45,31 +32,41 @@ import java.util.Map;
 import javax.swing.Icon;
 import javax.swing.JComponent;
 
+import com.rapidminer.gui.plotter.ColorProvider;
+import com.rapidminer.operator.learner.tree.Tree;
+import com.rapidminer.operator.learner.tree.TreeModel;
+
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.Context;
+import edu.uci.ics.jung.visualization.Layer;
+import edu.uci.ics.jung.visualization.RenderContext;
+import edu.uci.ics.jung.visualization.renderers.Renderer;
+import edu.uci.ics.jung.visualization.transform.MutableTransformer;
+import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
+import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
+
 
 /**
  * This class is used for rendering the nodes of a tree model.
- * 
+ *
  * @author Ingo Mierswa
- * 
+ *
  * @param <V>
  * @param <E>
  */
 public class TreeModelNodeRenderer<V, E> implements Renderer.Vertex<V, E> {
 
-	private static final int FREQUENCY_BAR_MIN_HEIGHT = 2;
-	private static final int FREQUENCY_BAR_MAX_HEIGHT = 12;
-	private static final int FREQUENCY_BAR_OFFSET_X = 3;
-	private static final int FREQUENCY_BAR_OFFSET_Y = 3;
+	private static final int FREQUENCY_BAR_MAX_HEIGHT = 20;
+	private static final int FREQUENCY_BAR_OFFSET_X = 5;
+	private static final int FREQUENCY_BAR_OFFSET_Y = 8;
 
 	private TreeModelGraphCreator graphCreator;
 	private TreeModel model;
 
-	private int maxLeafSize = 0;
-
 	public TreeModelNodeRenderer(TreeModelGraphCreator graphCreator, int maxLeafSize) {
 		this.graphCreator = graphCreator;
 		this.model = graphCreator.getModel();
-		this.maxLeafSize = maxLeafSize;
 	}
 
 	@Override
@@ -156,6 +153,7 @@ public class TreeModelNodeRenderer<V, E> implements Renderer.Vertex<V, E> {
 			g.draw(shape);
 			g.setPaint(oldPaint);
 			g.setStroke(oldStroke);
+
 		}
 
 		// leaf: draw frequency colors
@@ -165,15 +163,14 @@ public class TreeModelNodeRenderer<V, E> implements Renderer.Vertex<V, E> {
 			int numberOfLabels = countMap.size();
 			int frequencySum = tree.getFrequencySum();
 
-			double height = tree.getFrequencySum() / (double) maxLeafSize
-					* (FREQUENCY_BAR_MAX_HEIGHT - FREQUENCY_BAR_MIN_HEIGHT) + FREQUENCY_BAR_MIN_HEIGHT;
+			double height = FREQUENCY_BAR_MAX_HEIGHT;
 			double width = shape.getBounds().getWidth() - 2 * FREQUENCY_BAR_OFFSET_X - 1;
 			double xPos = shape.getBounds().getX() + FREQUENCY_BAR_OFFSET_X;
 			double yPos = shape.getBounds().getY() + shape.getBounds().getHeight() - FREQUENCY_BAR_OFFSET_Y - height;
 			ColorProvider colorProvider = new ColorProvider();
 			for (String labelValue : countMap.keySet()) {
 				int count = tree.getCount(labelValue);
-				double currentWidth = ((double) count / (double) frequencySum) * width;
+				double currentWidth = (double) count / (double) frequencySum * width;
 				Rectangle2D.Double frequencyRect = new Rectangle2D.Double(xPos, yPos, currentWidth, height);
 				int counter = model.getTrainingHeader().getAttributes().getLabel().getMapping().mapString(labelValue);
 				g.setColor(colorProvider.getPointColor((double) counter / (double) (numberOfLabels - 1)));
@@ -181,8 +178,6 @@ public class TreeModelNodeRenderer<V, E> implements Renderer.Vertex<V, E> {
 				g.setColor(Color.BLACK);
 				xPos += currentWidth;
 			}
-			g.setColor(Color.BLACK);
-			g.draw(new Rectangle2D.Double(shape.getBounds().getX() + FREQUENCY_BAR_OFFSET_X, yPos, width, height));
 
 			g.setPaint(oldPaint);
 		}

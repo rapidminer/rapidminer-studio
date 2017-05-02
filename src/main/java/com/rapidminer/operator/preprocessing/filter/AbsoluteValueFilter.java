@@ -66,9 +66,9 @@ public class AbsoluteValueFilter extends AbstractValueProcessing {
 
 	@Override
 	public ExampleSet applyOnFiltered(ExampleSet exampleSet) throws OperatorException {
-		for (Example example : exampleSet) {
-			for (Attribute attribute : exampleSet.getAttributes()) {
-				if (attribute.isNumerical()) {
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			if (attribute.isNumerical()) {
+				for (Example example : exampleSet) {
 					double value = example.getValue(attribute);
 					value = Math.abs(value);
 					example.setValue(attribute, value);

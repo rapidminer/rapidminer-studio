@@ -75,7 +75,6 @@ public class SimpleUnitExecutor implements UnitExecutor {
 
 			// execute the operator
 			operator.execute();
-			operator.freeMemory();
 
 			lastOperator = operator;
 			operator = opEnum.hasMoreElements() ? opEnum.nextElement() : null;
@@ -96,6 +95,7 @@ public class SimpleUnitExecutor implements UnitExecutor {
 				}
 				process.fireProcessFlowAfterOperator(lastOperator, operator, output);
 			}
+			lastOperator.freeMemory();
 		}
 
 	}

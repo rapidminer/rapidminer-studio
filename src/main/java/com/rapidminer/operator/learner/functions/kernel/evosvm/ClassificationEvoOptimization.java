@@ -304,6 +304,7 @@ public class ClassificationEvoOptimization extends ESOptimization implements Evo
 	 */
 	private EvoSVMModel getModel(double[] alphas) {
 		// calculate support vectors
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		Iterator<Example> reader = exampleSet.iterator();
 		List<SupportVector> supportVectors = new ArrayList<>();
 		int index = 0;
@@ -313,7 +314,7 @@ public class ClassificationEvoOptimization extends ESOptimization implements Evo
 			if (currentAlpha != 0.0d) {
 				double[] x = new double[exampleSet.getAttributes().size()];
 				int a = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					x[a++] = currentExample.getValue(attribute);
 				}
 				supportVectors.add(new SupportVector(x, ys[index], currentAlpha));
@@ -329,7 +330,7 @@ public class ClassificationEvoOptimization extends ESOptimization implements Evo
 			Example current = reader.next();
 			double[] x = new double[exampleSet.getAttributes().size()];
 			int a = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				x[a++] = current.getValue(attribute);
 			}
 			sum[index] = kernel.getSum(supportVectors, x);

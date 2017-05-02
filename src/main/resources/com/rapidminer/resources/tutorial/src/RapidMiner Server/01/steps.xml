@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<steps>
+	<step name="Learn more about RapidMiner Server.">
+		<text>RapidMiner Server is the component that allows you to run demanding processes on a dedicated machine and create a collaboration space where you can share processes, models and experience with your colleagues. </text>
+		<info>RapidMiner Server provides a common repository for multiple users. It is a secure environment where you can control who sees or executes what and keep version control. It is also a dedicated execution platform where you can run or schedule your jobs.</info>
+	</step>
+		<step name="Check your installation data.">
+		<text>The first step is to check whether you have all the needed information to connect to your RapidMiner Server. If you don't have a RapidMiner Server installation, the first step is to download and install from  <link url="https://rapidminer.com/download">here.</link> Check also our <link url="https://redirects.rapidminer.com/web/server/installation-guide">documentation.</link></text>
+		<info>What you need to know before connecting to the RapidMiner Server is: </info>
+			<text><point>The Server's URL (something like http://[your host name]:8080).</point>
+			<point>Your user and password. </point></text>
+			<text>	This information should be provided by the system administrator.</text>
+	</step>
+	<step name="Connect to a RapidMiner Server and create your process.">
+	<text>Connect to a RapidMiner Server (log in to the repository).</text>
+		<tasks>
+			<task><activity>Find</activity> the <ui>Repository</ui> panel on the left of the screen.</task>
+			<task>In the top right <ui>drop-down menu</ui>, select  <activity>Create repository</activity>, and then <ui>New RapidMiner Server repository</ui>.</task>
+			<task><activity>Fill </activity>in the connection data. The <ui>alias</ui> is the name you choose for the connection. The URL should be given by your administrator. Then <activity>type </activity>your user and password. After that, <activity>click </activity> on <ui>check connection settings</ui>.</task>
+			<task>If successful, just press finish. </task>
+		</tasks>
+		<info>Good job! You have just connected to RapidMiner Server. Now let’s see what you can do with it!</info>
+	</step>
+	<step name="Browse the repository to verify the connection.">
+	<text>Now it's time to check the connection. <activity>Find</activity> the <ui>Repository</ui> panel on the left of the screen. You should see your connection as an additional repository on the list.</text>
+		<tasks>
+			<task><activity>Double click </activity>on the connection.</task>
+			<task>In a few seconds, the folder tree will open and you'll be able to<activity> browse </activity> through it.</task>
+			<task>Create a new folder in your home directory. We'll use it in the following steps.</task>
+		</tasks>
+		<info>Great! You have connected to the RapidMiner Server</info>
+	</step>
+	<step name="Work with the RapidMiner Server's repository.">
+	<text>Let's create a process now.</text>
+		<tasks>
+			<task><activity>Drag and drop</activity> the <op>Generate Data</op> operator to the canvas.</task>
+			<task><activity>Drag and drop</activity> the <op>Store</op> operator to the canvas.</task>
+			<task><activity>Connect</activity> the output of <op>Generate Data</op> to the input of <op>Store</op>.</task>
+			<task><activity>Configure </activity>the <op>Store</op> operator to save the data in the Server's repository by just providing any name for the repository entry (by default it will be saved in the same folder as the process). Also, for this tutorial we recommend a name like "result_%{t}". The last part is a macro variable that will be replaced with the execution time. This way we can repeat the executions and see results easily.</task>
+			<task><activity>Save </activity> the process in the same Server folder by using the "Save process as..." menu and browsing to the right location.</task>
+		</tasks>
+		<info>Now our processes are located at the Server and can be shared.</info>
+	</step>
+	<step name="Understand version control.">
+		<text>We have a first version of our process, but maybe we need to refine it. Let us see how we can control different versions.</text>
+		<tasks>
+			<task>In the Server's repository, <activity>browse </activity> to your recently created process.</task>
+			<task><activity>Right-click</activity> on it and select <ui>Edit Access Rights</ui>. You can grant or deny permissions to the other users. Cancel if you don't want to change anything. </task>
+			<task><activity>Right-click</activity> again on the process and select <ui>Start new revision</ui>. </task>
+			<task>The <ui>History</ui> panel is automatically opened. Go back to the canvas and change something, like the name of the stored ExampleSet.</task>
+			<task><activity>Save</activity> the process again. </task>
+			<task>You should be able to see your two versions of the process. Don't do it now, but you can later always switch between them using the <ui>History</ui> panel.</task>
+			<task>You can close or move the panel if you need more space for the canvas. It can always be opened using the <ui>View->Show Panel</ui> menu.</task>
+		</tasks>
+		<info>Now you can configure process and folder permissions and control process versions. We are getting there!</info>
+	</step>	
+	<step name="Run and Schedule a process.">
+		<text>We have been working with a process, but now it's time to run it and see the results.</text>
+		<tasks>
+			<task>Use the drop-down menu from the arrow to the right of the <icon>16/media_play.png</icon> <ui>Run</ui> button</task>
+			<task>Several options appear, we are interested in <ui>Run process on Server</ui>. <activity>Select</activity> it.</task>
+			<task>The process is scheduled for immediate execution on RapidMiner Server. As opposed to what happens when running from Studio, no result comes back, but we have stored the results and we can check. </task>
+			<task><activity> Browse </activity> the repository again and locate the result file in the folder that you created. You may need to refresh the folder (F5).</task>
+			<task>Now, use again the drop-down menu from the arrow to the right of the <icon>16/media_play.png</icon> <ui>Run</ui> button, but this time, <ui>Schedule process on Server</ui>.</task>
+			<task>A new window is opened and you can select Server, queue, and schedule. Try to schedule the process once in 5 minutes from now.</task>
+			<task>Wait until the scheduling is run and you'll see the results in your folder.</task>
+		</tasks>
+		<info>You have run a process on RapidMiner Server, and by doing so, you have freed your personal computer from the most demanding tasks.</info>
+	</step>	
+	<step name="Congratulations!">
+		<text>Well done - you have gone through the RapidMiner Server tutorial. To quickly review:
+			<point>You have connected to a RapidMiner Server instance</point>
+			<point>You have created and stored a process</point>
+			<point>You have configured permissions and versioning</point>
+			<point>You have run and scheduled the process and you have checked the results</point>
+		</text>
+			<text>Before you celebrate too much, try some of the following challenges:</text>
+		<questions>
+			<question>Can you schedule your process to run every hour?</question>
+			<question>Can you create a process that reads data from the Server, transforms it and stores it in a different folder?</question>
+			<question>Can you configure security so that your colleagues can see everything in one of your folders, but not in another?</question>
+		</questions>
+	</step>
+</steps>

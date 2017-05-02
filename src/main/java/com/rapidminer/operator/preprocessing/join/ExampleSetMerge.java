@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing.join;
 
 import java.util.ArrayList;
@@ -23,10 +23,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.IntToDoubleFunction;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
@@ -43,6 +43,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
@@ -60,6 +61,7 @@ import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.ParameterService;
@@ -188,7 +190,7 @@ public class ExampleSetMerge extends Operator {
 
 		// create new example table
 		ExampleSet firstSet = allExampleSets.get(0);
-		List<Attribute> newAttributeList = new LinkedList<Attribute>();
+		List<Attribute> newAttributeList = new ArrayList<Attribute>();
 		HashMap<String, Attribute> newAttributeNameMap = new HashMap<String, Attribute>();
 		Map<Attribute, String> specialAttributesMap = new LinkedHashMap<Attribute, String>();
 		Iterator<AttributeRole> a = firstSet.getAttributes().allAttributeRoles();
@@ -295,41 +297,110 @@ public class ExampleSetMerge extends Operator {
 		for (ExampleSet set : allExampleSets) {
 			totalSize += set.size();
 		}
-		ExampleSetBuilder builder = ExampleSets.from(newAttributeList).withExpectedSize(totalSize);
 
-		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
-			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
-			builder.withOptimizationHint(DataManagementParameterHelper.getSelectedDataManagement(this));
-		}
+		ExampleSetBuilder builder = ExampleSets.from(newAttributeList);
 
-		// now fill table with rows, copied from source example sets
-		DataRowFactory factory = new DataRowFactory(datamanagement, '.');
-		int numberOfAttributes = newAttributeList.size();
-		for (ExampleSet exampleSet : allExampleSets) {
-			for (Example example : exampleSet) {
-				DataRow dataRow = factory.create(numberOfAttributes);
-				Iterator<Attribute> iterator = exampleSet.getAttributes().allAttributes();
-				while (iterator.hasNext()) {
-					Attribute oldAttribute = iterator.next();
-					Attribute newAttribute = newAttributeNameMap.get(oldAttribute.getName());
-					double oldValue = example.getValue(oldAttribute);
-					if (Double.isNaN(oldValue)) {
-						dataRow.set(newAttribute, oldValue);
-					} else {
-						if (oldAttribute.isNominal()) {
-							dataRow.set(newAttribute,
-									newAttribute.getMapping().mapString(oldAttribute.getMapping().mapIndex((int) oldValue)));
-						} else {
+		if (Boolean.parseBoolean(
+				ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
+			// to preserve the (legacy) data management, we must use the data row factory
+			builder.withExpectedSize(totalSize);
+			int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
+			int numberOfAttributes = newAttributeList.size();
+			DataRowFactory factory = new DataRowFactory(datamanagement, '.');
+			for (ExampleSet exampleSet : allExampleSets) {
+				for (Example example : exampleSet) {
+					DataRow dataRow = factory.create(numberOfAttributes);
+					Iterator<Attribute> iterator = exampleSet.getAttributes().allAttributes();
+					while (iterator.hasNext()) {
+						Attribute oldAttribute = iterator.next();
+						Attribute newAttribute = newAttributeNameMap.get(oldAttribute.getName());
+						double oldValue = example.getValue(oldAttribute);
+						if (Double.isNaN(oldValue)) {
 							dataRow.set(newAttribute, oldValue);
+						} else {
+							if (oldAttribute.isNominal()) {
+								dataRow.set(newAttribute, newAttribute.getMapping()
+										.mapString(oldAttribute.getMapping().mapIndex((int) oldValue)));
+							} else {
+								dataRow.set(newAttribute, oldValue);
+							}
 						}
 					}
+					// adding new row to builder
+					builder.addDataRow(dataRow);
 				}
-				// adding new row to builder
-				builder.addDataRow(dataRow);
+				checkForStop();
 			}
-			checkForStop();
+		} else {
+			builder.withBlankSize(totalSize);
+			builder.withOptimizationHint(DataManagementParameterHelper.getSelectedDataManagement(this));
+
+			int[] sizes = new int[allExampleSets.size()];
+			int i = 0;
+			for (ExampleSet set : allExampleSets) {
+				sizes[i] = set.size();
+				i++;
+			}
+			int[] sizesSums = new int[sizes.length];
+			sizesSums[0] = sizes[0];
+			for (int j = 1; j < sizes.length; j++) {
+				sizesSums[j] = sizesSums[j - 1] + sizes[j];
+			}
+
+			for (Attribute newAttribute : newAttributeList) {
+				builder.withColumnFiller(newAttribute, new IntToDoubleFunction() {
+
+					private final String attributeName = newAttribute.getName();
+
+					private ExampleSet oldSet = null;
+					private Attribute oldAttribute = null;
+
+					private int start = 0;
+					private int end = 0;
+					private int oldExampleSetIndex = -1;
+
+					@Override
+					public synchronized double applyAsDouble(int i) {
+						if (i < start || i >= end) {
+							try {
+								ExampleSetMerge.this.checkForStop();
+							} catch (ProcessStoppedException e) {
+								throw new ProcessStoppedRuntimeException();
+							}
+							int startIndex = 0;
+							end = 0;
+							if (oldExampleSetIndex > -1 && i >= sizesSums[oldExampleSetIndex]) {
+								startIndex = oldExampleSetIndex + 1;
+								end = sizesSums[oldExampleSetIndex];
+							}
+							for (int j = startIndex; j < sizesSums.length; j++) {
+								start = end;
+								end = sizesSums[j];
+								if (end > i) {
+									oldExampleSetIndex = j;
+									oldSet = allExampleSets.get(j);
+									oldAttribute = oldSet.getAttributes().get(attributeName);
+									break;
+								}
+							}
+
+						}
+						double oldValue = oldSet.getExample(i - start).getValue(oldAttribute);
+						if (Double.isNaN(oldValue)) {
+							return Double.NaN;
+						} else {
+							if (oldAttribute.isNominal()) {
+								return newAttribute.getMapping()
+										.mapString(oldAttribute.getMapping().mapIndex((int) oldValue));
+							} else {
+								return oldValue;
+							}
+						}
+					}
+				});
+			}
 		}
+
 		// create result example set
 		ExampleSet resultSet = builder.withRoles(specialAttributesMap).build();
 		resultSet.getAnnotations().addAll(firstSet.getAnnotations());

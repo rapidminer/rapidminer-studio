@@ -167,8 +167,8 @@ final class ExcelSheetSelectionWizardStep extends AbstractWizardStep {
 					throw new InvalidConfigurationException();
 				} catch (DataSetException e) {
 					calculateMetaData = true;
-					SwingTools.showSimpleErrorMessage("io.dataimport.step.excel.sheet_selection.read_failure", e,
-							e.getMessage());
+					SwingTools.showSimpleErrorMessage(wizard.getDialog(),
+							"io.dataimport.step.excel.sheet_selection.read_failure", e, e.getMessage());
 					throw new InvalidConfigurationException();
 				}
 			}

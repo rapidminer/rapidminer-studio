@@ -32,7 +32,11 @@ import java.util.LinkedList;
  * <i>not</i> synchronized.
  * 
  * @author Marco Boeck
+ * @deprecated since 7.5
+ * @see com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel ProcessRendererModel
+ * @see NewProcessUndoManager
  */
+@Deprecated
 public class ProcessUndoManager {
 
 	private final LinkedList<Triple<String, OperatorChain, Operator>> undoList;

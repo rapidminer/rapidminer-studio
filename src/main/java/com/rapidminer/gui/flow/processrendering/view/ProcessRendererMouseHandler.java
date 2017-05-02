@@ -33,7 +33,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
-import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
@@ -640,9 +639,7 @@ public class ProcessRendererMouseHandler {
 			if (e.getClickCount() == 2) {
 				if (model.getHoveringOperator() != null) {
 					if (model.getHoveringOperator() instanceof OperatorChain) {
-						model.setDisplayedChain((OperatorChain) model.getHoveringOperator());
-						model.fireDisplayedChainChanged();
-						RapidMinerGUI.getMainFrame().addViewSwitchToUndo();
+						model.setDisplayedChainAndFire((OperatorChain) model.getHoveringOperator());
 					}
 					e.consume();
 				}

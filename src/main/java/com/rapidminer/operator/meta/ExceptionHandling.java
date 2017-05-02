@@ -1,22 +1,26 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.meta;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
 
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.OperatorChain;
@@ -33,10 +37,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.LogService;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-
 
 /**
  * <p>
@@ -44,13 +44,13 @@ import java.util.logging.Level;
  * error occurs during this subprocess, this error will be neglected and this operator simply will
  * return no additional input.
  * </p>
- * 
+ *
  * <p>
  * Please use this operator with care since it will also cover errors which are not expected by the
  * analyst. In combination with a process branch, however, it can be used to handle exceptions in
  * the analysis process (i.e. expected errors).
  * </p>
- * 
+ *
  * @author Ingo Mierswa, Marius Helf
  */
 public class ExceptionHandling extends OperatorChain {
@@ -114,8 +114,8 @@ public class ExceptionHandling extends OperatorChain {
 		tryProcess.getInnerSinks().clear(Port.CLEAR_DATA);
 		catchProcess.getInnerSinks().clear(Port.CLEAR_DATA);
 
-		inputExtender.passDataThrough();
 		try {
+			inputExtender.passDataThrough(TRY_SUBPROCESS);
 			tryProcess.execute();
 			outputExtender.passDataThrough(TRY_SUBPROCESS);
 		} catch (Throwable e) {
@@ -127,6 +127,7 @@ public class ExceptionHandling extends OperatorChain {
 			withoutError = false;
 			this.throwable = e;
 
+			inputExtender.passDataThrough(CATCH_SUBPROCESS);
 			catchProcess.execute();
 			outputExtender.passDataThrough(CATCH_SUBPROCESS);
 		}

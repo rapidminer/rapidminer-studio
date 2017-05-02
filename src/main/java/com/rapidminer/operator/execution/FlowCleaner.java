@@ -37,8 +37,8 @@ enum FlowCleaner {
 	INSTANCE;
 
 	/** the cleanup is only possible if beta features are activated */
-	private boolean cleanupPossible = Boolean
-			.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES));
+	private boolean cleanupPossible = !Boolean
+			.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT));
 
 	private FlowCleaner() {
 		// register listener for (de)activation of beta features
@@ -51,8 +51,8 @@ enum FlowCleaner {
 
 			@Override
 			public void informParameterChanged(String key, String value) {
-				if (RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES.equals(key)) {
-					cleanupPossible = Boolean.parseBoolean(value);
+				if (RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT.equals(key)) {
+					cleanupPossible = !Boolean.parseBoolean(value);
 				}
 			}
 		});

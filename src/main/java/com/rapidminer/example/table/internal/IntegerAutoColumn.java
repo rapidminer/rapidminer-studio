@@ -1,24 +1,25 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.table.internal;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 
@@ -113,8 +114,7 @@ final class IntegerAutoColumn implements Column {
 		void complete() {}
 	}
 
-	private IntegerAutoChunk[] chunks = new IntegerAutoChunk[Integer.MAX_VALUE / AutoColumnUtils.CHUNK_SIZE + 1];
-	private int position = 0;
+	private IntegerAutoChunk[] chunks = new IntegerAutoChunk[1];
 	private int chunkCount = 0;
 	private int ensuredSize = 0;
 	private final DataManagement management;
@@ -151,13 +151,13 @@ final class IntegerAutoColumn implements Column {
 	}
 
 	@Override
-	public void append(double value) {
-		chunks[position >> AutoColumnUtils.CHUNK_SIZE_EXP].setLast(position & AutoColumnUtils.CHUNK_MODULO_MASK, value);
-		position++;
+	public void setLast(int row, double value) {
+		chunks[row >> AutoColumnUtils.CHUNK_SIZE_EXP].setLast(row & AutoColumnUtils.CHUNK_MODULO_MASK, value);
 	}
 
 	@Override
 	public void ensure(int size) {
+		ensureChunks(size);
 		int completeChunks = 0;
 		boolean enlargeLastChunk = false;
 		if (chunkCount > 0) {
@@ -192,6 +192,22 @@ final class IntegerAutoColumn implements Column {
 		}
 
 		ensuredSize = size;
+	}
+
+	/**
+	 * Ensures that the chunks array is big enough to hold all chunks.
+	 *
+	 * @param numberOfRows
+	 *            the number of rows that should be stored in the chunks
+	 */
+	private void ensureChunks(int numberOfRows) {
+		int chunksNeeded = numberOfRows / AutoColumnUtils.CHUNK_SIZE + 1;
+		if (chunksNeeded <= chunks.length) {
+			return;
+		}
+		int chunksMinGrowth = chunks.length == 1 ? 2 : chunks.length + (chunks.length >> 1);
+		int newLength = Math.min(AutoColumnUtils.MAXIMAL_CHUNKS, Math.max(chunksNeeded, chunksMinGrowth));
+		chunks = Arrays.copyOf(chunks, newLength);
 	}
 
 	@Override

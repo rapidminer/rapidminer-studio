@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools.parameter.internal;
 
 import java.util.HashMap;
@@ -82,25 +82,25 @@ public final class DataManagementParameterHelper {
 	public static void addParameterTypes(List<ParameterType> types, Operator operator) {
 		ParameterType standard = new ParameterTypeCategory(ExampleSetGenerator.PARAMETER_DATAMANAGEMENT,
 				"Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES,
-				DataRowFactory.TYPE_DOUBLE_ARRAY, false);
+				DataRowFactory.TYPE_DOUBLE_ARRAY, true);
 		standard.registerDependencyCondition(new ParameterCondition(operator, false) {
 
 			@Override
 			public boolean isConditionFullfilled() {
-				return !Boolean.parseBoolean(
-						ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES));
+				return Boolean.parseBoolean(
+						ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT));
 			}
 		});
 		types.add(standard);
 		ParameterType beta = new ParameterTypeCategory(PARAMETER_NEW_DATA_MANAGEMENT,
 				"The data management optimization to use. Determines, how the data is represented internally. The auto option (default) only compresses data if it is very sparse and otherwise optimizes for speed. Choose speed-optimized if you have enough memory and want to speed up your process. Choose memory-optimized if you have a lot of sparse data that has trouble fitting into memory with auto mode.",
-				NEW_DATA_MANAGMENT_OPTIONS, 0);
+				NEW_DATA_MANAGMENT_OPTIONS, 0, true);
 		beta.registerDependencyCondition(new ParameterCondition(operator, false) {
 
 			@Override
 			public boolean isConditionFullfilled() {
-				return Boolean.parseBoolean(
-						ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES));
+				return !Boolean.parseBoolean(
+						ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT));
 			}
 		});
 		types.add(beta);

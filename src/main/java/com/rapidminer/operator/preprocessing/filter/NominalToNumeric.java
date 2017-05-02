@@ -416,7 +416,7 @@ public class NominalToNumeric extends PreprocessingOperator {
 	@Override
 	public boolean writesIntoExistingData() {
 		if (getCompatibilityLevel().isAbove(VERSION_MAY_WRITE_INTO_DATA)) {
-			return super.writesIntoExistingData();
+			return false;
 		} else {
 			// old version: true only if original output port is connected
 			return isOriginalOutputConnected() && super.writesIntoExistingData();

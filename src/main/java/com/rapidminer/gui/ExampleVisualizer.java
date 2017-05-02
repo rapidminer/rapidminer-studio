@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui;
 
 import java.awt.Dimension;
@@ -66,15 +66,19 @@ public class ExampleVisualizer implements ObjectVisualizer {
 		remapIds();
 
 		double idValue = Double.NaN;
-		if (idAttribute.isNominal()) {
-			idValue = objId instanceof String ? idAttribute.getMapping().mapString((String) objId) : (Double) objId;
-		} else {
-			idValue = objId instanceof String ? Double.parseDouble((String) objId) : (Double) objId;
-		}
-		Example example = exampleSet.getExampleFromId(idValue);
 		JComponent main;
-		if (example != null) {
-			main = makeMainVisualizationComponent(example);
+		if (idAttribute != null) {
+			if (idAttribute.isNominal()) {
+				idValue = objId instanceof String ? idAttribute.getMapping().mapString((String) objId) : (Double) objId;
+			} else {
+				idValue = objId instanceof String ? Double.parseDouble((String) objId) : (Double) objId;
+			}
+			Example example = exampleSet.getExampleFromId(idValue);
+			if (example != null) {
+				main = makeMainVisualizationComponent(example);
+			} else {
+				main = new JLabel("No information available for object '" + objId + "'.");
+			}
 		} else {
 			main = new JLabel("No information available for object '" + objId + "'.");
 		}
@@ -132,8 +136,8 @@ public class ExampleVisualizer implements ObjectVisualizer {
 		table.setModel(tableModel);
 		main = new ExtendedJScrollPane(table);
 		main.setBorder(null);
-		int tableHeight = (int) (table.getPreferredSize().getHeight()
-				+ table.getTableHeader().getPreferredSize().getHeight() + 5); // 5 for border
+		int tableHeight = (int) (table.getPreferredSize().getHeight() + table.getTableHeader().getPreferredSize().getHeight()
+				+ 5); // 5 for border
 		if (tableHeight < main.getPreferredSize().getHeight()) {
 			main.setPreferredSize(new Dimension((int) main.getPreferredSize().getWidth(), tableHeight));
 		}

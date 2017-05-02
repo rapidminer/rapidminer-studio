@@ -34,12 +34,12 @@ import com.rapidminer.operator.ports.OutputPort;
  * matrixes up to now cannot be used by other operators but can be displayed to the user in the
  * result tab.
  * </p>
- * 
+ *
  * <p>
  * Please note that this simple implementation performs a data scan for each attribute combination
  * and might therefore take some time for non-memory example tables.
  * </p>
- * 
+ *
  * @author Ingo Mierswa
  */
 public abstract class AbstractPairwiseMatrixOperator extends Operator {
@@ -77,10 +77,11 @@ public abstract class AbstractPairwiseMatrixOperator extends Operator {
 
 		// calculate mutual information
 		NumericalMatrix matrix = new NumericalMatrix(getMatrixName(), exampleSet, true);
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		int k = 0;
-		for (Attribute firstAttribute : exampleSet.getAttributes()) {
+		for (Attribute firstAttribute : regularAttributes) {
 			int l = 0;
-			for (Attribute secondAttribute : exampleSet.getAttributes()) {
+			for (Attribute secondAttribute : regularAttributes) {
 				matrix.setValue(k, l, getMatrixValue(exampleSet, firstAttribute, secondAttribute));
 				checkForStop();
 				l++;

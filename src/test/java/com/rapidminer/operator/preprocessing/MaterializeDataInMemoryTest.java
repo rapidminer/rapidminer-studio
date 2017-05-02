@@ -51,12 +51,12 @@ import com.rapidminer.tools.ParameterService;
 @RunWith(value = Parameterized.class)
 public class MaterializeDataInMemoryTest {
 
-	public MaterializeDataInMemoryTest(boolean columnarTable) {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES,
-				String.valueOf(columnarTable));
+	public MaterializeDataInMemoryTest(boolean legacyMode) {
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT,
+				String.valueOf(legacyMode));
 	}
 
-	@Parameters(name = "betaFeatures={0}")
+	@Parameters(name = "legacyMode={0}")
 	public static Collection<Object> params() {
 		return Arrays.asList(true, false);
 	}

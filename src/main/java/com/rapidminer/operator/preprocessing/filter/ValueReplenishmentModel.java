@@ -45,8 +45,6 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = -4886756106998999255L;
 
-	private static final int PROGRESS_UPDATE_STEPS = 100;
-
 	private HashMap<String, Double> numericalAndDateReplacementMap;
 	private HashMap<String, String> nominalReplacementMap;
 
@@ -88,15 +86,16 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 
 		// initialize progress
 		OperatorProgress progress = null;
+		long progressCounter = 0;
+		long totalProgress = (long) attributes.size() * exampleSet.size();
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
-			progress.setTotal(exampleSet.size());
+			progress.setTotal(1000);
 		}
-		int progressCounter = 0;
 
-		for (Example example : exampleSet) {
-			i = 0;
-			for (Attribute attribute : attributes) {
+		i = 0;
+		for (Attribute attribute : attributes) {
+			for (Example example : exampleSet) {
 				if (replace[i]) {
 					double value = example.getValue(attribute);
 					if (value == replaceWhat || Double.isNaN(replaceWhat) && Double.isNaN(value)) {
@@ -104,11 +103,11 @@ public class ValueReplenishmentModel extends PreprocessingModel {
 						example.setValue(attribute, by[i]);
 					}
 				}
-				i++;
+				if (progress != null && ++progressCounter % 100_000 == 0) {
+					progress.setCompleted((int) (1000.0d * progressCounter / totalProgress));
+				}
 			}
-			if (progress != null && ++progressCounter % PROGRESS_UPDATE_STEPS == 0) {
-				progress.setCompleted(progressCounter);
-			}
+			i++;
 		}
 		return exampleSet;
 	}

@@ -18,6 +18,8 @@
  */
 package com.rapidminer.studio.concurrency.internal;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
@@ -36,6 +39,7 @@ import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
 import com.rapidminer.studio.internal.ParameterServiceRegistry;
 import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
+import com.rapidminer.tools.LogService;
 
 
 /**
@@ -142,10 +146,17 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		}
 
 		// submit callables without further checks
-		List<Future<T>> futures = new ArrayList<>(callables.size());
-		for (Callable<T> callable : callables) {
-			futures.add(getForkJoinPool().submit(callable));
-		}
+		final List<Future<T>> futures = new ArrayList<>(callables.size());
+		AccessController.doPrivileged(new PrivilegedAction<Void>() {
+
+			@Override
+			public Void run() {
+				for (Callable<T> callable : callables) {
+					futures.add(getForkJoinPool().submit(callable));
+				}
+				return null;
+			}
+		});
 		return futures;
 	}
 
@@ -252,7 +263,10 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 			if (pool != null) {
 				pool.shutdown();
 			}
-			pool = new ForkJoinPool(getDesiredParallelismLevel());
+			int desiredParallelismLevel = getDesiredParallelismLevel();
+			pool = new ForkJoinPool(desiredParallelismLevel);
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.concurrency.concurrency_context.pool_creation",
+					desiredParallelismLevel);
 			return pool;
 		} finally {
 			WRITE_LOCK.unlock();
@@ -288,8 +302,12 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		if (numberOfThreads != null) {
 			try {
 				userLevel = Integer.parseInt(numberOfThreads);
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.concurrency.concurrency_context.parse_success",
+						userLevel);
 			} catch (NumberFormatException e) {
 				// ignore and use default value
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.concurrency.concurrency_context.parse_failure",
+						numberOfThreads);
 			}
 		}
 
@@ -297,8 +315,7 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 			userLevel = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
 		}
 
-		// should not happen, but we want to avoid any exception
-		// during the pool creation
+		// should not happen, but we want to avoid any exception during pool creation
 		if (userLevel > FJPOOL_MAXIMAL_PARALLELISM) {
 			userLevel = FJPOOL_MAXIMAL_PARALLELISM;
 		}

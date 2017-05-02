@@ -140,8 +140,8 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 		attributes.add(label);
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
-		if (sparseRepresentation && Boolean
-				.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+		if (sparseRepresentation && !Boolean
+				.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			builder.withOptimizationHint(DataManagement.MEMORY_OPTIMIZED);
 			sparseRepresentation = false;
 		}

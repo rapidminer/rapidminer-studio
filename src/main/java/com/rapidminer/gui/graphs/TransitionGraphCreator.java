@@ -1,27 +1,28 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
 
 import java.awt.Dimension;
 import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,11 +59,13 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.visualization.dependencies.TransitionGraph;
 import com.rapidminer.tools.ObjectVisualizerService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.container.Pair;
 
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.EdgeType;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.renderers.Renderer.EdgeLabel;
 
 
 /**
@@ -169,11 +172,13 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 
 	private final ExampleSet exampleSet;
 
-	private final Map<String, String> edgeLabelMap = new HashMap<String, String>();
+	private final Map<String, String> edgeLabelMap = new HashMap<>();
 
-	private final Map<String, Double> edgeStrengthMap = new HashMap<String, Double>();
+	private final Map<String, Double> edgeStrengthMap = new HashMap<>();
 
-	private final Map<String, String> vertexLabelMap = new HashMap<String, String>();
+	private final Map<String, String> vertexLabelMap = new HashMap<>();
+
+	private Map<String, List<Pair<String, Double>>> adjacencyMap = new HashMap<>();
 
 	private final DefaultObjectViewer objectViewer;
 
@@ -190,7 +195,6 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 		this.nodeDescription = transitionGraph.getNodeDescription();
 
 		SortedSet<SourceId> sourceNames = new TreeSet<SourceId>();
-		// Attribute idAttribute = exampleSet.getAttributes().getId();
 		for (Example example : exampleSet) {
 			Object id = example.getValue(sourceAttribute);
 			if (sourceAttribute.isNominal()) {
@@ -218,7 +222,11 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 		this.numberOfHops.setPreferredSize(
 				new Dimension(this.numberOfHops.getPreferredSize().width, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 
-		objectViewer = new DefaultObjectViewer(exampleSet);
+		if (exampleSet.getAttributes().getId() != null) {
+			objectViewer = new DefaultObjectViewer(exampleSet);
+		} else {
+			objectViewer = null;
+		}
 	}
 
 	@Override
@@ -245,7 +253,7 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 
 	@Override
 	public String getVertexToolTip(String id) {
-		return id;
+		return createTooltip(id);
 	}
 
 	/**
@@ -316,6 +324,7 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 		}
 		edgeLabelMap.clear();
 		edgeStrengthMap.clear();
+		adjacencyMap.clear();
 
 		// remove old vertices if available
 		Iterator<String> v = vertexLabelMap.keySet().iterator();
@@ -390,8 +399,8 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 							edgeName = strength + "";
 						}
 
-						sortableEdges.add(new SortableEdge(source, target, edgeName, strength,
-								SortableEdge.DIRECTION_INCREASE));
+						sortableEdges
+								.add(new SortableEdge(source, target, edgeName, strength, SortableEdge.DIRECTION_INCREASE));
 
 						newSources.add(target);
 					}
@@ -446,7 +455,22 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 
 			String idString = edgeFactory.create();
 			graph.addEdge(idString, sortableEdge.getFirstVertex(), sortableEdge.getSecondVertex(), EdgeType.DIRECTED);
-			edgeLabelMap.put(idString, Tools.formatIntegerIfPossible(sortableEdge.getEdgeValue()));
+			edgeLabelMap.put(idString, Tools.formatNumber(sortableEdge.getEdgeValue(), 2));
+
+			List<Pair<String, Double>> edgesFirstList = adjacencyMap.get(sortableEdge.getFirstVertex());
+			if (edgesFirstList == null) {
+				edgesFirstList = new ArrayList<>();
+				adjacencyMap.put(sortableEdge.getFirstVertex(), edgesFirstList);
+			}
+			Pair<String, Double> pair = new Pair<>(sortableEdge.getSecondVertex(), sortableEdge.getEdgeValue());
+			addIfKeyNotYetExists(edgesFirstList, pair);
+			List<Pair<String, Double>> edgesSecondList = adjacencyMap.get(sortableEdge.getSecondVertex());
+			if (edgesSecondList == null) {
+				edgesSecondList = new ArrayList<>();
+				adjacencyMap.put(sortableEdge.getSecondVertex(), edgesSecondList);
+			}
+			pair = new Pair<>(sortableEdge.getFirstVertex(), sortableEdge.getEdgeValue());
+			addIfKeyNotYetExists(edgesSecondList, pair);
 
 			double strength = sortableEdge.getEdgeValue();
 
@@ -459,8 +483,8 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 		}
 
 		for (Entry<String, Double> entry : strengthMap.entrySet()) {
-			edgeStrengthMap.put(entry.getKey(), (strengthMap.get(entry.getKey()) - minStrength)
-					/ (maxStrength - minStrength));
+			edgeStrengthMap.put(entry.getKey(),
+					(strengthMap.get(entry.getKey()) - minStrength) / (maxStrength - minStrength));
 		}
 	}
 
@@ -510,22 +534,25 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 
 			@Override
 			public Paint transform(String name) {
-				if (sourceFilter.getSelectedIndex() > 0 && ((SourceId) sourceFilter.getSelectedItem()).getId().equals(name)) {
-					return SwingTools.LIGHT_YELLOW;
+				if (viewer.getPickedVertexState().isPicked(name)) {
+					return GraphViewer.NODE_SELECTED;
+				} else if (sourceFilter.getSelectedIndex() > 0
+						&& ((SourceId) sourceFilter.getSelectedItem()).getId().equals(name)) {
+					return GraphViewer.NODE_ON_PATH;
 				} else {
-					return SwingTools.LIGHT_BLUE;
+					return GraphViewer.NODE_BACKGROUND;
 				}
 			}
 		};
 	}
 
-	/** Returns false. */
+	/** Returns true. */
 	@Override
 	public boolean showEdgeLabelsDefault() {
-		return false;
+		return true;
 	}
 
-	/** Returns false. */
+	/** Returns true. */
 	@Override
 	public boolean showVertexLabelsDefault() {
 		return true;
@@ -559,5 +586,86 @@ public class TransitionGraphCreator extends GraphCreatorAdaptor {
 	@Override
 	public GraphObjectViewer getObjectViewer() {
 		return objectViewer;
+	}
+
+	@Override
+	public EdgeLabel<String, String> getEdgeLabelRenderer() {
+		return new TreeModelEdgeLabelRenderer<String, String>();
+	}
+
+	/**
+	 * Create the tooltip for a node.
+	 *
+	 * @param id
+	 *            the id of the node for which to create the tooltip
+	 * @return the HTML-formatted tooltip string
+	 */
+	private String createTooltip(String id) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<html><div style=\"font-size: 10px; font-family: 'Open Sans'\">");
+		sb.append("<p style=\"font-size: 110%; text-align: center; font-family: 'Open Sans Semibold'\"><b>" + id
+				+ "</b><hr NOSHADE style=\"color: '#000000'; width: 95%; \"/></p><br/>");
+		sb.append("Top adjacent items:&nbsp;"
+				+ SwingTools.transformToolTipText(formatAdjacencyMap(adjacencyMap.get(id)), false, 200, false, false));
+		sb.append("</div></html>");
+
+		return sb.toString();
+	}
+
+	/**
+	 * Displays the rule premise/conclusion list contents nicely formatted for humans.
+	 *
+	 * @param dependencyList
+	 *            the list of premises/conclusions of the rule to format
+	 * @return the formatted string
+	 */
+	private String formatAdjacencyMap(List<Pair<String, Double>> list) {
+		StringBuilder sb = new StringBuilder();
+
+		if (list == null) {
+			sb.append('-');
+			return sb.toString();
+		}
+
+		int counter = 0;
+		for (Pair<String, Double> edge : list) {
+			sb.append("<br/>");
+			sb.append(edge.getFirst());
+			sb.append(' ');
+			sb.append('-');
+			sb.append(' ');
+			sb.append("<i>");
+			sb.append(Tools.formatNumber(edge.getSecond(), 2));
+			sb.append("</i>");
+			if (counter++ >= 2) {
+				break;
+			}
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Adds the given {@link Pair} if the key of the pair does not yet exist in any pair of the
+	 * given list.
+	 * 
+	 * @param list
+	 *            the list which must not contain the key of the given pair
+	 * @param pair
+	 *            the pair to potentially insert
+	 */
+	private static void addIfKeyNotYetExists(List<Pair<String, Double>> list, Pair<String, Double> pair) {
+		if (pair.getFirst() == null) {
+			return;
+		}
+
+		for (Pair<String, Double> p : list) {
+			if (pair.getFirst().equals(p.getFirst())) {
+				return;
+			}
+		}
+
+		list.add(pair);
 	}
 }

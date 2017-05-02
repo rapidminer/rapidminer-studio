@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.meta;
 
 import java.util.Iterator;
@@ -318,10 +318,8 @@ public class BayBoostModel extends PredictionModel implements MetaModel {
 
 		// Initialize each intermediate estimate with the odds ratio of
 		// the corresponding class:
-		Iterator<Example> reader = exampleSet.iterator();
-		while (reader.hasNext()) {
-			Example example = reader.next();
-			for (int i = 0; i < specAttrib.length; i++) {
+		for (int i = 0; i < specAttrib.length; i++) {
+			for (Example example : exampleSet) {
 				example.setValue(specAttrib[i], priorOdds[i]);
 			}
 		}
@@ -408,9 +406,7 @@ public class BayBoostModel extends PredictionModel implements MetaModel {
 	}
 
 	private void updateEstimates(ExampleSet exampleSet, ContingencyMatrix cm, Attribute[] specialAttributes) {
-		Iterator<Example> reader = exampleSet.iterator();
-		while (reader.hasNext()) {
-			Example example = reader.next();
+		for (Example example : exampleSet) {
 			int predicted = (int) example.getPredictedLabel();
 
 			L: for (int j = 0; j < cm.getNumberOfClasses(); j++) {

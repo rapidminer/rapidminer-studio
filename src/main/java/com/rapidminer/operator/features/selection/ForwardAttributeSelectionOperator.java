@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.features.selection;
 
 import java.util.ArrayList;
@@ -335,7 +335,7 @@ public class ForwardAttributeSelectionOperator extends OperatorChain {
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_MIN_ABSOLUT_INCREASE,
-				"If the absolut performance increase to the last step drops below this threshold, the selection will be stopped.",
+				"If the absolute performance increase to the last step drops below this threshold, the selection will be stopped.",
 				0d, Double.POSITIVE_INFINITY, true);
 		type.setExpert(false);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_RELATIVE_INCREASE, true, false));

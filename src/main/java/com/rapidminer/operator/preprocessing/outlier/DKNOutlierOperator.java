@@ -105,6 +105,7 @@ public class DKNOutlierOperator extends AbstractOutlierDetection {
 		Iterator<Example> reader = eSet.iterator();
 		int searchSpaceDimension = eSet.getAttributes().size();
 		SearchSpace sr = new SearchSpace(searchSpaceDimension, k, k);
+		Attribute[] regularAttributes = eSet.getAttributes().createRegularAttributeArray();
 
 		// now read through the Examples of the ExampleSet
 		int counter = 0;
@@ -120,7 +121,7 @@ public class DKNOutlierOperator extends AbstractOutlierDetection {
 																									// label
 			counter++;
 			int i = 0;
-			for (Attribute attribute : eSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				so.setVektor(i++, example.getValue(attribute)); // get the attributes for the so
 																// from example and pass it on
 			}

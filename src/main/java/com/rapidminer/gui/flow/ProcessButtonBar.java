@@ -25,7 +25,6 @@ import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.tools.ParentButtonPanel;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorChain;
 
 
 /**
@@ -44,16 +43,8 @@ public class ProcessButtonBar extends ParentButtonPanel<Operator> {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainFrame.selectOperator(getSelectedNode());
-				if (getSelectedNode() instanceof OperatorChain) {
-					mainFrame.getProcessPanel().getProcessRenderer().getModel()
-							.setDisplayedChain((OperatorChain) getSelectedNode());
-				} else {
-					mainFrame.getProcessPanel().getProcessRenderer().getModel()
-							.setDisplayedChain(getSelectedNode().getParent());
-				}
-				mainFrame.getProcessPanel().getProcessRenderer().getModel().fireDisplayedChainChanged();
-				mainFrame.addViewSwitchToUndo();
+				Operator selectedNode = getSelectedNode();
+				mainFrame.selectAndShowOperator(selectedNode, false);
 			}
 		});
 	}

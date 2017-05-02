@@ -281,7 +281,7 @@ public class AttributeWeightsDialog extends JDialog {
 			AttributeWeights fileWeights = AttributeWeights.load(file);
 			attributeTableModel.mergeWeights(fileWeights);
 		} catch (IOException e) {
-			SwingTools.showSimpleErrorMessage("cannot_load_attr_weights_from_file", e, file.getName());
+			SwingTools.showSimpleErrorMessage(this, "cannot_load_attr_weights_from_file", e, file.getName());
 		}
 		update();
 	}
@@ -291,7 +291,7 @@ public class AttributeWeightsDialog extends JDialog {
 		try {
 			attributeTableModel.getAttributeWeights().writeAttributeWeights(file, Tools.getDefaultEncoding());
 		} catch (IOException e) {
-			SwingTools.showSimpleErrorMessage("cannot_write_attr_weights_to_file", e, file.getName());
+			SwingTools.showSimpleErrorMessage(this, "cannot_write_attr_weights_to_file", e, file.getName());
 		}
 	}
 

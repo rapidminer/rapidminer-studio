@@ -1,26 +1,31 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.flow;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,6 +36,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
@@ -40,6 +47,7 @@ import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnota
 import com.rapidminer.gui.flow.processrendering.background.ProcessBackgroundImageVisualizer;
 import com.rapidminer.gui.flow.processrendering.connections.RemoveHoveredConnectionDecorator;
 import com.rapidminer.gui.flow.processrendering.connections.RemoveSelectedConnectionDecorator;
+import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererAnnotationEvent;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererEventListener;
 import com.rapidminer.gui.flow.processrendering.event.ProcessRendererModelEvent;
@@ -64,11 +72,96 @@ import com.vlsolutions.swing.docking.Dockable;
  * Contains the main {@link ProcessRendererView} and a {@link ProcessButtonBar} to navigate through
  * the process.
  *
- * @author Simon Fischer, Tobias Malbrecht
+ * @author Simon Fischer, Tobias Malbrecht, Jan Czogalla
  */
 public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
+	/**
+	 * A helper class to scroll to the view position of the currently displayed operator chain, e.g.
+	 * after the displayed chain has changed.
+	 *
+	 * @author Jan Czogalla
+	 * @see ProcessPanel#scrollToViewPosition(Point)
+	 * @see ProcessPanel#scrollToProcessPosition(Point, int)
+	 * @see ProcessPanel#scrollToOperator(Operator)
+	 * @since 7.5
+	 */
+	private final class Scroller implements ChangeListener, PropertyChangeListener {
+
+		private boolean drawn = false;
+		private boolean running = false;
+
+		private Operator op;
+
+		@Override
+		public void stateChanged(ChangeEvent e) {
+			if (running) {
+				return;
+			}
+			getViewPort().removeChangeListener(this);
+			propertyChange(null);
+		}
+
+		private void scroll() {
+			ProcessRendererModel model = renderer.getModel();
+			OperatorChain opChain = model.getDisplayedChain();
+			if (opChain == null) {
+				return;
+			}
+			if (op != null && op != opChain) {
+				// scroll to operator after selection
+				// force centering (happened after displayed chain changed)
+				scrollToOperator(op, true);
+				drawn = true;
+				return;
+			}
+
+			Point position = model.getScrollPosition(opChain);
+			int index = -1;
+			if (position != null) {
+				model.resetScrollPosition(opChain);
+				Double i = model.getScrollIndex(opChain);
+				if (i != null) {
+					model.resetScrollIndex(opChain);
+					index = i.intValue();
+				}
+			} else {
+				position = model.getOperatorChainPosition(opChain);
+			}
+			if (position == null) {
+				position = new Point();
+			}
+			if (index == -1) {
+				// scroll to zoom-specific position (e.g. re-entering the current chain)
+				scrollToViewPosition(position);
+			} else {
+				// scroll to process-specific position (e.g. after zooming)
+				scrollToProcessPosition(position, index);
+			}
+			drawn = true;
+		}
+
+		public void setOperator(Operator op) {
+			this.op = op;
+		}
+
+		public boolean isFinished() {
+			return drawn;
+		}
+
+		@Override
+		public synchronized void propertyChange(PropertyChangeEvent evt) {
+			running = true;
+			getViewPort().removePropertyChangeListener(SCROLLER_UPDATE, this);
+			scroll();
+			running = false;
+		}
+
+	}
+
 	private static final long serialVersionUID = -4419160224916991497L;
+
+	public static final String SCROLLER_UPDATE = "rm.scroller_update";
 
 	/** the process renderer instance */
 	private final ProcessRendererView renderer;
@@ -123,6 +216,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 						break;
 					case PROCESS_SIZE_CHANGED:
 					case MISC_CHANGED:
+					case DISPLAYED_CHAIN_WILL_CHANGE:
 					default:
 						break;
 				}
@@ -133,7 +227,110 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 				// don't care
 			}
 		});
+
 		renderer = new ProcessRendererView(model, this, mainFrame);
+
+		// listen for operator selection and view changes (displayed chain/zoom) to adjust view
+		// position as needed
+		model.registerEventListener(new ProcessRendererEventListener() {
+
+			Scroller scroller;
+
+			@Override
+			public void operatorsChanged(ProcessRendererOperatorEvent e, Collection<Operator> operators) {
+				switch (e.getEventType()) {
+					case SELECTED_OPERATORS_CHANGED:
+						Operator operator = operators.iterator().next();
+						Rectangle2D opRect = model.getOperatorRect(operator);
+						OperatorChain parent = operator.getParent();
+						if (opRect == null || parent == null || model.getDisplayedChain() != parent) {
+							break;
+						}
+						if (model.getRestore(operator)) {
+							// don't scroll further after undo/redo
+							model.resetRestore(operator);
+							break;
+						}
+						if (operators.size() != 1) {
+							// only scroll to operator if it is the single one selected;
+							// there is no sensible behavior for scrolling to multiple operators yet
+							return;
+						}
+						if (scroller != null && !scroller.isFinished()) {
+							// scroll to operator after new chain is painted
+							scroller.setOperator(operator);
+						} else {
+							// scroll to operator directly (chain is displayed)
+							scrollToOperator(operator);
+						}
+						break;
+					case OPERATORS_MOVED:
+					case PORTS_CHANGED:
+					default:
+						break;
+				}
+			}
+
+			@Override
+			public void modelChanged(ProcessRendererModelEvent e) {
+				switch (e.getEventType()) {
+					case DISPLAYED_CHAIN_WILL_CHANGE:
+					// before change: save zoom lvl & center point
+					{
+						OperatorChain opChain = model.getDisplayedChain();
+						if (opChain == null) {
+							return;
+						}
+						// always save zoom, even if no scrollbars exist
+						model.setOperatorChainZoom(opChain, model.getZoomFactor());
+
+						// only need to save scroll position if scrollbars exist
+						if (scroller != null && !scroller.isFinished()) {
+							return;
+						} else {
+							scroller = null;
+						}
+						Point position = getCurrentViewCenter();
+						model.setOperatorChainPosition(opChain, position);
+						break;
+					}
+					case DISPLAYED_CHAIN_CHANGED:
+						// after change: restore zoom lvl first
+						OperatorChain opChain = model.getDisplayedChain();
+						if (opChain == null) {
+							break;
+						}
+						Double zoom = model.getOperatorChainZoom(opChain);
+						if (zoom != null) {
+							if (zoom != model.getZoomFactor()) {
+								model.setZoomFactor(zoom);
+								model.fireProcessZoomChanged();
+							}
+						} else if (model.getZoomFactor() != 1) {
+							model.resetZoom();
+							model.fireProcessZoomChanged();
+						}
+						//$FALL-THROUGH$
+					case PROCESS_ZOOM_CHANGED:
+						if (scroller == null || scroller.isFinished()) {
+							// scroll to position as soon as view port has adjusted
+							getViewPort().addChangeListener(scroller = new Scroller());
+							getViewPort().addPropertyChangeListener(SCROLLER_UPDATE, scroller);
+						}
+						break;
+					case DISPLAYED_PROCESSES_CHANGED:
+					case MISC_CHANGED:
+					case PROCESS_SIZE_CHANGED:
+					default:
+						break;
+				}
+			}
+
+			@Override
+			public void annotationsChanged(ProcessRendererAnnotationEvent e, Collection<WorkflowAnnotation> annotations) {
+				// don't care
+			}
+		});
 
 		flowVisualizer = new FlowVisualizer(renderer);
 		annotationsHandler = new AnnotationsVisualizer(renderer, flowVisualizer);
@@ -159,6 +356,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				fireProcessZoomWillChange();
 				model.zoomIn();
 				model.fireProcessZoomChanged();
 			}
@@ -169,6 +367,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				fireProcessZoomWillChange();
 				model.zoomOut();
 				model.fireProcessZoomChanged();
 			}
@@ -179,6 +378,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				fireProcessZoomWillChange();
 				model.resetZoom();
 				model.fireProcessZoomChanged();
 			}
@@ -218,6 +418,19 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 	}
 
 	/**
+	 * Fires update before zoom changes, keeping the view centered
+	 *
+	 * @see ProcessRendererModel#prepareProcessZoomWillChange(Point, int)
+	 * @since 7.5
+	 */
+	private void fireProcessZoomWillChange() {
+		Point center = getCurrentViewCenter();
+		int index = renderer.getProcessIndexUnder(center);
+		center = renderer.toProcessSpace(center, index);
+		renderer.getModel().prepareProcessZoomWillChange(center, index);
+	}
+
+	/**
 	 * Shows the specified {@link OperatorChain} in the {@link ProcessRendererView}.
 	 *
 	 * @param operatorChain
@@ -233,8 +446,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 		this.operatorChain = operatorChain;
 
-		renderer.getModel().setDisplayedChain(operatorChain);
-		renderer.getModel().fireDisplayedChainChanged();
+		renderer.getModel().setDisplayedChainAndFire(operatorChain);
 	}
 
 	@Override
@@ -314,6 +526,129 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 
 	public JViewport getViewPort() {
 		return scrollPane.getViewport();
+	}
+
+	/** Returns the center position of the current view. */
+	public Point getCurrentViewCenter() {
+		Rectangle viewRect = getViewPort().getViewRect();
+		Point center = new Point((int) viewRect.getCenterX(), (int) viewRect.getCenterY());
+		return center;
+	}
+
+	/**
+	 * Scrolls the view to the specified {@link Operator}, making it visible. Will not force
+	 * centering
+	 *
+	 * @param operator
+	 *            the operator to focus on
+	 * @return whether the scrolling was successful
+	 * @since 7.5
+	 * @see #scrollToOperator(Operator, boolean)
+	 */
+	public boolean scrollToOperator(Operator operator) {
+		return scrollToOperator(operator, false);
+	}
+
+	/**
+	 * Scrolls the view to the specified {@link Operator}, making it the center of the view if
+	 * necessary, indicated by the flag.
+	 *
+	 * @param operator
+	 *            the operator to focus on
+	 * @param toCenter
+	 *            flag to indicate whether to force centering
+	 * @return whether the scrolling was successful
+	 * @since 7.5
+	 * @see #scrollToViewPosition(Point)
+	 */
+	public boolean scrollToOperator(Operator operator, boolean toCenter) {
+		Rectangle2D opRect = renderer.getModel().getOperatorRect(operator);
+		if (opRect == null) {
+			return false;
+		}
+		int pIndex = renderer.getProcessIndexOfOperator(operator);
+		if (pIndex == -1) {
+			return false;
+		}
+		Rectangle opViewRect = getOpViewRect(opRect, pIndex);
+		Rectangle viewRect = getViewPort().getViewRect();
+		if (!toCenter) {
+			if (viewRect.contains(opViewRect)) {
+				// if operator visible, do nothing
+				return false;
+			}
+			if (viewRect.intersects(opViewRect)) {
+				// if partially visible, just scroll it into view
+				opViewRect.translate(-viewRect.x, -viewRect.y);
+				getViewPort().scrollRectToVisible(opViewRect);
+				// return false nonetheless, see PortInfoBubble
+				return false;
+			}
+		}
+		Point opCenter = new Point((int) opViewRect.getCenterX(), (int) opViewRect.getCenterY());
+		scrollToViewPosition(opCenter);
+		return true;
+	}
+
+	/**
+	 * Calculates the view rectangle of the given process rectangle, adding in some border padding.
+	 *
+	 * @param opRect
+	 *            the operator rectangle in the process
+	 * @param pIndex
+	 *            the process index of the corresponding operator
+	 * @return the view rectangle
+	 * @since 7.5
+	 */
+	private Rectangle getOpViewRect(Rectangle2D opRect, int pIndex) {
+		Rectangle target = new Rectangle();
+		target.setLocation(renderer.fromProcessSpace(opRect.getBounds().getLocation(), pIndex));
+		double zoomFactor = renderer.getModel().getZoomFactor();
+		target.setSize((int) (opRect.getWidth() * zoomFactor), (int) (opRect.getHeight() * zoomFactor));
+		target.grow(ProcessDrawer.PORT_SIZE, ProcessDrawer.WALL_WIDTH * 2);
+		return target;
+	}
+
+	/**
+	 * Scrolls the view to the specified {@link Point center point}.
+	 *
+	 * @param center
+	 *            the point to focus on
+	 * @since 7.5
+	 * @see #scrollToProcessPosition(Point)
+	 */
+	public void scrollToViewPosition(Point center) {
+		getViewPort().scrollRectToVisible(getScrollRectangle(center));
+	}
+
+	/**
+	 * Scrolls the view to the specified {@link Point process point}.
+	 *
+	 * @param center
+	 *            the point to focus on
+	 * @param processIndex
+	 *            the index of the process to focus on
+	 * @since 7.5
+	 * @see #scrollToViewPosition(Point)
+	 */
+	public void scrollToProcessPosition(Point center, int processIndex) {
+		scrollToViewPosition(renderer.fromProcessSpace(center, processIndex));
+	}
+
+	/**
+	 * Calculates the relative scroll rectangle from the current view, so that the specified
+	 * {@link Point} is in the center if possible.
+	 *
+	 * @param center
+	 *            the point to focus on
+	 * @return the relative scroll rectangle
+	 * @since 7.5
+	 */
+	private Rectangle getScrollRectangle(Point center) {
+		Point newViewPoint = new Point(center);
+		Rectangle currentViewRect = getViewPort().getViewRect();
+		newViewPoint.translate((int) -currentViewRect.getCenterX(), (int) -currentViewRect.getCenterY());
+		return new Rectangle(newViewPoint, currentViewRect.getSize());
 	}
 
 	/**

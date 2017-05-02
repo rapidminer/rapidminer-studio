@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui;
 
 import java.awt.Color;
@@ -100,6 +100,7 @@ import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.plugin.Plugin;
 import com.rapidminer.tools.update.internal.UpdateManagerRegistry;
+import com.rapidminer.tools.usagestats.CallToActionScheduler;
 import com.rapidminer.tools.usagestats.UsageStatistics;
 import com.rapidminer.tools.usagestats.UsageStatsTransmissionDialog;
 import com.vlsolutions.swing.docking.DockableContainerFactory;
@@ -132,6 +133,12 @@ public class RapidMinerGUI extends RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_GUI_MAX_SORTABLE_ROWS = "rapidminer.gui.max_sortable_rows";
 	public static final String PROPERTY_RAPIDMINER_GUI_MAX_DISPLAYED_VALUES = "rapidminer.gui.max_displayed_values";
 	public static final String PROPERTY_RAPIDMINER_GUI_SNAP_TO_GRID = "rapidminer.gui.snap_to_grid";
+	/**
+	 * The property name for &quot;Maximum number of states in the undo list.&quot;
+	 *
+	 * @since 7.5
+	 */
+	public static final String PROPERTY_RAPIDMINER_GUI_UNDOLIST_SIZE = "rapidminer.gui.undolist.size";
 	public static final String PROPERTY_AUTOWIRE_INPUT = "rapidminer.gui.autowire_input";
 	public static final String PROPERTY_AUTOWIRE_OUTPUT = "rapidminer.gui.autowire_output";
 	public static final String PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS = "rapidminer.gui.resolve_relative_repository_locations";
@@ -152,6 +159,9 @@ public class RapidMinerGUI extends RapidMiner {
 	public static final String PROPERTY_DRAG_TARGET_HIGHLIGHTING = "rapidminer.gui.drag_target_highlighting";
 	public static final String[] PROPERTY_DRAG_TARGET_HIGHLIGHTING_VALUES = { "full", "border", "none" };
 	public static final int DRAG_TARGET_HIGHLIGHTING_FULL = 0;
+
+	// GUI flag key for caching
+	public static final String IS_GUI_PROCESS = "com.rapidminer.gui.isGUIProcess";
 
 	// Update Properties
 
@@ -174,8 +184,7 @@ public class RapidMinerGUI extends RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS, "", true));
 		RapidMiner.registerParameter(new ParameterTypeCategory(PROPERTY_CLOSE_RESULTS_BEFORE_RUN, "",
 				DecisionRememberingConfirmDialog.PROPERTY_VALUES, DecisionRememberingConfirmDialog.TRUE));
-		RapidMiner.registerParameter(
-				new ParameterTypeBoolean(RapidMinerGUI.PROPERTY_ADD_BREAKPOINT_RESULTS_TO_HISTORY, "", false));
+		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_ADD_BREAKPOINT_RESULTS_TO_HISTORY, "", false));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_CONFIRM_EXIT, "", false));
 		RapidMiner.registerParameter(new ParameterTypeCategory(PROPERTY_OPEN_IN_FILEBROWSER, "",
 				DecisionRememberingConfirmDialog.PROPERTY_VALUES, DecisionRememberingConfirmDialog.ASK));
@@ -184,9 +193,9 @@ public class RapidMinerGUI extends RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_FETCH_DATA_BASE_TABLES_NAMES, "", true));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_DISCONNECT_ON_DISABLE, "", true));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_SHOW_NO_RESULT_WARNING, "", true));
-		RapidMiner.registerParameter(new ParameterTypeCategory(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS, "",
+		RapidMiner.registerParameter(new ParameterTypeCategory(PROPERTY_TRANSFER_USAGESTATS, "",
 				RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS_ANSWERS, UsageStatsTransmissionDialog.ALWAYS));
-		RapidMiner.registerParameter(new ParameterTypeCategory(RapidMinerGUI.PROPERTY_DRAG_TARGET_HIGHLIGHTING, "",
+		RapidMiner.registerParameter(new ParameterTypeCategory(PROPERTY_DRAG_TARGET_HIGHLIGHTING, "",
 				PROPERTY_DRAG_TARGET_HIGHLIGHTING_VALUES, DRAG_TARGET_HIGHLIGHTING_FULL));
 
 		// GUI Parameters MainFrame
@@ -206,7 +215,7 @@ public class RapidMinerGUI extends RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeInt(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_COLORS_CLASSLIMIT, "",
 				-1, Integer.MAX_VALUE, 10));
 		RapidMiner.registerParameter(
-				new ParameterTypeInt(MainFrame.PROPERTY_RAPIDMINER_GUI_UNDOLIST_SIZE, "", 1, Integer.MAX_VALUE, 100));
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_GUI_UNDOLIST_SIZE, "", 1, Integer.MAX_VALUE, 100));
 		RapidMiner.registerParameter(new ParameterTypeInt(MainFrame.PROPERTY_RAPIDMINER_GUI_ATTRIBUTEEDITOR_ROWLIMIT, "", -1,
 				Integer.MAX_VALUE, 50));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(MainFrame.PROPERTY_RAPIDMINER_GUI_BEEP_SUCCESS, "", false));
@@ -273,6 +282,7 @@ public class RapidMinerGUI extends RapidMiner {
 			UsageStatistics.getInstance().save();
 			RepositoryManager.shutdown();
 			UsageStatsTransmissionDialog.transmitOnShutdown();
+			CallToActionScheduler.INSTANCE.shutdown();
 		}
 	}
 
@@ -447,6 +457,10 @@ public class RapidMinerGUI extends RapidMiner {
 		DataSourceFactoryRegistry.INSTANCE.register(new BinaryDataSourceFactory());
 		DataSourceFactoryRegistry.INSTANCE.register(new ExcelDataSourceFactory());
 		DataSourceFactoryRegistry.INSTANCE.register(new CSVDataSourceFactory());
+
+		// init CTA event storage and rule checking system only after all other systems have been
+		// started to avoid overlaying CTA mesages during startup
+		CallToActionScheduler.INSTANCE.init();
 	}
 
 	private void setupToolTipManager() {

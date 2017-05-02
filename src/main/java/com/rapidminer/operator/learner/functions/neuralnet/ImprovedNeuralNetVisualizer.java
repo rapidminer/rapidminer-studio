@@ -1,27 +1,22 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.functions.neuralnet;
-
-import com.rapidminer.gui.actions.export.AbstractPrintableIOObjectPanel;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.report.Renderable;
-import com.rapidminer.tools.Tools;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -30,6 +25,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -40,16 +36,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.rapidminer.gui.actions.export.AbstractPrintableIOObjectPanel;
+import com.rapidminer.gui.graphs.GraphViewer;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.report.Renderable;
+import com.rapidminer.tools.Tools;
+
 
 /**
  * Visualizes the improved neural net. The nodes can be selected by clicking. The next tool tip will
  * then show the input weights for the selected node.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel implements MouseListener, Renderable {
 
-	private static final long serialVersionUID = -26826681541601736L;
+	private static final long serialVersionUID = 1L;
 
 	private static final int ROW_HEIGHT = 36;
 
@@ -59,7 +61,11 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 
 	private static final int NODE_RADIUS = 24;
 
-	private static final Font LABEL_FONT = new Font("SansSerif", Font.PLAIN, 11);
+	private static final Font LABEL_FONT = GraphViewer.VERTEX_PLAIN_FONT;
+
+	private static final Font LAYER_FONT = GraphViewer.VERTEX_BOLD_FONT;
+
+	private static final Color NODE_ALMOST_WHITE = new Color(233, 233, 233);
 
 	private ImprovedNeuralNetModel neuralNet;
 
@@ -152,9 +158,10 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 		int height = dim.height;
 
 		Graphics2D g = (Graphics2D) graphics;
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setFont(LABEL_FONT);
 		Graphics2D translated = (Graphics2D) g.create();
 		translated.translate(MARGIN, MARGIN);
-		translated.setFont(LABEL_FONT);
 
 		Graphics2D synapsesG = (Graphics2D) translated.create();
 		paintSynapses(synapsesG, height);
@@ -181,9 +188,9 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 			totalHeight += (lines.length - 1) * 3;
 
 			Rectangle frame = new Rectangle(keyX - 4, keyY, (int) maxWidth + 8, (int) totalHeight + 6);
-			g.setColor(SwingTools.LIGHTEST_YELLOW);
+			g.setColor(Color.WHITE);
 			g.fill(frame);
-			g.setColor(SwingTools.DARK_YELLOW);
+			g.setColor(Color.BLACK);
 			g.draw(frame);
 			g.setColor(Color.BLACK);
 			int xPos = keyX;
@@ -203,26 +210,20 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 			List<Node> layer = this.layers.get(layerIndex);
 
 			int offset = layerIndex == layers.size() - 1 ? 0 : 1; // last layer no threshold
-			int outputY = (height / 2) - ((layer.size() + offset) * ROW_HEIGHT / 2);
+			int outputY = height / 2 - (layer.size() + offset) * ROW_HEIGHT / 2;
 			for (Node node : layer) {
 				if (node instanceof InnerNode) {
 					Node[] inputNodes = node.getInputNodes();
-					// int[] indices = node.getInputNodeOutputIndices();
 					double[] weights = ((InnerNode) node).getWeights();
 
-					// Matrix matrix = layer.getMatrix();
-					// int inputRows = matrix.getRows();
-					// int outputRows = matrix.getCols();
-
-					int inputY = (height / 2) - ((inputNodes.length + 1) * ROW_HEIGHT / 2);
+					int inputY = height / 2 - (inputNodes.length + 1) * ROW_HEIGHT / 2;
 
 					for (int j = 0; j < inputNodes.length; j++) {
-						// Node inputNode = inputNodes[j];
 						float weight = 1.0f - (float) (Math.abs(weights[j + 1]) / this.maxAbsoluteWeight);
 						Color color = new Color(weight, weight, weight);
 						g.setColor(color);
-						g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH, outputY
-								+ NODE_RADIUS / 2);
+						g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH,
+								outputY + NODE_RADIUS / 2);
 						inputY += ROW_HEIGHT;
 					}
 
@@ -230,8 +231,8 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 					float weight = 1.0f - (float) (Math.abs(weights[0]) / this.maxAbsoluteWeight);
 					Color color = new Color(weight, weight, weight);
 					g.setColor(color);
-					g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH, outputY
-							+ NODE_RADIUS / 2);
+					g.drawLine(NODE_RADIUS / 2, inputY + NODE_RADIUS / 2, NODE_RADIUS / 2 + LAYER_WIDTH,
+							outputY + NODE_RADIUS / 2);
 				}
 				outputY += ROW_HEIGHT;
 			}
@@ -258,27 +259,28 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 				layerName = "Hidden " + layerIndex;
 			}
 
-			Rectangle2D stringBounds = LABEL_FONT.getStringBounds(layerName, g.getFontRenderContext());
+			g.setFont(LAYER_FONT);
 			g.setColor(Color.BLACK);
-			g.drawString(layerName, (int) (((-1) * stringBounds.getWidth() / 2) + NODE_RADIUS / 2), 0);
-			int yPos = (height / 2) - (nodes * ROW_HEIGHT / 2);
+			Rectangle2D stringBounds = g.getFontMetrics().getStringBounds(layerName, g);
+			g.drawString(layerName, (int) (-1 * stringBounds.getWidth() / 2 + NODE_RADIUS / 2), 0);
+			int yPos = height / 2 - nodes * ROW_HEIGHT / 2;
 			for (int r = 0; r < nodes; r++) {
 				Shape node = new Ellipse2D.Double(0, yPos, NODE_RADIUS, NODE_RADIUS);
-				if ((layerIndex == 0) || (layerIndex == layers.size() - 1)) {
-					if ((r < nodes - 1) || (layerIndex == layers.size() - 1)) {
+				if (layerIndex == 0 || layerIndex == layers.size() - 1) {
+					if (r < nodes - 1 || layerIndex == layers.size() - 1) {
 						g.setPaint(SwingTools.makeYellowPaint(NODE_RADIUS, NODE_RADIUS));
 					} else {
-						g.setPaint(new Color(233, 233, 233));
+						g.setPaint(NODE_ALMOST_WHITE);
 					}
 				} else {
 					if (r < nodes - 1) {
 						g.setPaint(SwingTools.makeBluePaint(NODE_RADIUS, NODE_RADIUS));
 					} else {
-						g.setPaint(new Color(233, 233, 233));
+						g.setPaint(NODE_ALMOST_WHITE);
 					}
 				}
 				g.fill(node);
-				if ((layerIndex == this.selectedLayerIndex) && (r == this.selectedRowIndex)) {
+				if (layerIndex == this.selectedLayerIndex && r == this.selectedRowIndex) {
 					g.setColor(Color.RED);
 				} else {
 					g.setColor(Color.BLACK);
@@ -302,13 +304,13 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 		this.selectedLayerIndex = layerIndex;
 		this.selectedRowIndex = rowIndex;
 
-		if ((this.selectedLayerIndex < 0) || (this.selectedRowIndex < 0)) {
+		if (this.selectedLayerIndex < 0 || this.selectedRowIndex < 0) {
 			setKey(null, -1, -1);
 			return;
 		}
 
 		if (layerIndex == 0) { // input layer
-			if ((rowIndex >= 0) && (rowIndex < this.attributeNames.length)) {
+			if (rowIndex >= 0 && rowIndex < this.attributeNames.length) {
 				setKey(this.attributeNames[rowIndex], xPos, yPos);
 			} else {
 				if (rowIndex == this.attributeNames.length) {
@@ -319,7 +321,7 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 			}
 		} else {
 			List<Node> currentLayer = layers.get(selectedLayerIndex);
-			if ((rowIndex >= 0) && (rowIndex < currentLayer.size())) {
+			if (rowIndex >= 0 && rowIndex < currentLayer.size()) {
 				StringBuffer toolTip = new StringBuffer("Weights:" + Tools.getLineSeparator());
 				Node node = currentLayer.get(this.selectedRowIndex);
 				if (node instanceof InnerNode) {
@@ -344,18 +346,18 @@ public class ImprovedNeuralNetVisualizer extends AbstractPrintableIOObjectPanel 
 		int y = yPos - MARGIN;
 		int layerIndex = x / LAYER_WIDTH;
 		int layerMod = x % LAYER_WIDTH;
-		boolean layerHit = ((layerMod > 0) && (layerMod < NODE_RADIUS));
-		if ((layerHit) && (layerIndex >= 0) && (layerIndex < this.layers.size())) {
+		boolean layerHit = layerMod > 0 && layerMod < NODE_RADIUS;
+		if (layerHit && layerIndex >= 0 && layerIndex < this.layers.size()) {
 			List<Node> layer = layers.get(layerIndex);
 			int rows = layer.size();
 			if (layerIndex < layers.size() - 1) {
 				rows++;
 			}
-			int yMargin = (getPreferredSize().height / 2) - (rows * ROW_HEIGHT / 2);
+			int yMargin = getPreferredSize().height / 2 - rows * ROW_HEIGHT / 2;
 			if (y > yMargin) {
 				for (int i = 0; i < rows; i++) {
-					if ((y > yMargin) && (y < yMargin + NODE_RADIUS)) {
-						if ((this.selectedLayerIndex == layerIndex) && (this.selectedRowIndex == i)) {
+					if (y > yMargin && y < yMargin + NODE_RADIUS) {
+						if (this.selectedLayerIndex == layerIndex && this.selectedRowIndex == i) {
 							setSelectedNode(-1, -1, -1, -1);
 						} else {
 							setSelectedNode(layerIndex, i, xPos, yPos);

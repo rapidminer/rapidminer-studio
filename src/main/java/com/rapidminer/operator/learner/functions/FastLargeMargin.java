@@ -121,7 +121,8 @@ public class FastLargeMargin extends AbstractLearner {
 			nodeArray[a] = node;
 		}
 		if (useBias) {
-			nodeArray[nodeArray.length - 1] = new FeatureNode(nodeArray.length, 1);
+			// bias index is number of attributes +1
+			nodeArray[nodeArray.length - 1] = new FeatureNode(e.getAttributes().size() + 1, 1);
 		}
 
 		return nodeArray;

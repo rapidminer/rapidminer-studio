@@ -120,7 +120,7 @@ public class FrequentItemSetsToData extends Operator {
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(sets.size());
 
 		int datamanagement = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+		if (!Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))) {
 			datamanagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
 			builder.withOptimizationHint(DataManagementParameterHelper.getSelectedDataManagement(this));
 		}

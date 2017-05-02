@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.renderer;
 
 import java.awt.Component;
@@ -65,7 +65,7 @@ public abstract class AbstractGraphRenderer extends AbstractRenderer {
 	public static final String RENDERER_NAME = "Graph View";
 
 	public static final String[] LAYOUTS = { LAYOUT_ISOM, LAYOUT_KK_LAYOUT, LAYOUT_FR_LAYOUT, LAYOUT_CIRCLE, LAYOUT_SPRING,
-		LAYOUT_TREE, LAYOUT_BALLOON };
+			LAYOUT_TREE, LAYOUT_BALLOON };
 
 	public abstract GraphCreator<String, String> getGraphCreator(Object renderable, IOContainer ioContainer);
 
@@ -99,13 +99,6 @@ public abstract class AbstractGraphRenderer extends AbstractRenderer {
 			try {
 				layoutSelection.setSelectedItem(getParameter(PARAMETER_LAYOUT));
 			} catch (UndefinedParameterError e) {
-				// do nothing
-			}
-
-			try {
-				// necessary to give layout (thread!) time to finish its work before reporting
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
 				// do nothing
 			}
 

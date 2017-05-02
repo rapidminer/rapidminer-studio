@@ -39,7 +39,6 @@ public class RedoAction extends ResourceAction {
 		super("redo");
 		this.mainFrame = mainFrame;
 		setCondition(EDIT_IN_PROGRESS, DISALLOWED);
-		setCondition(PROCESS_RENDERER_IS_VISIBLE, MANDATORY);
 		setCondition(PROCESS_RENDERER_HAS_REDO_STEPS, MANDATORY);
 	}
 

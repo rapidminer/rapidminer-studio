@@ -1,35 +1,28 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.properties.tablepanel.cells.implementations;
-
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
-import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
-import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
-import com.rapidminer.gui.tools.ScrollableJPopupMenu;
-import com.rapidminer.tools.I18N;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -47,19 +40,26 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
+import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldNumerical;
+import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
+import com.rapidminer.gui.tools.ScrollableJPopupMenu;
+import com.rapidminer.tools.I18N;
+
 
 /**
  * This class contains some helper methods for the cell type implementations.
- * 
+ *
  * @author Marco Boeck
- * 
+ *
  */
 public final class CellTypeImplHelper {
 
 	/**
 	 * Adds content assist to the given field. Does not validate the model, so make sure this call
 	 * works!
-	 * 
+	 *
 	 * @param model
 	 * @param rowIndex
 	 * @param columnIndex
@@ -78,7 +78,9 @@ public final class CellTypeImplHelper {
 		final List<String> possibleValues = valuesList;
 
 		// add ctrl+space shortcut for content assist
-		field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_MASK), "contentAssistAction");
+		field.getInputMap().put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
+				"contentAssistAction");
 		field.getActionMap().put("contentAssistAction", new AbstractAction() {
 
 			private static final long serialVersionUID = 7930480602861798587L;
@@ -104,11 +106,11 @@ public final class CellTypeImplHelper {
 
 			/**
 			 * Shows the content assist popup.
-			 * 
+			 *
 			 */
 			private void showContentAssistPopup() {
-				final ScrollableJPopupMenu popupMenu = createContentAssistPopup(field, possibleValues,
-						multipleValuesAllowed, cellClass);
+				final ScrollableJPopupMenu popupMenu = createContentAssistPopup(field, possibleValues, multipleValuesAllowed,
+						cellClass);
 
 				popupMenu.show(field, field.getX(), field.getY() + field.getHeight());
 				popupMenu.requestFocusInWindow();
@@ -116,7 +118,7 @@ public final class CellTypeImplHelper {
 
 			/**
 			 * Creates the content assist popup.
-			 * 
+			 *
 			 * @param field
 			 * @param possibleValues
 			 * @param multipleValuesAllowed
@@ -133,10 +135,10 @@ public final class CellTypeImplHelper {
 
 				// no values available, so show user there is nothing
 				if (possibleValues == null || possibleValues.size() <= 0) {
-					JMenuItem emptyItem = new JMenuItem(I18N.getMessage(I18N.getGUIBundle(),
-							"gui.label.table_panel.no_content_assist_items.title"));
-					emptyItem.setToolTipText(I18N.getMessage(I18N.getGUIBundle(),
-							"gui.label.table_panel.no_content_assist_items.tip"));
+					JMenuItem emptyItem = new JMenuItem(
+							I18N.getMessage(I18N.getGUIBundle(), "gui.label.table_panel.no_content_assist_items.title"));
+					emptyItem.setToolTipText(
+							I18N.getMessage(I18N.getGUIBundle(), "gui.label.table_panel.no_content_assist_items.tip"));
 					emptyItem.setOpaque(false);
 					popupMenu.add(emptyItem);
 					return popupMenu;
@@ -155,7 +157,7 @@ public final class CellTypeImplHelper {
 
 			/**
 			 * Fills the given popup menu for single value selection.
-			 * 
+			 *
 			 * @param field
 			 * @param possibleValues
 			 * @param popupMenu
@@ -198,15 +200,14 @@ public final class CellTypeImplHelper {
 
 			/**
 			 * Fills the given popup menu for multiple value selection.
-			 * 
+			 *
 			 * @param field
 			 * @param possibleValues
 			 * @param popupMenu
 			 * @param cellClass
 			 */
-			private void fillMultipleValuesSelectionPopup(final JFormattedTextField field,
-					final List<String> possibleValues, final ScrollableJPopupMenu popupMenu,
-					final Class<? extends CellType> cellClass) {
+			private void fillMultipleValuesSelectionPopup(final JFormattedTextField field, final List<String> possibleValues,
+					final ScrollableJPopupMenu popupMenu, final Class<? extends CellType> cellClass) {
 				String encodedValue = field.getText();
 				List<String> currentValuesList = model.convertEncodedStringValueToList(encodedValue);
 
@@ -251,7 +252,7 @@ public final class CellTypeImplHelper {
 	/**
 	 * Creates a {@link JFormattedTextField} for the specified cell. Does not validate the model, so
 	 * make sure this call works!
-	 * 
+	 *
 	 * @param model
 	 * @param rowIndex
 	 * @param columnIndex

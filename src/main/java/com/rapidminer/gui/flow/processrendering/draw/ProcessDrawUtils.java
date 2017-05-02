@@ -1,24 +1,25 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.flow.processrendering.draw;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -572,5 +573,33 @@ public final class ProcessDrawUtils {
 		} else {
 			return (ImageIcon) UIManager.getLookAndFeel().getDisabledIcon(DUMMY_LABEL, icon);
 		}
+	}
+
+	/**
+	 * Calculates the preferred size for the given {@link ExecutionUnit} based on the total
+	 * available target renderer size.
+	 * <p>
+	 * Note that if the currently displayed chain (see
+	 * {@link ProcessRendererModel#getDisplayedChain()}) has more than one {@link ExecutionUnit},
+	 * the returned size will accommodate the simultaneous display of all execution units in the
+	 * given size.
+	 * </p>
+	 *
+	 * @param model
+	 *            the model required to calculate the size
+	 * @param unit
+	 *            the process for which the initial size should be created
+	 * @param width
+	 *            the total width which is available
+	 * @param height
+	 *            the total height which is available
+	 * @return the size, never {@code null}
+	 * @since 7.5
+	 */
+	public static Dimension calculatePreferredSize(final ProcessRendererModel model, final ExecutionUnit unit, int width,
+			int height) {
+		int processes = model.getProcesses().size();
+		int wallSpace = (processes - 1) * 2 * ProcessDrawer.WALL_WIDTH;
+		return new Dimension((width - wallSpace) / processes, height);
 	}
 }

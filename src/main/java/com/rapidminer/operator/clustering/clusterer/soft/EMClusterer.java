@@ -274,12 +274,13 @@ public class EMClusterer extends RMAbstractClusterer {
 					do {
 						clustersFilled = 0;
 						double[][] clusterMeans = new double[k][exampleSet.getAttributes().size()];
+						Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 						int i = 0;
 						for (Example ex : exampleSet) {
 							int cluster = random.nextInt(k);
 							exampleInClusterProbability[i][cluster] = 1;
 							int j = 0;
-							for (Attribute attribute : exampleSet.getAttributes()) {
+							for (Attribute attribute : regularAttributes) {
 								clusterMeans[cluster][j] += ex.getValue(attribute);
 								j++;
 							}
@@ -317,11 +318,12 @@ public class EMClusterer extends RMAbstractClusterer {
 				double[][] clusterMeans = new double[k][exampleSet.getAttributes().size()];
 				int exampleIndex = 0;
 				Attribute clusterAttribute = clusterSet.getAttributes().getCluster();
+				Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 				for (Example example : clusterSet) {
 					int clusterIndex = (int) example.getValue(clusterAttribute);
 					exampleInClusterProbability[exampleIndex][clusterIndex] = 1;
 					int j = 0;
-					for (Attribute attribute : clusterSet.getAttributes()) {
+					for (Attribute attribute : regularAttributes) {
 						clusterMeans[clusterIndex][j] += example.getValue(attribute);
 						j++;
 					}
@@ -427,10 +429,11 @@ public class EMClusterer extends RMAbstractClusterer {
 		}
 
 		// compute average, minimum and maximum values of the attributes
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		int i = 0;
 		for (Example ex : exampleSet) {
 			int j = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				double value = ex.getValue(attribute);
 				average[j] += value;
 				if (value < min[j]) {

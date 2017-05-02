@@ -1,38 +1,44 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.codehaus.groovy.GroovyBugError;
 
+import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ports.InputPortExtender;
 import com.rapidminer.operator.ports.OutputPortExtender;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeText;
 import com.rapidminer.parameter.TextType;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.plugin.Plugin;
 
+import groovy.lang.Binding;
 import groovy.lang.GroovyCodeSource;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
@@ -80,9 +86,65 @@ import groovy.lang.Script;
  * incompatible in future releases of RapidMiner.
  * </p>
  *
- * @author Simon Fischer, Ingo Mierswa
+ * <p>
+ * <em>Note:</em> As of RapidMiner Studio 7.5, Execute Script is now capable of executing many
+ * scripts in parallel by implementing script caching. Before that, each execution parsed its script
+ * again which was done on a global lock.
+ * </p>
+ *
+ * @author Simon Fischer, Ingo Mierswa, Marco Boeck
  */
 public class ScriptingOperator extends Operator {
+
+	/**
+	 * Binding delegator capable of multi-threaded access. Using a regular binding on a script which
+	 * is run concurrently would result in the last set binding to be used.
+	 *
+	 * @author Marco Boeck
+	 * @since 7.5
+	 */
+	private static class ConcurrentBindingDelegator extends Binding {
+
+		private final ThreadLocal<Binding> binding = new ThreadLocal<Binding>() {
+
+			@Override
+			protected Binding initialValue() {
+				return new Binding();
+			}
+		};
+
+		@Override
+		public Object getVariable(String name) {
+			return binding.get().getVariable(name);
+		}
+
+		@Override
+		public void setVariable(String name, Object value) {
+			binding.get().setVariable(name, value);
+		}
+
+		@Override
+		public boolean hasVariable(String name) {
+			return binding.get().hasVariable(name);
+		}
+
+		@Override
+		@SuppressWarnings("rawtypes")
+		public Map getVariables() {
+			return binding.get().getVariables();
+		}
+
+		@Override
+		public Object getProperty(String property) {
+			return binding.get().getProperty(property);
+		}
+
+		@Override
+		public void setProperty(String property, Object newValue) {
+			binding.get().setProperty(property, newValue);
+		}
+
+	}
 
 	private InputPortExtender inExtender = new InputPortExtender("input", getInputPorts());
 	private OutputPortExtender outExtender = new OutputPortExtender("output", getOutputPorts());
@@ -93,10 +155,61 @@ public class ScriptingOperator extends Operator {
 
 	public static final String PARAMETER_STANDARD_IMPORTS = "standard_imports";
 
+	/** the max number of entries in the script cache */
+	private static final int MAX_CACHE_SIZE = 500;
+
+	/**
+	 * this map contains lock objects for each script. This is necessary because we only want to
+	 * block a particular script which has not yet been parsed, but not other scripts. If there was
+	 * only synchronization on a static object, all script execution would be blocked JVM-wide
+	 * (think background process execution or RM Server) until parsing is finished.
+	 */
+	private static final Map<String, Object> LOCK_MAP = Collections
+			.synchronizedMap(new LinkedHashMap<String, Object>(MAX_CACHE_SIZE + 1, 0.75f, true) {
+
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public boolean removeEldestEntry(Map.Entry<String, Object> eldest) {
+					return size() > MAX_CACHE_SIZE;
+				}
+			});
+
+	/**
+	 * this map contains the parsed scripts. This greatly speeds up operator execution, especially
+	 * in loops. Will drop the oldest scripts that have not been used if the max cache size is
+	 * exceeded.
+	 */
+	private static final Map<String, Script> SCRIPT_CACHE = Collections
+			.synchronizedMap(new LinkedHashMap<String, Script>(MAX_CACHE_SIZE + 1, 0.75f, true) {
+
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public boolean removeEldestEntry(Map.Entry<String, Script> eldest) {
+					return size() > MAX_CACHE_SIZE;
+				}
+			});
+
 	public ScriptingOperator(OperatorDescription description) {
 		super(description);
 		inExtender.start();
 		outExtender.start();
+	}
+
+	@Override
+	protected void performAdditionalChecks() {
+		super.performAdditionalChecks();
+		try {
+			String scriptWithoutReplacedMacros = getParameters().getParameter(PARAMETER_SCRIPT);
+			int startIndex = scriptWithoutReplacedMacros.indexOf(Operator.MACRO_STRING_START);
+			int endIndex = scriptWithoutReplacedMacros.indexOf(Operator.MACRO_STRING_END, startIndex);
+			if (startIndex > -1 && endIndex > -1) {
+				addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "script_has_macro"));
+			}
+		} catch (UndefinedParameterError e) {
+			// should not happen - ignore
+		}
 	}
 
 	@Override
@@ -114,17 +227,41 @@ public class ScriptingOperator extends Operator {
 			script = imports.toString() + script;
 		}
 
+		List<IOObject> input = inExtender.getData(IOObject.class, false);
 		Object result;
 		try {
-			GroovyShell shell = new GroovyShell(Plugin.getMajorClassLoader());
-			// GroovyShell shell = new GroovyShell(ScriptingOperator.class.getClassLoader());
-			List<IOObject> input = inExtender.getData(IOObject.class, false);
-			shell.setVariable("input", input);
-			shell.setVariable("operator", this);
-			GroovyCodeSource codeSource = new GroovyCodeSource(script, "customScript", GROOVY_DOMAIN);
+			// cache access is synchronized on a per-script basis to prevent Execute Script
+			// inside a loop to start many parsings at the same time
+			Object lock;
+			synchronized (LOCK_MAP) {
+				lock = LOCK_MAP.get(script);
+				if (lock == null) {
+					lock = new Object();
+					LOCK_MAP.put(script, lock);
+				}
+			}
 
-			Script parsedScript = shell.parse(codeSource);
-			result = parsedScript.run();
+			Script cachedScript;
+			synchronized (lock) {
+				cachedScript = SCRIPT_CACHE.get(script);
+				if (cachedScript == null) {
+					// use the delegator which is capable of handling multi-threaded access as
+					// binding
+					GroovyShell shell = new GroovyShell(Plugin.getMajorClassLoader(), new ConcurrentBindingDelegator());
+					GroovyCodeSource codeSource = new GroovyCodeSource(script, "customScript", GROOVY_DOMAIN);
+					codeSource.setCachable(false);
+					cachedScript = shell.parse(codeSource);
+					SCRIPT_CACHE.put(script, cachedScript);
+				}
+			}
+
+			// even though we cache the script, we need to use a new binding for each execution to
+			// avoid multiple concurrent scripts running on the same/editing the same binding
+			cachedScript.getBinding().setVariable("input", input);
+			cachedScript.getBinding().setVariable("operator", this);
+
+			// run the script via the delegator
+			result = cachedScript.run();
 		} catch (SecurityException e) {
 			throw new UserError(this, e, "scriptingOperator_security", e.getMessage());
 		} catch (GroovyBugError e) {
@@ -134,8 +271,9 @@ public class ScriptingOperator extends Operator {
 				throw new UserError(this, e, 945, "Groovy", e);
 			}
 		} catch (Throwable e) {
-			throw new UserError(this, e, 945, "Groovy", e);
+			throw new UserError(this, e, 945, "Groovy", e, ExceptionUtils.getStackTrace(e));
 		}
+
 		if (result instanceof Object[]) {
 			outExtender.deliver(Arrays.asList((IOObject[]) result));
 		} else if (result instanceof List) {
@@ -152,7 +290,6 @@ public class ScriptingOperator extends Operator {
 			if (result != null) {
 				if (result instanceof IOObject) {
 					outExtender.deliver(Collections.singletonList((IOObject) result));
-					;
 				} else {
 					getLogger().warning("Unknown result: " + result.getClass() + ": " + result);
 				}
@@ -165,6 +302,15 @@ public class ScriptingOperator extends Operator {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = new ParameterTypeText(PARAMETER_SCRIPT, "The script to execute.", TextType.GROOVY, false);
 		type.setExpert(false);
+		type.setDefaultValue("/* \n" + " * You can use both Java and Groovy syntax in this script.\n"
+				+ " * \n * Note that you have access to the following two predefined variables:\n"
+				+ " * 1) input (an array of all input data)\n"
+				+ " * 2) operator (the operator instance which is running this script)\n" + " */\n" + "\n"
+				+ "// Take first input data and treat it as generic IOObject\n"
+				+ "// Alternatively, you could treat it as an ExampleSet if it is one:\n"
+				+ "// ExampleSet inputData = input[0];\n" + "IOObject inputData = input[0];\n" + "\n\n"
+				+ "// You can add any code here\n" + "\n" + "\n"
+				+ "// This line returns the first input as the first output\n" + "return inputData;");
 		types.add(type);
 		types.add(new ParameterTypeBoolean(PARAMETER_STANDARD_IMPORTS,
 				"Indicates if standard imports for examples and attributes etc. should be automatically generated.", true));

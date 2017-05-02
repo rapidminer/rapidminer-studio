@@ -175,6 +175,7 @@ public class PSOSVMOptimization extends PSOOptimization {
 		}
 
 		// calculate support vectors
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		Iterator<Example> reader = exampleSet.iterator();
 		List<SupportVector> supportVectors = new ArrayList<SupportVector>();
 		int index = 0;
@@ -182,9 +183,9 @@ public class PSOSVMOptimization extends PSOOptimization {
 			double currentAlpha = alphas[index];
 			Example currentExample = reader.next();
 			if (currentAlpha != 0.0d) {
-				double[] x = new double[exampleSet.getAttributes().size()];
+				double[] x = new double[regularAttributes.length];
 				int a = 0;
-				for (Attribute attribute : exampleSet.getAttributes()) {
+				for (Attribute attribute : regularAttributes) {
 					x[a++] = currentExample.getValue(attribute);
 				}
 				supportVectors.add(new SupportVector(x, ys[index], currentAlpha));
@@ -200,9 +201,9 @@ public class PSOSVMOptimization extends PSOOptimization {
 		// double minPos = Double.POSITIVE_INFINITY;
 		while (reader.hasNext()) {
 			Example current = reader.next();
-			double[] x = new double[exampleSet.getAttributes().size()];
+			double[] x = new double[regularAttributes.length];
 			int a = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				x[a++] = current.getValue(attribute);
 			}
 			sum[index] = kernel.getSum(supportVectors, x);

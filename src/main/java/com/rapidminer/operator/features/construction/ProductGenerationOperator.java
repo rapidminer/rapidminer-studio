@@ -106,11 +106,11 @@ public class ProductGenerationOperator extends AbstractFeatureConstruction {
 		List<Attribute> newAttributes = new LinkedList<Attribute>();
 		String firstAttributeName = getParameterAsString(PARAMETER_FIRST_ATTRIBUTE_NAME);
 		String secondAttributeName = getParameterAsString(PARAMETER_SECOND_ATTRIBUTE_NAME);
-
-		for (Attribute attribute : exampleSet.getAttributes()) {
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
+		for (Attribute attribute : regularAttributes) {
 			if (attribute.isNumerical()) {
 				if (attribute.getName().matches(firstAttributeName)) {
-					for (Attribute attribute2 : exampleSet.getAttributes()) {
+					for (Attribute attribute2 : regularAttributes) {
 						checkForStop();
 						if (attribute2.isNumerical()) {
 							if (attribute2.getName().matches(secondAttributeName)) {

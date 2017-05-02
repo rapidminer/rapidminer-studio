@@ -45,7 +45,7 @@ import java.util.Set;
  * Knorr and Ng. A DB(p,D)-outlier is an object to which at least a proportion of p of all objects
  * are farer away than distance D. It implements a global homogenous outlier search.
  * </p>
- * 
+ *
  * <p>
  * Currently, the operator supports cosine, sine or squared distances in addition to the usual
  * euclidian distance which can be specified by the corresponding parameter. The operator takes two
@@ -53,12 +53,12 @@ import java.util.Set;
  * created from the examples in the ExampleSet passed to the operator. These search objects will be
  * added to a search space which will perform the outlier search according to the DB(p,D) scheme.
  * </p>
- * 
+ *
  * <p>
  * The Outlier status (boolean in its nature) is written to a new special attribute
  * &quot;Outlier&quot; and is passed on with the example set.
  * </p>
- * 
+ *
  * @author Stephan Deutsch, Ingo Mierswa
  */
 public class DBOutlierOperator extends AbstractOutlierDetection {
@@ -97,6 +97,7 @@ public class DBOutlierOperator extends AbstractOutlierDetection {
 		Iterator<Example> reader = eSet.iterator();
 		int searchSpaceDimension = eSet.getAttributes().size();
 		SearchSpace sr = new SearchSpace(searchSpaceDimension);
+		Attribute[] regularAttributes = eSet.getAttributes().createRegularAttributeArray();
 
 		// now read through the Examples of the ExampleSet
 		int counter = 0;
@@ -105,7 +106,7 @@ public class DBOutlierOperator extends AbstractOutlierDetection {
 			SearchObject so = new SearchObject(searchSpaceDimension, "object" + counter);
 			counter++;
 			int i = 0;
-			for (Attribute attribute : eSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				so.setVektor(i++, example.getValue(attribute));
 			}
 			sr.addObject(so);

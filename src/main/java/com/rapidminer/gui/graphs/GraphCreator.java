@@ -1,39 +1,40 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
 
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.renderers.Renderer;
-
 import java.awt.Paint;
+import java.util.Set;
 
 import javax.swing.JComponent;
 
 import org.apache.commons.collections15.Transformer;
 
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.renderers.Renderer;
+
 
 /**
  * Creates a graph which can be displayed by the graph viewer. This class serves as a sort of graph
  * model combined with some methods tuning the displaying of nodes and edges in the graph.
- * 
- * @author Ingo Mierswa
+ *
+ * @author Ingo Mierswa, Marco Boeck
  */
 public interface GraphCreator<V, E> {
 
@@ -153,4 +154,30 @@ public interface GraphCreator<V, E> {
 	/** Indicates if the vertex labels should be initially shown. */
 	public boolean showVertexLabelsDefault();
 
+	/** For directed graphs, the edges on the path back to the root will return true. */
+	public default boolean isEdgeOnSelectedPath(Set<V> selectedVertexes, E id) {
+		return false;
+	}
+
+	/** For directed graphs, the vertices on the path back to the root will return true. */
+	public default boolean isVertexOnSelectedPath(Set<V> selectedVertexes, V id) {
+		return false;
+	}
+
+	/**
+	 * Returns the scale of the vertex. Should be normalized between 0 and 1. Only used if
+	 * {@link #isVertexCircle()} returns {@code true}.
+	 */
+	public default double getVertexScale(V id) {
+		return 1d;
+	}
+
+	/**
+	 * Returns if the given vertex should be displayed as a perfect circle. Otherwise it will be
+	 * displayed as ellipsis. Note that circle vertexes will NOT care about their vertex label size
+	 * and assume a default size, scaled by {@link #getVertexScale(Object)}. Default: {@code false}
+	 */
+	public default boolean isVertexCircle(V id) {
+		return false;
+	}
 }

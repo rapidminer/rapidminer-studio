@@ -56,11 +56,6 @@ public class NominalToNumericModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = -4203775081616082145L;
 
-	/**
-	 * Chosen because it results in a trigger frequency of ~50ms on i5-3470.
-	 */
-	private static final int LOOPS_UNTIL_PROGRESS_TRIGGER = 500_000;
-
 	private int codingType;
 
 	/**
@@ -275,29 +270,25 @@ public class NominalToNumericModel extends PreprocessingModel {
 		}
 
 		// initialize progress
-		int progressCompletedCounter = 0;
-		int progressTriggerCounter = 0;
+		long progressCompletedCounter = 0;
+		long progressTotal = (long) nominalAttributes.size() * exampleSet.size();
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
-			progress.setTotal(exampleSet.size());
+			progress.setTotal(1000);
 		}
 
 		// copying values
-		for (Example example : exampleSet) {
-			for (Attribute nominalAttribute : nominalAttributes) {
+		for (Attribute nominalAttribute : nominalAttributes) {
+			for (Example example : exampleSet) {
 				double sourceValue = example.getValue(nominalAttribute);
 				for (Attribute targetAttribute : targetAttributesFromSources.get(nominalAttribute)) {
 					example.setValue(targetAttribute, getValue(targetAttribute, sourceValue));
-
-					// trigger progress
-					if (progress != null && ++progressTriggerCounter > LOOPS_UNTIL_PROGRESS_TRIGGER) {
-						progressTriggerCounter = 0;
-						progress.setCompleted(progressCompletedCounter);
-					}
+				}
+				if (++progressCompletedCounter % 10_000 == 0) {
+					progress.setCompleted((int) (1000.0d * progressCompletedCounter / progressTotal));
 				}
 			}
-			progressCompletedCounter++;
 		}
 
 		// remove nominal attributes
@@ -329,27 +320,23 @@ public class NominalToNumericModel extends PreprocessingModel {
 		exampleSet.getExampleTable().addAttributes(transformedAttributes);
 
 		// initialize progress
-		int progressCompletedCounter = 0;
-		int workloadForEachLoop = nominalAttributes.size();
-		int progressTriggerCounter = 0;
+		long progressCompletedCounter = 0;
+		long progressTotal = (long) nominalAttributes.size() * exampleSet.size();
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
-			progress.setTotal(exampleSet.size());
+			progress.setTotal(1000);
 		}
 
 		// copying values
-		for (Example example : exampleSet) {
-			Iterator<Attribute> target = transformedAttributes.iterator();
-			for (Attribute attribute : nominalAttributes) {
-				example.setValue(target.next(), example.getValue(attribute));
-			}
-
-			// trigger progress
-			progressCompletedCounter++;
-			if (progress != null && ++progressTriggerCounter * workloadForEachLoop > LOOPS_UNTIL_PROGRESS_TRIGGER) {
-				progressTriggerCounter = 0;
-				progress.setCompleted(progressCompletedCounter);
+		Iterator<Attribute> target = transformedAttributes.iterator();
+		for (Attribute attribute : nominalAttributes) {
+			Attribute targetAttribute = target.next();
+			for (Example example : exampleSet) {
+				example.setValue(targetAttribute, example.getValue(attribute));
+				if (progress != null && ++progressCompletedCounter % 100_000 == 0) {
+					progress.setCompleted((int) (1000.0d * progressCompletedCounter / progressTotal));
+				}
 			}
 		}
 

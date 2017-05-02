@@ -1091,8 +1091,7 @@ public class ProcessGUITools {
 					// open process which caused the error
 					Operator op = error.getUserError().getOperator();
 					final Process causingProcess = op.getProcess();
-					RapidMinerGUI.getMainFrame().setOpenedProcess(causingProcess, false,
-							causingProcess.getProcessLocation().toString());
+					RapidMinerGUI.getMainFrame().setOpenedProcess(causingProcess);
 
 					// show new error bubble in the newly opened process
 					displayBubbleForUserError(error.getUserError());

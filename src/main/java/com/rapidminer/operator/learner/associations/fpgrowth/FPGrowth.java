@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.associations.fpgrowth;
 
 import java.util.ArrayList;
@@ -463,16 +463,17 @@ public class FPGrowth extends Operator {
 	private void getItemFrequency(ExampleSet exampleSet, Attribute[] attributes, double[] positiveIndices,
 			Map<Attribute, Item> mapping) {
 		// iterate over exampleSet, counting item frequency
-		for (Example currentExample : exampleSet) {
-			int i = 0;
-			for (Attribute attribute : attributes) {
+		int i = 0;
+		for (Attribute attribute : attributes) {
+			Item item = mapping.get(attribute);
+			for (Example currentExample : exampleSet) {
 				// if attribute is boolean and if attribute is the positive one
 				// --> increase frequency of item
 				if (currentExample.getValue(attribute) == positiveIndices[i]) {
-					mapping.get(attribute).increaseFrequency();
+					item.increaseFrequency();
 				}
-				i++;
 			}
+			i++;
 		}
 	}
 

@@ -106,10 +106,11 @@ public class NoiseModel extends PreprocessingModel {
 			progress.setTotal(100);
 		}
 		int progressCounter = 0;
+		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
 		while (reader.hasNext()) {
 			Example example = reader.next();
 			// attribute noise
-			for (Attribute attribute : exampleSet.getAttributes()) {
+			for (Attribute attribute : regularAttributes) {
 				if (attribute.isNumerical()) {
 					Double noiseObject = noiseMap.get(attribute.getName());
 					double noise = noiseObject == null ? attributeNoise : noiseObject.doubleValue();

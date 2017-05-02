@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.features.transformation;
 
 import java.util.Iterator;
@@ -51,8 +51,6 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 	private static final long serialVersionUID = -6380202686511014212L;
 
 	private static final int PROGRESS_UPDATE_STEPS_1 = 100;
-	private static final int PROGRESS_UPDATE_STEPS_2 = 10000;
-	private static final int PROGRESS_UPDATE_STEPS_3 = 500;
 
 	/**
 	 * The progress of this operator is split into 5 part-progresses. These values define how many
@@ -124,19 +122,18 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 
 		// get the centered data
 		double[][] data = new double[numberOfSamples][numberOfAttributes];
-		Iterator<Example> reader = testSet.iterator();
-		Example example;
 
-		for (int sample = 0; sample < numberOfSamples; sample++) {
-			example = reader.next();
-			int d = 0;
-			for (Attribute attribute : testSet.getAttributes()) {
-				data[sample][d] = example.getValue(attribute) - means[d];
-				d++;
+		int index = 0;
+		for (Attribute attribute : testSet.getAttributes()) {
+			Iterator<Example> reader = testSet.iterator();
+			for (int sample = 0; sample < numberOfSamples; sample++) {
+				Example example = reader.next();
+				data[sample][index] = example.getValue(attribute) - means[index];
 			}
-			if (progress != null && sample % PROGRESS_UPDATE_STEPS_2 == 0) {
+			index++;
+			if (progress != null) {
 				progress.setCompleted(
-						(int) (((double) INTERMEDIATE_PROGRESS_2 - INTERMEDIATE_PROGRESS_1) * sample / numberOfSamples
+						(int) (((double) INTERMEDIATE_PROGRESS_2 - INTERMEDIATE_PROGRESS_1) * index / numberOfAttributes
 								+ INTERMEDIATE_PROGRESS_1));
 			}
 		}
@@ -193,15 +190,15 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 		}
 
 		double[][] finaldata = S.getArray();
-		reader = testSet.iterator();
-		for (int sample = 0; sample < testSet.size(); sample++) {
-			example = reader.next();
-			for (int d = 0; d < numberOfComponents; d++) {
+		for (int d = 0; d < numberOfComponents; d++) {
+			Iterator<Example> reader = testSet.iterator();
+			for (int sample = 0; sample < testSet.size(); sample++) {
+				Example example = reader.next();
 				example.setValue(icAttributes[d], finaldata[sample][d]);
 			}
-			if (progress != null && sample % PROGRESS_UPDATE_STEPS_3 == 0) {
+			if (progress != null) {
 				progress.setCompleted(
-						(int) ((100.0 - INTERMEDIATE_PROGRESS_4) * sample / testSet.size() + INTERMEDIATE_PROGRESS_4));
+						(int) ((100.0 - INTERMEDIATE_PROGRESS_4) * d / numberOfComponents + INTERMEDIATE_PROGRESS_4));
 			}
 		}
 

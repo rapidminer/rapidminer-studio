@@ -58,7 +58,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void simpleExampleSetActivatedTest() {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -75,7 +75,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void simpleExampleSetDeactivatedTest() {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -92,7 +92,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void conditionedExampleSetActivatedTest() throws ExpressionEvaluationException {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -110,7 +110,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void conditionedExampleSetDeactivatedTest() throws ExpressionEvaluationException {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -128,7 +128,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void mappedExampleSetActivatedTest() throws ExpressionEvaluationException {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -148,7 +148,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void mappedExampleSetDeactivatedTest() throws ExpressionEvaluationException {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -168,7 +168,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void splittedExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -187,7 +187,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void splittedExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -206,7 +206,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void sortedExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -224,7 +224,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void sortedExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -242,7 +242,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void singleExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -260,7 +260,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void singleExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -278,7 +278,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void similarityExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.withRole(attribute1, Attributes.ID_NAME).build();
@@ -298,7 +298,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void similarityExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.withRole(attribute1, Attributes.ID_NAME).build();
@@ -318,7 +318,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void replaceMissingExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -336,7 +336,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void replaceMissingExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -354,7 +354,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void remappedExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -374,7 +374,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void remappedExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -394,7 +394,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void nonSpecialExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.withRole(attribute1, Attributes.LABEL_NAME).build();
@@ -412,7 +412,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void nonSpecialExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.withRole(attribute1, Attributes.LABEL_NAME).build();
@@ -430,7 +430,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void modelViewExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -454,7 +454,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void modelViewExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -475,7 +475,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void attributeWeightedExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -493,7 +493,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void attributeWeightedExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -511,7 +511,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void attributeSelectionExampleSetActivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -530,7 +530,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void attributeSelectionExampleSetDeactivatedTest() throws UserError {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(true));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -549,7 +549,7 @@ public class ColumnCleanupTest {
 
 	@Test
 	public void moreWrappedExampleSetsTest() throws UserError, ExpressionEvaluationException {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(true));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 
 		ExampleSet simpleExampleSet = ExampleSets.from(attribute1, attribute2, attribute3, attribute4).withBlankSize(ROWS)
 				.build();
@@ -626,6 +626,6 @@ public class ColumnCleanupTest {
 
 	@AfterClass
 	public static void setDown() {
-		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, String.valueOf(false));
+		ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, String.valueOf(false));
 	}
 }

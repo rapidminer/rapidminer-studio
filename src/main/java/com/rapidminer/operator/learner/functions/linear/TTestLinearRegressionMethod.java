@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.functions.linear;
 
 import java.util.LinkedList;
@@ -97,7 +97,7 @@ public class TTestLinearRegressionMethod implements LinearRegressionMethod {
 		}
 		LinearRegressionResult result = new LinearRegressionResult();
 		result.isUsedAttribute = isUsedAttribute;
-		result.coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge);
+		result.coefficients = regression.performRegression(exampleSet, isUsedAttribute, means, labelMean, ridge, useBias);
 		result.error = regression.getSquaredError(exampleSet, isUsedAttribute, result.coefficients, useBias);
 		return result;
 	}
@@ -111,7 +111,7 @@ public class TTestLinearRegressionMethod implements LinearRegressionMethod {
 	protected double getPValue(double coefficient, int attributeIndex, LinearRegression regression, boolean useBias,
 			double ridge, ExampleSet exampleSet, boolean[] isUsedAttribute, double[] standardDeviations,
 			double labelStandardDeviation, FDistribution fdistribution, double generalCorrelation)
-					throws UndefinedParameterError, ProcessStoppedException {
+			throws UndefinedParameterError, ProcessStoppedException {
 		double tolerance = regression.getTolerance(exampleSet, isUsedAttribute, attributeIndex, ridge, useBias);
 		double standardError = Math.sqrt((1.0d - generalCorrelation)
 				/ (tolerance * (exampleSet.size() - exampleSet.getAttributes().size() - 1.0d)))

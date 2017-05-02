@@ -103,9 +103,9 @@ public class InternalBinominalRemapping extends AbstractDataProcessing {
 			}
 		}
 
-		for (Example example : exampleSet) {
-			for (Attribute attribute : attributes) {
-				if (remappedAttributes.contains(attribute)) {
+		for (Attribute attribute : attributes) {
+			if (remappedAttributes.contains(attribute)) {
+				for (Example example : exampleSet) {
 					double value = example.getValue(attribute);
 					if (!Double.isNaN(value)) {
 						if (value == BinominalMapping.NEGATIVE_INDEX) {

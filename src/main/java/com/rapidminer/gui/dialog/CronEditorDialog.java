@@ -993,7 +993,7 @@ public class CronEditorDialog extends ButtonDialog {
 			public void actionPerformed(ActionEvent e) {
 				String errorMsg = getErrorMessage();
 				if (errorMsg != null) {
-					SwingTools.showVerySimpleErrorMessage("cron_editor.invalid_settings", errorMsg);
+					SwingTools.showVerySimpleErrorMessage(CronEditorDialog.this, "cron_editor.invalid_settings", errorMsg);
 					return;
 				}
 				wasConfirmed = true;

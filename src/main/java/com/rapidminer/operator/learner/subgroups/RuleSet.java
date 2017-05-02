@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
@@ -111,6 +112,11 @@ public class RuleSet extends SimplePredictionModel implements Iterable<Rule> {
 		UtilityFunction[] functions = new UtilityFunction[utilityFunctions.size()];
 		functions = utilityFunctions.toArray(functions);
 		return functions;
+	}
+
+	@Override
+	protected boolean supportsConfidences(Attribute label) {
+		return false;
 	}
 
 	@Override

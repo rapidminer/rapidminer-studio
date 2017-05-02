@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
 import java.util.ArrayList;
@@ -226,12 +226,19 @@ public class AggregationOperator extends AbstractDataProcessing {
 	 * nominal attributes anymore.
 	 */
 	private static final OperatorVersion VERSION_5_1_6 = new OperatorVersion(5, 1, 6);
+
 	private static final OperatorVersion VERSION_5_2_8 = new OperatorVersion(5, 2, 8);
+
 	/*
 	 * From version 6.0.7 on the operator will throw an user error if group-by-attributes argument
 	 * refers to an attribute not present in the example set or is empty
 	 */
 	private static final OperatorVersion VERSION_6_0_6 = new OperatorVersion(6, 0, 6);
+
+	/*
+	 * From version 7.5.0 on the operator will use a new MedianAggregator
+	 */
+	static final OperatorVersion VERSION_7_4_0 = new OperatorVersion(7, 4, 0);
 
 	private final AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getExampleSetInputPort());
 
@@ -668,7 +675,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 				throw new UserError(this, "aggregation.aggregation_attribute_not_present", aggregationFunctionPair[0]);
 			}
 			AggregationFunction function = AggregationFunction.createAggregationFunction(aggregationFunctionPair[1],
-					attribute, ignoreMissings, countOnlyDistinct);
+					attribute, ignoreMissings, countOnlyDistinct, getCompatibilityLevel());
 			if (!function.isCompatible()) {
 				throw new UserError(this, "aggregation.incompatible_attribute_type", attribute.getName(),
 						aggregationFunctionPair[1]);
@@ -748,7 +755,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
-				new OperatorVersion[] { VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6 });
+				new OperatorVersion[] { VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6, VERSION_7_4_0 });
 	}
 
 	@Override

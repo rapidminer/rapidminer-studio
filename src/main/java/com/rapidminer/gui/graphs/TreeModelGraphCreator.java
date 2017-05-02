@@ -1,28 +1,41 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.graphs;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.commons.collections15.Factory;
 
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.learner.tree.Edge;
+import com.rapidminer.operator.learner.tree.NominalSplitCondition;
 import com.rapidminer.operator.learner.tree.SplitCondition;
 import com.rapidminer.operator.learner.tree.Tree;
 import com.rapidminer.operator.learner.tree.TreeModel;
+import com.rapidminer.tools.Tools;
+
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.graph.DirectedOrderedSparseMultigraph;
 import edu.uci.ics.jung.graph.Graph;
@@ -30,16 +43,10 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.EdgeLabel;
 import edu.uci.ics.jung.visualization.renderers.Renderer.Vertex;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.apache.commons.collections15.Factory;
-
 
 /**
  * Creates a graph model for a learned tree model.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class TreeModelGraphCreator extends GraphCreatorAdaptor {
@@ -66,11 +73,13 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 
 	private TreeModel model;
 
-	private Map<String, Tree> vertexMap = new HashMap<String, Tree>();
+	private Map<String, Tree> vertexMap = new HashMap<>();
 
-	private Map<String, SplitCondition> edgeMap = new HashMap<String, SplitCondition>();
+	private Map<String, SplitCondition> edgeMap = new HashMap<>();
 
-	private Map<String, Double> edgeStrengthMap = new HashMap<String, Double>();
+	private Map<String, Double> edgeStrengthMap = new HashMap<>();
+
+	private Map<String, List<String>> pathToRootMap = new HashMap<>();
 
 	public TreeModelGraphCreator(TreeModel model) {
 		this.model = model;
@@ -103,19 +112,7 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 	public String getVertexToolTip(String object) {
 		Tree tree = vertexMap.get(object);
 		if (tree != null) {
-			StringBuffer result = new StringBuffer();
-			if (tree.isLeaf()) {
-				String labelString = tree.getLabel();
-				if (labelString != null) {
-					result.append("<html><b>Class:</b>&nbsp;" + labelString + "<br>");
-					result.append("<b>Size:</b>&nbsp;" + tree.getFrequencySum() + "<br>");
-					result.append("<b>Class frequencies:</b>&nbsp;"
-							+ SwingTools.transformToolTipText(tree.getCounterMap().toString()) + "</html>");
-				}
-			} else {
-				result.append("<html><b>Subtree Size:</b>&nbsp;" + tree.getSubtreeFrequencySum() + "</html>");
-			}
-			return result.toString();
+			return createTooltip(tree);
 		} else {
 			return null;
 		}
@@ -125,7 +122,11 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 	public String getEdgeName(String object) {
 		SplitCondition condition = edgeMap.get(object);
 		if (condition != null) {
-			return condition.getRelation() + " " + condition.getValueString();
+			if (condition instanceof NominalSplitCondition) {
+				return condition.getValueString();
+			} else {
+				return condition.getRelation() + " " + condition.getValueString();
+			}
 		} else {
 			return null;
 		}
@@ -142,27 +143,44 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 	}
 
 	@Override
+	public boolean isEdgeOnSelectedPath(Set<String> selectedVertexes, String id) {
+		// both edges and vertexes are in the same map
+		return isVertexOnSelectedPath(selectedVertexes, id);
+	}
+
+	@Override
+	public boolean isVertexOnSelectedPath(Set<String> selectedVertexes, String id) {
+		boolean onPath = false;
+		for (String selectedVertex : selectedVertexes) {
+			List<String> pathElements = pathToRootMap.get(selectedVertex);
+			if (pathElements != null) {
+				onPath = pathElements.contains(id);
+			}
+
+			if (onPath) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public Graph<String, String> createGraph() {
-		// edu.uci.ics.jung.graph.Tree<String,String> treeGraph = new DelegateTree<String,String>();
 		DirectedOrderedSparseMultigraph<String, String> treeGraph = new DirectedOrderedSparseMultigraph<String, String>();
 
 		Tree root = this.model.getRoot();
 		treeGraph.addVertex("Root");
 		vertexMap.put("Root", root);
-		addTree(treeGraph, root, "Root");
+		addTree(treeGraph, root, "Root", new ArrayList<>());
 
 		return new DelegateForest<String, String>(treeGraph);
-		// return treeGraph;
 	}
 
-	private void addTree(DirectedOrderedSparseMultigraph<String, String> treeGraph, Tree node, String parentName) {
+	private void addTree(DirectedOrderedSparseMultigraph<String, String> treeGraph, Tree node, String parentName,
+			List<String> currentParentList) {
 		Iterator<Edge> e = node.childIterator();
-		double edgeWeightSum = 0.0d;
-		while (e.hasNext()) {
-			Edge edge = e.next();
-			Tree child = edge.getChild();
-			edgeWeightSum += child.getSubtreeFrequencySum();
-		}
+		double edgeWeightSum = model.getRoot().getSubtreeFrequencySum();
 
 		e = node.childIterator();
 		while (e.hasNext()) {
@@ -171,11 +189,20 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 			SplitCondition condition = edge.getCondition();
 			String childName = vertexFactory.create();
 			String edgeName = edgeFactory.create();
+			currentParentList.add(parentName);
+			currentParentList.add(edgeName);
+			pathToRootMap.put(edgeName, currentParentList);
+			pathToRootMap.put(childName, currentParentList);
+
 			vertexMap.put(childName, child);
 			edgeMap.put(edgeName, condition);
 			edgeStrengthMap.put(edgeName, child.getSubtreeFrequencySum() / edgeWeightSum);
 			treeGraph.addEdge(edgeName, parentName, childName);
-			addTree(treeGraph, child, childName);
+			addTree(treeGraph, child, childName, new ArrayList<>(currentParentList));
+
+			// siblings would use the same list with wrong edges if we did not copy
+			currentParentList = new ArrayList<String>(currentParentList);
+			currentParentList.remove(edgeName);
 		}
 	}
 
@@ -226,12 +253,12 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 
 	@Override
 	public int getMinLeafHeight() {
-		return 26;
+		return 45;
 	}
 
 	@Override
 	public int getMinLeafWidth() {
-		return 40;
+		return 70;
 	}
 
 	@Override
@@ -267,5 +294,65 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 	@Override
 	public int getLabelOffset() {
 		return 0;
+	}
+
+	/**
+	 * Create the tooltip for a tree node.
+	 *
+	 * @param tree
+	 *            the tree for which to create the tooltip
+	 * @return the HTML-formatted tooltip string
+	 */
+	private String createTooltip(Tree tree) {
+		StringBuilder sb = new StringBuilder();
+
+		if (tree.isLeaf()) {
+			String labelString = tree.getLabel();
+			if (labelString != null) {
+				sb.append(
+						"<html><div style=\"font-size: 10px; font-family: 'Open Sans'\"><p style=\"font-size: 110%; text-align: center; font-family: 'Open Sans Semibold'\"><b>"
+								+ labelString + "</b><hr NOSHADE style=\"color: '#000000'; width: 95%; \"/></p>");
+				sb.append(SwingTools.transformToolTipText(formatCounterMap(tree.getCounterMap()), false, 200, false, false)
+						+ "<br/>");
+				sb.append("Number of items:&nbsp;" + tree.getFrequencySum() + "<br/>");
+				sb.append("Ratio of total:&nbsp;"
+						+ Tools.formatPercent((double) tree.getFrequencySum() / model.getRoot().getSubtreeFrequencySum()));
+				sb.append("</div></html>");
+			}
+		} else {
+			sb.append("<html><div style=\"font-size: 10px; font-family: 'Open Sans'\">");
+			sb.append("<p>" + tree.getSubtreeFrequencySum() + " items in subtree</p><br/>");
+			sb.append("Ratio of total:&nbsp;" + Tools
+					.formatPercent((double) tree.getSubtreeFrequencySum() / model.getRoot().getSubtreeFrequencySum()));
+			sb.append("</div></html>");
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Displays the tree counterMap contents nicely formatted for humans.
+	 *
+	 * @param counterMap
+	 *            the counter map of the tree to format
+	 * @return the formatted string
+	 */
+	private static String formatCounterMap(Map<String, Integer> counterMap) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("Distribution: ");
+		int size = counterMap.size();
+		for (Entry<String, Integer> item : counterMap.entrySet()) {
+			sb.append(item.getValue());
+			sb.append(' ');
+			sb.append("<i>");
+			sb.append(item.getKey());
+			sb.append("</i>");
+			if (--size > 0) {
+				sb.append(',').append(' ');
+			}
+		}
+
+		return sb.toString();
 	}
 }

@@ -90,8 +90,8 @@ public final class ConfigureDataStep extends AbstractWizardStep {
 		try {
 			dataSource.getMetadata().configure(view.getMetaData());
 		} catch (DataSetException e) {
-			SwingTools.showSimpleErrorMessage("io.dataimport.step.data_column_configuration.error_configuring_metadata",
-					e.getMessage());
+			SwingTools.showSimpleErrorMessage(wizard.getDialog(),
+					"io.dataimport.step.data_column_configuration.error_configuring_metadata", e.getMessage());
 			throw new InvalidConfigurationException();
 		}
 	}

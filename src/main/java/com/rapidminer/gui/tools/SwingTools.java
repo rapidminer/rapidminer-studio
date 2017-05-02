@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools;
 
 import java.awt.AlphaComposite;
@@ -48,6 +48,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,6 +74,7 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.look.fc.Bookmark;
@@ -124,7 +126,6 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  *
  * @author Ingo Mierswa
  */
-@SuppressWarnings("deprecation")
 public class SwingTools {
 
 	/**
@@ -773,11 +774,22 @@ public class SwingTools {
 	 * gui.dialog.results.-key-.icon
 	 */
 	public static void showResultsDialog(final String i18nKey, final JComponent results, final Object... i18nArgs) {
+		showResultsDialog(ApplicationFrame.getApplicationFrame(), i18nKey, results, i18nArgs);
+	}
+
+	/**
+	 * The key will be used for the properties gui.dialog.-key-.title and
+	 * gui.dialog.results.-key-.icon
+	 *
+	 * @since 7.5.0
+	 */
+	public static void showResultsDialog(final Window owner, final String i18nKey, final JComponent results,
+			final Object... i18nArgs) {
 		invokeLater(new Runnable() {
 
 			@Override
 			public void run() {
-				ResultViewDialog dialog = new ResultViewDialog(i18nKey, results, i18nArgs);
+				ResultViewDialog dialog = new ResultViewDialog(owner, i18nKey, results, i18nArgs);
 				dialog.setVisible(true);
 			}
 		});
@@ -789,15 +801,17 @@ public class SwingTools {
 	 * gui.dialog.message.-key-.icon
 	 */
 	public static void showMessageDialog(final String key, final Object... keyArguments) {
-		invokeLater(new Runnable() {
+		showMessageDialog(key, null, keyArguments);
+	}
 
-			@Override
-			public void run() {
-				MessageDialog dialog = new MessageDialog(key, keyArguments);
-				dialog.setVisible(true);
-			}
-		});
-
+	/**
+	 * The key will be used for the properties gui.dialog.-key-.title and
+	 * gui.dialog.message.-key-.icon
+	 *
+	 * @since 7.5.0
+	 */
+	public static void showMessageDialog(final Window owner, final String key, final Object... keyArguments) {
+		showMessageDialog(owner, key, null, keyArguments);
 	}
 
 	/**
@@ -805,11 +819,22 @@ public class SwingTools {
 	 * gui.dialog.message.-key-.icon
 	 */
 	public static void showMessageDialog(final String key, final JComponent component, final Object... keyArguments) {
+		showMessageDialog(ApplicationFrame.getApplicationFrame(), key, component, keyArguments);
+	}
+
+	/**
+	 * The key will be used for the properties gui.dialog.-key-.title and
+	 * gui.dialog.message.-key-.icon
+	 *
+	 * @since 7.5.0
+	 */
+	public static void showMessageDialog(final Window owner, final String key, final JComponent component,
+			final Object... keyArguments) {
 		invokeLater(new Runnable() {
 
 			@Override
 			public void run() {
-				MessageDialog dialog = new MessageDialog(key, component, keyArguments);
+				MessageDialog dialog = new MessageDialog(owner, key, component, keyArguments);
 				dialog.setVisible(true);
 			}
 		});
@@ -822,11 +847,23 @@ public class SwingTools {
 	 * See {@link ConfirmDialog} for details on the mode options.
 	 */
 	public static int showConfirmDialog(final String key, final int mode, final Object... keyArguments) {
+		return showConfirmDialog(ApplicationFrame.getApplicationFrame(), key, mode, keyArguments);
+	}
+
+	/**
+	 * The key will be used for the properties gui.dialog.-key-.title and
+	 * gui.dialog.confirm.-key-.icon
+	 *
+	 * See {@link ConfirmDialog} for details on the mode options.
+	 *
+	 * @since 7.5.0
+	 */
+	public static int showConfirmDialog(final Window owner, final String key, final int mode, final Object... keyArguments) {
 		return invokeAndWaitWithResult(new ResultRunnable<Integer>() {
 
 			@Override
 			public Integer run() {
-				ConfirmDialog dialog = new ConfirmDialog(key, mode, false, keyArguments);
+				ConfirmDialog dialog = new ConfirmDialog(owner, key, mode, false, keyArguments);
 				dialog.setVisible(true);
 				return dialog.getReturnOption();
 			}
@@ -840,19 +877,20 @@ public class SwingTools {
 	 * gui.dialog.input.-key-.icon
 	 */
 	public static String showInputDialog(final String key, final String text, final Object... keyArguments) {
-		return invokeAndWaitWithResult(new ResultRunnable<String>() {
+		return showInputDialog(ApplicationFrame.getApplicationFrame(), key, text, keyArguments);
+	}
 
-			@Override
-			public String run() {
-				InputDialog dialog = new InputDialog(key, text, keyArguments);
-				dialog.setVisible(true);
-				if (dialog.wasConfirmed()) {
-					return dialog.getInputText();
-				} else {
-					return null;
-				}
-			}
-		});
+	/**
+	 * This method will present a dialog to enter a text. This text will be returned if the user
+	 * confirmed the edit. Otherwise {@code null} is returned. The key will be used for the
+	 * properties gui.dialog.input.-key-.title, gui.dialog.input.-key-.message and
+	 * gui.dialog.input.-key-.icon
+	 *
+	 * @since 7.5.0
+	 */
+	public static String showInputDialog(final Window owner, final String key, final String text,
+			final Object... keyArguments) {
+		return showInputDialog(owner, key, text, null, keyArguments);
 	}
 
 	/**
@@ -887,11 +925,24 @@ public class SwingTools {
 	 * gui.dialog.input.-key-.message and gui.dialog.input.-key-.icon
 	 */
 	public static String showRepositoryEntryInputDialog(final String key, final String text, final Object... keyArguments) {
+		return showRepositoryEntryInputDialog(ApplicationFrame.getApplicationFrame(), key, text, keyArguments);
+	}
+
+	/**
+	 * This method will present a repository entry dialog to enter a text. This text will be
+	 * returned if the user confirmed the edit. Otherwise {@code null} is returned. Prevents invalid
+	 * repository names. The key will be used for the properties gui.dialog.input.-key-.title,
+	 * gui.dialog.input.-key-.message and gui.dialog.input.-key-.icon
+	 *
+	 * @since 7.5.0
+	 */
+	public static String showRepositoryEntryInputDialog(final Window owner, final String key, final String text,
+			final Object... keyArguments) {
 		return invokeAndWaitWithResult(new ResultRunnable<String>() {
 
 			@Override
 			public String run() {
-				RepositoryEntryInputDialog dialog = new RepositoryEntryInputDialog(key, text, keyArguments);
+				RepositoryEntryInputDialog dialog = new RepositoryEntryInputDialog(owner, key, text, keyArguments);
 				dialog.setVisible(true);
 				if (dialog.wasConfirmed()) {
 					return dialog.getInputText();
@@ -906,23 +957,21 @@ public class SwingTools {
 	 * The key will be used for the properties gui.dialog.-key-.title and
 	 * gui.dialog.input.-key-.icon
 	 */
-	public static Object showInputDialog(final String key, final Object[] selectionValues, final Object initialSelectionVale,
+	public static <T> T showInputDialog(final String key, final T[] selectionValues, final T initialSelectionValue,
 			final Object... keyArguments) {
-		return invokeAndWaitWithResult(new ResultRunnable<Object>() {
+		return showInputDialog(ApplicationFrame.getApplicationFrame(), key, selectionValues, initialSelectionValue,
+				keyArguments);
+	}
 
-			@Override
-			public Object run() {
-				SelectionInputDialog<Object> dialog = new SelectionInputDialog<>(key, selectionValues, initialSelectionVale,
-						keyArguments);
-				dialog.setVisible(true);
-				if (dialog.wasConfirmed()) {
-					return dialog.getInputSelection();
-				} else {
-					return null;
-				}
-			}
-		});
-
+	/**
+	 * The key will be used for the properties gui.dialog.-key-.title and
+	 * gui.dialog.input.-key-.icon
+	 *
+	 * @since 7.5.0
+	 */
+	public static <T> T showInputDialog(final Window owner, final String key, final T[] selectionValues,
+			final T initialSelectionValue, final Object... keyArguments) {
+		return showInputDialog(owner, key, false, Arrays.asList(selectionValues), initialSelectionValue, null, keyArguments);
 	}
 
 	/**
@@ -932,22 +981,25 @@ public class SwingTools {
 	 * The key will be used for the properties gui.dialog.-key-.title and
 	 * gui.dialog.input.-key-.icon
 	 */
-	public static Object showInputDialog(final String key, final boolean editable, final Object[] selectionValues,
-			final Object initialSelectionVale, final Object... keyArguments) {
-		return invokeAndWaitWithResult(new ResultRunnable<Object>() {
+	public static <T> T showInputDialog(final String key, final boolean editable, final T[] selectionValues,
+			final T initialSelectionValue, final Object... keyArguments) {
+		return showInputDialog(ApplicationFrame.getApplicationFrame(), key, editable, selectionValues, initialSelectionValue,
+				null, keyArguments);
+	}
 
-			@Override
-			public Object run() {
-				SelectionInputDialog<Object> dialog = new SelectionInputDialog<>(key, editable, selectionValues,
-						initialSelectionVale, keyArguments);
-				dialog.setVisible(true);
-				if (dialog.wasConfirmed()) {
-					return dialog.getInputSelection();
-				} else {
-					return null;
-				}
-			}
-		});
+	/**
+	 * This will open a simple input dialog, where a comboBox presents the given values. The
+	 * Combobox might be editable depending on parameter setting.
+	 *
+	 * The key will be used for the properties gui.dialog.-key-.title and
+	 * gui.dialog.input.-key-.icon
+	 *
+	 * @since 7.5.0
+	 */
+	public static <T> T showInputDialog(final Window owner, final String key, final boolean editable,
+			final T[] selectionValues, final T initialSelectionValue, final Object... keyArguments) {
+		return showInputDialog(owner, key, editable, Arrays.asList(selectionValues), initialSelectionValue, null,
+				keyArguments);
 	}
 
 	/**
@@ -962,14 +1014,14 @@ public class SwingTools {
 	 * @since 7.0.0
 	 */
 	public static <T> T showInputDialog(final Window owner, final String key, final boolean editable,
-			final Collection<T> selectionValues, final T initialSelectionVale, final InputValidator<T> inputValidator,
+			final Collection<T> selectionValues, final T initialSelectionValue, final InputValidator<T> inputValidator,
 			final Object... keyArguments) {
 		return invokeAndWaitWithResult(new ResultRunnable<T>() {
 
 			@Override
 			public T run() {
 				SelectionInputDialog<T> dialog = new SelectionInputDialog<>(owner, key, editable, selectionValues,
-						initialSelectionVale, inputValidator, keyArguments);
+						initialSelectionValue, inputValidator, keyArguments);
 				dialog.setVisible(true);
 				if (dialog.wasConfirmed()) {
 					return dialog.getInputSelection();
@@ -990,11 +1042,27 @@ public class SwingTools {
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
 	 */
 	public static void showVerySimpleErrorMessage(final String key, final Object... arguments) {
+		showVerySimpleErrorMessage(ApplicationFrame.getApplicationFrame(), key, arguments);
+	}
+
+	/**
+	 * Shows a very simple error message without any Java exception hints.
+	 *
+	 * @param owner
+	 *            the owner of the opened dialog
+	 * @param key
+	 *            the I18n-key which will be used to display the internationalized message
+	 * @param arguments
+	 *            additional arguments for the internationalized message, which replace
+	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
+	 * @since 7.5.0
+	 */
+	public static void showVerySimpleErrorMessage(final Window owner, final String key, final Object... arguments) {
 		invokeLater(new Runnable() {
 
 			@Override
 			public void run() {
-				ErrorDialog dialog = new ErrorDialog(key, arguments);
+				ErrorDialog dialog = new ErrorDialog(owner, key, arguments);
 				dialog.setModal(true);
 				dialog.setVisible(true);
 			}
@@ -1003,11 +1071,18 @@ public class SwingTools {
 	}
 
 	public static void showVerySimpleErrorMessageAndWait(final String key, final Object... arguments) {
+		showVerySimpleErrorMessageAndWait(ApplicationFrame.getApplicationFrame(), key, arguments);
+	}
+
+	/**
+	 * @since 7.5.0
+	 */
+	public static void showVerySimpleErrorMessageAndWait(final Window owner, final String key, final Object... arguments) {
 		invokeAndWait(new Runnable() {
 
 			@Override
 			public void run() {
-				ErrorDialog dialog = new ErrorDialog(key, arguments);
+				ErrorDialog dialog = new ErrorDialog(owner, key, arguments);
 				dialog.setModal(true);
 				dialog.setVisible(true);
 			}
@@ -1036,6 +1111,27 @@ public class SwingTools {
 	 * exception (e.g. IO issues). Of course these error message methods should never be invoked by
 	 * operators or similar.
 	 *
+	 * @param owner
+	 *            the owner of the opened dialog
+	 * @param key
+	 *            the I18n-key which will be used to display the internationalized message
+	 * @param e
+	 *            the exception associated to this message
+	 * @param arguments
+	 *            additional arguments for the internationalized message, which replace
+	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
+	 * @since 7.5.0
+	 */
+	public static void showSimpleErrorMessage(final Window owner, final String key, final Throwable e,
+			final Object... arguments) {
+		showSimpleErrorMessage(owner, key, e, true, arguments);
+	}
+
+	/**
+	 * This is the normal method which could be used by GUI classes for errors caused by some
+	 * exception (e.g. IO issues). Of course these error message methods should never be invoked by
+	 * operators or similar.
+	 *
 	 * @param key
 	 *            the I18n-key which will be used to display the internationalized message
 	 * @param e
@@ -1049,6 +1145,30 @@ public class SwingTools {
 	 */
 	public static void showSimpleErrorMessage(final String key, final Throwable e, final boolean displayExceptionMessage,
 			final Object... arguments) {
+		showSimpleErrorMessage(ApplicationFrame.getApplicationFrame(), key, e, displayExceptionMessage, arguments);
+	}
+
+	/**
+	 * This is the normal method which could be used by GUI classes for errors caused by some
+	 * exception (e.g. IO issues). Of course these error message methods should never be invoked by
+	 * operators or similar.
+	 *
+	 * @param owner
+	 *            the owner of the opened dialog
+	 * @param key
+	 *            the I18n-key which will be used to display the internationalized message
+	 * @param e
+	 *            the exception associated to this message
+	 * @param displayExceptionMessage
+	 *            indicates if the exception message will be displayed in the dialog or just in the
+	 *            detailed panel
+	 * @param arguments
+	 *            additional arguments for the internationalized message, which replace
+	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
+	 * @since 7.5.0
+	 */
+	public static void showSimpleErrorMessage(final Window owner, final String key, final Throwable e,
+			final boolean displayExceptionMessage, final Object... arguments) {
 		ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_ERROR, key,
 				e != null ? e.getClass().getName() : null);
 		// if debug mode is enabled, send exception to logger
@@ -1060,7 +1180,7 @@ public class SwingTools {
 
 			@Override
 			public void run() {
-				ExtendedErrorDialog dialog = new ExtendedErrorDialog(key, e, displayExceptionMessage, arguments);
+				ExtendedErrorDialog dialog = new ExtendedErrorDialog(owner, key, e, displayExceptionMessage, arguments);
 				dialog.setVisible(true);
 			}
 		});
@@ -1084,11 +1204,35 @@ public class SwingTools {
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
 	 */
 	public static void showSimpleErrorMessage(final String key, final String errorMessage, final Object... arguments) {
+		showSimpleErrorMessage(ApplicationFrame.getApplicationFrame(), key, errorMessage, arguments);
+	}
+
+	/**
+	 * This is the normal method which could be used by GUI classes for errors caused by some
+	 * exception (e.g. IO issues). Of course these error message methods should never be invoked by
+	 * operators or similar. The key is constructed as gui.dialog.error.-key- and uses .title and
+	 * .icon properties
+	 *
+	 * @param owner
+	 *            the owner of the opened dialog
+	 * @param key
+	 *            the I18n-key which will be used to display the internationalized message
+	 * @param errorMessage
+	 *            the error message associated to this message
+	 * @param displayExceptionMessage
+	 *            indicates if the exception message will be displayed in the dialog or just in the
+	 *            detailed panel
+	 * @param arguments
+	 *            additional arguments for the internationalized message, which replace
+	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
+	 */
+	public static void showSimpleErrorMessage(final Window owner, final String key, final String errorMessage,
+			final Object... arguments) {
 		invokeLater(new Runnable() {
 
 			@Override
 			public void run() {
-				ExtendedErrorDialog dialog = new ExtendedErrorDialog(key, errorMessage, arguments);
+				ExtendedErrorDialog dialog = new ExtendedErrorDialog(owner, key, errorMessage, arguments);
 				dialog.setVisible(true);
 			}
 		});
@@ -1116,6 +1260,29 @@ public class SwingTools {
 	 */
 	public static void showFinalErrorMessage(final String key, final Throwable e, final boolean displayExceptionMessage,
 			final Object... objects) {
+		showFinalErrorMessage(ApplicationFrame.getApplicationFrame(), key, e, displayExceptionMessage, objects);
+	}
+
+	/**
+	 * Shows the final error message dialog. This dialog also allows to send a bug report if the
+	 * error was not (definitely) a user error.
+	 *
+	 * @param owner
+	 *            the owner of the opened dialog
+	 * @param key
+	 *            the I18n-key which will be used to display the internationalized message
+	 * @param e
+	 *            the exception associated to this message
+	 * @param displayExceptionMessage
+	 *            indicates if the exception message will be displayed in the dialog or just in the
+	 *            detailed panel
+	 * @param arguments
+	 *            additional arguments for the internationalized message, which replace
+	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
+	 * @since 7.5.0
+	 */
+	public static void showFinalErrorMessage(final Window owner, final String key, final Throwable e,
+			final boolean displayExceptionMessage, final Object... objects) {
 		// if debug modus is enabled, print throwable into logger
 		if (ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE).equals("true")) {
 			LogService.getRoot().log(Level.SEVERE, e.getMessage(), e);
@@ -1124,7 +1291,7 @@ public class SwingTools {
 
 			@Override
 			public void run() {
-				ExtendedErrorDialog dialog = new ExtendedErrorDialog(key, e, displayExceptionMessage, objects);
+				ExtendedErrorDialog dialog = new ExtendedErrorDialog(owner, key, e, displayExceptionMessage, objects);
 				dialog.setVisible(true);
 			}
 		});
@@ -1429,7 +1596,7 @@ public class SwingTools {
 	 *
 	 * Example:
 	 *
-	 * enlargeString("1234", 8) -> "  1234  "
+	 * enlargeString("1234", 8) -> " 1234 "
 	 *
 	 *
 	 * @param string
@@ -1602,11 +1769,18 @@ public class SwingTools {
 	}
 
 	public static void showLongMessage(final String i18nKey, final String message) {
+		showLongMessage(ApplicationFrame.getApplicationFrame(), i18nKey, message);
+	}
+
+	/**
+	 * @since 7.5.0
+	 */
+	public static void showLongMessage(final Window owner, final String i18nKey, final String message) {
 		invokeLater(new Runnable() {
 
 			@Override
 			public void run() {
-				LongMessageDialog dialog = new LongMessageDialog(i18nKey, message);
+				LongMessageDialog dialog = new LongMessageDialog(owner, i18nKey, message);
 				dialog.setVisible(true);
 			}
 		});
