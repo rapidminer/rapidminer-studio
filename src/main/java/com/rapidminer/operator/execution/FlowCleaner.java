@@ -74,6 +74,10 @@ enum FlowCleaner {
 			// do cleanup if there are unused columns
 			if (exampleSet.getAttributes().allSize() < exampleSet.getExampleTable().getAttributeCount()) {
 				ExampleSet clone = (ExampleSet) exampleSet.clone();
+				String source = exampleSet.getSource();
+				if (source != null && !source.isEmpty()) {
+					clone.setSource(source);
+				}
 				clone.cleanup();
 				inputPort.receive(clone);
 				return clone;

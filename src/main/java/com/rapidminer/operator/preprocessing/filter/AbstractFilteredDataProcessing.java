@@ -145,7 +145,7 @@ public abstract class AbstractFilteredDataProcessing extends AbstractDataProcess
 		}
 
 		// converting special to normal
-		workingExampleSet = new NonSpecialAttributesExampleSet(workingExampleSet);
+		workingExampleSet = NonSpecialAttributesExampleSet.create(workingExampleSet);
 
 		// applying filtering
 		ExampleSet resultSet = applyOnFiltered(workingExampleSet);

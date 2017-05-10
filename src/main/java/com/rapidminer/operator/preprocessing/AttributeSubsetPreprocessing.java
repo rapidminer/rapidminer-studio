@@ -374,7 +374,7 @@ public class AttributeSubsetPreprocessing extends OperatorChain {
 		}
 		if (getParameterAsBoolean(PARAMETER_REMOVE_ROLES)) {
 			// converting special to normal
-			workingExampleSet = new NonSpecialAttributesExampleSet(workingExampleSet);
+			workingExampleSet = NonSpecialAttributesExampleSet.create(workingExampleSet);
 		}
 
 		// perform inner operators

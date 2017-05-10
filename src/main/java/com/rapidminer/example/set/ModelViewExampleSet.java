@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.set;
 
 import java.io.IOException;
@@ -46,15 +46,41 @@ public class ModelViewExampleSet extends AbstractExampleSet {
 
 	private Attributes attributes;
 
+	/**
+	 * @deprecated use static creation method {@link #create(ExampleSet, ViewModel)} instead
+	 */
+	@Deprecated
 	public ModelViewExampleSet(ExampleSet parent, ViewModel model) {
 		this.parent = (ExampleSet) parent.clone();
-		Attributes modelAttributes = model.getTargetAttributes(parent);
-		// clear parent attributes and copy model attributes there
-		Attributes parentAttributes = this.parent.getAttributes();
-		parentAttributes.clearRegular();
-		parentAttributes.clearSpecial();
-		for (Iterator<AttributeRole> i = modelAttributes.allAttributeRoles(); i.hasNext();) {
-			parentAttributes.add(i.next());
+		replaceAttributes(this.parent, model.getTargetAttributes(parent));
+	}
+
+	/**
+	 * Creates a new example set based on parent that has the attributes specified by the model.
+	 *
+	 * @param parent
+	 *            the example set from which to create the new one
+	 * @param model
+	 *            the model supplying the new attributes
+	 * @return an example set with attributes provided by the model
+	 * @since 7.5.1
+	 */
+	public static ExampleSet create(ExampleSet parent, ViewModel model) {
+		ExampleSet newSet = (ExampleSet) parent.clone();
+		replaceAttributes(newSet, model.getTargetAttributes(parent));
+		return newSet;
+	}
+
+	/**
+	 * Replaces the attributes of exampleSet by the given replacementAttributes.
+	 */
+	private static void replaceAttributes(ExampleSet exampleSet, Attributes replacementAttributes) {
+		Attributes attributes = exampleSet.getAttributes();
+		// clear attributes and copy replacement attributes there
+		attributes.clearRegular();
+		attributes.clearSpecial();
+		for (Iterator<AttributeRole> i = replacementAttributes.allAttributeRoles(); i.hasNext();) {
+			attributes.add(i.next());
 		}
 	}
 

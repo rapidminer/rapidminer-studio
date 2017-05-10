@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing;
 
 import java.util.Collection;
@@ -129,7 +129,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 	@Override
 	public final ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		ExampleSet workingSet = isSupportingAttributeRoles() ? getSelectedAttributes(exampleSet)
-				: new NonSpecialAttributesExampleSet(getSelectedAttributes(exampleSet));
+				: NonSpecialAttributesExampleSet.create(getSelectedAttributes(exampleSet));
 
 		AbstractModel model = createPreprocessingModel(workingSet);
 		model.setParameter(PARAMETER_CREATE_VIEW, getParameterAsBoolean(PARAMETER_CREATE_VIEW));
@@ -151,7 +151,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 	 */
 	public ExampleSet doWork(ExampleSet exampleSet) throws OperatorException {
 		ExampleSet workingSet = isSupportingAttributeRoles() ? getSelectedAttributes(exampleSet)
-				: new NonSpecialAttributesExampleSet(getSelectedAttributes(exampleSet));
+				: NonSpecialAttributesExampleSet.create(getSelectedAttributes(exampleSet));
 
 		AbstractModel model = createPreprocessingModel(workingSet);
 		model.setParameter(PARAMETER_CREATE_VIEW, getParameterAsBoolean(PARAMETER_CREATE_VIEW));

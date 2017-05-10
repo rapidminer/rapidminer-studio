@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.set;
 
 import java.util.Iterator;
@@ -43,9 +43,45 @@ public class AttributeSelectionExampleSet extends AbstractExampleSet {
 	 * Constructs a new AttributeSelectionExampleSet. Only those attributes with a true value in the
 	 * selection mask will be used. If the given mask is null, all regular attributes of the parent
 	 * example set will be used.
+	 *
+	 * @deprecated use static creation method {@link #create(ExampleSet, boolean[])} instead
 	 */
+	@Deprecated
 	public AttributeSelectionExampleSet(ExampleSet exampleSet, boolean[] selectionMask) {
 		this.parent = (ExampleSet) exampleSet.clone();
+		selectAttributes(selectionMask, parent);
+	}
+
+	/**
+	 * Creates a new example set with only the regular attributes selected by the selection mask.
+	 * Only those attributes with a true value in the selection mask will be used. If the given mask
+	 * is null, all regular attributes of the parent example set will be used. The special
+	 * attributes stay the same.
+	 *
+	 * @param exampleSet
+	 *            the example set to start from
+	 * @param selectionMask
+	 *            the mask defining which attributes to use
+	 * @return an example set which the specified attributes selected
+	 * @throws IllegalArgumentException
+	 *             if the selectionMask has not the same number of entries as regular attributes in
+	 *             the example set
+	 * @since 7.5.1
+	 */
+	public static ExampleSet create(ExampleSet exampleSet, boolean[] selectionMask) {
+		ExampleSet newSet = (ExampleSet) exampleSet.clone();
+		selectAttributes(selectionMask, newSet);
+		return newSet;
+	}
+
+	/**
+	 * Removes all attributes at which index the selectinMask is {@code false}.
+	 *
+	 * @throws IllegalArgumentException
+	 *             if the selectionMask has not the same number of entries as regular attributes in
+	 *             the example set
+	 */
+	private static void selectAttributes(boolean[] selectionMask, ExampleSet exampleSet) {
 		if (selectionMask != null) {
 			if (selectionMask.length != exampleSet.getAttributes().size()) {
 				throw new IllegalArgumentException(
@@ -53,7 +89,7 @@ public class AttributeSelectionExampleSet extends AbstractExampleSet {
 			}
 
 			int counter = 0;
-			Iterator<Attribute> i = this.parent.getAttributes().iterator();
+			Iterator<Attribute> i = exampleSet.getAttributes().iterator();
 			while (i.hasNext()) {
 				i.next();
 				if (!selectionMask[counter]) {

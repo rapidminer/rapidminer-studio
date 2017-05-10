@@ -24,7 +24,10 @@ dependencies {
 
 	// RapidMiner license framework for license management
 	compile 'com.rapidminer.license:rapidminer-license-api:3.2.0'
-	compile 'com.rapidminer.license:rapidminer-license-commons:3.2.1'
+	compile('com.rapidminer.license:rapidminer-license-commons:3.2.1'){
+		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+	}
 
 	// RapidMiner API
 	compile 'com.rapidminer:rapidminer-api:0.2.1'
@@ -33,7 +36,7 @@ dependencies {
 	compile 'com.rapidminer.external:alphanumeric-sorting:1.0.1'
 
 	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
-	compile 'com.rapidminer.external:vldocking:1.2.0'
+	compile 'com.rapidminer.external:vldocking:1.2.1'
 
 	// Freehep for vector graphic export (http://java.freehep.org/)
 	compile('org.freehep:freehep-graphicsio-ps:2.3') {
@@ -137,8 +140,8 @@ dependencies {
 	compile 'com.h2database:h2:1.4.194'
 
 	// up until 7.4.1 this was a transitive dependency coming from license-commons (jackson version 2.4.0)
-	compile 'com.fasterxml.jackson.core:jackson-core:2.8.8'
-	compile 'com.fasterxml.jackson.core:jackson-databind:2.8.8'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.6.6'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.6.6'
 }
 
 task wrapper(type: Wrapper) { gradleVersion = '2.14.1' }

@@ -18,16 +18,27 @@
  */
 package com.rapidminer.example.utils;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.SimpleAttributes;
+import com.rapidminer.example.set.SimpleExampleSet;
+import com.rapidminer.example.table.BinominalAttribute;
+import com.rapidminer.example.table.DateAttribute;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.GrowingExampleTable;
 import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.table.NumericalAttribute;
+import com.rapidminer.example.table.PolynominalAttribute;
 import com.rapidminer.example.table.internal.ColumnarExampleTable;
 import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
+import com.rapidminer.operator.preprocessing.MaterializeDataInMemory;
 import com.rapidminer.tools.ParameterService;
 
 
@@ -38,6 +49,16 @@ import com.rapidminer.tools.ParameterService;
  * @since 7.3
  */
 public final class ExampleSets {
+	
+	/** Set of primitive attribute types that are known to be thread safe for read accesses. */
+	private static final Set<Class<? extends Attribute>> SAFE_ATTRIBUTES = new HashSet<>(5);
+	static {
+		SAFE_ATTRIBUTES.add(DateAttribute.class);
+		SAFE_ATTRIBUTES.add(BinominalAttribute.class);
+		SAFE_ATTRIBUTES.add(PolynominalAttribute.class);
+		SAFE_ATTRIBUTES.add(DateAttribute.class);
+		SAFE_ATTRIBUTES.add(NumericalAttribute.class);
+	}
 
 	private ExampleSets() {}
 
@@ -106,6 +127,55 @@ public final class ExampleSets {
 		} else {
 			return new ColumnarExampleTable(attributes, management, false);
 		}
+	}
+	
+	/**
+	 * Creates a copy of the input that guarantees thread-safety for read access and attribute set manipulations.
+	 * If the input already provides these guarantees, a shallow copy is return, otherwise a deep copy is created.
+	 * 
+	 * @param set the input example set
+	 * @return the thread safe copy of the given set
+	 * @throws IllegalArgumentException if the input example set is {@code null}
+	 */
+	public static ExampleSet createThreadSafeCopy(ExampleSet set) {
+		if (set == null) {
+			throw new IllegalArgumentException("Example set must not be null");
+		}
+		
+		boolean foundUnsafeComponent = false;
+		
+		// check example set implementation
+		foundUnsafeComponent |= set.getClass() != SimpleExampleSet.class;
+		
+		// check example table implementation
+		if (!foundUnsafeComponent) {
+			ExampleTable table = set.getExampleTable();
+			foundUnsafeComponent |= table.getClass() != ColumnarExampleTable.class;
+		}
+		
+		// check attribute implementation
+		if (!foundUnsafeComponent) {
+			Attributes attributes = set.getAttributes();
+			foundUnsafeComponent |= attributes.getClass() != SimpleAttributes.class;
+		}
+		
+		// check individual attributes and attribute transformations
+		if (!foundUnsafeComponent) {
+			Iterator<Attribute> attributes = set.getAttributes().allAttributes();
+			while (!foundUnsafeComponent && attributes.hasNext()) {
+				Attribute attribute = attributes.next();
+				if (!SAFE_ATTRIBUTES.contains(attribute.getClass()) || attribute.getLastTransformation() != null) {
+					foundUnsafeComponent = true;
+				}
+			}
+		}
+		
+		if (foundUnsafeComponent) {
+			return MaterializeDataInMemory.materializeExampleSet(set);
+		} else {
+			return (ExampleSet) set.clone();
+		}
+		
 	}
 
 }

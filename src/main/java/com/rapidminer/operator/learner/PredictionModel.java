@@ -110,7 +110,7 @@ public abstract class PredictionModel extends AbstractModel {
 	 */
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
-		ExampleSet mappedExampleSet = new RemappedExampleSet(exampleSet, getTrainingHeader(), false);
+		ExampleSet mappedExampleSet = RemappedExampleSet.create(exampleSet, getTrainingHeader(), false, true);
 		checkCompatibility(mappedExampleSet);
 		Attribute predictedLabel = createPredictionAttributes(mappedExampleSet, getLabel());
 		ExampleSet result = performPrediction(mappedExampleSet, predictedLabel);
