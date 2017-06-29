@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools.components;
 
 import java.awt.AWTEvent;
@@ -69,6 +69,7 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.RMUrlHandler;
 
 
@@ -105,7 +106,9 @@ public class ToolTipWindow {
 
 	public interface TipProvider {
 
-		/** Returns the actual tip belonging to this point. Called after {@link #getIdUnder(Point)}. */
+		/**
+		 * Returns the actual tip belonging to this point. Called after {@link #getIdUnder(Point)}.
+		 */
 		public String getTip(Object id);
 
 		/** Returns an additional tooltip component to be added below the text field. */
@@ -290,7 +293,7 @@ public class ToolTipWindow {
 
 		showTipTimer.setRepeats(false);
 
-		tipPane.setFont(new Font("Sans-serif", Font.PLAIN, 9));
+		tipPane.setFont(FontTools.getFont(Font.SANS_SERIF, Font.PLAIN, 9));
 		tipPane.setMargin(new Insets(4, 4, 4, 4));
 		tipPane.setEditable(false);
 		tipPane.addHyperlinkListener(new HyperlinkListener() {
@@ -516,16 +519,16 @@ public class ToolTipWindow {
 
 		currentDialog.pack();
 		if (undecorated) {
-			currentDialog.setLocation(new Point((int) (parent.getLocationOnScreen().getX() + point.getX()), (int) (parent
-					.getLocationOnScreen().getY() + point.getY())));
+			currentDialog.setLocation(new Point((int) (parent.getLocationOnScreen().getX() + point.getX()),
+					(int) (parent.getLocationOnScreen().getY() + point.getY())));
 		} else {
 			Rectangle innerBounds = currentDialog.getComponent(0).getBounds();
 			currentDialog.setLocation(new Point((int) (parent.getLocationOnScreen().getX() + point.getX() - innerBounds.x),
 					(int) (parent.getLocationOnScreen().getY() + point.getY() - innerBounds.y)));
 			int dx = currentDialog.getSize().width - tipScrollPane.getSize().width;
 			int dy = currentDialog.getSize().height - tipScrollPane.getSize().height;
-			currentDialog.setPreferredSize(new Dimension(tipScrollPane.getPreferredSize().width + dx, tipScrollPane
-					.getPreferredSize().height + dy));
+			currentDialog.setPreferredSize(new Dimension(tipScrollPane.getPreferredSize().width + dx,
+					tipScrollPane.getPreferredSize().height + dy));
 		}
 
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -540,14 +543,14 @@ public class ToolTipWindow {
 
 		Rectangle bounds = currentDialog.getBounds();
 		if (bounds.getMaxX() > boundsOfCurrentScreen.getMaxX()) {
-			currentDialog.setLocation(new Point((int) (boundsOfCurrentScreen.getMaxX() - bounds.getWidth()), (int) bounds
-					.getY()));
+			currentDialog.setLocation(
+					new Point((int) (boundsOfCurrentScreen.getMaxX() - bounds.getWidth()), (int) bounds.getY()));
 			bounds = currentDialog.getBounds();
 		}
 
 		if (bounds.getMaxY() > boundsOfCurrentScreen.getMaxY()) {
-			currentDialog.setLocation(new Point((int) bounds.getX(), (int) (boundsOfCurrentScreen.getMaxY() - bounds
-					.getHeight())));
+			currentDialog.setLocation(
+					new Point((int) bounds.getX(), (int) (boundsOfCurrentScreen.getMaxY() - bounds.getHeight())));
 		}
 		currentDialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
 				.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CLOSE");
@@ -569,8 +572,8 @@ public class ToolTipWindow {
 		if (tipPaneHeight > 300) {
 			tipScrollPane.setPreferredSize(new Dimension(tipPaneWidth + 50, 300 + (undecorated ? 0 : f3Label.getHeight())));
 		} else {
-			tipScrollPane.setPreferredSize(new Dimension(tipPaneWidth + 50, tipPaneHeight + 30
-					+ (undecorated ? 0 : f3Label.getHeight())));
+			tipScrollPane.setPreferredSize(
+					new Dimension(tipPaneWidth + 50, tipPaneHeight + 30 + (undecorated ? 0 : f3Label.getHeight())));
 		}
 	}
 
@@ -585,8 +588,8 @@ public class ToolTipWindow {
 			if (!parent.isDisplayable()) {
 				return;
 			}
-			Rectangle parentBounds = new Rectangle(parent.getLocationOnScreen(), new Dimension(parent.getWidth(),
-					parent.getHeight()));
+			Rectangle parentBounds = new Rectangle(parent.getLocationOnScreen(),
+					new Dimension(parent.getWidth(), parent.getHeight()));
 			if (!parentBounds.contains(MouseInfo.getPointerInfo().getLocation())) {
 				return;
 			}

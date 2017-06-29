@@ -59,7 +59,7 @@ public enum CallToActionScheduler {
 	/** Clean on start-up */
 	private static final int CLEAN_DELAY = 0;
 
-	/** Clean every day */
+	/** Clean every hour */
 	private static final int CLEAN_INTERVAL = 1;
 
 	/** Skip iteration if still running */
@@ -91,8 +91,12 @@ public enum CallToActionScheduler {
 			public void run() {
 				if (IS_RUNNING.compareAndSet(false, true)) {
 					try {
+						LogService.getRoot().log(Level.FINE,
+								"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.started");
 						persistEvents();
 						checkRules();
+						LogService.getRoot().log(Level.FINE,
+								"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.finished");
 					} finally {
 						IS_RUNNING.set(false);
 					}
@@ -106,14 +110,18 @@ public enum CallToActionScheduler {
 			@Override
 			public void run() {
 				try {
+					LogService.getRoot().log(Level.FINE,
+							"com.rapidminer.tools.usagestats.CallToActionScheduler.cleanup.started");
 					CtaDao.INSTANCE.cleanUpDatabase();
+					LogService.getRoot().log(Level.FINE,
+							"com.rapidminer.tools.usagestats.CallToActionScheduler.cleanup.finished");
 				} catch (SQLException e) {
 					LogService.getRoot().log(Level.WARNING,
 							"com.rapidminer.tools.usagestats.CallToActionScheduler.db.clean.failed", e);
 				}
 			}
 
-		}, CLEAN_DELAY, CLEAN_INTERVAL, TimeUnit.DAYS);
+		}, CLEAN_DELAY, CLEAN_INTERVAL, TimeUnit.HOURS);
 	}
 
 	/**
@@ -163,6 +171,7 @@ public enum CallToActionScheduler {
 		Collection<VerifiableRule> rules = RuleService.INSTANCE.getRules();
 		for (VerifiableRule rule : rules) {
 			// check if rule is fulfilled, if it is, create CTA popup and show it
+			long before = System.currentTimeMillis();
 			if (rule.isRuleFulfilled()) {
 				LogService.getRoot().log(Level.FINE,
 						"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.verification.triggered",
@@ -197,6 +206,10 @@ public enum CallToActionScheduler {
 				}).start();
 
 			}
+			LogService.getRoot().log(Level.FINE,
+					"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.verification.verify",
+					new Object[] { rule.getRule().getId(), System.currentTimeMillis() - before });
+
 		}
 	}
 }

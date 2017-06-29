@@ -1,27 +1,22 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.new_plotter.configuration;
-
-import com.rapidminer.gui.new_plotter.listener.LegendConfigurationListener;
-import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent;
-import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent.LegendConfigurationChangeType;
-import com.rapidminer.tools.I18N;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -32,20 +27,26 @@ import java.util.List;
 
 import org.jfree.ui.RectangleEdge;
 
+import com.rapidminer.gui.new_plotter.listener.LegendConfigurationListener;
+import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent;
+import com.rapidminer.gui.new_plotter.listener.events.LegendConfigurationChangeEvent.LegendConfigurationChangeType;
+import com.rapidminer.tools.FontTools;
+import com.rapidminer.tools.I18N;
+
 
 /**
- * 
+ *
  * @author Marius Helf, Nils Woehler
- * 
+ *
  */
 public class LegendConfiguration implements Cloneable {
 
 	public enum LegendPosition {
-		TOP(I18N.getGUILabel("plotter.legendposition.TOP.label"), RectangleEdge.TOP), BOTTOM(I18N
-				.getGUILabel("plotter.legendposition.BOTTOM.label"), RectangleEdge.BOTTOM), LEFT(I18N
-				.getGUILabel("plotter.legendposition.LEFT.label"), RectangleEdge.LEFT), RIGHT(I18N
-				.getGUILabel("plotter.legendposition.RIGHT.label"), RectangleEdge.RIGHT), NONE(I18N
-				.getGUILabel("plotter.legendposition.NONE.label"), null);
+		TOP(I18N.getGUILabel("plotter.legendposition.TOP.label"), RectangleEdge.TOP), BOTTOM(
+				I18N.getGUILabel("plotter.legendposition.BOTTOM.label"),
+				RectangleEdge.BOTTOM), LEFT(I18N.getGUILabel("plotter.legendposition.LEFT.label"),
+						RectangleEdge.LEFT), RIGHT(I18N.getGUILabel("plotter.legendposition.RIGHT.label"),
+								RectangleEdge.RIGHT), NONE(I18N.getGUILabel("plotter.legendposition.NONE.label"), null);
 
 		private String name;
 		private RectangleEdge position;
@@ -61,7 +62,7 @@ public class LegendConfiguration implements Cloneable {
 
 		/**
 		 * Caution may be <code>null</code>!
-		 * 
+		 *
 		 * @return
 		 */
 		public RectangleEdge getPosition() {
@@ -69,7 +70,7 @@ public class LegendConfiguration implements Cloneable {
 		}
 	}
 
-	public static final Font DEFAULT_LEGEND_FONT = new Font("Dialog", Font.PLAIN, 12);
+	public static final Font DEFAULT_LEGEND_FONT = FontTools.getFont(Font.DIALOG, Font.PLAIN, 12);
 	private static final boolean DEFAULT_SHOW_DIMENSION_TYPE = true;
 	private static final LegendPosition DEFAULT_LEGEND_POSITION = LegendPosition.RIGHT;
 	public static final Color DEFAULT_LEGEND_BACKGROUND_COLOR = Color.white;
@@ -152,8 +153,8 @@ public class LegendConfiguration implements Cloneable {
 	 */
 	public void setLegendFrameColor(Color legendFrameColor) {
 		this.legendFrameColor = legendFrameColor;
-		fireLegendConfigurationChanged(new LegendConfigurationChangeEvent(this, legendFrameColor,
-				LegendConfigurationChangeType.FRAME_COLOR));
+		fireLegendConfigurationChanged(
+				new LegendConfigurationChangeEvent(this, legendFrameColor, LegendConfigurationChangeType.FRAME_COLOR));
 	}
 
 	public LegendPosition getLegendPosition() {
@@ -238,8 +239,8 @@ public class LegendConfiguration implements Cloneable {
 	 */
 	public void setShowLegendFrame(boolean showLegendFrame) {
 		this.showLegendFrame = showLegendFrame;
-		fireLegendConfigurationChanged(new LegendConfigurationChangeEvent(this, showLegendFrame,
-				LegendConfigurationChangeType.SHOW_LEGEND_FRAME));
+		fireLegendConfigurationChanged(
+				new LegendConfigurationChangeEvent(this, showLegendFrame, LegendConfigurationChangeType.SHOW_LEGEND_FRAME));
 	}
 
 	public Color getLegendFontColor() {

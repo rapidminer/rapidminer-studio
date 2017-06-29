@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.new_plotter.gui.cellrenderer;
 
 import java.awt.BorderLayout;
@@ -56,6 +56,7 @@ import com.rapidminer.gui.new_plotter.gui.treenodes.PlotConfigurationTreeNode;
 import com.rapidminer.gui.new_plotter.gui.treenodes.RangeAxisConfigTreeNode;
 import com.rapidminer.gui.new_plotter.gui.treenodes.ValueSourceTreeNode;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 
 
@@ -183,7 +184,7 @@ public class PlotConfigurationTreeCellRenderer extends DefaultTreeCellRenderer i
 			if (fontValue == null) {
 				fontValue = nameLabel.getFont();
 			}
-			fontValue = new Font(fontValue.getFamily(), Font.PLAIN, fontValue.getSize());
+			fontValue = FontTools.getFont(fontValue.getFamily(), Font.PLAIN, fontValue.getSize());
 			nameLabel.setFont(fontValue);
 
 			// set label icon
@@ -286,7 +287,7 @@ public class PlotConfigurationTreeCellRenderer extends DefaultTreeCellRenderer i
 			if (fontValue == null) {
 				fontValue = nameLabel.getFont();
 			}
-			fontValue = new Font(fontValue.getFamily(), Font.PLAIN, fontValue.getSize());
+			fontValue = FontTools.getFont(fontValue.getFamily(), Font.PLAIN, fontValue.getSize());
 			nameLabel.setFont(fontValue);
 
 			// set label icon
@@ -359,8 +360,8 @@ public class PlotConfigurationTreeCellRenderer extends DefaultTreeCellRenderer i
 					errorLabelIcon = WARNING_ICON;
 				}
 
-				if (!dimensionConfig.getErrors().isEmpty() || foregroundColor != null
-						&& foregroundColor.equals(TreeNodeColors.getInvalidColor())) {
+				if (!dimensionConfig.getErrors().isEmpty()
+						|| foregroundColor != null && foregroundColor.equals(TreeNodeColors.getInvalidColor())) {
 					foregroundColor = TreeNodeColors.getInvalidColor();
 					errorLabelIcon = ERROR_ICON;
 				}
@@ -493,8 +494,6 @@ public class PlotConfigurationTreeCellRenderer extends DefaultTreeCellRenderer i
 			if (fontValue == null) {
 				fontValue = nameLabel.getFont();
 			}
-			// fontValue = new Font(fontValue.getFamily(), Font.BOLD, fontValue.getSize());
-			// nameLabel.setFont(fontValue);
 
 			// set label icon
 			String icon = I18N.getMessageOrNull(I18N.getGUIBundle(), "gui.label." + i18nKey + ".icon");
@@ -509,15 +508,15 @@ public class PlotConfigurationTreeCellRenderer extends DefaultTreeCellRenderer i
 			errorIconLabel.setIcon(null);
 		}
 
-		private void adaptValueSource(JTree tree, ValueSourceTreeNode node, boolean selected, boolean expanded,
-				boolean leaf, int row, boolean hasFocus, boolean dragging) {
+		private void adaptValueSource(JTree tree, ValueSourceTreeNode node, boolean selected, boolean expanded, boolean leaf,
+				int row, boolean hasFocus, boolean dragging) {
 
 			// set label font
 			Font fontValue = TREE_FONT;
 			if (fontValue == null) {
 				fontValue = nameLabel.getFont();
 			}
-			fontValue = new Font(fontValue.getFamily(), Font.PLAIN, fontValue.getSize());
+			fontValue = FontTools.getFont(fontValue.getFamily(), Font.PLAIN, fontValue.getSize());
 			nameLabel.setFont(fontValue);
 
 			ValueSource valueSource = node.getUserObject();
@@ -613,10 +612,10 @@ public class PlotConfigurationTreeCellRenderer extends DefaultTreeCellRenderer i
 	public PlotConfigurationTreeCellRenderer(DataTableColumnListTransferHandler aTH) {
 		aTH.addDragListener(this);
 
-		ERROR_ICON = SwingTools.createIcon("16/"
-				+ I18N.getMessageOrNull(I18N.getGUIBundle(), "gui.label.plotter.configuratiom_dialog.error_icon"));
-		WARNING_ICON = SwingTools.createIcon("16/"
-				+ I18N.getMessageOrNull(I18N.getGUIBundle(), "gui.label.plotter.configuratiom_dialog.warning_icon"));
+		ERROR_ICON = SwingTools.createIcon(
+				"16/" + I18N.getMessageOrNull(I18N.getGUIBundle(), "gui.label.plotter.configuratiom_dialog.error_icon"));
+		WARNING_ICON = SwingTools.createIcon(
+				"16/" + I18N.getMessageOrNull(I18N.getGUIBundle(), "gui.label.plotter.configuratiom_dialog.warning_icon"));
 
 		focusBorder = BorderFactory.createLineBorder(BORDER_SELECTION_COLOR);
 		nonFocusBorder = BorderFactory.createLineBorder(Color.white);
@@ -627,11 +626,11 @@ public class PlotConfigurationTreeCellRenderer extends DefaultTreeCellRenderer i
 	}
 
 	@Override
-	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
-			boolean leaf, int row, boolean hasFocus) {
+	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf,
+			int row, boolean hasFocus) {
 		if (value instanceof PlotConfigurationTreeNode) {
-			globalAndValueSourceRenderPanel.updateTreeCell(tree, (PlotConfigurationTreeNode) value, selected, expanded,
-					leaf, row, hasFocus, dragging);
+			globalAndValueSourceRenderPanel.updateTreeCell(tree, (PlotConfigurationTreeNode) value, selected, expanded, leaf,
+					row, hasFocus, dragging);
 			return globalAndValueSourceRenderPanel;
 		} else if (value instanceof ValueSourceTreeNode) {
 			globalAndValueSourceRenderPanel.updateTreeCell(tree, (ValueSourceTreeNode) value, selected, expanded, leaf, row,

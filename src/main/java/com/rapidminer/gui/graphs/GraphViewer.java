@@ -66,6 +66,7 @@ import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.report.Renderable;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
@@ -112,16 +113,13 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 	public static final Color NODE_ON_PATH = NODE_SELECTED;
 
-	public static final Font EDGE_FONT = StyleContext.getDefaultStyleContext().getFont("Open Sans", Font.PLAIN, 12);
+	public static final Font EDGE_FONT = FontTools.getFont("Open Sans", Font.PLAIN, 12);
 
-	public static final Font EDGE_FONT_ON_PATH = StyleContext.getDefaultStyleContext().getFont("Open Sans Semibold",
-			Font.BOLD, 13);
+	public static final Font EDGE_FONT_ON_PATH = FontTools.getFont("Open Sans Semibold", Font.BOLD, 13);
 
-	public static final Font VERTEX_BOLD_FONT = StyleContext.getDefaultStyleContext().getFont("Open Sans Semibold",
-			Font.BOLD, 14);
+	public static final Font VERTEX_BOLD_FONT = FontTools.getFont("Open Sans Semibold", Font.BOLD, 14);
 
-	public static final Font VERTEX_PLAIN_FONT = StyleContext.getDefaultStyleContext().getFont("Open Sans Semibold",
-			Font.BOLD, 14);
+	public static final Font VERTEX_PLAIN_FONT = FontTools.getFont("Open Sans Semibold", Font.BOLD, 14);
 
 	private VisualizationViewer<V, E> vv;
 
@@ -243,12 +241,12 @@ public class GraphViewer<V, E> extends JPanel implements Renderable, PrintableCo
 
 			@Override
 			public void graphClicked(V vertex, MouseEvent arg1) {
-				if (graphCreator.getObjectViewer() != null) {
-					vv.getPickedVertexState().clear();
-					vv.getPickedVertexState().pick(vertex, true);
-					graphCreator.getObjectViewer().showObject(graphCreator.getObject(vertex));
+					if (graphCreator.getObjectViewer() != null) {
+						vv.getPickedVertexState().clear();
+						vv.getPickedVertexState().pick(vertex, true);
+						graphCreator.getObjectViewer().showObject(graphCreator.getObject(vertex));
+					}
 				}
-			}
 
 			@Override
 			public void graphPressed(V arg0, MouseEvent arg1) {}

@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.plotter;
 
 import java.awt.Component;
@@ -65,6 +65,7 @@ import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedListModel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.parameter.ParameterTypeEnumeration;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 
@@ -142,8 +143,8 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 			label = new JLabel(I18N.getGUILabel("plotter_panel.selection.label") + ":");
 			this.add(label, c);
 
-			ImageIcon buttonIcon = SwingTools.createImage("icons/chartPreview/32/"
-					+ plotter.getPlotterName().replace(' ', '_') + ".png");
+			ImageIcon buttonIcon = SwingTools
+					.createImage("icons/chartPreview/32/" + plotter.getPlotterName().replace(' ', '_') + ".png");
 
 			plotterCombo.setIcon(buttonIcon);
 			plotterCombo.setIconTextGap(6);
@@ -205,19 +206,19 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 
 			// log scale
 			if (plotter.isSupportingLogScale(axisIndex)) {
-				final ListeningJCheckBox logScaleBox = new ListeningJCheckBox(PlotterAdapter.PARAMETER_SUFFIX_AXIS
-						+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex))
-						+ PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE, I18N.getMessage(I18N.getGUIBundle(),
-						"gui.label.plotter_panel.log_scale.label"), false);
+				final ListeningJCheckBox logScaleBox = new ListeningJCheckBox(
+						PlotterAdapter.PARAMETER_SUFFIX_AXIS
+								+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex))
+								+ PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE,
+						I18N.getMessage(I18N.getGUIBundle(), "gui.label.plotter_panel.log_scale.label"), false);
 				changeListenerElements.add(logScaleBox);
 				logScaleBox.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						plotterSettings.setParameterAsBoolean(
-								PlotterAdapter.PARAMETER_SUFFIX_AXIS
-										+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex))
-										+ PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE, logScaleBox.isSelected());
+						plotterSettings.setParameterAsBoolean(PlotterAdapter.PARAMETER_SUFFIX_AXIS
+								+ PlotterAdapter.transformParameterName(plotter.getAxisName(finalAxisIndex))
+								+ PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE, logScaleBox.isSelected());
 					}
 				});
 				this.add(logScaleBox, c);
@@ -300,8 +301,8 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 
 					@Override
 					public void itemStateChanged(ItemEvent e) {
-						plotterSettings.setParameterAsString(PlotterAdapter.PARAMETER_PLOT_COLUMN, plotCombo
-								.getSelectedItem().toString());
+						plotterSettings.setParameterAsString(PlotterAdapter.PARAMETER_PLOT_COLUMN,
+								plotCombo.getSelectedItem().toString());
 					}
 				});
 
@@ -316,16 +317,17 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 
 		// log scale
 		if (plotter.isSupportingLogScaleForPlotColumns()) {
-			final ListeningJCheckBox logScaleBox = new ListeningJCheckBox(PlotterAdapter.PARAMETER_PLOT_COLUMNS
-					+ PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE, I18N.getMessage(I18N.getGUIBundle(),
-					"gui.label.plotter_panel.log_scale.label"), false);
+			final ListeningJCheckBox logScaleBox = new ListeningJCheckBox(
+					PlotterAdapter.PARAMETER_PLOT_COLUMNS + PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE,
+					I18N.getMessage(I18N.getGUIBundle(), "gui.label.plotter_panel.log_scale.label"), false);
 			changeListenerElements.add(logScaleBox);
 			logScaleBox.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					plotterSettings.setParameterAsBoolean(PlotterAdapter.PARAMETER_PLOT_COLUMNS
-							+ PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE, logScaleBox.isSelected());
+					plotterSettings.setParameterAsBoolean(
+							PlotterAdapter.PARAMETER_PLOT_COLUMNS + PlotterAdapter.PARAMETER_SUFFIX_LOG_SCALE,
+							logScaleBox.isSelected());
 				}
 			});
 			this.add(logScaleBox, c);
@@ -367,8 +369,8 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 
 		// zooming
 		if (plotter.canHandleZooming()) {
-			label = new JLabel(I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.set_zooming_factor.label")
-					+ ":");
+			label = new JLabel(
+					I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.set_zooming_factor.label") + ":");
 			toolTip = I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.set_zooming_factor.tip");
 			label.setToolTipText(toolTip);
 			this.add(label, c);
@@ -389,8 +391,8 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 
 		// jitter
 		if (plotter.canHandleJitter()) {
-			label = new JLabel(I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.set_jittering_amount.label")
-					+ ":");
+			label = new JLabel(
+					I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.set_jittering_amount.label") + ":");
 			toolTip = I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.set_jittering_amount.tip");
 			label.setToolTipText(toolTip);
 			this.add(label, c);
@@ -413,8 +415,8 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 		// option dialog
 		if (plotter.hasOptionsDialog()) {
 			toolTip = I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.open_options_dialog.tip");
-			JButton optionsButton = new JButton(I18N.getMessage(I18N.getGUIBundle(),
-					"gui.action.plotter_panel.open_options_dialog.label"));
+			JButton optionsButton = new JButton(
+					I18N.getMessage(I18N.getGUIBundle(), "gui.action.plotter_panel.open_options_dialog.label"));
 			optionsButton.setToolTipText(toolTip);
 			this.add(optionsButton, c);
 			this.add(createFiller(10), c);
@@ -445,7 +447,7 @@ public class PlotterControlPanel extends JPanel implements PlotterChangedListene
 			toolTip = I18N.getMessage(I18N.getGUIBundle(), "gui.label.plotter_panel.coordinates.label");
 			coordinatesLabel.setToolTipText(toolTip);
 			coordinatesLabel.setBorder(BorderFactory.createEtchedBorder());
-			coordinatesLabel.setFont(new Font("Monospaced", Font.PLAIN, coordinatesLabel.getFont().getSize()));
+			coordinatesLabel.setFont(FontTools.getFont(Font.MONOSPACED, Font.PLAIN, coordinatesLabel.getFont().getSize()));
 			this.add(coordinatesLabel, c);
 		}
 

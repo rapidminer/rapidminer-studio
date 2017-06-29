@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.look.borders;
 
 import java.awt.BasicStroke;
@@ -35,6 +35,7 @@ import javax.swing.border.Border;
 
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.FontTools;
 
 
 /**
@@ -43,6 +44,8 @@ import com.rapidminer.gui.tools.SwingTools;
  * @author Simon Fischer
  */
 public class RoundTitledBorder implements Border {
+
+	private static final Font FONT = FontTools.getFont(Font.DIALOG, Font.BOLD, 21);
 
 	private int number;
 	private String key;
@@ -79,7 +82,7 @@ public class RoundTitledBorder implements Border {
 		}
 
 		g2d.setPaint(paint);
-		g2d.setFont(new Font("Dialog", Font.BOLD, 21));
+		g2d.setFont(FONT);
 
 		if (drawRoundFrame) {
 			Shape roundFrame = new RoundRectangle2D.Float(x + 2, y + 2, width - 4, height - 4, 10, 10);

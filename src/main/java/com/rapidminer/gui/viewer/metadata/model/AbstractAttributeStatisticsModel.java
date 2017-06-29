@@ -1,30 +1,22 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.viewer.metadata.model;
-
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
-import com.rapidminer.example.ExampleSet;
-import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
-import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
-import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent.EventType;
-import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEventListener;
 
 import java.awt.Font;
 import java.lang.ref.WeakReference;
@@ -35,12 +27,21 @@ import org.jfree.chart.ChartTheme;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
 
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
+import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
+import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent.EventType;
+import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEventListener;
+import com.rapidminer.tools.FontTools;
+
 
 /**
  * Abstract model for the {@link AttributeStatisticsPanel}. See implementations for details.
- * 
+ *
  * @author Marco Boeck
- * 
+ *
  */
 public abstract class AbstractAttributeStatisticsModel {
 
@@ -73,7 +74,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Inits the
-	 * 
+	 *
 	 * @param exampleSet
 	 * @param attribute
 	 */
@@ -89,7 +90,7 @@ public abstract class AbstractAttributeStatisticsModel {
 	/**
 	 * Adds a {@link AttributeStatisticsEventListener} which will be informed of all changes to this
 	 * model.
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void registerEventListener(final AttributeStatisticsEventListener listener) {
@@ -98,7 +99,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Removes the {@link AttributeStatisticsEventListener} from this model.
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void removeEventListener(final AttributeStatisticsEventListener listener) {
@@ -108,7 +109,7 @@ public abstract class AbstractAttributeStatisticsModel {
 	/**
 	 * Sets if this panel should be drawn in an alternating color scheme (slightly darker) to make
 	 * reading of many rows easier.
-	 * 
+	 *
 	 * @param alternating
 	 */
 	public void setAlternating(final boolean alternating) {
@@ -121,7 +122,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Returns <code>true</code> if this is an alternating attribute statistics model.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isAlternating() {
@@ -130,7 +131,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Gets the enlarged status which determines how many information to display.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isEnlarged() {
@@ -139,7 +140,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Sets the enlarged status.
-	 * 
+	 *
 	 * @param enlarged
 	 */
 	public void setEnlarged(final boolean enlarged) {
@@ -153,7 +154,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Gets the show construction status which determines if the construction value is shown.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isShowConstruction() {
@@ -162,7 +163,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Sets the show construction status.
-	 * 
+	 *
 	 * @param showConstruction
 	 */
 	public void setShowConstruction(final boolean showConstruction) {
@@ -174,7 +175,7 @@ public abstract class AbstractAttributeStatisticsModel {
 	/**
 	 * Returns <code>true</code> if this attribute has a special {@link AttributeRole};
 	 * <code>false</code> otherwise.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isSpecialAtt() {
@@ -184,7 +185,7 @@ public abstract class AbstractAttributeStatisticsModel {
 	/**
 	 * Returns the name of the special {@link AttributeRole} for this {@link Attribute}. If this is
 	 * not a special attribute, returns <code>null</code> .
-	 * 
+	 *
 	 * @return
 	 */
 	public String getSpecialAttName() {
@@ -193,7 +194,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Gets the {@link Attribute} backing this model.
-	 * 
+	 *
 	 * @return
 	 */
 	public Attribute getAttribute() {
@@ -203,7 +204,7 @@ public abstract class AbstractAttributeStatisticsModel {
 	/**
 	 * Gets the {@link ExampleSet} backing this model or <code>null</code> if the
 	 * {@link WeakReference} to it was removed.
-	 * 
+	 *
 	 * @return
 	 */
 	public ExampleSet getExampleSetOrNull() {
@@ -240,7 +241,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Fires the given {@link EventType}.
-	 * 
+	 *
 	 * @param type
 	 */
 	protected void fireEvent(final EventType type) {
@@ -256,7 +257,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Updates the statistics of this model via the given {@link ExampleSet}.
-	 * 
+	 *
 	 * @param exampleSet
 	 *            the {@link ExampleSet} for which the attribute statistics should be updated. No
 	 *            reference to it is stored to prevent memory leaks.
@@ -265,7 +266,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Returns the number of missing values.
-	 * 
+	 *
 	 * @return
 	 */
 	public double getNumberOfMissingValues() {
@@ -274,7 +275,7 @@ public abstract class AbstractAttributeStatisticsModel {
 
 	/**
 	 * Returns the construction value for this attribute.
-	 * 
+	 *
 	 * @return
 	 */
 	public String getConstruction() {
@@ -284,7 +285,7 @@ public abstract class AbstractAttributeStatisticsModel {
 	/**
 	 * Returns the given {@link JFreeChart} for the given index. If the given index is invalid,
 	 * returns <code>null</code>.
-	 * 
+	 *
 	 * @param index
 	 * @return
 	 */
@@ -299,7 +300,7 @@ public abstract class AbstractAttributeStatisticsModel {
 	 * Changes the font of {@link JFreeChart}s to Sans Serif. This method uses a
 	 * {@link StandardChartTheme} to do so, so any changes to the look of the chart must be done
 	 * after calling this method.
-	 * 
+	 *
 	 * @param chart
 	 *            the chart to change fonts for
 	 */
@@ -314,10 +315,11 @@ public abstract class AbstractAttributeStatisticsModel {
 			final Font oldRegularFont = standardTheme.getRegularFont();
 			final Font oldSmallFont = standardTheme.getSmallFont();
 
-			final Font extraLargeFont = new Font(Font.SANS_SERIF, oldExtraLargeFont.getStyle(), oldExtraLargeFont.getSize());
-			final Font largeFont = new Font(Font.SANS_SERIF, oldLargeFont.getStyle(), oldLargeFont.getSize());
-			final Font regularFont = new Font(Font.SANS_SERIF, oldRegularFont.getStyle(), oldRegularFont.getSize());
-			final Font smallFont = new Font(Font.SANS_SERIF, oldSmallFont.getStyle(), oldSmallFont.getSize());
+			final Font extraLargeFont = FontTools.getFont(Font.SANS_SERIF, oldExtraLargeFont.getStyle(),
+					oldExtraLargeFont.getSize());
+			final Font largeFont = FontTools.getFont(Font.SANS_SERIF, oldLargeFont.getStyle(), oldLargeFont.getSize());
+			final Font regularFont = FontTools.getFont(Font.SANS_SERIF, oldRegularFont.getStyle(), oldRegularFont.getSize());
+			final Font smallFont = FontTools.getFont(Font.SANS_SERIF, oldSmallFont.getStyle(), oldSmallFont.getSize());
 
 			standardTheme.setExtraLargeFont(extraLargeFont);
 			standardTheme.setLargeFont(largeFont);

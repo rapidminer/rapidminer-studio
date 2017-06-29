@@ -109,6 +109,7 @@
 		<property key="rapidminer.gui.fetch_data_base_table_names" />
 		<property key="rapidminer.gui.evaluate_meta_data_for_sql_queries" />
 		<property key="rapidminer.gui.processinfo.show" />
+		<property key="rapidminer.gui.font_config" />
 	</group>
 	<group key="proxy">
 		<group key="rapidminer.preferences.subgroup.proxy.settings">

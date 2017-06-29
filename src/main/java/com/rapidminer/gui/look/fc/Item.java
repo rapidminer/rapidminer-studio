@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.look.fc;
 
 import java.awt.Color;
@@ -46,6 +46,7 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.io.remote.RemoteFileSystemView;
+import com.rapidminer.tools.FontTools;
 
 
 /**
@@ -184,9 +185,7 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 
 	private Dimension bestSize = new Dimension(10, 10);
 
-	public static Font menuFont = new Font("SansSerif", Font.PLAIN, 12);
-
-	// public static Font strongMenuFont = new Font("SansSerif", Font.BOLD, 12);
+	public static Font menuFont = FontTools.getFont(Font.SANS_SERIF, Font.PLAIN, 12);
 
 	public static void updateVirtualItemForTheme(Colors currentTheme) {
 		if (currentTheme == null) {
@@ -455,15 +454,15 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 			this.popup.getComponent();
 
 			// for remote files only show rename if renaming is possible
-			if (!(this.fileSystemView instanceof RemoteFileSystemView && !((RemoteFileSystemView) this.fileSystemView)
-					.isRenamingEnabled())) {
+			if (!(this.fileSystemView instanceof RemoteFileSystemView
+					&& !((RemoteFileSystemView) this.fileSystemView).isRenamingEnabled())) {
 				menuItem = new JMenuItem(RENAME_ACTION);
 				this.popup.add(menuItem);
 			}
 
 			// for remote files only show delete if deleting is possible
-			if (!(this.fileSystemView instanceof RemoteFileSystemView && !((RemoteFileSystemView) this.fileSystemView)
-					.isDeletingEnabled())) {
+			if (!(this.fileSystemView instanceof RemoteFileSystemView
+					&& !((RemoteFileSystemView) this.fileSystemView).isDeletingEnabled())) {
 				menuItem = new JMenuItem(DELETE_ACTION);
 				this.popup.add(menuItem);
 			}
@@ -478,15 +477,15 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 			}
 
 			// for remote files only show rename if renaming is possible
-			if (!(this.fileSystemView instanceof RemoteFileSystemView && !((RemoteFileSystemView) this.fileSystemView)
-					.isRenamingEnabled())) {
+			if (!(this.fileSystemView instanceof RemoteFileSystemView
+					&& !((RemoteFileSystemView) this.fileSystemView).isRenamingEnabled())) {
 				menuItem = new JMenuItem(RENAME_ACTION);
 				this.popup.add(menuItem);
 			}
 
 			// for remote files only show delete if deleting is possible
-			if (!(this.fileSystemView instanceof RemoteFileSystemView && !((RemoteFileSystemView) this.fileSystemView)
-					.isDeletingEnabled())) {
+			if (!(this.fileSystemView instanceof RemoteFileSystemView
+					&& !((RemoteFileSystemView) this.fileSystemView).isDeletingEnabled())) {
 				menuItem = new JMenuItem(DELETE_ACTION);
 				this.popup.add(menuItem);
 			}
@@ -494,8 +493,8 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 	}
 
 	private void renameFile() {
-		this.response = SwingTools.showInputDialog("file_chooser.rename", this.fileName, (isDirectory() ? "directory"
-				: "file") + " " + this.fileName);
+		this.response = SwingTools.showInputDialog("file_chooser.rename", this.fileName,
+				(isDirectory() ? "directory" : "file") + " " + this.fileName);
 		try {
 			if (this.response == null || this.response.equals("")) {
 				SwingTools.showVerySimpleErrorMessage("file_chooser.rename.invalid");

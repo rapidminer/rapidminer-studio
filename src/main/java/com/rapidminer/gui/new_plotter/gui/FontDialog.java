@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.new_plotter.gui;
 
 import java.awt.BorderLayout;
@@ -52,6 +52,7 @@ import javax.swing.event.ListSelectionListener;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.tools.FontTools;
 
 
 /**
@@ -132,8 +133,8 @@ public class FontDialog extends ButtonDialog {
 				doClose(RET_CANCEL);
 			}
 		};
-		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
+		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+				.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), "CANCEL");
 		getRootPane().getActionMap().put("CANCEL", cancelAction);
 
 	}
@@ -301,7 +302,7 @@ public class FontDialog extends ButtonDialog {
 				// create preview panel
 				previewPanel = new JPanel(new BorderLayout());
 				previewPanel.setBorder(new TitledBorder(null, "Preview", TitledBorder.DEFAULT_JUSTIFICATION,
-						TitledBorder.DEFAULT_POSITION, new Font("Dialog", 0, 12)));
+						TitledBorder.DEFAULT_POSITION, FontTools.getFont(Font.DIALOG, 0, 12)));
 
 				// create preview label
 				previewLabel = new JLabel("ABCDEFG abcdefg", SwingConstants.CENTER);
@@ -409,7 +410,7 @@ public class FontDialog extends ButtonDialog {
 	}
 
 	private void fontListValueChanged(ListSelectionEvent e) {
-		font = new Font(fontList.getSelectedValue(), font.getStyle(), font.getSize());
+		font = FontTools.getFont(fontList.getSelectedValue(), font.getStyle(), font.getSize());
 
 		previewLabel.setFont(font);
 	}
@@ -431,14 +432,14 @@ public class FontDialog extends ButtonDialog {
 			style = Font.BOLD + Font.ITALIC;
 		}
 
-		font = new Font(font.getFamily(), style, font.getSize());
+		font = FontTools.getFont(font.getFamily(), style, font.getSize());
 		previewLabel.setFont(font);
 	}
 
 	private void sizeListValueChanged(ListSelectionEvent e) {
 		int size = Integer.parseInt(sizeList.getSelectedValue());
 
-		font = new Font(font.getFamily(), font.getStyle(), size);
+		font = FontTools.getFont(font.getFamily(), font.getStyle(), size);
 
 		previewLabel.setFont(font);
 

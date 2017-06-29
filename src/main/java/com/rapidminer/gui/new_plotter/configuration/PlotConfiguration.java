@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.new_plotter.configuration;
 
 import java.awt.Color;
@@ -66,6 +66,7 @@ import com.rapidminer.gui.new_plotter.utility.CategoricalColorProvider;
 import com.rapidminer.gui.new_plotter.utility.ContinuousColorProvider;
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.ListUtility;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
 
@@ -78,7 +79,7 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 
 	public static final Paint DEFAULT_SERIES_OUTLINE_PAINT = Color.BLACK;
 
-	public static final Font DEFAULT_AXES_FONT = new Font("Dialog", Font.PLAIN, 10);
+	public static final Font DEFAULT_AXES_FONT = FontTools.getFont(Font.DIALOG, Font.PLAIN, 10);
 
 	public static final Color DEFAULT_OUTLINE_COLOR = Color.BLACK;
 
@@ -90,7 +91,7 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 	public static final int GUI_PLOTTER_ROWS_MAXIMUM_IF_RAPIDMINER_PROPERTY_NOT_READABLE = 5000;
 
 	private static final String DEFAULT_TITLE_TEXT = null;
-	private static final Font DEFAULT_TITLE_FONT = new Font("Arial", Font.PLAIN, 20);
+	private static final Font DEFAULT_TITLE_FONT = FontTools.getFont("Arial", Font.PLAIN, 20);
 
 	private static final Color DEFAULT_PLOT_BACKGROUND_COLOR = Color.white;
 	private static final Color DEFAULT_FRAME_BACKGROUND_COLOR = Color.white;
@@ -529,8 +530,8 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 	public void setAxisLineColor(Color axisLineColor) {
 		if (!axisLineColor.equals(this.axisLineColor)) {
 			this.axisLineColor = axisLineColor;
-			firePlotConfigurationChanged(new PlotConfigurationChangeEvent(this, PlotConfigurationChangeType.AXIS_LINE_COLOR,
-					axisLineColor));
+			firePlotConfigurationChanged(
+					new PlotConfigurationChangeEvent(this, PlotConfigurationChangeType.AXIS_LINE_COLOR, axisLineColor));
 		}
 	}
 
@@ -713,8 +714,8 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 
 			// set processing to false
 			setProcessEvents(false);
-			informValueSourcesAboutDimensionChange(new DimensionConfigChangeEvent(dimensionConfig, dimension,
-					DimensionConfigChangeType.RESET));
+			informValueSourcesAboutDimensionChange(
+					new DimensionConfigChangeEvent(dimensionConfig, dimension, DimensionConfigChangeType.RESET));
 			firePlotConfigurationChanged(new PlotConfigurationChangeEvent(this,
 					PlotConfigurationChangeType.DIMENSION_CONFIG_ADDED, dimension, dimensionConfig));
 			setProcessEvents(processEvents); // Restore old state
@@ -728,8 +729,8 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 
 			// set processing to false
 			setProcessEvents(false);
-			informValueSourcesAboutDimensionChange(new DimensionConfigChangeEvent(dimensionConfig, dimension,
-					DimensionConfigChangeType.RESET));
+			informValueSourcesAboutDimensionChange(
+					new DimensionConfigChangeEvent(dimensionConfig, dimension, DimensionConfigChangeType.RESET));
 			firePlotConfigurationChanged(new PlotConfigurationChangeEvent(this,
 					PlotConfigurationChangeType.DIMENSION_CONFIG_REMOVED, dimension, dimensionConfig));
 			setProcessEvents(processEvents); // Restore old state
@@ -1098,8 +1099,8 @@ public class PlotConfiguration implements DimensionConfigListener, RangeAxisConf
 			warnings.addAll(dimensionConfig.getWarnings());
 
 			if (!isDimensionUsed(dimensionConfig.getDimension())) {
-				warnings.add(new PlotConfigurationError("dimension_config_not_used", dimensionConfig.getDimension()
-						.getName()));
+				warnings.add(
+						new PlotConfigurationError("dimension_config_not_used", dimensionConfig.getDimension().getName()));
 			}
 
 		}

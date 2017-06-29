@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.look;
 
 import java.awt.Color;
@@ -41,6 +41,7 @@ import com.rapidminer.gui.look.borders.Borders;
 import com.rapidminer.gui.look.icons.IconFactory;
 import com.rapidminer.gui.tools.ScaledImageIcon;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 
@@ -319,7 +320,7 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				new UIDefaults.LazyInputMap(
 						new Object[] { "ESCAPE", "cancelSelection", "BACK_SPACE", "Go Up", "ENTER", "approveSelection" }),
 				// InternalFrame
-				"InternalFrame.titleFont", new FontUIResource("Dialog", 1, 12), "InternalFrame.activeTitleForeground",
+				"InternalFrame.titleFont", new FontUIResource(FontTools.getFont(Font.DIALOG, 1, 12)), "InternalFrame.activeTitleForeground",
 				Colors.TEXT_FOREGROUND, "InternalFrame.inactiveTitleForeground", Colors.TEXT_FOREGROUND,
 				"InternalFrame.closeIcon", SwingTools.createImage("plaf/close_icon.png"), "InternalFrame.rolloverCloseIcon",
 				SwingTools.createImage("plaf/armed_close_icon.png"), "InternalFrame.maximizeIcon",
@@ -730,11 +731,11 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 	}
 
 	public static FontUIResource getMainFont() {
-		return new FontUIResource("Dialog", 0, 12);
+		return new FontUIResource(FontTools.getFont(Font.DIALOG, 0, 12));
 	}
 
 	public static FontUIResource getTextfieldFont() {
-		return new FontUIResource("Dialog", 0, 12);
+		return new FontUIResource(FontTools.getFont(Font.DIALOG, 0, 12));
 	}
 
 	public ColorUIResource getTextHighlightColor() {

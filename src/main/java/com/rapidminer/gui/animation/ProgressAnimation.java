@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.animation;
 
 import java.awt.BasicStroke;
@@ -27,6 +27,8 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+
+import com.rapidminer.tools.FontTools;
 
 
 /**
@@ -63,7 +65,7 @@ public class ProgressAnimation implements Animation {
 	private static final Color ANIMATION_COLOR = IndeterminateAnimation.SPINNER_COLORS[0];
 
 	/** the default font for the text inside the arc */
-	private static final Font DEFAULT_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 17);
+	private static final Font DEFAULT_FONT = FontTools.getFont(Font.SANS_SERIF, Font.BOLD, 17);
 
 	/** the font with the maximal size such that it fits into the arc */
 	private static Font platformSpecificFont;

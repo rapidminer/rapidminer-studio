@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.set;
 
 import java.io.File;
@@ -279,7 +279,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 
 			// special attributes
 			AttributeRole labelRole = getAttributes().getRole(Attributes.LABEL_NAME);
-			if ((labelRole != null) && (format != SparseFormatDataRowReader.FORMAT_NO_LABEL)) {
+			if (labelRole != null && format != SparseFormatDataRowReader.FORMAT_NO_LABEL) {
 				root.appendChild(writeAttributeMetaData(labelRole, 0, document, true));
 			}
 			AttributeRole idRole = getAttributes().getRole(Attributes.ID_NAME);
@@ -320,7 +320,8 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	}
 
 	/** Writes the data of this attribute in the given stream. */
-	private Element writeAttributeMetaData(String tag, Attribute attribute, int sourcecol, Document document, boolean sparse) {
+	private Element writeAttributeMetaData(String tag, Attribute attribute, int sourcecol, Document document,
+			boolean sparse) {
 		Element attributeElement = document.createElement(tag);
 		attributeElement.setAttribute("name", attribute.getName());
 		if (!sparse || tag.equals("attribute")) {
@@ -332,8 +333,8 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 		}
 
 		// nominal values
-		if ((Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NOMINAL))
-				&& (!tag.equals(Attributes.KNOWN_ATTRIBUTE_TYPES[Attributes.TYPE_ID]))) {
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NOMINAL)
+				&& !tag.equals(Attributes.KNOWN_ATTRIBUTE_TYPES[Attributes.TYPE_ID])) {
 			for (String nominalValue : attribute.getMapping().getValues()) {
 				Element valueElement = document.createElement("value");
 				valueElement.setTextContent(nominalValue);
@@ -465,7 +466,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * <p>
 	 * The statistics calculation is stopped by {@link Thread#interrupt()}.
 	 */
-	private void recalculateAttributeStatistics(List<Attribute> attributeList) {
+	private synchronized void recalculateAttributeStatistics(List<Attribute> attributeList) {
 		// do nothing if not desired
 		if (attributeList.size() == 0) {
 			return;
@@ -478,7 +479,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 			if (weightAttribute != null && !weightAttribute.isNumerical()) {
 				weightAttribute = null;
 			}
-			
+
 			for (Attribute attribute : attributeList) {
 				if (weightAttribute == null) {
 					for (Example example : this) {
@@ -501,21 +502,16 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 
 			// store cloned statistics
 			for (Attribute attribute : attributeList) {
-				List<Statistics> statisticsList = statisticsMap.get(attribute.getName());
-				// no stats known for this attribute at all --> new list
-				if (statisticsList == null) {
-					statisticsList = new LinkedList<Statistics>();
-					statisticsMap.put(attribute.getName(), statisticsList);
-				}
-
-				// in all cases: clear the list before adding new stats (clone of the calculations)
-				statisticsList.clear();
+				// do not directly work on the existing List because that might force a
+				// ConcurrentModification and the well known Exception
+				List<Statistics> tmpStatisticsList = new LinkedList<>();
 
 				Iterator<Statistics> stats = attribute.getAllStatistics();
 				while (stats.hasNext()) {
 					Statistics statistics = (Statistics) stats.next().clone();
-					statisticsList.add(statistics);
+					tmpStatisticsList.add(statistics);
 				}
+				statisticsMap.put(attribute.getName(), tmpStatisticsList);
 				if (Thread.currentThread().isInterrupted()) {
 					return;
 				}

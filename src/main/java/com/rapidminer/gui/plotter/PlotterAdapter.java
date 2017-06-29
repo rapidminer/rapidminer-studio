@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.plotter;
 
 import java.awt.BasicStroke;
@@ -57,6 +57,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
@@ -106,9 +107,9 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 
 	public static final int WEIGHT_BORDER_WIDTH = 5;
 
-	public static final Font LABEL_FONT_BOLD = new Font(Font.SANS_SERIF, Font.BOLD, 11);
+	public static final Font LABEL_FONT_BOLD = FontTools.getFont(Font.SANS_SERIF, Font.BOLD, 11);
 
-	public static final Font LABEL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
+	public static final Font LABEL_FONT = FontTools.getFont(Font.SANS_SERIF, Font.PLAIN, 11);
 
 	protected static final Color GRID_COLOR = Color.lightGray;
 
@@ -121,12 +122,12 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 	protected static final PointStyle STAR_POINT_STYLE = new StarPointStyle();
 
 	protected static final Color[] LINE_COLORS = { new Color(255, 0, 0), new Color(0, 255, 0), new Color(0, 0, 255),
-		new Color(255, 0, 255), Color.ORANGE, new Color(255, 255, 0), new Color(0, 255, 255), new Color(200, 100, 0),
-		new Color(100, 200, 0), new Color(0, 100, 200), };
+			new Color(255, 0, 255), Color.ORANGE, new Color(255, 255, 0), new Color(0, 255, 255), new Color(200, 100, 0),
+			new Color(100, 200, 0), new Color(0, 100, 200), };
 
 	protected static final PointStyle[] KNOWN_POINT_STYLES = { ELLIPSOID_POINT_STYLE, RECTANGLE_POINT_STYLE,
-		TRIANGUALAR_POINT_STYLE, TURNED_TRIANGUALAR_POINT_STYLE, STAR_POINT_STYLE, ELLIPSOID_POINT_STYLE,
-		RECTANGLE_POINT_STYLE, TRIANGUALAR_POINT_STYLE, TURNED_TRIANGUALAR_POINT_STYLE, STAR_POINT_STYLE };
+			TRIANGUALAR_POINT_STYLE, TURNED_TRIANGUALAR_POINT_STYLE, STAR_POINT_STYLE, ELLIPSOID_POINT_STYLE,
+			RECTANGLE_POINT_STYLE, TRIANGUALAR_POINT_STYLE, TURNED_TRIANGUALAR_POINT_STYLE, STAR_POINT_STYLE };
 
 	// stroked lines are very slow!!!
 	protected static final Stroke[] LINE_STROKES = { new BasicStroke(2.0f) };
@@ -416,7 +417,9 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 		return null;
 	}
 
-	/** Returns 1. Subclasses might want to deliver another initial zoom factor between 1 and 100. */
+	/**
+	 * Returns 1. Subclasses might want to deliver another initial zoom factor between 1 and 100.
+	 */
 	@Override
 	public int getInitialZoomFactor() {
 		return 1;
@@ -612,7 +615,9 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 	@Override
 	public void setZooming(int zooming) {}
 
-	/** Does nothing. Subclasses might implement this method in order to provide an options dialog. */
+	/**
+	 * Does nothing. Subclasses might implement this method in order to provide an options dialog.
+	 */
 	@Override
 	public void showOptionsDialog() {}
 
@@ -681,7 +686,8 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 				int newMaxRows = Integer.parseInt(maxRowNumberString);
 				maxRowNumber = newMaxRows;
 			} catch (NumberFormatException e) {
-				// LogService.getGlobal().logWarning("Plotter: cannot read maximum number of plotter points (was '"
+				// LogService.getGlobal().logWarning("Plotter: cannot read maximum number of plotter
+				// points (was '"
 				// + maxRowNumberString + "').");
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.gui.plotter.PlotterAdapter.reading_maximum_number_of_plotter_points_error",
@@ -691,7 +697,8 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 
 		if (source.getNumberOfRows() > maxRowNumber) {
 			DataTable sampledDataTable = source.sample(maxRowNumber);
-			// LogService.getGlobal().logWarning("Cannot plot all data points, using only a sample of "
+			// LogService.getGlobal().logWarning("Cannot plot all data points, using only a sample
+			// of "
 			// + maxRowNumber + " rows.");
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.gui.plotter.PlotterAdapter.ploting_all_data_points_error", maxRowNumber);
@@ -758,7 +765,8 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 					maxNumberOfNominalValues = Integer.parseInt(maxNominalValuesString);
 				}
 			} catch (NumberFormatException e) {
-				// LogService.getGlobal().logWarning("Plotter: cannot parse maximal number of nominal values for legend ("
+				// LogService.getGlobal().logWarning("Plotter: cannot parse maximal number of
+				// nominal values for legend ("
 				// + maxNominalValuesString +
 				// ")! Using 10...");
 				LogService.getRoot().log(Level.WARNING,
@@ -768,7 +776,8 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 			if (maxNumberOfNominalValues == -1 || table.getNumberOfValues(legendColumn) <= maxNumberOfNominalValues) {
 				drawNominalLegend(graphics, table, legendColumn, xOffset, alpha);
 			} else {
-				// LogService.getGlobal().logWarning("Plotter: cannot draw nominal legend since number of different values is too high (more than "
+				// LogService.getGlobal().logWarning("Plotter: cannot draw nominal legend since
+				// number of different values is too high (more than "
 				// +
 				// maxNominalValuesString + ")! Using numerical legend instead.");
 				LogService.getRoot().log(Level.WARNING,
@@ -864,7 +873,8 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 	}
 
 	/** This method can be used to draw a legend on the given graphics context. */
-	private void drawNumericalLegend(Graphics graphics, String legendColumnName, double minColor, double maxColor, int alpha) {
+	private void drawNumericalLegend(Graphics graphics, String legendColumnName, double minColor, double maxColor,
+			int alpha) {
 		// key or legend
 		String minColorString = Tools.formatNumber(minColor);
 		String maxColorString = Tools.formatNumber(maxColor);
@@ -994,8 +1004,9 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 			g.setFont(LABEL_FONT);
 			Rectangle2D stringBounds = LABEL_FONT.getStringBounds(toolTip.getText(), g.getFontRenderContext());
 			g.setColor(TOOLTIP_COLOR);
-			Rectangle2D bg = new Rectangle2D.Double(toolTip.getX() - stringBounds.getWidth() / 2 - 4, toolTip.getY()
-					- stringBounds.getHeight() / 2, stringBounds.getWidth() + 5, stringBounds.getHeight() + 3);
+			Rectangle2D bg = new Rectangle2D.Double(toolTip.getX() - stringBounds.getWidth() / 2 - 4,
+					toolTip.getY() - stringBounds.getHeight() / 2, stringBounds.getWidth() + 5,
+					stringBounds.getHeight() + 3);
 			g.fill(bg);
 			g.setColor(Color.black);
 			g.draw(bg);
@@ -1074,8 +1085,8 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 			newSpace.fill(weightRect);
 			newSpace.setColor(Color.WHITE);
 			int weightBorder = WEIGHT_BORDER_WIDTH + 1;
-			weightRect = new Rectangle2D.Double(weightBorder, weightBorder, plotterSize - 2 * weightBorder, plotterSize - 2
-					* weightBorder);
+			weightRect = new Rectangle2D.Double(weightBorder, weightBorder, plotterSize - 2 * weightBorder,
+					plotterSize - 2 * weightBorder);
 			newSpace.fill(weightRect);
 		}
 	}
@@ -1176,13 +1187,13 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 						String name = name2.trim();
 						int columnIndex = dataTable.getColumnIndex(name);
 						if (columnIndex >= 0 && columnIndex < selectedDimensions.length) { // can
-																							// be
-																							// -1
-																							// if
-																							// column
-																							// names
-																							// have
-																							// changed
+																							 // be
+																							 // -1
+																							 // if
+																							 // column
+																							 // names
+																							 // have
+																							 // changed
 							selectedDimensions[columnIndex] = true;
 						}
 					}
@@ -1298,18 +1309,19 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 		for (int i = 0; i < getNumberOfAxes(); i++) {
 			String axisName = getAxisName(i);
 			if (inputDeliversAttributes) {
-				types.add(new ParameterTypeAttribute(transformParameterName(getPlotterName()) + PARAMETER_SUFFIX_AXIS
-						+ transformParameterName(axisName), "The name of the column which should be used for this axis",
-						inputPort, true));
+				types.add(new ParameterTypeAttribute(
+						transformParameterName(getPlotterName()) + PARAMETER_SUFFIX_AXIS + transformParameterName(axisName),
+						"The name of the column which should be used for this axis", inputPort, true));
 			} else {
-				types.add(new ParameterTypeString(transformParameterName(getPlotterName()) + PARAMETER_SUFFIX_AXIS
-						+ transformParameterName(axisName), "The name of the column which should be used for this axis",
-						true));
+				types.add(new ParameterTypeString(
+						transformParameterName(getPlotterName()) + PARAMETER_SUFFIX_AXIS + transformParameterName(axisName),
+						"The name of the column which should be used for this axis", true));
 			}
 
 			if (isSupportingLogScale(i)) {
-				types.add(new ParameterTypeBoolean(transformParameterName(getPlotterName()) + PARAMETER_SUFFIX_AXIS
-						+ transformParameterName(axisName) + PARAMETER_SUFFIX_LOG_SCALE,
+				types.add(new ParameterTypeBoolean(
+						transformParameterName(getPlotterName()) + PARAMETER_SUFFIX_AXIS + transformParameterName(axisName)
+								+ PARAMETER_SUFFIX_LOG_SCALE,
 						"Indicates if this axis should be plotter with a log scale.", false));
 			}
 		}

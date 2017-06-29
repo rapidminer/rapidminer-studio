@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools.dialogs;
 
 import java.awt.BorderLayout;
@@ -59,6 +59,7 @@ import com.rapidminer.gui.tools.VersionNumber.VersionNumberExcpetion;
 import com.rapidminer.gui.tools.components.LinkRemoteButton;
 import com.rapidminer.license.License;
 import com.rapidminer.license.StudioLicenseConstants;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PlatformUtilities;
@@ -115,16 +116,16 @@ public class AboutBox extends JDialog {
 
 		private static final String[] DISPLAYED_KEYS = new String[] { "copyright", "licensor", "license" };
 
-		private static final Font FONT_SANS_SERIF_11 = new Font("SansSerif", Font.PLAIN, 11);
-		private static final Font FONT_SANS_SERIF_BOLD_11 = new Font("SansSerif", Font.BOLD, 11);
-		private static final Font FONT_SANS_SERIF_BOLD_26 = new Font("SansSerif", Font.BOLD, 26);
-		private static final Font FONT_OPEN_SANS_15 = new Font("Open Sans", Font.PLAIN, 15);
+		private static final Font FONT_SANS_SERIF_11 = FontTools.getFont(Font.SANS_SERIF, Font.PLAIN, 11);
+		private static final Font FONT_SANS_SERIF_BOLD_11 = FontTools.getFont(Font.SANS_SERIF, Font.BOLD, 11);
+		private static final Font FONT_SANS_SERIF_BOLD_26 = FontTools.getFont(Font.SANS_SERIF, Font.BOLD, 26);
+		private static final Font FONT_OPEN_SANS_15 = FontTools.getFont("Open Sans", Font.PLAIN, 15);
 
 		private static final List<Font> FONTS_PRODUCT_NAME = new ArrayList<>(15);
 
 		static {
 			for (int size = 60; size >= 8; size -= 4) {
-				FONTS_PRODUCT_NAME.add(new Font("Open Sans Light", Font.PLAIN, size));
+				FONTS_PRODUCT_NAME.add(FontTools.getFont("Open Sans Light", Font.PLAIN, size));
 			}
 		}
 
@@ -381,7 +382,7 @@ public class AboutBox extends JDialog {
 
 		pack();
 		if (owner != null) {
-		setLocationRelativeTo(owner);
+			setLocationRelativeTo(owner);
 		} else {
 			setLocationRelativeTo(ApplicationFrame.getApplicationFrame());
 		}

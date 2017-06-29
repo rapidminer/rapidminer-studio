@@ -1,47 +1,22 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.new_plotter.gui.dnd;
-
-import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
-import com.rapidminer.gui.new_plotter.ChartConfigurationException;
-import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
-import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
-import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
-import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
-import com.rapidminer.gui.new_plotter.configuration.DomainConfigManager;
-import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
-import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
-import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
-import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.ValueGroupingFactory;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource;
-import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
-import com.rapidminer.gui.new_plotter.gui.PlotConfigurationTree;
-import com.rapidminer.gui.new_plotter.gui.PlotConfigurationTreeModel;
-import com.rapidminer.gui.new_plotter.gui.treenodes.DimensionConfigTreeNode;
-import com.rapidminer.gui.new_plotter.gui.treenodes.PlotConfigurationTreeNode;
-import com.rapidminer.gui.new_plotter.gui.treenodes.RangeAxisConfigTreeNode;
-import com.rapidminer.gui.new_plotter.gui.treenodes.ValueSourceTreeNode;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction.AggregationFunctionType;
 
 import java.awt.Component;
 import java.awt.Font;
@@ -67,14 +42,40 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
+import com.rapidminer.gui.new_plotter.ChartConfigurationException;
+import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
+import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
+import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
+import com.rapidminer.gui.new_plotter.configuration.DimensionConfig.PlotDimension;
+import com.rapidminer.gui.new_plotter.configuration.DomainConfigManager;
+import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
+import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
+import com.rapidminer.gui.new_plotter.configuration.SeriesFormat;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.GroupingType;
+import com.rapidminer.gui.new_plotter.configuration.ValueGrouping.ValueGroupingFactory;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource;
+import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
+import com.rapidminer.gui.new_plotter.gui.PlotConfigurationTree;
+import com.rapidminer.gui.new_plotter.gui.PlotConfigurationTreeModel;
+import com.rapidminer.gui.new_plotter.gui.treenodes.DimensionConfigTreeNode;
+import com.rapidminer.gui.new_plotter.gui.treenodes.PlotConfigurationTreeNode;
+import com.rapidminer.gui.new_plotter.gui.treenodes.RangeAxisConfigTreeNode;
+import com.rapidminer.gui.new_plotter.gui.treenodes.ValueSourceTreeNode;
+import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.FontTools;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction.AggregationFunctionType;
+
 
 /**
  * The {@link TransferHandler} for the {@link PlotConfigurationTree}. It handles dropping
  * {@link DataTableColumn}s on the tree and exporting {@link ValueSource}s and
  * {@link RangeAxisConfig}s.
- * 
+ *
  * @author Nils Woehler
- * 
+ *
  */
 public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransferHandler {
 
@@ -189,13 +190,13 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 
 		// check if the source actions (a bitwise-OR of supported actions)
 		// contains the COPY action
-		boolean copySupported = (COPY & support.getSourceDropActions()) == (COPY);
+		boolean copySupported = (COPY & support.getSourceDropActions()) == COPY;
 		if (copySupported) {
 			support.setDropAction(COPY);
 			updateDropDeniedTooltip((JComponent) support.getComponent(), actionDescription);
 			return true;
 		}
-		boolean moveSupported = (MOVE & support.getSourceDropActions()) == (MOVE);
+		boolean moveSupported = (MOVE & support.getSourceDropActions()) == MOVE;
 		if (moveSupported) {
 			support.setDropAction(MOVE);
 			updateDropDeniedTooltip((JComponent) support.getComponent(), actionDescription);
@@ -213,8 +214,8 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 		// check if transferable is DataTableColumn, ValueSourceTreeNode or
 		// RangeAxisConfigTreeNode
 		if (!(support.isDataFlavorSupported(ValueSourceTreeNode.VALUE_SOURCE_FLAVOR)
-				|| support.isDataFlavorSupported(RangeAxisConfigTreeNode.RANGE_AXIS_CONFIG_FLAVOR) || support
-					.isDataFlavorSupported(DataTableColumnCollection.DATATABLE_COLUMN_COLLECTION_FLAVOR))) {
+				|| support.isDataFlavorSupported(RangeAxisConfigTreeNode.RANGE_AXIS_CONFIG_FLAVOR)
+				|| support.isDataFlavorSupported(DataTableColumnCollection.DATATABLE_COLUMN_COLLECTION_FLAVOR))) {
 			return false;
 		}
 
@@ -240,8 +241,8 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 			if (support.isDataFlavorSupported(RangeAxisConfigTreeNode.RANGE_AXIS_CONFIG_FLAVOR)) {
 				rangeAxisConfigDrop(support, path, childIndex);
 			} else if (support.isDataFlavorSupported(ValueSourceTreeNode.VALUE_SOURCE_FLAVOR)) {
-				ValueSourceTreeNode valueSourceTreeNode = (ValueSourceTreeNode) support.getTransferable().getTransferData(
-						ValueSourceTreeNode.VALUE_SOURCE_FLAVOR);
+				ValueSourceTreeNode valueSourceTreeNode = (ValueSourceTreeNode) support.getTransferable()
+						.getTransferData(ValueSourceTreeNode.VALUE_SOURCE_FLAVOR);
 				valueSourceDrop(valueSourceTreeNode, path, childIndex, false);
 			} else if (support.isDataFlavorSupported(DataTableColumnCollection.DATATABLE_COLUMN_COLLECTION_FLAVOR)) {
 				dataTableColumnDrop(support, path, childIndex);
@@ -621,7 +622,7 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 
 		menuItem = new JMenuItem(OPTIONS[2]);
 		Font font = menuItem.getFont();
-		menuItem.setFont(new Font(font.getFamily(), Font.ITALIC, font.getSize()));
+		menuItem.setFont(FontTools.getFont(font.getFamily(), Font.ITALIC, font.getSize()));
 		rangeAxisPopupMenu.add(menuItem);
 
 		// get mouse position
@@ -742,8 +743,8 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 			RangeAxisConfigTreeNode rangeAxisConfigTreeNode = (RangeAxisConfigTreeNode) lastPathComponent;
 
 			// get plot configuration
-			PlotConfiguration plotConfiguration = ((PlotConfigurationTreeNode) (((RangeAxisConfigTreeNode) lastPathComponent)
-					.getParent())).getUserObject();
+			PlotConfiguration plotConfiguration = ((PlotConfigurationTreeNode) ((RangeAxisConfigTreeNode) lastPathComponent)
+					.getParent()).getUserObject();
 
 			// get range axis config
 			RangeAxisConfig rangeAxis = rangeAxisConfigTreeNode.getUserObject();
@@ -768,13 +769,15 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 			if (childIndex >= 0) {
 				for (int i = dataTableColumnList.size() - 1; i >= 0; --i) {
 					DataTableColumn dtc = dataTableColumnList.get(i);
-					ValueSource newValueSource = new ValueSource(plotConfiguration, dtc, newAggregationFunctionType, grouped);
+					ValueSource newValueSource = new ValueSource(plotConfiguration, dtc, newAggregationFunctionType,
+							grouped);
 					rangeAxis.addValueSource(childIndex, newValueSource,
 							plotConfiguration.getAutomaticSeriesFormatForNextValueSource(rangeAxis));
 				}
 			} else {
 				for (DataTableColumn dtc : dataTableColumnList) {
-					ValueSource newValueSource = new ValueSource(plotConfiguration, dtc, newAggregationFunctionType, grouped);
+					ValueSource newValueSource = new ValueSource(plotConfiguration, dtc, newAggregationFunctionType,
+							grouped);
 					rangeAxis.addValueSource(newValueSource,
 							plotConfiguration.getAutomaticSeriesFormatForNextValueSource(rangeAxis));
 				}
@@ -789,7 +792,7 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 			DimensionConfigTreeNode dimensionConfigTreeNode = (DimensionConfigTreeNode) lastPathComponent;
 			PlotDimension dimension = dimensionConfigTreeNode.getDimension();
 
-			JTree dropTarget = ((JTree) support.getComponent());
+			JTree dropTarget = (JTree) support.getComponent();
 			PlotConfigurationTreeNode root = (PlotConfigurationTreeNode) dropTarget.getModel().getRoot();
 			PlotConfiguration plotConfig = root.getUserObject();
 
@@ -815,15 +818,15 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 						if (valueType != dimensionConfig.getDataTableColumn().getValueType()) {
 							switch (valueType) {
 								case NOMINAL:
-									dimensionConfig.setGrouping(ValueGroupingFactory.getValueGrouping(
-											GroupingType.DISTINCT_VALUES, dataTableColumn, true,
-											dimensionConfig.getDateFormat()));
+									dimensionConfig
+											.setGrouping(ValueGroupingFactory.getValueGrouping(GroupingType.DISTINCT_VALUES,
+													dataTableColumn, true, dimensionConfig.getDateFormat()));
 									break;
 								case DATE_TIME:
 								case NUMERICAL:
-									dimensionConfig.setGrouping(ValueGroupingFactory.getValueGrouping(
-											GroupingType.EQUIDISTANT_FIXED_BIN_COUNT, dataTableColumn, true,
-											dimensionConfig.getDateFormat()));
+									dimensionConfig.setGrouping(
+											ValueGroupingFactory.getValueGrouping(GroupingType.EQUIDISTANT_FIXED_BIN_COUNT,
+													dataTableColumn, true, dimensionConfig.getDateFormat()));
 									break;
 								default:
 									break;
@@ -844,15 +847,15 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 					if (grouped) {
 						switch (valueType) {
 							case NOMINAL:
-								newDimensionConfig.setGrouping(ValueGroupingFactory.getValueGrouping(
-										GroupingType.DISTINCT_VALUES, dataTableColumn, true,
-										newDimensionConfig.getDateFormat()));
+								newDimensionConfig
+										.setGrouping(ValueGroupingFactory.getValueGrouping(GroupingType.DISTINCT_VALUES,
+												dataTableColumn, true, newDimensionConfig.getDateFormat()));
 								break;
 							case DATE_TIME:
 							case NUMERICAL:
-								newDimensionConfig.setGrouping(ValueGroupingFactory.getValueGrouping(
-										GroupingType.EQUIDISTANT_FIXED_BIN_COUNT, dataTableColumn, true,
-										newDimensionConfig.getDateFormat()));
+								newDimensionConfig.setGrouping(
+										ValueGroupingFactory.getValueGrouping(GroupingType.EQUIDISTANT_FIXED_BIN_COUNT,
+												dataTableColumn, true, newDimensionConfig.getDateFormat()));
 								break;
 							default:
 								break;
@@ -942,7 +945,7 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 			valueSourcePopupMenu.addSeparator();
 			menuItem = new JMenuItem(OPTIONS[2]);
 			Font font = menuItem.getFont();
-			menuItem.setFont(new Font(font.getFamily(), Font.ITALIC, font.getSize()));
+			menuItem.setFont(FontTools.getFont(font.getFamily(), Font.ITALIC, font.getSize()));
 			valueSourcePopupMenu.add(menuItem);
 
 			// get mouse position
@@ -1010,8 +1013,8 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 					// create new RangeAxis
 					RangeAxisConfig newRangeAxis = new RangeAxisConfig(null, plotConfiguration);
 
-					boolean process = plotConfiguration.isProcessingEvents();  // save old processing
-																				// state
+					// save old processing state
+					boolean process = plotConfiguration.isProcessingEvents();
 					plotConfiguration.setProcessEvents(false);
 
 					// add range axis to plot config
@@ -1034,7 +1037,7 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 
 			menuItem = new JMenuItem(OPTIONS[2]);
 			Font font = menuItem.getFont();
-			menuItem.setFont(new Font(font.getFamily(), Font.ITALIC, font.getSize()));
+			menuItem.setFont(FontTools.getFont(font.getFamily(), Font.ITALIC, font.getSize()));
 			rangeAxisPopupMenu.add(menuItem);
 
 			// get mouse position
@@ -1053,7 +1056,7 @@ public class PlotConfigurationTreeTransferHandler extends AbstractPatchedTransfe
 			RangeAxisConfig newRangeAxis = new RangeAxisConfig(null, plotConfiguration);
 
 			boolean tmp_processing = plotConfiguration.isProcessingEvents();  // save all processing
-																				// status
+																			  // status
 			plotConfiguration.setProcessEvents(false);
 
 			plotConfiguration.addRangeAxisConfig(newRangeAxis);

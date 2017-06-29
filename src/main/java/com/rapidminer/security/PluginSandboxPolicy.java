@@ -21,6 +21,7 @@ package com.rapidminer.security;
 import java.awt.AWTPermission;
 import java.io.FilePermission;
 import java.lang.reflect.ReflectPermission;
+import java.net.NetPermission;
 import java.net.SocketPermission;
 import java.net.URLPermission;
 import java.security.AccessController;
@@ -265,6 +266,7 @@ public final class PluginSandboxPolicy extends Policy {
 				permissions.add(new RuntimePermission("preferences"));
 				permissions.add(new RuntimePermission("setFactory"));
 				permissions.add(new PropertyPermission("*", "write"));
+				permissions.add(new NetPermission("*"));
 			}
 		}
 
@@ -384,6 +386,7 @@ public final class PluginSandboxPolicy extends Policy {
 		permissions.add(new RuntimePermission("readFileDescriptor"));
 		permissions.add(new RuntimePermission("writeFileDescriptor"));
 		permissions.add(new RuntimePermission("queuePrintJob"));
+		permissions.add(new NetPermission("specifyStreamHandler"));
 	}
 
 	/**

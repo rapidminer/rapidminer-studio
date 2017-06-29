@@ -1,26 +1,26 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools.syntax;
 
 /*
  * TextAreaPainter.java - Paints the text area Copyright (C) 1999 Slava Pestov
- * 
+ *
  * You may use and modify this package for any purpose. Redistribution is permitted, in both source
  * and binary form, provided that this notice remains intact in all source distributions of this
  * package.
@@ -42,10 +42,12 @@ import javax.swing.text.Segment;
 import javax.swing.text.TabExpander;
 import javax.swing.text.Utilities;
 
+import com.rapidminer.tools.FontTools;
+
 
 /**
  * The text area repaint manager. It performs double buffering and paints lines of text.
- * 
+ *
  * @author Slava Pestov, Ingo Mierswa
  */
 public class TextAreaPainter extends JComponent implements TabExpander {
@@ -69,7 +71,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 		setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 
-		setFont(new Font("Monospaced", Font.PLAIN, 14));
+		setFont(FontTools.getFont(Font.MONOSPACED, Font.PLAIN, 14));
 		setForeground(Color.black);
 		setBackground(Color.white);
 
@@ -112,7 +114,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 	/**
 	 * Sets the syntax styles used to paint colorized text. Entry <i>n</i> will be used to paint
 	 * tokens with id = <i>n</i>.
-	 * 
+	 *
 	 * @param styles
 	 *            The syntax styles
 	 */
@@ -130,7 +132,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets the caret color.
-	 * 
+	 *
 	 * @param caretColor
 	 *            The caret color
 	 */
@@ -148,7 +150,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets the selection color.
-	 * 
+	 *
 	 * @param selectionColor
 	 *            The selection color
 	 */
@@ -166,7 +168,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets the line highlight color.
-	 * 
+	 *
 	 * @param lineHighlightColor
 	 *            The line highlight color
 	 */
@@ -184,7 +186,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Enables or disables current line highlighting.
-	 * 
+	 *
 	 * @param lineHighlight
 	 *            True if current line highlight should be enabled, false otherwise
 	 */
@@ -202,7 +204,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets the bracket highlight color.
-	 * 
+	 *
 	 * @param bracketHighlightColor
 	 *            The bracket highlight color
 	 */
@@ -222,7 +224,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 	/**
 	 * Enables or disables bracket highlighting. When bracket highlighting is enabled, the bracket
 	 * matching the one before the caret (if any) is highlighted.
-	 * 
+	 *
 	 * @param bracketHighlight
 	 *            True if bracket highlighting should be enabled, false otherwise
 	 */
@@ -240,7 +242,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets if the caret should be drawn as a block, false otherwise.
-	 * 
+	 *
 	 * @param blockCaret
 	 *            True if the caret should be drawn as a block, false otherwise.
 	 */
@@ -258,7 +260,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets the EOL marker color.
-	 * 
+	 *
 	 * @param eolMarkerColor
 	 *            The EOL marker color
 	 */
@@ -276,7 +278,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets if EOL markers are to be drawn.
-	 * 
+	 *
 	 * @param eolMarkers
 	 *            True if EOL markers should be drawn, false otherwise
 	 */
@@ -294,7 +296,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Sets if invalid lines are to be painted as red tildes.
-	 * 
+	 *
 	 * @param paintInvalid
 	 *            True if invalid lines should be drawn, false otherwise
 	 */
@@ -305,7 +307,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Adds a custom highlight painter.
-	 * 
+	 *
 	 * @param highlight
 	 *            The highlight
 	 */
@@ -321,7 +323,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 		/**
 		 * Called after the highlight painter has been added.
-		 * 
+		 *
 		 * @param textArea
 		 *            The text area
 		 * @param next
@@ -331,7 +333,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 		/**
 		 * This should paint the highlight and delgate to the next highlight painter.
-		 * 
+		 *
 		 * @param gfx
 		 *            The graphics context
 		 * @param line
@@ -344,7 +346,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 		/**
 		 * Returns the tool tip to display at the specified location. If this highlighter doesn't
 		 * know what to display, it should delegate to the next highlight painter.
-		 * 
+		 *
 		 * @param evt
 		 *            The mouse event
 		 */
@@ -353,7 +355,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Returns the tool tip to display at the specified location.
-	 * 
+	 *
 	 * @param evt
 	 *            The mouse event
 	 */
@@ -376,7 +378,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 	/**
 	 * Sets the font for this component. This is overridden to update the cached font metrics and to
 	 * recalculate which lines are visible.
-	 * 
+	 *
 	 * @param font
 	 *            The font
 	 */
@@ -390,7 +392,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Repaints the text.
-	 * 
+	 *
 	 * @param gfx
 	 *            The graphics context
 	 */
@@ -436,7 +438,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Marks a line as needing a repaint.
-	 * 
+	 *
 	 * @param line
 	 *            The line to invalidate
 	 */
@@ -446,7 +448,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Marks a range of lines as needing a repaint.
-	 * 
+	 *
 	 * @param firstLine
 	 *            The first line to invalidate
 	 * @param lastLine
@@ -466,7 +468,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 
 	/**
 	 * Implementation of TabExpander interface. Returns next tab stop after a specified point.
-	 * 
+	 *
 	 * @param x
 	 *            The x co-ordinate
 	 * @param tabOffset
@@ -656,7 +658,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 			}
 
 			// "inlined" min/max()
-			gfx.fillRect(x1 > x2 ? x2 : x1, y, x1 > x2 ? (x1 - x2) : (x2 - x1), height);
+			gfx.fillRect(x1 > x2 ? x2 : x1, y, x1 > x2 ? x1 - x2 : x2 - x1, height);
 		}
 
 	}
@@ -679,7 +681,7 @@ public class TextAreaPainter extends JComponent implements TabExpander {
 		if (textArea.isCaretVisible()) {
 			int offset = textArea.getCaretPosition() - textArea.getLineStartOffset(line);
 			int caretX = textArea._offsetToX(line, offset);
-			int caretWidth = ((blockCaret || textArea.isOverwriteEnabled()) ? fm.charWidth('w') : 1);
+			int caretWidth = blockCaret || textArea.isOverwriteEnabled() ? fm.charWidth('w') : 1;
 			y += fm.getLeading() + fm.getMaxDescent();
 			int height = fm.getHeight();
 

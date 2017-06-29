@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.new_plotter.gui;
 
 import java.awt.Color;
@@ -100,6 +100,7 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction.AggregationFunctionType;
 
@@ -995,9 +996,10 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 
 						@Override
 						public void actionPerformed(ActionEvent e) {
-							ConfirmDialog dialog = new ConfirmDialog(SwingUtilities.getWindowAncestor((Component) e
-									.getSource()), "plotter.configuration_dialog.confirm_color_scheme_delete",
-									ConfirmDialog.YES_NO_OPTION, false);
+							ConfirmDialog dialog = new ConfirmDialog(
+									SwingUtilities.getWindowAncestor((Component) e.getSource()),
+									"plotter.configuration_dialog.confirm_color_scheme_delete", ConfirmDialog.YES_NO_OPTION,
+									false);
 							dialog.setLocationRelativeTo((Component) e.getSource());
 							dialog.setVisible(true);
 							if (dialog.getReturnOption() == ConfirmDialog.YES_OPTION) {
@@ -1090,7 +1092,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 		// retrieve data for showing example data
 		try {
 			ExampleSet exampleSet = (ExampleSet) ((IOObjectEntry) new RepositoryLocation("//Samples/data/Iris")
-			.locateEntry()).retrieveData(null);
+					.locateEntry()).retrieveData(null);
 			dataTable = new DataTableExampleSetAdapter(exampleSet, null);
 		} catch (MalformedRepositoryLocationException e) {
 			return;
@@ -1106,12 +1108,12 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 		DataTableColumn domainColumn = new DataTableColumn(dataTable, 0);
 		DataTableColumn mainColumn = new DataTableColumn(dataTable, 1);
 
-		Font titleFont = new Font("Lucida Sans", Font.PLAIN, 12);
+		Font titleFont = FontTools.getFont("Lucida Sans", Font.PLAIN, 12);
 
 		// configure gradient preview plot
 		gradientPlotConfig = new PlotConfiguration(domainColumn);
-		gradientPlotConfig.setTitleText(I18N
-				.getGUILabel("plotter.configuration_dialog.color_scheme_dialog.numerical_gradient_preview.label"));
+		gradientPlotConfig.setTitleText(
+				I18N.getGUILabel("plotter.configuration_dialog.color_scheme_dialog.numerical_gradient_preview.label"));
 		gradientPlotConfig.setFrameBackgroundColor(background);
 		gradientPlotConfig.getDomainConfigManager().setLabel("");
 		gradientPlotConfig.setTitleFont(titleFont);
@@ -1132,8 +1134,8 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 
 		// configure nominal preview plot
 		nominalPlotConfig = new PlotConfiguration(domainColumn);
-		nominalPlotConfig.setTitleText(I18N
-				.getGUILabel("plotter.configuration_dialog.color_scheme_dialog.nominal_color_preview.label"));
+		nominalPlotConfig.setTitleText(
+				I18N.getGUILabel("plotter.configuration_dialog.color_scheme_dialog.nominal_color_preview.label"));
 		nominalPlotConfig.setFrameBackgroundColor(background);
 		nominalPlotConfig.getDomainConfigManager().setLabel("");
 		nominalPlotConfig.setTitleFont(titleFont);
@@ -1541,8 +1543,8 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 				colorSchemeComboBoxModel.addElement(colorScheme);
 			}
 		}
-		colorSchemeComboBoxModel.addElement(I18N
-				.getGUILabel("plotter.configuration_dialog.color_scheme_dialog.add_new_scheme.label"));
+		colorSchemeComboBoxModel
+				.addElement(I18N.getGUILabel("plotter.configuration_dialog.color_scheme_dialog.add_new_scheme.label"));
 		colorSchemeComboBox.setSelectedItem(getCurrentActiveColorScheme());
 
 		calculateGradientPreview();
@@ -1557,8 +1559,8 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 	private void adaptNominalPlot() {
 		if (!initializing) {
 			// change chart config
-			EqualDataFractionGrouping edfg = (EqualDataFractionGrouping) nominalPlotConfig.getDimensionConfig(
-					PlotDimension.COLOR).getGrouping();
+			EqualDataFractionGrouping edfg = (EqualDataFractionGrouping) nominalPlotConfig
+					.getDimensionConfig(PlotDimension.COLOR).getGrouping();
 			edfg.setBinCount(getCurrentActiveColorScheme().getColors().size());
 			nominalPlotConfig.addColorSchemeAndSetActive(getCurrentActiveColorScheme());
 			// nominalPlotter.updateChartPanelChart(false);
@@ -1583,8 +1585,8 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 	 */
 	private void checkIfButtonsEnabled() {
 		removeCategoryColorButton.setEnabled(nominalColorListModel.getSize() > 2);
-		boolean enableSchemeRemove = !((ColorScheme) colorSchemeComboBox.getSelectedItem()).getName().equals(
-				I18N.getGUILabel("plotter.default_color_scheme_name.label"));
+		boolean enableSchemeRemove = !((ColorScheme) colorSchemeComboBox.getSelectedItem()).getName()
+				.equals(I18N.getGUILabel("plotter.default_color_scheme_name.label"));
 		removeSchemeButton.setEnabled(colorSchemeComboBoxModel.getSize() > 2 && enableSchemeRemove);
 		renameSchemeButton.setEnabled(enableSchemeRemove);
 	}

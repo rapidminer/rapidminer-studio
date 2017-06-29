@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.flow.processrendering.draw;
 
 import java.awt.BasicStroke;
@@ -70,6 +70,7 @@ import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.CollectionMetaData;
 import com.rapidminer.operator.ports.metadata.Precondition;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tutorial.Tutorial;
@@ -141,15 +142,15 @@ public final class ProcessDrawer {
 	private static final int DRAG_BORDER_PADDING = 30;
 	private static final int DRAG_BORDER_CORNER = 15;
 
-	private static final Font PROCESS_FONT = new Font("Dialog", Font.BOLD, 12);
-	private static final Font DRAG_FONT_LARGE = new Font("Dialog", Font.BOLD, 30);
-	private static final Font DRAG_FONT_MEDIUM = new Font("Dialog", Font.BOLD, 22);
-	private static final Font DRAG_FONT_SMALL = new Font("Dialog", Font.BOLD, 14);
-	private static final Font HINT_FONT_LARGE = new Font("Dialog", Font.BOLD, 30);
-	private static final Font HINT_FONT_MEDIUM = new Font("Dialog", Font.BOLD, 24);
-	private static final Font HINT_FONT_SMALL = new Font("Dialog", Font.BOLD, 18);
+	private static final Font PROCESS_FONT = FontTools.getFont(Font.DIALOG, Font.BOLD, 12);
+	private static final Font DRAG_FONT_LARGE = FontTools.getFont(Font.DIALOG, Font.BOLD, 30);
+	private static final Font DRAG_FONT_MEDIUM = FontTools.getFont(Font.DIALOG, Font.BOLD, 22);
+	private static final Font DRAG_FONT_SMALL = FontTools.getFont(Font.DIALOG, Font.BOLD, 14);
+	private static final Font HINT_FONT_LARGE = FontTools.getFont(Font.DIALOG, Font.BOLD, 30);
+	private static final Font HINT_FONT_MEDIUM = FontTools.getFont(Font.DIALOG, Font.BOLD, 24);
+	private static final Font HINT_FONT_SMALL = FontTools.getFont(Font.DIALOG, Font.BOLD, 18);
 
-	private static final Font PORT_FONT = new Font("Dialog", Font.PLAIN, 9);
+	private static final Font PORT_FONT = FontTools.getFont(Font.DIALOG, Font.PLAIN, 9);
 	private static final Color PORT_NAME_COLOR = Color.DARK_GRAY;
 	private static final Color PORT_NAME_SELECTION_COLOR = Color.GRAY;
 	private static final Color ACTIVE_EDGE_COLOR = new Color(255, 102, 0);

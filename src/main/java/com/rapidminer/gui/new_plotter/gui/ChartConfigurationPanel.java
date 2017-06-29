@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.new_plotter.gui;
 
 import java.awt.CardLayout;
@@ -109,6 +109,7 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 
 
@@ -116,8 +117,8 @@ import com.rapidminer.tools.I18N;
  * @author Nils Woehler
  *
  */
-public class ChartConfigurationPanel extends AbstractConfigurationPanel implements MasterOfDesasterListener, DragListener,
-PlotConfigurationProcessingListener, PrintableComponent {
+public class ChartConfigurationPanel extends AbstractConfigurationPanel
+		implements MasterOfDesasterListener, DragListener, PlotConfigurationProcessingListener, PrintableComponent {
 
 	private static final Insets STANDARD_INSETS = new Insets(2, 2, 2, 2);
 
@@ -371,7 +372,8 @@ PlotConfigurationProcessingListener, PrintableComponent {
 	private PlotInstance getNewDePivotedPlotInstance(PlotConfiguration newPlotConfig,
 			Collection<String> excludedNumericalAttributeList, Collection<String> selectedNominalToNumericAttributesList) {
 		PlotInstance plotInstance;
-		DataTable transformed = getDePivotedDataTable(excludedNumericalAttributeList, selectedNominalToNumericAttributesList);
+		DataTable transformed = getDePivotedDataTable(excludedNumericalAttributeList,
+				selectedNominalToNumericAttributesList);
 
 		if (transformed == null) {
 			return null;
@@ -407,20 +409,20 @@ PlotConfigurationProcessingListener, PrintableComponent {
 		leftSideShowHiddenPanel = new JPanel(new GridBagLayout());
 		leftSideShowHiddenPanel.setBackground(Color.red);
 
-		JButton showConfigButton = new JButton(new ResourceAction(smallIcons,
-				"plotter.configuration_dialog.show_configuration") {
+		JButton showConfigButton = new JButton(
+				new ResourceAction(smallIcons, "plotter.configuration_dialog.show_configuration") {
 
-			private static final long serialVersionUID = 1L;
+					private static final long serialVersionUID = 1L;
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				leftSideShowHiddenPanel.setVisible(false);
-				leftSideConfigPanel.setVisible(true);
-				statusTextArea.setVisible(true);
-				statusTextAreaScrollPane.setVisible(true);
-				chartPanel.chartChanged(null);
-			}
-		});
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						leftSideShowHiddenPanel.setVisible(false);
+						leftSideConfigPanel.setVisible(true);
+						statusTextArea.setVisible(true);
+						statusTextAreaScrollPane.setVisible(true);
+						chartPanel.chartChanged(null);
+					}
+				});
 
 		itemConstraint = new GridBagConstraints();
 		itemConstraint.insets = STANDARD_INSETS;
@@ -569,8 +571,8 @@ PlotConfigurationProcessingListener, PrintableComponent {
 								datasetTransformationSelectionComboBox.setSelectedItem(getCurrentTranformationType());
 							}
 							configureDataSetTransformationButton
-							.setEnabled((DatasetTransformationType) datasetTransformationSelectionComboBox
-									.getSelectedItem() != DatasetTransformationType.ORIGINAL);
+									.setEnabled((DatasetTransformationType) datasetTransformationSelectionComboBox
+											.getSelectedItem() != DatasetTransformationType.ORIGINAL);
 						}
 					}
 
@@ -590,18 +592,18 @@ PlotConfigurationProcessingListener, PrintableComponent {
 
 				datasetTranformationContainerPanel.add(datasetTransformationSelectionComboBox, itemConstraint);
 
-				configureDataSetTransformationButton = new JButton(new ResourceAction(smallIcons,
-						"plotter.configure_dataset_transformation") {
+				configureDataSetTransformationButton = new JButton(
+						new ResourceAction(smallIcons, "plotter.configure_dataset_transformation") {
 
-					private static final long serialVersionUID = 1L;
+							private static final long serialVersionUID = 1L;
 
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						DatasetTransformationType type = (DatasetTransformationType) datasetTransformationSelectionComboBox
-								.getSelectedItem();
-						changeDatatableTransformationType(type, true);
-					}
-				});
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								DatasetTransformationType type = (DatasetTransformationType) datasetTransformationSelectionComboBox
+										.getSelectedItem();
+								changeDatatableTransformationType(type, true);
+							}
+						});
 
 				itemConstraint = new GridBagConstraints();
 				itemConstraint.gridx = 2;
@@ -629,7 +631,8 @@ PlotConfigurationProcessingListener, PrintableComponent {
 			JPanel labelPanel = new JPanel();
 			labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.LINE_AXIS));
 
-			attributeListLabel.setFont(new Font(oldFont.getFamily(), Font.BOLD, oldFont.getSize()));
+			attributeListLabel
+					.setFont(FontTools.getFont(oldFont.getFamily(), Font.BOLD, oldFont.getSize()));
 			// add attribute list label
 			labelPanel.add(attributeListLabel);
 			labelPanel.add(new JLabel(" "));
@@ -683,21 +686,21 @@ PlotConfigurationProcessingListener, PrintableComponent {
 
 			// add hide configuration button
 			{
-				JButton hideButton = new JButton(new ResourceAction(smallIcons,
-						"plotter.configuration_dialog.hide_configuration") {
+				JButton hideButton = new JButton(
+						new ResourceAction(smallIcons, "plotter.configuration_dialog.hide_configuration") {
 
-					private static final long serialVersionUID = 1L;
+							private static final long serialVersionUID = 1L;
 
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						boolean visible = !leftSideConfigPanel.isVisible();
-						leftSideConfigPanel.setVisible(visible);
-						statusTextArea.setVisible(visible);
-						statusTextAreaScrollPane.setVisible(visible);
-						leftSideShowHiddenPanel.setVisible(!visible);
-						chartPanel.chartChanged(null);
-					}
-				});
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								boolean visible = !leftSideConfigPanel.isVisible();
+								leftSideConfigPanel.setVisible(visible);
+								statusTextArea.setVisible(visible);
+								statusTextAreaScrollPane.setVisible(visible);
+								leftSideShowHiddenPanel.setVisible(!visible);
+								chartPanel.chartChanged(null);
+							}
+						});
 
 				itemConstraint = new GridBagConstraints();
 				itemConstraint.gridwidth = GridBagConstraints.REMAINDER;
@@ -756,7 +759,8 @@ PlotConfigurationProcessingListener, PrintableComponent {
 			JPanel labelPanel = new JPanel();
 			labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.LINE_AXIS));
 
-			plotConfigurationLabel.setFont(new Font(oldFont.getFamily(), Font.BOLD, oldFont.getSize()));
+			plotConfigurationLabel
+					.setFont(FontTools.getFont(oldFont.getFamily(), Font.BOLD, oldFont.getSize()));
 			// add attribute list label
 			labelPanel.add(plotConfigurationLabel);
 
@@ -859,8 +863,8 @@ PlotConfigurationProcessingListener, PrintableComponent {
 						// one there
 						DimensionConfig config = ((DimensionConfigTreeNode) node).getUserObject();
 						if (config != null) {
-							if (config.getDimension() == PlotDimension.DOMAIN
-									&& getPlotConfiguration().getDomainConfigManager().getDataTableColumn().getValueType() == ValueType.INVALID) {
+							if (config.getDimension() == PlotDimension.DOMAIN && getPlotConfiguration()
+									.getDomainConfigManager().getDataTableColumn().getValueType() == ValueType.INVALID) {
 								removeAttributeFromDimensionMenuItem.setEnabled(false);
 							} else {
 								removeAttributeFromDimensionMenuItem.setEnabled(true);
@@ -1078,8 +1082,8 @@ PlotConfigurationProcessingListener, PrintableComponent {
 			if (config.getDimension() != PlotDimension.DOMAIN) {
 				getPlotConfiguration().setDimensionConfig(config.getDimension(), null);
 			} else {
-				getPlotConfiguration().getDomainConfigManager().setDataTableColumn(
-						new DataTableColumn(null, ValueType.INVALID));
+				getPlotConfiguration().getDomainConfigManager()
+						.setDataTableColumn(new DataTableColumn(null, ValueType.INVALID));
 			}
 		}
 	}
@@ -1345,9 +1349,9 @@ PlotConfigurationProcessingListener, PrintableComponent {
 		// The real chart has to use double buffering for a) performance and b) zoom rectangle
 		// drawing
 		LinkAndBrushChartPanel newLaBPanel = new LinkAndBrushChartPanel(getPlotEngine().getChartPanel().getChart(),
-				getPlotEngine().getChartPanel().getWidth(), getPlotEngine().getChartPanel().getHeight(), getPlotEngine()
-				.getChartPanel().getMinimumDrawWidth(), getPlotEngine().getChartPanel().getMinimumDrawHeight(),
-				false, false);
+				getPlotEngine().getChartPanel().getWidth(), getPlotEngine().getChartPanel().getHeight(),
+				getPlotEngine().getChartPanel().getMinimumDrawWidth(),
+				getPlotEngine().getChartPanel().getMinimumDrawHeight(), false, false);
 		newLaBPanel.setSize(getPlotEngine().getChartPanel().getSize());
 		newLaBPanel.setOverlayList(getPlotEngine().getChartPanel().getOverlayList());
 		return newLaBPanel;

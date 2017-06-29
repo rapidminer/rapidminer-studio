@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools;
 
 import java.awt.AlphaComposite;
@@ -48,6 +48,7 @@ import javax.swing.Timer;
 
 import com.rapidminer.gui.license.LicenseTools;
 import com.rapidminer.license.License;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
@@ -63,10 +64,10 @@ import com.rapidminer.tools.plugin.Plugin;
  */
 public class SplashScreen extends JPanel implements ActionListener {
 
-	private static final Font FONT_SANS_SERIF_11 = new Font("SansSerif", java.awt.Font.PLAIN, 11);
-	private static final Font FONT_SANS_SERIF_BOLD_11 = new Font("SansSerif", java.awt.Font.BOLD, 11);
-	private static final Font FONT_OPEN_SANS_15 = new Font("Open Sans", java.awt.Font.PLAIN, 15);
-	private static final Font FONT_OPEN_SANS_LIGHT_60 = new Font("Open Sans Light", java.awt.Font.PLAIN, 60);
+	private static final Font FONT_SANS_SERIF_11 = FontTools.getFont(Font.SANS_SERIF, java.awt.Font.PLAIN, 11);
+	private static final Font FONT_SANS_SERIF_BOLD_11 = FontTools.getFont(Font.SANS_SERIF, java.awt.Font.BOLD, 11);
+	private static final Font FONT_OPEN_SANS_15 = FontTools.getFont("Open Sans", java.awt.Font.PLAIN, 15);
+	private static final Font FONT_OPEN_SANS_LIGHT_60 = FontTools.getFont("Open Sans Light", java.awt.Font.PLAIN, 60);
 
 	private static final int EXTENSION_GAP = 400;
 	private static final float EXTENSION_FADE_TIME = 1000;

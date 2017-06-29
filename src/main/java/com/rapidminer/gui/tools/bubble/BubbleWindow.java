@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools.bubble;
 
 import java.awt.BasicStroke;
@@ -69,6 +69,7 @@ import com.rapidminer.gui.PerspectiveChangeListener;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.vlsolutions.swing.docking.Dockable;
@@ -530,10 +531,11 @@ public abstract class BubbleWindow extends JDialog {
 
 	private static final long serialVersionUID = -7508372660983304065L;
 
-	private static final Font FONT_TITLE = new Font("Open Sans Light", Font.PLAIN, 18);
-	private static final Font FONT_BODY = new Font("Open Sans", Font.PLAIN, 13);
-	private static final Font FONT_TITLE_COMIC = new Font("AlterEgoBB", Font.PLAIN, 14).deriveFont(Font.BOLD);
-	private static final Font FONT_BODY_COMIC = new Font("AlterEgoBB", Font.PLAIN, 13);
+	private static final Font FONT_TITLE = FontTools.getFont("Open Sans Light", Font.PLAIN, 18);
+	private static final Font FONT_BODY = FontTools.getFont("Open Sans", Font.PLAIN, 13);
+	private static final Font FONT_TITLE_COMIC = FontTools.getFont("AlterEgoBB", Font.PLAIN, 14)
+			.deriveFont(Font.BOLD);
+	private static final Font FONT_BODY_COMIC = FontTools.getFont("AlterEgoBB", Font.PLAIN, 13);
 
 	private static final Color COLOR_BACKGROUND_COMIC = new Color(249, 200, 127);
 	private static final Color COLOR_TRANSPARENT = new Color(0, 0, 0, 0);

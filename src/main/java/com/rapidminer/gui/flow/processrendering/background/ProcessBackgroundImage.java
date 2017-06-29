@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.flow.processrendering.background;
 
 import java.awt.Font;
@@ -41,6 +41,7 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 
@@ -212,10 +213,8 @@ public class ProcessBackgroundImage implements UserData<Object> {
 						RepositoryLocation location = new RepositoryLocation(ProcessBackgroundImage.this.getLocation());
 						Entry entry = location.locateEntry();
 						if (entry == null) {
-							LogService
-									.getRoot()
-									.log(Level.WARNING,
-											"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.missing");
+							LogService.getRoot().log(Level.WARNING,
+									"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.missing");
 							img = createImageFromString(I18N.getGUILabel("process_background.loading.error.label"));
 							errorImageLoading = true;
 							return;
@@ -227,9 +226,7 @@ public class ProcessBackgroundImage implements UserData<Object> {
 							img = createImageFromBlob(blob);
 
 							if (img == null) {
-								LogService
-								.getRoot()
-								.log(Level.WARNING,
+								LogService.getRoot().log(Level.WARNING,
 										"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.invalid_type");
 								img = createImageFromString(I18N.getGUILabel("process_background.loading.error.label"));
 								errorImageLoading = true;
@@ -242,26 +239,20 @@ public class ProcessBackgroundImage implements UserData<Object> {
 								h = img.getHeight(null);
 							}
 						} else {
-							LogService
-									.getRoot()
-									.log(Level.WARNING,
-											"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.invalid_type");
+							LogService.getRoot().log(Level.WARNING,
+									"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.invalid_type");
 							img = createImageFromString(I18N.getGUILabel("process_background.loading.error.label"));
 							errorImageLoading = true;
 						}
 					} catch (RepositoryException | MalformedRepositoryLocationException e) {
-						LogService
-								.getRoot()
-								.log(Level.WARNING,
-										"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.invalid_loc",
-										ProcessBackgroundImage.this.getLocation());
+						LogService.getRoot().log(Level.WARNING,
+								"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.invalid_loc",
+								ProcessBackgroundImage.this.getLocation());
 						img = createImageFromString(I18N.getGUILabel("process_background.loading.error.label"));
 						errorImageLoading = true;
 					} catch (IOException e) {
-						LogService
-								.getRoot()
-								.log(Level.WARNING,
-										"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.invalid_type");
+						LogService.getRoot().log(Level.WARNING,
+								"com.rapidminer.gui.flow.processrendering.background_image.ProcessBackgroundImageDecorator.invalid_type");
 						img = createImageFromString(I18N.getGUILabel("process_background.loading.error.label"));
 						errorImageLoading = true;
 					}
@@ -308,7 +299,7 @@ public class ProcessBackgroundImage implements UserData<Object> {
 	private Image createImageFromString(String text) {
 		// to know bounds of desired text we need Graphics context so create fake one
 		Graphics2D g2 = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
-		Font font = new Font("Arial", Font.PLAIN, 24);
+		Font font = FontTools.getFont("Arial", Font.PLAIN, 24);
 		g2.setFont(font);
 		FontMetrics fm = g2.getFontMetrics();
 		// set intermediate width and height so we don't lose original height of background image

@@ -1,26 +1,26 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools.syntax;
 
 /*
  * SyntaxStyle.java - A simple text style class Copyright (C) 1999 Slava Pestov
- * 
+ *
  * You may use and modify this package for any purpose. Redistribution is permitted, in both source
  * and binary form, provided that this notice remains intact in all source distributions of this
  * package.
@@ -32,17 +32,19 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 
+import com.rapidminer.tools.FontTools;
+
 
 /**
  * A simple text style class. It can specify the color, italic flag, and bold flag of a run of text.
- * 
+ *
  * @author Slava Pestov, Ingo Mierswa
  */
 public class SyntaxStyle {
 
 	/**
 	 * Creates a new SyntaxStyle.
-	 * 
+	 *
 	 * @param color
 	 *            The text color
 	 * @param italic
@@ -95,7 +97,8 @@ public class SyntaxStyle {
 			return lastStyledFont;
 		}
 		lastFont = font;
-		lastStyledFont = new Font(font.getFamily(), (bold ? Font.BOLD : 0) | (italic ? Font.ITALIC : 0), font.getSize());
+		lastStyledFont = FontTools.getFont(font.getFamily(),
+				(bold ? Font.BOLD : 0) | (italic ? Font.ITALIC : 0), font.getSize());
 		return lastStyledFont;
 	}
 
@@ -111,7 +114,8 @@ public class SyntaxStyle {
 			return fontMetrics;
 		}
 		lastFont = font;
-		lastStyledFont = new Font(font.getFamily(), (bold ? Font.BOLD : 0) | (italic ? Font.ITALIC : 0), font.getSize());
+		lastStyledFont = FontTools.getFont(font.getFamily(),
+				(bold ? Font.BOLD : 0) | (italic ? Font.ITALIC : 0), font.getSize());
 		fontMetrics = Toolkit.getDefaultToolkit().getFontMetrics(lastStyledFont);
 		return fontMetrics;
 	}
@@ -119,7 +123,7 @@ public class SyntaxStyle {
 	/**
 	 * Sets the foreground color and font of the specified graphics context to that specified in
 	 * this style.
-	 * 
+	 *
 	 * @param gfx
 	 *            The graphics context
 	 * @param font

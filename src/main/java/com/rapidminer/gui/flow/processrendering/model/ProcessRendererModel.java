@@ -65,6 +65,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
@@ -101,7 +102,7 @@ public final class ProcessRendererModel {
 	private static final int ORIGINAL_ZOOM_INDEX = 6;
 
 	/** the font for the operator name */
-	public static final Font OPERATOR_FONT = new Font(Font.DIALOG, Font.BOLD, 11);
+	public static final Font OPERATOR_FONT = FontTools.getFont(Font.DIALOG, Font.BOLD, 11);
 
 	/** the height of the operator name header */
 	public static final int HEADER_HEIGHT = OPERATOR_FONT.getSize() + 7;

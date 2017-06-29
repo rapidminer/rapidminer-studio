@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.properties;
 
 import java.awt.Color;
@@ -79,6 +79,7 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.ModelMetaData;
 import com.rapidminer.parameter.ParameterTypeExpression;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
@@ -155,8 +156,8 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 					if (!predefined) {
 						if (parser.getExpressionContext().getFunction("macro") != null
 								|| parser.getExpressionContext().getFunction("eval") != null) {
-							MacroSelectionDialog macroSelectionDialog = new MacroSelectionDialog(arg, parser
-									.getExpressionContext().getFunction("macro") != null);
+							MacroSelectionDialog macroSelectionDialog = new MacroSelectionDialog(arg,
+									parser.getExpressionContext().getFunction("macro") != null);
 							macroSelectionDialog.setLocation(arg.getLocationOnScreen().x, arg.getLocationOnScreen().y + 40);
 							macroSelectionDialog.setVisible(true);
 							addToExpression(macroSelectionDialog.getExpression());
@@ -506,8 +507,8 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 
 		// use a compatibility level to only show functions that are available
 		if (type.getInputPort() != null) {
-			builder = builder.withCompatibility(type.getInputPort().getPorts().getOwner().getOperator()
-					.getCompatibilityLevel());
+			builder = builder
+					.withCompatibility(type.getInputPort().getPorts().getOwner().getOperator().getCompatibilityLevel());
 		}
 		if (controllingProcess != null) {
 			builder = builder.withProcess(controllingProcess);
@@ -675,8 +676,8 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		scrollPaneExpression.setPreferredSize(new Dimension(getPreferredSize().width, HEIGHT_EXPRESSION_SCROLL_PANE));
 		scrollPaneExpression.setMaximumSize(new Dimension(getMaximumSize().width, HEIGHT_EXPRESSION_SCROLL_PANE));
 		scrollPaneExpression.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 0, COLOR_BORDER_EXPRESSION));
-		scrollPaneExpression.getVerticalScrollBar().setBorder(
-				BorderFactory.createMatteBorder(0, 0, 0, 1, Colors.TEXTFIELD_BORDER));
+		scrollPaneExpression.getVerticalScrollBar()
+				.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Colors.TEXTFIELD_BORDER));
 
 		// use the gutter to display an error icon in the line with an error
 		Gutter gutter = scrollPaneExpression.getGutter();
@@ -733,8 +734,8 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		functionsC.gridy = 0;
 		functionsC.gridx = 0;
 		functionsC.anchor = GridBagConstraints.NORTHWEST;
-		functionPanel
-				.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Functions</font></b></html>"), functionsC);
+		functionPanel.add(new JLabel("<html><b><font size=" + FONT_SIZE_HEADER + ">Functions</font></b></html>"),
+				functionsC);
 
 		functionsC.insets = new Insets(0, 0, STD_INSET_GBC, STD_INSET_GBC);
 		functionsC.gridx += 1;
@@ -1141,9 +1142,8 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 				if (!perfectMatch && searchStringGiven) {
 					// check for function name equality without brackets and with brackets
 					String functionName = function.getDisplayName().split("\\(")[0];
-					if (filterName.toLowerCase(Locale.ENGLISH).equals(functionName.toLowerCase(Locale.ENGLISH))
-							|| filterName.toLowerCase(Locale.ENGLISH).equals(
-									function.getDisplayName().toLowerCase(Locale.ENGLISH))) {
+					if (filterName.toLowerCase(Locale.ENGLISH).equals(functionName.toLowerCase(Locale.ENGLISH)) || filterName
+							.toLowerCase(Locale.ENGLISH).equals(function.getDisplayName().toLowerCase(Locale.ENGLISH))) {
 						perfectMatch = true;
 					}
 				}
@@ -1285,8 +1285,8 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 				// open the attributes categories
 				if (filteredModel.get(ExampleResolver.KEY_ATTRIBUTES) != null
 						&& filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES) != null
-						&& filteredModel.get(ExampleResolver.KEY_ATTRIBUTES).size()
-								+ filteredModel.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).size() <= MAX_NMBR_INPUTS_SHOWN) {
+						&& filteredModel.get(ExampleResolver.KEY_ATTRIBUTES).size() + filteredModel
+								.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).size() <= MAX_NMBR_INPUTS_SHOWN) {
 
 					inputCategoryTaskPanes.get(ExampleResolver.KEY_ATTRIBUTES).setCollapsed(false);
 					inputCategoryTaskPanes.get(ExampleResolver.KEY_SPECIAL_ATTRIBUTES).setCollapsed(false);
@@ -1415,7 +1415,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		validationLabel.setText("<html>" + title + explanation + "</html>");
 		// show the error message with the place of the error in monospaced
 		// DO NOT CHANGE THIS, AS THE INDENTATION IS WRONG OTHERWISE
-		validationTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+		validationTextArea.setFont(FontTools.getFont(Font.MONOSPACED, Font.PLAIN, 12));
 
 		// set the error message
 		// strip the error message if necessary

@@ -51,7 +51,7 @@ enum CtaDao {
 	private static final String INSERT_RULE_QUERY = "INSERT INTO rule(id, action) VALUES (?,?)";
 
 	/** This query returns an empty result set, if the offset is larger than the event count */
-	private static final String SELECT_OVER_ONE_MILLION = "SELECT timestamp FROM event ORDER BY timestamp DESC LIMIT 1 OFFSET 1000000";
+	private static final String SELECT_OVER_250K = "SELECT timestamp FROM event ORDER BY timestamp DESC LIMIT 1 OFFSET 250000";
 
 	/** Delete events older than the given timestamp */
 	private static final String DELETE_OLDER_THAN = "DELETE FROM event WHERE timestamp < ?";
@@ -66,7 +66,7 @@ enum CtaDao {
 
 	private PreparedStatement insertEvent = null;
 	private PreparedStatement insertRule = null;
-	private PreparedStatement selectOverOneMillion = null;
+	private PreparedStatement selectOver250k = null;
 	private PreparedStatement deleteOlderThan = null;
 	private PreparedStatement deleteOlderOneMonth = null;
 
@@ -75,7 +75,7 @@ enum CtaDao {
 			Connection connection = CtaDataSource.INSTANCE.getConnection();
 			insertEvent = connection.prepareStatement(INSERT_EVENT_QUERY);
 			insertRule = connection.prepareStatement(INSERT_RULE_QUERY);
-			selectOverOneMillion = connection.prepareStatement(SELECT_OVER_ONE_MILLION);
+			selectOver250k = connection.prepareStatement(SELECT_OVER_250K);
 			deleteOlderThan = connection.prepareStatement(DELETE_OLDER_THAN);
 			deleteOlderOneMonth = connection.prepareStatement(DELETE_OLDER_ONE_MONTH);
 		} catch (SQLException e) {
@@ -180,7 +180,7 @@ enum CtaDao {
 	 */
 	public void cleanUpDatabase() throws SQLException {
 		deleteOlderOneMonth.executeUpdate();
-		ResultSet oldResult = selectOverOneMillion.executeQuery();
+		ResultSet oldResult = selectOver250k.executeQuery();
 		if (oldResult.next()) {
 			Timestamp old = oldResult.getTimestamp(1);
 			deleteOlderThan.setTimestamp(1, old);
