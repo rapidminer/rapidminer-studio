@@ -43,7 +43,7 @@ public class OperatorVersion extends VersionNumber {
 	/**
 	 * Parses a version string of the form x.xx.xxx
 	 * 
-	 * @throws IllegalArgumentException
+	 * @throws VersionNumberExcpetion
 	 *             for malformed strings.
 	 */
 	public OperatorVersion(String versionString) {
@@ -54,17 +54,30 @@ public class OperatorVersion extends VersionNumber {
 		super(major, minor, buildNumber);
 	}
 
-	public static OperatorVersion getLatestVersion(OperatorDescription desc) {
+	/**
+	 * Creates an {@link OperatorVersion} from any other {@link VersionNumber}.
+	 * 
+	 * @since 7.6
+	 */
+	public static OperatorVersion asNewOperatorVersion(VersionNumber vn) {
 		try {
-			Plugin plugin = desc.getProvider();
-			if (plugin == null) {
-				return new OperatorVersion(RapidMiner.getLongVersion());
-			} else {
+			return new OperatorVersion(vn.getLongVersion());
+		} catch (VersionNumberExcpetion vne) {
+			return new OperatorVersion(vn.getMajorNumber(), vn.getMinorNumber(), vn.getPatchLevel());
+		}
+	}
+
+	public static OperatorVersion getLatestVersion(OperatorDescription desc) {
+		Plugin plugin = desc.getProvider();
+		if (plugin == null) {
+			return asNewOperatorVersion(RapidMiner.getVersion());
+		} else {
+			try {
 				return new OperatorVersion(plugin.getVersion());
+			} catch (VersionNumberExcpetion vne) {
+				// returning current version
+				return asNewOperatorVersion(RapidMiner.getVersion());
 			}
-		} catch (IllegalArgumentException e) {
-			// returning current version
-			return new OperatorVersion(5, 0, 0);
 		}
 	}
 }

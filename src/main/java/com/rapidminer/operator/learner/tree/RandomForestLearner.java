@@ -33,6 +33,7 @@ import com.rapidminer.operator.preprocessing.sampling.BootstrappingOperator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.RandomGenerator;
 
 
 /**
@@ -65,6 +66,11 @@ public class RandomForestLearner extends RandomTreeLearner {
 			bootstrapping = OperatorService.createOperator(BootstrappingOperator.class);
 			bootstrapping.setParameter(BootstrappingOperator.PARAMETER_USE_WEIGHTS, "false");
 			bootstrapping.setParameter(BootstrappingOperator.PARAMETER_SAMPLE_RATIO, "1.0");
+			if (getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED)) {
+				bootstrapping.setParameter(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED, Boolean.toString(true));
+				bootstrapping.setParameter(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED,
+						getParameter(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+			}
 		} catch (OperatorCreationException e) {
 			throw new OperatorException(getName() + ": cannot construct random tree learner: " + e.getMessage());
 		}

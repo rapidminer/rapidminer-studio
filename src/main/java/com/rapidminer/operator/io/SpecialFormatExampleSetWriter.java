@@ -167,17 +167,12 @@ public class SpecialFormatExampleSetWriter extends AppendingExampleSetWriter {
 		} catch (FormatterException e) {
 			throw new UserError(this, 901, format, e.getMessage());
 		}
-
 		OutputStream out = null;
-		PrintWriter writer = null;
-		try {
-			if (zipped) {
-				out = new GZIPOutputStream(new FileOutputStream(dataFile, append));
-			} else {
-				out = new FileOutputStream(dataFile, append);
-			}
-
-			writer = new PrintWriter(new OutputStreamWriter(out, encoding));
+		try (OutputStream outStream = new FileOutputStream(dataFile, append);
+				OutputStream zippedStream = zipped ? new GZIPOutputStream(outStream) : null;
+				OutputStreamWriter osw = new OutputStreamWriter(zipped ? zippedStream : outStream, encoding);
+				PrintWriter writer = new PrintWriter(osw)) {
+			out = outStream;
 			Iterator<Example> reader = exampleSet.iterator();
 			while (reader.hasNext()) {
 				if (automaticLineBreak) {
@@ -189,10 +184,6 @@ public class SpecialFormatExampleSetWriter extends AppendingExampleSetWriter {
 		} catch (IOException e) {
 			throw new UserError(this, 303, dataFile, e.getMessage());
 		} finally {
-			if (writer != null) {
-				writer.flush();
-				writer.close();
-			}
 			if (out != null) {
 				try {
 					out.close();

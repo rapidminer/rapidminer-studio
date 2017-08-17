@@ -201,16 +201,10 @@ public class ScatterPlotter extends PlotterAdapter {
 		JFileChooser chooser = SwingTools.createFileChooser("file_chooser.save", null, false, new FileFilter[0]);
 		if (chooser.showSaveDialog(ScatterPlotter.this) == JFileChooser.APPROVE_OPTION) {
 			File file = chooser.getSelectedFile();
-			PrintWriter out = null;
-			try {
-				out = new PrintWriter(new FileWriter(file));
+			try (FileWriter fw = new FileWriter(file); PrintWriter out = new PrintWriter(fw)) {
 				dataTable.write(out);
 			} catch (Exception ex) {
 				SwingTools.showSimpleErrorMessage("cannot_write_to_file_0", ex, file);
-			} finally {
-				if (out != null) {
-					out.close();
-				}
 			}
 		}
 	}

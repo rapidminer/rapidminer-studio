@@ -22,11 +22,11 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -116,6 +116,9 @@ public class EcodbOperator extends AbstractOutlierDetection {
 	 */
 	@Override
 	public ExampleSet apply(ExampleSet eSet) throws OperatorException {
+		// check if the label attribute exists and is nominal
+		Tools.hasNominalLabels(eSet, getOperatorClassName());
+
 		// declaration and initializing the necessary fields from input
 		int k = this.getParameterAsInt(PARAMETER_NUMBER_OF_NEIGHBORS);
 		int n = this.getParameterAsInt(PARAMETER_NUMBER_OF_Class_OUTLIERS);
@@ -123,16 +126,6 @@ public class EcodbOperator extends AbstractOutlierDetection {
 		// initialize distance measure
 		DistanceMeasure measure = DistanceMeasures.createMeasure(this);
 		measure.init(eSet);
-
-		// check if the label attribute exists
-		if (eSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
-		}
-
-		// check if the label attribute is nominal
-		if (!eSet.getAttributes().getLabel().isNominal()) {
-			throw new UserError(this, 101, eSet.getName(), eSet.getAttributes().getLabel().getName());
-		}
 
 		// create a new special attribute for the exampleSet
 		String outlierAttributeName = Attributes.OUTLIER_NAME;

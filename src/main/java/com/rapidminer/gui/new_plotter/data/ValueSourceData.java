@@ -32,7 +32,6 @@ import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.datatable.FilteredDataTable;
 import com.rapidminer.gui.new_plotter.ConfigurationChangeResponse;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
-import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
 import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
 import com.rapidminer.gui.new_plotter.configuration.DimensionConfig;
@@ -570,7 +569,6 @@ public class ValueSourceData {
 	}
 
 	private Pair<Double, Double> calculateMinMaxWithUtilities() {
-		debug("ValueSourceData: calculateMinMaxWithUtilities");
 		Pair<Double, Double> yMinMax = calculateMinMaxFast();
 		double minValue = yMinMax.getFirst();
 		double maxValue = yMinMax.getSecond();
@@ -604,9 +602,6 @@ public class ValueSourceData {
 
 		Pair<Double, Double> minMaxValues = new Pair<Double, Double>(minValue, maxValue);
 
-		debug("min: " + minMaxValues.getFirst());
-		debug("max: " + minMaxValues.getSecond());
-
 		return minMaxValues;
 	}
 
@@ -615,7 +610,6 @@ public class ValueSourceData {
 	 * min value, the second value will hold the max value.
 	 */
 	private Pair<Double, Double> calculateMinMaxFast() {
-		debug("ValueSourceData: calculateMinMaxFast()");
 		Pair<Double, Double> minMaxValues = new Pair<Double, Double>(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
 		// no utility is used..
 
@@ -634,8 +628,6 @@ public class ValueSourceData {
 			minMaxValues.setSecond(Double.POSITIVE_INFINITY);
 		}
 
-		debug("min: " + minMaxValues.getFirst());
-		debug("max: " + minMaxValues.getSecond());
 		return minMaxValues;
 	}
 
@@ -659,7 +651,6 @@ public class ValueSourceData {
 	}
 
 	private void invalidateValueCache() {
-		debug("ValueSourceData: invalidateValueCache()");
 		cachedSeriesDataForAllGroupCells = null;
 		cachedDistinctValues = null;
 		invalidateMinMaxCache();
@@ -699,7 +690,6 @@ public class ValueSourceData {
 		lastProcessedEvent = e;
 
 		if (clonedValueSource == null) {
-			debug("ValueSourceData: ### CAUTION #### ValueSource with ID " + valueSource.getId() + " is null!");
 			return;
 		}
 		setValueSource(clonedValueSource);
@@ -722,10 +712,6 @@ public class ValueSourceData {
 			default:
 		}
 
-	}
-
-	private void debug(String string) {
-		StaticDebug.debug("ValueSourceData: " + string);
 	}
 
 	public ValueSource getValueSource() {

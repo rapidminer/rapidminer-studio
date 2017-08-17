@@ -144,7 +144,8 @@ public class KMeanspp extends RMAbstractClusterer {
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
+	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
 		return null;
 	}
+
 }

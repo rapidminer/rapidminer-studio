@@ -21,11 +21,14 @@ package com.rapidminer.operator.preprocessing.normalization;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -47,6 +50,8 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
  * @author Ingo Mierswa, Sebastian Land
  */
 public class Normalization extends PreprocessingOperator {
+
+	public static final OperatorVersion BEFORE_NON_FINITE_VALUES_HANDLING = new OperatorVersion(7, 5, 3);
 
 	private static final ArrayList<NormalizationMethod> METHODS = new ArrayList<NormalizationMethod>();
 
@@ -145,6 +150,22 @@ public class Normalization extends PreprocessingOperator {
 			NORMALIZATION_METHODS[i] = method.getName();
 			i++;
 		}
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] old = super.getIncompatibleVersionChanges();
+		Set<OperatorVersion> allVersions = new HashSet<>();
+		for (OperatorVersion ov : old) {
+			allVersions.add(ov);
+		}
+		allVersions.add(BEFORE_NON_FINITE_VALUES_HANDLING);
+		for (NormalizationMethod method : METHODS) {
+			for (OperatorVersion version : method.getIncompatibleVersionChanges()) {
+				allVersions.add(version);
+			}
+		}
+		return allVersions.toArray(new OperatorVersion[allVersions.size()]);
 	}
 
 }

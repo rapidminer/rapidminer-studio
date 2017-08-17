@@ -18,22 +18,20 @@
  */
 package com.rapidminer.operator.clustering.clusterer;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.clustering.CentroidClusterModel;
 import com.rapidminer.operator.clustering.ClusterModel;
-import com.rapidminer.operator.learner.CapabilityProvider;
-import com.rapidminer.operator.ports.metadata.CapabilityPrecondition;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
-import com.rapidminer.tools.math.similarity.DistanceMeasureHelper;
 import com.rapidminer.tools.math.similarity.DistanceMeasures;
 
 import de.dfki.madm.operator.ClusteringAlgorithms;
@@ -50,7 +48,7 @@ import de.dfki.madm.operator.clustering.XMeansCore;
  *
  * @author Patrick Kalka
  */
-public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
+public class XMeans extends RMAbstractClusterer {
 
 	/** Maximal number of Clusters */
 	public static final String PARAMETER_K_Max = "k_max";
@@ -70,20 +68,18 @@ public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
 	 */
 	public static final String PARAMETER_MAX_OPTIMIZATION_STEPS = "max_optimization_steps";
 
-	private DistanceMeasureHelper measureHelper = new DistanceMeasureHelper(this);
 	OperatorDescription Description = null;
 
 	public XMeans(OperatorDescription description) {
 		super(description);
 
 		Description = description;
-		getExampleSetInputPort().addPrecondition(new CapabilityPrecondition(this, getExampleSetInputPort()));
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet eSet) throws OperatorException {
+	protected ClusterModel generateInternalClusterModel(ExampleSet eSet) throws OperatorException {
 
-		DistanceMeasure measure = measureHelper.getInitializedMeasure(eSet);
+		DistanceMeasure measure = getInitializedMeasure(eSet);
 		int k_max = getParameterAsInt(PARAMETER_K_Max);
 		int k_min = getParameterAsInt(PARAMETER_K_Min);
 		boolean kpp = getParameterAsBoolean(KMeanspp.PARAMETER_USE_KPP);
@@ -103,14 +99,13 @@ public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
 	}
 
 	@Override
-	public boolean supportsCapability(OperatorCapability capability) {
-		switch (capability) {
-			case BINOMINAL_ATTRIBUTES:
-			case POLYNOMINAL_ATTRIBUTES:
-				return false;
-			default:
-				return true;
-		}
+	protected boolean usesDistanceMeasures() {
+		return true;
+	}
+
+	@Override
+	protected boolean handlesInfiniteValues() {
+		return false;
 	}
 
 	@Override
@@ -125,12 +120,7 @@ public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
 		type.setExpert(false);
 		types.add(type);
 
-		for (ParameterType a : DistanceMeasures.getParameterTypes(this)) {
-			if (a.getKey() == DistanceMeasures.PARAMETER_MEASURE_TYPES) {
-				a.setDefaultValue(2);
-			}
-			types.add(a);
-		}
+		types.addAll(getMeasureParameterTypes());
 
 		types.addAll(ClusteringAlgorithms.getParameterTypes(this));
 		types.add(new ParameterTypeInt(PARAMETER_MAX_RUNS,
@@ -140,5 +130,10 @@ public class XMeans extends RMAbstractClusterer implements CapabilityProvider {
 				"The maximal number of iterations performed for one run of k-Means.", 1, Integer.MAX_VALUE, 100, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
+	}
+
+	@Override
+	protected Map<String, Object> getMeasureParametersDefaults() {
+		return Collections.singletonMap(DistanceMeasures.PARAMETER_MEASURE_TYPES, DistanceMeasures.NUMERICAL_MEASURES_TYPE);
 	}
 }

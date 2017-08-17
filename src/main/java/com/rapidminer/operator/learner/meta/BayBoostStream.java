@@ -637,10 +637,9 @@ public class BayBoostStream extends AbstractMetaLearner {
 
 			BayBoostStream.createOrReplacePredictedLabelFor(exampleSet);
 			exampleSet = consideredModel.apply(exampleSet);
-			if (exampleSet.getAttributes().getPredictedLabel().isNominal() == false) {
+			if (!exampleSet.getAttributes().getPredictedLabel().isNominal()) {
 				// Only the case of nominal base classifiers is supported!
-				throw new UserError(this, 101,
-						new Object[] { exampleSet.getAttributes().getLabel(), "BayBoostStream base learners" });
+				throw new UserError(this, 101, "BayBoostStream base learners", exampleSet.getAttributes().getLabel());
 			}
 
 			WeightedPerformanceMeasures wp = new WeightedPerformanceMeasures(exampleSet);

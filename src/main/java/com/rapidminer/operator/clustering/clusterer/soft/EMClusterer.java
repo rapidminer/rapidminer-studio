@@ -27,30 +27,32 @@ import java.util.Vector;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Statistics;
 import com.rapidminer.example.Tools;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.operator.clustering.FlatFuzzyClusterModel;
 import com.rapidminer.operator.clustering.clusterer.KMeans;
 import com.rapidminer.operator.clustering.clusterer.RMAbstractClusterer;
-import com.rapidminer.operator.learner.CapabilityProvider;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.CapabilityPrecondition;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
+import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.VectorMath;
+import com.rapidminer.tools.math.similarity.DistanceMeasures;
 
 import Jama.Matrix;
 
@@ -61,6 +63,8 @@ import Jama.Matrix;
  * @author Regina Fritsch
  */
 public class EMClusterer extends RMAbstractClusterer {
+
+	private static final OperatorVersion BEFORE_MEASURE_PARAM = new OperatorVersion(7, 5, 3);
 
 	/** The parameter name for &quot;the maximal number of clusters&quot; */
 	public static final String PARAMETER_K = "k";
@@ -95,32 +99,20 @@ public class EMClusterer extends RMAbstractClusterer {
 	/** The parameter name for &quot;List of the different init distributions&quot; */
 	public static final String[] INIT_DISTRIBUTION = { "randomly assigned examples", "k-means run", "average parameters" };
 
-	/** The parameter name for &quot;Init distributions randomly assigned&quot; */
+	/** The parameter value for &quot;Init distributions randomly assigned&quot; */
 	public static final int RANDOMLY_ASSIGNED = 0;
 
-	/** The parameter name for &quot;Init distributions hard clustering&quot; */
+	/** The parameter value for &quot;Init distributions hard clustering&quot; */
 	public static final int K_MEANS = 1;
 
-	/** The parameter name for &quot;Init distributions average parameters&quot; */
+	/** The parameter value for &quot;Init distributions average parameters&quot; */
 	public static final int AVERAGE_PARAMETERS = 2;
 
 	/** The parameter name for &quot;Indicates if the example set has correlated attributes&quot; */
 	public static final String PARAMETER_CORRELATED = "correlated_attributes";
 
-	private CapabilityProvider capabilityProvider = new CapabilityProvider() {
-
-		@Override
-		public boolean supportsCapability(OperatorCapability capability) {
-			if (OperatorCapability.MISSING_VALUES.equals(capability)) {
-				return false;
-			}
-			return true;
-		}
-	};
-
 	public EMClusterer(OperatorDescription description) {
 		super(description);
-		getExampleSetInputPort().addPrecondition(new CapabilityPrecondition(capabilityProvider, getExampleSetInputPort()));
 	}
 
 	@Override
@@ -147,7 +139,7 @@ public class EMClusterer extends RMAbstractClusterer {
 		int restoreMaxRuns = getParameterAsInt(PARAMETER_MAX_RUNS);
 		boolean restoreCorrelated = getParameterAsBoolean(PARAMETER_CORRELATED);
 		boolean isCorrelated = getParameterAsBoolean(PARAMETER_CORRELATED);
-		boolean addAsLabel = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL);
+		boolean addAsLabel = addsLabelAttribute();
 		boolean removeUnlabeled = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED);
 		double quality = getParameterAsDouble(PARAMETER_QUALITY);
 		int k = getParameterAsInt(PARAMETER_K);
@@ -161,6 +153,10 @@ public class EMClusterer extends RMAbstractClusterer {
 
 		double max = Double.NEGATIVE_INFINITY;
 		int exceptionCounter = 0;
+
+		int[] bestAssignments = null;
+
+		RandomGenerator randomGenerator = RandomGenerator.getGlobalRandomGenerator();
 
 		// the iterations
 		for (int iter = 0; iter < restoreMaxRuns; iter++) {
@@ -196,7 +192,7 @@ public class EMClusterer extends RMAbstractClusterer {
 					for (int exampleIndex = 0; exampleIndex < exampleSet.size(); exampleIndex++) {
 						int bestIndex = bestIndex(exampleIndex, k, exampleInClusterProbability);
 						if (bestIndex < 0) {
-							bestIndex = RandomGenerator.getGlobalRandomGenerator().nextInt(result.getNumberOfClusters());
+							bestIndex = randomGenerator.nextInt(result.getNumberOfClusters());
 						}
 						clusterAssignments[exampleIndex] = bestIndex;
 					}
@@ -236,6 +232,7 @@ public class EMClusterer extends RMAbstractClusterer {
 			if (Math.abs(logLikelyHood) > max) {
 				max = Math.abs(logLikelyHood);
 				bestModel = result;
+				bestAssignments = clusterAssignments;
 				if (showProbs() == true) {
 					setProbabilitiesInTable(exampleSet, exampleInClusterProbability);
 					bestModel.setExampleInClusterProbability(exampleInClusterProbability);
@@ -247,6 +244,10 @@ public class EMClusterer extends RMAbstractClusterer {
 		// restore original values
 		setParameter(PARAMETER_MAX_RUNS, "" + restoreMaxRuns);
 		setParameter(PARAMETER_CORRELATED, "" + restoreCorrelated);
+
+		if (addsClusterAttribute()) {
+			addClusterAssignments(exampleSet, bestAssignments);
+		}
 
 		return bestModel;
 	}
@@ -312,6 +313,14 @@ public class EMClusterer extends RMAbstractClusterer {
 				ExampleSet clusterSet = (ExampleSet) exampleSet.clone();
 				clusterAlgorithm.setParameter(KMeans.PARAMETER_K, "" + k);
 				clusterAlgorithm.setParameter(RMAbstractClusterer.PARAMETER_ADD_CLUSTER_ATTRIBUTE, "true");
+				
+				if (getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED)) {
+					clusterAlgorithm.setParameter(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED, Boolean.toString(true));
+					clusterAlgorithm.setParameter(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED,
+							getParameter(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+				}
+
+				clusterAlgorithm.setPresetMeasure(DistanceMeasures.createMeasure(this));
 				clusterAlgorithm.generateClusterModel(clusterSet); // ad a side effect, add cluster
 				// attribute to clusterSet
 
@@ -422,32 +431,15 @@ public class EMClusterer extends RMAbstractClusterer {
 			FlatFuzzyClusterModel result, Random random) {
 		// various initializations
 		double[] max = new double[exampleSet.getAttributes().size()];
-		double[] min = new double[exampleSet.getAttributes().size()];
-		double[] average = new double[exampleSet.getAttributes().size()];
-		for (int j = 0; j < min.length; j++) {
-			min[j] = Double.POSITIVE_INFINITY;
-		}
-
-		// compute average, minimum and maximum values of the attributes
-		Attribute[] regularAttributes = exampleSet.getAttributes().createRegularAttributeArray();
+		double[] min = new double[max.length];
+		double[] average = new double[max.length];
+		exampleSet.recalculateAllAttributeStatistics();
 		int i = 0;
-		for (Example ex : exampleSet) {
-			int j = 0;
-			for (Attribute attribute : regularAttributes) {
-				double value = ex.getValue(attribute);
-				average[j] += value;
-				if (value < min[j]) {
-					min[j] = value;
-				} else if (value > max[j]) {
-					max[j] = value;
-				}
-				j++;
-			}
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			max[i] = exampleSet.getStatistics(attribute, Statistics.MAXIMUM);
+			min[i] = exampleSet.getStatistics(attribute, Statistics.MINIMUM);
+			average[i] = exampleSet.getStatistics(attribute, Statistics.AVERAGE);
 			i++;
-		}
-
-		for (int j = 0; j < average.length; j++) {
-			average[j] = average[j] / exampleSet.size();
 		}
 
 		// make it random (to get different initializations for the different iterations)
@@ -750,7 +742,7 @@ public class EMClusterer extends RMAbstractClusterer {
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
+	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
 		// get parameters
 		int k = getParameterAsInt(PARAMETER_K);
 
@@ -765,23 +757,14 @@ public class EMClusterer extends RMAbstractClusterer {
 		}
 
 		ClusterModel model = createClusterModel(exampleSet);
-		Attribute idAttribute = exampleSet.getAttributes().getId();
-		if (addsClusterAttribute()) {
-			Attribute cluster = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
-			exampleSet.getExampleTable().addAttribute(cluster);
-			exampleSet.getAttributes().setCluster(cluster);
-			if (idAttribute.isNumerical()) {
-				for (Example example : exampleSet) {
-					example.setValue(cluster, "cluster_" + model.getClusterIndexOfId(example.getValue(idAttribute)));
-				}
-			} else {
-				for (Example example : exampleSet) {
-					example.setValue(cluster, "cluster_" + model.getClusterIndexOfId(example.getValueAsString(idAttribute)));
-				}
-			}
-		}
 
 		return model;
+
+	}
+
+	@Override
+	protected boolean handlesInfiniteValues() {
+		return false;
 	}
 
 	@Override
@@ -811,9 +794,34 @@ public class EMClusterer extends RMAbstractClusterer {
 				"Insert probabilities for every cluster with every example in the example set.", true));
 		types.add(new ParameterTypeCategory(PARAMETER_INITIALIZATION_DISTRIBUTION,
 				"Indicates the inital distribution of the centroids.", INIT_DISTRIBUTION, K_MEANS));
+		addDistMeasureParams(types);
 		types.add(new ParameterTypeBoolean(PARAMETER_CORRELATED,
 				"Has to be activated, if the example set contains correlated attributes.", true));
 
 		return types;
 	}
+
+	private void addDistMeasureParams(List<ParameterType> types) {
+		List<ParameterType> measureParams = DistanceMeasures.getParameterTypesForNumAndDiv(this);
+		ParameterType param = measureParams.get(0);
+		param.registerDependencyCondition(new AboveOperatorVersionCondition(this, BEFORE_MEASURE_PARAM));
+		param.setDefaultValue(DistanceMeasures.DIVERGENCES_TYPE - DistanceMeasures.NUMERICAL_MEASURES_TYPE);
+		param.registerDependencyCondition(
+				new EqualTypeCondition(this, PARAMETER_INITIALIZATION_DISTRIBUTION, INIT_DISTRIBUTION, false, K_MEANS));
+		measureParams.get(2).setDefaultValue(6);
+		measureParams.forEach(p -> p.setExpert(true));
+		types.addAll(measureParams);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] old = super.getIncompatibleVersionChanges();
+		OperatorVersion[] newVersions = new OperatorVersion[old.length + 1];
+		if (old.length != 0) {
+			System.arraycopy(old, 0, newVersions, 0, old.length);
+		}
+		newVersions[old.length] = BEFORE_MEASURE_PARAM;
+		return newVersions;
+	}
+
 }

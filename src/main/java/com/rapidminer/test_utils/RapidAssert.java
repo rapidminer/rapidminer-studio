@@ -504,7 +504,7 @@ public class RapidAssert extends Assert {
 			Attribute expectedSpecial = allExpectedAttributes.get(i);
 			String expectedName = expectedSpecial.getName();
 			String actualName = null;
-			for (int j = 0; i < allActualAttributes.size(); j++) {
+			for (int j = 0; j < allActualAttributes.size(); j++) {
 				Attribute actualSpecial = allActualAttributes.get(j);
 				actualName = actualSpecial.getName();
 				if (expectedName.equals(actualName)) {
@@ -522,7 +522,6 @@ public class RapidAssert extends Assert {
 					allExpectedAttributes.remove(expectedSpecial);
 					allActualAttributes.remove(actualSpecial);
 					i--;
-					j--;
 					break;
 				}
 			}

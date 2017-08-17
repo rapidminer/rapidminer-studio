@@ -73,6 +73,7 @@ import com.rapidminer.tools.math.similarity.numerical.OverlapNumericalSimilarity
 public class DistanceMeasures {
 
 	public static final String PARAMETER_MEASURE_TYPES = "measure_types";
+	public static final String PARAMETER_NUMERICAL_MEASURE_TYPES = "numerical_measure_types";
 	public static final String PARAMETER_NOMINAL_MEASURE = "nominal_measure";
 	public static final String PARAMETER_NUMERICAL_MEASURE = "numerical_measure";
 	public static final String PARAMETER_MIXED_MEASURE = "mixed_measure";
@@ -85,6 +86,9 @@ public class DistanceMeasures {
 	public static final int NOMINAL_MEASURES_TYPE = 1;
 	public static final int NUMERICAL_MEASURES_TYPE = 2;
 	public static final int DIVERGENCES_TYPE = 3;
+	public static final int KERNEL_IN_NUMERICAL = 9;
+	public static final String[] NUMERICAL_MEASURE_TYPES = Arrays.copyOfRange(MEASURE_TYPES, NUMERICAL_MEASURES_TYPE,
+			DIVERGENCES_TYPE + 1);
 
 	private static String[] NOMINAL_MEASURES = new String[] { "NominalDistance", "DiceSimilarity", "JaccardSimilarity",
 			"KulczynskiSimilarity", "RogersTanimotoSimilarity", "RussellRaoSimilarity", "SimpleMatchingSimilarity" };
@@ -154,19 +158,11 @@ public class DistanceMeasures {
 	 */
 	public static DistanceMeasure createMeasure(ParameterHandler parameterHandler)
 			throws UndefinedParameterError, OperatorException {
-		return createMeasure(parameterHandler, null, null);
-	}
-
-	/**
-	 * @deprecated ioContainer is not used. Use a {@link DistanceMeasureHelper} to obtain distance
-	 *             measures.
-	 */
-	@Deprecated
-	public static DistanceMeasure createMeasure(ParameterHandler parameterHandler, ExampleSet exampleSet,
-			IOContainer ioContainer) throws UndefinedParameterError, OperatorException {
 		int measureType;
 		if (parameterHandler.isParameterSet(PARAMETER_MEASURE_TYPES)) {
 			measureType = parameterHandler.getParameterAsInt(PARAMETER_MEASURE_TYPES);
+		} else if (parameterHandler.isParameterSet(PARAMETER_NUMERICAL_MEASURE_TYPES)) {
+			measureType = parameterHandler.getParameterAsInt(PARAMETER_NUMERICAL_MEASURE_TYPES) + NUMERICAL_MEASURES_TYPE;
 		} else {
 			// if type is not set, then might be there is no type selection: Test if one definition
 			// is present
@@ -203,9 +199,6 @@ public class DistanceMeasures {
 			DistanceMeasure measure;
 			try {
 				measure = measureClass.newInstance();
-				if (exampleSet != null) {
-					measure.init(exampleSet, parameterHandler);
-				}
 				return measure;
 			} catch (InstantiationException e) {
 				throw new OperatorException("Could not instanciate distance measure " + measureClass);
@@ -216,8 +209,33 @@ public class DistanceMeasures {
 		return null;
 	}
 
+	/**
+	 * @deprecated ioContainer is not used. Use a {@link DistanceMeasureHelper} to obtain distance
+	 *             measures.
+	 */
+	@Deprecated
+	public static DistanceMeasure createMeasure(ParameterHandler parameterHandler, ExampleSet exampleSet,
+			IOContainer ioContainer) throws UndefinedParameterError, OperatorException {
+		DistanceMeasure measure = createMeasure(parameterHandler);
+		if (measure == null) {
+			return null;
+		}
+		if (exampleSet != null) {
+			measure.init(exampleSet, parameterHandler);
+		}
+		return measure;
+	}
+
 	public static int getSelectedMeasureType(ParameterHandler parameterHandler) throws UndefinedParameterError {
 		return parameterHandler.getParameterAsInt(PARAMETER_MEASURE_TYPES);
+	}
+
+	public static boolean measureTypeSupportsNominalValues(int measureType) {
+		return measureType == NOMINAL_MEASURES_TYPE || measureType == MIXED_MEASURES_TYPE;
+	}
+
+	public static boolean measureTypeSupportsNumericalValues(int measureType) {
+		return measureType != NOMINAL_MEASURES_TYPE;
 	}
 
 	/**
@@ -229,36 +247,78 @@ public class DistanceMeasures {
 		ParameterType type = new ParameterTypeCategory(PARAMETER_MIXED_MEASURE, "Select measure",
 				MEASURE_ARRAYS[MIXED_MEASURES_TYPE], 0, false);
 		type.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_MEASURE_TYPES, MEASURE_TYPES,
-				false, 0));
+				false, MIXED_MEASURES_TYPE));
 		list.add(type);
 		type = new ParameterTypeCategory(PARAMETER_NOMINAL_MEASURE, "Select measure", MEASURE_ARRAYS[NOMINAL_MEASURES_TYPE],
 				0, false);
 		type.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_MEASURE_TYPES, MEASURE_TYPES,
-				false, 1));
+				false, NOMINAL_MEASURES_TYPE));
 		list.add(type);
 		type = new ParameterTypeCategory(PARAMETER_NUMERICAL_MEASURE, "Select measure",
 				MEASURE_ARRAYS[NUMERICAL_MEASURES_TYPE], 0, false);
 		type.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_MEASURE_TYPES, MEASURE_TYPES,
-				false, 2));
+				false, NUMERICAL_MEASURES_TYPE));
 		list.add(type);
 		type = new ParameterTypeCategory(PARAMETER_DIVERGENCE, "Select divergence", MEASURE_ARRAYS[DIVERGENCES_TYPE], 0,
 				false);
-		type.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_MEASURE_TYPES, MEASURE_TYPES,
-				false, 3));
+		type.registerDependencyCondition(
+				new EqualTypeCondition(parameterHandler, PARAMETER_MEASURE_TYPES, MEASURE_TYPES, false, DIVERGENCES_TYPE));
 		list.add(type);
-		list.addAll(registerDependency(Kernel.getParameters(parameterHandler), 9, parameterHandler));
+		list.addAll(registerDependency(Kernel.getParameters(parameterHandler), KERNEL_IN_NUMERICAL, parameterHandler));
 
 		return list;
 	}
 
 	/**
-	 * This method provides the parameters to chose only from numerical measures.
+	 * This method provides the parameters to choose only from numerical and divergence distance
+	 * measures.
+	 *
+	 * @since 7.6
+	 */
+	public static List<ParameterType> getParameterTypesForNumAndDiv(Operator parameterHandler) {
+		List<ParameterType> list = new LinkedList<ParameterType>();
+		list.add(new ParameterTypeCategory(PARAMETER_NUMERICAL_MEASURE_TYPES, "The measure type", NUMERICAL_MEASURE_TYPES, 0,
+				false));
+		ParameterType type = new ParameterTypeCategory(PARAMETER_NUMERICAL_MEASURE, "Select measure",
+				MEASURE_ARRAYS[NUMERICAL_MEASURES_TYPE], 0, false);
+		type.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_NUMERICAL_MEASURE_TYPES,
+				NUMERICAL_MEASURE_TYPES, false, NUMERICAL_MEASURES_TYPE - NUMERICAL_MEASURES_TYPE));
+		list.add(type);
+		type = new ParameterTypeCategory(PARAMETER_DIVERGENCE, "Select divergence", MEASURE_ARRAYS[DIVERGENCES_TYPE], 0,
+				false);
+		type.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_NUMERICAL_MEASURE_TYPES,
+				NUMERICAL_MEASURE_TYPES, false, DIVERGENCES_TYPE - NUMERICAL_MEASURES_TYPE));
+		list.add(type);
+		for (ParameterType kernelType : Kernel.getParameters(parameterHandler)) {
+			kernelType.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_NUMERICAL_MEASURE,
+					MEASURE_ARRAYS[NUMERICAL_MEASURES_TYPE], false, KERNEL_IN_NUMERICAL));
+			type.registerDependencyCondition(new EqualTypeCondition(parameterHandler, PARAMETER_NUMERICAL_MEASURE_TYPES,
+					NUMERICAL_MEASURE_TYPES, false, NUMERICAL_MEASURES_TYPE - NUMERICAL_MEASURES_TYPE));
+			kernelType.setExpert(true);
+			list.add(kernelType);
+		}
+
+		return list;
+	}
+
+	/**
+	 * This method provides the parameters to choose only from numerical measures.
 	 */
 	public static List<ParameterType> getParameterTypesForNumericals(ParameterHandler handler) {
 		List<ParameterType> list = new LinkedList<ParameterType>();
 		ParameterType type = new ParameterTypeCategory(PARAMETER_NUMERICAL_MEASURE, "Select measure",
 				MEASURE_ARRAYS[NUMERICAL_MEASURES_TYPE], 0);
 		list.add(type);
+		if (!(handler instanceof Operator)) {
+			return list;
+		}
+		Operator operator = (Operator) handler;
+		for (ParameterType kernelType : Kernel.getParameters(operator)) {
+			kernelType.registerDependencyCondition(new EqualTypeCondition(operator, PARAMETER_NUMERICAL_MEASURE,
+					MEASURE_ARRAYS[NUMERICAL_MEASURES_TYPE], false, KERNEL_IN_NUMERICAL));
+			kernelType.setExpert(true);
+			list.add(kernelType);
+		}
 		return list;
 	}
 
@@ -267,8 +327,8 @@ public class DistanceMeasures {
 		for (ParameterType type : sourceTypeList) {
 			type.registerDependencyCondition(new EqualTypeCondition(handler, PARAMETER_NUMERICAL_MEASURE,
 					MEASURE_ARRAYS[NUMERICAL_MEASURES_TYPE], false, selectedValue));
-			type.registerDependencyCondition(new EqualTypeCondition(handler, PARAMETER_MEASURE_TYPES, MEASURE_TYPES, false,
-					NUMERICAL_MEASURES_TYPE));
+			type.registerDependencyCondition(
+					new EqualTypeCondition(handler, PARAMETER_MEASURE_TYPES, MEASURE_TYPES, false, NUMERICAL_MEASURES_TYPE));
 		}
 		return sourceTypeList;
 	}

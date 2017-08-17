@@ -111,16 +111,8 @@ public class ParameterSet extends ResultObjectAdapter {
 	}
 
 	public void save(File file) throws IOException {
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new FileWriter(file));
+		try (FileWriter fw = new FileWriter(file); PrintWriter out = new PrintWriter(fw)) {
 			writeParameterSet(out, Tools.getDefaultEncoding());
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (out != null) {
-				out.close();
-			}
 		}
 	}
 

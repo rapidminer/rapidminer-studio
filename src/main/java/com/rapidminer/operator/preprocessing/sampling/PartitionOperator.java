@@ -1,29 +1,30 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing.sampling;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
@@ -43,12 +44,10 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-
 
 /**
  * Divides a data set into the defined partitions and deliver the subsets.
- * 
+ *
  * @author Tobias Malbrecht
  */
 public class PartitionOperator extends Operator {
@@ -58,8 +57,6 @@ public class PartitionOperator extends Operator {
 	public static final String PARAMETER_RATIO = "ratio";
 
 	public static final String PARAMETER_SAMPLING_TYPE = "sampling_type";
-
-	private static final OperatorVersion DEFAULT_MODE_AUTO = new OperatorVersion("7.5.0-SNAPSHOT");
 
 	private InputPort exampleSetInput = getInputPorts().createPort("example set", ExampleSet.class);
 	private OutputPortExtender outExtender = new OutputPortExtender("partition", getOutputPorts());
@@ -176,13 +173,8 @@ public class PartitionOperator extends Operator {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeEnumeration(PARAMETER_PARTITIONS, "The partitions that should be created.",
 				new ParameterTypeDouble(PARAMETER_RATIO, "The relative size of this partition.", 0, 1), false));
-		int samplingType = SplittedExampleSet.SHUFFLED_SAMPLING;
-		// Since 7.5.0 automatic is the default sampling type
-		if (getCompatibilityLevel().isAtLeast(DEFAULT_MODE_AUTO)) {
-			samplingType = SplittedExampleSet.AUTOMATIC;
-		}
 		types.add(new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE, "Defines the sampling type of this operator.",
-				SplittedExampleSet.SAMPLING_NAMES, samplingType, false));
+				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.AUTOMATIC, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
 	}

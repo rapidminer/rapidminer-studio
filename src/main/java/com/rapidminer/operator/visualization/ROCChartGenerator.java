@@ -18,8 +18,10 @@
 */
 package com.rapidminer.operator.visualization;
 
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -103,14 +105,10 @@ public class ROCChartGenerator extends Operator {
 	@Override
 	public void doWork() throws OperatorException {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
-		if (exampleSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
-		}
-		if (!exampleSet.getAttributes().getLabel().isNominal()) {
-			throw new UserError(this, 101, "ROC Charts", exampleSet.getAttributes().getLabel());
-		}
-		if (exampleSet.getAttributes().getLabel().getMapping().getValues().size() != 2) {
-			throw new UserError(this, 114, "ROC Charts", exampleSet.getAttributes().getLabel());
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
+		Attribute label = exampleSet.getAttributes().getLabel();
+		if (label.getMapping().size() != 2) {
+			throw new UserError(this, 114, "ROC Charts", label);
 		}
 
 		if (exampleSet.getAttributes().getPredictedLabel() != null && getParameterAsBoolean(PARAMETER_USE_MODEL)) {

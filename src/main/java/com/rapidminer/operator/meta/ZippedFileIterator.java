@@ -97,45 +97,51 @@ public class ZippedFileIterator extends AbstractFileIterator {
 		} catch (IOException e) {
 			throw new UserError(this, 301, physicalZipFile.getAbsolutePath());
 		}
+		try {
+			String rootDirectory = getParameterAsString(PARAMETER_INTERNAL_DIRECTORY);
 
-		String rootDirectory = getParameterAsString(PARAMETER_INTERNAL_DIRECTORY);
-
-		// init Operator progress and store the entries which meet all criteria
-		Enumeration<? extends ZipEntry> entries = zipFile.entries();
-		LinkedList<EntryContainer> entriesOfIntrest = new LinkedList<>();
-		while (entries.hasMoreElements()) {
-			ZipEntry currentEntry = entries.nextElement();
-			String fullPath = currentEntry.getName();
-			String[] pathParts = fullPath.split("/");
-			String fileName = pathParts[pathParts.length - 1];
-			StringBuilder builder = new StringBuilder();
-			for (int i = 0; i < pathParts.length - 1; ++i) {
-				builder.append(pathParts[i]);
-				if (i != pathParts.length - 2) {
-					builder.append("/");
+			// init Operator progress and store the entries which meet all criteria
+			LinkedList<EntryContainer> entriesOfIntrest = new LinkedList<>();
+			Enumeration<? extends ZipEntry> entries = zipFile.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry currentEntry = entries.nextElement();
+				String fullPath = currentEntry.getName();
+				String[] pathParts = fullPath.split("/");
+				String fileName = pathParts[pathParts.length - 1];
+				StringBuilder builder = new StringBuilder();
+				for (int i = 0; i < pathParts.length - 1; ++i) {
+					builder.append(pathParts[i]);
+					if (i != pathParts.length - 2) {
+						builder.append("/");
+					}
 				}
-			}
-			String parentPath = builder.toString();
+				String parentPath = builder.toString();
 
-			if (iterateFiles && !currentEntry.isDirectory() || iterateSubDirs && currentEntry.isDirectory()) {
-				if (recursive
-						&& parentPath.startsWith(rootDirectory)
-						|| !recursive
-						&& (rootDirectory.isEmpty() && parentPath.isEmpty() || !rootDirectory.isEmpty()
-								&& parentPath.equals(rootDirectory))) {
-					if (matchesFilter(filter, fileName, fullPath, parentPath)) {
-						FileObject fileObject = new ZipEntryObject(currentEntry, zipFile);
-						entriesOfIntrest.add(new EntryContainer(fileName, fullPath, parentPath, fileObject));
+				if (iterateFiles && !currentEntry.isDirectory() || iterateSubDirs && currentEntry.isDirectory()) {
+					if (recursive && parentPath.startsWith(rootDirectory)
+							|| !recursive && (rootDirectory.isEmpty() && parentPath.isEmpty()
+									|| !rootDirectory.isEmpty() && parentPath.equals(rootDirectory))) {
+						if (matchesFilter(filter, fileName, fullPath, parentPath)) {
+							FileObject fileObject = new ZipEntryObject(currentEntry, zipFile);
+							entriesOfIntrest.add(new EntryContainer(fileName, fullPath, parentPath, fileObject));
+						}
 					}
 				}
 			}
-		}
-		getProgress().setTotal(entriesOfIntrest.size());
+			getProgress().setTotal(entriesOfIntrest.size());
 
-		// do actual work
-		for (EntryContainer entry : entriesOfIntrest) {
-			doWorkForSingleIterationStep(entry.fileName, entry.fullPath, entry.parentPath, entry.fileObject);
-			getProgress().step();
+			// do actual work
+			for (EntryContainer entry : entriesOfIntrest) {
+				doWorkForSingleIterationStep(entry.fileName, entry.fullPath, entry.parentPath, entry.fileObject);
+				getProgress().step();
+			}
+		} catch (Exception e) {
+			try {
+				zipFile.close();
+			} catch (IOException ioe) {
+				e.addSuppressed(ioe);
+			}
+			throw e;
 		}
 	}
 

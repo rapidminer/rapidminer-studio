@@ -275,21 +275,13 @@ public class AttributeWeights extends AverageVector {
 	}
 
 	public void writeAttributeWeights(File file, Charset encoding) throws IOException {
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new FileWriter(file));
+		try (FileWriter fw = new FileWriter(file); PrintWriter out = new PrintWriter(fw)) {
 			out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 			out.println("<attributeweights version=\"" + RapidMiner.getShortVersion() + "\">");
 			for (Entry<String, AttributeWeight> entry : weightMap.entrySet()) {
 				out.println("    <weight name=\"" + entry.getKey() + "\" value=\"" + entry.getValue().getWeight() + "\"/>");
 			}
 			out.println("</attributeweights>");
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (out != null) {
-				out.close();
-			}
 		}
 	}
 

@@ -18,7 +18,6 @@
 */
 package com.rapidminer.gui.new_plotter.engine.jfreechart.renderer;
 
-import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.engine.jfreechart.RenderFormatDelegate;
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 
@@ -78,7 +77,6 @@ public class FormattedXYDifferenceRenderer extends XYDifferenceRenderer implemen
 
 	@Override
 	public Paint getPositivePaint() {
-		StaticDebug.debug("getPositivePaint(): " + trueSeriesIdx);
 		Color color = getFormatDelegate().getSeriesColor(trueSeriesIdx);
 		if (color != null) {
 			return DataStructureUtils.setColorAlpha(color, color.getAlpha() / 2);
@@ -89,7 +87,6 @@ public class FormattedXYDifferenceRenderer extends XYDifferenceRenderer implemen
 
 	@Override
 	public Paint getNegativePaint() {
-		StaticDebug.debug("getNegativePaint(): " + trueSeriesIdx);
 		Color color = getFormatDelegate().getSeriesColor(trueSeriesIdx);
 		if (color != null) {
 			return (new Color(255 - color.getRed(), 255 - color.getGreen(), 255 - color.getBlue(), color.getAlpha() / 2));

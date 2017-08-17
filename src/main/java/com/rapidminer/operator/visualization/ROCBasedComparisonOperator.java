@@ -23,7 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorCapability;
@@ -115,14 +117,10 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 	public void doWork() throws OperatorException {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
 
-		if (exampleSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
-		}
-		if (!exampleSet.getAttributes().getLabel().isNominal()) {
-			throw new UserError(this, 101, "ROC Comparison", exampleSet.getAttributes().getLabel());
-		}
-		if (exampleSet.getAttributes().getLabel().getMapping().getValues().size() != 2) {
-			throw new UserError(this, 114, "ROC Comparison", exampleSet.getAttributes().getLabel());
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
+		Attribute label = exampleSet.getAttributes().getLabel();
+		if (label.getMapping().size() != 2) {
+			throw new UserError(this, 114, "ROC Comparison", label.getName());
 		}
 
 		Map<String, List<ROCData>> rocData = new HashMap<String, List<ROCData>>();

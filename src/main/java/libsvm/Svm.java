@@ -1711,8 +1711,9 @@ public class Svm {
 		for (i = 0; i < prob.l; i++) {
 			perm[i] = i;
 		}
+		RandomGenerator randomGenerator = RandomGenerator.getGlobalRandomGenerator();
 		for (i = 0; i < prob.l; i++) {
-			int j = i + (int) (RandomGenerator.getGlobalRandomGenerator().nextDouble() * (prob.l - i));
+			int j = i + (int) (randomGenerator.nextDouble() * (prob.l - i));
 			do {
 				int _ = perm[i];
 				perm[i] = perm[j];
@@ -2189,9 +2190,10 @@ public class Svm {
 			for (i = 0; i < l; i++) {
 				index[i] = perm[i];
 			}
+			RandomGenerator randomGenerator = RandomGenerator.getGlobalRandomGenerator();
 			for (c = 0; c < nr_class; c++) {
 				for (i = 0; i < count[c]; i++) {
-					int j = i + (int) (RandomGenerator.getGlobalRandomGenerator().nextDouble() * (count[c] - i));
+					int j = i + (int) (randomGenerator.nextDouble() * (count[c] - i));
 					do {
 						int _ = index[start[c] + j];
 						index[start[c] + j] = index[start[c] + i];
@@ -2434,92 +2436,90 @@ public class Svm {
 	static final String kernel_type_table[] = { "linear", "polynomial", "rbf", "sigmoid", "precomputed" };
 
 	public static void svm_save_model(String model_file_name, svm_model model) throws IOException {
-		DataOutputStream fp = new DataOutputStream(new FileOutputStream(model_file_name));
+		try (FileOutputStream fos = new FileOutputStream(model_file_name); DataOutputStream fp = new DataOutputStream(fos)) {
+			svm_parameter param = model.param;
 
-		svm_parameter param = model.param;
+			fp.writeBytes("svm_type " + svm_type_table[param.svm_type] + "\n");
+			fp.writeBytes("kernel_type " + kernel_type_table[param.kernel_type] + "\n");
 
-		fp.writeBytes("svm_type " + svm_type_table[param.svm_type] + "\n");
-		fp.writeBytes("kernel_type " + kernel_type_table[param.kernel_type] + "\n");
-
-		if (param.kernel_type == svm_parameter.POLY) {
-			fp.writeBytes("degree " + param.degree + "\n");
-		}
-
-		if (param.kernel_type == svm_parameter.POLY || param.kernel_type == svm_parameter.RBF
-				|| param.kernel_type == svm_parameter.SIGMOID) {
-			fp.writeBytes("gamma " + param.gamma + "\n");
-		}
-
-		if (param.kernel_type == svm_parameter.POLY || param.kernel_type == svm_parameter.SIGMOID) {
-			fp.writeBytes("coef0 " + param.coef0 + "\n");
-		}
-
-		int nr_class = model.nr_class;
-		int l = model.l;
-		fp.writeBytes("nr_class " + nr_class + "\n");
-		fp.writeBytes("total_sv " + l + "\n");
-
-		{
-			fp.writeBytes("rho");
-			for (int i = 0; i < nr_class * (nr_class - 1) / 2; i++) {
-				fp.writeBytes(" " + model.rho[i]);
-			}
-			fp.writeBytes("\n");
-		}
-
-		if (model.label != null) {
-			fp.writeBytes("label");
-			for (int i = 0; i < nr_class; i++) {
-				fp.writeBytes(" " + model.label[i]);
-			}
-			fp.writeBytes("\n");
-		}
-
-		if (model.probA != null) // regression has probA only
-		{
-			fp.writeBytes("probA");
-			for (int i = 0; i < nr_class * (nr_class - 1) / 2; i++) {
-				fp.writeBytes(" " + model.probA[i]);
-			}
-			fp.writeBytes("\n");
-		}
-		if (model.probB != null) {
-			fp.writeBytes("probB");
-			for (int i = 0; i < nr_class * (nr_class - 1) / 2; i++) {
-				fp.writeBytes(" " + model.probB[i]);
-			}
-			fp.writeBytes("\n");
-		}
-
-		if (model.nSV != null) {
-			fp.writeBytes("nr_sv");
-			for (int i = 0; i < nr_class; i++) {
-				fp.writeBytes(" " + model.nSV[i]);
-			}
-			fp.writeBytes("\n");
-		}
-
-		fp.writeBytes("SV\n");
-		double[][] sv_coef = model.sv_coef;
-		svm_node[][] SV = model.SV;
-
-		for (int i = 0; i < l; i++) {
-			for (int j = 0; j < nr_class - 1; j++) {
-				fp.writeBytes(sv_coef[j][i] + " ");
+			if (param.kernel_type == svm_parameter.POLY) {
+				fp.writeBytes("degree " + param.degree + "\n");
 			}
 
-			svm_node[] p = SV[i];
-			if (param.kernel_type == svm_parameter.PRECOMPUTED) {
-				fp.writeBytes("0:" + (int) p[0].value);
-			} else {
-				for (int j = 0; j < p.length; j++) {
-					fp.writeBytes(p[j].index + ":" + p[j].value + " ");
+			if (param.kernel_type == svm_parameter.POLY || param.kernel_type == svm_parameter.RBF
+					|| param.kernel_type == svm_parameter.SIGMOID) {
+				fp.writeBytes("gamma " + param.gamma + "\n");
+			}
+
+			if (param.kernel_type == svm_parameter.POLY || param.kernel_type == svm_parameter.SIGMOID) {
+				fp.writeBytes("coef0 " + param.coef0 + "\n");
+			}
+
+			int nr_class = model.nr_class;
+			int l = model.l;
+			fp.writeBytes("nr_class " + nr_class + "\n");
+			fp.writeBytes("total_sv " + l + "\n");
+
+			{
+				fp.writeBytes("rho");
+				for (int i = 0; i < nr_class * (nr_class - 1) / 2; i++) {
+					fp.writeBytes(" " + model.rho[i]);
 				}
+				fp.writeBytes("\n");
 			}
-			fp.writeBytes("\n");
-		}
 
-		fp.close();
+			if (model.label != null) {
+				fp.writeBytes("label");
+				for (int i = 0; i < nr_class; i++) {
+					fp.writeBytes(" " + model.label[i]);
+				}
+				fp.writeBytes("\n");
+			}
+
+			if (model.probA != null) // regression has probA only
+			{
+				fp.writeBytes("probA");
+				for (int i = 0; i < nr_class * (nr_class - 1) / 2; i++) {
+					fp.writeBytes(" " + model.probA[i]);
+				}
+				fp.writeBytes("\n");
+			}
+			if (model.probB != null) {
+				fp.writeBytes("probB");
+				for (int i = 0; i < nr_class * (nr_class - 1) / 2; i++) {
+					fp.writeBytes(" " + model.probB[i]);
+				}
+				fp.writeBytes("\n");
+			}
+
+			if (model.nSV != null) {
+				fp.writeBytes("nr_sv");
+				for (int i = 0; i < nr_class; i++) {
+					fp.writeBytes(" " + model.nSV[i]);
+				}
+				fp.writeBytes("\n");
+			}
+
+			fp.writeBytes("SV\n");
+			double[][] sv_coef = model.sv_coef;
+			svm_node[][] SV = model.SV;
+
+			for (int i = 0; i < l; i++) {
+				for (int j = 0; j < nr_class - 1; j++) {
+					fp.writeBytes(sv_coef[j][i] + " ");
+				}
+
+				svm_node[] p = SV[i];
+				if (param.kernel_type == svm_parameter.PRECOMPUTED) {
+					fp.writeBytes("0:" + (int) p[0].value);
+				} else {
+					for (int j = 0; j < p.length; j++) {
+						fp.writeBytes(p[j].index + ":" + p[j].value + " ");
+					}
+				}
+				fp.writeBytes("\n");
+			}
+		}
 	}
 
 	private static double atof(String s) {
@@ -2531,123 +2531,120 @@ public class Svm {
 	}
 
 	public static svm_model svm_load_model(String model_file_name) throws IOException {
-		BufferedReader fp = new BufferedReader(new FileReader(model_file_name));
+		try (FileReader fr = new FileReader(model_file_name); BufferedReader fp = new BufferedReader(fr)) {
+			// read parameters
+			svm_model model = new svm_model();
+			svm_parameter param = new svm_parameter();
+			model.param = param;
+			model.rho = null;
+			model.probA = null;
+			model.probB = null;
+			model.label = null;
+			model.nSV = null;
 
-		// read parameters
+			while (true) {
+				String cmd = fp.readLine();
+				String arg = cmd.substring(cmd.indexOf(' ') + 1);
 
-		svm_model model = new svm_model();
-		svm_parameter param = new svm_parameter();
-		model.param = param;
-		model.rho = null;
-		model.probA = null;
-		model.probB = null;
-		model.label = null;
-		model.nSV = null;
-
-		while (true) {
-			String cmd = fp.readLine();
-			String arg = cmd.substring(cmd.indexOf(' ') + 1);
-
-			if (cmd.startsWith("svm_type")) {
-				int i;
-				for (i = 0; i < svm_type_table.length; i++) {
-					if (arg.indexOf(svm_type_table[i]) != -1) {
-						param.svm_type = i;
-						break;
+				if (cmd.startsWith("svm_type")) {
+					int i;
+					for (i = 0; i < svm_type_table.length; i++) {
+						if (arg.indexOf(svm_type_table[i]) != -1) {
+							param.svm_type = i;
+							break;
+						}
 					}
-				}
-				if (i == svm_type_table.length) {
+					if (i == svm_type_table.length) {
+						return null;
+					}
+				} else if (cmd.startsWith("kernel_type")) {
+					int i;
+					for (i = 0; i < kernel_type_table.length; i++) {
+						if (arg.indexOf(kernel_type_table[i]) != -1) {
+							param.kernel_type = i;
+							break;
+						}
+					}
+					if (i == kernel_type_table.length) {
+						return null;
+					}
+				} else if (cmd.startsWith("degree")) {
+					param.degree = atoi(arg);
+				} else if (cmd.startsWith("gamma")) {
+					param.gamma = atof(arg);
+				} else if (cmd.startsWith("coef0")) {
+					param.coef0 = atof(arg);
+				} else if (cmd.startsWith("nr_class")) {
+					model.nr_class = atoi(arg);
+				} else if (cmd.startsWith("total_sv")) {
+					model.l = atoi(arg);
+				} else if (cmd.startsWith("rho")) {
+					int n = model.nr_class * (model.nr_class - 1) / 2;
+					model.rho = new double[n];
+					StringTokenizer st = new StringTokenizer(arg);
+					for (int i = 0; i < n; i++) {
+						model.rho[i] = atof(st.nextToken());
+					}
+				} else if (cmd.startsWith("label")) {
+					int n = model.nr_class;
+					model.label = new int[n];
+					StringTokenizer st = new StringTokenizer(arg);
+					for (int i = 0; i < n; i++) {
+						model.label[i] = atoi(st.nextToken());
+					}
+				} else if (cmd.startsWith("probA")) {
+					int n = model.nr_class * (model.nr_class - 1) / 2;
+					model.probA = new double[n];
+					StringTokenizer st = new StringTokenizer(arg);
+					for (int i = 0; i < n; i++) {
+						model.probA[i] = atof(st.nextToken());
+					}
+				} else if (cmd.startsWith("probB")) {
+					int n = model.nr_class * (model.nr_class - 1) / 2;
+					model.probB = new double[n];
+					StringTokenizer st = new StringTokenizer(arg);
+					for (int i = 0; i < n; i++) {
+						model.probB[i] = atof(st.nextToken());
+					}
+				} else if (cmd.startsWith("nr_sv")) {
+					int n = model.nr_class;
+					model.nSV = new int[n];
+					StringTokenizer st = new StringTokenizer(arg);
+					for (int i = 0; i < n; i++) {
+						model.nSV[i] = atoi(st.nextToken());
+					}
+				} else if (cmd.startsWith("SV")) {
+					break;
+				} else {
 					return null;
 				}
-			} else if (cmd.startsWith("kernel_type")) {
-				int i;
-				for (i = 0; i < kernel_type_table.length; i++) {
-					if (arg.indexOf(kernel_type_table[i]) != -1) {
-						param.kernel_type = i;
-						break;
-					}
-				}
-				if (i == kernel_type_table.length) {
-					return null;
-				}
-			} else if (cmd.startsWith("degree")) {
-				param.degree = atoi(arg);
-			} else if (cmd.startsWith("gamma")) {
-				param.gamma = atof(arg);
-			} else if (cmd.startsWith("coef0")) {
-				param.coef0 = atof(arg);
-			} else if (cmd.startsWith("nr_class")) {
-				model.nr_class = atoi(arg);
-			} else if (cmd.startsWith("total_sv")) {
-				model.l = atoi(arg);
-			} else if (cmd.startsWith("rho")) {
-				int n = model.nr_class * (model.nr_class - 1) / 2;
-				model.rho = new double[n];
-				StringTokenizer st = new StringTokenizer(arg);
-				for (int i = 0; i < n; i++) {
-					model.rho[i] = atof(st.nextToken());
-				}
-			} else if (cmd.startsWith("label")) {
-				int n = model.nr_class;
-				model.label = new int[n];
-				StringTokenizer st = new StringTokenizer(arg);
-				for (int i = 0; i < n; i++) {
-					model.label[i] = atoi(st.nextToken());
-				}
-			} else if (cmd.startsWith("probA")) {
-				int n = model.nr_class * (model.nr_class - 1) / 2;
-				model.probA = new double[n];
-				StringTokenizer st = new StringTokenizer(arg);
-				for (int i = 0; i < n; i++) {
-					model.probA[i] = atof(st.nextToken());
-				}
-			} else if (cmd.startsWith("probB")) {
-				int n = model.nr_class * (model.nr_class - 1) / 2;
-				model.probB = new double[n];
-				StringTokenizer st = new StringTokenizer(arg);
-				for (int i = 0; i < n; i++) {
-					model.probB[i] = atof(st.nextToken());
-				}
-			} else if (cmd.startsWith("nr_sv")) {
-				int n = model.nr_class;
-				model.nSV = new int[n];
-				StringTokenizer st = new StringTokenizer(arg);
-				for (int i = 0; i < n; i++) {
-					model.nSV[i] = atoi(st.nextToken());
-				}
-			} else if (cmd.startsWith("SV")) {
-				break;
-			} else {
-				fp.close();
-				return null;
 			}
+
+			// read sv_coef and SV
+
+			int m = model.nr_class - 1;
+			int l = model.l;
+			model.sv_coef = new double[m][l];
+			model.SV = new svm_node[l][];
+
+			for (int i = 0; i < l; i++) {
+				String line = fp.readLine();
+				StringTokenizer st = new StringTokenizer(line, " \t\n\r\f:");
+
+				for (int k = 0; k < m; k++) {
+					model.sv_coef[k][i] = atof(st.nextToken());
+				}
+				int n = st.countTokens() / 2;
+				model.SV[i] = new svm_node[n];
+				for (int j = 0; j < n; j++) {
+					model.SV[i][j] = new svm_node();
+					model.SV[i][j].index = atoi(st.nextToken());
+					model.SV[i][j].value = atof(st.nextToken());
+				}
+			}
+
+			return model;
 		}
-
-		// read sv_coef and SV
-
-		int m = model.nr_class - 1;
-		int l = model.l;
-		model.sv_coef = new double[m][l];
-		model.SV = new svm_node[l][];
-
-		for (int i = 0; i < l; i++) {
-			String line = fp.readLine();
-			StringTokenizer st = new StringTokenizer(line, " \t\n\r\f:");
-
-			for (int k = 0; k < m; k++) {
-				model.sv_coef[k][i] = atof(st.nextToken());
-			}
-			int n = st.countTokens() / 2;
-			model.SV[i] = new svm_node[n];
-			for (int j = 0; j < n; j++) {
-				model.SV[i][j] = new svm_node();
-				model.SV[i][j].index = atoi(st.nextToken());
-				model.SV[i][j].value = atof(st.nextToken());
-			}
-		}
-
-		fp.close();
-		return model;
 	}
 
 	public static String svm_check_parameter(svm_problem prob, svm_parameter param) {

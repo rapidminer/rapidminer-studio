@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.associations;
 
 import java.util.Collection;
@@ -65,7 +65,7 @@ public class AssociationRuleGenerator extends Operator {
 
 	public static final String PARAMETER_LAPLACE_K = "laplace_k";
 
-	public static final String[] CRITERIA = { "confidence", "lift", "conviction", "ps", "gain", "laplace" };
+	public static final String[] CRITERIA = {"confidence", "lift", "conviction", "ps", "gain", "laplace"};
 
 	public static final int CONFIDENCE = 0;
 	public static final int LIFT = 1;
@@ -92,7 +92,7 @@ public class AssociationRuleGenerator extends Operator {
 
 		FrequentItemSets sets = itemSetsInput.getData(FrequentItemSets.class);
 		AssociationRules rules = new AssociationRules();
-		HashMap<Collection<Item>, Integer> setFrequencyMap = new HashMap<Collection<Item>, Integer>();
+		HashMap<Collection<Item>, Integer> setFrequencyMap = new HashMap<>();
 		int numberOfTransactions = sets.getNumberOfTransactions();
 
 		// iterating sorted over every frequent Set, generating every possible rule and building
@@ -104,13 +104,13 @@ public class AssociationRuleGenerator extends Operator {
 			setFrequencyMap.put(set.getItems(), set.getFrequency());
 			// generating rule by splitting set in every two parts for head and body of rule
 			if (set.getItems().size() > 1) {
-				PowerSet<Item> powerSet = new PowerSet<Item>(set.getItems());
+				PowerSet<Item> powerSet = new PowerSet<>(set.getItems());
 				for (Collection<Item> premises : powerSet) {
-					if (premises.size() > 0 && premises.size() < set.getItems().size()) {
+					if (!premises.isEmpty() && premises.size() < set.getItems().size()) {
 						Collection<Item> conclusion = powerSet.getComplement(premises);
 						int totalFrequency = set.getFrequency();
-						int preconditionFrequency = setFrequencyMap.get(premises);
-						int conclusionFrequency = setFrequencyMap.get(conclusion);
+						int preconditionFrequency = setFrequencyMap.getOrDefault(premises, 0);
+						int conclusionFrequency = setFrequencyMap.getOrDefault(conclusion, 0);
 
 						double value = getCriterionValue(totalFrequency, preconditionFrequency, conclusionFrequency,
 								numberOfTransactions, theta, laplaceK, criterion);
@@ -124,9 +124,9 @@ public class AssociationRuleGenerator extends Operator {
 									numberOfTransactions));
 							rule.setPs(
 									getPs(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions));
-							rule.setGain(getGain(theta, totalFrequency, preconditionFrequency, conclusionFrequency,
+							rule.setGain(getGain(theta, totalFrequency, preconditionFrequency,
 									numberOfTransactions));
-							rule.setLaplace(getLaPlace(laplaceK, totalFrequency, preconditionFrequency, conclusionFrequency,
+							rule.setLaplace(getLaPlace(laplaceK, totalFrequency, preconditionFrequency,
 									numberOfTransactions));
 							rules.addItemRule(rule);
 						}
@@ -143,7 +143,7 @@ public class AssociationRuleGenerator extends Operator {
 	}
 
 	private double getCriterionValue(int totalFrequency, int preconditionFrequency, int conclusionFrequency,
-			int numberOfTransactions, double theta, double laplaceK, int criterion) {
+									 int numberOfTransactions, double theta, double laplaceK, int criterion) {
 		switch (criterion) {
 			case LIFT:
 				return getLift(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions);
@@ -152,9 +152,9 @@ public class AssociationRuleGenerator extends Operator {
 			case PS:
 				return getPs(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions);
 			case GAIN:
-				return getGain(theta, totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions);
+				return getGain(theta, totalFrequency, preconditionFrequency, numberOfTransactions);
 			case LAPLACE:
-				return getLaPlace(laplaceK, totalFrequency, preconditionFrequency, conclusionFrequency,
+				return getLaPlace(laplaceK, totalFrequency, preconditionFrequency,
 						numberOfTransactions);
 			case CONFIDENCE:
 			default:
@@ -162,14 +162,14 @@ public class AssociationRuleGenerator extends Operator {
 		}
 	}
 
-	private double getGain(double theta, int totalFrequency, int preconditionFrequency, int conclusionFrequency,
-			int numberOfTransactions) {
+	private double getGain(double theta, int totalFrequency, int preconditionFrequency,
+						   int numberOfTransactions) {
 		return getSupport(totalFrequency, numberOfTransactions)
 				- theta * getSupport(preconditionFrequency, numberOfTransactions);
 	}
 
 	private double getLift(int totalFrequency, int preconditionFrequency, int conclusionFrequency,
-			int numberOfTransactions) {
+						   int numberOfTransactions) {
 		return (double) totalFrequency * (double) numberOfTransactions
 				/ ((double) preconditionFrequency * conclusionFrequency);
 	}
@@ -179,16 +179,16 @@ public class AssociationRuleGenerator extends Operator {
 				* getSupport(conclusionFrequency, numberOfTransactions);
 	}
 
-	private double getLaPlace(double k, int totalFrequency, int preconditionFrequency, int conclusionFrequency,
-			int numberOfTransactions) {
+	private double getLaPlace(double k, int totalFrequency, int preconditionFrequency,
+							  int numberOfTransactions) {
 		return (getSupport(totalFrequency, numberOfTransactions) + 1d)
 				/ (getSupport(preconditionFrequency, numberOfTransactions) + k);
 	}
 
 	private double getConviction(int totalFrequency, int preconditionFrequency, int conclusionFrequency,
-			int numberOfTransactions) {
-		double numerator = preconditionFrequency * (numberOfTransactions - conclusionFrequency);
-		double denumerator = numberOfTransactions * (preconditionFrequency - totalFrequency);
+								 int numberOfTransactions) {
+		double numerator = (double) preconditionFrequency * (numberOfTransactions - conclusionFrequency);
+		double denumerator = (double) numberOfTransactions * (preconditionFrequency - totalFrequency);
 		return numerator / denumerator;
 	}
 

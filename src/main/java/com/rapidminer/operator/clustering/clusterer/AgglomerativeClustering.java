@@ -1,23 +1,24 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.clustering.clusterer;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,15 +30,20 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.gui.ExampleVisualizer;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.clustering.DendogramHierarchicalClusterModel;
 import com.rapidminer.operator.clustering.HierarchicalClusterLeafNode;
 import com.rapidminer.operator.clustering.HierarchicalClusterModel;
 import com.rapidminer.operator.clustering.HierarchicalClusterNode;
+import com.rapidminer.operator.learner.CapabilityProvider;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.CapabilityPrecondition;
 import com.rapidminer.operator.ports.metadata.DistanceMeasurePrecondition;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
@@ -60,7 +66,7 @@ import com.rapidminer.tools.math.similarity.DistanceMeasures;
  *
  * @author Sebastian Land
  */
-public class AgglomerativeClustering extends Operator {
+public class AgglomerativeClustering extends Operator implements CapabilityProvider {
 
 	public static final String PARAMETER_MODE = "mode";
 
@@ -79,6 +85,7 @@ public class AgglomerativeClustering extends Operator {
 		super(description);
 
 		exampleSetInput.addPrecondition(new DistanceMeasurePrecondition(exampleSetInput, this));
+		exampleSetInput.addPrecondition(new CapabilityPrecondition(this, exampleSetInput));
 
 		getTransformer().addRule(new GenerateNewMDRule(modelOutput, new MetaData(HierarchicalClusterModel.class)));
 		getTransformer().addRule(new ExampleSetPassThroughRule(exampleSetInput, exampleSetOutput, SetRelation.EQUAL) {
@@ -97,7 +104,16 @@ public class AgglomerativeClustering extends Operator {
 		DistanceMeasure measure = measureHelper.getInitializedMeasure(exampleSet);
 
 		// additional checks
-		Tools.onlyNonMissingValues(exampleSet, getOperatorClassName(), this, new String[0]);
+		Tools.isNonEmpty(exampleSet);
+		try {
+			Tools.hasRegularAttributes(exampleSet);
+		} catch (UserError ue) {
+			if (exampleSet.size() > 1 || getCompatibilityLevel().isAbove(AbstractClusterer.BEFORE_EMPTY_CHECKS)) {
+				throw ue;
+			}
+			logWarning(ue.getMessage());
+		}
+		Tools.onlyFiniteValues(exampleSet, getOperatorClassName(), this, new String[0]);
 		Tools.checkAndCreateIds(exampleSet);
 
 		// initialize operator progress
@@ -179,6 +195,28 @@ public class AgglomerativeClustering extends Operator {
 	}
 
 	@Override
+	public boolean supportsCapability(OperatorCapability capability) {
+		switch (capability) {
+			case BINOMINAL_ATTRIBUTES:
+			case POLYNOMINAL_ATTRIBUTES:
+			case NUMERICAL_ATTRIBUTES:
+			case NO_LABEL:
+			case NUMERICAL_LABEL:
+			case BINOMINAL_LABEL:
+			case ONE_CLASS_LABEL:
+			case POLYNOMINAL_LABEL:
+				return true;
+			case WEIGHTED_EXAMPLES:
+			case MISSING_VALUES:
+			case FORMULA_PROVIDER:
+			case UPDATABLE:
+			default:
+				return false;
+
+		}
+	}
+
+	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterTypeStringCategory type = new ParameterTypeStringCategory(PARAMETER_MODE, "Specifies the cluster mode.",
@@ -188,5 +226,13 @@ public class AgglomerativeClustering extends Operator {
 
 		types.addAll(DistanceMeasures.getParameterTypes(this));
 		return types;
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] old = super.getIncompatibleVersionChanges();
+		OperatorVersion[] versions = Arrays.copyOf(old, old.length + 1);
+		versions[old.length] = AbstractClusterer.BEFORE_EMPTY_CHECKS;
+		return versions;
 	}
 }

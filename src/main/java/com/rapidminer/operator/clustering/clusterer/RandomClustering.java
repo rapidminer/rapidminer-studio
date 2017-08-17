@@ -1,36 +1,36 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.clustering.clusterer;
 
+import java.util.Iterator;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
-import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 
 
@@ -52,7 +52,7 @@ public class RandomClustering extends RMAbstractClusterer {
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
+	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
 		// checking and creating ids if necessary
 		Tools.checkAndCreateIds(exampleSet);
 
@@ -65,35 +65,63 @@ public class RandomClustering extends RMAbstractClusterer {
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
 		int clusterAssignments[] = new int[exampleSet.size()];
 		int k = getParameterAsInt(PARAMETER_NUMBER_OF_CLUSTERS);
+		ClusterModel model = new ClusterModel(exampleSet, k, addsLabelAttribute(),
+				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
+		Attribute targetAttribute = null;
+		Iterator<Example> exIter = null;
+		if (addsClusterAttribute) {
+			// generating cluster attribute
+			targetAttribute = addClusterAttribute(exampleSet);
+			exIter = exampleSet.iterator();
+		}
 		for (int i = 0; i < exampleSet.size(); i++) {
 			clusterAssignments[i] = random.nextInt(k);
+			if (addsClusterAttribute) {
+				exIter.next().setValue(targetAttribute, "cluster_" + clusterAssignments[i]);
+			}
 			if (i % OPERATOR_PROGRESS_STEPS == 0) {
-				getProgress().setCompleted(addsClusterAttribute() ? i / 2 : i);
+				getProgress().setCompleted(i);
 			}
 		}
-
-		ClusterModel model = new ClusterModel(exampleSet, k,
-				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
-				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
 		model.setClusterAssignments(clusterAssignments, exampleSet);
 
-		// generating cluster attribute
-		if (addsClusterAttribute) {
-			Attribute cluster = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
-			exampleSet.getExampleTable().addAttribute(cluster);
-			exampleSet.getAttributes().setCluster(cluster);
-			int i = 0;
-			for (Example example : exampleSet) {
-				example.setValue(cluster, "cluster_" + clusterAssignments[i]);
-				i++;
-				if (i % OPERATOR_PROGRESS_STEPS == 0) {
-					getProgress().setCompleted(exampleSet.size() / 2 + i / 2);
-				}
-			}
-		}
 		getProgress().complete();
 
 		return model;
+	}
+
+	@Override
+	public boolean supportsCapability(OperatorCapability capability) {
+		switch (capability) {
+			case WEIGHTED_EXAMPLES:
+			case MISSING_VALUES:
+				return true;
+			default:
+				return super.supportsCapability(capability);
+		}
+	}
+
+	@Override
+	protected boolean supportsNominalValues() {
+		return true;
+	}
+
+	@Override
+	protected void checkNoNfiniteValues(ExampleSet exampleSet) throws OperatorException {}
+
+	@Override
+	protected boolean checksForExamples() {
+		return getCompatibilityLevel().isAbove(BEFORE_EMPTY_CHECKS);
+	}
+
+	@Override
+	protected boolean checksForRegularAttributes() {
+		return false;
+	}
+
+	@Override
+	protected boolean affectedByEmptyCheck() {
+		return true;
 	}
 
 	@Override

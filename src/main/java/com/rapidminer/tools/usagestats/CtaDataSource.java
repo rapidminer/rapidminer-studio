@@ -99,11 +99,12 @@ enum CtaDataSource {
 	public Connection getConnection() throws SQLException {
 		if (connection == null) {
 			connection = DriverManager.getConnection(DB_CONNECTION);
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate(CREATE_EVENT_TABLE_STATEMENT);
-			stmt.executeUpdate(CREATE_RULE_TABLE_STATEMENT);
-			stmt.executeUpdate(CREATE_EVENT_INDEX);
-			stmt.executeUpdate(CREATE_RULE_INDEX);
+			try (Statement stmt = connection.createStatement()) {
+				stmt.executeUpdate(CREATE_EVENT_TABLE_STATEMENT);
+				stmt.executeUpdate(CREATE_RULE_TABLE_STATEMENT);
+				stmt.executeUpdate(CREATE_EVENT_INDEX);
+				stmt.executeUpdate(CREATE_RULE_INDEX);
+			}
 		}
 		return connection;
 	}

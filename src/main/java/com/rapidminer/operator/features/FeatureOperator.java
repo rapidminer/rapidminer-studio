@@ -379,16 +379,10 @@ public abstract class FeatureOperator extends OperatorChain {
 			PopulationPlotter.fillDataTable(finalStatistics, new HashMap<String, double[]>(), population,
 					getParameterAsBoolean(PARAMETER_DRAW_DOMINATED_POINTS));
 			File outFile = getParameterAsFile(PARAMETER_POPULATION_CRITERIA_DATA_FILE, true);
-			PrintWriter out = null;
-			try {
-				out = new PrintWriter(new FileWriter(outFile));
+			try (FileWriter fw = new FileWriter(outFile); PrintWriter out = new PrintWriter(fw)) {
 				finalStatistics.write(out);
 			} catch (IOException e) {
 				throw new UserError(this, e, 303, new Object[] { outFile, e.getMessage() });
-			} finally {
-				if (out != null) {
-					out.close();
-				}
 			}
 		}
 

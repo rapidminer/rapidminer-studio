@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.GradientPaint;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -61,6 +62,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -70,6 +72,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
 
@@ -2365,6 +2368,47 @@ public class SwingTools {
 		if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.WINDOWS && AA_TEXT_PROPERTY != null) {
 			component.putClientProperty(AA_TEXT_PROPERTY, null);
 		}
+	}
+
+	/**
+	 * Creates a panel which is shown and fades slowly away.
+	 *
+	 * @param iconKey
+	 *            the I18N-string for the icon on the panel
+	 * @param messageKey
+	 *            the I18N-string for the message on the panel
+	 * @return a panel with specified icon and message
+	 */
+	public static JPanel createNotificationPanel(String iconKey, String messageKey) {
+		JPanel notificationPanel = new JPanel() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			protected void paintComponent(Graphics g) {
+
+				super.paintComponent(g);
+				Graphics2D g2 = (Graphics2D) g;
+				Color bg = getBackground();
+				GradientPaint gp = new GradientPaint(0, 0, bg.brighter(), 0, getHeight(), bg);
+				g2.setPaint(gp);
+				g2.fillRect(0, 0, getWidth(), getHeight());
+			}
+
+		};
+
+		notificationPanel.setLayout(new BoxLayout(notificationPanel, BoxLayout.X_AXIS));
+
+		JLabel icon = new JLabel();
+		icon.setIcon(SwingTools.createIcon("48/" + I18N.getGUIMessage(iconKey)));
+		icon.setBorder(new EmptyBorder(20, 20, 20, 10));
+
+		JLabel label = new JLabel("<html><div style='font-size:12px;'>" + I18N.getGUIMessage(messageKey) + "</div></html>");
+		label.setBorder(new EmptyBorder(20, 10, 20, 20));
+
+		notificationPanel.add(icon);
+		notificationPanel.add(label);
+		return notificationPanel;
 	}
 
 	/**

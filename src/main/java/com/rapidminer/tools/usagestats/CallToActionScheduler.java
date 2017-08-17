@@ -36,6 +36,7 @@ import com.rapidminer.gui.tools.bubble.WindowChoreographer;
 import com.rapidminer.studio.internal.RuleProviderRegistry;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector.Key;
 
 
@@ -63,7 +64,7 @@ public enum CallToActionScheduler {
 	private static final int CLEAN_INTERVAL = 1;
 
 	/** Skip iteration if still running */
-	private static AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
+	private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
 
 	private static WindowChoreographer choreographer = new WindowChoreographer();
 
@@ -85,42 +86,42 @@ public enum CallToActionScheduler {
 		exec = Executors.newSingleThreadScheduledExecutor();
 		// If any execution of the task encounters an exception, subsequent executions are
 		// suppressed
-		exec.scheduleAtFixedRate(new Runnable() {
-
-			@Override
-			public void run() {
-				if (IS_RUNNING.compareAndSet(false, true)) {
-					try {
-						LogService.getRoot().log(Level.FINE,
+		exec.scheduleAtFixedRate(() -> {
+			if (IS_RUNNING.compareAndSet(false, true)) {
+				try {
+					boolean isDebug = (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE)));
+					if (isDebug) {
+						LogService.getRoot().log(Level.FINEST,
 								"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.started");
-						persistEvents();
-						checkRules();
-						LogService.getRoot().log(Level.FINE,
-								"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.finished");
-					} finally {
-						IS_RUNNING.set(false);
 					}
+					persistEvents();
+					checkRules();
+					if (isDebug) {
+						LogService.getRoot().log(Level.FINEST,
+								"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.finished");
+					}
+				} finally {
+					IS_RUNNING.set(false);
 				}
 			}
-
 		}, INITIAL_DELAY, DELAY, TimeUnit.SECONDS);
 
-		exec.scheduleAtFixedRate(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					LogService.getRoot().log(Level.FINE,
+		exec.scheduleAtFixedRate(() -> {
+			try {
+				boolean isDebug = (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE)));
+				if (isDebug) {
+					LogService.getRoot().log(Level.FINEST,
 							"com.rapidminer.tools.usagestats.CallToActionScheduler.cleanup.started");
-					CtaDao.INSTANCE.cleanUpDatabase();
-					LogService.getRoot().log(Level.FINE,
-							"com.rapidminer.tools.usagestats.CallToActionScheduler.cleanup.finished");
-				} catch (SQLException e) {
-					LogService.getRoot().log(Level.WARNING,
-							"com.rapidminer.tools.usagestats.CallToActionScheduler.db.clean.failed", e);
 				}
+				CtaDao.INSTANCE.cleanUpDatabase();
+				if (isDebug) {
+					LogService.getRoot().log(Level.FINEST,
+							"com.rapidminer.tools.usagestats.CallToActionScheduler.cleanup.finished");
+				}
+			} catch (SQLException e) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.usagestats.CallToActionScheduler.db.clean.failed", e);
 			}
-
 		}, CLEAN_DELAY, CLEAN_INTERVAL, TimeUnit.HOURS);
 	}
 
@@ -136,7 +137,7 @@ public enum CallToActionScheduler {
 			persistEvents();
 			terminatedGracefully = exec.awaitTermination(DELAY, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
-			// do nothing
+			Thread.currentThread().interrupt();
 		} finally {
 			if (terminatedGracefully) {
 				LogService.getRoot().log(Level.FINE,
@@ -159,7 +160,7 @@ public enum CallToActionScheduler {
 		} catch (SQLException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.usagestats.CallToActionScheduler.storing.failure",
 					e);
-			throw new RuntimeException("The database died, shutting down CTA.", e);
+			throw new IllegalStateException("The database died, shutting down CTA.", e);
 		}
 	}
 
@@ -169,46 +170,45 @@ public enum CallToActionScheduler {
 	 */
 	private void checkRules() {
 		Collection<VerifiableRule> rules = RuleService.INSTANCE.getRules();
+		boolean isDebug = (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE)));
 		for (VerifiableRule rule : rules) {
 			// check if rule is fulfilled, if it is, create CTA popup and show it
 			long before = System.currentTimeMillis();
 			if (rule.isRuleFulfilled()) {
-				LogService.getRoot().log(Level.FINE,
-						"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.verification.triggered",
-						rule.getRule().getId());
+				if (isDebug) {
+					LogService.getRoot().log(Level.FINE,
+							"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.verification.triggered",
+							rule.getRule().getId());
+				}
 
 				// Display the CTA
 				final BrowserPopup cta = new BrowserPopup(rule.getRule().getMessage());
 				rule.setDisplaying(true);
-				SwingUtilities.invokeLater(() -> {
-					choreographer.addWindow(cta);
-				});
+				SwingUtilities.invokeLater(() -> choreographer.addWindow(cta));
 
 				// wait for results in separate thread (user may not click on CTA for ages)
-				new Thread(new Runnable() {
-
-					@Override
-					public void run() {
-						// Store the triggered state
-						try {
-							String result = cta.get();
-							rule.setDisplaying(false);
-							CtaDao.INSTANCE.triggered(rule.getRule(), result);
-							ActionStatisticsCollector.INSTANCE.logCtaRuleTriggered(rule.getRule().getId(), result);
-						} catch (SQLException e) {
-							LogService.getRoot().log(Level.WARNING,
-									I18N.getMessage(LogService.getRoot().getResourceBundle(),
-											"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.triggered.storage.failed",
-											rule.getRule().getId()),
-									e);
-						}
+				new Thread(() -> {
+					// Store the triggered state
+					try {
+						String result = cta.get();
+						rule.setDisplaying(false);
+						CtaDao.INSTANCE.triggered(rule.getRule(), result);
+						ActionStatisticsCollector.INSTANCE.logCtaRuleTriggered(rule.getRule().getId(), result);
+					} catch (SQLException e) {
+						LogService.getRoot().log(Level.WARNING,
+								I18N.getMessage(LogService.getRoot().getResourceBundle(),
+										"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.triggered.storage.failed",
+										rule.getRule().getId()),
+								e);
 					}
 				}).start();
 
 			}
-			LogService.getRoot().log(Level.FINE,
-					"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.verification.verify",
-					new Object[] { rule.getRule().getId(), System.currentTimeMillis() - before });
+			if (isDebug) {
+				LogService.getRoot().log(Level.FINEST,
+						"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.verification.verify",
+						new Object[] { rule.getRule().getId(), System.currentTimeMillis() - before });
+			}
 
 		}
 	}

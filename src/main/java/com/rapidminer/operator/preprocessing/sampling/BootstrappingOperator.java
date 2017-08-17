@@ -23,12 +23,12 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.MappedExampleSet;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MDInteger;
@@ -95,12 +95,9 @@ public class BootstrappingOperator extends AbstractSamplingOperator {
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
-		int size = exampleSet.size();
-
 		// cannot bootstrap without any examples
-		if (size < 1) {
-			throw new UserError(this, 117);
-		}
+		Tools.isNonEmpty(exampleSet);
+		int size = exampleSet.size();
 
 		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
 		switch (getParameterAsInt(PARAMETER_SAMPLE)) {

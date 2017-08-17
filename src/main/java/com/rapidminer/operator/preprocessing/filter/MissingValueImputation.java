@@ -29,6 +29,7 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.Condition;
 import com.rapidminer.example.set.ConditionCreationException;
 import com.rapidminer.example.set.ConditionedExampleSet;
@@ -339,9 +340,7 @@ public class MissingValueImputation extends OperatorChain {
 				}
 				break;
 			case INFORMATION_GAIN:
-				if (exampleSet.getAttributes().getLabel() == null) {
-					throw new UserError(this, 105);
-				}
+				Tools.isLabelled(exampleSet);
 				InfoGainWeighting infoGainWeightingOperator;
 				try {
 					infoGainWeightingOperator = OperatorService.createOperator(InfoGainWeighting.class);

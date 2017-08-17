@@ -60,10 +60,12 @@ public class ZTransformationNormalizationMethod extends AbstractNormalizationMet
 		HashMap<String, Tupel<Double, Double>> attributeMeanVarianceMap = new HashMap<String, Tupel<Double, Double>>();
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			if (attribute.isNumerical()) {
-				attributeMeanVarianceMap.put(
-						attribute.getName(),
-						new Tupel<Double, Double>(exampleSet.getStatistics(attribute, Statistics.AVERAGE), exampleSet
-								.getStatistics(attribute, Statistics.VARIANCE)));
+				double average = exampleSet.getStatistics(attribute, Statistics.AVERAGE);
+				double variance = exampleSet.getStatistics(attribute, Statistics.VARIANCE);
+				if (!Double.isFinite(average) || !Double.isFinite(variance)) {
+					nonFiniteValueWarning(operator, attribute.getName(), average, variance);
+				}
+				attributeMeanVarianceMap.put(attribute.getName(), new Tupel<Double, Double>(average, variance));
 			}
 		}
 		ZTransformationModel model = new ZTransformationModel(exampleSet, attributeMeanVarianceMap);

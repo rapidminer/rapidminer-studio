@@ -57,9 +57,9 @@ public class BufferedFileObject extends FileObject {
 		if (file == null) {
 			try {
 				file = File.createTempFile("rm_file_", ".dump");
-				FileOutputStream fos = new FileOutputStream(file);
-				fos.write(this.buffer);
-				fos.close();
+				try (FileOutputStream fos = new FileOutputStream(file)) {
+					fos.write(this.buffer);
+				}
 				file.deleteOnExit();
 			} catch (IOException e) {
 				throw new OperatorException("303", e, file, e.getMessage());

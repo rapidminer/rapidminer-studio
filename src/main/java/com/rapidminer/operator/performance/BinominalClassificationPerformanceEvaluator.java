@@ -81,15 +81,10 @@ public class BinominalClassificationPerformanceEvaluator extends AbstractPerform
 
 	@Override
 	protected void checkCompatibility(ExampleSet exampleSet) throws OperatorException {
-		Tools.isLabelled(exampleSet);
 		Tools.isNonEmpty(exampleSet);
+		Tools.hasNominalLabels(exampleSet, "the calculation of performance criteria for binominal classification tasks");
 
 		Attribute label = exampleSet.getAttributes().getLabel();
-		if (!label.isNominal()) {
-			throw new UserError(this, 101, "the calculation of performance criteria for binominal classification tasks",
-					label.getName());
-		}
-
 		if (label.getMapping().size() != 2) {
 			throw new UserError(this, 114, "the calculation of performance criteria for binominal classification tasks",
 					label.getName());

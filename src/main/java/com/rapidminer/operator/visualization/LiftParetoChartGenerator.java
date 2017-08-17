@@ -26,6 +26,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -131,15 +132,9 @@ public class LiftParetoChartGenerator extends Operator {
 	@Override
 	public void doWork() throws OperatorException {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
+
 		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
-
-		if (exampleSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
-		}
-
-		if (!exampleSet.getAttributes().getLabel().isNominal()) {
-			throw new UserError(this, 101, "Lift Charts", exampleSet.getAttributes().getLabel());
-		}
 
 		boolean cleanUp = false;
 		Model model = modelInput.getData(Model.class);

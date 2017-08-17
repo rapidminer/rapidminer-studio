@@ -79,10 +79,12 @@ public class RangeNormalizationMethod extends AbstractNormalizationMethod {
 		exampleSet.recalculateAllAttributeStatistics();
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			if (attribute.isNumerical()) {
-				attributeRanges.put(
-						attribute.getName(),
-						new Tupel<Double, Double>(exampleSet.getStatistics(attribute, Statistics.MINIMUM), exampleSet
-								.getStatistics(attribute, Statistics.MAXIMUM)));
+				double minA = exampleSet.getStatistics(attribute, Statistics.MINIMUM);
+				double maxA = exampleSet.getStatistics(attribute, Statistics.MAXIMUM);
+				if (!Double.isFinite(minA) || !Double.isFinite(maxA)) {
+					nonFiniteValueWarning(operator, attribute.getName(), minA, maxA);
+				}
+				attributeRanges.put(attribute.getName(), new Tupel<Double, Double>(minA, maxA));
 			}
 		}
 		return new MinMaxNormalizationModel(exampleSet, min, max, attributeRanges);

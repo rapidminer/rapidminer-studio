@@ -35,7 +35,6 @@ import java.util.TimeZone;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -71,7 +70,6 @@ import com.rapidminer.gui.new_plotter.ConfigurationChangeResponse;
 import com.rapidminer.gui.new_plotter.MasterOfDesaster;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
 import com.rapidminer.gui.new_plotter.PlotConfigurationQuickFix;
-import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.configuration.AxisParallelLineConfiguration;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
 import com.rapidminer.gui.new_plotter.configuration.DefaultDimensionConfig;
@@ -308,8 +306,6 @@ public class JFreeChartPlotEngine
 	 */
 	private synchronized void updateChartPanelChart(final boolean informPlotConfigWhenDone) {
 		updatingChart.getAndSet(true);
-
-		StaticDebug.debug("######################### STARTING CHART UPDATE ######################");
 
 		SwingWorker<JFreeChart, Void> updateChartWorker = new SwingWorker<JFreeChart, Void>() {
 
@@ -549,7 +545,6 @@ public class JFreeChartPlotEngine
 	private boolean isPlotInstanceValid() {
 		plotInstance.getMasterOfDesaster().clearAll();
 		if (!plotInstance.isValid()) {
-			StaticDebug.debug("######## CAUTION: INVALID PLOT INSTANCE!!");
 
 			if (!plotInstance.getCurrentPlotConfigurationClone().isValid()) {
 				ConfigurationChangeResponse response = new ConfigurationChangeResponse();
@@ -1360,7 +1355,6 @@ public class JFreeChartPlotEngine
 		synchronized (nextPlotInstanceLock) {
 			if (updatingChart.get()) {
 				if (plotInstance != this.plotInstance) {
-					StaticDebug.debug("Set NEW PLOTINSTANCE for PlotEnginge " + plotInstance);
 					this.nextPlotInstance = plotInstance;
 				}
 			} else {
@@ -1371,7 +1365,6 @@ public class JFreeChartPlotEngine
 	}
 
 	private synchronized void updatingChartPanelChartDone() {
-		StaticDebug.debug("Updating chart done!");
 		updatingChart.getAndSet(false);
 		synchronized (nextPlotInstanceLock) {
 			if (nextPlotInstance != null) {
@@ -1381,7 +1374,6 @@ public class JFreeChartPlotEngine
 	}
 
 	private void privateSetPlotInstance() {
-		StaticDebug.debug("PlotInstance has changed. Replacing..");
 		unsubscribeFromPlotInstance(plotInstance);
 		subscribeAtPlotInstance(nextPlotInstance);
 		this.plotInstance = nextPlotInstance;

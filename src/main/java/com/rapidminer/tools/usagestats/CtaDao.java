@@ -132,17 +132,18 @@ enum CtaDao {
 		int index = -1;
 		for (PreparedStatement statement : statements) {
 			index++;
-			ResultSet result = statement.executeQuery();
-			if (result.next()) {
-				isValid = result.getBoolean(1);
-			}
-			// Abort if one condition is unsatisfied
-			if (!isValid) {
-				// Fail earlier next time
-				if (index > 0) {
-					Collections.swap(statements, 0, index);
+			try (ResultSet result = statement.executeQuery()) {
+				if (result.next()) {
+					isValid = result.getBoolean(1);
 				}
-				return isValid;
+				// Abort if one condition is unsatisfied
+				if (!isValid) {
+					// Fail earlier next time
+					if (index > 0) {
+						Collections.swap(statements, 0, index);
+					}
+					return isValid;
+				}
 			}
 		}
 		return isValid;
@@ -180,11 +181,12 @@ enum CtaDao {
 	 */
 	public void cleanUpDatabase() throws SQLException {
 		deleteOlderOneMonth.executeUpdate();
-		ResultSet oldResult = selectOver250k.executeQuery();
-		if (oldResult.next()) {
-			Timestamp old = oldResult.getTimestamp(1);
-			deleteOlderThan.setTimestamp(1, old);
-			deleteOlderThan.executeUpdate();
+		try (ResultSet oldResult = selectOver250k.executeQuery()) {
+			if (oldResult.next()) {
+				Timestamp old = oldResult.getTimestamp(1);
+				deleteOlderThan.setTimestamp(1, old);
+				deleteOlderThan.executeUpdate();
+			}
 		}
 	}
 

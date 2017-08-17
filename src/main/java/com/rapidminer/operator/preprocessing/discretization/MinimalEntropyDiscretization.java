@@ -33,6 +33,7 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
@@ -307,14 +308,13 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 	 *             is label is missing
 	 */
 	private double[][] getRanges(ExampleSet exampleSet) throws UserError {
-		double[][] ranges = new double[exampleSet.getAttributes().size()][];
-		Attribute label = exampleSet.getAttributes().getLabel();
-		if (label == null) {
-			throw new UserError(this, 105);
-		}
+		Tools.isLabelled(exampleSet);
+		Attributes attributes = exampleSet.getAttributes();
+		double[][] ranges = new double[attributes.size()][];
+		Attribute label = attributes.getLabel();
 
 		int a = 0;
-		for (Attribute attribute : exampleSet.getAttributes()) {
+		for (Attribute attribute : attributes) {
 			if (attribute.isNumerical()) { // skip nominal and date attributes
 				Iterator<Example> reader = exampleSet.iterator();
 				LinkedList<double[]> startPartition = new LinkedList<double[]>();

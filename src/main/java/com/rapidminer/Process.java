@@ -269,16 +269,8 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	public Process(final File file, final ProgressListener progressListener) throws IOException, XMLException {
 		this.processLocation = new FileProcessLocation(file);
 		initContext();
-		Reader in = null;
-		try {
-			in = new InputStreamReader(new FileInputStream(file), "UTF-8");
+		try (FileInputStream fis = new FileInputStream(file); Reader in = new InputStreamReader(fis, "UTF-8")) {
 			readProcess(in, progressListener);
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (in != null) {
-				in.close();
-			}
 		}
 	}
 
@@ -428,6 +420,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	// Logging
 	// -------------------------
 
+	/**
+	 * @deprecated use {@link #getLogger()} instead
+	 */
+	@Deprecated
 	public LoggingHandler getLog() {
 		return this.logService;
 	}
@@ -454,7 +450,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	// IOObject Storage
 	// -------------------------
 
-	/** Returns the macro handler. */
+	/** Stores the object with the given name. */
 	public void store(final String name, final IOObject object) {
 		this.storageMap.put(name, object);
 	}

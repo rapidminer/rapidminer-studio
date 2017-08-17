@@ -1,22 +1,24 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.validation;
+
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
@@ -40,8 +42,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.RandomGenerator;
 
-import java.util.List;
-
 
 /**
  * <p>
@@ -50,20 +50,20 @@ import java.util.List;
  * shuffled, the specified amounts of data are used as training and test set. The sum of both must
  * be smaller than the input example set size.
  * </p>
- * 
+ *
  * <p>
  * At least either the training set size must be specified (rest is used for testing) or the test
  * set size must be specified (rest is used for training). If both are specified, the rest is not
  * used at all.
  * </p>
- * 
+ *
  * <p>
  * The first inner operator must accept an {@link com.rapidminer.example.ExampleSet} while the
  * second must accept an {@link com.rapidminer.example.ExampleSet} and the output of the first
  * (which in most cases is a {@link com.rapidminer.operator.Model}) and must produce a
  * {@link com.rapidminer.operator.performance.PerformanceVector}.
  * </p>
- * 
+ *
  * <p>
  * This validation operator provides several values which can be logged by means of a
  * {@link ProcessLogOperator}. All performance estimation operators of RapidMiner provide access to
@@ -79,7 +79,7 @@ import java.util.List;
  * <li>for the main criterion, also the variance and the standard deviation can be accessed where
  * applicable.</li>
  * </ul>
- * 
+ *
  * @author Simon Fischer, Ingo Mierswa
  */
 public class SplitValidationOperator extends ValidationChain {
@@ -127,20 +127,20 @@ public class SplitValidationOperator extends ValidationChain {
 				double splitRatio = getParameterAsDouble(PARAMETER_SPLIT_RATIO);
 				eSet = new SplittedExampleSet(inputSet, splitRatio, getParameterAsInt(PARAMETER_SAMPLING_TYPE),
 						getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-						getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED), getCompatibilityLevel().isAtMost(
-								SplittedExampleSet.VERSION_SAMPLING_CHANGED));
+						getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
+						getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 				break;
 			case SPLIT_ABSOLUTE: {
 				int trainingSetSize = getParameterAsInt(PARAMETER_TRAINING_SET_SIZE);
 				int testSetSize = getParameterAsInt(PARAMETER_TEST_SET_SIZE);
 				int inputSetSize = inputSet.size();
 				if (inputSetSize < trainingSetSize + testSetSize) {
-					throw new UserError(this, 110, (trainingSetSize + testSetSize) + " (" + trainingSetSize
-							+ " for training, " + testSetSize + " for testing)");
+					throw new UserError(this, 110, trainingSetSize + testSetSize + " (" + trainingSetSize + " for training, "
+							+ testSetSize + " for testing)");
 				}
 
 				int rest = inputSetSize - (trainingSetSize + testSetSize);
-				if ((trainingSetSize < 1) && (testSetSize < 1)) {
+				if (trainingSetSize < 1 && testSetSize < 1) {
 					throw new UserError(this, 116, "training_set_size / test_set_size",
 							"either training_set_size or test_set_size or both must be greater than 1.");
 				} else if (testSetSize < 1) {
@@ -156,8 +156,8 @@ public class SplitValidationOperator extends ValidationChain {
 						(double) testSetSize / (double) inputSetSize, (double) rest / (double) inputSetSize };
 				eSet = new SplittedExampleSet(inputSet, ratios, getParameterAsInt(PARAMETER_SAMPLING_TYPE),
 						getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-						getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED), getCompatibilityLevel().isAtMost(
-								SplittedExampleSet.VERSION_SAMPLING_CHANGED));
+						getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
+						getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 				break;
 			}
 		}
@@ -213,10 +213,9 @@ public class SplitValidationOperator extends ValidationChain {
 		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SPLIT, SPLIT_MODES, true, SPLIT_ABSOLUTE));
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeCategory(
-				PARAMETER_SAMPLING_TYPE,
-				"Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant)",
-				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.SHUFFLED_SAMPLING, false));
+		types.add(new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE,
+				"Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant, automatic = primary stratified or secondary shuffled)",
+				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.AUTOMATIC, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
 	}

@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.Arrays;
@@ -26,12 +26,11 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
-import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.clustering.ClusterModel;
-import com.rapidminer.operator.learner.CapabilityProvider;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExample;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel.Kernel;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel.KernelDot;
@@ -43,7 +42,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
-import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -52,7 +50,7 @@ import com.rapidminer.tools.Ontology;
  *
  * @author Stefan Rueping, Ingo Mierswa, Michael Wurst, Sebastian Land
  */
-public class SVClustering extends RMAbstractClusterer implements CapabilityProvider {
+public class SVClustering extends RMAbstractClusterer {
 
 	public static final String MIN_PTS_NAME = "min_pts";
 
@@ -128,13 +126,17 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
+	protected boolean checksForExamples() {
+		return true;
+	}
+
+	@Override
+	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
 		// checking and creating ids if necessary
 		Tools.checkAndCreateIds(exampleSet);
 
 		// additional checks
 		Tools.onlyNonMissingValues(exampleSet, getOperatorClassName(), this, new String[0]);
-		Tools.isNonEmpty(exampleSet);
 
 		// creating kernel
 		int kernelType = getParameterAsInt(PARAMETER_KERNEL_TYPE);
@@ -207,24 +209,20 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 						(int) (INTERMEDIATE_PROGRESS + (100.0 - INTERMEDIATE_PROGRESS) * i / exampleSet.size()));
 			}
 		}
-		ClusterModel model = new ClusterModel(exampleSet, nextClusterId + 1,
-				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
-				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
+		ClusterModel model = new ClusterModel(exampleSet, nextClusterId + 1, addsLabelAttribute(),
+				getParameterAsBoolean(PARAMETER_REMOVE_UNLABELED));
 		model.setClusterAssignments(clusterAssignments, exampleSet);
 
 		if (addsClusterAttribute()) {
-			Attribute cluster = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
-			exampleSet.getExampleTable().addAttribute(cluster);
-			exampleSet.getAttributes().setCluster(cluster);
-			i = 0;
-			for (Example example : exampleSet) {
-				if (clusterAssignments[i] == NOISE) {
-					example.setValue(cluster, "noise");
-				} else {
-					example.setValue(cluster, "cluster_" + clusterAssignments[i]);
-				}
-				i++;
+			addClusterAssignments(exampleSet, clusterAssignments);
+			Attribute targetAttribute;
+			if (addsLabelAttribute() && operatorCanAddLabel()) {
+				targetAttribute = exampleSet.getAttributes().getLabel();
+			} else {
+				targetAttribute = exampleSet.getAttributes().getCluster();
 			}
+			NominalMapping mapping = targetAttribute.getMapping();
+			mapping.setMapping("noise", mapping.getIndex("cluster_" + NOISE));
 		}
 		return model;
 	}
@@ -298,6 +296,16 @@ public class SVClustering extends RMAbstractClusterer implements CapabilityProvi
 			default:
 				return true;
 		}
+	}
+
+	@Override
+	protected boolean checksForRegularAttributes() {
+		return getCompatibilityLevel().isAbove(BEFORE_EMPTY_CHECKS);
+	}
+
+	@Override
+	protected boolean affectedByEmptyCheck() {
+		return true;
 	}
 
 	@Override

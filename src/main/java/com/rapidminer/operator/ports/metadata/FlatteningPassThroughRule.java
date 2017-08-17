@@ -49,11 +49,13 @@ public class FlatteningPassThroughRule implements MDTransformationRule {
 				if (metaData instanceof CollectionMetaData) {
 					metaData = ((CollectionMetaData) metaData).getElementMetaDataRecursive();
 				}
+				if (metaData != null) {
 				metaData = metaData.clone();
 				metaData.addToHistory(outputPort);
 				outputPort.deliverMD(modifyMetaData(metaData));
 				return;
 			}
+		}
 		}
 		outputPort.deliverMD(null);
 	}

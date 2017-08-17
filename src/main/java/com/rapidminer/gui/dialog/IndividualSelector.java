@@ -182,13 +182,7 @@ public class IndividualSelector extends JDialog implements ListSelectionListener
 	private void saveData() {
 		File file = SwingTools.chooseFile(this, null, false, "csv", "comma separated values");
 		if (file != null) {
-			PrintWriter out = null;
-			try {
-				out = new PrintWriter(new FileWriter(file));
-			} catch (IOException e) {
-				SwingTools.showSimpleErrorMessage("cannot_write_data_into_file", e);
-			}
-			if (out != null) {
+			try (FileWriter fw = new FileWriter(file); PrintWriter out = new PrintWriter(fw)) {
 				TableModel model = this.individualTable.getModel();
 				for (int c = 0; c < model.getColumnCount(); c++) {
 					if (c != 0) {
@@ -207,7 +201,8 @@ public class IndividualSelector extends JDialog implements ListSelectionListener
 					}
 					out.println();
 				}
-				out.close();
+			} catch (IOException e) {
+				SwingTools.showSimpleErrorMessage("cannot_write_data_into_file", e);
 			}
 		}
 	}

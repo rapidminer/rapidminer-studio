@@ -22,12 +22,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.TimeZone;
 import java.util.logging.Level;
 
 import com.rapidminer.RapidMiner;
@@ -81,15 +81,13 @@ public class LicenseTools {
 	/**
 	 * Date formatter to generate ISO8601 compliant string representations in UTC time.
 	 */
-	public static final ThreadLocal<DateFormat> ISO_DATE_FORMATTER = new ThreadLocal<DateFormat>() {
+	public static final DateTimeFormatter ISO_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+			.withLocale(Locale.UK).withZone(ZoneOffset.UTC);
 
-		@Override
-		protected DateFormat initialValue() {
-			DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmXXX", Locale.UK);
-			format.setTimeZone(TimeZone.getTimeZone("UTC"));
-			return format;
-		}
-	};
+	/**
+	 * Date formatter format the license start and end date for UI labels. Format will look like this: 'July 07, 2018'
+	 */
+	public static final DateTimeFormatter UI_DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG);
 
 	/**
 	 * Get the translated name of the product associated with the license.
@@ -312,7 +310,7 @@ public class LicenseTools {
 		licenseProperties.setProperty(getEditionKey(activeLicense), activeLicense.getProductEdition());
 		licenseProperties.setProperty(getPrecedenceKey(activeLicense), String.valueOf(activeLicense.getPrecedence()));
 		if (activeLicense.getExpirationDate() != null) {
-			String dateString = ISO_DATE_FORMATTER.get().format(activeLicense.getExpirationDate());
+			String dateString = ISO_DATE_FORMATTER.format(activeLicense.getExpirationDate());
 			licenseProperties.setProperty(getExpirationDateKey(activeLicense), dateString);
 		} else {
 			licenseProperties.remove(getExpirationDateKey(activeLicense));

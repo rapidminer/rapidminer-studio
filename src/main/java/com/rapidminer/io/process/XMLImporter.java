@@ -41,7 +41,9 @@ import org.w3c.dom.NodeList;
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.Process;
 import com.rapidminer.ProcessContext;
+import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.tools.VersionNumber;
+import com.rapidminer.gui.tools.VersionNumber.VersionNumberExcpetion;
 import com.rapidminer.io.process.rules.AbstractGenericParseRule;
 import com.rapidminer.io.process.rules.ChangeParameterValueRule;
 import com.rapidminer.io.process.rules.DeleteAfterAutoWireRule;
@@ -517,7 +519,7 @@ public class XMLImporter {
 		// sort to be sure to have an array of ascending order
 		Arrays.sort(incompatibleVersionChanges);
 
-		OperatorVersion opVersion;
+		OperatorVersion opVersion = null;
 
 		/*
 		 * Here we are searching if there has been any change since the last save. If no, we use the
@@ -527,41 +529,46 @@ public class XMLImporter {
 		if (versionString != null && !versionString.isEmpty()) {
 			try {
 				opVersion = new OperatorVersion(versionString);
-
-				OperatorVersion nextIncompatibility = null;
-				for (int i = incompatibleVersionChanges.length - 1; i >= 0; i--) {
-					if (opVersion.isAtMost(incompatibleVersionChanges[i])) {
-						nextIncompatibility = incompatibleVersionChanges[i];
-					} else {
-						break;
-					}
-				}
-
-				if (nextIncompatibility == null) {
-					opVersion = latestOperatorVersion;
-				} else {
-					opVersion = nextIncompatibility;
-				}
-			} catch (IllegalArgumentException e) {
+			} catch (VersionNumberExcpetion e) {
 				addMessage(
 						"Failed to parse version string '" + versionString + "' for operator " + operator.getName() + ".");
+				// fall back to 5.0 on malformed version string
 				opVersion = new OperatorVersion(5, 0, 0);
 			}
+		}
+		if (opVersion == null) {
+			// fall back version for missing version string
+			opVersion = getEnclosingVersion(process);
+		}
+
+		OperatorVersion nextIncompatibility = null;
+		for (int i = incompatibleVersionChanges.length - 1; i >= 0; i--) {
+			if (opVersion.isAtMost(incompatibleVersionChanges[i])) {
+				nextIncompatibility = incompatibleVersionChanges[i];
+			} else {
+				break;
+			}
+		}
+
+		if (nextIncompatibility == null) {
+			opVersion = latestOperatorVersion;
 		} else {
-			opVersion = new OperatorVersion(5, 0, 0);
+			opVersion = nextIncompatibility;
 		}
 		operator.setCompatibilityLevel(opVersion);
+		if (operator instanceof ProcessRootOperator && process != null) {
+			// add root operator to process to enable fallback version
+			process.setRootOperator((ProcessRootOperator) operator);
+		}
 
-		if (incompatibleVersionChanges != null && incompatibleVersionChanges.length > 0) {
-			/*
-			 * Check if the selected operator version does not equal the latest version (hence an
-			 * older/incompatible version was loaded)
-			 */
-			if (opVersion.compareTo(latestOperatorVersion) != 0) {
-				addMessage("Operator '" + operator.getName() + "' was created with version '" + opVersion
-						+ "'. The operator's behaviour has changed as of version '" + latestOperatorVersion
-						+ "' and can be adapted to the latest version in the parameter panel.");
-			}
+		/*
+		 * Check if the selected operator version does not equal the latest version (hence an
+		 * older/incompatible version was loaded)
+		 */
+		if (incompatibleVersionChanges.length > 0 && opVersion.compareTo(latestOperatorVersion) != 0) {
+			addMessage("Operator '" + operator.getName() + "' was created with version '" + opVersion
+					+ "'. The operator's behaviour has changed as of version '" + latestOperatorVersion
+					+ "' and can be adapted to the latest version in the parameter panel.");
 		}
 
 		if (opElement.hasAttribute("breakpoints")) {
@@ -760,6 +767,26 @@ public class XMLImporter {
 			}
 		}
 		return operator;
+	}
+
+	/**
+	 * Returns the best default version for an operator. Will use the root operator or current
+	 * RapidMiner version (in this order). The given process can be null.
+	 *
+	 * @param process
+	 *            the process
+	 *
+	 * @return the best matching enclosing version
+	 * @since 7.6
+	 */
+	private OperatorVersion getEnclosingVersion(Process process) {
+		if (process != null) {
+			Operator root = process.getRootOperator();
+			if (root != null && root.getCompatibilityLevel() != null) {
+				return root.getCompatibilityLevel();
+			}
+		}
+		return OperatorVersion.asNewOperatorVersion(RapidMiner.getVersion());
 	}
 
 	private boolean relevantParameter(String opName, String paramName) {

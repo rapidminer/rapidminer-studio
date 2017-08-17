@@ -248,30 +248,22 @@ public class SplittedExampleSet extends AbstractExampleSet {
 			case AUTOMATIC:
 			default:
 				Attribute label = exampleSet.getAttributes().getLabel();
-				if ((label != null) && (label.isNominal())) {
+				if (label != null && label.isNominal()) {
 					builder = new StratifiedPartitionBuilder(exampleSet, useLocalRandomSeed, seed);
 				} else {
-					if (autoSwitchToShuffled || samplingType == AUTOMATIC) {
-						if (label == null || !label.isNominal()) {
-							exampleSet
-									.getLog()
-									.logWarning(
+					if ((autoSwitchToShuffled || samplingType == AUTOMATIC) && (label == null || !label.isNominal())) {
+							exampleSet.getLog().logWarning(
 									"Example set has no nominal label: using shuffled partition instead of stratified partition");
 							return new ShuffledPartitionBuilder(useLocalRandomSeed, seed);
 						}
-					}
 
-					if (label == null) {
-						throw new UserError(null, 105);
-					}
-					if (!label.isNominal()) {
-						throw new UserError(null, 101, "stratified sampling", label.getName());
-					}
+					com.rapidminer.example.Tools.hasNominalLabels(exampleSet, "stratified sampling");
 					builder = new ShuffledPartitionBuilder(useLocalRandomSeed, seed);
 				}
 				break;
 		}
 		return builder;
+
 	}
 
 	/** Adds the given subset. */

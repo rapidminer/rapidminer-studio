@@ -308,7 +308,7 @@ public final class ProcessRootOperator extends OperatorChain {
 			content.append(Tools.getLineSeparator() + Tools.getLineSeparator() + "Results:");
 			ResultObject result;
 			int i = 0;
-			while (true) {
+			while (i < results.size()) {
 				try {
 					result = results.get(ResultObject.class, i);
 					content.append(Tools.getLineSeparator() + Tools.getLineSeparator() + Tools.getLineSeparator()

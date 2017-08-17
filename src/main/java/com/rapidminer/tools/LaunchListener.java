@@ -147,13 +147,26 @@ public enum LaunchListener {
 	 * handler.
 	 *
 	 * Also creates {@link #getLockFile()} with information on how to contact this socket.
-	 * */
+	 */
 	private void installListener(final RemoteControlHandler handler) throws IOException {
 		// port 0 = let system assign port
 		// backlog 1 = we don't expect simultaneous requests
 		final ServerSocket serverSocket = new ServerSocket(0, 1, InetAddress.getLoopbackAddress());
-		final int port = serverSocket.getLocalPort();
 		final File socketFile = getLockFile();
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+
+			@Override
+			public void run() {
+				LOGGER.config("Deleting " + socketFile);
+				socketFile.delete();
+				try {
+					serverSocket.close();
+				} catch (IOException e) {
+					// silent - we're dying anyway
+				}
+			}
+		});
+		final int port = serverSocket.getLocalPort();
 		LOGGER.config("Listening for other instances on port " + port + ". Writing " + socketFile + ".");
 		PrintStream socketOut = new PrintStream(socketFile);
 		socketOut.println(String.valueOf(port));
@@ -171,20 +184,6 @@ public enum LaunchListener {
 			// ignore
 		}
 		socketFile.deleteOnExit();
-
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-
-			@Override
-			public void run() {
-				LOGGER.config("Deleting " + socketFile);
-				socketFile.delete();
-				try {
-					serverSocket.close();
-				} catch (IOException e) {
-					// silent - we're dying anyway
-				}
-			}
-		});
 
 		Thread listenerThread = new Thread("Launch-Listener") {
 

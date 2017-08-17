@@ -47,6 +47,10 @@ public class AreaUnderCurve extends MeasuredPerformance {
 		public Optimistic() {
 			super(ROCBias.OPTIMISTIC);
 		}
+
+		public Optimistic(Optimistic optimistic) {
+			super(optimistic);
+		}
 	}
 
 	public static class Pessimistic extends AreaUnderCurve {
@@ -56,6 +60,10 @@ public class AreaUnderCurve extends MeasuredPerformance {
 		public Pessimistic() {
 			super(ROCBias.PESSIMISTIC);
 		}
+
+		public Pessimistic(Pessimistic pessimistic) {
+			super(pessimistic);
+		}
 	}
 
 	public static class Neutral extends AreaUnderCurve {
@@ -64,6 +72,10 @@ public class AreaUnderCurve extends MeasuredPerformance {
 
 		public Neutral() {
 			super(ROCBias.NEUTRAL);
+		}
+
+		public Neutral(Neutral neutral) {
+			super(neutral);
 		}
 	}
 

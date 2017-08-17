@@ -33,7 +33,9 @@ import java.util.List;
  * maximum values. The random values are constructed by a {@link RandomDataRowReader}.
  * 
  * @author Ingo Mierswa Exp $
+ * @deprecated since 7.5.4.
  */
+@Deprecated
 public class RandomExampleTable extends AbstractExampleTable {
 
 	private static final long serialVersionUID = 5675878166499224680L;

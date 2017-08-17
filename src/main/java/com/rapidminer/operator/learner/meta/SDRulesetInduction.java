@@ -33,7 +33,6 @@ import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ValueDouble;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.operator.ports.InputPort;
@@ -217,9 +216,7 @@ public class SDRulesetInduction extends OperatorChain {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
 
 		// Check if label is present and fits the learning task
-		if (exampleSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
-		}
+		com.rapidminer.example.Tools.isLabelled(exampleSet);
 
 		Model model = this.trainRuleset(exampleSet, this.prepareWeights(exampleSet));
 

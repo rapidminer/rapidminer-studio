@@ -1,0 +1,27 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion ='0.7.9'
+}
+
+test {
+    jacoco {
+        // go 1 up to end up in root project dir
+        destinationFile = file("../build/jacoco.exec")
+    }
+}
+
+jacocoTestReport {
+    // Temporary work-around -- http://issues.gradle.org/browse/GRADLE-2764
+    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+    reports {
+        html.enabled true
+        xml.enabled true
+    }
+}
+
+// Temporary work-around -- Fixes http://issues.gradle.org/browse/GRADLE-2859 
+// Allows to run jacoco with multi project builds
+tasks.withType(Test) {
+    systemProperties['user.dir'] = workingDir
+}

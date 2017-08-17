@@ -22,6 +22,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -87,66 +88,58 @@ public class CostEvaluator extends Operator {
 	@Override
 	public void doWork() throws OperatorException {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 		Attribute predictedLabel = exampleSet.getAttributes().getPredictedLabel();
 		if (predictedLabel == null) {
 			throw new UserError(this, 107);
 		}
 		Attribute label = exampleSet.getAttributes().getLabel();
-		if (label != null) {
-			if (label.isNominal()) {
-				double[][] costMatrix = getParameterAsMatrix(PARAMETER_COST_MATRIX);
+		double[][] costMatrix = getParameterAsMatrix(PARAMETER_COST_MATRIX);
 
-				// build label ordering map
-				Map<String, Integer> classOrderMap = null;
-				if (isParameterSet(PARAMETER_CLASS_DEFINITION)) {
-					String[] enumeratedValues = ParameterTypeEnumeration
-							.transformString2Enumeration(getParameterAsString(PARAMETER_CLASS_DEFINITION));
+		// build label ordering map
+		Map<String, Integer> classOrderMap = null;
+		if (isParameterSet(PARAMETER_CLASS_DEFINITION)) {
+			String[] enumeratedValues = ParameterTypeEnumeration
+					.transformString2Enumeration(getParameterAsString(PARAMETER_CLASS_DEFINITION));
 
-					if (enumeratedValues.length > 0) {
-						classOrderMap = new HashMap<String, Integer>();
-						int i = 0;
+			if (enumeratedValues.length > 0) {
+				classOrderMap = new HashMap<String, Integer>();
+				int i = 0;
 
-						for (String className : enumeratedValues) {
-							classOrderMap.put(className, i);
-							i++;
-						}
-						// check whether each possible label occurred once
-						for (String value : label.getMapping().getValues()) {
-							if (!classOrderMap.containsKey(value)) {
-								throw new UserError(this, "performance_costs.class_order_definition_misses_value", value);
-							}
-						}
-
-						// check whether map is of same size than costMatrix
-						if (costMatrix.length != classOrderMap.size()) {
-							throw new UserError(this, "performance_costs.cost_matrix_with_wrong_dimension",
-									costMatrix.length, classOrderMap.size());
-						}
-
+				for (String className : enumeratedValues) {
+					classOrderMap.put(className, i);
+					i++;
+				}
+				// check whether each possible label occurred once
+				for (String value : label.getMapping().getValues()) {
+					if (!classOrderMap.containsKey(value)) {
+						throw new UserError(this, "performance_costs.class_order_definition_misses_value", value);
 					}
 				}
 
-				MeasuredPerformance criterion = new ClassificationCostCriterion(costMatrix, classOrderMap, label,
-						predictedLabel);
-				PerformanceVector performance = new PerformanceVector();
-				performance.addCriterion(criterion);
-				// now measuring costs
-				criterion.startCounting(exampleSet, false);
-				for (Example example : exampleSet) {
-					criterion.countExample(example);
+				// check whether map is of same size than costMatrix
+				if (costMatrix.length != classOrderMap.size()) {
+					throw new UserError(this, "performance_costs.cost_matrix_with_wrong_dimension", costMatrix.length,
+							classOrderMap.size());
 				}
 
-				// setting logging value
-				lastCosts = criterion.getAverage();
-
-				exampleSetOutput.deliver(exampleSet);
-				performanceOutput.deliver(performance);
-			} else {
-				throw new UserError(this, 101, "CostEvaluator", label.getName());
 			}
-		} else {
-			throw new UserError(this, 105);
 		}
+
+		MeasuredPerformance criterion = new ClassificationCostCriterion(costMatrix, classOrderMap, label, predictedLabel);
+		PerformanceVector performance = new PerformanceVector();
+		performance.addCriterion(criterion);
+		// now measuring costs
+		criterion.startCounting(exampleSet, false);
+		for (Example example : exampleSet) {
+			criterion.countExample(example);
+		}
+
+		// setting logging value
+		lastCosts = criterion.getAverage();
+
+		exampleSetOutput.deliver(exampleSet);
+		performanceOutput.deliver(performance);
 	}
 
 	@Override

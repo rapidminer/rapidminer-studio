@@ -144,12 +144,11 @@ public class ConfidenceVoteModel extends SimplePredictionModel implements MetaMo
 			example.setConfidence(className, confidence);
 		}
 
-		if (bestClasses.size() == 1) {
-			return getLabel().getMapping().getIndex(bestClasses.get(0));
-		} else {
-			return getLabel().getMapping()
-					.getIndex(bestClasses.get(RandomGenerator.getGlobalRandomGenerator().nextInt(bestClasses.size())));
+		int bestClassIndex = 0;
+		if (bestClasses.size() != 1) {
+			bestClassIndex = RandomGenerator.getGlobalRandomGenerator().nextInt(bestClasses.size());
 		}
+		return getLabel().getMapping().getIndex(bestClasses.get(bestClassIndex));
 	}
 
 }

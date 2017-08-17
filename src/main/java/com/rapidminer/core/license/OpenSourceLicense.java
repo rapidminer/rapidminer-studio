@@ -18,10 +18,8 @@
  */
 package com.rapidminer.core.license;
 
-import java.util.Arrays;
+import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.rapidminer.license.Constraints;
@@ -78,12 +76,12 @@ public class OpenSourceLicense implements License {
 	}
 
 	@Override
-	public Date getStartDate() {
+	public LocalDate getStartDate() {
 		return null;
 	}
 
 	@Override
-	public Date getExpirationDate() {
+	public LocalDate getExpirationDate() {
 		return null;
 	}
 
@@ -93,7 +91,7 @@ public class OpenSourceLicense implements License {
 	}
 
 	@Override
-	public LicenseStatus validate(Date now) {
+	public LicenseStatus validate(LocalDate today) {
 		return LicenseStatus.VALID;
 	}
 
@@ -114,7 +112,7 @@ public class OpenSourceLicense implements License {
 
 	@Override
 	public Set<String> getVersions() {
-		return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(StudioLicenseConstants.VERSION)));
+		return Collections.unmodifiableSet(Collections.singleton(StudioLicenseConstants.VERSION));
 	}
 
 	@Override

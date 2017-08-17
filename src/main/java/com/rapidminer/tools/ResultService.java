@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.logging.Level;
 
 
 /**
@@ -48,7 +49,7 @@ public class ResultService {
 
 	private static boolean systemStream = true;
 
-	/** Without initialization stdout is used. */
+	/* Without initialization stdout is used. */
 	static {
 		out = new PrintWriter(System.out);
 	}
@@ -63,7 +64,7 @@ public class ResultService {
 	 */
 	public static void init(String filename, Process process) {
 		if (filename == null) {
-			process.getLog().log("No filename given for result file, using stdout for logging results!", LogService.NOTE);
+			process.getLogger().log(Level.INFO, "No filename given for result file, using stdout for logging results!");
 			init(new PrintWriter(System.out));
 		} else if (filename.equals("stderr")) {
 			init(new PrintWriter(System.err));
@@ -75,18 +76,28 @@ public class ResultService {
 			Charset encoding;
 			try {
 				encoding = Encoding.getEncoding(process.getRootOperator());
-			} catch (UndefinedParameterError e1) {
-				encoding = Charset.defaultCharset();
 			} catch (UserError e1) {
 				encoding = Charset.defaultCharset();
 			}
+			FileOutputStream fos = null;
+			OutputStreamWriter osw = null;
 			try {
-				out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), encoding));
+				fos = new FileOutputStream(file);
+				osw = new OutputStreamWriter(fos, encoding);
+				out = new PrintWriter(osw);
 			} catch (IOException e) {
-				process.getLog().log("Cannot create resultfile '" + filename + "': " + e.getClass() + ":" + e.getMessage(),
-						LogService.MAXIMUM);
-				process.getLog().log("using stdout", LogService.MAXIMUM);
+				process.getLogger().log(Level.SEVERE, "Cannot create resultfile '" + filename + "': " + e.getClass() + ":" + e.getMessage());
+				process.getLogger().log(Level.SEVERE, "Using stdout");
 				out = new PrintWriter(System.out);
+			} catch (RuntimeException re) {
+				if (fos != null) {
+					try {
+						fos.close();
+					} catch (IOException e) {
+						re.addSuppressed(e);
+					}
+				}
+				throw re;
 			}
 			systemStream = false;
 			init(out);
@@ -145,14 +156,13 @@ public class ResultService {
 	/** Returns the current date and time as formatted string. */
 	private static String getTime() {
 		GregorianCalendar cal = (GregorianCalendar) Calendar.getInstance();
-		String time = getTwoDigits(cal.get(Calendar.DAY_OF_MONTH)) + "." + getTwoDigits((cal.get(Calendar.MONTH) + 1)) + "."
+		return getTwoDigits(cal.get(Calendar.DAY_OF_MONTH)) + "." + getTwoDigits((cal.get(Calendar.MONTH) + 1)) + "."
 				+ cal.get(Calendar.YEAR) + " " + getTwoDigits(cal.get(Calendar.HOUR_OF_DAY)) + ":"
 				+ getTwoDigits(cal.get(Calendar.MINUTE)) + ":" + getTwoDigits(cal.get(Calendar.SECOND));
-		return time;
 	}
 
 	/** Adds a leading zero. */
-	static String getTwoDigits(int i) {
+	private static String getTwoDigits(int i) {
 		return (i < 10 ? "0" : "") + i;
 	}
 }

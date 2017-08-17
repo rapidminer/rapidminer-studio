@@ -36,6 +36,7 @@ import com.rapidminer.generator.FeatureGenerator;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -425,13 +426,129 @@ public class Tools {
 	}
 
 	/**
+	 * The data set is not allowed to contain non-finite values. If it does, a {@link UserError} is
+	 * thrown.
+	 *
+	 * @param exampleSet
+	 *            the {@link ExampleSet} to check
+	 * @param task
+	 *            will be shown as the origin of the error
+	 * @param operator
+	 *            the offending operator. Can be <code>null</code>
+	 * @since 7.6
+	 **/
+	public static void onlyFiniteValues(ExampleSet exampleSet, String task, Operator operator)
+			throws ProcessStoppedException, UserError {
+		onlyFiniteValues(exampleSet, false, task, operator);
+	}
+
+	/**
+	 * The data set is not allowed to contain infinite and, if indicated, missing values. If it
+	 * does, a {@link UserError} is thrown.
+	 *
+	 * @param exampleSet
+	 *            the {@link ExampleSet} to check
+	 * @param allowMissing
+	 *            indicates whether {@link Double#NaN} should be ignored
+	 * @param task
+	 *            will be shown as the origin of the error
+	 * @param operator
+	 *            the offending operator. Can be <code>null</code>
+	 * @since 7.6
+	 **/
+	public static void onlyFiniteValues(ExampleSet exampleSet, boolean allowMissing, String task, Operator operator)
+			throws ProcessStoppedException, UserError {
+		List<String> specialAttList = new LinkedList<>();
+		Iterator<AttributeRole> specialAttributes = exampleSet.getAttributes().specialAttributes();
+		while (specialAttributes.hasNext()) {
+			specialAttList.add(specialAttributes.next().getSpecialName());
+		}
+		onlyFiniteValues(exampleSet, task, operator, specialAttList.toArray(new String[specialAttList.size()]));
+	}
+
+	/**
+	 * The data set is not allowed to contain non-finite values. If it does, a {@link UserError} is
+	 * thrown. Special attributes will be ignored, except they are explicitly listed at
+	 * specialAttributes. Furthermore, if a specified special attribute does not exist a
+	 * {@link UserError} is also thrown!
+	 *
+	 * @param exampleSet
+	 *            the {@link ExampleSet} to check
+	 * @param task
+	 *            will be shown as the origin of the error
+	 * @param operator
+	 *            the offending operator. Can be <code>null</code>
+	 * @param specialAttributes
+	 *            contains the special attributes which have to be checked. If a listed attribute
+	 *            does not exist or contains non-finite values, a {@link UserError} is thrown
+	 * @since 7.6
+	 **/
+	public static void onlyFiniteValues(ExampleSet exampleSet, String task, Operator operator, String... specialAttributes)
+			throws ProcessStoppedException, UserError {
+		onlyFiniteValues(exampleSet, false, task, operator, specialAttributes);
+	}
+
+	/**
+	 * The data set is not allowed to contain infinite and, if indicated, missing values. If it
+	 * does, a {@link UserError} is thrown. Special attributes will be ignored, except they are
+	 * explicitly listed at specialAttributes. Furthermore, if a specified special attribute does
+	 * not exist a {@link UserError} is also thrown!
+	 *
+	 * @param exampleSet
+	 *            the {@link ExampleSet} to check
+	 * @param allowMissing
+	 *            indicates whether {@link Double#NaN} should be ignored
+	 * @param task
+	 *            will be shown as the origin of the error
+	 * @param operator
+	 *            the offending operator. Can be <code>null</code>
+	 * @param specialAttributes
+	 *            contains the special attributes which have to be checked. If a listed attribute
+	 *            does not exist or contains not-allowed values, a {@link UserError} is thrown
+	 * @since 7.6
+	 **/
+	public static void onlyFiniteValues(ExampleSet exampleSet, boolean allowMissing, String task, Operator operator,
+			String... specialAttributes) throws ProcessStoppedException, UserError {
+		HashSet<Attribute> specialToCheck = new HashSet<>();
+
+		for (int i = 0; i < specialAttributes.length; i++) {
+			Attribute att = exampleSet.getAttributes().getSpecial(specialAttributes[i]);
+			if (att != null) {
+				specialToCheck.add(att);
+			} else {
+				throw new UserError(operator, "113", specialAttributes[i]);
+			}
+		}
+
+		Iterator<AttributeRole> allRoles = exampleSet.getAttributes().allAttributeRoles();
+		while (allRoles.hasNext()) {
+			if (operator != null) {
+				operator.checkForStop();
+			}
+			AttributeRole role = allRoles.next();
+			if (!role.isSpecial() || specialToCheck.contains(role.getAttribute())) {
+				Attribute attribute = role.getAttribute();
+				for (Example example : exampleSet) {
+					double value = example.getValue(attribute);
+					if (Double.isInfinite(value)) {
+						throw new UserError(operator, "infinite_values", task);
+					}
+					if (!allowMissing && Double.isNaN(value)) {
+						throw new UserError(operator, 139, task);
+					}
+				}
+			}
+		}
+	}
+
+	/**
 	 * The attributes all have to be numerical.
 	 *
 	 * @param es
 	 *            the example set
-	 * @throws OperatorException
+	 * @throws UserError
 	 */
-	public static void onlyNumericalAttributes(ExampleSet es, String task) throws OperatorException {
+	public static void onlyNumericalAttributes(ExampleSet es, String task) throws UserError {
 		onlyNumericalAttributes(es.getAttributes(), task);
 	}
 
@@ -440,9 +557,9 @@ public class Tools {
 	 *
 	 * @param es
 	 *            the example set
-	 * @throws OperatorException
+	 * @throws UserError
 	 */
-	public static void onlyNumericalAttributes(Attributes attributes, String task) throws OperatorException {
+	public static void onlyNumericalAttributes(Attributes attributes, String task) throws UserError {
 		for (Attribute attribute : attributes) {
 			if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NUMERICAL)) {
 				throw new UserError(null, 104, task, attribute.getName());
@@ -455,18 +572,18 @@ public class Tools {
 	 *
 	 * @param es
 	 *            the example set
-	 * @throws OperatorException
+	 * @throws UserError
 	 */
-	public static void onlyNominalAttributes(ExampleSet es, String task) throws OperatorException {
+	public static void onlyNominalAttributes(ExampleSet es, String task) throws UserError {
 		onlyNominalAttributes(es.getAttributes(), task);
 	}
 
 	/**
 	 * The attributes all have to be nominal or binary.
 	 *
-	 * @throws OperatorException
+	 * @throws UserError
 	 */
-	public static void onlyNominalAttributes(Attributes attributes, String task) throws OperatorException {
+	public static void onlyNominalAttributes(Attributes attributes, String task) throws UserError {
 		for (Attribute attribute : attributes) {
 			if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NOMINAL)) {
 				throw new UserError(null, 103, task, attribute.getName());
@@ -479,10 +596,10 @@ public class Tools {
 	 *
 	 * @param exampleSet
 	 *            the example set
-	 * @throws OperatorException
+	 * @throws UserError
 	 *
 	 */
-	public static void maximumTwoNominalAttributes(ExampleSet exampleSet, String task) throws OperatorException {
+	public static void maximumTwoNominalAttributes(ExampleSet exampleSet, String task) throws UserError {
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			int valueType = attribute.getValueType();
 			boolean throwError = false;
@@ -505,9 +622,9 @@ public class Tools {
 	 *
 	 * @param es
 	 *            the example set
-	 * @throws OperatorException
+	 * @throws UserError
 	 */
-	public static void isLabelled(ExampleSet es) throws OperatorException {
+	public static void isLabelled(ExampleSet es) throws UserError {
 		if (es.getAttributes().getLabel() == null) {
 			throw new UserError(null, 105);
 		}
@@ -518,9 +635,9 @@ public class Tools {
 	 *
 	 * @param es
 	 *            the example set
-	 * @throws OperatorException
+	 * @throws UserError
 	 */
-	public static void isIdTagged(ExampleSet es) throws OperatorException {
+	public static void isIdTagged(ExampleSet es) throws UserError {
 		if (es.getAttributes().getId() == null) {
 			throw new UserError(null, 129);
 		}
@@ -557,13 +674,30 @@ public class Tools {
 	 *
 	 * @param es
 	 *            the example set
-	 * @throws OperatorException
+	 * @see #hasNominalLabels(ExampleSet, String) hasNominalLabels(ExampleSet, "clustering")
+	 * @throws UserError
 	 */
-	public static void hasNominalLabels(ExampleSet es) throws OperatorException {
+	public static void hasNominalLabels(ExampleSet es) throws UserError {
+		hasNominalLabels(es, "clustering");
+	}
+
+	/**
+	 * The example set has to have nominal labels. Generalized form allows for better use with other
+	 * algorithms than clustering.
+	 *
+	 * @param es
+	 *            the example set
+	 * @param algorithm
+	 *            the name of the algorithm
+	 * @throws UserError
+	 * @since 7.6
+	 * @see #hasNominalLabels(ExampleSet)
+	 */
+	public static void hasNominalLabels(ExampleSet es, String algorithm) throws UserError {
 		isLabelled(es);
 		Attribute a = es.getAttributes().getLabel();
 		if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.NOMINAL)) {
-			throw new UserError(null, 101, "clustering", a.getName());
+			throw new UserError(null, 101, algorithm, a.getName());
 		}
 	}
 
@@ -572,11 +706,25 @@ public class Tools {
 	 *
 	 * @param es
 	 *            the example set
-	 * @throws OperatorException
+	 * @throws UserError
 	 */
-	public static void isNonEmpty(ExampleSet es) throws OperatorException {
+	public static void isNonEmpty(ExampleSet es) throws UserError {
 		if (es.size() == 0) {
 			throw new UserError(null, 117);
+		}
+	}
+
+	/**
+	 * The example set has to contain at least one regular attribute.
+	 *
+	 * @param es
+	 *            the example set
+	 * @throws UserError
+	 * @since 7.6
+	 */
+	public static void hasRegularAttributes(ExampleSet es) throws UserError {
+		if (es.getAttributes().size() == 0) {
+			throw new UserError(null, 106);
 		}
 	}
 

@@ -278,6 +278,11 @@ public class RapidMiner {
 	public static final int PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_SMTP = 1;
 
 	/**
+	 * Specifies the sender mail address
+	 */
+	public static final String PROPERTY_RAPIDMINER_TOOLS_MAIL_SENDER = "rapidminer.tools.mail.sender";
+
+	/**
 	 * Property specifying the email address to which mails are sent if no email address is
 	 * specified in the {@link ProcessRootOperator}.
 	 */
@@ -314,6 +319,36 @@ public class RapidMiner {
 	 * notifications.&quot;
 	 */
 	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD = "rapidminer.tools.smtp.passwd";
+
+	/**
+	 * The property specifying the security for smtp.
+	 */
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY = "rapidminer.tools.smtp.security";
+
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_NONE = "None";
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS = "StartTLS";
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE = "Enforce StartTLS";
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE_PFS = "Enforce StartTLS - TLS 1.2 + PFS";
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS = "TLS";
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS_PFS = "TLS 1.2 + PFS";
+
+	public static final String[] PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_VALUES = {
+			PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_NONE, PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS,
+			PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE,
+			PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE_PFS, PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS,
+			PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS_PFS };
+
+	/**
+	 * The property specifying the authentication method for smtp.
+	 */
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION = "rapidminer.tools.smtp.authentication";
+
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_AUTO = "Auto";
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_CRAM_MD5 = "CRAM-MD5";
+	public static final String PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_NTLM = "NTLM";
+	public static final String[] PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_VALUES = {
+			PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_AUTO, PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_CRAM_MD5,
+			PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_NTLM };
 
 	/**
 	 * If set to true, the query builders and database assistants and query_builders show only
@@ -490,6 +525,7 @@ public class RapidMiner {
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_EDITOR, "", true));
 		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD, "",
 				PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_VALUES, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_SMTP));
+		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_MAIL_SENDER, "", true));
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_MAIL_DEFAULT_RECIPIENT, "", true));
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_TOOLS_MAIL_DEFAULT_PROCESS_DURATION_FOR_MAIL, "", 0,
 				Integer.MAX_VALUE, 30));
@@ -499,6 +535,10 @@ public class RapidMiner {
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT, "", true));
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_USER, "", true));
 		registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD, ""));
+		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY, "",
+				PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_VALUES, 0));
+		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION, "",
+				PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_VALUES, 0));
 
 		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_TOOLS_DB_ONLY_STANDARD_TABLES, "", true));
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_TOOLS_DB_LOGIN_TIMEOUT, "", 0, Integer.MAX_VALUE,
@@ -804,8 +844,8 @@ public class RapidMiner {
 		} else {
 			String versionString = null;
 			BufferedReader in = null;
-			try {
-				in = new BufferedReader(new FileReader(lastVersionFile));
+			try (FileReader fr = new FileReader(lastVersionFile)) {
+				in = new BufferedReader(fr);
 				versionString = in.readLine();
 			} catch (IOException e) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
@@ -848,17 +888,11 @@ public class RapidMiner {
 	}
 
 	private static void writeLastVersion(final File versionFile) {
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new FileWriter(versionFile));
+		try (FileWriter fw = new FileWriter(versionFile); PrintWriter out = new PrintWriter(fw)) {
 			out.println(getLongVersion());
 		} catch (IOException e) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.RapidMiner.writing_current_version_error"), e);
-		} finally {
-			if (out != null) {
-				out.close();
-			}
 		}
 	}
 

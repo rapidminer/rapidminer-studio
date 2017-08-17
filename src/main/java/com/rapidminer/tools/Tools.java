@@ -1068,8 +1068,6 @@ public class Tools {
 	 * will be read with UTF-8 encoding.
 	 */
 	public static String readTextFile(File file) throws IOException {
-		FileInputStream inStream = new FileInputStream(file);
-
 		// due to a bug in pre-5.2.009, process files were stored in System encoding instead of
 		// UTF-8. So we have to check the process version, and if it's less than 5.2.009 we have
 		// to retrieve the file again with System encoding.
@@ -1078,33 +1076,35 @@ public class Tools {
 		// method will probably work), or it is not a valid process file (which will also be
 		// detected by the old method).
 		boolean useFallback = false;
-		try {
-			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-			Document processXmlDocument = documentBuilder.parse(inStream);
-			XPathFactory xPathFactory = XPathFactory.newInstance();
-			XPath xPath = xPathFactory.newXPath();
-			String versionString = xPath.evaluate("/process/@version", processXmlDocument);
-			VersionNumber version = new VersionNumber(versionString);
-			if (version.isAtMost(5, 2, 8)) {
+		try (FileInputStream inStream = new FileInputStream(file)) {
+
+			try {
+				DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+				Document processXmlDocument = documentBuilder.parse(inStream);
+				XPathFactory xPathFactory = XPathFactory.newInstance();
+				XPath xPath = xPathFactory.newXPath();
+				String versionString = xPath.evaluate("/process/@version", processXmlDocument);
+				VersionNumber version = new VersionNumber(versionString);
+				if (version.isAtMost(5, 2, 8)) {
+					useFallback = true;
+				}
+			} catch (XPathExpressionException e) {
+				useFallback = true;
+			} catch (SAXException e) {
+				useFallback = true;
+			} catch (ParserConfigurationException e) {
+				useFallback = true;
+			} catch (IOException e) {
+				useFallback = true;
+			} catch (NumberFormatException e) {
 				useFallback = true;
 			}
-		} catch (XPathExpressionException e) {
-			useFallback = true;
-		} catch (SAXException e) {
-			useFallback = true;
-		} catch (ParserConfigurationException e) {
-			useFallback = true;
-		} catch (IOException e) {
-			useFallback = true;
-		} catch (NumberFormatException e) {
-			useFallback = true;
 		}
 
 		InputStreamReader reader = null;
 
-		try {
-			inStream = new FileInputStream(file);
+		try (FileInputStream inStream = new FileInputStream(file)) {
 			if (useFallback) {
 				// default reader (as in old versions)
 				reader = new InputStreamReader(inStream);
@@ -1115,10 +1115,6 @@ public class Tools {
 
 			return readTextFile(reader);
 		} finally {
-			try {
-				inStream.close();
-			} catch (IOException e) {
-			}
 			if (reader != null) {
 				try {
 					reader.close();

@@ -26,7 +26,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Map;
-
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
@@ -40,7 +39,6 @@ import javax.swing.event.PopupMenuListener;
 
 import org.jfree.chart.plot.PlotOrientation;
 
-import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.data.PlotInstance;
 import com.rapidminer.gui.new_plotter.gui.cellrenderer.ColorSchemeComboBoxRenderer;
 import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
@@ -51,7 +49,6 @@ import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEve
 import com.rapidminer.gui.new_plotter.templates.style.ColorScheme;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 
@@ -139,10 +136,6 @@ public class GlobalConfigurationPanel extends AbstractConfigurationPanel {
 						} else {
 							getPlotConfiguration().setTitleText(null);
 						}
-					}
-
-					if (newTitle.equals("Iris") && SwingTools.isControlOrMetaDown(e) && e.getKeyCode() == KeyEvent.VK_D) {
-						startAnimation();
 					}
 				}
 
@@ -320,49 +313,6 @@ public class GlobalConfigurationPanel extends AbstractConfigurationPanel {
 			itemConstraint.gridwidth = GridBagConstraints.REMAINDER;
 			this.add(spacerPanel, itemConstraint);
 		}
-
-	}
-
-	private void startAnimation() {
-		StaticDebug.debug("Starting animation");
-
-		// PlotConfiguration plotConfig = getPlotConfiguration();
-		//
-		// DataTable dataTable;
-		// // retrieve data for showing example data
-		// try {
-		// ExampleSet exampleSet = (ExampleSet) ((IOObjectEntry) new
-		// RepositoryLocation("//Samples/data/Iris").locateEntry()).retrieveData(null);
-		// dataTable = new DataTableExampleSetAdapter(exampleSet, null);
-		// } catch (MalformedRepositoryLocationException e) {
-		// return;
-		// } catch (RepositoryException e) {
-		// return;
-		// }
-		//
-		// if (dataTable == null || dataTable.getColumnNumber() < 2) {
-		// return;
-		// }
-		//
-		// // domain and y column
-		// DataTableColumn domainColumn = new DataTableColumn(dataTable, 0);
-		// DataTableColumn mainColumn = new DataTableColumn(dataTable, 1);
-		//
-		// plotConfig.getDomainConfigManager().setDataTableColumn(domainColumn);
-		//
-		// RangeAxisConfig rangeAxis = new RangeAxisConfig("", plotConfig);
-		// DefaultValueSource valueSource = new DefaultValueSource(plotConfig, mainColumn, null,
-		// false);
-		// try {
-		// rangeAxis.addValueSource(valueSource);
-		// } catch (ChartConfigurationException e) {
-		// return;
-		// }
-		// plotConfig.addRangeAxisConfig(rangeAxis);
-		//
-		// DefaultDimensionConfig colorDimension = new DefaultDimensionConfig(plotConfig,
-		// mainColumn, PlotDimension.COLOR);
-		// plotConfig.setDimensionConfig(PlotDimension.COLOR, colorDimension);
 
 	}
 

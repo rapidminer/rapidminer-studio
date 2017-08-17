@@ -28,7 +28,6 @@ package de.bwaldvogel.liblinear;
 
 import static de.bwaldvogel.liblinear.Linear.atof;
 import static de.bwaldvogel.liblinear.Linear.atoi;
-import static de.bwaldvogel.liblinear.Linear.closeQuietly;
 import static de.bwaldvogel.liblinear.Linear.info;
 import static de.bwaldvogel.liblinear.Linear.printf;
 
@@ -214,17 +213,15 @@ public class Predict {
 			exit_with_help();
 		}
 
-		BufferedReader reader = null;
-		Writer writer = null;
-		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(argv[i]), Linear.FILE_CHARSET));
-			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(argv[i + 2]), Linear.FILE_CHARSET));
+		try (FileInputStream fis = new FileInputStream(argv[i]);
+				InputStreamReader isr = new InputStreamReader(fis, Linear.FILE_CHARSET);
+				FileOutputStream fos = new FileOutputStream(argv[i + 2]);
+				OutputStreamWriter osw = new OutputStreamWriter(fos, Linear.FILE_CHARSET);
+				BufferedReader reader = new BufferedReader(isr);
+				Writer writer = new BufferedWriter(osw)) {
 
 			Model model = Linear.loadModel(new File(argv[i + 1]));
 			doPredict(reader, writer, model);
-		} finally {
-			closeQuietly(reader);
-			closeQuietly(writer);
 		}
 	}
 }

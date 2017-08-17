@@ -103,11 +103,11 @@ public class SimpleVoteModel extends SimplePredictionModel implements MetaModel 
 					example.setConfidence(getLabel().getMapping().mapIndex((int) currentClass), 0.00);
 				}
 			}
-			if (bestClasses.size() == 1) {
-				return bestClasses.get(0);
-			} else {
-				return bestClasses.get(RandomGenerator.getGlobalRandomGenerator().nextInt(bestClasses.size()));
+			int bestClassIndex = 0;
+			if (bestClasses.size() != 1) {
+				bestClassIndex = RandomGenerator.getGlobalRandomGenerator().nextInt(bestClasses.size());
 			}
+			return bestClasses.get(bestClassIndex);
 		} else {
 			double sum = 0.0d;
 			Iterator<? extends SimplePredictionModel> iterator = baseModels.iterator();

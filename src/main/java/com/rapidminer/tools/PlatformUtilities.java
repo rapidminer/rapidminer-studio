@@ -62,6 +62,7 @@ public final class PlatformUtilities {
 	private static final Set<String> BUILD_PATH_ELEMENTS  = new HashSet<>(4);
 	static {
 		BUILD_PATH_ELEMENTS.add("build");
+		BUILD_PATH_ELEMENTS.add("out");
 		BUILD_PATH_ELEMENTS.add("classes");
 		BUILD_PATH_ELEMENTS.add("rapidminer-studio-core");
 		BUILD_PATH_ELEMENTS.add("rapidminer-studio-commons");

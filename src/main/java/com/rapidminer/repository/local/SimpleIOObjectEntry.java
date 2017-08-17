@@ -23,7 +23,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -80,19 +79,11 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 		}
 		File dataFile = getDataFile();
 		if (dataFile.exists()) {
-			BufferedInputStream in = null;
-			try {
-				in = new BufferedInputStream(new FileInputStream(dataFile));
+			try (FileInputStream fis = new FileInputStream(dataFile);
+					BufferedInputStream in = new BufferedInputStream(fis)) {
 				return (IOObject) IOObjectSerializer.getInstance().deserialize(in);
 			} catch (Exception e) {
 				throw new RepositoryException("Cannot load data from '" + dataFile + "': " + e, e);
-			} finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-					}
-				}
 			}
 		} else {
 			throw new RepositoryException("File '" + dataFile + " does not exist'.");
@@ -111,9 +102,8 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 		MetaData readObject;
 		File metaDataFile = getMetaDataFile();
 		if (metaDataFile.exists()) {
-			ObjectInputStream objectIn = null;
-			try {
-				objectIn = new RMObjectInputStream(new FileInputStream(metaDataFile));
+			try (FileInputStream fis = new FileInputStream(metaDataFile);
+					ObjectInputStream objectIn = new RMObjectInputStream(fis)) {
 				readObject = (MetaData) objectIn.readObject();
 				this.metaData = new WeakReference<>(readObject);
 				if (readObject instanceof ExampleSetMetaData) {
@@ -125,13 +115,6 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 				}
 			} catch (Exception e) {
 				throw new RepositoryException("Cannot load meta data from '" + metaDataFile + "': " + e, e);
-			} finally {
-				if (objectIn != null) {
-					try {
-						objectIn.close();
-					} catch (IOException e) {
-					}
-				}
 			}
 		} else {
 			throw new RepositoryException("Meta data file '" + metaDataFile + " does not exist'.");
@@ -147,41 +130,24 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 		}
 		MetaData md = MetaData.forIOObject(data);
 		// Serialize Non-ExampleSets as IOO
-		OutputStream out = null;
-		try {
-			out = new BufferedOutputStream(new FileOutputStream(getDataFile()));
+		try (FileOutputStream fos = new FileOutputStream(getDataFile()); OutputStream out = new BufferedOutputStream(fos)) {
 			IOObjectSerializer.getInstance().serialize(out, data);
 			if (l != null) {
 				l.setCompleted(75);
 			}
 		} catch (Exception e) {
 			throw new RepositoryException("Cannot store data at '" + getDataFile() + "': " + e, e);
-		} finally {
-			if (out != null) {
-				try {
-					out.close();
-				} catch (IOException e) {
-				}
-			}
 		}
 		// Save MetaData
-		ObjectOutputStream mdOut = null;
-		try {
-			mdOut = new ObjectOutputStream(new FileOutputStream(getMetaDataFile()));
+		try (FileOutputStream fos = new FileOutputStream(getMetaDataFile());
+				ObjectOutputStream mdOut = new ObjectOutputStream(fos)) {
 			mdOut.writeObject(md);
-			mdOut.close();
 			if (l != null) {
 				l.setCompleted(90);
 			}
 		} catch (Exception e) {
 			throw new RepositoryException("Cannot store data at '" + getMetaDataFile() + "': " + e, e);
 		} finally {
-			if (mdOut != null) {
-				try {
-					mdOut.close();
-				} catch (IOException e) {
-				}
-			}
 			if (l != null) {
 				l.setCompleted(100);
 				l.complete();

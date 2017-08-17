@@ -150,7 +150,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 
 	private static final boolean CPU_TIME_SUPPORTED = ManagementFactory.getThreadMXBean().isThreadCpuTimeSupported();
 
-	private static final OperatorVersion[] EMPTY_OPERATOR_VERSIONS_ARRAY = new OperatorVersion[0];
+	public static final OperatorVersion[] EMPTY_OPERATOR_VERSIONS_ARRAY = new OperatorVersion[0];
 
 	private static final OperatorVersion THROW_ERROR_ON_UNDEFINED_MACRO = new OperatorVersion(6, 0, 3);
 

@@ -26,6 +26,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.MappedExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -168,17 +169,10 @@ public class SamplingOperator extends AbstractSamplingOperator {
 		List<String[]> pairs = null;
 		ExampleSet exampleSet = null;
 		if (balanceData) {
+			Tools.hasNominalLabels(originalSet, this.getOperatorClassName());
 			label = originalSet.getAttributes().getLabel();
-			if (label != null) {
-				if (label.isNominal()) {
-					perLabelSets = SplittedExampleSet.splitByAttribute(originalSet, label);
-					exampleSet = perLabelSets;
-				} else {
-					throw new UserError(this, 101, this, label.getName());
-				}
-			} else {
-				throw new UserError(this, 105);
-			}
+				perLabelSets = SplittedExampleSet.splitByAttribute(originalSet, label);
+				exampleSet = perLabelSets;
 
 			switch (sample) {
 				case SAMPLE_RELATIVE:
@@ -211,6 +205,7 @@ public class SamplingOperator extends AbstractSamplingOperator {
 		// now iterate over all subsets
 		for (int i = 0; i < numberOfIterations; i++) {
 			SamplingSequenceGenerator sampleSequence = null;
+			RandomGenerator randomGenerator = RandomGenerator.getRandomGenerator(this);
 			if (balanceData) {
 				perLabelSets.clearSelection();
 				perLabelSets.selectAdditionalSubset(i);
@@ -233,16 +228,16 @@ public class SamplingOperator extends AbstractSamplingOperator {
 				switch (sample) {
 					case SAMPLE_RELATIVE:
 						sampleSequence = new RelativeSamplingSequenceGenerator(exampleSet.size(), Double.valueOf(parameter),
-								RandomGenerator.getRandomGenerator(this));
+								randomGenerator);
 						break;
 					case SAMPLE_ABSOLUTE:
 						sampleSequence = new AbsoluteSamplingSequenceGenerator(exampleSet.size(), Integer.valueOf(parameter),
-								RandomGenerator.getRandomGenerator(this));
+								randomGenerator);
 						break;
 					case SAMPLE_PROBABILITY:
 					default:
 						sampleSequence = new ProbabilitySamplingSequenceGenerator(Double.valueOf(parameter),
-								RandomGenerator.getRandomGenerator(this));
+								randomGenerator);
 						break;
 				}
 
@@ -251,19 +246,18 @@ public class SamplingOperator extends AbstractSamplingOperator {
 				switch (sample) {
 					case SAMPLE_RELATIVE:
 						sampleSequence = new RelativeSamplingSequenceGenerator(exampleSet.size(), sample_ratio,
-								RandomGenerator.getRandomGenerator(this));
+								randomGenerator);
 						break;
 					case SAMPLE_ABSOLUTE:
 						if (sampleSize > exampleSet.size()) {
 							throw new UserError(this, 110, sampleSize);
 						}
 						sampleSequence = new AbsoluteSamplingSequenceGenerator(exampleSet.size(), sampleSize,
-								RandomGenerator.getRandomGenerator(this));
+								randomGenerator);
 						break;
 					case SAMPLE_PROBABILITY:
 					default:
-						sampleSequence = new ProbabilitySamplingSequenceGenerator(sampleProbability,
-								RandomGenerator.getRandomGenerator(this));
+						sampleSequence = new ProbabilitySamplingSequenceGenerator(sampleProbability, randomGenerator);
 						break;
 				}
 			}

@@ -88,7 +88,7 @@ public class LocalPolynomialRegressionOperator extends AbstractLearner {
 	@Override
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 		DistanceMeasure measure = DistanceMeasures.createMeasure(this);
-		measure.init(exampleSet);
+		measure.init(exampleSet, this);
 		GeometricDataCollection<RegressionData> data = new LinearList<RegressionData>(measure);
 
 		// check if weights should be used

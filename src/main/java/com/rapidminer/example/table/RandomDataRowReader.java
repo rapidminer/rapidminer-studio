@@ -29,7 +29,9 @@ import com.rapidminer.tools.RandomGenerator;
  * attributes of the given base example set.
  * 
  * @author Ingo Mierswa Exp $
+ * @deprecated since 7.5.4.
  */
+@Deprecated
 public class RandomDataRowReader extends AbstractDataRowReader {
 
 	private int size;

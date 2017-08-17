@@ -4577,6 +4577,7 @@
          <tag>Impute</tag>
          <tag>Na</tag>
          <tag>Nan</tag>
+         <tag>NaN</tag>
          <tag>Fill na</tag>
     </tags>
   </operator>
@@ -7071,6 +7072,7 @@
          <tag>Scores</tag>
          <tag>Scoring</tag>
          <tag>Trained</tag>
+         <tag>Test</tag>
     </tags>
   </operator>
     <operator>

@@ -82,14 +82,15 @@ public class IQRNormalizationModel extends AbstractNormalizationModel {
 	@Override
 	public double getValue(Attribute targetAttribute, double value) {
 		Tupel<Double, Double> meanSigmaTupel = attributeMeanSigmaMap.get(targetAttribute.getName());
-		if (meanSigmaTupel != null) {
-			if (meanSigmaTupel.getSecond().doubleValue() <= 0) {
-				return (0);
-			} else {
-				return ((value - meanSigmaTupel.getFirst().doubleValue()) / meanSigmaTupel.getSecond().doubleValue());
-			}
+		if (meanSigmaTupel == null) {
+			return value;
 		}
-		return value;
+		double sigma = meanSigmaTupel.getSecond().doubleValue();
+		if (sigma <= 0) {
+			return 0;
+		} else {
+			return (value - meanSigmaTupel.getFirst().doubleValue()) / sigma;
+		}
 	}
 	
 	public Map<String, Tupel<Double, Double>> getAttributeMeanSigmaMap() {

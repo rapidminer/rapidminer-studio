@@ -122,16 +122,14 @@ public class BookmarkIO {
 
 	public static List<Bookmark> readBookmarks(File bookmarkFile) {
 		List<Bookmark> bookmarks = new LinkedList<Bookmark>();
-		BufferedReader in = null;
-		try {
-			in = new BufferedReader(new FileReader(bookmarkFile));
+		try (FileReader fr = new FileReader(bookmarkFile); BufferedReader in = new BufferedReader(fr)) {
 			String line = in.readLine();
 			if (line != null) {
 				int numberOfBookmarks = Integer.parseInt(line);
 				for (int i = 0; i < numberOfBookmarks; i++) {
 					String name = in.readLine();
 					String path = in.readLine();
-					if ((name != null) && (path != null)) {
+					if (name != null && path != null) {
 						bookmarks.add(new Bookmark(name, path));
 					}
 				}
@@ -140,22 +138,12 @@ public class BookmarkIO {
 			Collections.sort(bookmarks);
 		} catch (Exception e) {
 			bookmarks.clear();
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					// should not happen
-				}
-			}
 		}
 		return bookmarks;
 	}
 
 	public static void writeBookmarks(Collection<Bookmark> bookmarks, File bookmarkFile) {
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new FileWriter(bookmarkFile));
+		try (FileWriter fw = new FileWriter(bookmarkFile); PrintWriter out = new PrintWriter(fw)) {
 			out.println(bookmarks.size());
 			for (Bookmark bookmark : bookmarks) {
 				out.println(bookmark.getName());
@@ -164,10 +152,6 @@ public class BookmarkIO {
 			out.close();
 		} catch (Exception e) {
 			// do nothing
-		} finally {
-			if (out != null) {
-				out.close();
-			}
 		}
 	}
 }

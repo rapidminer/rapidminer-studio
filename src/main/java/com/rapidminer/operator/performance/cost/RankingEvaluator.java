@@ -18,14 +18,13 @@
 */
 package com.rapidminer.operator.performance.cost;
 
-import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ValueDouble;
 import com.rapidminer.operator.performance.MeasuredPerformance;
 import com.rapidminer.operator.performance.PerformanceCriterion;
@@ -91,37 +90,29 @@ public class RankingEvaluator extends Operator {
 	@Override
 	public void doWork() throws OperatorException {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
-		Attribute label = exampleSet.getAttributes().getLabel();
-		if (label != null) {
-			if (label.isNominal()) {
-				List<String[]> rankings = getParameterList(PARAMETER_RANKING_COSTS);
-				int i = 0;
-				double[] costs = new double[rankings.size()];
-				int[] indices = new int[rankings.size()];
-				for (String[] pair : rankings) {
-					indices[i] = Integer.valueOf(pair[0]);
-					costs[i] = Double.valueOf(pair[1]);
-					// TODO: Check if correctly sorted or sort automatically
-					i++;
-				}
-
-				MeasuredPerformance criterion = new RankingCriterion(indices, costs, exampleSet);
-				performance = new PerformanceVector();
-				performance.addCriterion(criterion);
-				// now measuring costs
-				criterion.startCounting(exampleSet, false);
-				for (Example example : exampleSet) {
-					criterion.countExample(example);
-				}
-
-				exampleSetOutput.deliver(exampleSet);
-				performanceOutput.deliver(performance);
-			} else {
-				throw new UserError(this, 101, "CostEvaluator", label.getName());
-			}
-		} else {
-			throw new UserError(this, 105);
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
+		List<String[]> rankings = getParameterList(PARAMETER_RANKING_COSTS);
+		int i = 0;
+		double[] costs = new double[rankings.size()];
+		int[] indices = new int[rankings.size()];
+		for (String[] pair : rankings) {
+			indices[i] = Integer.valueOf(pair[0]);
+			costs[i] = Double.valueOf(pair[1]);
+			// TODO: Check if correctly sorted or sort automatically
+			i++;
 		}
+
+		MeasuredPerformance criterion = new RankingCriterion(indices, costs, exampleSet);
+		performance = new PerformanceVector();
+		performance.addCriterion(criterion);
+		// now measuring costs
+		criterion.startCounting(exampleSet, false);
+		for (Example example : exampleSet) {
+			criterion.countExample(example);
+		}
+
+		exampleSetOutput.deliver(exampleSet);
+		performanceOutput.deliver(performance);
 	}
 
 	@Override

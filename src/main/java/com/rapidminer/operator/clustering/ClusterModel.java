@@ -88,15 +88,13 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 		this.checkCapabilities(exampleSet);
 
 		// creating attribute
-		Attribute targetAttribute;
-		if (!isAddingAsLabel) {
-			targetAttribute = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
-			exampleSet.getExampleTable().addAttribute(targetAttribute);
-			attributes.setCluster(targetAttribute);
-		} else {
-			targetAttribute = AttributeFactory.createAttribute("label", Ontology.NOMINAL);
-			exampleSet.getExampleTable().addAttribute(targetAttribute);
+		Attribute targetAttribute = AttributeFactory
+				.createAttribute(isAddingAsLabel ? Attributes.LABEL_NAME : Attributes.CLUSTER_NAME, Ontology.NOMINAL);
+		exampleSet.getExampleTable().addAttribute(targetAttribute);
+		if (isAddingAsLabel) {
 			attributes.setLabel(targetAttribute);
+		} else {
+			attributes.setCluster(targetAttribute);
 		}
 
 		if (progress != null) {
@@ -181,18 +179,15 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 	public int[] getClusterAssignments(ExampleSet exampleSet) {
 		int[] clusterAssignments = new int[exampleSet.size()];
 		Attribute idAttribute = exampleSet.getAttributes().getId();
+		NominalMapping mapping = null;
 		if (idAttribute.isNominal()) {
-			int j = 0;
-			for (Example example : exampleSet) {
-				clusterAssignments[j] = getClusterIndexOfId(example.getValueAsString(idAttribute));
-				j++;
-			}
-		} else {
-			int j = 0;
-			for (Example example : exampleSet) {
-				clusterAssignments[j] = getClusterIndexOfId(example.getValue(idAttribute));
-				j++;
-			}
+			mapping = idAttribute.getMapping();
+		}
+		int j = 0;
+		for (Example example : exampleSet) {
+			double value = example.getValue(idAttribute);
+			clusterAssignments[j] = getClusterIndexOfId(mapping != null ? mapping.mapIndex((int) value) : value);
+			j++;
 		}
 		return clusterAssignments;
 	}

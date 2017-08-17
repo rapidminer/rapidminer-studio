@@ -64,7 +64,8 @@ public class PolynomialFunction {
 
 	@Override
 	public String toString() {
-		if (coefficient == 0.0f || coefficient == -0.0f) {
+		// this is true for both 0.0 and -0.0 because primitive compare is defined that way
+		if (coefficient == 0.0d) {
 			return "n/a";
 		}
 		NumberFormat formatter = new DecimalFormat("#.##");

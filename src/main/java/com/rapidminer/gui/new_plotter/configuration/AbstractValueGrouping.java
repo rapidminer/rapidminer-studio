@@ -18,18 +18,17 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.text.DateFormat;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
 import com.rapidminer.gui.new_plotter.listener.ValueGroupingListener;
 import com.rapidminer.gui.new_plotter.listener.events.ValueGroupingChangeEvent;
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.gui.new_plotter.utility.ValueRange;
-
-import java.text.DateFormat;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -123,8 +122,6 @@ public abstract class AbstractValueGrouping implements ValueGrouping {
 
 	@Override
 	public final List<ValueRange> getGroupingModel(DataTable data, double upperBound, double lowerBound) {
-		StaticDebug.debug("Create grouping with upper bound: " + upperBound);
-		StaticDebug.debug("and lower bound: " + lowerBound);
 		return createGroupingModel(data, upperBound, lowerBound);
 	}
 

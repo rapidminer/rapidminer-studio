@@ -18,9 +18,13 @@
 */
 package com.rapidminer.gui.new_plotter.configuration;
 
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.new_plotter.ChartConfigurationException;
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
-import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
 import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.StackingMode;
 import com.rapidminer.gui.new_plotter.configuration.SeriesFormat.VisualizationType;
@@ -38,11 +42,6 @@ import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.ListUtility;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.tools.I18N;
-
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -124,12 +123,7 @@ public class RangeAxisConfig implements ValueSourceListener, ValueRangeListener,
 	 *            Otherwise this series format will be set for the new value source.
 	 * 
 	 */
-	public void addValueSource(int index, ValueSource valueSource, SeriesFormat seriesFormat) { // throws
-																								// ChartConfigurationException
-																								// {
-
-		StaticDebug.debug("RangeAxisConfig: ADDING VALUE SOURCE " + valueSource + " (id: " + valueSource.getId()
-				+ ") to RangeAxis with ID " + this.getId());
+	public void addValueSource(int index, ValueSource valueSource, SeriesFormat seriesFormat) {
 
 		if (seriesFormat != null) {
 			valueSource.setSeriesFormat(seriesFormat);

@@ -20,10 +20,10 @@ package com.rapidminer.operator.learner.functions.kernel;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.examples.SVMExamples;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.kernel.Kernel;
 import com.rapidminer.operator.learner.functions.kernel.jmysvm.svm.SVMInterface;
@@ -67,9 +67,7 @@ public class MyKLRLearner extends AbstractMySVMLearner {
 	@Override
 	public SVMInterface createSVM(Attribute label, Kernel kernel, SVMExamples sVMExamples,
 			com.rapidminer.example.ExampleSet rapidMinerExamples) throws OperatorException {
-		if (!label.isNominal()) {
-			throw new UserError(this, 101, new Object[] { "MyKLR", label.getName() });
-		}
+		Tools.hasNominalLabels(rapidMinerExamples, "MyKLR");
 		return new KLR(this);
 	}
 

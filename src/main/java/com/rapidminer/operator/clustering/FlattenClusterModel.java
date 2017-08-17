@@ -23,17 +23,23 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
 import com.rapidminer.operator.ports.metadata.GenerateNewMDRule;
-import com.rapidminer.operator.ports.metadata.PassThroughRule;
+import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -56,7 +62,15 @@ public class FlattenClusterModel extends Operator {
 	public FlattenClusterModel(OperatorDescription description) {
 		super(description);
 		getTransformer().addRule(new GenerateNewMDRule(flatOutput, ClusterModel.class));
-		getTransformer().addRule(new PassThroughRule(exampleSetInput, exampleSetOutput, true));
+		getTransformer().addRule(new ExampleSetPassThroughRule(exampleSetInput, exampleSetOutput, SetRelation.EQUAL) {
+
+			@Override
+			public ExampleSetMetaData modifyExampleSet(ExampleSetMetaData metaData) {
+				String targetName = addsLabelAttribute() ? Attributes.LABEL_NAME : Attributes.CLUSTER_NAME;
+				metaData.addAttribute(new AttributeMetaData(targetName, Ontology.NOMINAL, targetName));
+				return metaData;
+			}
+		});
 	}
 
 	@Override
@@ -91,6 +105,9 @@ public class FlattenClusterModel extends Operator {
 		queue.add(root);
 		while (queue.size() < numberOfClusters - leafs.size()) {
 			HierarchicalClusterNode topNode = queue.poll();
+			if (topNode == null) {
+				throw new UserError(null, 142, PARAMETER_NUMBER_OF_CLUSTER);
+			}
 			if (topNode.getSubNodes().size() > 0) {
 				queue.addAll(topNode.getSubNodes());
 			} else {
@@ -100,8 +117,8 @@ public class FlattenClusterModel extends Operator {
 		queue.addAll(leafs);
 
 		// construct flat cluster model from nodes
-		ClusterModel flatModel = new ClusterModel(exampleSet, numberOfClusters,
-				getParameterAsBoolean(PARAMETER_ADD_AS_LABEL), getParameterAsBoolean(PARAMETER_REMOVE_UNLABELED));
+		ClusterModel flatModel = new ClusterModel(exampleSet, numberOfClusters, addsLabelAttribute(),
+				getParameterAsBoolean(PARAMETER_REMOVE_UNLABELED));
 		int i = 0;
 		for (HierarchicalClusterNode node : queue) {
 			Cluster flatCluster = flatModel.getCluster(i);
@@ -116,6 +133,15 @@ public class FlattenClusterModel extends Operator {
 			exampleSetOutput.deliver(flatModel.apply((ExampleSet) exampleSet.clone()));
 		}
 		return flatModel;
+	}
+
+	/**
+	 * Indicates whether this operator adds the cluster attribute as a label attribute.
+	 *
+	 * @since 7.6
+	 */
+	private boolean addsLabelAttribute() {
+		return getParameterAsBoolean(PARAMETER_ADD_AS_LABEL);
 	}
 
 	@Override

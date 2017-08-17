@@ -21,7 +21,6 @@ package com.rapidminer.gui.tools;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -96,7 +95,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 		 * Opens the given url in the system browser.
 		 *
 		 * @param url
-		 *            the url to open
+		 * 		the url to open
 		 */
 		public void openLink(String url) {
 			if (url != null) {
@@ -148,8 +147,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 	/**
 	 * Predefined reasons for the closing of the CTA window.
 	 */
-	private interface Reason {
-
+	private final class Reason {
 		public static final String CLOSED = "closed";
 		public static final String UNKNOWN = "unknown";
 		public static final String LATER = "later";
@@ -157,6 +155,10 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 		public static final String JS_INVALID = "js_invalid";
 		public static final String FAILED_LOADING = "failed_loading";
 		public static final String TIMEOUT = "loading_timeout";
+
+		private Reason() {
+			throw new UnsupportedOperationException("Static utility class");
+		}
 	}
 
 	private static final long serialVersionUID = 1L;
@@ -175,13 +177,17 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 			.getDefaultConfiguration().isTranslucencyCapable();
 
 	/** Mac OS X requires the fonts very early */
-	private static final String[] FONT_NAMES = new String[] { "OpenSans.ttf", "OpenSans-Bold.ttf", "OpenSans-BoldItalic.ttf",
+	private static final String[] FONT_NAMES = new String[]{"OpenSans.ttf", "OpenSans-Bold.ttf", "OpenSans-BoldItalic.ttf",
 			"OpenSans-ExtraBold.ttf", "OpenSans-ExtraBoldItalic.ttf", "OpenSans-Italic.ttf", "OpenSans-Light.ttf",
-			"OpenSans-LightItalic.ttf", "OpenSans-Semibold.ttf", "OpenSans-SemiboldItalic.ttf", "ionicons.ttf" };
+			"OpenSans-LightItalic.ttf", "OpenSans-Semibold.ttf", "OpenSans-SemiboldItalic.ttf", "ionicons.ttf"};
+	/** Loading fonts - do not remove! */
 	private static final Font[] FONTS = Stream.of(FONT_NAMES)
 			.map(font -> Font.loadFont(
 					BrowserPopup.class.getResource("/com/rapidminer/resources/fonts/" + font).toExternalForm(), 12))
-			.toArray(s -> new Font[s]);
+			.toArray(Font[]::new);
+
+	/** Default Mac Dialog shadow */
+	private static final String MAC_OS_X_SHADOW = "Window.shadow";
 
 	private static final int TRANSLATION_MS = MODERN_UI ? 1_000 : 1;
 
@@ -218,8 +224,11 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 	private static final String JS_NAME = "CTA";
 	private static final String JS_INITIALIZE = "initialize()";
 
+	/** This is required since 8u112 due to the changes of https://bugs.openjdk.java.net/browse/JDK-8089681 */
+	private final CTACallbacks ctaCallbacks = new CTACallbacks();
+
 	/** Hack to keep translucent window alive after it was iconified */
-	private final WindowListener transparencyFix = new WindowAdapter() {
+	private final transient WindowListener transparencyFix = new WindowAdapter() {
 
 		@Override
 		public void windowActivated(WindowEvent e) {
@@ -251,7 +260,13 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 
 	private final JFXPanel contentPanel;
 
-	private Timer failTimer;
+	private final Timer failTimer = new Timer(TIMEOUT, (ActionEvent ev) -> {
+		Platform.runLater(() -> {
+					ctaCallbacks.closeWithReason(Reason.TIMEOUT);
+					logCtaFailure(Reason.TIMEOUT);
+				}
+		);
+	});
 
 	/** Actual HTML content of the popup */
 	private final String html;
@@ -260,10 +275,10 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 	private final StackPane animatedPane = new StackPane();
 
 	/** Used to decrease the quality on transition */
-	private WebView webView;
+	private transient WebView webView;
 
 	/** Used to decrease shadow quality for transition */
-	private final DropShadow dropShadow = new DropShadow(BORDER_PADDING, SHADOW_OFFSET_X, SHADOW_OFFSET_Y, SHADOW_COLOR);
+	private final transient DropShadow dropShadow = new DropShadow(BORDER_PADDING, SHADOW_OFFSET_X, SHADOW_OFFSET_Y, SHADOW_COLOR);
 
 	/**
 	 * Creates a 500x200 Browser Popup
@@ -276,7 +291,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 
 	/**
 	 * @param onboardingDialog
-	 *            the parent dialog
+	 * 		the parent dialog
 	 */
 	public BrowserPopup(String html, int width, int height) {
 		super(RapidMinerGUI.getMainFrame());
@@ -294,6 +309,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 		this.setUndecorated(MODERN_UI);
 		// Make it transparent
 		getRootPane().setOpaque(!MODERN_UI);
+		getRootPane().putClientProperty(MAC_OS_X_SHADOW, Boolean.FALSE);
 		getContentPane().setBackground(BG_COLOR);
 		getRootPane().setBackground(BG_COLOR);
 		setBackground(BG_COLOR);
@@ -313,7 +329,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 	 */
 	@Override
 	public String get() {
-		String reason = Reason.UNKNOWN;
+		String reason;
 		if (closed.get() && reasonQueue.isEmpty()) {
 			reason = Reason.CLOSED;
 		} else {
@@ -329,6 +345,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 			} catch (InterruptedException e) {
 				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.tools.BrowserPopup.result.interupted", e);
 				reason = Reason.UNKNOWN;
+				Thread.currentThread().interrupt();
 			}
 		}
 		return reason;
@@ -337,7 +354,10 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 	@Override
 	public void setVisible(boolean visible) {
 		boolean wasVisible = this.isVisible();
+		//Don't steal the focus from the user
+		this.setFocusableWindowState(false);
 		super.setVisible(visible);
+		this.setFocusableWindowState(true);
 		if (!wasVisible && visible) {
 			slideIn();
 		}
@@ -372,50 +392,50 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 		Platform.setImplicitExit(false);
 
 		Platform.runLater(() -> {
-			// Transparent root pane
-			BorderPane rootPane = new BorderPane();
-			rootPane.setBackground(Background.EMPTY);
-			// Add padding to see the Shadow
-			rootPane.setPadding(new Insets(BORDER_PADDING - SHADOW_OFFSET_Y, RIGHT_MARGIN, BORDER_PADDING + SHADOW_OFFSET_Y,
-					BORDER_PADDING));
-			rootPane.setCenter(animatedPane);
+					// Transparent root pane
+					BorderPane rootPane = new BorderPane();
+					rootPane.setBackground(Background.EMPTY);
+					// Add padding to see the Shadow
+					rootPane.setPadding(new Insets(BORDER_PADDING - SHADOW_OFFSET_Y, RIGHT_MARGIN, BORDER_PADDING + SHADOW_OFFSET_Y,
+							BORDER_PADDING));
+					rootPane.setCenter(animatedPane);
 
-			// Enable cache for smoother animation
-			animatedPane.setCache(true);
-			animatedPane.setCacheHint(CacheHint.SPEED);
-			animatedPane.setCacheShape(true);
-			/** Just fill the whole pane and add a background */
-			animatedPane.setPadding(new Insets(BORDER_SIZE));
-			animatedPane.setBackground(BORDER_BG);
+					// Enable cache for smoother animation
+					animatedPane.setCache(true);
+					animatedPane.setCacheHint(CacheHint.SPEED);
+					animatedPane.setCacheShape(true);
+					/** Just fill the whole pane and add a background */
+					animatedPane.setPadding(new Insets(BORDER_SIZE));
+					animatedPane.setBackground(BORDER_BG);
 
-			// Reduce dropShadow Quality
-			dropShadow.setBlurType(BlurType.TWO_PASS_BOX);
-			animatedPane.setEffect(dropShadow);
+					// Reduce dropShadow Quality
+					dropShadow.setBlurType(BlurType.TWO_PASS_BOX);
+					animatedPane.setEffect(dropShadow);
 
-			webView = new WebView();
-			Button closeButton = createCloseButton();
-			// Show button only on hover
-			closeButton.opacityProperty()
-					.bind(Bindings.when(webView.hoverProperty().or(closeButton.hoverProperty())).then(1).otherwise(0));
+					webView = new WebView();
+					Button closeButton = createCloseButton();
+					// Show button only on hover
+					closeButton.opacityProperty()
+							.bind(Bindings.when(webView.hoverProperty().or(closeButton.hoverProperty())).then(1).otherwise(0));
 
-			// Reduce WebView Quality
-			webView.setContextMenuEnabled(false);
-			webView.setFontSmoothingType(FontSmoothingType.GRAY);
-			webView.setCache(true);
-			webView.setCacheHint(CacheHint.SPEED);
-			// Translate the animatedPane out of sight
-			animatedPane.setTranslateX(translationDistance);
-			// The webView is overlayed by the close button
-			animatedPane.getChildren().addAll(webView, closeButton);
-			// move close button to the upper right corner
-			StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
-			StackPane.setMargin(closeButton, CLOSE_MARGIN);
-			// Create a transparent root scene
-			Scene rootScene = new Scene(rootPane, Color.TRANSPARENT);
-			contentPanel.setScene(rootScene);
-			// prepare the browser
-			configureWebEngine(webView);
-		}
+					// Reduce WebView Quality
+					webView.setContextMenuEnabled(false);
+					webView.setFontSmoothingType(FontSmoothingType.GRAY);
+					webView.setCache(true);
+					webView.setCacheHint(CacheHint.SPEED);
+					// Translate the animatedPane out of sight
+					animatedPane.setTranslateX(translationDistance);
+					// The webView is overlayed by the close button
+					animatedPane.getChildren().addAll(webView, closeButton);
+					// move close button to the upper right corner
+					StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
+					StackPane.setMargin(closeButton, CLOSE_MARGIN);
+					// Create a transparent root scene
+					Scene rootScene = new Scene(rootPane, Color.TRANSPARENT);
+					contentPanel.setScene(rootScene);
+					// prepare the browser
+					configureWebEngine(webView);
+				}
 
 		);
 
@@ -444,7 +464,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 		closeButton.backgroundProperty()
 				.bind(Bindings.when(closeButton.hoverProperty()).then(CLOSE_BG_HOVER).otherwise(CLOSE_BG));
 		// Close action
-		closeButton.setOnAction((ev) -> new CTACallbacks().closeWithReason(Reason.CLOSED));
+		closeButton.setOnAction((e) -> ctaCallbacks.closeWithReason(Reason.CLOSED));
 		return closeButton;
 	}
 
@@ -467,53 +487,36 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 				switch (newState) {
 					case SUCCEEDED:
 						JSObject win = (JSObject) webEngine.executeScript(JS_ROOT);
-						win.setMember(JS_NAME, new CTACallbacks());
+						win.setMember(JS_NAME, ctaCallbacks);
 						try {
 							// Check JS initialization
 							webEngine.executeScript(JS_INITIALIZE);
 							// Stop the timer
-							if (failTimer != null) {
-								failTimer.stop();
-							}
+							failTimer.stop();
 							// Translate the webView in
 							isLoaded = true;
 							slideIn();
 						} catch (RuntimeException e) {
 							// initialize method does not exist, fail silently
-							if (failTimer != null) {
-								failTimer.stop();
-							}
-							new CTACallbacks().closeWithReason(Reason.JS_INVALID);
+							failTimer.stop();
+							ctaCallbacks.closeWithReason(Reason.JS_INVALID);
 							logCtaFailure(Reason.JS_INVALID);
 						}
 						break;
 					case FAILED:
-						if (failTimer != null) {
-							failTimer.stop();
-						}
-						new CTACallbacks().closeWithReason(Reason.FAILED_LOADING);
+						failTimer.stop();
+						ctaCallbacks.closeWithReason(Reason.FAILED_LOADING);
 						logCtaFailure(Reason.FAILED_LOADING);
 						break;
 					case RUNNING:
 						if (!hasFallbackTimer) {
 							hasFallbackTimer = true;
-							failTimer = new Timer(TIMEOUT, new ActionListener() {
-
-								@Override
-								public void actionPerformed(ActionEvent e) {
-									Platform.runLater(() -> {
-										new CTACallbacks().closeWithReason(Reason.TIMEOUT);
-										logCtaFailure(Reason.TIMEOUT);
-									});
-
-								}
-							});
 							failTimer.setRepeats(false);
 							failTimer.start();
 						}
 						break;
 					case CANCELLED:
-						new CTACallbacks().closeWithReason(Reason.CANCELED);
+						ctaCallbacks.closeWithReason(Reason.CANCELED);
 						logCtaFailure(Reason.CANCELED);
 						break;
 					case READY:

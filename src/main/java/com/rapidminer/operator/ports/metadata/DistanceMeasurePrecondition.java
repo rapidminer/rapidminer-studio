@@ -18,12 +18,20 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
+import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.math.similarity.DistanceMeasure;
 import com.rapidminer.tools.math.similarity.DistanceMeasures;
 
 
@@ -42,34 +50,67 @@ public class DistanceMeasurePrecondition extends AbstractPrecondition {
 		this.parameterHandler = handler;
 	}
 
+	private static String errorKeys[] = { null, "measures.nominal", "measures.numerical", "measures.numerical" };
+	private static String paramNames[] = { null, DistanceMeasures.PARAMETER_NOMINAL_MEASURE,
+			DistanceMeasures.PARAMETER_NUMERICAL_MEASURE, DistanceMeasures.PARAMETER_DIVERGENCE };
+
 	@Override
 	public void check(MetaData metaData) {
 		if (metaData instanceof ExampleSetMetaData) {
 			ExampleSetMetaData emd = (ExampleSetMetaData) metaData;
 			try {
-				switch (this.parameterHandler.getParameterAsInt(DistanceMeasures.PARAMETER_MEASURE_TYPES)) {
-					case DistanceMeasures.NOMINAL_MEASURES_TYPE:
-						if (!containsOnlyType(emd, Ontology.NOMINAL, false)) {
-							createError(Severity.ERROR, "measures.nominal",
-									parameterHandler.getParameterAsString(DistanceMeasures.PARAMETER_NOMINAL_MEASURE));
-						}
-						break;
-					case DistanceMeasures.NUMERICAL_MEASURES_TYPE:
-						if (!containsOnlyType(emd, Ontology.NUMERICAL, false)) {
-							createError(Severity.ERROR, "measures.numerical",
-									parameterHandler.getParameterAsString(DistanceMeasures.PARAMETER_NUMERICAL_MEASURE));
-						}
-						break;
-					case DistanceMeasures.DIVERGENCES_TYPE:
-						if (!containsOnlyType(emd, Ontology.NUMERICAL, false)) {
-							createError(Severity.ERROR, "measures.numerical",
-									parameterHandler.getParameterAsString(DistanceMeasures.PARAMETER_DIVERGENCE));
-						}
-						break;
+				int distType = this.parameterHandler.getParameterAsInt(DistanceMeasures.PARAMETER_MEASURE_TYPES);
+				if (distType == DistanceMeasures.MIXED_MEASURES_TYPE) {
+					return;
+				}
+				boolean handlesOnlyNom = distType == DistanceMeasures.NOMINAL_MEASURES_TYPE;
+				boolean containsOnlyNom = containsOnlyType(emd, Ontology.NOMINAL, false);
+				boolean containsOnlyNum = containsOnlyType(emd, Ontology.NUMERICAL, false);
+				if (!handlesOnlyNom && !containsOnlyNum || handlesOnlyNom && !containsOnlyNom) {
+					createError(Severity.ERROR, getQuickFixes(containsOnlyNom != containsOnlyNum, containsOnlyNom),
+							errorKeys[distType], parameterHandler.getParameterAsString(paramNames[distType]));
 				}
 			} catch (UndefinedParameterError e) {
 			}
 		}
+
+	}
+
+	/**
+	 * Creates {@link QuickFix QuickFixes} for {@link DistanceMeasure} based errors. Will always
+	 * suggest mixed measures, but also nominal/numeric measures if the meta data supports that.
+	 *
+	 * @param moreFixes
+	 *            indicates whether the meta data represents a pure nominal/numerical example set
+	 * @param nomFixes
+	 *            if {@code true}, adds nominal measure fix, otherwise adds numerical measure fixes
+	 * @return a list of appropriate quick fixes
+	 *
+	 * @since 7.6
+	 */
+	private List<QuickFix> getQuickFixes(boolean moreFixes, boolean nomFixes) {
+		Operator operator;
+		try {
+			operator = getInputPort().getPorts().getOwner().getOperator();
+		} catch (NullPointerException npe) {
+			return Collections.emptyList();
+		}
+		List<QuickFix> fixes = new ArrayList<>();
+		fixes.add(createFix(operator, DistanceMeasures.MIXED_MEASURES_TYPE));
+		if (moreFixes) {
+			if (nomFixes) {
+				fixes.add(createFix(operator, DistanceMeasures.NOMINAL_MEASURES_TYPE));
+			} else {
+				fixes.add(createFix(operator, DistanceMeasures.NUMERICAL_MEASURES_TYPE));
+				fixes.add(createFix(operator, DistanceMeasures.DIVERGENCES_TYPE));
+			}
+		}
+		return fixes;
+	}
+
+	private QuickFix createFix(Operator operator, int type) {
+		return new ParameterSettingQuickFix(operator, DistanceMeasures.PARAMETER_MEASURE_TYPES,
+				DistanceMeasures.MEASURE_TYPES[type]);
 	}
 
 	private boolean containsOnlyType(ExampleSetMetaData emd, int type, boolean includeSpecial) {

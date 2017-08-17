@@ -18,11 +18,17 @@
 */
 package com.rapidminer.operator.preprocessing.normalization;
 
-import com.rapidminer.parameter.ParameterHandler;
-import com.rapidminer.parameter.ParameterType;
-
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.ProcessSetupError;
+import com.rapidminer.operator.ProcessSetupError.Severity;
+import com.rapidminer.operator.SimpleProcessSetupError;
+import com.rapidminer.parameter.ParameterHandler;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.tools.LogService;
 
 
 /**
@@ -40,6 +46,58 @@ public abstract class AbstractNormalizationMethod implements NormalizationMethod
 	@Override
 	public List<ParameterType> getParameterTypes(ParameterHandler handler) {
 		return new LinkedList<ParameterType>();
+	}
+
+	/**
+	 * Logs a warning and adds a {@link ProcessSetupError} to the given operator based on the i18n
+	 * key and offending values.
+	 *
+	 * @param i18nKey
+	 *            the key of the error
+	 * @param operator
+	 *            the offending operator
+	 * @param attributeName
+	 *            the offending attribute
+	 * @param values
+	 *            the offending value(s)
+	 * @since 7.6
+	 */
+	protected void problematicValueWarning(String i18nKey, Operator operator, String attributeName, double... values) {
+		String valueString = Arrays.toString(values);
+		SimpleProcessSetupError setupError = new SimpleProcessSetupError(Severity.WARNING, operator.getPortOwner(), i18nKey,
+				getName(), attributeName, valueString);
+		operator.addError(setupError);
+		LogService.getRoot().warning(setupError.getMessage());
+	}
+
+	/**
+	 * Same as {@link #problematicValueWarning(String, Operator, String, double...)
+	 * problematicValueWarning("normalization.nonfinite_values", Operator, String, double...)}
+	 *
+	 * @since 7.6
+	 */
+	protected void nonFiniteValueWarning(Operator operator, String attributeName, double... values) {
+		problematicValueWarning("normalization.nonfinite_values", operator, attributeName, values);
+	}
+
+	/**
+	 * Same as {@link #problematicValueWarning(String, Operator, String, double...)
+	 * problematicValueWarning("normalization.negative_values", Operator, String, double...)}
+	 *
+	 * @since 7.6
+	 */
+	protected void negativeValueWarning(Operator operator, String attributeName, double... values) {
+		problematicValueWarning("normalization.negative_values", operator, attributeName, values);
+	}
+
+	/**
+	 * Same as {@link #problematicValueWarning(String, Operator, String, double...)
+	 * problematicValueWarning("normalization.divisor", Operator, String, double...)}
+	 *
+	 * @since 7.6
+	 */
+	protected void divisorWarning(Operator operator, String attributeName, double... values) {
+		problematicValueWarning("normalization.divisor", operator, attributeName, values);
 	}
 
 }

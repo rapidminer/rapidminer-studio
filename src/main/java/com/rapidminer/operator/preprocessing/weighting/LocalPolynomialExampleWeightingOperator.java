@@ -123,7 +123,7 @@ public class LocalPolynomialExampleWeightingOperator extends Operator {
 
 	public ExampleSet doWork(ExampleSet exampleSet, ParameterHandler handler) throws OperatorException {
 		DistanceMeasure measure = DistanceMeasures.createMeasure(handler);
-		measure.init(exampleSet);
+		measure.init(exampleSet, this);
 
 		Attributes attributes = exampleSet.getAttributes();
 		Attribute label = attributes.getLabel();

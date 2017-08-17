@@ -100,9 +100,7 @@ public class CostBasedThresholdLearner extends AbstractMetaLearner {
 		List<String[]> classWeights = getParameterList(PARAMETER_CLASS_WEIGHTS);
 
 		// some checks
-		if (!exampleSet.getAttributes().getLabel().isNominal()) {
-			throw new UserError(this, 101, getName(), label.getName());
-		}
+		com.rapidminer.example.Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 
 		if (classWeights.size() == 0) {
 			throw new UndefinedParameterError(PARAMETER_CLASS_WEIGHTS, this);

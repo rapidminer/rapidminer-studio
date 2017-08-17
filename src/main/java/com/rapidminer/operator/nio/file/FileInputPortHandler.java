@@ -100,8 +100,10 @@ public class FileInputPortHandler {
 					try {
 						cachedFile = File.createTempFile("rm_file_", ".dump");
 						cachedFile.deleteOnExit();
-						FileOutputStream fos = new FileOutputStream(cachedFile);
-						Tools.copyStreamSynchronously(WebServiceTools.openStreamFromURL(url), fos, true);
+						try (InputStream urlStream = WebServiceTools.openStreamFromURL(url);
+								FileOutputStream fos = new FileOutputStream(cachedFile)) {
+							Tools.copyStreamSynchronously(urlStream, fos, true);
+						}
 					} catch (IOException e) {
 						throw new OperatorException("Failed to access URL: " + url, e);
 					}

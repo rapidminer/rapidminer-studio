@@ -37,6 +37,7 @@
 		<group key="rapidminer.preferences.subgroup.tools.mail">
 			<property key="rapidminer.tools.mail.method" />
 			<property key="rapidminer.tools.sendmail.command" />
+			<property key="rapidminer.tools.mail.sender" />
 			<property key="rapidminer.tools.mail.default_recipient" />
 			<property key="rapidminer.tools.mail.process_duration_for_mail" />
 		</group>
@@ -45,6 +46,8 @@
 			<property key="rapidminer.tools.smtp.port" />
 			<property key="rapidminer.tools.smtp.user" />
 			<property key="rapidminer.tools.smtp.passwd" />
+			<property key="rapidminer.tools.smtp.security" />
+			<property key="rapidminer.tools.smtp.authentication" />
 		</group>
 		<property key="rapidminer.tools.editor" />
 		<property key="rapidminer.tools.db.assist.show_only_standard_tables" />

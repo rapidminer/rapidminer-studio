@@ -407,8 +407,8 @@ public class ParameterService {
 			}
 		}
 		BufferedOutputStream out = null;
-		try {
-			out = new BufferedOutputStream(new FileOutputStream(configFile));
+		try (FileOutputStream fos = new FileOutputStream(configFile)) {
+			out = new BufferedOutputStream(fos);
 			properties.store(out, "");
 		} catch (FileNotFoundException e) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
@@ -521,20 +521,11 @@ public class ParameterService {
 			return;
 		}
 
-		BufferedOutputStream out = null;
-		try {
-			out = new BufferedOutputStream(new FileOutputStream(file));
+		try (FileOutputStream fos = new FileOutputStream(file); BufferedOutputStream out = new BufferedOutputStream(fos)) {
 			properties.store(out, "");
 		} catch (IOException e) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.tools.ParameterService.writing_user_properties_error", e.getMessage()), e);
-		} finally {
-			if (out != null) {
-				try {
-					out.close();
-				} catch (IOException e) {
-				}
-			}
 		}
 	}
 

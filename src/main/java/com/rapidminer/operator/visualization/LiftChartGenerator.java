@@ -18,8 +18,10 @@
 */
 package com.rapidminer.operator.visualization;
 
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -67,14 +69,10 @@ public class LiftChartGenerator extends Operator {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
 		Model model = modelInput.getData(Model.class);
 
-		if (exampleSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
-		}
-		if (!exampleSet.getAttributes().getLabel().isNominal()) {
-			throw new UserError(this, 101, "Lift Charts", exampleSet.getAttributes().getLabel());
-		}
-		if (exampleSet.getAttributes().getLabel().getMapping().getValues().size() != 2) {
-			throw new UserError(this, 114, "Lift Charts", exampleSet.getAttributes().getLabel());
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
+		Attribute label = exampleSet.getAttributes().getLabel();
+		if (label.getMapping().size() != 2) {
+			throw new UserError(this, 114, getOperatorClassName(), label);
 		}
 
 		ExampleSet workingSet = (ExampleSet) exampleSet.clone();

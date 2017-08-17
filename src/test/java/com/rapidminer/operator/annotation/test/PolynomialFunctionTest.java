@@ -49,4 +49,12 @@ public class PolynomialFunctionTest {
 		assertEquals((long)268553.69946285250055529643, f.evaluate(5, 7));
 	}
 
+	@Test
+	public void testToStringForInvalidValue() {
+		PolynomialFunction f = PolynomialFunction.makeLinearFunction(-0.0d);
+		assertEquals("n/a", f.toString());
+		f = PolynomialFunction.makeLinearFunction(0.0d);
+		assertEquals("n/a", f.toString());
+	}
+
 }

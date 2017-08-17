@@ -85,7 +85,10 @@ public class ProportionNormalizationModel extends AbstractNormalizationModel {
 	@Override
 	public double getValue(Attribute targetAttribute, double value) {
 		Double sum = attributeSums.get(targetAttribute.getName());
-		return (value / sum);
+		if (sum == null) {
+			return value;
+		}
+		return value / sum;
 	}
 
 	/**

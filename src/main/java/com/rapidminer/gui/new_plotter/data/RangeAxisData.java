@@ -18,8 +18,12 @@
 */
 package com.rapidminer.gui.new_plotter.data;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.gui.new_plotter.PlotConfigurationError;
-import com.rapidminer.gui.new_plotter.StaticDebug;
 import com.rapidminer.gui.new_plotter.configuration.DataTableColumn.ValueType;
 import com.rapidminer.gui.new_plotter.configuration.PlotConfiguration;
 import com.rapidminer.gui.new_plotter.configuration.RangeAxisConfig;
@@ -30,11 +34,6 @@ import com.rapidminer.gui.new_plotter.listener.events.RangeAxisConfigChangeEvent
 import com.rapidminer.gui.new_plotter.utility.DataStructureUtils;
 import com.rapidminer.gui.new_plotter.utility.NumericalValueRange;
 import com.rapidminer.tools.container.Pair;
-
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -187,7 +186,6 @@ public class RangeAxisData {
 		int id = e.getSource().getId();
 		RangeAxisConfig rangeAxisConfigById = currentPlotConfigurationClone.getRangeAxisConfigById(id);
 		if (rangeAxisConfigById == null) {
-			StaticDebug.debug("RangeAxisData: ### ATTENTION #### RangeAxis with ID " + id + " is null! Meta change event?");
 			return;  // do nothing if range axis is not present anymore
 		}
 		setRangeAxisConfig(rangeAxisConfigById);

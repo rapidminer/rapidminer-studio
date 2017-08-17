@@ -30,6 +30,7 @@ import com.rapidminer.operator.ports.metadata.MDReal;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.container.Tupel;
 import com.rapidminer.tools.math.container.Range;
 
@@ -57,12 +58,15 @@ public class IQRNormalizationMethod extends AbstractNormalizationMethod {
 	@Override
 	public AbstractNormalizationModel getNormalizationModel(ExampleSet exampleSet, Operator operator) throws UserError {
 		// IQR Transformation
-		IQRNormalizationModel model = new IQRNormalizationModel(exampleSet, calculateMeanSigma(exampleSet));
+		IQRNormalizationModel model = new IQRNormalizationModel(exampleSet, calculateMeanSigma(exampleSet, operator));
 		return model;
 	}
 
-	private HashMap<String, Tupel<Double, Double>> calculateMeanSigma(ExampleSet exampleSet) {
+	private HashMap<String, Tupel<Double, Double>> calculateMeanSigma(ExampleSet exampleSet, Operator operator) {
 		HashMap<String, Tupel<Double, Double>> attributeMeanSigmaMap = new HashMap<String, Tupel<Double, Double>>();
+
+		boolean checkForNonFinite = operator.getCompatibilityLevel()
+				.isAbove(Normalization.BEFORE_NON_FINITE_VALUES_HANDLING);
 
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			if (attribute.isNumerical()) {
@@ -74,24 +78,78 @@ public class IQRNormalizationMethod extends AbstractNormalizationMethod {
 
 				Arrays.sort(values);
 
-				int lowerQuart = (int) (((values.length + 1) * 0.25) - 1);
-				int upperQuart = (int) (((values.length + 1) * 0.75) - 1);
+				if (checkForNonFinite) {
+					values = removeNonfiniteValues(values);
+				}
 
-				double iqSigma = (values[upperQuart] - values[lowerQuart]) / 1.349;
+				double iqSigma = 0;
 				double median = 0;
+				if (values.length > 0) {
+					int lowerQuart = (int) ((values.length + 1) * 0.25 - 1);
+					int upperQuart = (int) ((values.length + 1) * 0.75 - 1);
 
-				if (0 == (exampleSet.size() % 2)) {
-					if (exampleSet.size() > 1) {
-						median = (values[exampleSet.size() / 2] + values[(exampleSet.size() / 2) - 1]) / 2;
+					iqSigma = (values[upperQuart] - values[lowerQuart]) / 1.349;
+					if (!checkForNonFinite && !Double.isFinite(iqSigma)) {
+						nonFiniteValueWarning(operator, attribute.getName(), iqSigma);
+					}
+
+					if (0 == values.length % 2) {
+						median = (values[values.length / 2] + values[values.length / 2 - 1]) / 2;
+					} else {
+						median = values[values.length / 2];
 					}
 				} else {
-					median = values[exampleSet.size() / 2];
+					LogService.getRoot()
+							.warning("Ignoring " + attribute.getName() + " in Normalization because of no usable values");
+
 				}
 
 				attributeMeanSigmaMap.put(attribute.getName(), new Tupel<Double, Double>(median, iqSigma));
 			}
 		}
 		return attributeMeanSigmaMap;
+	}
+
+	/**
+	 * Checks the given sorted array for non finite values and returns a cropped version containing
+	 * only finite values. Will return an empty array if only non-finite values exist.
+	 *
+	 * @since 7.6
+	 */
+	private static double[] removeNonfiniteValues(double[] values) {
+		return Arrays.copyOfRange(values, findFirstFinite(values), findLastFinite(values) + 1);
+	}
+
+	/**
+	 * Returns the first index of the given array whose value is finite if it exists. Will return
+	 * {@link #findLastFinite(double[])}{@code +1} if none exist.
+	 *
+	 * @since 7.6
+	 */
+	private static int findFirstFinite(double[] values) {
+		int index = Arrays.binarySearch(values, -Double.MAX_VALUE);
+		if (index < 0) {
+			return -index - 1;
+		}
+		while (index >= 0 && values[index--] > Double.NEGATIVE_INFINITY) {
+		}
+		return index + 2;
+	}
+
+	/**
+	 * Returns the last index of the given array whose value is finite if it exists. Will return
+	 * {@link #findLastFinite(double[])}{@code -1} if none exist.
+	 *
+	 * @since 7.6
+	 */
+	private static int findLastFinite(double[] values) {
+		int index = Arrays.binarySearch(values, Double.MAX_VALUE);
+		if (index < 0) {
+			return -index - 2;
+		}
+		while (index < values.length && values[index++] < Double.POSITIVE_INFINITY) {
+		}
+		return index - 2;
 	}
 
 	@Override

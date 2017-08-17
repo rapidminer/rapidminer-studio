@@ -1,22 +1,24 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.validation;
+
+import java.util.List;
 
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
@@ -37,9 +39,8 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.parameter.conditions.NonEqualTypeCondition;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.List;
 
 
 /**
@@ -48,9 +49,9 @@ import java.util.List;
  * return an attribute weights vector which is applied on the data. Then a new model is created
  * using the second inner operator and a performance is retrieved using the third inner operator.
  * This performance vector serves as a performance indicator for the actual algorithm.
- * 
+ *
  * This implementation is described for the {@link RandomSplitValidationChain}.
- * 
+ *
  * @author Ingo Mierswa
  */
 public class RandomSplitWrapperValidationChain extends WrapperValidationChain {
@@ -83,8 +84,8 @@ public class RandomSplitWrapperValidationChain extends WrapperValidationChain {
 		ExampleSet inputSet = exampleSetInput.getData(ExampleSet.class);
 		SplittedExampleSet eSet = new SplittedExampleSet(inputSet, splitRatio, getParameterAsInt(PARAMETER_SAMPLING_TYPE),
 				getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
-				getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED), getCompatibilityLevel().isAtMost(
-						SplittedExampleSet.VERSION_SAMPLING_CHANGED));
+				getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
+				getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 
 		eSet.selectSingleSubset(0);
 		AttributeWeights weights = useWeightingMethod(eSet);
@@ -109,11 +110,16 @@ public class RandomSplitWrapperValidationChain extends WrapperValidationChain {
 		ParameterType type = new ParameterTypeDouble(PARAMETER_SPLIT_RATIO, "Relative size of the training set", 0, 1, 0.7);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeCategory(
-				PARAMETER_SAMPLING_TYPE,
-				"Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant)",
-				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.STRATIFIED_SAMPLING, false));
-		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
+		types.add(new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE,
+				"Defines the sampling type of the cross validation (linear = consecutive subsets, shuffled = random subsets, stratified = random subsets with class distribution kept constant, automatic = primary stratified or secondary shuffled)",
+				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.AUTOMATIC, false));
+		List<ParameterType> randomTypes = RandomGenerator.getRandomGeneratorParameters(this);
+		for (ParameterType randomType : randomTypes) {
+			// Don't show random seed when linear sampling is selected
+			randomType.registerDependencyCondition(new NonEqualTypeCondition(this, PARAMETER_SAMPLING_TYPE,
+					SplittedExampleSet.SAMPLING_NAMES, false, SplittedExampleSet.LINEAR_SAMPLING));
+		}
+		types.addAll(randomTypes);
 		return types;
 	}
 

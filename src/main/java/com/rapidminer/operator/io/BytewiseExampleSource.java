@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -100,9 +101,7 @@ public abstract class BytewiseExampleSource extends AbstractExampleSource {
 		}
 
 		// verify that the resulting example set is not empty
-		if (result.size() == 0) {
-			throw new UserError(this, 117);
-		}
+		Tools.isNonEmpty(result);
 		return result;
 	}
 

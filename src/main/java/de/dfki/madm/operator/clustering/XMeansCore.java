@@ -26,7 +26,6 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.SplittedExampleSet;
-import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -40,7 +39,7 @@ import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.operator.clustering.clusterer.FastKMeans;
 import com.rapidminer.operator.clustering.clusterer.KMeans;
 import com.rapidminer.operator.clustering.clusterer.RMAbstractClusterer;
-import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
 
 import de.dfki.madm.operator.KMeanspp;
@@ -151,6 +150,12 @@ public class XMeansCore extends RMAbstractClusterer {
 		KMean.setParameter("max_runs", maxRuns + "");
 		KMean.setParameter("max_optimization_steps", maxOptimizationSteps + "");
 		KMean.setParameter(KMeanspp.PARAMETER_USE_KPP, kpp + "");
+		if (executingOperator != null
+				&& executingOperator.getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED)) {
+			KMean.setParameter(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED, Boolean.toString(true));
+			KMean.setParameter(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED,
+					executingOperator.getParameter(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED));
+		}
 
 		// initialize progress
 		OperatorProgress operatorProgress = null;
@@ -173,7 +178,7 @@ public class XMeansCore extends RMAbstractClusterer {
 
 		boolean change = true;
 
-		boolean addAsLabel = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL);
+		boolean addAsLabel = addsLabelAttribute();
 		boolean removeUnlabeled = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED);
 
 		while (bestModel.getCentroids().size() < k_max && change) {
@@ -307,14 +312,7 @@ public class XMeansCore extends RMAbstractClusterer {
 		}
 
 		if (addsClusterAttribute()) {
-			Attribute cluster = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
-			exampleSet.getExampleTable().addAttribute(cluster);
-			exampleSet.getAttributes().setCluster(cluster);
-			int i = 0;
-			for (Example example : exampleSet) {
-				example.setValue(cluster, "cluster_" + centroidAssignments[i]);
-				i++;
-			}
+			addClusterAssignments(exampleSet, centroidAssignments);
 		}
 
 		if (operatorProgress != null) {
@@ -424,7 +422,7 @@ public class XMeansCore extends RMAbstractClusterer {
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
+	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
 		return null;
 	}
 
@@ -437,4 +435,5 @@ public class XMeansCore extends RMAbstractClusterer {
 	public void setExecutingOperator(Operator executingOperator) {
 		this.executingOperator = executingOperator;
 	}
+
 }

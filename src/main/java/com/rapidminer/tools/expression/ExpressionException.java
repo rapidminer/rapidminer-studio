@@ -89,7 +89,8 @@ public class ExpressionException extends Exception {
 	 * @return the first sentence of the error message
 	 */
 	public String getShortMessage() {
-		return super.getMessage().split("\n")[0];
+		String message = super.getMessage();
+		return message == null ? null : message.split("\n")[0];
 	}
 
 }

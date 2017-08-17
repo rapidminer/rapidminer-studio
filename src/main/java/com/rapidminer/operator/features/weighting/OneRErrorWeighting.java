@@ -21,6 +21,7 @@ package com.rapidminer.operator.features.weighting;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.AttributeSelectionExampleSet;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorCapability;
@@ -51,10 +52,7 @@ public class OneRErrorWeighting extends AbstractWeighting {
 
 	@Override
 	protected AttributeWeights calculateWeights(ExampleSet exampleSet) throws OperatorException {
-		Attribute label = exampleSet.getAttributes().getLabel();
-		if (!label.isNominal()) {
-			throw new UserError(this, 101, "OneR error weighting", label.getName());
-		}
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 
 		// calculate the actual chi-squared values and assign them to weights
 		AttributeWeights weights = new AttributeWeights(exampleSet);

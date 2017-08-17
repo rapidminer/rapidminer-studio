@@ -138,15 +138,9 @@ public abstract class AbstractLearner extends Operator implements Learner {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
 
 		// some checks
-		if (exampleSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
-		}
-		if (exampleSet.getAttributes().size() == 0) {
-			throw new UserError(this, 106);
-		}
-		if (exampleSet.size() == 0) {
-			throw new UserError(this, 117);
-		}
+		com.rapidminer.example.Tools.isLabelled(exampleSet);
+		com.rapidminer.example.Tools.isNonEmpty(exampleSet);
+		com.rapidminer.example.Tools.hasRegularAttributes(exampleSet);
 
 		// check capabilities and produce errors if they are not fulfilled
 		CapabilityCheck check = new CapabilityCheck(this, Tools.booleanValue(

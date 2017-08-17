@@ -737,9 +737,9 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 			// do nothing and use default encoding
 		}
 
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), encoding));
+		try (FileOutputStream fos = new FileOutputStream(file);
+				OutputStreamWriter osw = new OutputStreamWriter(fos, encoding);
+				PrintWriter out = new PrintWriter(osw)) {
 
 			for (int i = 0; i < sourceList.size(); i++) {
 				AttributeDataSource source = sourceList.get(i);
@@ -764,12 +764,6 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 			}
 
 			this.dataChanged = false;
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (out != null) {
-				out.close();
-			}
 		}
 	}
 
@@ -906,9 +900,11 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 			}
 
 			// writing XML from DOM
-			PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(attFile), encoding));
-			writer.print(XMLTools.toString(document, encoding));
-			writer.close();
+			try (FileOutputStream fos = new FileOutputStream(attFile);
+					OutputStreamWriter osw = new OutputStreamWriter(fos, encoding);
+					PrintWriter writer = new PrintWriter(osw)) {
+				writer.print(XMLTools.toString(document, encoding));
+			}
 		} catch (ParserConfigurationException e) {
 			throw new IOException("Cannot create XML document builder: " + e, e);
 		} catch (XMLException e) {

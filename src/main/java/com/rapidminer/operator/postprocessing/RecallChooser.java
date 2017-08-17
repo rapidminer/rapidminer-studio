@@ -22,7 +22,9 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.SortedExampleSet;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -70,17 +72,13 @@ public class RecallChooser extends Operator {
 		boolean useWeights = getParameterAsBoolean(PARAMETER_USE_EXAMPLE_WEIGHTS);
 
 		// checking preconditions
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 		Attribute label = exampleSet.getAttributes().getLabel();
 		exampleSet.recalculateAttributeStatistics(label);
-		if (label == null) {
-			throw new UserError(this, 105);
-		}
-		if (!label.isNominal()) {
-			throw new UserError(this, 101, label, "threshold finding");
-		}
-		if (label.getMapping().size() != 2) {
-			throw new UserError(this, 118, new Object[] { label, Integer.valueOf(label.getMapping().getValues().size()),
-					Integer.valueOf(2) });
+		NominalMapping mapping = label.getMapping();
+		if (mapping.size() != 2) {
+			throw new UserError(this, 118,
+					new Object[] { label, Integer.valueOf(mapping.getValues().size()), Integer.valueOf(2) });
 		}
 		if (exampleSet.getAttributes().getPredictedLabel() == null) {
 			throw new UserError(this, 107);
@@ -88,22 +86,17 @@ public class RecallChooser extends Operator {
 
 		// find positive class
 		String positiveClassName = null;
+		double positiveIndex;
 		if (isParameterSet(PARAMETER_POSITIVE_LABEL)) {
 			positiveClassName = getParameterAsString(PARAMETER_POSITIVE_LABEL);
-			if (label.getMapping().getIndex(positiveClassName) < 0) {
+			positiveIndex = mapping.getIndex(positiveClassName);
+			if (positiveIndex < 0) {
 				throw new UserError(this, 143, positiveClassName, label.getName());
 			}
 		} else {
-			if (label.isNominal() && (label.getMapping().size() == 2)) {
-				int positiveIndex = label.getMapping().getPositiveIndex();
-				positiveClassName = label.getMapping().mapIndex(positiveIndex);
-			} else if (label.isNominal() && (label.getMapping().size() == 1)) {
-				positiveClassName = label.getMapping().mapIndex(0);
-			} else {
-				throw new UserError(this, 954);
-			}
+			positiveIndex = mapping.getPositiveIndex();
+			positiveClassName = mapping.getPositiveString();
 		}
-		double positiveIndex = label.getMapping().getIndex(positiveClassName);
 
 		// calculate weighted count of positive class
 		double totalSum = 0;

@@ -89,9 +89,9 @@ public class BugReport {
 		buffer.append("------------" + Tools.getLineSeparator() + Tools.getLineSeparator());
 
 		BufferedReader reader = null;
-		try {
+		try (FileReader fr = new FileReader(FileSystemService.getLogFile())) {
 			List<String> logLineList = new LinkedList<>();
-			reader = new BufferedReader(new FileReader(FileSystemService.getLogFile()));
+			reader = new BufferedReader(fr);
 			String line = reader.readLine();
 			while (line != null) {
 				logLineList.add(line);
@@ -282,14 +282,12 @@ public class BugReport {
 
 		String id = String.valueOf(createResult.get("id"));
 		Map<String, Object> attachmentMap = new HashMap<>();
-		FileInputStream fileInputStream = null;
 		// add process xml file attachment if selected
 		if (attachProcess) {
 			attachmentMap.put("ids", new String[] { id });
 			// BugZilla API states Base64 encoded string is needed, but it does not work
 			// attachmentMap.put("data", Base64.encodeFromFile(processFile.getPath()));
-			try {
-				fileInputStream = new FileInputStream(processFile);
+			try (FileInputStream fileInputStream = new FileInputStream(processFile)) {
 				byte[] data = new byte[(int) processFile.length()];
 				fileInputStream.read(data);
 				attachmentMap.put("data", data);
@@ -299,10 +297,6 @@ public class BugReport {
 
 				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
-			} finally {
-				if (fileInputStream != null) {
-					fileInputStream.close();
-				}
 			}
 		}
 
@@ -311,8 +305,7 @@ public class BugReport {
 			attachmentMap.put("ids", new String[] { id });
 			// BugZilla API states Base64 encoded string is needed, but it does not work
 			// attachmentMap.put("data", Base64.encodeFromFile(propertiesFile.getPath()));
-			try {
-				fileInputStream = new FileInputStream(propertiesFile);
+			try (FileInputStream fileInputStream = new FileInputStream(propertiesFile)) {
 				byte[] data = new byte[(int) propertiesFile.length()];
 				fileInputStream.read(data);
 				attachmentMap.put("data", data);
@@ -322,10 +315,6 @@ public class BugReport {
 
 				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
-			} finally {
-				if (fileInputStream != null) {
-					fileInputStream.close();
-				}
 			}
 		}
 
@@ -334,8 +323,7 @@ public class BugReport {
 			attachmentMap.put("ids", new String[] { id });
 			// BugZilla API states Base64 encoded string is needed, but it does not work
 			// attachmentMap.put("data", Base64.encodeFromFile(propertiesFile.getPath()));
-			try {
-				fileInputStream = new FileInputStream(logTempFile);
+			try (FileInputStream fileInputStream = new FileInputStream(logTempFile)) {
 				byte[] data = new byte[(int) logTempFile.length()];
 				fileInputStream.read(data);
 				attachmentMap.put("data", data);
@@ -345,10 +333,6 @@ public class BugReport {
 
 				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
-			} finally {
-				if (fileInputStream != null) {
-					fileInputStream.close();
-				}
 			}
 		}
 
@@ -357,8 +341,7 @@ public class BugReport {
 			attachmentMap.put("ids", new String[] { id });
 			// BugZilla API states Base64 encoded string is needed, but it does not work
 			// attachmentMap.put("data", Base64.encodeFromFile(file.getPath()));
-			try {
-				fileInputStream = new FileInputStream(file);
+			try (FileInputStream fileInputStream = new FileInputStream(file)) {
 				byte[] data = new byte[(int) file.length()];
 				fileInputStream.read(data);
 				attachmentMap.put("data", data);
@@ -368,10 +351,6 @@ public class BugReport {
 
 				createResult = (Map<?, ?>) rpcClient.execute("Bug.add_attachment", new Object[] { attachmentMap });
 				attachmentMap.clear();
-			} finally {
-				if (fileInputStream != null) {
-					fileInputStream.close();
-				}
 			}
 		}
 
@@ -458,9 +437,7 @@ public class BugReport {
 	}
 
 	private static void writeFile(File file, ZipOutputStream out) throws IOException {
-		InputStream in = null;
-		try {
-			in = new FileInputStream(file);
+		try (InputStream in = new FileInputStream(file)) {
 			out.putNextEntry(new ZipEntry(file.getName()));
 			byte[] buffer = new byte[BUFFER_SIZE];
 			int read = -1;
@@ -471,12 +448,6 @@ public class BugReport {
 				}
 			} while (read > -1);
 			out.closeEntry();
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (in != null) {
-				in.close();
-			}
 		}
 	}
 
@@ -493,8 +464,8 @@ public class BugReport {
 	}
 
 	private static void writeFile(File file, String contents) throws IOException {
-		FileWriter writer = new FileWriter(file);
-		writer.write(contents);
-		writer.close();
+		try (FileWriter writer = new FileWriter(file)) {
+			writer.write(contents);
+		}
 	}
 }

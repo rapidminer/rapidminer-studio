@@ -141,15 +141,13 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
 	/** Initializes the criterion and sets the label. */
 	@Override
 	public void startCounting(ExampleSet eSet, boolean useExampleWeights) throws OperatorException {
+		com.rapidminer.example.Tools.hasNominalLabels(eSet, "calculation of classification performance criteria");
 		super.startCounting(eSet, useExampleWeights);
 		this.labelAttribute = eSet.getAttributes().getLabel();
-		if (!this.labelAttribute.isNominal()) {
-			throw new UserError(null, 101, "calculation of classification performance criteria",
-					this.labelAttribute.getName());
-		}
 		this.predictedLabelAttribute = eSet.getAttributes().getPredictedLabel();
 		if (this.predictedLabelAttribute == null || !this.predictedLabelAttribute.isNominal()) {
-			throw new UserError(null, 101, "calculation of classification performance criteria", "predicted label attribute");
+			throw new UserError(null, 101, "calculation of classification performance criteria",
+					predictedLabelAttribute.getName());
 		}
 
 		if (useExampleWeights) {

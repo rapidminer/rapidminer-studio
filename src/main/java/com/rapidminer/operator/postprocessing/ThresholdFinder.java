@@ -23,6 +23,7 @@ import java.util.List;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -81,18 +82,12 @@ public class ThresholdFinder extends Operator {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
 
 		// checking preconditions
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 		Attribute label = exampleSet.getAttributes().getLabel();
-		if (label == null) {
-			throw new UserError(this, 105);
-		}
-		if (!label.isNominal()) {
-			throw new UserError(this, 101, label, "threshold finding");
-		}
 		exampleSet.recalculateAttributeStatistics(label);
 		NominalMapping mapping = label.getMapping();
 		if (mapping.size() != 2) {
-			throw new UserError(this, 118, new Object[] { label, Integer.valueOf(mapping.getValues().size()),
-					Integer.valueOf(2) });
+			throw new UserError(this, 118, label, Integer.valueOf(mapping.getValues().size()), Integer.valueOf(2));
 		}
 		if (exampleSet.getAttributes().getPredictedLabel() == null) {
 			throw new UserError(this, 107);

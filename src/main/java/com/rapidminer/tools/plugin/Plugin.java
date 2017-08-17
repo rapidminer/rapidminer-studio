@@ -1537,8 +1537,10 @@ public class Plugin {
 						pluginName);
 				try {
 					URL pluginUrl = new URL(homeUrl + "/RAWS/dependencies/plugins/" + pluginName);
-					Tools.copyStreamSynchronously(WebServiceTools.openStreamFromURL(pluginUrl),
-							new FileOutputStream(pluginFile), true);
+					try (InputStream pluginURLStream = WebServiceTools.openStreamFromURL(pluginUrl);
+							FileOutputStream pluginFileStream = new FileOutputStream(pluginFile)) {
+						Tools.copyStreamSynchronously(pluginURLStream, pluginFileStream, true);
+					}
 				} catch (Exception e) {
 					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.tools.plugin.Plugin.downloading_extension_error", e), e);

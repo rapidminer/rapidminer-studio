@@ -759,9 +759,9 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 			source.setSource(file, i);
 		}
 
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), encoding));
+		try (FileOutputStream fos = new FileOutputStream(file);
+				OutputStreamWriter osw = new OutputStreamWriter(fos, encoding);
+				PrintWriter out = new PrintWriter(osw)) {
 
 			File originalDataFile = new File(fileTextField.getText());
 			String commentString = commentCharField.getText();
@@ -771,13 +771,11 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 			boolean firstLineAsNames = firstRowAsNames.isSelected();
 			Pattern separatorPattern = Pattern.compile(columnSeparators);
 
-			BufferedReader in = null;
-			try {
-				in = new BufferedReader(new FileReader(originalDataFile));
+			try (FileReader fr = new FileReader(originalDataFile); BufferedReader in = new BufferedReader(fr)) {
 				String line = null;
 				boolean first = true;
 				while ((line = in.readLine()) != null) {
-					if ((commentString != null) && (commentString.trim().length() > 0) && (line.startsWith(commentString))) {
+					if (commentString != null && commentString.trim().length() > 0 && line.startsWith(commentString)) {
 						continue;
 					}
 					String[] columns = null;
@@ -797,17 +795,9 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 				}
 			} catch (IOException e) {
 				SwingTools.showSimpleErrorMessage(ExampleSourceConfigurationWizard.this, "cannot_re_write_data", e);
-			} finally {
-				if (in != null) {
-					in.close();
-				}
 			}
 		} catch (IOException e) {
 			SwingTools.showSimpleErrorMessage(ExampleSourceConfigurationWizard.this, "cannot_re_write_data", e);
-		} finally {
-			if (out != null) {
-				out.close();
-			}
 		}
 	}
 
@@ -880,9 +870,11 @@ public class ExampleSourceConfigurationWizard extends AbstractConfigurationWizar
 			}
 
 			// writing XML from DOM
-			PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(attFile), encoding));
-			writer.print(XMLTools.toString(document, encoding));
-			writer.close();
+			try (FileOutputStream fos = new FileOutputStream(attFile);
+					OutputStreamWriter osw = new OutputStreamWriter(fos, encoding);
+					PrintWriter writer = new PrintWriter(osw)) {
+				writer.print(XMLTools.toString(document, encoding));
+			}
 		} catch (XMLException e) {
 			e.printStackTrace();
 		} catch (ParserConfigurationException e) {

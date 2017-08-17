@@ -27,7 +27,6 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.CapabilityCheck;
 import com.rapidminer.operator.learner.CapabilityProvider;
 import com.rapidminer.operator.ports.InputPort;
@@ -141,10 +140,10 @@ public abstract class AbstractWeighting extends Operator implements CapabilityPr
 
 	@Override
 	public void doWork() throws OperatorException {
-		ExampleSet exampleSet = isExampleSetMandatory() ? exampleSetInput.getData(ExampleSet.class) : exampleSetInput
-				.<ExampleSet> getDataOrNull(ExampleSet.class);
-		if (checkForLabel && exampleSet.getAttributes().getLabel() == null) {
-			throw new UserError(this, 105);
+		ExampleSet exampleSet = isExampleSetMandatory() ? exampleSetInput.getData(ExampleSet.class)
+				: exampleSetInput.<ExampleSet>getDataOrNull(ExampleSet.class);
+		if (checkForLabel) {
+			com.rapidminer.example.Tools.isLabelled(exampleSet);
 		}
 		AttributeWeights weights = calculateWeights(exampleSet);
 		if (getParameterAsBoolean(PARAMETER_NORMALIZE_WEIGHTS)) {

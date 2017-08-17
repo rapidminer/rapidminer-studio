@@ -158,27 +158,13 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	@Override
 	public void writeDataFile(File dataFile, int fractionDigits, boolean quoteNominal, boolean zipped, boolean append,
 			Charset encoding) throws IOException {
-		PrintWriter out = null;
-		OutputStream outStream = null;
-		try {
-			if (zipped) {
-				outStream = new GZIPOutputStream(new FileOutputStream(dataFile, append));
-			} else {
-				outStream = new FileOutputStream(dataFile, append);
-			}
-			out = new PrintWriter(new OutputStreamWriter(outStream, encoding));
+		try (OutputStream outStream = new FileOutputStream(dataFile, append);
+				OutputStream zippedStream = zipped ? new GZIPOutputStream(outStream) : null;
+				OutputStreamWriter osw = new OutputStreamWriter(zipped ? zippedStream : outStream, encoding);
+				PrintWriter out = new PrintWriter(osw)) {
 			Iterator<Example> reader = iterator();
 			while (reader.hasNext()) {
 				out.println(reader.next().toDenseString(fractionDigits, quoteNominal));
-			}
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (out != null) {
-				out.close();
-			}
-			if (outStream != null) {
-				outStream.close();
 			}
 		}
 	}
@@ -187,27 +173,13 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	@Override
 	public void writeSparseDataFile(File dataFile, int format, int fractionDigits, boolean quoteNominal, boolean zipped,
 			boolean append, Charset encoding) throws IOException {
-		PrintWriter out = null;
-		OutputStream outStream = null;
-		try {
-			if (zipped) {
-				outStream = new GZIPOutputStream(new FileOutputStream(dataFile, append));
-			} else {
-				outStream = new FileOutputStream(dataFile, append);
-			}
-			out = new PrintWriter(new OutputStreamWriter(outStream, encoding));
+		try (OutputStream outStream = new FileOutputStream(dataFile, append);
+				OutputStream zippedStream = zipped ? new GZIPOutputStream(outStream) : null;
+				OutputStreamWriter osw = new OutputStreamWriter(zipped ? zippedStream : outStream, encoding);
+				PrintWriter out = new PrintWriter(osw)) {
 			Iterator<Example> reader = iterator();
 			while (reader.hasNext()) {
 				out.println(reader.next().toSparseString(format, fractionDigits, quoteNominal));
-			}
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (out != null) {
-				out.close();
-			}
-			if (outStream != null) {
-				outStream.close();
 			}
 		}
 	}
@@ -243,9 +215,11 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 			}
 
 			// writing XML from DOM
-			PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(attFile), encoding));
-			writer.print(XMLTools.toString(document, encoding));
-			writer.close();
+			try (FileOutputStream fos = new FileOutputStream(attFile);
+					OutputStreamWriter osw = new OutputStreamWriter(fos, encoding);
+					PrintWriter writer = new PrintWriter(osw)) {
+				writer.print(XMLTools.toString(document, encoding));
+			}
 		} catch (ParserConfigurationException e) {
 			throw new IOException("Cannot create XML document builder: " + e, e);
 		} catch (XMLException e) {
@@ -299,9 +273,11 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 			}
 
 			// writing XML from DOM
-			PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(attFile), encoding));
-			writer.print(XMLTools.toString(document, encoding));
-			writer.close();
+			try (FileOutputStream fos = new FileOutputStream(attFile);
+					OutputStreamWriter osw = new OutputStreamWriter(fos, encoding);
+					PrintWriter writer = new PrintWriter(osw)) {
+				writer.print(XMLTools.toString(document, encoding));
+			}
 		} catch (ParserConfigurationException e) {
 			throw new IOException("Cannot create XML document builder: " + e, e);
 		} catch (XMLException e) {

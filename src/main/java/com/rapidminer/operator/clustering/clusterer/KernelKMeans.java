@@ -1,24 +1,25 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
@@ -26,15 +27,21 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
-import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.clustering.ClusterModel;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.MetaDataInfo;
+import com.rapidminer.operator.ports.metadata.SimplePrecondition;
+import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
+import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.kernels.Kernel;
 
@@ -63,13 +70,40 @@ public class KernelKMeans extends RMAbstractClusterer {
 	public static final String PARAMETER_MAX_OPTIMIZATION_STEPS = "max_optimization_steps";
 
 	private static final int OPERATOR_PROGRESS_STEPS = 200;
+	private List<? extends QuickFix> algoWeightQuickFix = Collections
+			.singletonList(new ParameterSettingQuickFix(this, PARAMETER_USE_WEIGHTS, Boolean.toString(true)));
 
 	public KernelKMeans(OperatorDescription description) {
 		super(description);
+		getExampleSetInputPort()
+				.addPrecondition(new SimplePrecondition(getExampleSetInputPort(), new ExampleSetMetaData(), false) {
+
+					@Override
+					public void makeAdditionalChecks(MetaData received) {
+						if (!(received instanceof ExampleSetMetaData)) {
+							return;
+						}
+						ExampleSetMetaData emd = (ExampleSetMetaData) received;
+						if (emd.hasSpecial(Attributes.WEIGHT_NAME) == MetaDataInfo.YES
+								&& !getParameterAsBoolean(PARAMETER_USE_WEIGHTS)) {
+							createError(Severity.WARNING, algoWeightQuickFix, "learner_does_not_support_weights");
+						}
+					}
+				});
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
+	protected boolean checksForRegularAttributes() {
+		return getCompatibilityLevel().isAbove(BEFORE_EMPTY_CHECKS);
+	}
+
+	@Override
+	protected boolean affectedByEmptyCheck() {
+		return true;
+	}
+
+	@Override
+	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
 		int k = getParameterAsInt(PARAMETER_K);
 		int maxOptimizationSteps = getParameterAsInt(PARAMETER_MAX_OPTIMIZATION_STEPS);
 		boolean useExampleWeights = getParameterAsBoolean(PARAMETER_USE_WEIGHTS);
@@ -98,8 +132,7 @@ public class KernelKMeans extends RMAbstractClusterer {
 
 		RandomGenerator generator = RandomGenerator.getRandomGenerator(this);
 
-		ClusterModel model = new ClusterModel(exampleSet, k,
-				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL),
+		ClusterModel model = new ClusterModel(exampleSet, k, addsLabelAttribute(),
 				getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED));
 		// init centroids
 		int[] clusterAssignments = new int[exampleSet.size()];
@@ -187,14 +220,7 @@ public class KernelKMeans extends RMAbstractClusterer {
 		model.setClusterAssignments(clusterAssignments, exampleSet);
 
 		if (addsClusterAttribute()) {
-			Attribute cluster = AttributeFactory.createAttribute("cluster", Ontology.NOMINAL);
-			exampleSet.getExampleTable().addAttribute(cluster);
-			exampleSet.getAttributes().setCluster(cluster);
-			int i = 0;
-			for (Example example : exampleSet) {
-				example.setValue(cluster, "cluster_" + clusterAssignments[i]);
-				i++;
-			}
+			addClusterAssignments(exampleSet, clusterAssignments);
 		}
 
 		getProgress().complete();
@@ -209,6 +235,14 @@ public class KernelKMeans extends RMAbstractClusterer {
 			i++;
 		}
 		return values;
+	}
+
+	@Override
+	public boolean supportsCapability(OperatorCapability capability) {
+		if (capability == OperatorCapability.WEIGHTED_EXAMPLES) {
+			return true;
+		}
+		return super.supportsCapability(capability);
 	}
 
 	@Override

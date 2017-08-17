@@ -1,48 +1,43 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.clustering.CentroidClusterModel;
 import com.rapidminer.operator.clustering.ClusterModel;
-import com.rapidminer.operator.learner.CapabilityProvider;
-import com.rapidminer.operator.ports.metadata.CapabilityPrecondition;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.similarity.DistanceMeasure;
-import com.rapidminer.tools.math.similarity.DistanceMeasureHelper;
 import com.rapidminer.tools.math.similarity.DistanceMeasures;
 
 import de.dfki.madm.operator.KMeanspp;
@@ -54,13 +49,10 @@ import de.dfki.madm.operator.KMeanspp;
  *
  * @author Sebastian Land
  */
-public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
+public class KMeans extends RMAbstractClusterer {
 
 	/** The parameter name for &quot;the maximal number of clusters&quot; */
 	public static final String PARAMETER_K = "k";
-
-	private DistanceMeasureHelper measureHelper = new DistanceMeasureHelper(this);
-	private DistanceMeasure presetMeasure = null;
 
 	/**
 	 * The parameter name for &quot;the maximal number of runs of the k method with random
@@ -74,38 +66,34 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 	 */
 	public static final String PARAMETER_MAX_OPTIMIZATION_STEPS = "max_optimization_steps";
 
+	private static final int SQUARED_EUCLIDEAN_INDEX = 6;
+
 	public KMeans(OperatorDescription description) {
 		super(description);
-		getExampleSetInputPort().addPrecondition(new CapabilityPrecondition(this, getExampleSetInputPort()));
 	}
 
 	/**
 	 * Overrides the measure specified by the operator parameters. If set to null, parameters will
 	 * be used again to determine the measure.
 	 */
+	@Override
 	public void setPresetMeasure(DistanceMeasure me) {
-		this.presetMeasure = me;
+		super.setPresetMeasure(me);
 	}
 
 	@Override
-	public ClusterModel generateClusterModel(ExampleSet exampleSet) throws OperatorException {
+	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
 		int k = getParameterAsInt(PARAMETER_K);
 		int maxOptimizationSteps = getParameterAsInt(PARAMETER_MAX_OPTIMIZATION_STEPS);
 		int maxRuns = getParameterAsInt(PARAMETER_MAX_RUNS);
 		boolean kpp = getParameterAsBoolean(KMeanspp.PARAMETER_USE_KPP);
-		boolean addAsLabel = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL);
+		boolean addAsLabel = addsLabelAttribute();
 		boolean removeUnlabeled = getParameterAsBoolean(RMAbstractClusterer.PARAMETER_REMOVE_UNLABELED);
 
 		// init operator progress
 		getProgress().setTotal(maxRuns * maxOptimizationSteps);
 
-		DistanceMeasure measure;
-		if (presetMeasure != null) {
-			measure = presetMeasure;
-			measure.init(exampleSet);
-		} else {
-			measure = measureHelper.getInitializedMeasure(exampleSet);
-		}
+		DistanceMeasure measure = getInitializedMeasure(exampleSet);
 
 		// checking and creating ids if necessary
 		Tools.checkAndCreateIds(exampleSet);
@@ -199,22 +187,7 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 		bestModel.setClusterAssignments(bestAssignments, exampleSet);
 
 		if (addsClusterAttribute()) {
-			Attribute cluster;
-			if (!getParameterAsBoolean(PARAMETER_ADD_AS_LABEL)) {
-				cluster = AttributeFactory.createAttribute(Attributes.CLUSTER_NAME, Ontology.NOMINAL);
-				exampleSet.getExampleTable().addAttribute(cluster);
-				attributes.setCluster(cluster);
-			} else {
-				cluster = AttributeFactory.createAttribute(Attributes.LABEL_NAME, Ontology.NOMINAL);
-				exampleSet.getExampleTable().addAttribute(cluster);
-				attributes.setLabel(cluster);
-			}
-
-			int i = 0;
-			for (Example example : exampleSet) {
-				example.setValue(cluster, "cluster_" + bestAssignments[i]);
-				i++;
-			}
+			addClusterAssignments(exampleSet, bestAssignments);
 		}
 
 		getProgress().complete();
@@ -237,26 +210,18 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 	}
 
 	@Override
-	public boolean supportsCapability(OperatorCapability capability) {
-		boolean supportsNominal = false;
-		boolean pureNominal = false;
-		try {
-			// Check if a measure type is selected that supports nominal attributes
-			int selectedMeasureType = measureHelper.getSelectedMeasureType();
-			pureNominal = selectedMeasureType == DistanceMeasures.NOMINAL_MEASURES_TYPE;
-			supportsNominal = selectedMeasureType == DistanceMeasures.MIXED_MEASURES_TYPE || pureNominal;
-		} catch (UndefinedParameterError e) {
-			// parameter is undefined we will stick tell that we do not support nominal attributes
-		}
-		switch (capability) {
-			case NUMERICAL_ATTRIBUTES:
-				return !pureNominal;
-			case BINOMINAL_ATTRIBUTES:
-			case POLYNOMINAL_ATTRIBUTES:
-				return supportsNominal;
-			default:
-				return true;
-		}
+	protected boolean usesDistanceMeasures() {
+		return true;
+	}
+
+	@Override
+	protected boolean usesPresetMeasure() {
+		return true;
+	}
+
+	@Override
+	protected boolean handlesInfiniteValues() {
+		return false;
 	}
 
 	@Override
@@ -272,19 +237,25 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 		type.setExpert(false);
 		types.add(type);
 
-		for (ParameterType a : DistanceMeasures.getParameterTypes(this)) {
-			if (a.getKey() == DistanceMeasures.PARAMETER_MEASURE_TYPES) {
-				a.setDefaultValue(DistanceMeasures.DIVERGENCES_TYPE);
-			}
-			if (a.getKey() == DistanceMeasures.PARAMETER_DIVERGENCE) {
-				a.setDefaultValue(6);
-			}
-			types.add(a);
-		}
+		types.addAll(getMeasureParameterTypes());
 
 		types.add(new ParameterTypeInt(PARAMETER_MAX_OPTIMIZATION_STEPS,
 				"The maximal number of iterations performed for one run of k-Means.", 1, Integer.MAX_VALUE, 100, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
 	}
+
+	@Override
+	protected Map<String, Object> getMeasureParametersDefaults() {
+		Map<String, Object> defaults = new HashMap<>();
+		defaults.put(DistanceMeasures.PARAMETER_MEASURE_TYPES, DistanceMeasures.DIVERGENCES_TYPE);
+		defaults.put(DistanceMeasures.PARAMETER_DIVERGENCE, SQUARED_EUCLIDEAN_INDEX);
+		return defaults;
+	}
+
+	@Override
+	protected boolean affectedByLabelFix() {
+		return false;
+	}
+
 }

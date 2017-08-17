@@ -42,11 +42,11 @@ public class UndefinedParameterError extends ParameterError {
 	}
 
 	public UndefinedParameterError(String key, Operator operator) {
-		super(operator, 217, key, "");
+		this(key, operator, "");
 	}
 
 	public UndefinedParameterError(String key, Operator operator, String additionalMessage) {
-		super(operator, 217, key, additionalMessage);
+		super(operator, 217, key, key, operator, additionalMessage);
 	}
 
 	public UndefinedParameterError(Operator operator, String code, String additionalText) {

@@ -21,10 +21,10 @@ package com.rapidminer.operator.features.weighting;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.tree.NumericalSplitter;
 import com.rapidminer.operator.learner.tree.criterions.Criterion;
 
@@ -47,10 +47,7 @@ public abstract class AbstractEntropyWeighting extends AbstractWeighting {
 
 	@Override
 	protected AttributeWeights calculateWeights(ExampleSet exampleSet) throws OperatorException {
-		Attribute label = exampleSet.getAttributes().getLabel();
-		if (!label.isNominal()) {
-			throw new UserError(this, 101, getName(), label.getName());
-		}
+		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 
 		// calculate the actual information gain values and assign them to weights
 		Criterion criterion = getEntropyCriterion();

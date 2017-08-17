@@ -1,36 +1,36 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools;
-
-import com.rapidminer.RapidMiner;
-import com.rapidminer.operator.MailNotSentException;
 
 import java.util.Map;
 import java.util.logging.Level;
 
 import javax.mail.Session;
 
+import com.rapidminer.RapidMiner;
+import com.rapidminer.operator.MailNotSentException;
+
 
 /**
- * 
+ *
  * @author Simon Fischer, Nils Woehler
- * 
+ *
  */
 public class MailUtilities {
 
@@ -48,7 +48,7 @@ public class MailUtilities {
 	/**
 	 * Sends a mail to the given address, using the specified subject and contents. Subject must
 	 * contain no whitespace!
-	 * 
+	 *
 	 * @param headers
 	 */
 	public static void sendEmail(String address, String subject, String content, Map<String, String> headers) {
@@ -90,8 +90,6 @@ public class MailUtilities {
 					mailSender = new MailSenderSendmail();
 					break;
 				default:
-					// LogService.getGlobal().log("Illegal send mail method: " + method + ".",
-					// LogService.ERROR);
 					LogService.getRoot().log(Level.SEVERE, "com.rapidminer.tools.MailUtilities.illegal_send_mail_method",
 							method);
 					throw new MailNotSentException("Illegal send mail method", "illegal_send_mail_method", method);
@@ -99,13 +97,10 @@ public class MailUtilities {
 
 			if (mailSender != null) {
 				mailSender.sendEmail(address, subject, content, headers);
-				// LogService.getRoot().info("Sent mail to "+address+" with subject "+subject);
 				LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.MailUtilities.sent_mail_to_adress_with_subject",
 						new Object[] { address, subject });
 			}
 		} catch (Exception e) {
-			// LogService.getGlobal().log("Cannot send mail to " + address + ": " + e,
-			// LogService.ERROR);
 			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.tools.MailUtilities.sending_mail_to_address_error",
 					new Object[] { address, e });
 			throw new MailNotSentException("Cannot send mail", "sending_mail_to_address_error", e,

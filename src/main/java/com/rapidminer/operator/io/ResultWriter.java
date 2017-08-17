@@ -18,6 +18,14 @@
 */
 package com.rapidminer.operator.io;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.util.List;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -29,13 +37,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.tools.ResultService;
 import com.rapidminer.tools.io.Encoding;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.util.List;
 
 
 /**
@@ -75,22 +76,20 @@ public class ResultWriter extends Operator {
 		IOObject[] input = portExtender.getData(IOObject.class).toArray(new IOObject[0]);
 		File file = getParameterAsFile(PARAMETER_RESULT_FILE, true);
 		if (file != null) {
-			PrintWriter out = null;
-			try {
-				out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, !firstRun),
-						Encoding.getEncoding(this)));
+			try (FileOutputStream fos = new FileOutputStream(file, !firstRun);
+					OutputStreamWriter osw = new OutputStreamWriter(fos, Encoding.getEncoding(this));
+					PrintWriter out = new PrintWriter(osw)) {
 				firstRun = false;
-			} catch (IOException e) {
-				throw new UserError(this, 301, file);
-			}
-			if (out != null) {
 				ResultService.logResult("Results of ResultWriter '" + getName() + "' [" + getApplyCount() + "]: ", out);
 				for (int i = 0; i < input.length; i++) {
 					if (input[i] instanceof ResultObject) {
 						ResultService.logResult((ResultObject) input[i], out);
 					}
 				}
-				out.close();
+			} catch (FileNotFoundException e) {
+				throw new UserError(this, 301, file);
+			} catch (IOException ioe) {
+				throw new UserError(this, 321, file, ioe);
 			}
 		} else {
 			ResultService.logResult("Results of ResultWriter '" + getName() + "' [" + getApplyCount() + "]: ");

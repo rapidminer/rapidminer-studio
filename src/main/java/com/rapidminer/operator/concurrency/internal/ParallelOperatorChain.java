@@ -98,7 +98,7 @@ public abstract class ParallelOperatorChain extends OperatorChain {
 	 * depends on the second parameter. If requested, ExampleSets are checked for their
 	 * thread-safety and materialized if necessary.
 	 *
-	 * @param inputData
+	 * @param input
 	 * @param materializeUnsafeExampleSets
 	 *            if {@code true}, ExampleSets that are not thread-safe are materialized
 	 * @return

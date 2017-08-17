@@ -20,6 +20,7 @@ package com.rapidminer.operator.preprocessing.normalization;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -70,6 +71,18 @@ public interface NormalizationMethod {
 	 * If this method needs additional parameter types, they can be returned here.
 	 */
 	public List<ParameterType> getParameterTypes(ParameterHandler handler);
+
+	/**
+	 * Returns the versions of a NormalizationMethod <strong>after which its behavior incompatibly
+	 * changed</strong> in random order. Only the versions after which the new behavior was
+	 * introduced are returned. See comment of {@link OperatorVersion} for details.
+	 *
+	 * @since 7.6
+	 * @see Operator#getIncompatibleVersionChanges()
+	 */
+	default public OperatorVersion[] getIncompatibleVersionChanges() {
+		return Operator.EMPTY_OPERATOR_VERSIONS_ARRAY;
+	}
 
 	/**
 	 * This just returns the name of the method.
