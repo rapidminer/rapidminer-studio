@@ -89,7 +89,7 @@ public interface NominalMapping extends Cloneable, Serializable {
 	public void setMapping(String nominalValue, int index);
 
 	/**
-	 * Returns a list of all nominal values which were mapped via {@link #mapString(String)} until
+	 * Returns an unmodifiable list of all nominal values which were mapped via {@link #mapString(String)} until
 	 * now.
 	 */
 	public List<String> getValues();

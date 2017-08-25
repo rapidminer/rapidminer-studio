@@ -18,7 +18,6 @@
 */
 package com.rapidminer.repository.gui;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
-
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
@@ -37,7 +35,6 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.Repository;
@@ -46,7 +43,6 @@ import com.rapidminer.repository.RepositoryListener;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.RepositorySortingMethod;
-import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Observable;
@@ -95,22 +91,14 @@ public class RepositoryTreeModel implements TreeModel {
 			// If there is already a sorted list of the entries of the parentfolder, the key and the
 			// list will be deleted so it will be recached with the new entry in the
 			// updateCachedRepositoryEntries method.
-			if (sortedRepositoryEntriesHashMap.containsKey(parent.getLocation())) {
-				sortedRepositoryEntriesHashMap.remove(parent.getLocation());
-			}
-
+			sortedRepositoryEntriesHashMap.remove(parent.getLocation());
 			// fire event
 			final TreeModelEvent e = makeChangeEvent(newEntry);
 
-			SwingTools.invokeAndWait(new Runnable() {
-
-				@Override
-				public void run() {
-					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-						l.treeNodesInserted(e);
-					}
+			SwingTools.invokeAndWait(() -> {
+				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+					l.treeNodesInserted(e);
 				}
-
 			});
 		}
 
@@ -120,9 +108,7 @@ public class RepositoryTreeModel implements TreeModel {
 			// If there is already a sorted list of the entries of the parentfolder, the key and the
 			// list will be deleted so it will be recached without the deleted entry in the
 			// updateCachedRepositoryEntries method.
-			if (sortedRepositoryEntriesHashMap.containsKey(parent.getLocation())) {
-				sortedRepositoryEntriesHashMap.remove(parent.getLocation());
-			}
+			sortedRepositoryEntriesHashMap.remove(parent.getLocation());
 
 			// Save path of parent
 			final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
@@ -134,26 +120,15 @@ public class RepositoryTreeModel implements TreeModel {
 			final TreeModelEvent e = new TreeModelEvent(RepositoryTreeModel.this, parentPath, new int[] { index },
 					new Object[] { removedEntry });
 
-			SwingTools.invokeAndWait(new Runnable() {
-
-				@Override
-				public void run() {
-					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-						l.treeNodesRemoved(e);
-						l.treeStructureChanged(p);
-					}
+			SwingTools.invokeAndWait(() -> {
+				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+					l.treeNodesRemoved(e);
+					l.treeStructureChanged(p);
 				}
 			});
 
 			// Restore selected path / expansion state of parent
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					treeUtil.restoreSelectionPaths(parentTree);
-				}
-
-			});
+			SwingUtilities.invokeLater(() -> treeUtil.restoreSelectionPaths(parentTree));
 		}
 
 		@Override
@@ -164,9 +139,7 @@ public class RepositoryTreeModel implements TreeModel {
 			// updateCachedRepositoryEntries method.
 			Folder parent = entry.getContainingFolder();
 			if (parent != null) {
-				if (sortedRepositoryEntriesHashMap.containsKey(parent.getLocation())) {
-					sortedRepositoryEntriesHashMap.remove(parent.getLocation());
-				}
+				sortedRepositoryEntriesHashMap.remove(parent.getLocation());
 			}
 
 			// fire event
@@ -178,26 +151,16 @@ public class RepositoryTreeModel implements TreeModel {
 				treeUtil.saveExpansionState(parentTree);
 			}
 
-			SwingTools.invokeAndWait(new Runnable() {
-
-				@Override
-				public void run() {
-					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-						l.treeNodesChanged(e);
-						if (p != null) {
-							l.treeStructureChanged(p);
-						}
+			SwingTools.invokeAndWait(() -> {
+				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+					l.treeNodesChanged(e);
+					if (p != null) {
+						l.treeStructureChanged(p);
 					}
 				}
 			});
 			if (parentTree != null) {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						treeUtil.restoreExpansionState(parentTree);
-					}
-				});
+				SwingUtilities.invokeLater(() -> treeUtil.restoreExpansionState(parentTree));
 			}
 		}
 
@@ -205,28 +168,17 @@ public class RepositoryTreeModel implements TreeModel {
 		public void folderRefreshed(final Folder folder) {
 			final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
 			final TreeModelEvent e = makeChangeEvent(folder);
-			SwingTools.invokeAndWait(new Runnable() {
-
-				@Override
-				public void run() {
-					if (parentTree != null) {
-						treeUtil.saveExpansionState(parentTree);
-					}
-					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-						l.treeStructureChanged(e);
-					}
-					treeUtil.locateExpandedEntries();
+			SwingTools.invokeAndWait(() -> {
+				if (parentTree != null) {
+					treeUtil.saveExpansionState(parentTree);
 				}
-
+				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+					l.treeStructureChanged(e);
+				}
+				treeUtil.locateExpandedEntries();
 			});
 			if (parentTree != null) {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						treeUtil.restoreExpansionState(parentTree);
-					}
-				});
+				SwingUtilities.invokeLater(() -> treeUtil.restoreExpansionState(parentTree));
 			}
 			sortedRepositoryEntriesHashMap.clear();
 		}
@@ -261,26 +213,11 @@ public class RepositoryTreeModel implements TreeModel {
 				}
 				final TreeModelEvent e = new TreeModelEvent(this, new TreePath(root));
 
-				if (SwingUtilities.isEventDispatchThread()) {
+				SwingTools.invokeAndWait(() -> {
 					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 						l.treeStructureChanged(e);
 					}
-				} else {
-					try {
-						SwingUtilities.invokeAndWait(new Runnable() {
-
-							@Override
-							public void run() {
-								for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-									l.treeStructureChanged(e);
-								}
-
-							}
-						});
-					} catch (InvocationTargetException | InterruptedException ex) {
-						LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.gui.edt_event", ex);
-					}
-				}
+				});
 			}
 		}, true);
 	}
@@ -348,25 +285,24 @@ public class RepositoryTreeModel implements TreeModel {
 				return PENDING_FOLDER_NAME;
 			} else {
 				try {
-					if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())) {
-						updateCachedRepositoryEntries(folder);
+					List<Entry> sortedEntries = sortedRepositoryEntriesHashMap.get(folder.getLocation());
+					if (sortedEntries == null) {
+						sortedEntries = updateCachedRepositoryEntries(folder);
 					}
 					int numFolders = folder.getSubfolders().size();
 					if (index < numFolders) {
-						if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())
-								|| sortedRepositoryEntriesHashMap.get(folder.getLocation()).size() <= index) {
-							updateCachedRepositoryEntries(folder);
+						if (sortedEntries.size() <= index) {
+							sortedEntries = updateCachedRepositoryEntries(folder);
 						}
-						return sortedRepositoryEntriesHashMap.get(folder.getLocation()).get(index);
+						return sortedEntries.get(index);
 					} else if (onlyFolders) {
 						return null;
 					} else {
 						if (folder.getDataEntries().size() > index - numFolders) {
-							if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())
-									|| sortedRepositoryEntriesHashMap.get(folder.getLocation()).size() <= index) {
-								updateCachedRepositoryEntries(folder);
+							if (sortedEntries.size() <= index) {
+								sortedEntries = updateCachedRepositoryEntries(folder);
 							}
-							return sortedRepositoryEntriesHashMap.get(folder.getLocation()).get(index);
+							return sortedEntries.get(index);
 						} else {
 							// In this case and at this state, no data entry is known.
 							// Returning null would cause a NPE.
@@ -418,10 +354,7 @@ public class RepositoryTreeModel implements TreeModel {
 					brokenFolders.add(folder);
 					SwingTools.showSimpleErrorMessage("error_fetching_folder_contents_from_repository", e);
 				} finally {
-					SwingUtilities.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
+					SwingUtilities.invokeLater(() -> {
 							try {
 								TreeModelEvent removeEvent = new TreeModelEvent(RepositoryTreeModel.this, getPathTo(folder),
 										new int[] { 0 }, new Object[] { PENDING_FOLDER_NAME });
@@ -430,7 +363,7 @@ public class RepositoryTreeModel implements TreeModel {
 									l.treeNodesRemoved(removeEvent);
 								}
 
-								int index[] = new int[children.size()];
+								int[] index = new int[children.size()];
 								for (int i = 0; i < index.length; i++) {
 									index[i] = i;
 								}
@@ -450,8 +383,7 @@ public class RepositoryTreeModel implements TreeModel {
 								}
 							}
 
-						}
-					});
+						});
 				}
 			}
 		}.start();
@@ -519,16 +451,16 @@ public class RepositoryTreeModel implements TreeModel {
 			}
 			Folder folder = (Folder) parent;
 			try {
-				if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())) {
-					updateCachedRepositoryEntries(folder);
+				List<Entry> sortedEntries = sortedRepositoryEntriesHashMap.get(folder.getLocation());
+				if (sortedEntries == null) {
+					sortedEntries = updateCachedRepositoryEntries(folder);
 				}
-				if (child instanceof Folder || child instanceof Entry) {
+				if (child instanceof Entry) {
 					if (folder.getSubfolders().contains(child) || folder.getDataEntries().contains(child)) {
-						if (!sortedRepositoryEntriesHashMap.keySet().contains(folder.getLocation())
-								|| !sortedRepositoryEntriesHashMap.get(folder.getLocation()).contains(child)) {
-							updateCachedRepositoryEntries(folder);
+						if (!sortedEntries.contains(child)) {
+							sortedEntries = updateCachedRepositoryEntries(folder);
 						}
-						return sortedRepositoryEntriesHashMap.get(folder.getLocation()).indexOf(child);
+						return sortedEntries.indexOf(child);
 					}
 				} else {
 					return -1;
@@ -555,23 +487,18 @@ public class RepositoryTreeModel implements TreeModel {
 	 *            determinate which part of the cached HashMap has to be updated
 	 * @throws RepositoryException
 	 */
-	private void updateCachedRepositoryEntries(Folder parent) throws RepositoryException {
-		sortedRepositoryEntriesHashMap.remove(parent.getLocation());
-		List<Folder> sortedFolders = new ArrayList<>(parent.getSubfolders());
-		List<DataEntry> sortedEntries = new ArrayList<>(parent.getDataEntries());
+	private List<Entry> updateCachedRepositoryEntries(Folder parent) throws RepositoryException {
+		List<Entry> sortedFolders = new ArrayList<>(parent.getSubfolders());
+		List<Entry> sortedEntries = new ArrayList<>(parent.getDataEntries());
 
 		// sort entries depending on sorting method
-		if (sortingMethod == RepositorySortingMethod.LAST_MODIFIED_DATE_DESC) {
-			Collections.sort(sortedEntries, RepositoryTools.ENTRY_COMPARATOR_LAST_MODIFIED);
-			Collections.sort(sortedFolders, RepositoryTools.ENTRY_COMPARATOR_LAST_MODIFIED);
-		} else {
-			Collections.sort(sortedEntries, RepositoryTools.ENTRY_COMPARATOR);
-			Collections.sort(sortedFolders, RepositoryTools.ENTRY_COMPARATOR);
-		}
+		Collections.sort(sortedEntries, sortingMethod);
+		Collections.sort(sortedFolders, sortingMethod);
 
-		List<Entry> newList = new ArrayList<>(sortedFolders);
-		newList.addAll(sortedEntries);
-		sortedRepositoryEntriesHashMap.put(parent.getLocation(), newList);
+		List<Entry> sortedFoldersFirst = sortedFolders;
+		sortedFoldersFirst.addAll(sortedEntries);
+		sortedRepositoryEntriesHashMap.put(parent.getLocation(), sortedFoldersFirst);
+		return sortedFoldersFirst;
 	}
 
 	@Override
@@ -628,15 +555,7 @@ public class RepositoryTreeModel implements TreeModel {
 			l.treeStructureChanged(e);
 		}
 
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				treeUtil.restoreSelectionPaths(parentTree);
-
-			}
-
-		});
+		SwingUtilities.invokeLater(() -> treeUtil.restoreSelectionPaths(parentTree));
 	}
 
 	/**

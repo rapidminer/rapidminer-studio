@@ -81,7 +81,7 @@ public class ParameterTypeEnumeration extends CombinedParameterType {
 		if (value != null) {
 			list = transformString2Enumeration(value);
 		} else {
-			list = (String[]) getDefaultValue();
+			list = transformString2Enumeration(getDefaultValueAsString());
 		}
 		if (list != null) {
 			for (String string : list) {

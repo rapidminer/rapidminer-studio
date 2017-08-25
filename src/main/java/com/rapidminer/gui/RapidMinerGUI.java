@@ -280,13 +280,17 @@ public class RapidMinerGUI extends RapidMiner {
 
 		@Override
 		public void run() {
-			LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.RapidMinerGUI.running_shutdown_sequence");
-			RapidMinerGUI.saveRecentFileList();
-			RapidMinerGUI.saveGUIProperties();
-			UsageStatistics.getInstance().save();
-			RepositoryManager.shutdown();
-			UsageStatsTransmissionDialog.transmitOnShutdown();
-			CallToActionScheduler.INSTANCE.shutdown();
+			// only need to do these if at least the MainFrame came up successfully.
+			// Otherwise saving might even be detrimental!
+			if (RapidMinerGUI.getMainFrame() != null) {
+				LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.RapidMinerGUI.running_shutdown_sequence");
+				RapidMinerGUI.saveRecentFileList();
+				RapidMinerGUI.saveGUIProperties();
+				UsageStatistics.getInstance().save();
+				RepositoryManager.shutdown();
+				UsageStatsTransmissionDialog.transmitOnShutdown();
+				CallToActionScheduler.INSTANCE.shutdown();
+			}
 		}
 	}
 

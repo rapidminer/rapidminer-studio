@@ -166,9 +166,9 @@ public class LibSVMModel extends KernelModel implements FormulaProvider {
 		// check if one class SVM is used
 		if (model.param.svm_type == LibSVMLearner.SVM_TYPE_ONE_CLASS) {
 			// if yes, then clear predictedLabel mapping: We use a fixed one
-			predictedLabel.getMapping().getValues().clear();
-			predictedLabel.getMapping().getValues().add("outside");
-			predictedLabel.getMapping().getValues().add("inside");
+			predictedLabel.getMapping().clear();
+			predictedLabel.getMapping().mapString("outside");
+			predictedLabel.getMapping().mapString("inside");
 
 			// create own confidence attribute
 			Attribute confidenceAttribute = AttributeFactory.createAttribute(Attributes.CONFIDENCE_NAME + "(inside)",

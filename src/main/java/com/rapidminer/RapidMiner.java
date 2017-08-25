@@ -966,14 +966,16 @@ public class RapidMiner {
 		for (Runnable hook : shutdownHooks) {
 			try {
 				hook.run();
-			} catch (Exception e) {
+			} catch (Throwable e) {
+				// catching Throwable because this also accounts for things like ExceptionInInitializerErrors
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 						"com.rapidminer.RapidMiner.executing_shotdown_hook_error", e.getMessage()), e);
 			}
 		}
 		try {
 			Runtime.getRuntime().runFinalization();
-		} catch (Exception e) {
+		} catch (Throwable e) {
+			// catching Throwable because this also accounts for things like ExceptionInInitializerErrors
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.RapidMiner.error_during_finalization", e.getMessage()), e);
 		}

@@ -19,6 +19,8 @@
 
 package com.rapidminer.repository;
 
+import java.util.Comparator;
+
 import com.rapidminer.repository.gui.RepositoryBrowser;
 
 
@@ -29,6 +31,17 @@ import com.rapidminer.repository.gui.RepositoryBrowser;
  * @since 7.4
  *
  */
-public enum RepositorySortingMethod {
-	NAME_ASC, LAST_MODIFIED_DATE_DESC;
+public enum RepositorySortingMethod implements Comparator<Entry> {
+	NAME_ASC(RepositoryTools.ENTRY_COMPARATOR) {
+	}, LAST_MODIFIED_DATE_DESC(RepositoryTools.ENTRY_COMPARATOR_LAST_MODIFIED);
+
+	private final Comparator<Entry> comparator;
+
+	RepositorySortingMethod(Comparator<Entry> comparator){
+		this.comparator = comparator;
+	}
+
+	public int compare(Entry o1, Entry o2) {
+		return comparator.compare(o1, o2);
+	}
 }
