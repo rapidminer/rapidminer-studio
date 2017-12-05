@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -33,10 +32,12 @@ import com.rapidminer.Process;
 import com.rapidminer.ProcessListener;
 import com.rapidminer.gui.ConditionalAction;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.OperatorActionFactory.ResourceEntry;
 import com.rapidminer.gui.dnd.OperatorTransferHandler;
 import com.rapidminer.gui.flow.AutoWireThread;
 import com.rapidminer.gui.operatormenu.OperatorMenu;
+import com.rapidminer.gui.operatortree.actions.ActionUtil;
 import com.rapidminer.gui.operatortree.actions.DeleteOperatorAction;
 import com.rapidminer.gui.operatortree.actions.InfoOperatorAction;
 import com.rapidminer.gui.operatortree.actions.ToggleActivationItem;
@@ -51,6 +52,7 @@ import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.ProcessRootOperator;
+import com.rapidminer.tools.ParameterService;
 
 
 /**
@@ -81,7 +83,7 @@ public class Actions implements ProcessEditor {
 		private static final long serialVersionUID = -3104160320178045540L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			mainFrame.getProcessPanel().getProcessRenderer().rename(getFirstSelectedOperator());
 		}
 	};
@@ -103,7 +105,7 @@ public class Actions implements ProcessEditor {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			for (Operator selectedOperator : new LinkedList<Operator>(getSelectedOperators())) {
 				selectedOperator.makeDirty();
 			}
@@ -119,7 +121,7 @@ public class Actions implements ProcessEditor {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			mainFrame.getProcessPanel().getOperatorWarningHandler().showOperatorWarning(getFirstSelectedOperator());
 		}
 	};
@@ -338,6 +340,9 @@ public class Actions implements ProcessEditor {
 			}
 			if (selectedOperator instanceof ProcessRootOperator) {
 				return;
+			}
+			if (!"false".equals(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_DISCONNECT_ON_DISABLE))) {
+				ActionUtil.doPassthroughPorts(selectedOperator);
 			}
 			selectedOperator.remove();
 		}

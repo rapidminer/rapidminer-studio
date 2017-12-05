@@ -222,7 +222,7 @@ public class AnnotationsRenderer extends AbstractRenderer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				String key = (String) SwingTools.showInputDialog("select_annotation", true, Annotations.ALL_KEYS_IOOBJECT,
 						Annotations.ALL_KEYS_IOOBJECT[0]);
 				if (key != null) {
@@ -235,7 +235,7 @@ public class AnnotationsRenderer extends AbstractRenderer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				model.deleteRow(table.getSelectedRow());
 			}
 		}));

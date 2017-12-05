@@ -1462,7 +1462,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 							private static final long serialVersionUID = -6557085878445788274L;
 
 							@Override
-							public void actionPerformed(final ActionEvent e) {
+							public void loggedActionPerformed(final ActionEvent e) {
 								data.setSource(hoveringPort.getPorts().getOwner().getOperator().getName());
 								mainFrame.getResultDisplay().showResult((ResultObject) data);
 							}
@@ -1492,7 +1492,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(final ActionEvent e) {
+					public void loggedActionPerformed(final ActionEvent e) {
 						if (hoveringPort != null) {
 							if (hoveringPort.isConnected()) {
 								if (hoveringPort instanceof OutputPort) {
@@ -1521,7 +1521,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(final ActionEvent e) {
+				public void loggedActionPerformed(final ActionEvent e) {
 					if (port != null) {
 						if (port.isConnected()) {
 							OutputPort disconnectedPort;
@@ -1557,7 +1557,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						model.resetZoom();
 						model.fireProcessZoomChanged();
 					}
@@ -1605,7 +1605,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(final ActionEvent ae) {
+					public void loggedActionPerformed(final ActionEvent ae) {
 						int index = getProcessIndexUnder(e.getPoint());
 						if (index == -1) {
 							for (ExecutionUnit u : model.getProcesses()) {
@@ -1642,7 +1642,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 									private static final long serialVersionUID = -6557085878445788274L;
 
 									@Override
-									public void actionPerformed(final ActionEvent e) {
+									public void loggedActionPerformed(final ActionEvent e) {
 										data.setSource(hoveredOp.getName());
 										mainFrame.getResultDisplay().showResult((ResultObject) data);
 									}

@@ -42,7 +42,4 @@ public class ResourceActionAdapter extends ResourceAction {
 		super(smallIcon, i18nKey, i18nArgs);
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {}
-
 }

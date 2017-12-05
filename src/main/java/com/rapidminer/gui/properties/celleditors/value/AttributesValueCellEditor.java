@@ -57,7 +57,7 @@ public class AttributesValueCellEditor extends AbstractCellEditor implements Pro
 			private static final long serialVersionUID = -4890375754223285831L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				LinkedList<String> preSelectedAttributeNames = new LinkedList<>();
 				String combinedNames = null;
 				try {

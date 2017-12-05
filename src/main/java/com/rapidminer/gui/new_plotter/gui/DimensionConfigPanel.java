@@ -125,7 +125,7 @@ public class DimensionConfigPanel extends AbstractConfigurationPanel {
 		// automateLabelCheckBox.addActionListener(new ActionListener() {
 		//
 		// @Override
-		// public void actionPerformed(ActionEvent e) {
+		// public void loggedActionPerformed(ActionEvent e) {
 		// DimensionConfig dimensionConfig = getPlotConfiguration().getDimensionConfig(dimension);
 		// if (dimensionConfig != null) {
 		// dimensionConfig.setAutoNaming(automateLabelCheckBox.isSelected());

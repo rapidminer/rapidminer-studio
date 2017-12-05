@@ -86,7 +86,7 @@ public class GridSearchParameterOptimizationOperator extends ParameterOptimizati
 
 	@Override
 	public int getParameterValueMode() {
-		return VALUE_MODE_DISCRETE;
+		return ParameterConfigurator.VALUE_MODE_DISCRETE;
 	}
 
 	/**
@@ -115,7 +115,8 @@ public class GridSearchParameterOptimizationOperator extends ParameterOptimizati
 
 	protected void getParametersToOptimize() throws OperatorException {
 		// check parameter values
-		List<ParameterValues> parameterValuesList = parseParameterValues(getParameterList(PARAMETER_PARAMETERS));
+		List<ParameterValues> parameterValuesList = parseParameterValues(
+				getParameterList(ParameterConfigurator.PARAMETER_PARAMETERS));
 		numberOfCombinations = 1;
 		numberOfParameters = parameterValuesList.size();
 		for (Iterator<ParameterValues> iterator = parameterValuesList.iterator(); iterator.hasNext();) {

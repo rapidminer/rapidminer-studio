@@ -38,7 +38,6 @@ import java.awt.geom.GeneralPath;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
@@ -54,6 +53,7 @@ import javax.swing.event.PopupMenuListener;
 import org.jdesktop.swingx.border.DropShadowBorder;
 
 import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.ArrowButton;
 import com.rapidminer.gui.tools.ViewToolBar;
 import com.rapidminer.tools.FontTools;
@@ -71,12 +71,12 @@ public abstract class FancyDropDownButton extends JButton implements FancyConsta
 
 	private static final long serialVersionUID = 7512959784153390965L;
 
-	private final class DefaultArrowAction extends AbstractAction {
+	private final class DefaultArrowAction extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent ae) {
+		public void loggedActionPerformed(ActionEvent ae) {
 			JPopupMenu popup = getPopupMenu();
 			popup.addPopupMenuListener(popupMenuListener);
 

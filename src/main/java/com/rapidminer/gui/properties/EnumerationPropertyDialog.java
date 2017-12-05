@@ -59,7 +59,7 @@ public class EnumerationPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = 2765131572516935488L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				enumerationPropertyTable.addRow();
 			}
 		}), new JButton(new ResourceAction("list.remove_row") {
@@ -67,7 +67,7 @@ public class EnumerationPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = 538193403731059601L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				enumerationPropertyTable.removeSelected();
 			}
 		}), makeOkButton(), makeCancelButton());

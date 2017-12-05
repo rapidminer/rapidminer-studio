@@ -302,7 +302,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		private static final long serialVersionUID = 3236281211064051583L;
 
 		@Override
-		public void actionPerformed(final ActionEvent e) {
+		public void loggedActionPerformed(final ActionEvent e) {
 			inputsFilterField.clearFilter();
 			inputsModel.setFilterNameString("");
 			inputsFilterField.requestFocusInWindow();
@@ -343,7 +343,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		private static final long serialVersionUID = 3236281211064051583L;
 
 		@Override
-		public void actionPerformed(final ActionEvent e) {
+		public void loggedActionPerformed(final ActionEvent e) {
 			functionsFilterField.clearFilter();
 			functionModel.setFilterNameString("");
 			functionsFilterField.requestFocusInWindow();
@@ -859,7 +859,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent arg0) {
+				public void loggedActionPerformed(ActionEvent arg0) {
 					inputsModel.setNominalFilter(chbNominal.isSelected());
 				}
 			});
@@ -871,7 +871,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent arg0) {
+				public void loggedActionPerformed(ActionEvent arg0) {
 					inputsModel.setNumericFilter(chbNumeric.isSelected());
 				}
 			});
@@ -883,7 +883,7 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent arg0) {
+				public void loggedActionPerformed(ActionEvent arg0) {
 					inputsModel.setDateTimeFilter(chbDateTime.isSelected());
 				}
 			});

@@ -42,7 +42,8 @@ import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.ProcessStoppedException;
+import com.rapidminer.operator.ProcessSetupError;
+import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.AbstractLearner;
 import com.rapidminer.operator.learner.functions.linear.LinearRegression;
@@ -52,7 +53,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
-import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.OperatorService;
@@ -77,16 +77,30 @@ public class SeeminglyUnrelatedRegressionOperator extends AbstractLearner {
 	}
 
 	@Override
+	protected void performAdditionalChecks() {
+		if (unrelatedExampleSets.getManagedPorts().size() <= 1) {
+			addError(new SimpleProcessSetupError(ProcessSetupError.Severity.ERROR, getPortOwner(), "seemingly_unrelated_regression.too_few_inputs"));
+		} else if (unrelatedExampleSets.getManagedPorts().size() <= 2) {
+			addError(new SimpleProcessSetupError(ProcessSetupError.Severity.WARNING, getPortOwner(), "seemingly_unrelated_regression.too_few_inputs"));
+		}
+	}
+
+	@Override
 	public Model learn(ExampleSet mainSet) throws OperatorException {
 		List<ExampleSet> dataSets = unrelatedExampleSets.getData(ExampleSet.class, true);
 		return learn(mainSet, dataSets);
 	}
 
-	public SeeminglyUnrelatedRegressionModel learn(ExampleSet mainSet, List<ExampleSet> dataSets) throws UserError,
-	UndefinedParameterError, OperatorException, ProcessStoppedException {
+	public SeeminglyUnrelatedRegressionModel learn(ExampleSet mainSet, List<ExampleSet> dataSets) throws
+			OperatorException {
 		// check if each data set is part of the mainSet and has the same size
 		int numberOfExamples = mainSet.size();
 		int numberOfSets = dataSets.size();
+
+		if (numberOfSets < 1) {
+			throw new UserError(this, "seemingly_unrelated_regression.too_few_inputs");
+		}
+
 		for (ExampleSet exampleSet : dataSets) {
 			if (exampleSet.size() != numberOfExamples) {
 				throw new UserError(this, 951);
@@ -106,12 +120,11 @@ public class SeeminglyUnrelatedRegressionOperator extends AbstractLearner {
 		}
 
 		// first perform linear regression on each dataSet
-		ArrayList<ExampleSet> residualSets = new ArrayList<ExampleSet>(dataSets.size());
-		ArrayList<Pair<Attribute, Attribute>> labelPredictionAttributes = new ArrayList<Pair<Attribute, Attribute>>(
+		ArrayList<Pair<Attribute, Attribute>> labelPredictionAttributes = new ArrayList<>(
 				dataSets.size());
-		ArrayList<Iterator<Example>> setIterators = new ArrayList<Iterator<Example>>(dataSets.size());
-		ArrayList<String[]> usedAttributeNames = new ArrayList<String[]>(dataSets.size());
-		ArrayList<String> labelNames = new ArrayList<String>(dataSets.size());
+		ArrayList<Iterator<Example>> setIterators = new ArrayList<>(dataSets.size());
+		ArrayList<String[]> usedAttributeNames = new ArrayList<>(dataSets.size());
+		ArrayList<String> labelNames = new ArrayList<>(dataSets.size());
 		try {
 			// create linear regression and set parameters
 			LinearRegression regression = OperatorService.createOperator(LinearRegression.class);
@@ -127,9 +140,8 @@ public class SeeminglyUnrelatedRegressionOperator extends AbstractLearner {
 
 				// now apply for getting residuals
 				ExampleSet resultSet = model.apply(exampleSet);
-				residualSets.add(resultSet);
 				Attribute label = resultSet.getAttributes().getLabel();
-				labelPredictionAttributes.add(new Pair<Attribute, Attribute>(label, resultSet.getAttributes()
+				labelPredictionAttributes.add(new Pair<>(label, resultSet.getAttributes()
 						.getPredictedLabel()));
 				labelNames.add(label.getName());
 				usedAttributeNames.add(model.getSelectedAttributeNames());
@@ -163,6 +175,9 @@ public class SeeminglyUnrelatedRegressionOperator extends AbstractLearner {
 
 		checkForStop();
 		wMatrixInverse = wMatrixInverse.times(1d / numberOfExamples);
+		if (!wMatrixInverse.lu().isNonsingular()) {
+			throw new UserError(this, "seemingly_unrelated_regression.singular_matrix_found");
+		}
 		wMatrixInverse = wMatrixInverse.inverse();
 
 		// now build data matrices and merge to single matrix
@@ -237,19 +252,14 @@ public class SeeminglyUnrelatedRegressionOperator extends AbstractLearner {
 
 	@Override
 	public boolean supportsCapability(OperatorCapability lc) {
-		if (lc.equals(OperatorCapability.NUMERICAL_ATTRIBUTES)) {
-			return true;
-		}
-		if (lc.equals(OperatorCapability.NUMERICAL_LABEL)) {
-			return true;
-		}
-		return false;
+		return lc.equals(OperatorCapability.NUMERICAL_ATTRIBUTES) || lc.equals(OperatorCapability.NUMERICAL_LABEL);
 	}
 
-	@Override
+
 	/**
 	 * This is a copy of the linear regression parameters, because we can't just copy them because of the dependencies
 	 */
+	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
@@ -267,8 +277,7 @@ public class SeeminglyUnrelatedRegressionOperator extends AbstractLearner {
 					methodType.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_FEATURE_SELECTION,
 							availableSelectionMethods, true, i));
 				}
-			} catch (InstantiationException e) { // can't do anything about this
-			} catch (IllegalAccessException e) {
+			} catch (InstantiationException | IllegalAccessException e) { // can't do anything about this
 			}
 			i++;
 		}

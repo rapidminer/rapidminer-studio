@@ -114,7 +114,7 @@ public class PrintAndExportDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				PageFormat newPageFormat = PrintingTools.getPrinterJob().pageDialog(pageFormat);
 				for (PrintPreviewPanel p : previewPanels) {
 					p.setPageFormat(newPageFormat);

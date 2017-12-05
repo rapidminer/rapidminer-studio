@@ -171,7 +171,8 @@ public class TreeModelNodeLabelRenderer<V, E> implements Renderer.VertexLabel<V,
 			p = getAnchorPoint(bounds, d, position);
 		}
 
-		if (graphCreator.isLeaf((String) v)) {
+		if (graphCreator.isLeaf((String) v) && !graphCreator.getModel().getRoot().isNumerical()) {
+			// shift the label if there is a frequency bar
 			p.setLocation(p.x, p.y + LEAF_LABEL_OFFSET_Y);
 		}
 		g.draw(component, rc.getRendererPane(), p.x, p.y, d.width, d.height, true);

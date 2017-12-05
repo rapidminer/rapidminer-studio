@@ -44,7 +44,7 @@ public class CloseAllResultsAction extends ResourceAction {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		if (mainframe != null) {
 			if (mainframe.getResultDisplay() != null) {
 				if (DecisionRememberingConfirmDialog.confirmAction("close_all_results",

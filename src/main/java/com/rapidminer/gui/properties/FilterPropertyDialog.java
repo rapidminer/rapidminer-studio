@@ -101,7 +101,7 @@ public class FilterPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = 2265489760585034488L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				okAction();
 			}
 		});
@@ -118,7 +118,7 @@ public class FilterPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = 5289974084350157673L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				innerPanel.getModel().appendRow();
 			}
 		});
@@ -133,7 +133,7 @@ public class FilterPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = -7003906588940462016L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {} // only used as a flag
+			public void loggedActionPerformed(final ActionEvent e) {} // only used as a flag
 
 		});
 		radioButtonAND.setSelected(true);
@@ -142,7 +142,7 @@ public class FilterPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = -7003906588940462016L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {} // only used as a flag
+			public void loggedActionPerformed(final ActionEvent e) {} // only used as a flag
 
 		});
 
@@ -151,7 +151,7 @@ public class FilterPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = -7003906588940462016L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 
 				if (checkBoxMetadata.isSelected()) {
 					model.setCheckMetaDataForComparators(true);

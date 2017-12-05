@@ -150,7 +150,7 @@ public class MedianAggregator extends NumericalAggregator {
 		// Median between two different lists -> Median is midpoint of greatest value of smaller
 		// list and smallest value of greater list
 		if (smallerValues.size() == n) {
-			double max = Double.MIN_VALUE;
+			double max = Double.NEGATIVE_INFINITY;
 			for (int i = 0; i < smallerValues.size(); i++) {
 				if (smallerValues.getArray()[i] > max) {
 					max = smallerValues.getArray()[i];
@@ -158,7 +158,7 @@ public class MedianAggregator extends NumericalAggregator {
 			}
 			return (pivot + max) / 2;
 		} else if (smallerValues.size() + equalCount == n) {
-			double min = Double.MAX_VALUE;
+			double min = Double.POSITIVE_INFINITY;
 			for (int i = 0; i < greaterValues.size(); i++) {
 				if (greaterValues.getArray()[i] < min) {
 					min = greaterValues.getArray()[i];
@@ -218,7 +218,7 @@ public class MedianAggregator extends NumericalAggregator {
 		// Median between two different lists -> Median is midpoint of greatest value of smaller
 		// list and smallest value of greater list
 		if (smallerWeightCount == n) {
-			double max = Double.MIN_VALUE;
+			double max = Double.NEGATIVE_INFINITY;
 			for (int i = 0; i < smallerValues.size(); i++) {
 				if (smallerValues.getArray()[i] > max) {
 					max = smallerValues.getArray()[i];
@@ -226,7 +226,7 @@ public class MedianAggregator extends NumericalAggregator {
 			}
 			return (pivot + max) / 2;
 		} else if (smallerWeightCount + equalWeightCount == n) {
-			double min = Double.MAX_VALUE;
+			double min = Double.POSITIVE_INFINITY;
 			for (int i = 0; i < greaterValues.size(); i++) {
 				if (greaterValues.getArray()[i] < min) {
 					min = greaterValues.getArray()[i];

@@ -63,7 +63,7 @@ public class ShowPrintAndExportDialogAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		List<PrintableComponent> components = new LinkedList<>();
 		if (comp != null) {
 			components.add(comp);

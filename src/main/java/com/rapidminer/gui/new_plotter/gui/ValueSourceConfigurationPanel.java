@@ -497,7 +497,7 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						try {
 							getSelectedValueSource().setDataTableColumn(SeriesUsageType.INDICATOR_1, null);
 						} catch (ChartConfigurationException e1) {
@@ -597,7 +597,7 @@ public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependen
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						try {
 							getSelectedValueSource().setDataTableColumn(SeriesUsageType.INDICATOR_2, null);
 						} catch (ChartConfigurationException e1) {

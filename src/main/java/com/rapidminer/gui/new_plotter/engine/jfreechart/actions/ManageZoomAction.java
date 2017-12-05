@@ -57,7 +57,7 @@ public class ManageZoomAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		manageZoom(engine);
 	}
 

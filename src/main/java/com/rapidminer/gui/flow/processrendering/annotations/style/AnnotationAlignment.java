@@ -87,7 +87,7 @@ public enum AnnotationAlignment {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				model.setAnnotationAlignment(anno, AnnotationAlignment.this);
 			}
 		};

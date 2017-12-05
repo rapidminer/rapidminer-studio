@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.tree;
 
 import java.util.ArrayList;
@@ -50,10 +50,15 @@ public class BenefitCalculator {
 	private ColumnNumericalSplitter splitter;
 
 	public BenefitCalculator(ColumnExampleTable columnTable, ColumnCriterion criterion, Operator operator) {
+		this(columnTable, criterion, operator, new ColumnNumericalSplitter(columnTable, criterion));
+	}
+
+	protected BenefitCalculator(ColumnExampleTable columnTable, ColumnCriterion criterion, Operator operator,
+			ColumnNumericalSplitter splitter) {
 		this.columnTable = columnTable;
 		this.criterion = criterion;
 		this.operator = operator;
-		splitter = new ColumnNumericalSplitter(columnTable, criterion);
+		this.splitter = splitter;
 	}
 
 	/**
@@ -84,7 +89,7 @@ public class BenefitCalculator {
 			final int[] selectedAttributes) throws OperatorException {
 		ConcurrencyContext context = Resources.getConcurrencyContext(operator);
 
-		final Vector<ParallelBenefit> benefits = new Vector<ParallelBenefit>();
+		final Vector<ParallelBenefit> benefits = new Vector<>();
 		final int numberOfParallel = Math.min(context.getParallelism(), selectedAttributes.length);
 		List<Callable<Void>> tasks = new ArrayList<>(numberOfParallel);
 
@@ -133,7 +138,7 @@ public class BenefitCalculator {
 	 * @return
 	 */
 	public List<ParallelBenefit> calculateAllBenefits(Map<Integer, int[]> allSelectedExamples, int[] selectedAttributes) {
-		Vector<ParallelBenefit> benefits = new Vector<ParallelBenefit>();
+		List<ParallelBenefit> benefits = new ArrayList<>();
 
 		for (int attribute : selectedAttributes) {
 			ParallelBenefit currentBenefit = calculateBenefit(allSelectedExamples, attribute);

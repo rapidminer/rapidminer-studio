@@ -80,7 +80,7 @@ public class ProcessExecutionResultOverview extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			try {
 				if (RapidMinerGUI.getMainFrame().close()) {
 					Process process = new Process(ProcessExecutionResultOverview.this.process);
@@ -98,7 +98,7 @@ public class ProcessExecutionResultOverview extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			parent.removeProcessOverview(ProcessExecutionResultOverview.this);
 		}
 	};

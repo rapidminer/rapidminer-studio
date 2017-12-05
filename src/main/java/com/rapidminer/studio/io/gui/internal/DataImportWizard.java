@@ -84,7 +84,7 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			previousStep();
 		}
 
@@ -95,7 +95,7 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			nextStep();
 		}
 
@@ -106,7 +106,7 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			// only execute the action in case the finish button is visible and enabled
 			if (finishButton.isVisible() && finishButton.isEnabled()) {
 				disableButtons();

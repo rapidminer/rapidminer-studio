@@ -64,28 +64,24 @@ import com.rapidminer.tools.ParameterService;
  * 
  * @author Tobias Malbrecht
  */
-public abstract class ParameterIteratingOperatorChain extends OperatorChain {
+public abstract class ParameterIteratingOperatorChain extends OperatorChain implements ParameterConfigurator {
 
 	/** Last version where errors in the inner process were not handled properly. */
 	public static final OperatorVersion CHANGE_6_0_3_ERROR_HANDLING = new OperatorVersion(6, 0, 3);
 
-	/**
-	 * The parameter name for &quot;Parameters to optimize in the format
-	 * OPERATORNAME.PARAMETERNAME.&quot;
-	 */
-	public static final String PARAMETER_PARAMETERS = "parameters";
+	/** @deprecated since 8.0. Use {@link ParameterConfigurator#PARAMETER_PARAMETERS} instead */
+	@Deprecated
+	public static final String PARAMETER_PARAMETERS = ParameterConfigurator.PARAMETER_PARAMETERS;
+	/** @deprecated since 8.0. Use {@link ParameterConfigurator#PARAMETER_VALUES} instead */
+	@Deprecated
+	public static final String PARAMETER_VALUES = ParameterConfigurator.PARAMETER_VALUES;
 
-	/** A specification of the parameter values for a parameter.&quot; */
-	public static final String PARAMETER_VALUES = "values";
-
-	/**
-	 * Means that the parameter iteration scheme can only handle discrete parameter values (i.e.
-	 * lists or numerical grids).
-	 */
-	public static final int VALUE_MODE_DISCRETE = 0;
-
-	/** Means that the parameter iteration scheme can only handle intervals of numerical values. */
-	public static final int VALUE_MODE_CONTINUOUS = 1;
+	/** @deprecated since 8.0. Use {@link ParameterConfigurator#VALUE_MODE_DISCRETE} instead */
+	@Deprecated
+	public static final int VALUE_MODE_DISCRETE = ParameterConfigurator.VALUE_MODE_DISCRETE;
+	/** @deprecated since 8.0. Use {@link ParameterConfigurator#VALUE_MODE_CONTINUOUS} instead */
+	@Deprecated
+	public static final int VALUE_MODE_CONTINUOUS = ParameterConfigurator.VALUE_MODE_CONTINUOUS;
 
 	private static final int PARAMETER_VALUES_ARRAY_LENGTH_RANGE = 2;
 
@@ -142,17 +138,9 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain {
 	protected abstract boolean isPerformanceRequired();
 
 	/**
-	 * Has to return one of the predefined modes which indicate whether the operator takes discrete
-	 * values or intervals as basis for optimization. The first option is to be taken for all
-	 * strategies that iterate over the given parameters. The latter option is to be taken for
-	 * strategies such as an evolutionary one in which allowed ranges of parameters have to be
-	 * specified.
-	 */
-	public abstract int getParameterValueMode();
-
-	/**
 	 * Parses a parameter list and creates the corresponding data structures.
 	 */
+	@Override
 	public List<ParameterValues> parseParameterValues(List<String[]> parameterList) throws OperatorException {
 		if (getProcess() == null) {
 			getLogger().warning("Cannot parse parameters while operator is not attached to a process.");
@@ -182,39 +170,20 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain {
 						String[] parameterValuesArray = parameterValuesString.substring(startIndex + 1, endIndex).trim()
 								.split("[;:,]");
 						switch (parameterValuesArray.length) {
-							case PARAMETER_VALUES_ARRAY_LENGTH_RANGE: {		// value range:
-								// [minValue;maxValue]
-								// double min = Double.parseDouble(parameterValuesArray[0]);
-								// double max = Double.parseDouble(parameterValuesArray[1]);
+							case PARAMETER_VALUES_ARRAY_LENGTH_RANGE: {
+								// value range: [minValue;maxValue]
 								parameterValues = new ParameterValueRange(operator, parameterType, parameterValuesArray[0],
 										parameterValuesArray[1]);
 							}
 								break;
-							case PARAMETER_VALUES_ARRAY_LENGTH_GRID: {		// value grid:
-								// [minValue;maxValue;stepSize]
-								// double min = Double.parseDouble(parameterValuesArray[0]);
-								// double max = Double.parseDouble(parameterValuesArray[1]);
-								// double stepSize = Double.parseDouble(parameterValuesArray[2]);
-								// if (stepSize == 0) {
-								// throw new Exception("step size of 0 is not allowed");
-								// }
-								// if (min <= max + stepSize) {
-								// throw new
-								// Exception("end value must at least be as large as start value plus step size");
-								// }
+							case PARAMETER_VALUES_ARRAY_LENGTH_GRID: {
+								// value grid: [minValue;maxValue;stepSize]
 								parameterValues = new ParameterValueGrid(operator, parameterType, parameterValuesArray[0],
 										parameterValuesArray[1], parameterValuesArray[2]);
 							}
 								break;
-							case PARAMETER_VALUES_ARRAY_LENGTH_SCALED_GRID: {		// value grid:
-								// [minValue;maxValue;noOfSteps;scale]
-								// double min = Double.parseDouble(parameterValuesArray[0]);
-								// double max = Double.parseDouble(parameterValuesArray[1]);
-								// int steps = Integer.parseInt(parameterValuesArray[2]);
-								// if (steps == 0) {
-								// throw new Exception("step size of 0 is not allowed");
-								// }
-								// String scaleName = parameterValuesArray[3];
+							case PARAMETER_VALUES_ARRAY_LENGTH_SCALED_GRID: {
+								// value grid: [minValue;maxValue;noOfSteps;scale]
 								parameterValues = new ParameterValueGrid(operator, parameterType, parameterValuesArray[0],
 										parameterValuesArray[1], parameterValuesArray[2], parameterValuesArray[3]);
 							}
@@ -234,8 +203,6 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain {
 						if (parameterValuesArray.length != 2) {
 							throw new Exception("wrong parameter range format");
 						} else {
-							// double min = Double.parseDouble(parameterValuesArray[0]);
-							// double max = Double.parseDouble(parameterValuesArray[1]);
 							parameterValues = new ParameterValueRange(operator, parameterType, parameterValuesArray[0],
 									parameterValuesArray[1]);
 						}
@@ -340,10 +307,11 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain {
 		ParameterType type = new ParameterTypeConfiguration(ConfigureParameterOptimizationDialogCreator.class, this);
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeList(PARAMETER_PARAMETERS, "The parameters.",
+		type = new ParameterTypeList(ParameterConfigurator.PARAMETER_PARAMETERS, "The parameters.",
 				new ParameterTypeTupel(PARAMETER_OPERATOR_PARAMETER_PAIR, "The operator and it's parameter",
-						new ParameterTypeInnerOperator(PARAMETER_OPERATOR, "The operator."), new ParameterTypeString(
-								PARAMETER_PARAMETER, "The parameter.")), new ParameterTypeParameterValue(PARAMETER_VALUES,
+						new ParameterTypeInnerOperator(PARAMETER_OPERATOR, "The operator."),
+						new ParameterTypeString(PARAMETER_PARAMETER, "The parameter.")),
+				new ParameterTypeParameterValue(ParameterConfigurator.PARAMETER_VALUES,
 						"The value specifications for the parameters."));
 		type.setHidden(true);
 		types.add(type);
@@ -371,7 +339,7 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain {
 	public int checkProperties() {
 		boolean parametersPresent = false;
 		try {
-			List<ParameterValues> list = parseParameterValues(getParameterList(PARAMETER_PARAMETERS));
+			List<ParameterValues> list = parseParameterValues(getParameterList(ParameterConfigurator.PARAMETER_PARAMETERS));
 			if (list != null && list.size() > 0) {
 				parametersPresent = true;
 			}

@@ -56,7 +56,7 @@ public class PasswordManager extends ButtonDialog {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			new PasswordManager().setVisible(true);
 		}
 	};
@@ -86,7 +86,7 @@ public class PasswordManager extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				updateButton();
 			}
 		};
@@ -96,7 +96,7 @@ public class PasswordManager extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				int[] selectedTableRows = table.getSelectedRows();
 				ArrayList<Integer> modelRows = new ArrayList<>(selectedTableRows.length);
 				for (int i = 0; i <= selectedTableRows.length - 1; i++) {
@@ -135,7 +135,7 @@ public class PasswordManager extends ButtonDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					updateButton();
 				}
 			};
@@ -147,7 +147,7 @@ public class PasswordManager extends ButtonDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					updateButton();
 				}
 			};

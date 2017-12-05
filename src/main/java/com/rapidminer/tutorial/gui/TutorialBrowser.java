@@ -259,7 +259,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					try {
 						StartupDialogRegistry.INSTANCE.showStartupDialog(ToolbarButton.TUTORIAL);
 					} catch (NoStartupDialogRegistreredException e1) {
@@ -286,7 +286,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
 						"tutorial:" + selectedTutorial.getIdentifier(), "step_" + (stepIndex + 1) + "_previous");
 				displayStep(--stepIndex);
@@ -301,7 +301,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
 						"tutorial:" + selectedTutorial.getIdentifier(), "step_" + (stepIndex + 1) + "_next");
 				displayStep(++stepIndex);

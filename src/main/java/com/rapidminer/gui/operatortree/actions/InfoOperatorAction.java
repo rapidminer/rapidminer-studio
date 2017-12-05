@@ -40,7 +40,7 @@ public abstract class InfoOperatorAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		Operator selectedOperator = getOperator();
 		if (selectedOperator != null) {
 			OperatorInfoScreen infoScreen = new OperatorInfoScreen(selectedOperator);

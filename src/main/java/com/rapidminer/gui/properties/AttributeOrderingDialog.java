@@ -92,7 +92,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		private static final long serialVersionUID = -3046621278306353077L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			int[] indices = attributeList.getSelectedIndices();
 			attributeList.setSelectedIndices(new int[] {});
 			List<String> selectedItems = new LinkedList<String>();
@@ -118,7 +118,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		private static final long serialVersionUID = -3046621278306353077L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			int[] indices = selectedRulesList.getSelectedIndices();
 			selectedRulesList.setSelectedIndices(new int[] {});
 			List<String> selectedItems = new LinkedList<String>();
@@ -146,7 +146,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			final String newRule = addRuleTextField.getText();
 
 			// clear text field
@@ -176,7 +176,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 
 			int[] selectedIndices = selectedRulesList.getSelectedIndices();
 			if (selectedIndices.length != 0) {
@@ -211,7 +211,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 
 			int[] selectedIndices = selectedRulesList.getSelectedIndices();
 			if (selectedIndices.length != 0) {
@@ -248,7 +248,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 
 		@SuppressWarnings("deprecation")
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			int[] selectedIndices = selectedRulesList.getSelectedIndices();
 			if (selectedIndices.length != 0) {
 				int currentIndex = selectedIndices[0];
@@ -274,7 +274,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			applyFilterConditions();
 		}
 	};
@@ -316,7 +316,7 @@ public class AttributeOrderingDialog extends PropertyDialog {
 			private static final long serialVersionUID = -3046621278306353077L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				attributeSearchField.clearFilter();
 				attributeSearchField.requestFocusInWindow();
 			}

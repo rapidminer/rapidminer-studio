@@ -58,7 +58,7 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
-import com.rapidminer.operator.meta.ParameterIteratingOperatorChain;
+import com.rapidminer.operator.meta.ParameterConfigurator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
@@ -179,15 +179,16 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 
 		layoutDefault(createMainPanel(), createButtonPanel(), LARGE);
 
-		ParameterIteratingOperatorChain parameterOperatorChain = (ParameterIteratingOperatorChain) listener;
-		this.mode = parameterOperatorChain.getParameterValueMode();
+		ParameterConfigurator parameterConfigurator = (ParameterConfigurator) listener;
+		Operator op = (Operator) listener;
+		this.mode = parameterConfigurator.getParameterValueMode();
 		List<ParameterValues> readParameterValues = null;
 		try {
-			List<String[]> parameterValueList = ParameterTypeList.transformString2List(parameterOperatorChain.getParameters()
-					.getParameter(ParameterIteratingOperatorChain.PARAMETER_PARAMETERS));
-			readParameterValues = parameterOperatorChain.parseParameterValues(parameterValueList);
+			List<String[]> parameterValueList = ParameterTypeList
+					.transformString2List(op.getParameters().getParameter(ParameterConfigurator.PARAMETER_PARAMETERS));
+			readParameterValues = parameterConfigurator.parseParameterValues(parameterValueList);
 		} catch (Exception e) {
-			parameterOperatorChain.logWarning(e.getMessage());
+			op.logWarning(e.getMessage());
 		}
 		if (readParameterValues != null) {
 			for (ParameterValues parameterValue : readParameterValues) {
@@ -461,7 +462,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		});
 		gridPanel.add(stepsValueTextField);
 
-		if (mode == ParameterIteratingOperatorChain.VALUE_MODE_DISCRETE) {
+		if (mode == ParameterConfigurator.VALUE_MODE_DISCRETE) {
 			gridScaleValueComboBox = new JComboBox<String>(ParameterValueGrid.SCALES);
 		} else {
 			gridScaleValueComboBox = new JComboBox<String>();
@@ -756,7 +757,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 			private static final long serialVersionUID = -5102786702723664410L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				ok();
 			}
 		});
@@ -776,7 +777,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		int size = parameterValuesMap.size();
 		int combinations = 1;
 		try {
-			if (mode == ParameterIteratingOperatorChain.VALUE_MODE_DISCRETE) {
+			if (mode == ParameterConfigurator.VALUE_MODE_DISCRETE) {
 				for (ParameterValues parameterValues : parameterValuesMap.values()) {
 					int values = parameterValues.getNumberOfValues();
 					combinations *= values == 0 ? 1 : values;
@@ -877,7 +878,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 		Collection<ParameterType> parameters = operator.getParameters().getParameterTypes();
 		for (ParameterType parameter : parameters) {
 			// do not show parameters that are not numerical in continuous mode
-			if (mode == ParameterIteratingOperatorChain.VALUE_MODE_CONTINUOUS) {
+			if (mode == ParameterConfigurator.VALUE_MODE_CONTINUOUS) {
 				if (!operator.getParameterType(parameter.getKey()).isNumerical()) {
 					continue;
 				}
@@ -1169,7 +1170,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 			}
 		}
 
-		if (mode == ParameterIteratingOperatorChain.VALUE_MODE_DISCRETE) {
+		if (mode == ParameterConfigurator.VALUE_MODE_DISCRETE) {
 			return new ParameterValueGrid(operator, type, Double.toString(min), Double.toString(max));
 		} else {
 			return new ParameterValueRange(operator, type, Double.toString(min), Double.toString(max));
@@ -1198,7 +1199,7 @@ public class ConfigureParameterOptimizationDialog extends PropertyDialog {
 			parameterList.add(new String[] { key, value });
 		}
 		Parameters parameters = listener.getParameters();
-		parameters.setParameter(ParameterIteratingOperatorChain.PARAMETER_PARAMETERS,
+		parameters.setParameter(ParameterConfigurator.PARAMETER_PARAMETERS,
 				ParameterTypeList.transformList2String(parameterList));
 		listener.setParameters(parameters);
 		dispose();

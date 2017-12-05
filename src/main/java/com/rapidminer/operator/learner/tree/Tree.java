@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.tree;
 
 import java.io.Serializable;
@@ -44,11 +44,20 @@ public class Tree implements Serializable {
 
 	private String label = null;
 
-	private List<Edge> children = new LinkedList<Edge>();
+	private List<Edge> children = new LinkedList<>();
 
-	private Map<String, Integer> counterMap = new LinkedHashMap<String, Integer>();
+	private Map<String, Integer> counterMap = new LinkedHashMap<>();
 
+	/**
+	 * transient because not used for prediction but only for pruning in deprecated tree, {@link PessimisticPruner}.
+	 */
 	private transient ExampleSet trainingSet = null;
+
+	/**
+	 * transient because not used for prediction but only for calculation of attribute weights inside tree operator.
+	 */
+	private transient double benefit = Double.NaN;
+
 
 	public Tree(ExampleSet trainingSet) {
 		this.trainingSet = trainingSet;
@@ -58,9 +67,18 @@ public class Tree implements Serializable {
 		return this.trainingSet;
 	}
 
+
+	/**
+	 * @return {@code true} if the tree has numerical leaves
+	 */
+	public boolean isNumerical() {
+		return false;
+	}
+
 	public void addCount(String className, int count) {
 		counterMap.put(className, count);
 	}
+
 
 	public int getCount(String className) {
 		Integer count = counterMap.get(className);
@@ -80,7 +98,7 @@ public class Tree implements Serializable {
 	}
 
 	public int getSubtreeFrequencySum() {
-		if (children.size() == 0) {
+		if (children.isEmpty()) {
 			return getFrequencySum();
 		} else {
 			int sum = 0;
@@ -96,16 +114,17 @@ public class Tree implements Serializable {
 	 * the tree.
 	 */
 	public Map<String, Integer> getSubtreeCounterMap() {
-		Map<String, Integer> counterMap = new LinkedHashMap<String, Integer>();
+		Map<String, Integer> counterMap = new LinkedHashMap<>();
 		fillSubtreeCounterMap(counterMap);
 		return counterMap;
 	}
 
 	protected void fillSubtreeCounterMap(Map<String, Integer> counterMap) {
-		if (children.size() == 0) {
+		if (children.isEmpty()) {
 			// then its leaf: Add all counted frequencies
-			for (String key : this.counterMap.keySet()) {
-				int newValue = this.counterMap.get(key);
+			for (Map.Entry<String, Integer> entry : this.counterMap.entrySet()) {
+				String key = entry.getKey();
+				int newValue = entry.getValue();
 				if (counterMap.containsKey(key)) {
 					newValue += counterMap.get(key);
 				}
@@ -136,11 +155,28 @@ public class Tree implements Serializable {
 	}
 
 	public boolean isLeaf() {
-		return children.size() == 0;
+		return children.isEmpty();
 	}
 
 	public String getLabel() {
 		return this.label;
+	}
+
+	/**
+	 * Sets the benefit that lead to the creation of children at this node.
+	 *
+	 * @param benefit
+	 *            the benefit
+	 */
+	public void setBenefit(double benefit) {
+		this.benefit = benefit;
+	}
+
+	/**
+	 * @return the benefit for creating children at this node or NaN if it is not a leaf or the benefit was not set
+	 */
+	public double getBenefit() {
+		return benefit;
 	}
 
 	public Iterator<Edge> childIterator() {
@@ -153,12 +189,12 @@ public class Tree implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		toString(null, this, "", buffer);
 		return buffer.toString();
 	}
 
-	private void toString(SplitCondition condition, Tree tree, String indent, StringBuffer buffer) {
+	private void toString(SplitCondition condition, Tree tree, String indent, StringBuilder buffer) {
 		if (condition != null) {
 			buffer.append(condition.toString());
 		}

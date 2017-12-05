@@ -246,7 +246,7 @@ public class GlobalConfigurationPanel extends AbstractConfigurationPanel {
 						private static final long serialVersionUID = 1L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							createColorSchemeDialog();
 						}
 					});
@@ -266,7 +266,7 @@ public class GlobalConfigurationPanel extends AbstractConfigurationPanel {
 						private static final long serialVersionUID = 1L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							createPlotBackgroundColorDialog();
 
 						}
@@ -288,7 +288,7 @@ public class GlobalConfigurationPanel extends AbstractConfigurationPanel {
 						private static final long serialVersionUID = 1L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							createFrameBackgroundColorDialog();
 						}
 					});

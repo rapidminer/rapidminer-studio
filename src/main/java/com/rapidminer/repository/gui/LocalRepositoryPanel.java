@@ -119,7 +119,7 @@ public class LocalRepositoryPanel extends JPanel implements RepositoryConfigurat
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				File file = SwingTools.chooseFile(LocalRepositoryPanel.this, null, true, true, (String) null, null);
 				if (file != null) {
 					fileField.setText(file.toString());

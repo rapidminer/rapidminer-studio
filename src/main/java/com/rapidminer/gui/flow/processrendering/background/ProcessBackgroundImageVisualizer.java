@@ -78,7 +78,7 @@ public final class ProcessBackgroundImageVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				final ExecutionUnit targetProcess = process != null ? process : view.getModel().getProcess(0);
 
 				ButtonDialog dialog = createBackgroundImageDialog(targetProcess, view.getModel());
@@ -104,7 +104,7 @@ public final class ProcessBackgroundImageVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 
 				ExecutionUnit targetProcess = process;
 				if (process == null) {

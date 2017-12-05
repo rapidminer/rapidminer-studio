@@ -99,7 +99,7 @@ public class MetaDataDeclarationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			toggleReload();
 		}
 	};
@@ -108,7 +108,7 @@ public class MetaDataDeclarationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			toggleReload();
 		}
 	};
@@ -119,7 +119,7 @@ public class MetaDataDeclarationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			toggleGuessValueTypes();
 		}
 	};
@@ -128,7 +128,7 @@ public class MetaDataDeclarationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			toggleGuessValueTypes();
 		}
 	};
@@ -139,7 +139,7 @@ public class MetaDataDeclarationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			state.getTranslationConfiguration().setFaultTolerant(errorsAsMissingBox.isSelected());
 		}
 	});
@@ -148,7 +148,7 @@ public class MetaDataDeclarationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			if (filteredModel != null) {
 				filteredModel.setFilterEnabled(filterErrorsBox.isSelected());
 			}

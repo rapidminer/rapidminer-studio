@@ -47,7 +47,7 @@ public class DeleteSelectedConnectionAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(final ActionEvent e) {
+	public void loggedActionPerformed(final ActionEvent e) {
 		ProcessRendererModel model = view.getModel();
 		if (model.getSelectedConnectionSource() != null) {
 			if (model.getSelectedConnectionSource().isConnected()) {

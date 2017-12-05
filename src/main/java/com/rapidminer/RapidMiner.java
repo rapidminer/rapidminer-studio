@@ -83,6 +83,7 @@ import com.rapidminer.tools.cipher.KeyGenerationException;
 import com.rapidminer.tools.cipher.KeyGeneratorTool;
 import com.rapidminer.tools.config.ConfigurationManager;
 import com.rapidminer.tools.plugin.Plugin;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 import com.rapidminer.tools.usagestats.UsageStatistics;
 
 
@@ -724,6 +725,9 @@ public class RapidMiner {
 			}
 		}
 		UsageStatistics.getInstance(); // initializes as a side effect
+		ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_CONSTANT, ActionStatisticsCollector.VALUE_CONSTANT_START, null);
+		ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_CONSTANT, ActionStatisticsCollector.VALUE_MODE, RapidMiner.getExecutionMode().name());
+		ActionStatisticsCollector.getInstance().startTimer(RapidMiner.class, ActionStatisticsCollector.TYPE_CONSTANT, ActionStatisticsCollector.VALUE_EXECUTION, ActionStatisticsCollector.ARG_RUNTIME);
 
 		// registering operators
 		RapidMiner.splashMessage("register_plugins");
@@ -963,6 +967,8 @@ public class RapidMiner {
 	}
 
 	public synchronized static void quit(final ExitMode exitMode) {
+		ActionStatisticsCollector.getInstance().stopTimer(RapidMiner.class);
+
 		for (Runnable hook : shutdownHooks) {
 			try {
 				hook.run();

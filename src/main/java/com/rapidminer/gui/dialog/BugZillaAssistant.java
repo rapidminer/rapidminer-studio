@@ -423,7 +423,7 @@ public class BugZillaAssistant extends ButtonDialog {
 			private static final long serialVersionUID = 5152169309271935854L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				File file = SwingTools.chooseFile(null, null, true, null, null);
 				if (file != null) {
 					((DefaultListModel<File>) attachments.getModel()).addElement(file);
@@ -436,7 +436,7 @@ public class BugZillaAssistant extends ButtonDialog {
 			private static final long serialVersionUID = 5353693430346577972L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				if (attachments.getSelectedIndex() >= 0) {
 					((DefaultListModel<File>) attachments.getModel()).remove(attachments.getSelectedIndex());
 				}
@@ -447,7 +447,7 @@ public class BugZillaAssistant extends ButtonDialog {
 			private static final long serialVersionUID = 2135052418891516027L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				BugReportViewerDialog dialog = new BugReportViewerDialog(BugZillaAssistant.this);
 				dialog.setInfoText(BugReport.createCompleteBugDescription(descriptionField.getText().trim(), exception,
 						addProcessCheckBox.isSelected(), addSysPropsCheckBox.isSelected(), true));
@@ -462,7 +462,7 @@ public class BugZillaAssistant extends ButtonDialog {
 			private static final long serialVersionUID = -4559762951458936715L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 
 				// check fields
 				email = loginName.getText().trim();

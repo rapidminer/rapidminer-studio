@@ -384,7 +384,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				save(currentColorSchemes, currentActiveColorSchemeName);
 
 				// set new scheme
@@ -400,7 +400,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				revert();
 			}
 		};
@@ -709,7 +709,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						removeSelectedColorAction();
 					}
 
@@ -729,7 +729,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						Color oldColor = Color.white;
 						Color newSchemeColor = createColorDialog(oldColor);
 						if (newSchemeColor != null && !newSchemeColor.equals(oldColor)) {
@@ -861,7 +861,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 						private static final long serialVersionUID = 1L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							moveSelectedColorUpAction();
 						}
 					});
@@ -884,7 +884,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 								private static final long serialVersionUID = 1L;
 
 								@Override
-								public void actionPerformed(ActionEvent e) {
+								public void loggedActionPerformed(ActionEvent e) {
 									moveSelectedColorDownAction();
 								}
 							});
@@ -971,7 +971,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 						private static final long serialVersionUID = 1L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							String newName = createNameDialog(currentActiveColorSchemeName);
 							if (newName != null && !newName.equals(currentActiveColorSchemeName)) {
 								renameColorSchemeAction(newName);
@@ -995,7 +995,7 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 						private static final long serialVersionUID = 1L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							ConfirmDialog dialog = new ConfirmDialog(
 									SwingUtilities.getWindowAncestor((Component) e.getSource()),
 									"plotter.configuration_dialog.confirm_color_scheme_delete", ConfirmDialog.YES_NO_OPTION,

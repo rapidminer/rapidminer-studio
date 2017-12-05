@@ -24,10 +24,10 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.UIManager;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.vlsolutions.swing.docking.DockGroup;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.DockViewAsTab;
@@ -62,12 +62,12 @@ public class DetachedDockViewAsTab extends DockViewAsTab {
 	@Override
 	public void resetTabIcons() {
 		// configure attach button
-		attachAction = new AbstractAction("Attach") {
+		attachAction = new LoggedAbstractAction("Attach") {
 
 			private static final long serialVersionUID = 390635147992456838L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				desktop.setFloating(getDockable(), false);
 			}
 		};

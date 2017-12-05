@@ -50,7 +50,7 @@ public class SaveAsAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		saveAs(RapidMinerGUI.getMainFrame().getProcess());
 	}
 

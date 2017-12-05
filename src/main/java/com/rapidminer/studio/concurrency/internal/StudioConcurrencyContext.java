@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.locks.Lock;
@@ -70,6 +71,8 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 	/** The corresponding process. */
 	private final Process process;
 
+
+
 	/**
 	 * Creates a new {@link ConcurrencyContext} for the given {@link Process}.
 	 * <p>
@@ -107,24 +110,51 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		// wrap runnables in callables
 		List<Callable<Void>> callables = new ArrayList<>(runnables.size());
 		for (final Runnable runnable : runnables) {
-			callables.add(new Callable<Void>() {
-
-				@Override
-				public Void call() throws Exception {
-					runnable.run();
-					return null;
-				}
+			callables.add(() -> {
+				runnable.run();
+				return null;
 			});
 		}
 
 		// submit callables without further checks
-		collectResults(submit(callables));
+		call(callables);
 	}
 
 	@Override
 	public <T> List<T> call(List<Callable<T>> callables)
 			throws ExecutionException, ExecutionStoppedException, IllegalArgumentException {
-		return collectResults(submit(callables));
+		if (callables == null) {
+			throw new IllegalArgumentException("callables must not be null");
+		}
+
+		// nothing to do if list is empty
+		if (callables.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		// check for null tasks
+		for (Callable<T> callable : callables) {
+			if (callable == null) {
+				throw new IllegalArgumentException("callables must not contain null");
+			}
+		}
+
+		// handle submissions from inside and outside the pool differently
+		Thread currentThread = Thread.currentThread();
+		if (currentThread instanceof ForkJoinWorkerThread
+				&& ((ForkJoinWorkerThread) currentThread).getPool() == getForkJoinPool()) {
+			return RecursiveWrapper.call(callables);
+		} else {
+			final List<Future<T>> futures = new ArrayList<>(callables.size());
+			AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+
+				for (Callable<T> callable : callables) {
+					futures.add(getForkJoinPool().submit(callable));
+				}
+				return null;
+			});
+			return collectResults(futures);
+		}
 	}
 
 	@Override
@@ -147,15 +177,12 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 
 		// submit callables without further checks
 		final List<Future<T>> futures = new ArrayList<>(callables.size());
-		AccessController.doPrivileged(new PrivilegedAction<Void>() {
+		AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
 
-			@Override
-			public Void run() {
-				for (Callable<T> callable : callables) {
-					futures.add(getForkJoinPool().submit(callable));
-				}
-				return null;
+			for (Callable<T> callable : callables) {
+				futures.add(getForkJoinPool().submit(callable));
 			}
+			return null;
 		});
 		return futures;
 	}
@@ -223,7 +250,7 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 
 	@Override
 	public void checkStatus() throws ExecutionStoppedException {
-		if (process != null && process.shouldStop()) {
+		if (process.shouldStop()) {
 			throw new ProcessStoppedRuntimeException();
 		}
 	}
@@ -239,11 +266,11 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 	}
 
 	/**
-	 * Verifies and fetches the ForkJoinPool.
+	 * This method verifies and returns a JVM-wide, static FJPool. Override if a different pool behavior is needed.
 	 *
-	 * @return the pool which should be used for execution.
+	 * @return the ForkJoinPool to use for this context instance for execution.
 	 */
-	private static ForkJoinPool getForkJoinPool() {
+	protected ForkJoinPool getForkJoinPool() {
 		READ_LOCK.lock();
 		try {
 			if (!isPoolOutdated()) {
@@ -274,26 +301,24 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 	}
 
 	/**
-	 * Checks if the pool needs to be re-created.
+	 * Checks if the JVM-wide, static pool needs to be re-created. Override if a different pool behavior is needed.
 	 *
 	 * @return {@code true} if the current pool is {@code null} or the
 	 *         {@link #getDesiredParallelismLevel()} is not equal to the current {@link #pool}
 	 *         parallelism otherwise {@code false}
 	 */
-	private static boolean isPoolOutdated() {
-		if (pool == null) {
-			return true;
-		}
-		return getDesiredParallelismLevel() != pool.getParallelism();
+	protected boolean isPoolOutdated() {
+		return pool == null || getDesiredParallelismLevel() != pool.getParallelism();
 	}
 
 	/**
-	 * Returns the desired number of cores to be used for concurrent computations. This number is
-	 * always at least one and either bound by a license limit or by the user's configuration.
+	 * Returns the desired number of cores to be used for concurrent computations for the JVM-wide, static pool. This
+	 * number is always at least one and either bound by a license limit or by the user's configuration. Override if a
+	 * different pool behavior is needed.
 	 *
 	 * @return the desired parallelism level
 	 */
-	private static int getDesiredParallelismLevel() {
+	protected int getDesiredParallelismLevel() {
 		String numberOfThreads = ParameterServiceRegistry.INSTANCE
 				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
 
@@ -321,4 +346,5 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 		}
 		return userLevel;
 	}
+
 }

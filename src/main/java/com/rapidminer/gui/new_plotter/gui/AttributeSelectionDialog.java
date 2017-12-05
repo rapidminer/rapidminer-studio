@@ -76,7 +76,7 @@ public class AttributeSelectionDialog extends ButtonDialog {
 		private static final long serialVersionUID = -3046621278306353077L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			int[] indices = itemList.getSelectedIndices();
 			itemList.setSelectedIndices(new int[] {});
 			for (int i = indices.length - 1; i >= 0; i--) {
@@ -94,7 +94,7 @@ public class AttributeSelectionDialog extends ButtonDialog {
 		private static final long serialVersionUID = -3046621278306353077L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			int[] indices = selectedItemList.getSelectedIndices();
 			selectedItemList.setSelectedIndices(new int[] {});
 			for (int i = indices.length - 1; i >= 0; i--) {
@@ -130,7 +130,7 @@ public class AttributeSelectionDialog extends ButtonDialog {
 			private static final long serialVersionUID = -3046621278306353077L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				itemSearchField.clearFilter();
 			}
 		});
@@ -193,7 +193,7 @@ public class AttributeSelectionDialog extends ButtonDialog {
 			private static final long serialVersionUID = -3046621278306353032L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				selectedItemSearchField.clearFilter();
 			}
 		});

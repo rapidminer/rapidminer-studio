@@ -45,7 +45,7 @@ public abstract class ExportImageAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent event) {
+	public void loggedActionPerformed(ActionEvent event) {
 		PrintableComponent comp = getPrintableComponent();
 		try {
 			ExportStatus exportResult = new ImageExporter(comp).exportImage();

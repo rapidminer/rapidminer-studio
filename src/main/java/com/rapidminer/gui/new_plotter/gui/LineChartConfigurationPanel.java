@@ -196,7 +196,7 @@ public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentP
 		// private static final long serialVersionUID = 1L;
 		//
 		// @Override
-		// public void actionPerformed(ActionEvent e) {
+		// public void loggedActionPerformed(ActionEvent e) {
 		// createLineColorDialog();
 		// }
 		//
@@ -242,7 +242,7 @@ public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentP
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					createItemColorDialog();
 				}
 

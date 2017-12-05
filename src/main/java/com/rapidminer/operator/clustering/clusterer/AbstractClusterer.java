@@ -202,7 +202,7 @@ public abstract class AbstractClusterer extends Operator {
 		ClusterModel clusterModel = generateClusterModel(output);
 
 		// registering visualizer
-		ObjectVisualizerService.addObjectVisualizer(clusterModel, new ExampleVisualizer((ExampleSet) input.clone()));
+		ObjectVisualizerService.addObjectVisualizer(clusterModel, new ExampleVisualizer((ExampleSet) output.clone()));
 
 		modelOutput.deliver(clusterModel);
 		exampleSetOutput.deliver(output); // generateClusterModel() may have added cluster attribute

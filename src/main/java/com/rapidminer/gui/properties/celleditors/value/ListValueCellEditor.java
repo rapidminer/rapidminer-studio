@@ -62,7 +62,7 @@ public class ListValueCellEditor extends AbstractCellEditor implements PropertyV
 			private static final long serialVersionUID = 3546416469350908571L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				ListPropertyDialog dialog = new ListPropertyDialog(type, valuesList, operator);
 				dialog.setVisible(true);
 				if (dialog.isOk()) {

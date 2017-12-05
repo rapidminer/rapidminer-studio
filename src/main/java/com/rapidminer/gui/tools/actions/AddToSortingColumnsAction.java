@@ -18,6 +18,7 @@
 */
 package com.rapidminer.gui.tools.actions;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ExtendedJTableSorterModel;
 import com.rapidminer.gui.tools.IconSize;
@@ -25,7 +26,6 @@ import com.rapidminer.gui.tools.SwingTools;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
 import javax.swing.Icon;
 
 
@@ -34,7 +34,7 @@ import javax.swing.Icon;
  * 
  * @author Ingo Mierswa
  */
-public class AddToSortingColumnsAction extends AbstractAction {
+public class AddToSortingColumnsAction extends LoggedAbstractAction {
 
 	private static final long serialVersionUID = -6389072245302152679L;
 
@@ -68,7 +68,7 @@ public class AddToSortingColumnsAction extends AbstractAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		this.table.setSortingStatus(this.direction, false);
 	}
 }

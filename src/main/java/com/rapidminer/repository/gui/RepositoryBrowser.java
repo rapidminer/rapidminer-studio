@@ -67,7 +67,7 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			addRepository();
 		}
 	};
@@ -77,7 +77,7 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {}
+		public void loggedActionPerformed(ActionEvent e) {}
 	};
 
 	private final RepositoryTree tree;

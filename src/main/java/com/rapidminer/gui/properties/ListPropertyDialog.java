@@ -65,7 +65,7 @@ public class ListPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				listPropertyTable.addRow();
 			}
 		}), new JButton(new ResourceAction("list.remove_row") {
@@ -73,7 +73,7 @@ public class ListPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				listPropertyTable.removeSelected();
 			}
 		}), makeOkButton("list_property_dialog_apply"), makeCancelButton());
@@ -104,7 +104,7 @@ public class ListPropertyDialog extends PropertyDialog {
 						private static final long serialVersionUID = -8187199234055845095L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							returnOption = OK_OPTION;
 							ok();
 						}
@@ -120,7 +120,7 @@ public class ListPropertyDialog extends PropertyDialog {
 						private static final long serialVersionUID = -8387199234055845095L;
 
 						@Override
-						public void actionPerformed(ActionEvent e) {
+						public void loggedActionPerformed(ActionEvent e) {
 							returnOption = CANCEL_OPTION;
 							cancel();
 						}

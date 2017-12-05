@@ -15,7 +15,7 @@
  * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools.plugin;
 
 import java.io.File;
@@ -23,17 +23,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -41,6 +38,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
@@ -70,16 +68,10 @@ public class ManagedExtension {
 		return ext1.compareTo(ext2);
 	});
 
-	private final SortedSet<String> installedVersions = new TreeSet<>(new Comparator<String>() {
-
-		@Override
-		public int compare(String o1, String o2) {
-			return normalizeVersion(o1).compareTo(normalizeVersion(o2));
-		}
-	});
+	private final SortedSet<VersionNumber> installedVersions = new TreeSet<>();
 	private final String packageID;
 	private final String name;
-	private String selectedVersion;
+	private VersionNumber selectedVersion;
 	private boolean active;
 	private final String license;
 
@@ -88,10 +80,28 @@ public class ManagedExtension {
 		this.name = XMLTools.getTagContents(element, "name");
 		this.license = XMLTools.getTagContents(element, "license");
 		this.active = Boolean.parseBoolean(XMLTools.getTagContents(element, "active"));
-		this.selectedVersion = XMLTools.getTagContents(element, "selected-version");
+		String versionString = XMLTools.getTagContents(element, "selected-version");
+		try {
+			this.selectedVersion = new VersionNumber(versionString);
+		} catch (VersionNumber.VersionNumberException vne) {
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.tools.plugin.ManagedExtension.malformed_version",
+					new Object[]{versionString,vne.getLocalizedMessage()});
+			// use max installed version
+		}
 		NodeList versions = element.getElementsByTagName("installed-version");
 		for (int i = 0; i < versions.getLength(); i++) {
-			installedVersions.add(((Element) versions.item(i)).getTextContent());
+			String versionnumber = versions.item(i).getTextContent();
+			try {
+				installedVersions.add(new VersionNumber(versionnumber));
+			} catch (Exception e) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.plugin.ManagedExtension.malformed_installedversion",
+						new Object[]{name, versionnumber, e.getLocalizedMessage()});
+			}
+		}
+		if(selectedVersion == null) {
+			selectedVersion = installedVersions.last();
 		}
 	}
 
@@ -117,7 +127,7 @@ public class ManagedExtension {
 	}
 
 	private File findFile() {
-		return findFile(selectedVersion);
+		return findFile(selectedVersion.getShortLongVersion());
 	}
 
 	private File findFile(String version) {
@@ -154,7 +164,7 @@ public class ManagedExtension {
 		}
 	}
 
-	public String getSelectedVersion() {
+	public VersionNumber getSelectedVersion() {
 		return selectedVersion;
 	}
 
@@ -168,11 +178,11 @@ public class ManagedExtension {
 		XMLTools.setTagContents(result, "name", name);
 		XMLTools.setTagContents(result, "active", "" + active);
 		XMLTools.setTagContents(result, "license", license);
-		XMLTools.setTagContents(result, "selected-version", getSelectedVersion());
-		for (String v : installedVersions) {
+		XMLTools.setTagContents(result, "selected-version", selectedVersion.getShortLongVersion());
+		for (VersionNumber v : installedVersions) {
 			Element elem = doc.createElement("installed-version");
 			result.appendChild(elem);
-			elem.appendChild(doc.createTextNode(v));
+			elem.appendChild(doc.createTextNode(v.getShortLongVersion()));
 		}
 		return result;
 	}
@@ -269,8 +279,9 @@ public class ManagedExtension {
 	}
 
 	public void addAndSelectVersion(String version) {
-		this.selectedVersion = version;
-		installedVersions.add(version);
+		VersionNumber selected = new VersionNumber(version);
+		installedVersions.add(selected);
+		this.selectedVersion = selected;
 		saveConfiguration();
 	}
 
@@ -286,64 +297,42 @@ public class ManagedExtension {
 		return MANAGED_EXTENSIONS.values();
 	}
 
-	public Set<String> getInstalledVersions() {
-		return installedVersions;
+	/**
+	 * VersionNumbers for all installed versions of this extension
+	 * @since 8.0
+	 * @return sorted array of VersionNumbers
+	 */
+	public VersionNumber[] getInstalledVersions() {
+		return installedVersions.toArray(new VersionNumber[installedVersions.size()]);
 	}
 
-	public void setSelectedVersion(String version) {
+	public void setSelectedVersion(VersionNumber version) {
 		this.selectedVersion = version;
 	}
 
-	public String getLatestInstalledVersionBefore(String version) {
-		SortedSet<String> head = installedVersions.headSet(version);
+	/**
+	 * Find the installed VersionNumber that is younger than the given version
+	 * @since 8.0
+	 * @param version a VersionNumber String representation that is the search limit
+	 * @return newest installed version before param version
+	 */
+	public VersionNumber getLatestInstalledVersionBefore(String version) {
+		SortedSet<VersionNumber> head = installedVersions.headSet(new VersionNumber(version));
 		return head.isEmpty() ? null : head.last();
 	}
 
-	public String getLatestInstalledVersion() {
-		return installedVersions.isEmpty() ? null : installedVersions.last();
-	}
-
 	/**
-	 * Adds leading zeroes until the version is of the form {@code xx.yy.zzz}.
+	 * Latest installed version
+	 * @since 8.0
+	 * @return VersionNumber of the latest installed version or null if none are present
 	 */
-	public static String normalizeVersion(String version) {
-		if (version == null) {
-			return null;
-		}
-		String[] split = version.split("\\.");
-		if (split.length < 3) {
-			String[] newSplit = new String[3];
-			System.arraycopy(split, 0, newSplit, 0, split.length);
-			for (int i = split.length; i < newSplit.length; i++) {
-				newSplit[i] = "0";
-			}
-			split = newSplit;
-		}
-		StringBuilder result = new StringBuilder();
-		for (int i = 0; i < split.length; i++) {
-			int lastDigit;
-			for (lastDigit = split[i].length() - 1; lastDigit >= 0; lastDigit--) {
-				if (Character.isDigit(split[i].charAt(lastDigit))) {
-					break;
-				}
-			}
-			String letters = split[i].substring(lastDigit + 1);
-			String digits = split[i].substring(0, lastDigit + 1);
-			int desiredLength = i == split.length - 1 ? 3 : 2;
-			while (digits.length() < desiredLength) {
-				digits = "0" + digits;
-			}
-			if (i != 0) {
-				result.append('.');
-			}
-			result.append(digits).append(letters);
-		}
-		return result.toString();
+	public VersionNumber getLatestInstalledVersion() {
+		return installedVersions.isEmpty() ? null : installedVersions.last();
 	}
 
 	/** Returns true if uninstall was successful. */
 	public boolean uninstallActiveVersion() {
-		File file = findFile(selectedVersion);
+		File file = findFile();
 		// we only mark as uninstalled if
 		// (1) File does not exist, probably was removed manually
 		// (2) We were able to remove it (requires administrator permissions if installed globally).

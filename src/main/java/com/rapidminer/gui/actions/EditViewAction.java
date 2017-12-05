@@ -41,7 +41,7 @@ public class EditViewAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		DockingSelectorDialog d = new DockingSelectorDialog(mainFrame);
 		d.setDockingDesktop(mainFrame.getDockingDesktop());
 		d.pack();

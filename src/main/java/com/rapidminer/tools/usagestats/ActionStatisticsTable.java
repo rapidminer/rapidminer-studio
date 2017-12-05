@@ -19,8 +19,6 @@
 package com.rapidminer.tools.usagestats;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,41 +29,33 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector.Key;
 
 
 /**
- * Presents counts from an {@link ActionStatisticsCollector} as a {@link TableModel}.
+ * Presents statistics from an {@link ActionStatisticsCollector} as a {@link TableModel}.
  *
  * @author Simon Fischer
  *
  */
 class ActionStatisticsTable implements TableModel {
 
-	private Map<Key, Long> counts;
+	private Map<Key, Long> statistics;
 	private List<Key> sortedKeys = new ArrayList<>();
 
-	ActionStatisticsTable(Map<ActionStatisticsCollector.Key, Long> counts) {
-		this.counts = counts;
-		sortedKeys.addAll(counts.keySet());
-		Collections.sort(sortedKeys, new Comparator<Key>() {
-
-			@Override
-			public int compare(Key o1, Key o2) {
-				int comp;
-				comp = o1.getType().compareTo(o2.getType());
-				if (comp != 0) {
-					return comp;
-				}
-				comp = o1.getValue().compareTo(o2.getValue());
-				if (comp != 0) {
-					return comp;
-				}
-				if (o1.getArg() == null && o2.getArg() == null) {
-					return 0;
-				} else if (o1.getArg() == null || o2.getArg() == null) {
-					return 0;
-				}
-				if (o1.getArg() != null) {
-					return o1.getArg().compareTo(o2.getArg());
-				}
+	ActionStatisticsTable(Map<ActionStatisticsCollector.Key, Long> statistics) {
+		this.statistics = statistics;
+		sortedKeys.addAll(statistics.keySet());
+		sortedKeys.sort((o1, o2) -> {
+			int comp;
+			comp = o1.getType().compareTo(o2.getType());
+			if (comp != 0) {
+				return comp;
+			}
+			comp = o1.getValue().compareTo(o2.getValue());
+			if (comp != 0) {
+				return comp;
+			}
+			if (o1.getArgWithIndicators() == null || o2.getArgWithIndicators() == null) {
 				return 0;
+			} else {
+				return o1.getArgWithIndicators().compareTo(o2.getArgWithIndicators());
 			}
 		});
 	}
@@ -115,9 +105,9 @@ class ActionStatisticsTable implements TableModel {
 			case 1:
 				return key.getValue();
 			case 2:
-				return key.getArg();
+				return key.getArgWithIndicators();
 			case 3:
-				return counts.get(key);
+				return statistics.get(key);
 			default:
 				throw new IllegalArgumentException("Illegal column: " + columnIndex);
 		}

@@ -28,13 +28,13 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Map;
-
 import javax.swing.Icon;
 import javax.swing.JComponent;
 
+import com.rapidminer.example.Attribute;
 import com.rapidminer.gui.plotter.ColorProvider;
 import com.rapidminer.operator.learner.tree.Tree;
-import com.rapidminer.operator.learner.tree.TreeModel;
+import com.rapidminer.operator.learner.tree.TreePredictionModel;
 
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
@@ -57,16 +57,19 @@ import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
  */
 public class TreeModelNodeRenderer<V, E> implements Renderer.Vertex<V, E> {
 
-	private static final int FREQUENCY_BAR_MAX_HEIGHT = 20;
+	private static final int FREQUENCY_BAR_MIN_HEIGHT = 1;
+	private static final int FREQUENCY_BAR_MAX_HEIGHT = 22;
 	private static final int FREQUENCY_BAR_OFFSET_X = 5;
-	private static final int FREQUENCY_BAR_OFFSET_Y = 8;
+	private static final int FREQUENCY_BAR_OFFSET_Y = 6;
 
 	private TreeModelGraphCreator graphCreator;
-	private TreeModel model;
+	private TreePredictionModel model;
+	private int maxLeafSize;
 
 	public TreeModelNodeRenderer(TreeModelGraphCreator graphCreator, int maxLeafSize) {
 		this.graphCreator = graphCreator;
 		this.model = graphCreator.getModel();
+		this.maxLeafSize = maxLeafSize;
 	}
 
 	@Override
@@ -156,30 +159,35 @@ public class TreeModelNodeRenderer<V, E> implements Renderer.Vertex<V, E> {
 
 		}
 
-		// leaf: draw frequency colors
+		// leaf: draw frequency colors if nominal
 		if (graphCreator.isLeaf((String) v)) {
-			Tree tree = graphCreator.getTree((String) v);
-			Map<String, Integer> countMap = tree.getCounterMap();
-			int numberOfLabels = countMap.size();
-			int frequencySum = tree.getFrequencySum();
+			Attribute label = model.getTrainingHeader().getAttributes().getLabel();
+			if (label.isNominal()) {
+				Tree tree = graphCreator.getTree((String) v);
+				Map<String, Integer> countMap = tree.getCounterMap();
+				int numberOfLabels = countMap.size();
+				int frequencySum = tree.getFrequencySum();
 
-			double height = FREQUENCY_BAR_MAX_HEIGHT;
-			double width = shape.getBounds().getWidth() - 2 * FREQUENCY_BAR_OFFSET_X - 1;
-			double xPos = shape.getBounds().getX() + FREQUENCY_BAR_OFFSET_X;
-			double yPos = shape.getBounds().getY() + shape.getBounds().getHeight() - FREQUENCY_BAR_OFFSET_Y - height;
-			ColorProvider colorProvider = new ColorProvider();
-			for (String labelValue : countMap.keySet()) {
-				int count = tree.getCount(labelValue);
-				double currentWidth = (double) count / (double) frequencySum * width;
-				Rectangle2D.Double frequencyRect = new Rectangle2D.Double(xPos, yPos, currentWidth, height);
-				int counter = model.getTrainingHeader().getAttributes().getLabel().getMapping().mapString(labelValue);
-				g.setColor(colorProvider.getPointColor((double) counter / (double) (numberOfLabels - 1)));
-				g.fill(frequencyRect);
-				g.setColor(Color.BLACK);
-				xPos += currentWidth;
+				double height = tree.getFrequencySum() / (double) maxLeafSize
+						* (FREQUENCY_BAR_MAX_HEIGHT - FREQUENCY_BAR_MIN_HEIGHT) + FREQUENCY_BAR_MIN_HEIGHT;
+				double width = shape.getBounds().getWidth() - 2 * FREQUENCY_BAR_OFFSET_X - 1;
+				double xPos = shape.getBounds().getX() + FREQUENCY_BAR_OFFSET_X;
+				double yPos = shape.getBounds().getY() + shape.getBounds().getHeight() - FREQUENCY_BAR_OFFSET_Y - height;
+				ColorProvider colorProvider = new ColorProvider();
+				for (String labelValue : countMap.keySet()) {
+					int count = tree.getCount(labelValue);
+					double currentWidth = (double) count / (double) frequencySum * width;
+					Rectangle2D.Double frequencyRect = new Rectangle2D.Double(xPos, yPos, currentWidth, height);
+					int counter = label.getMapping().mapString(labelValue);
+					g.setColor(colorProvider.getPointColor((double) counter / (double) (numberOfLabels - 1)));
+					g.fill(frequencyRect);
+
+					g.setColor(Color.BLACK);
+					xPos += currentWidth;
+				}
+
+				g.setPaint(oldPaint);
 			}
-
-			g.setPaint(oldPaint);
 		}
 	}
 }

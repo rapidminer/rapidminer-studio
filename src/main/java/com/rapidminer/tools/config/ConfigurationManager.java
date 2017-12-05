@@ -29,9 +29,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -66,8 +69,57 @@ import com.rapidminer.tools.container.Pair;
 public abstract class ConfigurationManager implements Observable<Pair<EventType, Configurable>> {
 
 	/**
+	 * Check if Configurable is of a given type
+	 */
+	private static class ConfigurableByTypeFilter implements Predicate<Configurable> {
+
+		private String type;
+
+		public ConfigurableByTypeFilter(String type) {
+			this.type = type;
+		}
+
+		@Override
+		public boolean test(Configurable configurable) {
+			return Objects.equals(type, configurable.getTypeId());
+		}
+	}
+
+	/**
+	 * Checks if a Configurable is stored at a given source
+	 **/
+	private static class ConfigurableBySourceFilter implements Predicate<Configurable> {
+
+		private String source;
+
+		public ConfigurableBySourceFilter(String source) {
+			this.source = source;
+		}
+
+		@Override
+		public boolean test(Configurable configurable) {
+			String sourceName = configurable.getSource() == null ? null : configurable.getSource().getName();
+			return Objects.equals(source, sourceName);
+		}
+	}
+
+	/**
+	 * Check if the Configurable is accessible by the current user
+	 */
+	private Predicate<Configurable> isAccessible = new Predicate<Configurable>() {
+		@Override
+		public boolean test(Configurable configurable) {
+			try {
+				checkAccess(configurable.getTypeId(), configurable.getName(), null);
+				return true;
+			} catch (ConfigurationException e) {
+				return false;
+			}
+		}
+	};
+
+	/**
 	 * Compares {@link Configurable}s.
-	 *
 	 */
 	public static class ConfigurableComparator implements Comparator<Configurable> {
 
@@ -816,7 +868,8 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 	}
 
 	/**
-	 * Returns the xml representation of the given configurables.
+	 * Returns the xml representation of the given configurables that match the given type,
+	 * are stored at the given source and are accessible by the current user.
 	 *
 	 * @param typeId
 	 *            the configurables of this typeId should be returned
@@ -828,27 +881,46 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 	 * @since 6.4.0
 	 */
 	public Document getConfigurablesAsXML(String typeId, List<Configurable> configurables, String source) {
+		return getConfigurablesAsXMLAndChangeEncryption(typeId, configurables, source, null, null);
+	}
+
+	/**
+	 * Returns the xml representation of the given configurables that match the given type,
+	 * are stored at the given source and are accessible by the current user,
+	 * by using the given old key to decrypt the information and the specified new key to encrypt the information.
+	 *
+	 * @param typeId
+	 *            the configurables of this typeId should be returned
+	 * @param configurables
+	 *            the configurables of one source
+	 * @param source
+	 *            the source of the given configurables, can be null (for local configurables)
+	 * @param decryptKey
+	 *            {@link Key} used to decrypt the configurable values
+	 * @param encryptKey
+	 *            {@link Key} which should be used to encrypt them in the returned xml
+	 * @return the configurables as XML document
+	 * @since 7.6.2
+	 */
+	public Document getConfigurablesAsXMLAndChangeEncryption(String typeId, List<Configurable> configurables, String source, Key decryptKey, Key encryptKey) {
 		Document doc = XMLTools.createDocument();
 		Element root = doc.createElement("configuration");
 		doc.appendChild(root);
 		AbstractConfigurator<? extends Configurable> configurator = ConfigurationManager.getInstance()
 		        .getAbstractConfigurator(typeId);
-
-		for (Configurable configurable : configurables) {
-
-			boolean sameLocalSource = source == null && configurable.getSource() == null;
-			boolean sameRemoteSource = source != null && configurable.getSource() != null
-			        && configurable.getSource().getName().equals(source);
-			if (typeId.equals(configurable.getTypeId())) {
-				if (sameLocalSource || sameRemoteSource) {
-					try {
-						checkAccess(typeId, configurable.getName(), null);
-					} catch (ConfigurationException e) {
-						continue;
-					}
-					root.appendChild(toXML(doc, configurator, configurable));
-
-				}
+		//Filter results
+		Predicate<Configurable> byType = new ConfigurableByTypeFilter(typeId);
+		Predicate<Configurable> bySource = new ConfigurableBySourceFilter(source);
+		List<Configurable> filteredList = configurables.stream()
+				.filter(byType)
+				.filter(bySource)
+				.filter(isAccessible).collect(Collectors.toList());
+		for (Configurable configurable : filteredList) {
+			//This is used by the getConfigurablesAsXML without decryptKey & encryptKey
+			if (decryptKey == null && encryptKey == null) {
+				root.appendChild(toXML(doc, configurator, configurable));
+			} else {
+				root.appendChild(toXMLAndChangeEncryption(doc, configurator, configurable, decryptKey, encryptKey));
 			}
 		}
 		return doc;

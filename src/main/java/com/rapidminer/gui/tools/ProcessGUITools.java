@@ -205,7 +205,7 @@ public class ProcessGUITools {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				BubbleWindow bubble = bubbleDelegator.getBubble();
 				if (bubble != null) {
 					bubble.killBubble(true);
@@ -598,7 +598,7 @@ public class ProcessGUITools {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(final ActionEvent e) {
+				public void loggedActionPerformed(final ActionEvent e) {
 					BubbleWindow bubble = bubbleDelegator.getBubble();
 					if (bubble != null) {
 						bubble.killBubble(true);
@@ -669,7 +669,7 @@ public class ProcessGUITools {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(final ActionEvent e) {
+				public void loggedActionPerformed(final ActionEvent e) {
 					BubbleWindow bubble = bubbleDelegator.getBubble();
 					if (bubble != null) {
 						bubble.killBubble(true);
@@ -871,7 +871,7 @@ public class ProcessGUITools {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				BubbleWindow bubble = bubbleDelegator.getBubble();
 				if (bubble != null) {
 					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
@@ -953,7 +953,7 @@ public class ProcessGUITools {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				BubbleWindow bubble = bubbleDelegator.getBubble();
 				if (bubble != null) {
 					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
@@ -1017,7 +1017,7 @@ public class ProcessGUITools {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				BubbleWindow bubble = bubbleDelegator.getBubble();
 				if (bubble != null) {
 					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
@@ -1080,7 +1080,7 @@ public class ProcessGUITools {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				if (RapidMinerGUI.getMainFrame().close(true)) {
 					// kill bubble
 					BubbleWindow bubble = bubbleDelegator.getBubble();
@@ -1158,7 +1158,7 @@ public class ProcessGUITools {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(final ActionEvent e) {
+				public void loggedActionPerformed(final ActionEvent e) {
 					// kill bubble when quick fix dialog is shown
 					processSetupBubble.killBubble(true);
 					new QuickFixDialog(processSetupError.getQuickFixes()).setVisible(true);

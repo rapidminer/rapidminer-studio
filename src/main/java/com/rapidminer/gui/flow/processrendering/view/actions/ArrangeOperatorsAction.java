@@ -48,7 +48,7 @@ public class ArrangeOperatorsAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(final ActionEvent e) {
+	public void loggedActionPerformed(final ActionEvent e) {
 		controller.autoArrange(view.getModel().getProcesses());
 	}
 }

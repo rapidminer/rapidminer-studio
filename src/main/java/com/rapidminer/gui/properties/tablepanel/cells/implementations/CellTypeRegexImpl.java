@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
@@ -93,7 +94,7 @@ public class CellTypeRegexImpl extends JPanel implements CellTypeRegex {
 			private static final long serialVersionUID = 3989811306286704326L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				RegexpPropertyDialog dialog = new RegexpPropertyDialog(values, field.getText(),
 						I18N.getMessageOrNull(I18N.getGUIBundle(), "gui.action.regex_description.label"));
 				dialog.setSearchFieldText(searchTextBuilder.toString());
@@ -106,7 +107,7 @@ public class CellTypeRegexImpl extends JPanel implements CellTypeRegex {
 		add(regexButton, BorderLayout.EAST);
 
 		// add ctrl+space shortcut for regex dialog
-		AbstractAction caAction = new AbstractAction() {
+		Action caAction = new AbstractAction() {
 
 			private static final long serialVersionUID = 5092311623220201432L;
 

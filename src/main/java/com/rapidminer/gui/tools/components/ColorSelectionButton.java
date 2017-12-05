@@ -71,7 +71,7 @@ public class ColorSelectionButton extends JButton {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				Color newColor = showDialog(RapidMinerGUI.getMainFrame(), I18N.getGUILabel(i18nKey), color);
 				if (newColor != null) {
 					color = newColor;

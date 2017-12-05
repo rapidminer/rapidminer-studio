@@ -97,7 +97,7 @@ public abstract class AbstractRepositoryAction<T extends Entry> extends Resource
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 
 		List<Entry> entries = tree.getSelectedEntries();
 

@@ -107,7 +107,7 @@ public class ConfigurableValueCellEditor extends AbstractSuggestionBoxValueCellE
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				ConfigurableDialog dialog = new ConfigurableDialog();
 				dialog.selectConfigurable(String.valueOf(getCellEditorValue()), typeId);
 				dialog.setVisible(true);

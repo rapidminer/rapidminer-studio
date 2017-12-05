@@ -60,7 +60,7 @@ public class AttributeOrderingCellEditor extends AbstractCellEditor implements P
 			private static final long serialVersionUID = -4890375754223285831L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				if (operator == null) {
 					return;
 				}

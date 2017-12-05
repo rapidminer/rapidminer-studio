@@ -785,14 +785,30 @@
     <operator>
         <name>Seemingly Unrelated Regression</name>
         <shortName>SUR</shortName>
-        <synopsis>This will perform regressions on different datasets with different labels and will take into account the 
-        correlation of residuals.</synopsis>
+        <synopsis>This operator performs regressions on coherent ExampleSets with 
+        different labels and will take into account the correlation of residuals 
+        to build the model. It creates a composite regression model optimized 
+        for predicting all label attributes at the same time.</synopsis>
         <help>
-        &lt;p&gt;The regression might be performed on different attribute sets, but all delivered ExampleSets must have the same number of examples. A main set must be 
-        delivered containing the union of all attributes in all subsets. This must be connected to the first input port of this operator.
-        On all other ports subsets might be attached.&lt;/p&gt; 
-        &lt;p&gt;To compute the residuals a linear regression is performed on each single set using the parameter settings of
-        this operator. The covariance of the residuals is used for improve the quality of predictions that are influenced by effects not captured by the attributes.&lt;/p&gt;
+        &lt;p&gt;This operator creates a model that consists of multiple 
+        regressions targeting different label attributes for the same set of 
+        examples. Once each single linear regression is built for each input 
+        ExampleSet (delivered at &lt;i&gt;unrelated example sets&lt;/i&gt; ports), 
+        the covariance of the residuals is used to improve the quality of 
+        predictions that are influenced by effects not captured by the attributes.
+        &lt;/p&gt;
+        &lt;p&gt;The first port is dedicated for the original ExampleSet, which 
+        must contain the union of all attributes delivered at &lt;i&gt;unrelated 
+        example sets&lt;/i&gt; input ports. Moreover, all input ExampleSets must 
+        have the same number of examples.&lt;/p&gt;
+        &lt;p&gt; Practically, all &lt;i&gt;seemingly unrelated&lt;/i&gt; input 
+        ExampleSets should have the same examples as the original one, but only 
+        contain a subset of its attributes and its own dedicated label.&lt;/p&gt;
+        &lt;p&gt;Please note that whenever a Seemingly Unrelated Regression model 
+        is applied, the prediction attributes will not have &lt;i&gt;prediction
+        &lt;/i&gt; roles, as only one attribute can have this role at a time. You 
+        can add &lt;i&gt;prediction&lt;/i&gt; role to a single attribute by using 
+        &lt;i&gt;Set Role&lt;/i&gt; operator.&lt;/p&gt;
         </help>
     <key>seemingly_unrelated_regression</key>
   </operator>
@@ -1469,8 +1485,6 @@
     <tags>
          <tag>Normalization</tag>
          <tag>Standardize</tag>
-         <tag>Standardization</tag>
-         <tag>Z-transformation</tag>
          <tag>Z-Transformation</tag>
          <tag>Scaling</tag>
          <tag>Features</tag>
@@ -4596,7 +4610,7 @@
     <key>logistic_regression_evolutionary</key>
   </operator>
     <operator>
-        <name>Optimize Parameters (Grid)</name>
+        <name>Optimize Parameters (Grid; Deprecated)</name>
         <synopsis>This operator finds the optimal values for parameters.
         </synopsis>
         <help>
@@ -4790,7 +4804,7 @@
         <key>loop_zipfile_entries</key>
     </operator>
     <operator>
-        <name>Loop Parameters</name>
+        <name>Loop Parameters (Deprecated)</name>
         <synopsis>This operator just iterates through all defined parameter
             combinations.</synopsis>
         <help>&lt;p&gt;In contrast to the
@@ -5361,6 +5375,7 @@
     <tags>
          <tag>Supervised</tag>
          <tag>Classification</tag>
+         <tag>Regression</tag>
          <tag>Model</tag>
          <tag>Nearest</tag>
          <tag>Neighbors</tag>

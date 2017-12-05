@@ -83,7 +83,7 @@ public final class TypeSelectionView extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			openMarketplaceDialog();
 		}
 
@@ -95,7 +95,7 @@ public final class TypeSelectionView extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			openMarketplaceDialog();
 		}
 

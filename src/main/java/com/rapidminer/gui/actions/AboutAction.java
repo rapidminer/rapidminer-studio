@@ -43,7 +43,7 @@ public class AboutAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		new AboutBox(mainFrame, RapidMiner.getLongVersion(), ProductConstraintManager.INSTANCE.getActiveLicense())
 				.setVisible(true);
 	}

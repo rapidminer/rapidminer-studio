@@ -57,7 +57,7 @@ public class StoreInRepositoryAction extends ResourceAction {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		String loc = RepositoryLocationChooser.selectLocation(lastLocation, "", RapidMinerGUI.getMainFrame(), true, false,
 				true, true, true);
 		if (loc != null) {

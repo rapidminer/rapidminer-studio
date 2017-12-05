@@ -21,6 +21,7 @@ package com.rapidminer.operator.concurrency.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.ExecutionUnit;
@@ -31,6 +32,7 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.ParameterService;
 
 
 /**
@@ -57,6 +59,10 @@ public abstract class ParallelOperatorChain extends OperatorChain {
 	 * @return
 	 */
 	protected boolean checkParallelizability() {
+		if(Integer.parseInt(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS)) == 1) {
+			return false;
+		}
+
 		boolean executeParallely = getParameterAsBoolean(PARAMETER_ENABLE_PARALLEL_EXECUTION);
 		if (executeParallely) {
 			// now check if there's a break point. Then we switch back to serial as well.

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.Model;
@@ -35,6 +36,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.PortUserError;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.meta.MetaModel;
 import com.rapidminer.operator.learner.tree.ConfigurableRandomForestModel;
 import com.rapidminer.operator.learner.tree.Edge;
@@ -123,8 +125,11 @@ public class ForestBasedWeighting extends Operator {
 			throw error;
 		}
 
-		String[] labelValues = forest.getTrainingHeader().getAttributes().getLabel().getMapping().getValues()
-				.toArray(new String[0]);
+		Attribute label = forest.getTrainingHeader().getAttributes().getLabel();
+		if (!label.isNominal()) {
+			throw new UserError(this, "weight_extraction.regression_forest");
+		}
+		String[] labelValues = label.getMapping().getValues().toArray(new String[0]);
 
 		// now start measuring weights
 		Criterion criterion = AbstractCriterion.createCriterion(this, 0);

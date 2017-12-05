@@ -83,7 +83,7 @@ final class LocalFileLocationChooserView extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			showFileDataSourceComboBox();
 		}
 
@@ -94,7 +94,7 @@ final class LocalFileLocationChooserView extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			chooseDataSourceFileTypeFromComboBox();
 		}
 

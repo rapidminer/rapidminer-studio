@@ -355,7 +355,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				fireProcessZoomWillChange();
 				model.zoomIn();
 				model.fireProcessZoomChanged();
@@ -366,7 +366,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				fireProcessZoomWillChange();
 				model.zoomOut();
 				model.fireProcessZoomChanged();
@@ -377,7 +377,7 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				fireProcessZoomWillChange();
 				model.resetZoom();
 				model.fireProcessZoomChanged();

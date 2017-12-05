@@ -75,7 +75,7 @@ public class TutorialSelector extends AbstractObservable<Tutorial> {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					LeaveTutorialDialog.this.setReturnOption(YES_OPTION);
 					LeaveTutorialDialog.this.setVisible(false);
 				}
@@ -90,7 +90,7 @@ public class TutorialSelector extends AbstractObservable<Tutorial> {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					LeaveTutorialDialog.this.setReturnOption(NO_OPTION);
 					LeaveTutorialDialog.this.setVisible(false);
 				}

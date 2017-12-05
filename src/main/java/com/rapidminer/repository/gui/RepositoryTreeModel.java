@@ -19,7 +19,6 @@
 package com.rapidminer.repository.gui;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -134,8 +133,8 @@ public class RepositoryTreeModel implements TreeModel {
 		@Override
 		public void entryChanged(final Entry entry) {
 
-			// If there is already a sorted list of the entries of the parentfolder, the key and the
-			// list will be deleted so it will be recached with the changed entry in the
+			// If there is already a sorted list of the entries of the parent folder, the key and the
+			// list will be deleted so it will be reached with the changed entry in the
 			// updateCachedRepositoryEntries method.
 			Folder parent = entry.getContainingFolder();
 			if (parent != null) {
@@ -143,7 +142,6 @@ public class RepositoryTreeModel implements TreeModel {
 			}
 
 			// fire event
-			final TreeModelEvent p = entry != null ? makeChangeEvent(entry) : null;
 			final TreeModelEvent e = makeChangeEvent(entry);
 
 			final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
@@ -154,9 +152,7 @@ public class RepositoryTreeModel implements TreeModel {
 			SwingTools.invokeAndWait(() -> {
 				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 					l.treeNodesChanged(e);
-					if (p != null) {
-						l.treeStructureChanged(p);
-					}
+					l.treeStructureChanged(e);
 				}
 			});
 			if (parentTree != null) {
@@ -188,7 +184,7 @@ public class RepositoryTreeModel implements TreeModel {
 
 	private boolean onlyWriteableRepositories = false;
 
-	RepositorySortingMethod sortingMethod = RepositorySortingMethod.NAME_ASC;
+	private RepositorySortingMethod sortingMethod = RepositorySortingMethod.NAME_ASC;
 
 	public RepositoryTreeModel(final RepositoryManager root) {
 		this(root, false, false);
@@ -485,20 +481,20 @@ public class RepositoryTreeModel implements TreeModel {
 	 *
 	 * @param parent
 	 *            determinate which part of the cached HashMap has to be updated
-	 * @throws RepositoryException
+	 * @throws RepositoryException if either sub folders or entries cannot be retrieved
 	 */
 	private List<Entry> updateCachedRepositoryEntries(Folder parent) throws RepositoryException {
 		List<Entry> sortedFolders = new ArrayList<>(parent.getSubfolders());
 		List<Entry> sortedEntries = new ArrayList<>(parent.getDataEntries());
 
 		// sort entries depending on sorting method
-		Collections.sort(sortedEntries, sortingMethod);
-		Collections.sort(sortedFolders, sortingMethod);
+		sortedFolders.sort(sortingMethod);
+		sortedEntries.sort(sortingMethod);
 
-		List<Entry> sortedFoldersFirst = sortedFolders;
-		sortedFoldersFirst.addAll(sortedEntries);
-		sortedRepositoryEntriesHashMap.put(parent.getLocation(), sortedFoldersFirst);
-		return sortedFoldersFirst;
+		// after all the folders, add the entries and return combined list
+		sortedFolders.addAll(sortedEntries);
+		sortedRepositoryEntriesHashMap.put(parent.getLocation(), sortedFolders);
+		return sortedFolders;
 	}
 
 	@Override

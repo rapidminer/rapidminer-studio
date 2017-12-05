@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.tree;
 
 import java.util.Collection;
@@ -134,7 +134,13 @@ public abstract class AbstractParallelTreeBuilder {
 		int[] selectedAttributes = selectionCreator.createFullArray(columnTable.getTotalNumberOfRegularAttributes());
 
 		// grow tree
-		Tree root = new Tree(null);
+		boolean isNominal = exampleSet.getAttributes().getLabel().isNominal();
+		Tree root;
+		if (isNominal) {
+			root = new Tree(null);
+		} else {
+			root = new RegressionTree(null);
+		}
 		if (shouldStop(selectedExamples, selectedAttributes, 0)) {
 			leafCreator.changeTreeToLeaf(root, columnTable, selectedExamples);
 		} else {
@@ -211,20 +217,21 @@ public abstract class AbstractParallelTreeBuilder {
 		}
 
 		Map<Integer, int[]> allSelectedExamples = nodeData.getAllSelectedExamples();
-		int[] selectedAttributes = nodeData.getSelectedAttributes();
+		int[] originalSelectedAttributes = nodeData.getSelectedAttributes();
 		Tree current = nodeData.getTree();
 		int depth = nodeData.getDepth();
 
 		// terminate
 		int[] selectedExamples = SelectionCreator.getArbitraryValue(allSelectedExamples);
-		if (shouldStop(selectedExamples, selectedAttributes, depth)) {
+		if (shouldStop(selectedExamples, originalSelectedAttributes, depth)) {
 			leafCreator.changeTreeToLeaf(current, columnTable, selectedExamples);
 			return Collections.emptyList();
 		}
 
+		int[] selectedAttributes = originalSelectedAttributes;
 		// preprocessing
-		if (preprocessing != null && depth > 1) {
-			selectedAttributes = preprocessing.preprocess(selectedAttributes);
+		if (preprocessing != null) {
+			selectedAttributes = preprocessing.preprocess(originalSelectedAttributes);
 		}
 
 		// calculate all benefits
@@ -233,10 +240,9 @@ public abstract class AbstractParallelTreeBuilder {
 		Collections.sort(benefits);
 
 		// try at most k benefits and check if prepruning is fulfilled
-		boolean splitFound = false;
 		for (int a = 0; a < numberOfPrepruningAlternatives + 1; a++) {
 			// break if no benefits are left
-			if (benefits.size() <= 0) {
+			if (benefits.isEmpty()) {
 				break;
 			}
 
@@ -260,14 +266,18 @@ public abstract class AbstractParallelTreeBuilder {
 			// if all have minimum size --> remove nominal attribute and recursive call for each
 			// subset
 			if (isSplitOK(selectedAttributes, depth, splits)) {
-				int[] remainingAttributes = selectionCreator.updateRemainingAttributes(selectedAttributes, bestAttribute);
-
+				int[] remainingAttributes = selectionCreator.updateRemainingAttributes(originalSelectedAttributes, bestAttribute);
 				LinkedList<NodeData> children = new LinkedList<>();
 
 				int i = 0;
 				for (Map<Integer, int[]> split : splits) {
 					if (SelectionCreator.getArbitraryValue(split).length > 0) {
-						Tree child = new Tree(null);
+						Tree child;
+						if (current.isNumerical()) {
+							child = new RegressionTree(null);
+						} else {
+							child = new Tree(null);
+						}
 						addToParentTree(current, child, bestAttribute, bestSplitValue,
 								SelectionCreator.getArbitraryValue(split), i);
 						NodeData newNode = new NodeData(child, split, remainingAttributes, depth + 1);
@@ -275,6 +285,7 @@ public abstract class AbstractParallelTreeBuilder {
 						i++;
 					}
 				}
+				current.setBenefit(bestBenefit.getBenefit());
 
 				// end loop
 				return children;
@@ -283,9 +294,7 @@ public abstract class AbstractParallelTreeBuilder {
 		}
 
 		// no split found --> change to leaf and return
-		if (!splitFound) {
-			leafCreator.changeTreeToLeaf(current, columnTable, selectedExamples);
-		}
+		leafCreator.changeTreeToLeaf(current, columnTable, selectedExamples);
 		return Collections.emptyList();
 	}
 
@@ -392,7 +401,7 @@ public abstract class AbstractParallelTreeBuilder {
 	}
 
 	/**
-	 * Class to bundle the parameters of {@link AbstractParallelTreeBuilder#splitNode(NodeData)}.
+	 * Class to bundle the parameters of {@link AbstractParallelTreeBuilder#splitNode(NodeData, boolean)}.
 	 */
 	protected class NodeData {
 

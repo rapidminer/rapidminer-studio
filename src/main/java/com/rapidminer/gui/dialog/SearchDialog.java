@@ -130,7 +130,7 @@ public class SearchDialog extends ButtonDialog {
 			private static final long serialVersionUID = -7450018802479146549L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				search();
 			}
 		});
@@ -154,7 +154,7 @@ public class SearchDialog extends ButtonDialog {
 				private static final long serialVersionUID = -5028551435610677265L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					replace();
 					search();
 				}

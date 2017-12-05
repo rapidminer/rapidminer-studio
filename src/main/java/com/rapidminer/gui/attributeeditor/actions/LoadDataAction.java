@@ -45,7 +45,7 @@ public class LoadDataAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		File file = SwingTools.chooseFile(this.attributeEditor, null, true, null, null);
 		if (file != null) {
 			try {

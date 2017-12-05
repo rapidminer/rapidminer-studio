@@ -150,7 +150,7 @@ public class SettingsDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				try {
 					updateFilter(null);
 					tabs.save();
@@ -214,7 +214,7 @@ public class SettingsDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				updateFilter(filterNameField.getText());
 			}
 
@@ -267,7 +267,7 @@ public class SettingsDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				// immediately show the filter update by calling the update filter method
 				// prevent duplicate updates by removing and re-adding the corresponding listener
 				filterNameField.getDocument().removeDocumentListener(filterListener);

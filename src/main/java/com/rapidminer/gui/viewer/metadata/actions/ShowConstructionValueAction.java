@@ -49,7 +49,7 @@ public class ShowConstructionValueAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		for (AbstractAttributeStatisticsModel statModel : model.getOrderedAttributeStatisticsModels()) {
 			statModel.setShowConstruction(!statModel.isShowConstruction());
 		}

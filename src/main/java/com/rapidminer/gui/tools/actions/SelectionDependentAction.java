@@ -57,7 +57,7 @@ public abstract class SelectionDependentAction extends ResourceAction {
 	}
 
 	@Override
-	public final void actionPerformed(ActionEvent e) {
+	public final void loggedActionPerformed(ActionEvent e) {
 		if (dependency != null) {
 			actionPerformed(e, dependency.getSelectedObject());
 		}

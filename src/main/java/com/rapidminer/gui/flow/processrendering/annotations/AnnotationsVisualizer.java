@@ -96,7 +96,7 @@ public final class AnnotationsVisualizer {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			if (model.getSelected() != null) {
 				decorator.editSelected();
 			}
@@ -204,7 +204,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				// do nothing if flow visualizer is active
 				if (flowVisualizer.isActive()) {
 					return;
@@ -272,7 +272,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				// activate annotations if they are not active yet
 				if (!isActive()) {
 					getToggleAnnotationsAction().actionPerformed(null);
@@ -315,7 +315,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				// activate annotations if they are not active yet
 				if (!isActive()) {
 					getToggleAnnotationsAction().actionPerformed(null);
@@ -354,7 +354,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				// activate annotations if they are not active yet
 				if (!isActive()) {
 					getToggleAnnotationsAction().actionPerformed(null);
@@ -390,7 +390,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				model.toFront(anno);
 			}
 		};
@@ -415,7 +415,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				model.sendForward(anno);
 			}
 		};
@@ -440,7 +440,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				model.toBack(anno);
 			}
 		};
@@ -465,7 +465,7 @@ public final class AnnotationsVisualizer {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				model.sendBack(anno);
 			}
 		};

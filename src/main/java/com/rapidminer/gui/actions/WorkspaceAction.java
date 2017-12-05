@@ -56,7 +56,7 @@ public class WorkspaceAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		if (perspectiveController != null) {
 			perspectiveController.showPerspective(perspective.getName());
 		} else {

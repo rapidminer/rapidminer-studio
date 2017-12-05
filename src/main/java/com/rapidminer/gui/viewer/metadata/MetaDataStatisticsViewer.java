@@ -769,7 +769,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 			private static final long serialVersionUID = 5334802828535128169L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				controller.setFilterNameString(filterNameField.getText());
 			}
 
@@ -821,7 +821,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 			private static final long serialVersionUID = 8540175790623212824L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				filterNameField.setText("");
 			}
 		};

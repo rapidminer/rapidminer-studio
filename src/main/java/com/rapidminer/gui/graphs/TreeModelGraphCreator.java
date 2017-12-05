@@ -33,7 +33,7 @@ import com.rapidminer.operator.learner.tree.Edge;
 import com.rapidminer.operator.learner.tree.NominalSplitCondition;
 import com.rapidminer.operator.learner.tree.SplitCondition;
 import com.rapidminer.operator.learner.tree.Tree;
-import com.rapidminer.operator.learner.tree.TreeModel;
+import com.rapidminer.operator.learner.tree.TreePredictionModel;
 import com.rapidminer.tools.Tools;
 
 import edu.uci.ics.jung.graph.DelegateForest;
@@ -71,7 +71,7 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 		}
 	};
 
-	private TreeModel model;
+	private TreePredictionModel model;
 
 	private Map<String, Tree> vertexMap = new HashMap<>();
 
@@ -81,7 +81,7 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 
 	private Map<String, List<String>> pathToRootMap = new HashMap<>();
 
-	public TreeModelGraphCreator(TreeModel model) {
+	public TreeModelGraphCreator(TreePredictionModel model) {
 		this.model = model;
 	}
 
@@ -209,7 +209,7 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 	/**
 	 * Returns the model.
 	 */
-	public TreeModel getModel() {
+	public TreePredictionModel getModel() {
 		return model;
 	}
 
@@ -312,8 +312,10 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 				sb.append(
 						"<html><div style=\"font-size: 10px; font-family: 'Open Sans'\"><p style=\"font-size: 110%; text-align: center; font-family: 'Open Sans Semibold'\"><b>"
 								+ labelString + "</b><hr NOSHADE style=\"color: '#000000'; width: 95%; \"/></p>");
-				sb.append(SwingTools.transformToolTipText(formatCounterMap(tree.getCounterMap()), false, 200, false, false)
-						+ "<br/>");
+				if (!tree.isNumerical()) {
+					sb.append(SwingTools.transformToolTipText(formatCounterMap(tree.getCounterMap()), false, 200, false, false)
+							+ "<br/>");
+				}
 				sb.append("Number of items:&nbsp;" + tree.getFrequencySum() + "<br/>");
 				sb.append("Ratio of total:&nbsp;"
 						+ Tools.formatPercent((double) tree.getFrequencySum() / model.getRoot().getSubtreeFrequencySum()));

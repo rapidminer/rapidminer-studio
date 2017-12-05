@@ -40,7 +40,6 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -59,6 +58,7 @@ import javax.swing.text.BadLocationException;
 
 import com.rapidminer.Process;
 import com.rapidminer.gui.GeneralProcessListener;
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.ToggleAction;
@@ -116,12 +116,12 @@ public class LogViewer extends JPanel implements Dockable {
 			super("log_level");
 
 			for (final Level level : LogViewer.SELECTABLE_LEVELS) {
-				JMenuItem item = new JMenuItem(new AbstractAction(level.getName()) {
+				JMenuItem item = new JMenuItem(new LoggedAbstractAction(level.getName()) {
 
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						new Thread(new Runnable() {
 
 							@Override

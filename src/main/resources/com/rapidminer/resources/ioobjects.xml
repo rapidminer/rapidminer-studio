@@ -240,7 +240,7 @@
     
     <ioobject
         name="Decision Tree"
-        class="com.rapidminer.operator.learner.tree.TreeModel"
+        class="com.rapidminer.operator.learner.tree.TreePredictionModel"
         reportable="true"
         icon="lightbulb_off.png">
         <renderer>com.rapidminer.gui.renderer.models.TreeModelGraphRenderer</renderer>      

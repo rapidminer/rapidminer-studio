@@ -60,7 +60,8 @@ public class ConfigurableRandomForestModel extends SimplePredictionModel impleme
 	/** The wrapped voting meta model. */
 	private final SimplePredictionModel model;
 
-	public ConfigurableRandomForestModel(ExampleSet exampleSet, List<? extends TreeModel> models, VotingStrategy strategy) {
+	public ConfigurableRandomForestModel(ExampleSet exampleSet, List<? extends TreePredictionModel> models,
+			VotingStrategy strategy) {
 		super(exampleSet, ExampleSetUtilities.SetsCompareOption.EQUAL,
 				ExampleSetUtilities.TypesCompareOption.ALLOW_SAME_PARENTS);
 		switch (strategy) {

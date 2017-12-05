@@ -148,7 +148,7 @@ public class MacroEditor extends JPanel {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				addMacro();
 			}
 		};
@@ -157,7 +157,7 @@ public class MacroEditor extends JPanel {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				removeMacros();
 			}
 		};

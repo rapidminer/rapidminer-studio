@@ -68,7 +68,7 @@ public class TextPropertyDialog extends PropertyDialog {
 			private static final long serialVersionUID = 8857840715142145951L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				Dimension screenDim = Toolkit.getDefaultToolkit().getScreenSize();
 				Dimension dim = new Dimension((int) (screenDim.width * 0.9), (int) (screenDim.height * 0.9));
 				Dimension currentSize = getSize();

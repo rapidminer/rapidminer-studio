@@ -18,6 +18,7 @@
 */
 package com.rapidminer.gui.tools.actions;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
@@ -25,7 +26,6 @@ import com.rapidminer.gui.tools.SwingTools;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
-import javax.swing.AbstractAction;
 import javax.swing.Icon;
 
 
@@ -34,7 +34,7 @@ import javax.swing.Icon;
  * 
  * @author Ingo Mierswa
  */
-public class EqualColumnWidthsAction extends AbstractAction {
+public class EqualColumnWidthsAction extends LoggedAbstractAction {
 
 	private static final long serialVersionUID = -4154228837058332592L;
 
@@ -59,7 +59,7 @@ public class EqualColumnWidthsAction extends AbstractAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		this.table.unpack();
 	}
 }

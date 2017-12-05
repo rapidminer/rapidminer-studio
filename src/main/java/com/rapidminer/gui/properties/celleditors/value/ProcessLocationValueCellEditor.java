@@ -64,7 +64,7 @@ public class ProcessLocationValueCellEditor extends RepositoryLocationValueCellE
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			RepositoryLocation repositoryLocation;
 			RepositoryProcessLocation repositoryProcessLocation = null;
 			try {

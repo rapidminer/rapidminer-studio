@@ -80,7 +80,7 @@ public class ExampleVisualizer implements ObjectVisualizer {
 				main = new JLabel("No information available for object '" + objId + "'.");
 			}
 		} else {
-			main = new JLabel("No information available for object '" + objId + "'.");
+			main = new JLabel("No information available for object '" + objId + "' because no ID attribute exists.");
 		}
 
 		ButtonDialogBuilder builder = new ButtonDialogBuilder("example_visualizer_dialog");

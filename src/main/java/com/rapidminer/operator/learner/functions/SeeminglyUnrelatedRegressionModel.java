@@ -19,7 +19,9 @@
 package com.rapidminer.operator.learner.functions;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -50,7 +52,7 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 	private ArrayList<String[]> usedAttributeNames;
 	private ArrayList<String> labelNames;
 	private double[] coefficients;
-
+	
 	protected SeeminglyUnrelatedRegressionModel(ExampleSet trainingExampleSet, ArrayList<String[]> usedAttributeNames,
 			ArrayList<String> labelNames, double[] coefficients) {
 		super(trainingExampleSet, ExampleSetUtilities.SetsCompareOption.ALLOW_SUPERSET,
@@ -65,10 +67,13 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 		checkCompatibility(exampleSet);
 		exampleSet = (ExampleSet) exampleSet.clone();
 
+		Set<String> usedLabelNames = new HashSet<>();
+
 		// creating labels
 		Attribute[] predictedLabels = new Attribute[labelNames.size()];
 		for (int i = 0; i < labelNames.size(); i++) {
-			String labelName = labelNames.get(i);
+			String labelName = generateLabelName(usedLabelNames, labelNames.get(i), i + 1);
+
 			predictedLabels[i] = AttributeFactory.createAttribute("prediction(" + labelName + ")", Ontology.REAL);
 			exampleSet.getExampleTable().addAttribute(predictedLabels[i]);
 			exampleSet.getAttributes().addRegular(predictedLabels[i]);
@@ -187,6 +192,38 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 			j++;
 		}
 		return result.toString();
+	}
+	
+	/**
+	 * Generates label names that will be used in the prediction attributes.
+	 * Resolves collisions between label names by generating a unique postfix if necessary.
+	 * If all label names are different, this method does not change the names.
+	 * 
+	 * @param usedLabelNames
+	 *             Already accepted unique label names
+	 * @param originalLabelName 
+	 *             The label name to be inserted
+	 * @param portIndex
+	 *             The input port index of the unrelated ExampleSet holding {@code originalLabelName} as label
+	 * @return
+	 */
+	private static String generateLabelName(Set<String> usedLabelNames, String originalLabelName, int portIndex) {
+		String labelName = originalLabelName;
+		
+		if (!usedLabelNames.contains(labelName)) {
+			usedLabelNames.add(labelName);
+			return labelName;
+		}
+		
+		originalLabelName = originalLabelName + "_port" + portIndex;
+		labelName = originalLabelName;
+		
+		int i = 1;
+		while (usedLabelNames.contains(labelName)) {
+			labelName = originalLabelName + "_" + i ++;
+		}
+		usedLabelNames.add(labelName);
+		return labelName;
 	}
 
 	private String getCoefficientString(double coefficient, boolean first) {

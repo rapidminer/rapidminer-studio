@@ -50,7 +50,7 @@ public class TextValueCellEditor extends AbstractCellEditor implements PropertyV
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			TextPropertyDialog dialog = new TextPropertyDialog(type, text, operator);
 			dialog.setVisible(true);
 			if (dialog.isOk()) {

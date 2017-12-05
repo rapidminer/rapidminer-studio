@@ -109,7 +109,7 @@ enum CtaDao {
 			Key key = event.getKey();
 			insertEvent.setString(1, key.getType());
 			insertEvent.setString(2, key.getValue());
-			insertEvent.setString(3, key.getArg());
+			insertEvent.setString(3, key.getArgWithIndicators());
 			insertEvent.setLong(4, event.getValue());
 			insertEvent.addBatch();
 			// We do not clear the parameter since we override them anyway
@@ -185,7 +185,10 @@ enum CtaDao {
 			if (oldResult.next()) {
 				Timestamp old = oldResult.getTimestamp(1);
 				deleteOlderThan.setTimestamp(1, old);
-				deleteOlderThan.executeUpdate();
+				long n = deleteOlderThan.executeUpdate();
+				ActionStatisticsCollector.getInstance().logCountSumMinMax(ActionStatisticsCollector.TYPE_CTA, ActionStatisticsCollector.VALUE_CTA_LIMIT, ActionStatisticsCollector.ARG_CTA_LIMIT_DELETED_EVENTS, n);
+				long timeFrame = System.currentTimeMillis() - old.getTime();
+				ActionStatisticsCollector.getInstance().logMinMax(ActionStatisticsCollector.TYPE_CTA, ActionStatisticsCollector.VALUE_CTA_LIMIT, ActionStatisticsCollector.ARG_CTA_LIMIT_DECREASED_TIMEFRAME, timeFrame);
 			}
 		}
 	}

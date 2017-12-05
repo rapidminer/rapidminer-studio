@@ -60,7 +60,7 @@ public class ResultOverview extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			Iterator<ProcessExecutionResultOverview> i = processOverviews.iterator();
 			while (i.hasNext()) {
 				ProcessExecutionResultOverview o = i.next();

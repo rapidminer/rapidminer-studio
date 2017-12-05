@@ -62,7 +62,7 @@ public class OpenCacheEntryAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		ResultDisplay display = RapidMinerGUI.getMainFrame().getResultDisplay();
 		IOObject object = map.get(key);
 		if (object != null) {

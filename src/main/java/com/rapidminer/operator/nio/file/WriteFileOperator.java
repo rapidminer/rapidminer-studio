@@ -18,6 +18,13 @@
 */
 package com.rapidminer.operator.nio.file;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -35,13 +42,6 @@ import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.tools.Tools;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
 
 
 /**
@@ -111,19 +111,13 @@ public class WriteFileOperator extends Operator {
 				Tools.copyStreamSynchronously(fileObject.openStream(), out, true);
 			} catch (IOException e) {
 				throw new UserError(this, 322, destName, e);
-			} finally {
-				if (out != null) {
-					try {
-						out.close();
-					} catch (IOException e) {
-					}
-				}
 			}
 		} finally {
 			if (out != null) {
 				try {
 					out.close();
 				} catch (IOException e) {
+					// nothing we can do
 				}
 			}
 		}
@@ -137,7 +131,7 @@ public class WriteFileOperator extends Operator {
 
 		parameterTypes
 				.add(new ParameterTypeCategory(PARAMETER_DESTINATION_TYPE,
-						"Choose wether to open a file, a URL or a repository entry.", DESTINATION_TYPES,
+						"Choose whether to open a file, a URL or a repository entry.", DESTINATION_TYPES,
 						DESTINATION_TYPE_FILE, true));
 
 		ParameterTypeFile parameterTypeFile = new ParameterTypeFile(PARAMETER_FILENAME, "File to save to.", null, true,

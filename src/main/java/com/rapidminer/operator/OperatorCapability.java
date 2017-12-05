@@ -21,7 +21,6 @@ package com.rapidminer.operator;
 /**
  * The possible capabilities for all learners.
  * 
- * @rapidminer.todo replace by Enumeration after change to Java 1.5
  * @author Julien Nioche, Ingo Mierswa
  */
 public enum OperatorCapability {
@@ -46,11 +45,4 @@ public enum OperatorCapability {
 		return description;
 	}
 
-	// public static LearnerCapability getCapability(int index) {
-	// return ALL_CAPABILITIES.get(index);
-	// }
-	//
-	// public static List<LearnerCapability> getAllCapabilities() {
-	// return ALL_CAPABILITIES;
-	// }
 }

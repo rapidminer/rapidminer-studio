@@ -48,7 +48,7 @@ public class SelectAllAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(final ActionEvent e) {
+	public void loggedActionPerformed(final ActionEvent e) {
 		view.getModel().clearOperatorSelection();
 		List<Operator> selected = new LinkedList<>();
 		for (ExecutionUnit unit : view.getModel().getProcesses()) {

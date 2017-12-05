@@ -63,7 +63,7 @@ public class ChartTitleConfigurationContainer extends AbstractConfigurationPanel
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					createTitleFontDialog();
 				}
 			});
@@ -81,7 +81,7 @@ public class ChartTitleConfigurationContainer extends AbstractConfigurationPanel
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					createTitleColorDialog();
 				}
 			});

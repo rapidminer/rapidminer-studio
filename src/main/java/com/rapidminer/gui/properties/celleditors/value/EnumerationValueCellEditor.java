@@ -63,7 +63,7 @@ public class EnumerationValueCellEditor extends AbstractCellEditor implements Pr
 			private static final long serialVersionUID = 3163983383358779866L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				EnumerationPropertyDialog dialog = new EnumerationPropertyDialog(type, valuesList, operator);
 				dialog.setVisible(true);
 				if (dialog.isOk()) {

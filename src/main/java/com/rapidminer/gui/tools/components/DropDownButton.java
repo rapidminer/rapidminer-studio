@@ -31,7 +31,6 @@ import java.awt.geom.GeneralPath;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
@@ -45,6 +44,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.ArrowButton;
 import com.rapidminer.gui.tools.ViewToolBar;
 import com.vlsolutions.swing.toolbars.VLToolBar;
@@ -105,12 +105,12 @@ public abstract class DropDownButton extends JButton {
 		}
 	};
 
-	private final class DefaultArrowAction extends AbstractAction {
+	private final class DefaultArrowAction extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent ae) {
+		public void loggedActionPerformed(ActionEvent ae) {
 			JPopupMenu popup = getPopupMenu();
 			popup.addPopupMenuListener(popupMenuListener);
 			popup.show(mainButton,

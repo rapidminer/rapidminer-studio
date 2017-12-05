@@ -101,7 +101,7 @@ public class SimplePlotterDialog extends JDialog implements MouseMotionListener,
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					plotter.save();
 				}
 			});
@@ -112,7 +112,7 @@ public class SimplePlotterDialog extends JDialog implements MouseMotionListener,
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				ok();
 			}
 		});

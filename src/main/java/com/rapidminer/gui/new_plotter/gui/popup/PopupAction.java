@@ -120,7 +120,7 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 	}
 
 	@Override
-	public synchronized void actionPerformed(ActionEvent e) {
+	public synchronized void loggedActionPerformed(ActionEvent e) {
 		if (System.currentTimeMillis() - hideTime > 150) {
 			if (hidePopup()) {
 				return;

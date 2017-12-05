@@ -195,7 +195,7 @@ public class ExtendedErrorDialog extends ButtonDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 					mainFrame.getPerspectiveController().showPerspective(PerspectiveModel.DESIGN);
 					mainFrame.selectAndShowOperator(mainFrame.getProcess().getOperator(opName), true);
@@ -333,7 +333,7 @@ public class ExtendedErrorDialog extends ButtonDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					RMUrlHandler.openInBrowser(I18N.getMessage(I18N.getGUIBundle(), "gui.action.report_bug.url"));
 				}
 			});
@@ -354,7 +354,7 @@ public class ExtendedErrorDialog extends ButtonDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					// in case of UserError, ask if the user really wants to send a bugreport
 					// because it's likely not a bug
 					if (error instanceof UserError) {

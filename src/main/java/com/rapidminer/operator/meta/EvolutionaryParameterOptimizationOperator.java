@@ -111,7 +111,7 @@ public class EvolutionaryParameterOptimizationOperator extends ParameterOptimiza
 
 	@Override
 	public int getParameterValueMode() {
-		return VALUE_MODE_CONTINUOUS;
+		return ParameterConfigurator.VALUE_MODE_CONTINUOUS;
 	}
 
 	@Override
@@ -135,8 +135,7 @@ public class EvolutionaryParameterOptimizationOperator extends ParameterOptimiza
 		for (Iterator<ParameterValues> iterator = parameterValuesList.iterator(); iterator.hasNext();) {
 			ParameterValues parameterValues = iterator.next();
 			if (!(parameterValues instanceof ParameterValueRange)) {
-				getLogger()
-				.warning(
+				getLogger().warning(
 						"Found (and deleted) unsupported parameter value definition. Parameters have to be given as range (e.g. as [2;5.7]).");
 				iterator.remove();
 			}

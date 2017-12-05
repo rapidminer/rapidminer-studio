@@ -106,7 +106,7 @@ final class ConfigureDataTableHeader extends JPanel implements TableCellRenderer
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			String columnName = metaData.getColumnMetaData(columnIndex).getName();
 			String type = DataImportWizardUtils.getNameForColumnType(metaData.getColumnMetaData(columnIndex).getType());
 			final String currentRoleName = metaData.getColumnMetaData(columnIndex).getRole();
@@ -169,7 +169,7 @@ final class ConfigureDataTableHeader extends JPanel implements TableCellRenderer
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			final String currentColumnName = metaData.getColumnMetaData(columnIndex).getName();
 			String type = DataImportWizardUtils.getNameForColumnType(metaData.getColumnMetaData(columnIndex).getType());
 			String roleName = metaData.getColumnMetaData(columnIndex).getRole();
@@ -208,7 +208,7 @@ final class ConfigureDataTableHeader extends JPanel implements TableCellRenderer
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			metaData.getColumnMetaData(columnIndex).setRemoved(!metaData.getColumnMetaData(columnIndex).isRemoved());
 			if (metaData.getColumnMetaData(columnIndex).isRemoved()) {
 				nameLabel.setForeground(COLOR_COLUMN_DISABLED);

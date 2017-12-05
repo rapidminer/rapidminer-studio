@@ -48,7 +48,7 @@ public class AutoWireAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		new EditBlockingProgressThread("auto_wiring") {
 
 			@Override

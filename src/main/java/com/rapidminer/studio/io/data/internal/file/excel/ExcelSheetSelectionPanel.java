@@ -201,7 +201,7 @@ final class ExcelSheetSelectionPanel extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			killCurrentBubbleWindow(null);
 
 			// create a new selection object
@@ -222,7 +222,7 @@ final class ExcelSheetSelectionPanel extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public synchronized void actionPerformed(ActionEvent e) {
+		public synchronized void loggedActionPerformed(ActionEvent e) {
 			applyTextFieldSelection(true);
 		}
 

@@ -74,6 +74,13 @@
 				<class>com.rapidminer.operator.validation.BatchXValidation</class>
 				<replaces>BatchXValidation</replaces>
 			</operator>
+            <operator>
+                <deprecatedSince>8.0</deprecatedSince>
+                <key>optimize_parameters_grid</key>
+                <class>com.rapidminer.operator.meta.GridSearchParameterOptimizationOperator
+                </class>
+                <replaces>GridParameterOptimization</replaces>
+            </operator>
 			<operator>
 				<deprecatedSince>7.4</deprecatedSince>
 				<key>loop</key>
@@ -98,6 +105,12 @@
 				<key>loop_values</key>
 				<class>com.rapidminer.operator.meta.ValueIteration</class>
 				<replaces>ValueIterator</replaces>
+			</operator>
+			<operator>
+				<deprecatedSince>8.0</deprecatedSince>
+				<key>loop_parameters</key>
+				<class>com.rapidminer.operator.meta.ParameterIteration</class>
+				<replaces>ParameterIteration</replaces>
 			</operator>
 			<operator>
 			<deprecatedSince>7.5</deprecatedSince>
@@ -1522,12 +1535,6 @@
 				<group key="parameters">
 					<icon>form.png</icon>
 					<operator>
-						<key>optimize_parameters_grid</key>
-						<class>com.rapidminer.operator.meta.GridSearchParameterOptimizationOperator
-						</class>
-						<replaces>GridParameterOptimization</replaces>
-					</operator>
-					<operator>
 						<key>optimize_parameters_quadratic</key>
 						<class>com.rapidminer.operator.meta.QuadraticParameterOptimizationOperator
 						</class>
@@ -1944,24 +1951,22 @@
 						<replaces>RepeatUntilOperatorChain</replaces>
 					</operator>
 					<operator>
-						<key>loop_parameters</key>
-						<class>com.rapidminer.operator.meta.ParameterIteration</class>
-						<replaces>ParameterIteration</replaces>
-					</operator>
-					<operator>
 						<key>loop_collection</key>
 						<class>com.rapidminer.operator.collections.CollectionIterationOperator
 						</class>
 						<replaces>CollectionIterator</replaces>
+                        <priority>-1</priority>
 					</operator>
 					
 					<operator>
 						<key>loop_repository</key>
 						<class>com.rapidminer.operator.meta.RepositoryIterator</class>
+                        <priority>-1</priority>
 					</operator>
 					<operator>
 						<key>loop_zipfile_entries</key>
 						<class>com.rapidminer.operator.meta.ZippedFileIterator</class>
+                        <priority>-1</priority>
 					</operator>
 				</group>
 				<group key="branches">

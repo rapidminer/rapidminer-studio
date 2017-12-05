@@ -98,7 +98,7 @@ public class RemoteFileValueCellEditor extends DefaultRMCellEditor implements Pr
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				fileOpenButton.setEnabled(false);
 				ProgressThread openFileChooserThread = new ProgressThread("open_remote_file_chooser") {
 

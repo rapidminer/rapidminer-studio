@@ -43,7 +43,7 @@ public class LogCloseAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		LogModel currentLogModel = this.logviewer.getLogSelectionModel().getCurrentLogModel();
 		if (currentLogModel.isClosable()) {
 			LogModelRegistry.INSTANCE.unregister(currentLogModel);

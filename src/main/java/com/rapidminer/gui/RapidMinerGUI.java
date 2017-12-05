@@ -103,6 +103,7 @@ import com.rapidminer.tools.plugin.Plugin;
 import com.rapidminer.tools.update.internal.UpdateManagerRegistry;
 import com.rapidminer.tools.usagestats.CallToActionScheduler;
 import com.rapidminer.tools.usagestats.UsageStatistics;
+import com.rapidminer.tools.usagestats.UsageStatsScheduler;
 import com.rapidminer.tools.usagestats.UsageStatsTransmissionDialog;
 import com.vlsolutions.swing.docking.DockableContainerFactory;
 import com.vlsolutions.swing.docking.ui.DockingUISettings;
@@ -284,11 +285,12 @@ public class RapidMinerGUI extends RapidMiner {
 			// Otherwise saving might even be detrimental!
 			if (RapidMinerGUI.getMainFrame() != null) {
 				LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.RapidMinerGUI.running_shutdown_sequence");
+				RapidMinerGUI.getMainFrame().getPerspectiveController().shutdown();
 				RapidMinerGUI.saveRecentFileList();
 				RapidMinerGUI.saveGUIProperties();
 				UsageStatistics.getInstance().save();
 				RepositoryManager.shutdown();
-				UsageStatsTransmissionDialog.transmitOnShutdown();
+				UsageStatsScheduler.transmitOnShutdown();
 				CallToActionScheduler.INSTANCE.shutdown();
 			}
 		}
@@ -437,7 +439,7 @@ public class RapidMinerGUI extends RapidMiner {
 			}
 		}
 
-		UsageStatsTransmissionDialog.init();
+		UsageStatsScheduler.init();
 
 		if (openLocation != null) {
 			if (!RepositoryLocation.isAbsolute(openLocation)) {

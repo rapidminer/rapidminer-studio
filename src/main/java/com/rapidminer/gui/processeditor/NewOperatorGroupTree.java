@@ -100,7 +100,7 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		private static final long serialVersionUID = 3236281211064051583L;
 
 		@Override
-		public void actionPerformed(final ActionEvent e) {
+		public void loggedActionPerformed(final ActionEvent e) {
 			filterField.clearFilter();
 			filterField.requestFocusInWindow();
 		}
@@ -443,7 +443,7 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 			private static final long serialVersionUID = 4363124048356045034L;
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void loggedActionPerformed(final ActionEvent e) {
 				insertSelected();
 			}
 		});

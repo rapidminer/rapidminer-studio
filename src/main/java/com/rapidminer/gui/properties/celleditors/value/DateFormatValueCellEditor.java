@@ -25,7 +25,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
@@ -36,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -77,7 +77,7 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				JPopupMenu menu = new JPopupMenu();
 				if (type.getInputPort() != null) {
 					MetaData md = type.getInputPort().getMetaData();
@@ -92,12 +92,12 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 									&& selectedAttribute.getValueSet() != null) {
 								boolean isNotMenuEmpty = false;
 								for (final String value : selectedAttribute.getValueSet()) {
-									menu.add(new JMenuItem(new AbstractAction(value) {
+									menu.add(new JMenuItem(new LoggedAbstractAction(value) {
 
 										private static final long serialVersionUID = 1L;
 
 										@Override
-										public void actionPerformed(ActionEvent e) {
+										public void loggedActionPerformed(ActionEvent e) {
 											formatCombo.setSelectedItem(value);
 										}
 									}));
@@ -109,7 +109,7 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 										private static final long serialVersionUID = 5312694774573705215L;
 
 										@Override
-										public void actionPerformed(ActionEvent e) {}
+										public void loggedActionPerformed(ActionEvent e) {}
 									}));
 								}
 								menu.show(selectButton, 0, selectButton.getHeight());
@@ -122,12 +122,12 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 										menu.add(subMenu);
 										int i = 0;
 										for (final String value : amd.getValueSet()) {
-											subMenu.add(new JMenuItem(new AbstractAction(value) {
+											subMenu.add(new JMenuItem(new LoggedAbstractAction(value) {
 
 												private static final long serialVersionUID = 1L;
 
 												@Override
-												public void actionPerformed(ActionEvent e) {
+												public void loggedActionPerformed(ActionEvent e) {
 													formatCombo.setSelectedItem(value);
 													if (attributeParameterType != null && type.getInputPort() != null) {
 														type.getInputPort()
@@ -157,7 +157,7 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 										private static final long serialVersionUID = 5312694774573705015L;
 
 										@Override
-										public void actionPerformed(ActionEvent e) {}
+										public void loggedActionPerformed(ActionEvent e) {}
 									}));
 								}
 								menu.show(selectButton, 0, selectButton.getHeight());

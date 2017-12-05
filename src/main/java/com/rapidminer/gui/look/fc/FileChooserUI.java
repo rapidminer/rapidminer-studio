@@ -77,6 +77,7 @@ import javax.swing.plaf.ActionMapUIResource;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicFileChooserUI;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.borders.Borders;
 import com.rapidminer.gui.tools.ExtendedJToolBar;
@@ -134,7 +135,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			if (UIManager.getBoolean("FileChooser.readOnly")) {
 				return;
 			}
@@ -213,7 +214,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 	}
 
-	private class DirectoryComboBoxAction extends AbstractAction {
+	private class DirectoryComboBoxAction extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = -6851838331146924117L;
 
@@ -222,7 +223,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			File f = (File) FileChooserUI.this.directoryComboBox.getSelectedItem();
 			setCurrentDirectoryOfFileChooser(f);
 			FileChooserUI.this.fileNameTextField.requestFocus();
@@ -526,7 +527,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			FileChooserUI.this.fileList.addToBookmarks();
 		}
 	}
@@ -540,17 +541,17 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			goBack();
 		}
 	}
 
-	private class CancelSelectionAction extends AbstractAction {
+	private class CancelSelectionAction extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = 2080395201063859907L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			FileChooserUI.this.fileList.stopThumbnailGeneration();
 			getFileChooser().cancelSelection();
 		}
@@ -576,7 +577,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			getFileChooser().changeToParentDirectory();
 		}
 	}
@@ -685,7 +686,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 	}
 
 	protected ActionMap createActions() {
-		final AbstractAction escAction = new AbstractAction() {
+		final Action escAction = new AbstractAction() {
 
 			private static final long serialVersionUID = -3976059968191425942L;
 

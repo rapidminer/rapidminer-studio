@@ -61,7 +61,7 @@ public class MatrixPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					matrixPropertyTable.addRow();
 				}
 			}));
@@ -70,7 +70,7 @@ public class MatrixPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					matrixPropertyTable.addColumn();
 				}
 			}));
@@ -79,7 +79,7 @@ public class MatrixPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					matrixPropertyTable.removeSelectedRow();
 				}
 			}));
@@ -88,7 +88,7 @@ public class MatrixPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					matrixPropertyTable.removeSelectedColumn();
 				}
 			}));
@@ -98,7 +98,7 @@ public class MatrixPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					matrixPropertyTable.addRow();
 					matrixPropertyTable.addColumn();
 					matrixPropertyTable.fillNewRowAndColumn();
@@ -109,7 +109,7 @@ public class MatrixPropertyDialog extends PropertyDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					matrixPropertyTable.removeSelectedRowAndColumn();
 
 				}

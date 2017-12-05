@@ -158,8 +158,7 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 		int maxNumberOfFails = getParameterAsInt(PARAMETER_ALLOWED_CONSECUTIVE_FAILS);
 		int behavior = getParameterAsInt(PARAMETER_STOPPING_BEHAVIOR);
 
-		boolean useRelativeIncrease = behavior == WITH_DECREASE_EXCEEDS
-				? getParameterAsBoolean(PARAMETER_USE_RELATIVE_DECREASE) : false;
+		boolean useRelativeIncrease = behavior == WITH_DECREASE_EXCEEDS && getParameterAsBoolean(PARAMETER_USE_RELATIVE_DECREASE);
 		double maximalDecrease = 0;
 		if (useRelativeIncrease) {
 			maximalDecrease = useRelativeIncrease ? getParameterAsDouble(PARAMETER_MAX_RELATIVE_DECREASE)
@@ -219,9 +218,9 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 				getProgress().setCompleted((int) (100.0 * (i * numberOfAttributes + current + 1)
 						/ (maxNumberOfAttributes * numberOfAttributes)));
 			}
-			double currentFitness = currentBestPerformance.getMainCriterion().getFitness();
+			double currentFitness = currentBestPerformance != null ? currentBestPerformance.getMainCriterion().getFitness() : -1;
 			if (i != 0) {
-				double lastFitness = lastPerformance.getMainCriterion().getFitness();
+				double lastFitness = lastPerformance != null ? lastPerformance.getMainCriterion().getFitness() : -1;
 				// switch stopping behavior
 				switch (behavior) {
 					case WITH_DECREASE:
@@ -243,22 +242,24 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 						}
 						break;
 					case WITH_DECREASE_SIGNIFICANT:
-						AnovaCalculator calculator = new AnovaCalculator();
-						calculator.setAlpha(alpha);
+						if (currentBestPerformance != null && lastPerformance != null) {
+							AnovaCalculator calculator = new AnovaCalculator();
+							calculator.setAlpha(alpha);
 
-						PerformanceCriterion pc = currentBestPerformance.getMainCriterion();
-						calculator.addGroup(pc.getAverageCount(), pc.getAverage(), pc.getVariance());
-						pc = lastPerformance.getMainCriterion();
-						calculator.addGroup(pc.getAverageCount(), pc.getAverage(), pc.getVariance());
+							PerformanceCriterion pc = currentBestPerformance.getMainCriterion();
+							calculator.addGroup(pc.getAverageCount(), pc.getAverage(), pc.getVariance());
+							pc = lastPerformance.getMainCriterion();
+							calculator.addGroup(pc.getAverageCount(), pc.getAverage(), pc.getVariance());
 
-						SignificanceTestResult result;
-						try {
-							result = calculator.performSignificanceTest();
-						} catch (SignificanceCalculationException e) {
-							throw new UserError(this, 920, e.getMessage());
-						}
-						if (lastFitness > currentFitness && result.getProbability() < alpha) {
-							earlyAbort = true;
+							SignificanceTestResult result;
+							try {
+								result = calculator.performSignificanceTest();
+							} catch (SignificanceCalculationException e) {
+								throw new UserError(this, 920, e.getMessage());
+							}
+							if (lastFitness > currentFitness && result.getProbability() < alpha) {
+								earlyAbort = true;
+							}
 						}
 				}
 			}
@@ -272,7 +273,7 @@ public class BackwardAttributeEliminationOperator extends OperatorChain {
 				earlyAbort = false;
 
 				// needs performance increase compared to better performance of current and last!
-				if (currentBestPerformance.compareTo(lastPerformance) > 0) {
+				if (currentBestPerformance != null && currentBestPerformance.compareTo(lastPerformance) > 0) {
 					lastPerformance = currentBestPerformance;
 				}
 			} else {

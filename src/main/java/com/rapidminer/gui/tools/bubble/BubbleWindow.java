@@ -1021,6 +1021,9 @@ public abstract class BubbleWindow extends JDialog {
 	 *            if true the listeners will be removed and added again after the repaint
 	 */
 	protected void paintAgain(final boolean reregisterListeners) {
+		if (!isVisible()) {
+			return;
+		}
 		Alignment newAlignment = this.calculateAlignment(realAlignment);
 		if (realAlignment.equals(newAlignment)) {
 			this.pointAtComponent();

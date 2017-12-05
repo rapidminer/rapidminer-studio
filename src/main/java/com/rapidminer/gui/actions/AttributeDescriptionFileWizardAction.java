@@ -41,7 +41,7 @@ public class AttributeDescriptionFileWizardAction extends ResourceAction impleme
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		ExampleSourceConfigurationWizard wizard = new ExampleSourceConfigurationWizard(this);
 		wizard.setVisible(true);
 	}

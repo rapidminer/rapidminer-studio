@@ -49,7 +49,7 @@ public class PrintAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		canceled = false;
 		PrintingTools.getPrinterJob().setPrintable(
 				new ComponentPrinter(new SimplePrintableComponent(component, componentName, "printer.png")));

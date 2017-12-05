@@ -167,7 +167,7 @@ public class ConfirmDialog extends ButtonDialog {
 			private static final long serialVersionUID = -8887199234055845095L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				returnOption = OK_OPTION;
 				ok();
 			}
@@ -183,7 +183,7 @@ public class ConfirmDialog extends ButtonDialog {
 			private static final long serialVersionUID = -8887199234055845095L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				returnOption = CANCEL_OPTION;
 				cancel();
 			}
@@ -202,7 +202,7 @@ public class ConfirmDialog extends ButtonDialog {
 			private static final long serialVersionUID = -8887199234055845095L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				returnOption = YES_OPTION;
 				yes();
 			}
@@ -217,7 +217,7 @@ public class ConfirmDialog extends ButtonDialog {
 			private static final long serialVersionUID = -8887199234055845095L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				returnOption = NO_OPTION;
 				no();
 			}

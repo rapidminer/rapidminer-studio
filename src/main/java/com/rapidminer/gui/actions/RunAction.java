@@ -52,7 +52,7 @@ public class RunAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		// small hack to force currently active parameter editor to save the changes due to focus
 		// lost event
 		mainFrame.getProcessPanel().requestFocus();

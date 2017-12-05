@@ -57,7 +57,7 @@ public class OpenChartAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 
 		// look up the panel invoking the pop up invoking the action
 		AttributeStatisticsPanel asp = null;

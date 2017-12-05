@@ -765,7 +765,7 @@ public class ButtonDialog extends JDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				wasConfirmed = true;
 				ok();
 			}
@@ -787,7 +787,7 @@ public class ButtonDialog extends JDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				wasConfirmed = false;
 				cancel();
 			}
@@ -805,7 +805,7 @@ public class ButtonDialog extends JDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				wasConfirmed = false;
 				close();
 			}

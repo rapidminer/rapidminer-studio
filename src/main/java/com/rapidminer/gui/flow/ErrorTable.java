@@ -286,7 +286,7 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 		private static final long serialVersionUID = -1454330266199555397L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			updateErrors();
 		}
 	});

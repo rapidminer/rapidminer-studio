@@ -353,7 +353,7 @@ public class MetaDataDeclarationEditor extends JPanel {
 			// JMenuItem deselect = new JMenuItem(new ResourceAction("wizard.deselect_all") {
 			//
 			// @Override
-			// public void actionPerformed(ActionEvent e) {
+			// public void loggedActionPerformed(ActionEvent e) {
 			// // TODO Auto-generated method stub
 			//
 			// }

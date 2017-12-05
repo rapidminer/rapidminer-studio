@@ -41,7 +41,7 @@ public class CopyEntryRepositoryAction extends AbstractRepositoryAction<Entry> {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		String action = e.getActionCommand();
 		Action a = tree.getActionMap().get(action);
 		if (a != null) {

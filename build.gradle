@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.rapidminer.gradle:java-basics:0.4.0'
-        classpath 'com.rapidminer.gradle:java-publishing:0.2.0'
+        classpath 'com.rapidminer.gradle:java-publishing:0.2.1'
     }
 }
 

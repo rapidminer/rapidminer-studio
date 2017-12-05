@@ -526,12 +526,9 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		} else if (entry instanceof BlobEntry) {
 			BlobEntry blob = (BlobEntry) entry;
 			BlobEntry target = destination.createBlobEntry(newName);
-			try {
-				InputStream in = blob.openInputStream();
-				String mimeType = blob.getMimeType();
-				OutputStream out = target.openOutputStream(mimeType);
+			String mimeType = blob.getMimeType();
+			try (InputStream in = blob.openInputStream(); OutputStream out = target.openOutputStream(mimeType)) {
 				Tools.copyStreamSynchronously(in, out, false);
-				out.close();
 				if (listener != null) {
 					listener.setCompleted(maxProgress);
 				}

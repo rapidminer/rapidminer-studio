@@ -369,6 +369,28 @@ public class AttributeWeights extends AverageVector {
 		}
 	}
 
+	/**
+	 * This method divides each weight by the sum of weights.
+	 * 
+	 * @since 8.0
+	 */
+	public void relativize() {
+		double sum = 0;
+		for (String name : getAttributeNames()) {
+			double weight = Math.abs(getWeight(name));
+			sum += weight;
+		}
+		Iterator<AttributeWeight> w = weightMap.values().iterator();
+		while (w.hasNext()) {
+			AttributeWeight attributeWeight = w.next();
+			double newWeight = attributeWeight.getWeight();
+			if (sum != 0.0d) {
+				newWeight = Math.abs(newWeight) / sum;
+			}
+			attributeWeight.setWeight(newWeight);
+		}
+	}
+
 	public DataTable createDataTable() {
 		DataTable dataTable = new SimpleDataTable("Attribute Weights", new String[] { "attribute", "weight" });
 		for (Map.Entry<String, AttributeWeight> entry : weightMap.entrySet()) {

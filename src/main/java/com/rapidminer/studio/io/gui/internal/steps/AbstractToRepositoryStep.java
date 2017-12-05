@@ -466,7 +466,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						if (backgroundJob != null) {
 							setEnabled(false);
 							backgroundJob.cancel();

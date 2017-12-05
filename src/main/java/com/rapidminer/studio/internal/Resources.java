@@ -18,10 +18,16 @@
 */
 package com.rapidminer.studio.internal;
 
+import java.security.AccessControlException;
+import java.security.AccessController;
+
 import com.rapidminer.Process;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.UserData;
+import com.rapidminer.security.PluginSandboxPolicy;
+import com.rapidminer.studio.concurrency.internal.ConcurrencyExecutionService;
 import com.rapidminer.studio.concurrency.internal.StudioConcurrencyContext;
 
 
@@ -61,6 +67,40 @@ public class Resources {
 	}
 
 	/**
+	 * Wrapper to store {@link ConcurrencyContext} within the root operator of a process.
+	 *
+	 * </p> Internal, do not use. Throws {@link UnsupportedOperationException} if used by 3rd parties.
+	 *
+	 * @author Marco Boeck
+	 */
+	public static class OverridingContextUserData implements UserData<Object> {
+
+		private final ConcurrencyContext context;
+
+		public OverridingContextUserData(ConcurrencyContext context) {
+			// make sure this cannot be called without RapidMiner internal permissions
+			try {
+				if (System.getSecurityManager() != null) {
+					AccessController.checkPermission(new RuntimePermission(PluginSandboxPolicy.RAPIDMINER_INTERNAL_PERMISSION));
+				}
+			} catch (AccessControlException e) {
+				throw new UnsupportedOperationException("Internal API, cannot be called by unauthorized sources.");
+			}
+			this.context = context;
+		}
+
+		@Override
+		public final UserData<Object> copyUserData(Object newParent) {
+			return this;
+		}
+
+		private ConcurrencyContext getContext() {
+			return this.context;
+		}
+
+	}
+
+	/**
 	 * Provides a {@link ConcurrencyContext} for the given {@link Operator}.
 	 *
 	 * @param operator
@@ -71,12 +111,21 @@ public class Resources {
 		if (operator == null) {
 			throw new IllegalArgumentException("operator must not be null");
 		}
+
+		// if anyone has set a ConcurrencyContext that should override the regular ones, use it
+		// currently used by RapidMiner Server web services
+		ProcessRootOperator rootOperator = operator.getProcess().getRootOperator();
+		if (rootOperator.getUserData(ConcurrencyExecutionService.OVERRIDING_CONTEXT) != null) {
+			OverridingContextUserData data = (OverridingContextUserData) rootOperator.getUserData(ConcurrencyExecutionService.OVERRIDING_CONTEXT);
+			return data.getContext();
+		}
+
 		Operator root = operator.getRoot();
 		if (root.getUserData(USER_DATA_KEY) != null) {
 			ContextUserData data = (ContextUserData) root.getUserData(USER_DATA_KEY);
-			ConcurrencyContext context = data.getContext();
-			return context;
+			return data.getContext();
 		}
+
 		Process process = operator.getProcess();
 		StudioConcurrencyContext context = new StudioConcurrencyContext(process);
 		ContextUserData data = new ContextUserData(context);

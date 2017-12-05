@@ -32,6 +32,8 @@ import javax.swing.tree.TreePath;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.tools.CamelCaseFilter;
+import com.rapidminer.gui.tools.CamelCaseTypoFilter;
+import com.rapidminer.gui.tools.OperatorFilter;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.tools.GroupTree;
@@ -61,9 +63,9 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 
 		@Override
 		public int compare(OperatorDescription op1, OperatorDescription op2) {
-			int usageCount1 = (int) ActionStatisticsCollector.getInstance().getCount(ActionStatisticsCollector.TYPE_OPERATOR,
+			int usageCount1 = (int) ActionStatisticsCollector.getInstance().getData(ActionStatisticsCollector.TYPE_OPERATOR,
 					op1.getKey(), ActionStatisticsCollector.OPERATOR_EVENT_EXECUTION);
-			int usageCount2 = (int) ActionStatisticsCollector.getInstance().getCount(ActionStatisticsCollector.TYPE_OPERATOR,
+			int usageCount2 = (int) ActionStatisticsCollector.getInstance().getData(ActionStatisticsCollector.TYPE_OPERATOR,
 					op2.getKey(), ActionStatisticsCollector.OPERATOR_EVENT_EXECUTION);
 			return usageCount2 - usageCount1;
 		}
@@ -215,23 +217,40 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 		return updateTree();
 	}
 
-	public List<TreePath> updateTree() {
-		// int hits = Integer.MAX_VALUE;
+	private GroupTree restoreTree(){
 		GroupTree filteredTree = this.completeTree.clone();
 		if (!"true".equals(System.getProperty(RapidMiner.PROPERTY_DEVELOPER_MODE))) {
 			removeDeprecatedGroup(filteredTree);
 		}
+		return filteredTree;
+	}
+
+	public List<TreePath> updateTree() {
+		GroupTree filteredTree = restoreTree();
 		List<TreePath> expandedPaths = new LinkedList<>();
 		if (filter != null && filter.trim().length() > 0) {
+			int hits = 0;
 			String[] terms = filter.trim().split(SEARCH_TERM_DELIMITER, MAX_SEARCH_TERMS);
 			if (terms.length > 1) {
 				Arrays.setAll(terms, i -> terms[i].toLowerCase());
-				removeFilteredInstances(terms, filteredTree, expandedPaths, new TreePath(getRoot()));
-			} else {
-				CamelCaseFilter ccFilter = new CamelCaseFilter(filter);
-				removeFilteredInstances(ccFilter, filteredTree, expandedPaths, new TreePath(getRoot()));
+				hits = removeFilteredInstances(terms, filteredTree, expandedPaths, new TreePath(getRoot()));
+			}
+
+			// If we couldn't find anything, restore the tree and try the CamelCase search
+			if (hits == 0) {
+				filteredTree = restoreTree();
+				OperatorFilter ccFilter = new CamelCaseFilter(filter);
+				hits = removeFilteredInstances(ccFilter, filteredTree, expandedPaths, new TreePath(getRoot()));
+			}
+
+			// If we still couldn't find anything, restore the tree and try the typo search
+			if (hits == 0) {
+				filteredTree = restoreTree();
+				OperatorFilter cctFilter = new CamelCaseTypoFilter(filter);
+				removeFilteredInstances(cctFilter, filteredTree, expandedPaths, new TreePath(getRoot()));
 			}
 		}
+
 		if (filterDeprecated) {
 			removeDeprecated(filteredTree);
 		}
@@ -319,7 +338,7 @@ public class NewOperatorGroupTreeModel implements TreeModel, OperatorServiceList
 	 *            the current path
 	 * @return number of hits below the current path
 	 */
-	private int removeFilteredInstances(CamelCaseFilter filter, GroupTree filteredTree, List<TreePath> expandedPaths,
+	private int removeFilteredInstances(OperatorFilter filter, GroupTree filteredTree, List<TreePath> expandedPaths,
 			TreePath path) {
 		int hits = 0;
 		Iterator<? extends GroupTree> g = filteredTree.getSubGroups().iterator();

@@ -60,7 +60,7 @@ public class PerspectiveController {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(final ActionEvent e) {
+		public void loggedActionPerformed(final ActionEvent e) {
 			if (!getModel().getSelectedPerspective().isUserDefined()) {
 				getModel().restoreDefault(getModel().getSelectedPerspective().getName());
 				getModel().getSelectedPerspective().apply(context);
@@ -122,12 +122,11 @@ public class PerspectiveController {
 			model.setSelectedPerspective(perspective);
 			if (oldPerspective != null) {
 				oldPerspective.store(context);
-				ActionStatisticsCollector.getInstance().stopTimer(ActionStatisticsCollector.TYPE_PERSPECTIVE,
-						oldPerspective.getName(), null);
+				ActionStatisticsCollector.getInstance().stopTimer(oldPerspective);
 			}
 			perspective.apply(context);
 			getRestoreDefaultAction().setEnabled(!perspective.isUserDefined());
-			ActionStatisticsCollector.getInstance().startTimer(ActionStatisticsCollector.TYPE_PERSPECTIVE,
+			ActionStatisticsCollector.getInstance().startTimer(perspective, ActionStatisticsCollector.TYPE_PERSPECTIVE,
 					perspective.getName(), null);
 			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PERSPECTIVE, perspective.getName(),
 					"show");
@@ -295,5 +294,12 @@ public class PerspectiveController {
 	 */
 	public Action getRestoreDefaultAction() {
 		return restoreDefaultAction;
+	}
+
+	/**
+	 * Called as part of the gui shutdown hook.
+	 */
+	public void shutdown() {
+		ActionStatisticsCollector.getInstance().stopTimer(getModel().getSelectedPerspective());
 	}
 }

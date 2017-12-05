@@ -46,7 +46,7 @@ public class CopyNumAvgValueAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		if (!(((JComponent) e.getSource()).getParent() instanceof AttributePopupMenu)) {
 			return;
 		}

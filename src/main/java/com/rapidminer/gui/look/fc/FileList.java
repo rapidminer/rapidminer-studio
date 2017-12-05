@@ -33,6 +33,7 @@ import java.awt.Image;
 import java.awt.Paint;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
@@ -83,7 +84,7 @@ import com.rapidminer.tools.I18N;
  */
 public class FileList extends JPanel implements PropertyChangeListener {
 
-	private static class MenuListener implements java.awt.event.ActionListener {
+	private static class MenuListener implements ActionListener {
 
 		private final FileList fileList;
 
@@ -203,7 +204,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		private static final long serialVersionUID = 2591227051998175245L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			boolean showHidden = FileList.this.fc.isFileHidingEnabled();
 			FileList.this.showHiddenMenuItem.setSelected(showHidden);
 			FileList.this.fc.setFileHidingEnabled(!showHidden);
@@ -215,7 +216,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		private static final long serialVersionUID = 2591227051998175245L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			rescanDirectory();
 		}
 	};
@@ -225,7 +226,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		private static final long serialVersionUID = 732148144067893679L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			selectAll();
 		}
 	};

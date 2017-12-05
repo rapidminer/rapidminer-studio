@@ -1117,7 +1117,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				boolean done = false;
 				final Configurable config = getSelectedValue();
 				if (config == null) {
@@ -1213,7 +1213,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				Configurable selectedValue = getSelectedValue();
 				if (selectedValue == null) {
 					return;
@@ -1277,7 +1277,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				// skip if we started this without configurable
 				if (getSelectedValue() == null) {
 					return;
@@ -1335,7 +1335,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				// skip if we started this without configurable
 				if (getSelectedValue() == null) {
 					return;
@@ -1399,7 +1399,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				Configurable configurable = getSelectedValue();
 				ConfigurableUserAccessDialog accessDialog = new ConfigurableUserAccessDialog(ConfigurableDialog.this,
 						configurable);
@@ -1443,7 +1443,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 
 				Configurable selected = getSelectedValue();
 				RemoteRepository source = selected == null ? null : selected.getSource();
@@ -1486,7 +1486,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 
 				// now we need to save the changes the user made
 				// in a separate thread
@@ -1613,7 +1613,7 @@ public class ConfigurableDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 
 				// show the glass pane
 				okButton.setEnabled(false);

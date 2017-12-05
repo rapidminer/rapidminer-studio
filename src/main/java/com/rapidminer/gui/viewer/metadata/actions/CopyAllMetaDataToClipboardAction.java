@@ -56,7 +56,7 @@ public class CopyAllMetaDataToClipboardAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		StringBuilder sb = new StringBuilder();
 		for (AbstractAttributeStatisticsModel statModel : model.getOrderedAttributeStatisticsModels()) {
 			// append general stats like name, type, missing values

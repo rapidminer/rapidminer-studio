@@ -415,7 +415,7 @@ public class ChartConfigurationPanel extends AbstractConfigurationPanel
 					private static final long serialVersionUID = 1L;
 
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void loggedActionPerformed(ActionEvent e) {
 						leftSideShowHiddenPanel.setVisible(false);
 						leftSideConfigPanel.setVisible(true);
 						statusTextArea.setVisible(true);
@@ -598,7 +598,7 @@ public class ChartConfigurationPanel extends AbstractConfigurationPanel
 							private static final long serialVersionUID = 1L;
 
 							@Override
-							public void actionPerformed(ActionEvent e) {
+							public void loggedActionPerformed(ActionEvent e) {
 								DatasetTransformationType type = (DatasetTransformationType) datasetTransformationSelectionComboBox
 										.getSelectedItem();
 								changeDatatableTransformationType(type, true);
@@ -666,7 +666,7 @@ public class ChartConfigurationPanel extends AbstractConfigurationPanel
 							private static final long serialVersionUID = 1L;
 
 							@Override
-							public void actionPerformed(ActionEvent e) {
+							public void loggedActionPerformed(ActionEvent e) {
 								if (ConfirmDialog.showConfirmDialogWithOptionalCheckbox(
 										ApplicationFrame.getApplicationFrame(),
 										"plotter.configuration_dialog.reset_configuration", ConfirmDialog.YES_NO_OPTION,
@@ -692,7 +692,7 @@ public class ChartConfigurationPanel extends AbstractConfigurationPanel
 							private static final long serialVersionUID = 1L;
 
 							@Override
-							public void actionPerformed(ActionEvent e) {
+							public void loggedActionPerformed(ActionEvent e) {
 								boolean visible = !leftSideConfigPanel.isVisible();
 								leftSideConfigPanel.setVisible(visible);
 								statusTextArea.setVisible(visible);

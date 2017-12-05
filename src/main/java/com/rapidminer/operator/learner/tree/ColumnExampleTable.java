@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.tree;
 
 import java.util.ArrayList;
@@ -86,6 +86,9 @@ public class ColumnExampleTable {
 	/** the column containing the values of the label attribute */
 	private int[] labelColumn;
 
+	/** the column containing the values of a numerical label attribute */
+	private double[] numericalLabelColumn;
+
 	/** the column containing the values of the weight attribute - if it exists */
 	private double[] weightColumn = null;
 
@@ -150,7 +153,11 @@ public class ColumnExampleTable {
 		// initialize tables
 		nominalColumnTable = new byte[numberOfRegularNominalAttributes][numberOfExamples];
 		numericalColumnTable = new double[numberOfRegularNumericalAttributes][numberOfExamples];
-		labelColumn = new int[numberOfExamples];
+		if (label.isNominal()) {
+			labelColumn = new int[numberOfExamples];
+		} else {
+			numericalLabelColumn = new double[numberOfExamples];
+		}
 		if (weight != null) {
 			weightColumn = new double[numberOfExamples];
 		}
@@ -255,7 +262,11 @@ public class ColumnExampleTable {
 			nominalColumnTable[column][row] = (byte) value;
 			column++;
 		}
-		labelColumn[row] = (int) example.getValue(label);
+		if (label.isNominal()) {
+			labelColumn[row] = (int) example.getValue(label);
+		} else {
+			numericalLabelColumn[row] = example.getValue(label);
+		}
 
 		column = 0;
 		for (Attribute attribute : regularNumericalAttributes) {
@@ -302,6 +313,13 @@ public class ColumnExampleTable {
 	 */
 	public int[] getLabelColumn() {
 		return labelColumn;
+	}
+
+	/**
+	 * @return a double array containing the values of the numerical label column
+	 */
+	public double[] getNumericalLabelColumn() {
+		return numericalLabelColumn;
 	}
 
 	/**

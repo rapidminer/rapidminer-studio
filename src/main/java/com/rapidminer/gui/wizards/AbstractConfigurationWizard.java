@@ -58,7 +58,7 @@ public abstract class AbstractConfigurationWizard extends JDialog {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			step(-1);
 			next.updateContent();
 		}
@@ -128,7 +128,7 @@ public abstract class AbstractConfigurationWizard extends JDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				cancel();
 			}
 		});

@@ -36,12 +36,12 @@ import java.util.Enumeration;
 import java.util.EventObject;
 import java.util.Hashtable;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.text.BadLocationException;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.dialog.SearchDialog;
 import com.rapidminer.gui.dialog.SearchableJEditTextArea;
 import com.rapidminer.gui.tools.IconSize;
@@ -1052,7 +1052,7 @@ public abstract class InputHandler extends KeyAdapter {
 		}
 	}
 
-	public static class ClipCopy extends AbstractAction {
+	public static class ClipCopy extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = 2942143617686299824L;
 
@@ -1062,13 +1062,13 @@ public abstract class InputHandler extends KeyAdapter {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent evt) {
+		public void loggedActionPerformed(ActionEvent evt) {
 			JEditTextArea textArea = getTextArea(evt);
 			textArea.copy();
 		}
 	}
 
-	public static class ClipPaste extends AbstractAction {
+	public static class ClipPaste extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = 1961399179178333327L;
 
@@ -1078,13 +1078,13 @@ public abstract class InputHandler extends KeyAdapter {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent evt) {
+		public void loggedActionPerformed(ActionEvent evt) {
 			JEditTextArea textArea = getTextArea(evt);
 			textArea.paste();
 		}
 	}
 
-	public static class ClipCut extends AbstractAction {
+	public static class ClipCut extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = 8199702559544536825L;
 
@@ -1094,13 +1094,13 @@ public abstract class InputHandler extends KeyAdapter {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent evt) {
+		public void loggedActionPerformed(ActionEvent evt) {
 			JEditTextArea textArea = getTextArea(evt);
 			textArea.cut();
 		}
 	}
 
-	public static class SelectAll extends AbstractAction {
+	public static class SelectAll extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = -5706102409245450060L;
 
@@ -1110,13 +1110,13 @@ public abstract class InputHandler extends KeyAdapter {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent evt) {
+		public void loggedActionPerformed(ActionEvent evt) {
 			JEditTextArea textArea = getTextArea(evt);
 			textArea.selectAll();
 		}
 	}
 
-	private static class SearchAction extends AbstractAction {
+	private static class SearchAction extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = -8380073257252178693L;
 
@@ -1128,7 +1128,7 @@ public abstract class InputHandler extends KeyAdapter {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent evt) {
+		public void loggedActionPerformed(ActionEvent evt) {
 			JEditTextArea textArea = getTextArea(evt);
 			new SearchDialog(textArea, new SearchableJEditTextArea(textArea), true).setVisible(true);
 		}

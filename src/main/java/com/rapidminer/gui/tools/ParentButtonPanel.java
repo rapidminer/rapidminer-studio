@@ -29,7 +29,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.LinkedList;
 
-import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -39,6 +38,7 @@ import javax.swing.event.EventListenerList;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.tools.I18N;
 
@@ -80,7 +80,7 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 		private static final long serialVersionUID = -5411675828764033039L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			selectedNode = model.getParent(currentNode);
 			fireAction();
 		}
@@ -182,13 +182,13 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 		}
 
 		if (node.equals(currentNode)) {
-			Action action = new AbstractAction("<span style=\"font-weight: bold; text-decoration: none; color: #000000\">"
+			Action action = new LoggedAbstractAction("<span style=\"font-weight: bold; text-decoration: none; color: #000000\">"
 					+ name + "</span>") {
 
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					selectedNode = node;
 					fireAction();
 				}
@@ -198,12 +198,12 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 			button.setBorder(BorderFactory.createEmptyBorder(7, 0, 0, 0));
 			return button;
 		} else {
-			Action action = new AbstractAction(name) {
+			Action action = new LoggedAbstractAction(name) {
 
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					selectedNode = node;
 					fireAction();
 				}
@@ -262,7 +262,7 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 		JPopupMenu menu = new JPopupMenu();
 		for (int i = 0; i < model.getNumberOfChildren(node); i++) {
 			final T child = model.getChild(node, i);
-			menu.add(new AbstractAction(model.toString(child)) {
+			menu.add(new LoggedAbstractAction(model.toString(child)) {
 
 				private static final long serialVersionUID = 7232177147279985209L;
 
@@ -271,7 +271,7 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 				}
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					selectedNode = child;
 					fireAction();
 				}

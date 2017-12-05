@@ -77,7 +77,7 @@ import com.rapidminer.tools.parameter.ParameterChangeListener;
  * {@link ProcessDrawer} can be achieved by calling the following setters:
  * <ul>
  * <li>{@link #setDisplayedChain(OperatorChain)}</li>
- * <li>{@link #setProcesses(ExecutionUnit[])}</li>
+ * <li>{@link #setProcesses(List)}</li>
  * <li>{@link #setProcessSize(ExecutionUnit, Dimension)} (see
  * {@link ProcessDrawUtils#calculatePreferredSize(ProcessRendererModel, ExecutionUnit, int, int)} to
  * automatically create the correct dimensions for each {@link ExecutionUnit} of a process)</li>
@@ -254,10 +254,10 @@ public final class ProcessRendererModel {
 			public void operatorsChanged(ProcessRendererOperatorEvent e, Collection<Operator> operators) {
 				if (e.getEventType() == OperatorEvent.SELECTED_OPERATORS_CHANGED) {
 					for (ProcessEditor editor : processEditors.getListeners(ProcessEditor.class)) {
-						editor.setSelection(new LinkedList<Operator>(operators));
+						editor.setSelection(new LinkedList<>(operators));
 					}
 					for (ExtendedProcessEditor editor : processEditors.getListeners(ExtendedProcessEditor.class)) {
-						editor.setSelection(new LinkedList<Operator>(operators));
+						editor.setSelection(new LinkedList<>(operators));
 					}
 				}
 			}
@@ -506,7 +506,7 @@ public final class ProcessRendererModel {
 		if (displayedChain == null) {
 			throw new IllegalArgumentException("displayedChain must not be null!");
 		}
-		addViewSwitchToUndo(displayedChain);
+		addViewSwitchToUndo();
 		this.displayedChain = displayedChain;
 		fireProcessViewChanged();
 	}
@@ -908,7 +908,7 @@ public final class ProcessRendererModel {
 	 * Returns the zoom factor of the process where {@code 1.0} means no zoom, values smaller equal
 	 * zooming out and values greater than {@code 1.0} equal zooming in.
 	 *
-	 * @return
+	 * @return the zoom factor
 	 */
 	public double getZoomFactor() {
 		return ZOOM_FACTORS[zoomIndex];
@@ -1093,7 +1093,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Removes the given {@link OperatorAnnotation}.
 	 *
-	 * @param annotation
+	 * @param anno
 	 *            the annotation to remove
 	 */
 	public void removeOperatorAnnotation(OperatorAnnotation anno) {
@@ -1103,7 +1103,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Adds the given {@link OperatorAnnotation}.
 	 *
-	 * @param annotation
+	 * @param anno
 	 *            the annotation to add
 	 */
 	public void addOperatorAnnotation(OperatorAnnotation anno) {
@@ -1124,7 +1124,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Removes the given {@link ProcessAnnotation}.
 	 *
-	 * @param annotation
+	 * @param anno
 	 *            the annotation to remove
 	 */
 	public void removeProcessAnnotation(ProcessAnnotation anno) {
@@ -1134,7 +1134,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Adds the given {@link ProcessAnnotation}.
 	 *
-	 * @param annotation
+	 * @param anno
 	 *            the annotation to add
 	 */
 	public void addProcessAnnotation(ProcessAnnotation anno) {
@@ -1263,7 +1263,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Looks up the view position of the specified {@link OperatorChain}.
 	 *
-	 * @param operatorChain
+	 * @param chain
 	 *            The operator chain.
 	 * @return The position or null.
 	 * @since 7.5
@@ -1275,7 +1275,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Sets the view position of the specified {@link OperatorChain}.
 	 *
-	 * @param operatorChain
+	 * @param chain
 	 *            The operator chain.
 	 * @param position
 	 *            The center position.
@@ -1291,7 +1291,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Resets the view position of the specified {@link OperatorChain}.
 	 *
-	 * @param operatorChain
+	 * @param chain
 	 *            The operator chain.
 	 * @since 7.5
 	 */
@@ -1305,7 +1305,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Looks up the zoom of the specified {@link OperatorChain}.
 	 *
-	 * @param operatorChain
+	 * @param chain
 	 *            The operator chain.
 	 * @return The position or null.
 	 * @since 7.5
@@ -1317,9 +1317,9 @@ public final class ProcessRendererModel {
 	/**
 	 * Sets the zoom of the specified {@link OperatorChain}.
 	 *
-	 * @param operatorChain
+	 * @param chain
 	 *            The operator chain.
-	 * @param position
+	 * @param zoom
 	 *            The zoom.
 	 * @since 7.5
 	 */
@@ -1333,7 +1333,7 @@ public final class ProcessRendererModel {
 	/**
 	 * Resets the zoom of the specified {@link OperatorChain}.
 	 *
-	 * @param operatorChain
+	 * @param chain
 	 *            The operator chain.
 	 * @since 7.5
 	 */
@@ -1435,8 +1435,6 @@ public final class ProcessRendererModel {
 	 *
 	 * @param operator
 	 *            the operator
-	 * @param restore
-	 *            The restore flag
 	 * @since 7.5
 	 */
 	public void setRestore(Operator operator) {
@@ -1744,9 +1742,9 @@ public final class ProcessRendererModel {
 	}
 
 	/**
-	 * Adds the current view to the undo stack. Called before the actual displyed chain will change.
+	 * Adds the current view to the undo stack. Called before the actual displayed chain will change.
 	 */
-	private void addViewSwitchToUndo(OperatorChain newChain) {
+	private void addViewSwitchToUndo() {
 		takeSnapshot();
 		addToUndoList(true);
 	}
@@ -1887,7 +1885,7 @@ public final class ProcessRendererModel {
 	 * Informs the {@link ProcessEditor ProcessEditors} that the process was changed. Fired when the
 	 * process was replaced.
 	 *
-	 * @see #setProcess(Process)
+	 * @see #setProcess(Process, boolean, boolean)
 	 */
 	private void fireProcessChanged() {
 		Process process = getProcess();
@@ -1903,7 +1901,7 @@ public final class ProcessRendererModel {
 	 * Informs the {@link ProcessStorageListener ProcessStorageListeners} that the process was
 	 * loaded.
 	 *
-	 * @see #openProcess(Process)
+	 * @see #setProcess(Process, boolean, boolean)
 	 */
 	private void fireProcessLoaded() {
 		Process process = getProcess();

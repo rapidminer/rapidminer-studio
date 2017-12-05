@@ -41,7 +41,7 @@ public class ClearMessageAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		this.loggingViewer.clearLog();
 	}
 }

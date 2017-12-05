@@ -55,7 +55,7 @@ import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.license.LicenseTools;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.VersionNumber;
-import com.rapidminer.gui.tools.VersionNumber.VersionNumberExcpetion;
+import com.rapidminer.gui.tools.VersionNumber.VersionNumberException;
 import com.rapidminer.gui.tools.components.LinkRemoteButton;
 import com.rapidminer.license.License;
 import com.rapidminer.license.StudioLicenseConstants;
@@ -218,7 +218,7 @@ public class AboutBox extends JDialog {
 			if (properties.getProperty("version") != null) {
 				try {
 					versionNumber = new VersionNumber(properties.getProperty("version"));
-				} catch (VersionNumberExcpetion e) {
+				} catch (VersionNumberException e) {
 					// nothing to do
 				}
 			}
@@ -360,7 +360,7 @@ public class AboutBox extends JDialog {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					RMUrlHandler.openInBrowser(url);
 				}
 			}));
@@ -371,7 +371,7 @@ public class AboutBox extends JDialog {
 			private static final long serialVersionUID = 1407089394491740308L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				dispose();
 			}
 

@@ -39,7 +39,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -67,6 +66,7 @@ import javax.swing.text.StyleConstants;
 import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.PlainArrowDropDownButton;
@@ -835,7 +835,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		}
 	}
 
-	private class InsertionAction extends AbstractAction {
+	private class InsertionAction extends LoggedAbstractAction {
 
 		private static final long serialVersionUID = -5185173378762191200L;
 		private final String insertionString;
@@ -846,7 +846,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			String text = regexpTextField.getText();
 
 			// is shortcut a construct?

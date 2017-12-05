@@ -52,6 +52,79 @@ enum CtaEventAggregator {
 	private static final boolean NOT_IN_UI_MODE = !RapidMiner.getExecutionMode().equals(ExecutionMode.UI);
 
 	/**
+	 * Represents the keys that are not to be written to the CTA database.
+	 * The log items should be filtered by checking for all blacklist items,
+	 * that determine which log parts are to be matched.
+	 */
+	private static class BlackListItem {
+
+		/**
+		 * The key to be matched.
+		 */
+		private final Key key;
+		/**
+		 * Match for the type of the key is obligatory.
+		 */
+		private final boolean useType;
+		/**
+		 * Match for the value of the key is obligatory.
+		 */
+		private final boolean useValue;
+		/**
+		 * Match for the arg of the key is obligatory.
+		 */
+		private final boolean useArg;
+
+		BlackListItem(Key key, boolean useType, boolean useValue, boolean useArg) {
+			this.key = key;
+			this.useType = useType;
+			this.useValue = useValue;
+			this.useArg = useArg;
+		}
+
+		boolean matchesKey(Key key) {
+			if (key == null) {
+				return false;
+			}
+			if (useType && (
+					this.key.getType() == null && key.getType() != null
+							|| this.key.getType() != null && !this.key.getType().equals(key.getType())
+			)) {
+				return false;
+			}
+			if (useValue && (
+					this.key.getValue() == null && key.getValue() != null
+							|| this.key.getValue() != null && !this.key.getValue().equals(key.getValue())
+			)) {
+				return false;
+			}
+			if (useArg && (
+					this.key.getArgWithIndicators() == null && key.getArgWithIndicators() != null
+							|| this.key.getArgWithIndicators() != null && !this.key.getArgWithIndicators().equals(key.getArgWithIndicators())
+			)) {
+				return false;
+			}
+			return true;
+		}
+
+	}
+
+	private static final BlackListItem[] BLACKLIST = new BlackListItem[] {
+			// the argument of logged exceptions are too long and irrelevant
+			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
+					null), true, true, false),
+			// progress-thread typed logs are irrelevant
+			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, null,
+					null), true, false, false),
+			// resource-action typed logs are irrelevant, use "action" type in CTA rules instead
+			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_RESOURCE_ACTION, null, 
+					null), true, false, false),
+			// simple-action typed logs are irrelevant, use "action" type in CTA rules instead
+			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_SIMPLE_ACTION, null, 
+					null), true, false, false)
+	};
+
+	/**
 	 * Log the event
 	 *
 	 * @param type
@@ -71,7 +144,7 @@ enum CtaEventAggregator {
 	 */
 	public void log(Key event, long count) {
 		// Disable logging on server
-		if (NOT_IN_UI_MODE) {
+		if (NOT_IN_UI_MODE || !validateKey(event)) {
 			return;
 		}
 		readLock.lock();
@@ -96,5 +169,20 @@ enum CtaEventAggregator {
 			writeLock.unlock();
 		}
 		return result;
+	}
+	
+	/**
+	 * Returns true if no item of the blacklist matched the key.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	private boolean validateKey(Key key) {
+		for (BlackListItem item : BLACKLIST) {
+			if (item.matchesKey(key)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

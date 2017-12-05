@@ -49,7 +49,7 @@ public class RenameAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(final ActionEvent e) {
+	public void loggedActionPerformed(final ActionEvent e) {
 		if (!view.getModel().getSelectedOperators().isEmpty()) {
 			controller.rename(view.getModel().getSelectedOperators().get(0));
 		}

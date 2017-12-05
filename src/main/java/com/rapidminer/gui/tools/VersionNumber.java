@@ -15,10 +15,11 @@
  * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools;
 
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 
 /**
@@ -28,11 +29,25 @@ import java.util.Locale;
  */
 public class VersionNumber implements Comparable<VersionNumber> {
 
+	/**
+	 * @deprecated use {@link VersionNumberException} instead
+	 */
+	@Deprecated
 	public class VersionNumberExcpetion extends RuntimeException {
 
 		private static final long serialVersionUID = 1L;
 
 		public VersionNumberExcpetion(String message) {
+			super(message);
+		}
+	}
+
+	/**
+	 * Exception for malformed VersionNumber String representations including further information
+	 * @since 8.0
+	 */
+	public class VersionNumberException extends VersionNumberExcpetion {
+		public VersionNumberException(String message) {
 			super(message);
 		}
 	}
@@ -55,10 +70,13 @@ public class VersionNumber implements Comparable<VersionNumber> {
 
 	private final String classifier;
 
+	// comparing BETA and BETA1 should be considered equal, using this helper therefore
+	private static final Pattern patternVersionClassifierOne = Pattern.compile("-[a-z]+1");
+
 	/**
 	 * Constructs a new VersionNumber object with the given versionString. The versionString should
 	 * use the format major.minor.patchlevel-classifier. Examples: 6.0 or 6.0.005-SNAPSHOT. Throws a
-	 * {@link VersionNumberExcpetion} if the given versionString is malformed.
+	 * {@link VersionNumberException} if the given versionString is malformed.
 	 */
 	public VersionNumber(String versionString) {
 		String version = versionString.toLowerCase().trim();
@@ -75,16 +93,16 @@ public class VersionNumber implements Comparable<VersionNumber> {
 			try {
 				majorNumber = Integer.parseInt(numbers[0]);
 			} catch (NumberFormatException e) {
-				throw new VersionNumberExcpetion("Malformed major version!");
+				throw new VersionNumberException("Malformed major version!");
 			}
 		} else {
-			throw new VersionNumberExcpetion("No major version given!");
+			throw new VersionNumberException("No major version given!");
 		}
 		if (numbers.length > 1) {
 			try {
 				minorNumber = Integer.parseInt(numbers[1]);
 			} catch (NumberFormatException e) {
-				throw new VersionNumberExcpetion("Malformed minor version!");
+				throw new VersionNumberException("Malformed minor version!");
 			}
 		} else {
 			minorNumber = 0;
@@ -93,7 +111,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 			try {
 				patchLevel = Integer.parseInt(numbers[2]);
 			} catch (NumberFormatException e) {
-				throw new VersionNumberExcpetion("Malformed patch level!");
+				throw new VersionNumberException("Malformed patch level!");
 			}
 		} else {
 			patchLevel = 0;
@@ -139,7 +157,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	 */
 	@Deprecated
 	public VersionNumber(int majorNumber, int minorNumber, int patchLevel, boolean alpha, int alphaNumber, boolean beta,
-			int betaNumber) {
+						 int betaNumber) {
 		this.majorNumber = majorNumber;
 		this.minorNumber = minorNumber;
 		this.patchLevel = patchLevel;
@@ -156,7 +174,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (classifier == null ? 0 : classifier.hashCode());
+		result = prime * result + (classifier == null ? 0 : normalize(classifier).hashCode());
 		result = prime * result + majorNumber;
 		result = prime * result + minorNumber;
 		result = prime * result + patchLevel;
@@ -175,13 +193,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 			return false;
 		}
 		VersionNumber other = (VersionNumber) obj;
-		if (classifier == null) {
-			if (other.classifier != null) {
-				return false;
-			}
-		} else if (!classifier.equals(other.classifier)) {
-			return false;
-		}
+
 		if (majorNumber != other.majorNumber) {
 			return false;
 		}
@@ -191,7 +203,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 		if (patchLevel != other.patchLevel) {
 			return false;
 		}
-		return true;
+		return this.compareClassifier(other) == 0;
 	}
 
 	/**
@@ -231,6 +243,9 @@ public class VersionNumber implements Comparable<VersionNumber> {
 
 	@Override
 	public int compareTo(VersionNumber o) {
+		if(o == null) {
+			return 1;
+		}
 		int index = Double.compare(this.majorNumber, o.majorNumber);
 		if (index != 0) {
 			return index;
@@ -243,15 +258,70 @@ public class VersionNumber implements Comparable<VersionNumber> {
 				if (index != 0) {
 					return index;
 				}
-				// prefer release versions over development builds
-				return Boolean.compare(!isDevelopmentBuild(), !o.isDevelopmentBuild());
+				return compareClassifier(o);
 			}
 		}
+	}
+
+	/**
+	 * SNAPSHOT < ALPHA == ALPHA1 < ALPHA2 < ALPHA200 < BETA == BETA1 < BETA2 < BETA300 < RC == RC1 < RC2 < RC400
+	 *
+	 * @param o VersionNumber to be classifier-compared to this VersionNumbers classifier
+	 * @return
+	 */
+	private int compareClassifier(VersionNumber o) {
+		if (classifier != null) {
+			if (o.classifier != null) {
+				if (isSnapshot()) {
+					if (o.isSnapshot()) {
+						return 0;
+					} else {
+						return -1;
+					}
+				}
+				if(o.isSnapshot()) {
+					return 1;
+				}
+				String normalizedClassifier = normalize(classifier);
+				String normalizedOtherClassifier = normalize(o.classifier);
+				return normalizedClassifier.compareTo(normalizedOtherClassifier);
+			}
+			return -1;
+		} else {
+			if (o.classifier != null) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	}
+
+	/**
+	 * create a lowercase version that changes beta1 to beta or alpha1 to alpha etc
+	 *
+	 * @param input
+	 * @return
+	 */
+	private String normalize(String input) {
+		String output = input.toLowerCase();
+		if (patternVersionClassifierOne.matcher(output).matches()) {
+			output = output.substring(0, output.length() - 1);
+		}
+		return output;
 	}
 
 	@Override
 	public String toString() {
 		return majorNumber + "." + minorNumber + "." + "000".substring((patchLevel + "").length()) + patchLevel
+				+ (classifier != null ? classifier.toUpperCase(Locale.ENGLISH) : "");
+	}
+
+	/**
+	 * Assembles the String representation to be a minimal representation without adding leading zeros to the patchlevel
+	 * @return a minimal String representation of this VersionNumber
+	 */
+	public String getShortLongVersion() {
+		return majorNumber + "." + minorNumber + "." + patchLevel
 				+ (classifier != null ? classifier.toUpperCase(Locale.ENGLISH) : "");
 	}
 
@@ -292,16 +362,15 @@ public class VersionNumber implements Comparable<VersionNumber> {
 	}
 
 	/**
-	 * @return <code>true</code> if the current version is a development build (i.e. it has a
-	 *         classifier named SNAPSHOT or ALPHA or BETA or RC).
+	 * @return <code>true</code> if the current version is a development build (i.e. it has a classifier named SNAPSHOT
+	 * or ALPHA or BETA or RC).
 	 */
 	public final boolean isDevelopmentBuild() {
 		return isSnapshot() || isPreview(ALPHA_TAG) || isPreview(BETA_TAG) || isPreview(RELEASE_CANDIDATE);
 	}
 
 	/**
-	 * @return {@code true} if the current version is a snapshot build (exactly if it has a
-	 *         classifier named SNAPSHOT).
+	 * @return {@code true} if the current version is a snapshot build (exactly if it has a classifier named SNAPSHOT).
 	 */
 	public final boolean isSnapshot() {
 		return classifier != null && classifier.equalsIgnoreCase(CLASSIFIER_TAG + SNAPSHOT);

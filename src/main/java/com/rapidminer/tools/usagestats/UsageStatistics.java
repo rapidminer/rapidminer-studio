@@ -28,11 +28,13 @@ import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.Random;
 import java.util.logging.Level;
 
-import javax.swing.table.TableModel;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -42,17 +44,15 @@ import org.w3c.dom.Element;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.core.license.ProductConstraintManager;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.dialog.EULADialog;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.license.License;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.WebServiceTools;
+import com.rapidminer.tools.XMLException;
 
 
 /**
@@ -68,41 +68,43 @@ public class UsageStatistics {
 
 	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 	// EXTREMELY expensive
-	private static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-
-		@Override
-		protected DateFormat initialValue() {
-			return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-		}
-	};
+	private static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
+		return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss"); // this is a legacy wrong format to parse old dates
+	});
 
 	/** URL to send the statistics values to. */
-	private static final String WEB_SERVICE_URL = "http://stats.rapidminer.com/usage-stats/upload/rapidminer";
-
-	/** Transmit usage statistics every day */
-	private static final long DAILY_TRANSMISSION_INTERVAL = 1000 * 60 * 60 * 24;
-	/** Transmit usage statistics every hour */
-	private static final long HOURLY_TRANSMISSION_INTERVAL = 1000 * 60 * 60;
-
-	/** Schedule extra transmission 10 minutes from now */
-	private static final long SOON_TRANSMISSION_INTERVAL = 1000 * 60 * 10;
-
-	private Date initialSetup;
-	private Date lastReset;
-	private Date nextTransmission;
+	private static final String WEB_SERVICE_URL = "https://stats.rapidminer.com/usage-stats/upload/rapidminer";
 
 	private static final UsageStatistics INSTANCE = new UsageStatistics();
 
+	private Date initialSetup;
+	private Date nextTransmission;
 	private String randomKey;
 
-	private transient boolean failedToday = false;
+	/**
+	 * The reason for usage statistics upload
+	 */
+	public enum Reason {
+		SHUTDOWN, ALWAYS, ASK, CTA, ROWLIMIT
+	}
 
+	/**
+	 * Singleton object of UsageStatistics.
+	 *
+	 * @return
+	 */
 	public static UsageStatistics getInstance() {
 		return INSTANCE;
 	}
 
 	private UsageStatistics() {
 		load();
+	}
+
+	private void init() {
+		this.randomKey = createRandomKey();
+		this.initialSetup = new Date();
+		ActionStatisticsCollector.getInstance().init();
 	}
 
 	/** Loads the statistics from the user file. */
@@ -119,15 +121,10 @@ public class UsageStatistics {
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.loading_operator_statistics");
 				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
 				Element root = doc.getDocumentElement();
-				String lastReset = root.getAttribute("last-reset");
-				if (lastReset != null && !lastReset.isEmpty()) {
-					try {
-						this.lastReset = getDateFormat().parse(lastReset);
-					} catch (ParseException e) {
-						this.lastReset = new Date();
-					}
-				} else {
-					this.lastReset = new Date();
+				String lastResetString = root.getAttribute("last-reset");
+				Date lastReset = parseDate(lastResetString);
+				if (lastReset == null) {
+					lastReset = new Date();
 				}
 
 				this.randomKey = root.getAttribute("random-key");
@@ -136,47 +133,49 @@ public class UsageStatistics {
 				}
 
 				String initialSetup = root.getAttribute("initial-setup");
-				if (initialSetup != null) {
-					try {
-						this.initialSetup = getDateFormat().parse(initialSetup);
-					} catch (ParseException e) {
-						// ignore malformed files
-					}
-				}
+				this.initialSetup = parseDate(initialSetup);
 
 				String nextTransmission = root.getAttribute("next-transmission");
-				if (lastReset != null && !lastReset.isEmpty()) {
-					try {
-						this.nextTransmission = getDateFormat().parse(nextTransmission);
-					} catch (ParseException e) {
-						scheduleTransmission(true);
-					}
-				} else {
-					scheduleTransmission(false);
+				this.nextTransmission = parseDate(nextTransmission);
+				if (this.nextTransmission == null) {
+					this.nextTransmission = new Date();
 				}
 
-				Element actionStats = XMLTools.getChildElement(root, ActionStatisticsCollector.XML_TAG, false);
-				if (actionStats != null) {
-					ActionStatisticsCollector.getInstance().load(actionStats);
-				}
+				ActionStatisticsCollector.getInstance().load(root, lastReset);
 			} catch (Exception e) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.loading_operator_usage_error", e), e);
+				init();
 			}
 		} else {
-			this.randomKey = createRandomKey();
-			this.initialSetup = new Date();
-			this.lastReset = new Date();
+			init();
 		}
 	}
 
 	/**
-	 * @return the transmission interval to be used (in milliseconds)
+	 * Tries to parse with the new date format first, old format second, returns null if both fail.
+	 *
+	 * @param date
+	 * @return
 	 */
-	private long getTransmissionInterval() {
-		return RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS_ANSWERS[UsageStatsTransmissionDialog.ALWAYS]
-				.equals(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS))
-						? HOURLY_TRANSMISSION_INTERVAL : DAILY_TRANSMISSION_INTERVAL;
+	private Date parseDate(String date) {
+		if(date != null && !date.trim().isEmpty()) {
+			try {
+				return Date.from(ZonedDateTime.parse(date).toInstant());
+			} catch (DateTimeParseException e) {
+				try {
+					return getDateFormat().parse(date);
+				} catch (ParseException e2) {
+					return null;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private String formatDate(Date date) {
+		return date.toInstant().atZone(ZoneId.systemDefault()).toString();
 	}
 
 	/**
@@ -184,9 +183,6 @@ public class UsageStatistics {
 	 *
 	 * @return {@code true} if the usage statistics should be transmitted
 	 */
-	boolean shouldTransmitOnShutdown() {
-		return EULADialog.getEULAAccepted();
-	}
 
 	private String createRandomKey() {
 		StringBuilder randomKey = new StringBuilder();
@@ -197,13 +193,11 @@ public class UsageStatistics {
 		return randomKey.toString();
 	}
 
-	/** Sets all current counters to 0 and sets the last reset date to the current time. */
-	public synchronized void reset() {
-		ActionStatisticsCollector.getInstance().clear();
-		this.lastReset = new Date();
+	private Document getXML(ActionStatisticsCollector.ActionStatisticsSnapshot snapshot) {
+		return getXML(null, snapshot);
 	}
 
-	private Document getXML() {
+	private Document getXML(Reason reason, ActionStatisticsCollector.ActionStatisticsSnapshot snapshot) {
 		Document doc;
 		try {
 			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -212,15 +206,15 @@ public class UsageStatistics {
 		}
 		Element root = doc.createElement("usageStatistics");
 
-		if (lastReset != null) {
-			root.setAttribute("last-reset", getDateFormat().format(lastReset));
-		}
+		root.setAttribute("last-reset", formatDate(snapshot.getFrom()));
+
+		root.setAttribute("closed-at", formatDate(snapshot.getTo()));
 		if (nextTransmission != null) {
-			root.setAttribute("next-transmission", getDateFormat().format(nextTransmission));
+			root.setAttribute("next-transmission", formatDate(nextTransmission));
 		}
 		root.setAttribute("random-key", this.randomKey);
 		if (this.initialSetup != null) {
-			root.setAttribute("initial-setup", getDateFormat().format(initialSetup));
+			root.setAttribute("initial-setup", formatDate(initialSetup));
 		}
 		root.setAttribute("rapidminer-version", new RapidMinerVersion().toString());
 		root.setAttribute("os-name", System.getProperties().getProperty("os.name"));
@@ -235,10 +229,14 @@ public class UsageStatistics {
 		if (activeLicense != null && activeLicense.getLicenseID() != null) {
 			root.setAttribute("lid", activeLicense.getLicenseID());
 		}
+		if (reason != null) {
+			root.setAttribute("reason", reason.toString());
+		}
 
 		doc.appendChild(root);
 
-		root.appendChild(ActionStatisticsCollector.getInstance().getXML(doc));
+		snapshot.toXML(doc, root);
+
 		return doc;
 	}
 
@@ -258,14 +256,16 @@ public class UsageStatistics {
 		}
 	}
 
-	/** Saves the statistics to a user file. */
+	/**
+	 * 	Saves the statistics to a user file.
+	 */
 	public void save() {
 		if (RapidMiner.getExecutionMode().canAccessFilesystem()) {
 			File file = FileSystemService.getUserConfigFile("usagestats.xml");
 			try {
 				LogService.getRoot().log(Level.CONFIG,
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.saving_operator_usage");
-				XMLTools.stream(getXML(), file, StandardCharsets.UTF_8);
+				XMLTools.stream(getXML(ActionStatisticsCollector.getInstance().getActionStatisticsSnapshot(false)), file, StandardCharsets.UTF_8);
 			} catch (Exception e) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.saving_operator_usage_error", e), e);
@@ -276,22 +276,20 @@ public class UsageStatistics {
 		}
 	}
 
-	/** Returns the statistics as a data table that can be displayed to the user. */
-	public TableModel getAsDataTable() {
-		return new ActionStatisticsTable(ActionStatisticsCollector.getInstance().getCounts());
-	}
-
 	private DateFormat getDateFormat() {
 		return DATE_FORMAT.get();
 	}
 
 	/**
+	 * Uploads the usage statistics
 	 *
-	 * @return true on success
+	 * @param progressListener
+	 * @param reason
+	 * @throws Exception
 	 */
-	public boolean transferUsageStats(ProgressListener progressListener) throws Exception {
+	void transferUsageStats(Reason reason, ActionStatisticsCollector.ActionStatisticsSnapshot snapshot, ProgressListener progressListener) throws XMLException, IOException {
 		progressListener.setCompleted(10);
-		String xml = XMLTools.toString(getXML());
+		String xml = XMLTools.toString(getXML(reason, snapshot));
 		progressListener.setCompleted(20);
 		URL url = new URL(WEB_SERVICE_URL);
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -304,20 +302,11 @@ public class UsageStatistics {
 			writer.flush();
 			progressListener.setCompleted(90);
 			if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				throw new IOException("Responde from server: " + con.getResponseMessage());
-			} else {
-				return true;
+				throw new IOException("Response from server: " + con.getResponseMessage());
 			}
 		} finally {
 			progressListener.complete();
-
 		}
-	}
-
-	/** Sets the date for the next transmission. Starts no timers. */
-	void scheduleTransmission(boolean lastAttemptFailed) {
-		this.failedToday = lastAttemptFailed;
-		this.nextTransmission = new Date(lastReset.getTime() + getTransmissionInterval());
 	}
 
 	/**
@@ -329,30 +318,22 @@ public class UsageStatistics {
 		return randomKey;
 	}
 
-	/** Returns the date at which the next transmission should be scheduled. */
-	public Date getNextTransmission() {
-		if (nextTransmission == null) {
-			scheduleTransmissionFromNow();
-		}
+	/**
+	 * Returns the date at which the next transmission should be scheduled.
+	 *
+	 * @return
+	 */
+	Date getNextTransmission() {
 		return nextTransmission;
 	}
 
-	public void scheduleTransmissionFromNow() {
-		this.nextTransmission = new Date(System.currentTimeMillis() + getTransmissionInterval());
-	}
-
-	public boolean hasFailedToday() {
-		return failedToday;
-	}
-
 	/**
-	 * Schedules a new transmission in 10 minutes. Restarts the timer for the transmission dialog if
-	 * not in headless mode.
+	 * Sets the date at which the next transmission should be scheduled.
+	 *
+	 * @param nextTransmission
 	 */
-	void scheduleTransmissionSoon() {
-		this.nextTransmission = new Date(System.currentTimeMillis() + SOON_TRANSMISSION_INTERVAL);
-		if (!RapidMiner.getExecutionMode().isHeadless()) {
-			UsageStatsTransmissionDialog.startTimer();
-		}
+	void setNextTransmission(Date nextTransmission) {
+		this.nextTransmission = nextTransmission;
 	}
+
 }

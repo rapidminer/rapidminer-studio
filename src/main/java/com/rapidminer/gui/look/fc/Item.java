@@ -74,7 +74,7 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 		private static final long serialVersionUID = 6397058648283021931L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			getParentPane().getFilePane().addToBookmarks(Item.this.file);
 		}
 	};
@@ -84,7 +84,7 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 		private static final long serialVersionUID = -415784022947681215L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			renameFile();
 		}
 	};
@@ -94,7 +94,7 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 		private static final long serialVersionUID = 2103094536883537758L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			getFileChooser().setSelectedFile(getFile());
 			getParentPane().getFilePane().filechooserUI.getApproveSelectionAction().actionPerformed(null);
 		}
@@ -105,7 +105,7 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 		private static final long serialVersionUID = 435288965907486522L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			boolean res = false;
 			String itemString = (isDirectory() ? "directory" : "file") + " " + getItemName();
 			int resInt = SwingTools.showConfirmDialog("file_chooser.delete", ConfirmDialog.YES_NO_CANCEL_OPTION, itemString);
@@ -130,7 +130,7 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 		private static final long serialVersionUID = -5651411399479644689L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			Item.this.parentPane.filePane.filechooserUI.setCurrentDirectoryOfFileChooser(getFile());
 		}
 	};

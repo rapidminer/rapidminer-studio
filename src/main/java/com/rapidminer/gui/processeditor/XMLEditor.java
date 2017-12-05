@@ -90,7 +90,7 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				try {
 					validateProcess();
 				} catch (IOException | XMLException e1) {

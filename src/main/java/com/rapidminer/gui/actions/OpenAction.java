@@ -58,7 +58,7 @@ public class OpenAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		open();
 	}
 

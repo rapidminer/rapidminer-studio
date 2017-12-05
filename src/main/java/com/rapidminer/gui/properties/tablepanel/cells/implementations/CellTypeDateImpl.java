@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
@@ -154,7 +155,7 @@ public class CellTypeDateImpl extends JPanel implements CellTypeDate, CellTypeDa
 
 		// add ctrl+space shortcut for date picker (to surrounding panel [for tab focus reasons] and
 		// to input field)
-		AbstractAction caAction = new AbstractAction() {
+		Action caAction = new AbstractAction() {
 
 			private static final long serialVersionUID = 5092311623220201432L;
 

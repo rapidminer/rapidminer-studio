@@ -21,9 +21,9 @@ package com.rapidminer.gui.tools.actions;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
-import javax.swing.AbstractAction;
 import javax.swing.Icon;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
@@ -34,7 +34,7 @@ import com.rapidminer.gui.tools.SwingTools;
  *
  * @author Ingo Mierswa
  */
-public class SelectColumnAction extends AbstractAction {
+public class SelectColumnAction extends LoggedAbstractAction {
 
 	private static final long serialVersionUID = 4505320292545488875L;
 
@@ -59,7 +59,7 @@ public class SelectColumnAction extends AbstractAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		this.table.selectCompleteColumn();
 	}
 

@@ -31,8 +31,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,11 +52,11 @@ import org.xml.sax.SAXException;
  * 
  * @author Simon Fischer, Ingo Mierswa
  */
-public class ParameterSet extends ResultObjectAdapter {
+public class ParameterSet extends ResultObjectAdapter implements Iterable<ParameterValue> {
 
 	private static final long serialVersionUID = -2615523039124583537L;
 
-	private final List<ParameterValue> parameterValues = new LinkedList<ParameterValue>();
+	private final List<ParameterValue> parameterValues = new ArrayList<>();
 
 	private PerformanceVector performance;
 
@@ -68,13 +69,34 @@ public class ParameterSet extends ResultObjectAdapter {
 	 * <code>parameters[i]</code> of the operator named <code>operators[i]</code>.
 	 */
 	public ParameterSet(Operator[] operators, String[] parameters, String[] values, PerformanceVector value) {
-		if ((operators.length != parameters.length) || (operators.length != values.length)) {
+		this(Arrays.stream(operators).map(Operator::getName).toArray(String[]::new), parameters, values, value);
+	}
+
+	/**
+	 * Constructs a new ParameterSet. The three arrays must have equal length. For each <i>i</i>,
+	 * the ParameterSet specifies the value <code>values[i]</code> for the parameter
+	 * <code>parameters[i]</code> of the operator named <code>operators[i]</code>.
+	 *
+	 * @since 8.0
+	 */
+	public ParameterSet(String[] operatorNames, String[] parameters, String[] values, PerformanceVector performance) {
+		if (operatorNames.length != parameters.length || operatorNames.length != values.length) {
 			throw new IllegalArgumentException("The arrays operators, parameters, and values must be of equal size!");
 		}
-		for (int i = 0; i < operators.length; i++) {
-			parameterValues.add(new ParameterValue(operators[i].getName(), parameters[i], values[i]));
+		for (int i = 0; i < operatorNames.length; i++) {
+			parameterValues.add(new ParameterValue(operatorNames[i], parameters[i], values[i]));
 		}
-		this.performance = value;
+		this.performance = performance;
+	}
+
+	/**
+	 * Associate a {@link PerformanceVector} with an existing {@link ParameterSet}.
+	 * 
+	 * @since 8.0
+	 */
+	public ParameterSet(ParameterSet set, PerformanceVector performance) {
+		this.parameterValues.addAll(set.parameterValues);
+		this.performance = performance;
 	}
 
 	@Override
@@ -84,9 +106,13 @@ public class ParameterSet extends ResultObjectAdapter {
 
 	@Override
 	public String toString() {
-		StringBuffer str = new StringBuffer("Parameter set:" + Tools.getLineSeparator());
+		StringBuilder str = new StringBuilder("Parameter set:");
+		str.append(Tools.getLineSeparator());
 		if (performance != null) {
-			str.append(Tools.getLineSeparator() + "Performance: " + performance + Tools.getLineSeparator());
+			str.append(Tools.getLineSeparator());
+			str.append("Performance: ");
+			str.append(performance);
+			str.append(Tools.getLineSeparator());
 		}
 		parameterValues.forEach(pv -> str.append(pv + Tools.getLineSeparator()));
 		return str.toString();
@@ -128,6 +154,23 @@ public class ParameterSet extends ResultObjectAdapter {
 		return this.parameterValues.iterator();
 	}
 
+	/**
+	 * @since 8.0
+	 */
+	@Override
+	public Iterator<ParameterValue> iterator() {
+		return this.parameterValues.iterator();
+	}
+
+	/**
+	 * Returns the number of parameter values.
+	 *
+	 * @since 8.0
+	 */
+	public int size() {
+		return parameterValues.size();
+	}
+
 	public void writeParameterSet(PrintWriter out, Charset encoding) {
 		out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 		out.println("<parameterset version=\"" + RapidMiner.getShortVersion() + "\">");
@@ -142,9 +185,7 @@ public class ParameterSet extends ResultObjectAdapter {
 		Document document = null;
 		try {
 			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
-		} catch (SAXException e1) {
-			throw new IOException(e1.getMessage());
-		} catch (ParserConfigurationException e1) {
+		} catch (SAXException | ParserConfigurationException e1) {
 			throw new IOException(e1.getMessage());
 		}
 

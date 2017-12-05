@@ -65,7 +65,7 @@ public class XMLSerialization {
 		try {
 			Class<?> xStreamClass = Class.forName("com.thoughtworks.xstream.XStream");
 			Class<?> generalDriverClass = Class.forName("com.thoughtworks.xstream.io.HierarchicalStreamDriver");
-			Constructor<?> constructor = xStreamClass.getConstructor(new Class[] { generalDriverClass });
+			Constructor<?> constructor = xStreamClass.getConstructor(generalDriverClass);
 			Class<?> driverClass = Class.forName("com.thoughtworks.xstream.io.xml.XppDriver");
 			xStream = (com.thoughtworks.xstream.XStream) constructor.newInstance(driverClass.newInstance());
 			xStream.setMode(com.thoughtworks.xstream.XStream.ID_REFERENCES);
@@ -92,12 +92,7 @@ public class XMLSerialization {
 			defineXMLAliasPairs();
 		} catch (Throwable e) {
 			// TODO: Why are we catching Throwables?
-			// LogService.getRoot().log(Level.WARNING,
-			// "Cannot initialize XML serialization. Probably the libraries 'xstream.jar' and 'xpp.jar' were not provided. XML serialization will not work!",
-			// e);
-			LogService.getRoot().log(
-					Level.WARNING,
-					I18N.getMessage(LogService.getRoot().getResourceBundle(),
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.tools.XMLSerialization.writing_initializing_xml_serialization_error", e), e);
 		}
 	}
@@ -118,12 +113,12 @@ public class XMLSerialization {
 
 	public void writeXML(Object object, OutputStream out) throws IOException {
 		if (xStream != null) {
-			ObjectOutputStream xOut = xStream.createObjectOutputStream(new OutputStreamWriter(out));
-			xOut.writeObject(object);
-			// xstream requires us to close() stream. see java doc of createObjectOutputStream
-			xOut.close();
+			try (OutputStreamWriter osw = new OutputStreamWriter(out);
+					ObjectOutputStream xOut = xStream.createObjectOutputStream(osw)) {
+				xOut.writeObject(object);
+				// xstream requires us to close() stream. see java doc of createObjectOutputStream
+			}
 		} else {
-			// LogService.getRoot().warning("Cannot write XML serialization. Probably the libraries 'xstream.jar' and 'xpp.jar' were not provided.");
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.XMLSerialization.writing_xml_serialization_error");
 			throw new IOException("Cannot write object with XML serialization.");
 		}
@@ -131,20 +126,15 @@ public class XMLSerialization {
 
 	public Object fromXML(InputStream in) throws IOException {
 		if (xStream != null) {
-			try {
-				ObjectInputStream xIn = xStream.createObjectInputStream(new InputStreamReader(in));
-				Object result = null;
-				try {
-					result = xIn.readObject();
-				} catch (ClassNotFoundException e) {
-					throw new IOException("Class not found: " + e.getMessage(), e);
-				}
-				return result;
-			} catch (Throwable e) {
+			try (InputStreamReader xmlReader = new InputStreamReader(in);
+					ObjectInputStream xIn = xStream.createObjectInputStream(xmlReader)) {
+				return xIn.readObject();
+			} catch (ClassNotFoundException e) {
+				throw new IOException("Class not found: " + e.getMessage(), e);
+			} catch (Exception e) {
 				throw new IOException("Cannot read from XML stream, wrong format: " + e.getMessage(), e);
 			}
 		} else {
-			// LogService.getRoot().warning("Cannot read object from XML serialization. Probably the libraries 'xstream.jar' and 'xpp.jar' were not provided.");
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.tools.XMLSerialization.reading_object_from_XML_serialization_error");
 			throw new IOException("Cannot read object from XML serialization.");

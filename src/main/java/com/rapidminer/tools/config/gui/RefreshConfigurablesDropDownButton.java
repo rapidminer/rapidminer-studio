@@ -69,7 +69,7 @@ public class RefreshConfigurablesDropDownButton extends DropDownPopupButton {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void loggedActionPerformed(ActionEvent arg0) {
 				refreshAllConfigurables();
 			}
 		};

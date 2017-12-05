@@ -543,7 +543,7 @@ public abstract class ProgressThread implements Runnable {
 					showProgressTimer.schedule(showProgressTask, getShowDialogTimerDelay());
 				}
 				try {
-					ActionStatisticsCollector.getInstance().startTimer(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
+					ActionStatisticsCollector.getInstance().startTimer(this, ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
 							"runtime");
 					ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
 							"started");
@@ -568,8 +568,7 @@ public abstract class ProgressThread implements Runnable {
 
 					SwingTools.showSimpleErrorMessage("error_executing_background_job", e, name, e);
 				} finally {
-					ActionStatisticsCollector.getInstance().stopTimer(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
-							"runtime");
+					ActionStatisticsCollector.getInstance().stopTimer(this);
 					if (!ProgressThread.this.isCancelled()) {
 						ProgressThread.this.getProgressListener().complete();
 					}

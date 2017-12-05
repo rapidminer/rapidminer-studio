@@ -18,12 +18,12 @@
 */
 package com.rapidminer.operator.ports.quickfix;
 
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.I18N;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
@@ -51,12 +51,12 @@ public abstract class AbstractQuickFix implements QuickFix {
 	}
 
 	protected void seti18nKey(String i18nKey, Object... i18nArgs) {
-		this.action = new AbstractAction(I18N.getMessage(I18N.getErrorBundle(), "metadata.quickfix." + i18nKey, i18nArgs)) {
+		this.action = new LoggedAbstractAction(I18N.getMessage(I18N.getErrorBundle(), "metadata.quickfix." + i18nKey, i18nArgs)) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void loggedActionPerformed(ActionEvent arg0) {
 				try {
 					apply();
 				} catch (Exception e) {

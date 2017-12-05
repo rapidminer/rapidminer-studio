@@ -43,7 +43,7 @@ import com.rapidminer.Process;
 import com.rapidminer.ProcessContext;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.tools.VersionNumber;
-import com.rapidminer.gui.tools.VersionNumber.VersionNumberExcpetion;
+import com.rapidminer.gui.tools.VersionNumber.VersionNumberException;
 import com.rapidminer.io.process.rules.AbstractGenericParseRule;
 import com.rapidminer.io.process.rules.ChangeParameterValueRule;
 import com.rapidminer.io.process.rules.DeleteAfterAutoWireRule;
@@ -529,7 +529,7 @@ public class XMLImporter {
 		if (versionString != null && !versionString.isEmpty()) {
 			try {
 				opVersion = new OperatorVersion(versionString);
-			} catch (VersionNumberExcpetion e) {
+			} catch (VersionNumberException e) {
 				addMessage(
 						"Failed to parse version string '" + versionString + "' for operator " + operator.getName() + ".");
 				// fall back to 5.0 on malformed version string

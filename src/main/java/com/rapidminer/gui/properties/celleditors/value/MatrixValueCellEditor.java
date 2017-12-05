@@ -52,7 +52,7 @@ public class MatrixValueCellEditor extends AbstractCellEditor implements Propert
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			MatrixPropertyDialog dialog = new MatrixPropertyDialog(type, matrix, operator);
 			dialog.setVisible(true);
 			if (dialog.isOk()) {

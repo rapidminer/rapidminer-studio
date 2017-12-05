@@ -73,7 +73,7 @@ public class NewPerspectiveAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		NewPerspectiveDialog dialog = new NewPerspectiveDialog(mainFrame.getPerspectiveController());
 		dialog.setVisible(true);
 		if (dialog.isOk()) {

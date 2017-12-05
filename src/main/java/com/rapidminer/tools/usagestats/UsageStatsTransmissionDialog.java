@@ -19,25 +19,17 @@
 package com.rapidminer.tools.usagestats;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.logging.Level;
 
 import javax.swing.JButton;
 import javax.swing.JTable;
-import javax.swing.Timer;
 
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
-import com.rapidminer.gui.tools.ProgressThread;
-import com.rapidminer.gui.tools.ProgressThreadDialog;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 
 
@@ -50,21 +42,16 @@ import com.rapidminer.tools.ParameterService;
 public class UsageStatsTransmissionDialog extends ButtonDialog {
 
 	private static final long serialVersionUID = 1L;
-	private static final long MIN_FIRE_INTERVAL = 1000 * 60; // Wait at least 60 seconds after start
-	// of RM
 
 	public static final int ASK = 0;
 	public static final int ALWAYS = 1;
-	public static final int NEVER = 2;
 
 	private static final int YES = 0;
 	private static final int NO = 1;
 
-	private static Timer timer;
-
 	private int answer;
 
-	private UsageStatsTransmissionDialog() {
+	private UsageStatsTransmissionDialog(ActionStatisticsCollector.ActionStatisticsSnapshot snapshot) {
 		super(ApplicationFrame.getApplicationFrame(), "transmit_usage_statistics", ModalityType.APPLICATION_MODAL,
 				new Object[] {});
 
@@ -73,7 +60,7 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				dispose();
 				ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS, "never");
 				ParameterService.saveParameters();
@@ -85,7 +72,7 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				answer = YES;
 				ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS, "always");
 				ParameterService.saveParameters();
@@ -93,7 +80,7 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 			}
 		});
 
-		JTable table = new ExtendedJTable(UsageStatistics.getInstance().getAsDataTable(), true, true, true);
+		JTable table = new ExtendedJTable(new ActionStatisticsTable(snapshot.getStatistics()), true, true, true);
 		table.setFocusable(false);
 		table.setBorder(null);
 		ExtendedJScrollPane tablePane = new ExtendedJScrollPane(table);
@@ -113,126 +100,23 @@ public class UsageStatsTransmissionDialog extends ButtonDialog {
 		super.cancel();
 	}
 
-	/** Starts the first timer. */
-	public static void init() {
-		startTimer();
-		ActionStatisticsCollector.getInstance().start();
-	}
-
 	/**
 	 * Pops up a dialog (unless "always" or "never" was chosen before asking the user to transmit
 	 * usage statistics.
 	 */
-	private static boolean askForTransmission() {
+	static boolean askForTransmission(ActionStatisticsCollector.ActionStatisticsSnapshot snapshot) {
 		String property = ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_TRANSFER_USAGESTATS);
 		if ("never".equals(property)) {
 			return false;
 		} else if ("always".equals(property)) {
 			return true;
 		} else {
-			return SwingTools.invokeAndWaitWithResult(new ResultRunnable<Boolean>() {
-
-				@Override
-				public Boolean run() {
-					UsageStatsTransmissionDialog trd = new UsageStatsTransmissionDialog();
-					trd.setVisible(true);
-					return trd.answer == YES;
-				}
+			return SwingTools.invokeAndWaitWithResult(() -> {
+				UsageStatsTransmissionDialog trd = new UsageStatsTransmissionDialog(snapshot);
+				trd.setVisible(true);
+				return trd.answer == YES;
 			});
-
 		}
 	}
 
-	/**
-	 * Schedules the next dialog popup to the next transmission time of the UsageStatistics, but at
-	 * least {@link #MIN_FIRE_INTERVAL} milliseconds from now.
-	 */
-	static void startTimer() {
-		if (UsageStatistics.getInstance().hasFailedToday()) {
-			return;
-		}
-		if (timer != null) {
-			timer.stop();
-		}
-		long timeToFire = UsageStatistics.getInstance().getNextTransmission().getTime() - System.currentTimeMillis();
-		if (timeToFire < 0) {
-			timeToFire = MIN_FIRE_INTERVAL;
-		}
-		timer = new Timer((int) timeToFire, new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (UsageStatsTransmissionDialog.askForTransmission()) {
-					new ProgressThread("transmit_usagestats") {
-
-						@Override
-						public void run() {
-							getProgressListener().setTotal(100);
-							getProgressListener().setCompleted(10);
-							try {
-								if (UsageStatistics.getInstance().transferUsageStats(getProgressListener())) {
-									UsageStatistics.getInstance().reset();
-									UsageStatistics.getInstance().scheduleTransmission(false);
-								} else {
-									UsageStatistics.getInstance().scheduleTransmission(true);
-								}
-							} catch (Exception e) {
-								LogService.getRoot().log(Level.WARNING,
-										I18N.getMessage(LogService.getRoot().getResourceBundle(),
-												"com.rapidminer.tools.usagestats.UsageStatsTransmissionDialog.submitting_operator_usage_statistics_error"),
-										e);
-								UsageStatistics.getInstance().scheduleTransmission(true);
-							}
-							getProgressListener().setCompleted(90);
-							startTimer();
-							getProgressListener().setCompleted(100);
-							getProgressListener().complete();
-						}
-					}.start();
-				} else {
-					UsageStatistics.getInstance().scheduleTransmissionFromNow();
-					startTimer();
-				}
-			}
-
-		});
-		timer.setRepeats(false);
-		timer.start();
-	}
-
-	/**
-	 * Transmits user statistics data if required. Expects to be called from the shutdown hook on
-	 * the EDT.
-	 */
-	public static void transmitOnShutdown() {
-		if (UsageStatistics.getInstance().shouldTransmitOnShutdown()) {
-			if (UsageStatsTransmissionDialog.askForTransmission()) {
-				ProgressThread thread = new ProgressThread("transmit_usagestats", true) {
-
-					@Override
-					public void run() {
-						getProgressListener().setTotal(100);
-						getProgressListener().setCompleted(10);
-						try {
-							if (UsageStatistics.getInstance().transferUsageStats(getProgressListener())) {
-								UsageStatistics.getInstance().reset();
-								UsageStatistics.getInstance().scheduleTransmission(false);
-							} else {
-								UsageStatistics.getInstance().scheduleTransmission(true);
-							}
-						} catch (Exception e) {
-							UsageStatistics.getInstance().scheduleTransmission(true);
-						}
-						getProgressListener().complete();
-						ProgressThreadDialog.getInstance().setVisible(false, false);
-					}
-				};
-				// wait for the progress thread - otherwise program ends before it is done
-				thread.startAndWait();
-			} else {
-				UsageStatistics.getInstance().scheduleTransmissionFromNow();
-			}
-			UsageStatistics.getInstance().save();
-		}
-	}
 }

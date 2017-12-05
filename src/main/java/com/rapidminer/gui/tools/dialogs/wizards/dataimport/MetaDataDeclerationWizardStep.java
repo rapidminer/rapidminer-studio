@@ -70,7 +70,7 @@ public abstract class MetaDataDeclerationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			reader.stopReading();
 		}
 	});
@@ -79,7 +79,7 @@ public abstract class MetaDataDeclerationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			new ProgressThread("validate_value_types") {
 
 				@Override
@@ -125,7 +125,7 @@ public abstract class MetaDataDeclerationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			reader.stopReading();
 		}
 	});
@@ -134,7 +134,7 @@ public abstract class MetaDataDeclerationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			new ProgressThread("show_error_rows") {
 
 				@Override
@@ -177,7 +177,7 @@ public abstract class MetaDataDeclerationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			reader.stopReading();
 		}
 	});
@@ -187,7 +187,7 @@ public abstract class MetaDataDeclerationWizardStep extends WizardStep {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void loggedActionPerformed(ActionEvent e) {
 			new ProgressThread("guessing_value_types") {
 
 				@Override

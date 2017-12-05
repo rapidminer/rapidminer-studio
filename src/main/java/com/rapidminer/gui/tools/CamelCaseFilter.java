@@ -30,7 +30,7 @@ import java.util.regex.PatternSyntaxException;
  * @author Simon Fischer, Gisa Schaefer
  *
  */
-public class CamelCaseFilter {
+public class CamelCaseFilter implements OperatorFilter {
 
 	private final String filterString;
 	private Pattern pattern = null;

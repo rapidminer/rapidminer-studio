@@ -49,7 +49,7 @@ public abstract class MultiPageDialog extends ButtonDialog implements ChangeList
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(java.awt.event.ActionEvent e) {
+		public void loggedActionPerformed(java.awt.event.ActionEvent e) {
 			previous();
 		}
 	});
@@ -58,7 +58,7 @@ public abstract class MultiPageDialog extends ButtonDialog implements ChangeList
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(java.awt.event.ActionEvent e) {
+		public void loggedActionPerformed(java.awt.event.ActionEvent e) {
 			next();
 		}
 	});
@@ -67,7 +67,7 @@ public abstract class MultiPageDialog extends ButtonDialog implements ChangeList
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(java.awt.event.ActionEvent e) {
+		public void loggedActionPerformed(java.awt.event.ActionEvent e) {
 			finish();
 		}
 	});

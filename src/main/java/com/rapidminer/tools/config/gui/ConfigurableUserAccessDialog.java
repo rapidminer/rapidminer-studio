@@ -274,7 +274,7 @@ public class ConfigurableUserAccessDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				confirmed = true;
 				dispose();
 			}
@@ -290,7 +290,7 @@ public class ConfigurableUserAccessDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				dispose();
 			}
 

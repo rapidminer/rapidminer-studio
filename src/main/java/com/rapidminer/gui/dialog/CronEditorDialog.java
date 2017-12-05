@@ -990,7 +990,7 @@ public class CronEditorDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				String errorMsg = getErrorMessage();
 				if (errorMsg != null) {
 					SwingTools.showVerySimpleErrorMessage(CronEditorDialog.this, "cron_editor.invalid_settings", errorMsg);
@@ -1015,7 +1015,7 @@ public class CronEditorDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				wasConfirmed = false;
 				setVisible(false);
 			}

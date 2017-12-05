@@ -50,7 +50,7 @@ public class SafeModeDialog extends ConfirmDialog {
 			private static final long serialVersionUID = -8887199234055845095L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				setReturnOption(YES_OPTION);
 				yes();
 			}
@@ -66,7 +66,7 @@ public class SafeModeDialog extends ConfirmDialog {
 			private static final long serialVersionUID = -8887199234055845095L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				setReturnOption(NO_OPTION);
 				no();
 			}

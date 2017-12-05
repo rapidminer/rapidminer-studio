@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
@@ -63,12 +63,11 @@ public enum CallToActionScheduler {
 	/** Clean every hour */
 	private static final int CLEAN_INTERVAL = 1;
 
-	/** Skip iteration if still running */
-	private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
-
 	private static WindowChoreographer choreographer = new WindowChoreographer();
 
 	private ScheduledExecutorService exec;
+	private ScheduledFuture<?> persistFuture;
+	private ScheduledFuture<?> cleanupFuture;
 
 	/**
 	 * Trigger class initialization. If not in {@link ExecutionMode#UI}, does nothing.
@@ -86,27 +85,21 @@ public enum CallToActionScheduler {
 		exec = Executors.newSingleThreadScheduledExecutor();
 		// If any execution of the task encounters an exception, subsequent executions are
 		// suppressed
-		exec.scheduleAtFixedRate(() -> {
-			if (IS_RUNNING.compareAndSet(false, true)) {
-				try {
-					boolean isDebug = (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE)));
-					if (isDebug) {
-						LogService.getRoot().log(Level.FINEST,
-								"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.started");
-					}
-					persistEvents();
-					checkRules();
-					if (isDebug) {
-						LogService.getRoot().log(Level.FINEST,
-								"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.finished");
-					}
-				} finally {
-					IS_RUNNING.set(false);
-				}
+		persistFuture = exec.scheduleAtFixedRate(() -> {
+			boolean isDebug = (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE)));
+			if (isDebug) {
+				LogService.getRoot().log(Level.FINEST,
+						"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.started");
+			}
+			persistEvents();
+			checkRules();
+			if (isDebug) {
+				LogService.getRoot().log(Level.FINEST,
+						"com.rapidminer.tools.usagestats.CallToActionScheduler.scheduler.finished");
 			}
 		}, INITIAL_DELAY, DELAY, TimeUnit.SECONDS);
 
-		exec.scheduleAtFixedRate(() -> {
+		cleanupFuture = exec.scheduleAtFixedRate(() -> {
 			try {
 				boolean isDebug = (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE)));
 				if (isDebug) {
@@ -133,8 +126,10 @@ public enum CallToActionScheduler {
 		boolean terminatedGracefully = false;
 		try {
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.usagestats.CallToActionScheduler.shutdown.start");
+			persistFuture.cancel(false);
+			cleanupFuture.cancel(false);
+			exec.submit(this::persistEvents);
 			exec.shutdown();
-			persistEvents();
 			terminatedGracefully = exec.awaitTermination(DELAY, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();

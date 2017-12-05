@@ -45,7 +45,7 @@ public class ShowProcessInRepositoryAction extends ResourceActionAdapter {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		if (RapidMinerGUI.getMainFrame().getProcess() != null) {
 			RepositoryLocation repoLoc = RapidMinerGUI.getMainFrame().getProcess().getRepositoryLocation();
 			if (repoLoc != null) {

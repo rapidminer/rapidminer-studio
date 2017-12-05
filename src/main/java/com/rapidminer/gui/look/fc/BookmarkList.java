@@ -160,7 +160,7 @@ public class BookmarkList extends JList<Bookmark> implements ListSelectionListen
 				private static final long serialVersionUID = -3728467995967823779L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					fileList.renameBookmark(bookmark);
 				}
 			}));
@@ -169,7 +169,7 @@ public class BookmarkList extends JList<Bookmark> implements ListSelectionListen
 				private static final long serialVersionUID = 5432105038105200178L;
 
 				@Override
-				public void actionPerformed(ActionEvent e) {
+				public void loggedActionPerformed(ActionEvent e) {
 					fileList.deleteBookmark(bookmark);
 				}
 			}));

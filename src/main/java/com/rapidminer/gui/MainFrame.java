@@ -391,7 +391,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void actionPerformed(final ActionEvent e) {
+		public void loggedActionPerformed(final ActionEvent e) {
 			ConfigurableDialog dialog = new ConfigurableDialog(getProcess());
 			dialog.setVisible(true);
 		}

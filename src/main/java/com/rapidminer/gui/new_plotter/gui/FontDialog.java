@@ -129,7 +129,7 @@ public class FontDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				doClose(RET_CANCEL);
 			}
 		};
@@ -324,7 +324,7 @@ public class FontDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				okayButtonPerformed();
 			}
 		});
@@ -337,7 +337,7 @@ public class FontDialog extends ButtonDialog {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				cancelButtonPerformed();
 			}
 		});

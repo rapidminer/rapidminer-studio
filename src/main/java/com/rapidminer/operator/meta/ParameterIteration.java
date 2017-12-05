@@ -115,7 +115,7 @@ public class ParameterIteration extends ParameterIteratingOperatorChain {
 
 	@Override
 	public int getParameterValueMode() {
-		return VALUE_MODE_DISCRETE;
+		return ParameterConfigurator.VALUE_MODE_DISCRETE;
 	}
 
 	@Override

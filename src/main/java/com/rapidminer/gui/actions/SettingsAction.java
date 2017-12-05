@@ -41,7 +41,7 @@ public class SettingsAction extends ResourceAction {
 	 * Opens the settings dialog
 	 */
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		new SettingsDialog().setVisible(true);
 	}
 }

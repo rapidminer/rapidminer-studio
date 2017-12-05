@@ -88,7 +88,7 @@ public abstract class ToggleAction extends ResourceAction {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void loggedActionPerformed(ActionEvent e) {
 		setSelected(!isSelected());
 		actionToggled(null);
 	}

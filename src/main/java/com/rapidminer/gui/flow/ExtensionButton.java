@@ -51,7 +51,7 @@ public class ExtensionButton extends JButton {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void loggedActionPerformed(ActionEvent e) {
 				if (add) {
 					chain.addSubprocess(subprocessIndex + 1);
 				} else {

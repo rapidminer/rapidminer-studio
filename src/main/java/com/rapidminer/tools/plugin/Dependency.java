@@ -1,18 +1,18 @@
 /**
  * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
 */
@@ -23,6 +23,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+
+import com.rapidminer.gui.tools.VersionNumber;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
 
 
 /**
@@ -51,9 +56,15 @@ public class Dependency {
 		Iterator<Plugin> i = plugins.iterator();
 		while (i.hasNext()) {
 			Plugin plugin = i.next();
-			if (plugin.getExtensionId().equals(this.extensionId) && ManagedExtension.normalizeVersion(plugin.getVersion())
-					.compareTo(ManagedExtension.normalizeVersion(this.version)) >= 0) {
-				return true;
+			if (plugin.getExtensionId().equals(this.extensionId)) {
+				try {
+					return new VersionNumber(plugin.getVersion()).isAtLeast(new VersionNumber(this.version));
+				} catch (VersionNumber.VersionNumberException vne) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.tools.plugin.Dependency.malformed_version",
+							new Object[]{plugin.toString(), this.toString(), vne.getLocalizedMessage()});
+					return false;
+				}
 			}
 		}
 		return false;
