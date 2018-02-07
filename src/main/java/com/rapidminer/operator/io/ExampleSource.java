@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
@@ -52,6 +50,8 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.XMLParserException;
 import com.rapidminer.tools.att.AttributeDataSource;
 import com.rapidminer.tools.att.AttributeDataSources;
 import com.rapidminer.tools.att.AttributeSet;
@@ -178,12 +178,10 @@ public class ExampleSource extends AbstractExampleSource {
 		AttributeDataSources attributeDataSources;
 		try {
 			attributeDataSources = AttributeDataSource.createAttributeDataSources(attributeFile, true, this);
+		} catch (XMLParserException | XMLException e) {
+			throw new UserError(this, e, 401, e.getMessage());
 		} catch (IOException e) {
 			throw new UserError(this, e, 302, new Object[] { attributeFile, e.getMessage() });
-		} catch (com.rapidminer.tools.XMLException e) {
-			throw new UserError(this, e, 401, e.getMessage());
-		} catch (ParserConfigurationException e) {
-			throw new UserError(this, e, 401, e.toString());
 		} catch (SAXException e) {
 			throw new UserError(this, e, 401, e.toString());
 		}
@@ -235,12 +233,10 @@ public class ExampleSource extends AbstractExampleSource {
 					RandomGenerator.getRandomGenerator(
 							getParameterAsBoolean(RandomGenerator.PARAMETER_USE_LOCAL_RANDOM_SEED),
 							getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED)));
+		} catch (XMLParserException | XMLException e) {
+			throw new UserError(this, e, 401, e.getMessage());
 		} catch (IOException e) {
 			throw new UserError(this, e, 302, new Object[] { attributeFile, e.getMessage() });
-		} catch (com.rapidminer.tools.XMLException e) {
-			throw new UserError(this, e, 401, e.getMessage());
-		} catch (ParserConfigurationException e) {
-			throw new UserError(this, e, 401, e.toString());
 		} catch (SAXException e) {
 			throw new UserError(this, e, 401, e.toString());
 		}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,10 +18,11 @@
 */
 package com.rapidminer.gui.actions;
 
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.tools.ResourceAction;
-
 import java.awt.event.ActionEvent;
+
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**
@@ -33,16 +34,20 @@ public class PauseAction extends ResourceAction {
 
 	private static final long serialVersionUID = -8416546573798401295L;
 
-	private final MainFrame mainFrame;
-
-	public PauseAction(MainFrame mainFrame) {
+	public PauseAction() {
 		super("pause");
-		this.mainFrame = mainFrame;
 		setCondition(PROCESS_RUNNING, MANDATORY);
+	}
+	/**
+	 * @deprecated use {@link #PauseAction()} instead
+	 */
+	@Deprecated
+	public PauseAction(MainFrame mainFrame) {
+		this();
 	}
 
 	@Override
 	public void loggedActionPerformed(ActionEvent e) {
-		mainFrame.pauseProcess();
+		RapidMinerGUI.getMainFrame().pauseProcess();
 	}
 }

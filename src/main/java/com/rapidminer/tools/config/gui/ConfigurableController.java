@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,6 +21,7 @@ package com.rapidminer.tools.config.gui;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.security.Key;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -184,7 +185,17 @@ public class ConfigurableController {
 	 */
 	protected void renameConfigurable(Configurable configurable, String newName) {
 		String oldConfigurableName = configurable.getName();
-		configurable.setName(newName);
+
+		//Update permitted groups
+		if (configurable.getSource() != null) {
+			Set<String> permittedGroups = ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable);
+			//Clear old entries
+			ConfigurationManager.getInstance().setPermittedGroupsForConfigurable(configurable, Collections.emptySet());
+			configurable.setName(newName);
+			ConfigurationManager.getInstance().setPermittedGroupsForConfigurable(configurable, permittedGroups);
+		} else {
+			configurable.setName(newName);
+		}
 
 		// Update ParameterHandler
 		ConfigurationManager.getInstance().getAbstractConfigurator(configurable.getTypeId())

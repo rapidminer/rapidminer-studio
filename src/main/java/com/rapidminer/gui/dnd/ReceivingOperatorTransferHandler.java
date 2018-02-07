@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -27,9 +27,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.SwingUtilities;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -44,6 +42,7 @@ import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLImporter;
+import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.UnknownParameterInformation;
@@ -191,7 +190,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 					newOperators = process.getRootOperator().getSubprocess(0).getOperators();
 				} catch (Exception e) {
 					try {
-						Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+						Document document = XMLTools.createDocumentBuilder()
 								.parse(new InputSource(new StringReader((String) transferData)));
 						NodeList opElements = document.getDocumentElement().getChildNodes();
 						Operator newOp = null;

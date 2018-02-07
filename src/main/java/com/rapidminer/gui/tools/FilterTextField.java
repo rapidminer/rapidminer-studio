@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.tools.I18N;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.FocusEvent;
@@ -28,12 +26,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Collection;
 import java.util.LinkedList;
-
 import javax.swing.JTextField;
 import javax.swing.text.Document;
 
 import org.jdesktop.swingx.prompt.PromptSupport;
 import org.jdesktop.swingx.prompt.PromptSupport.FocusBehavior;
+
+import com.rapidminer.tools.I18N;
 
 
 /**
@@ -47,6 +46,9 @@ public class FilterTextField extends JTextField {
 	private static final long serialVersionUID = -7613936832117084427L;
 
 	private String defaultFilterText = I18N.getMessage(I18N.getGUIBundle(), "gui.filter_text_field.label");
+
+	/** the value of the field when the last update was fired */
+	private String valueLastUpdate = null;
 
 	private final Collection<FilterListener> filterListeners;
 
@@ -83,13 +85,6 @@ public class FilterTextField extends JTextField {
 
 			@Override
 			public void keyPressed(KeyEvent e) {
-				if ((e == null)
-						|| ((e.getKeyCode() != KeyEvent.VK_BACK_SPACE) && (e.getKeyCode() != KeyEvent.VK_ESCAPE)
-								&& (e.getKeyCode() != KeyEvent.VK_DELETE) && (e.getKeyCode() != KeyEvent.VK_SHIFT)
-								&& (e.getKeyCode() != KeyEvent.VK_ALT) && (e.getKeyCode() != KeyEvent.VK_ALT_GRAPH)
-								&& (e.getKeyCode() != KeyEvent.VK_CONTROL) && (e.getKeyCode() != KeyEvent.VK_META) && (!e
-									.isActionKey()))) {
-				}
 				if (e == null) {
 					return;
 				}
@@ -160,6 +155,11 @@ public class FilterTextField extends JTextField {
 
 	private void updateFilter(KeyEvent e) {
 		String filterText = getText();
+		// do nothing if no actual change was done
+		if (valueLastUpdate != null && valueLastUpdate.equals(filterText)) {
+			return;
+		}
+
 		if ((filterText == null) || (filterText.length() == 0)) {
 			if ((e == null)
 					|| ((e.getKeyCode() != KeyEvent.VK_BACK_SPACE) && (e.getKeyCode() != KeyEvent.VK_DELETE)
@@ -169,6 +169,9 @@ public class FilterTextField extends JTextField {
 				setText(null);
 			}
 		}
+
+		// store text when listeners were notified
+		valueLastUpdate = filterText;
 		for (FilterListener l : filterListeners) {
 			l.valueChanged(filterText);
 		}

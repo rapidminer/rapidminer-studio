@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.rapidminer.operator.Operator;
-import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.Tools;
 
 
@@ -41,12 +40,9 @@ public class TransferableOperator implements Transferable {
 	public static final DataFlavor LOCAL_TRANSFERRED_OPERATORS_FLAVOR = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType
 			+ ";class=" + Operator.class.getName(), "RapidMiner operator");
 
-	public static final DataFlavor LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR = new DataFlavor(
-			DataFlavor.javaJVMLocalObjectMimeType + ";class=" + RepositoryLocation.class.getName(), "repository location");
+	public static final DataFlavor LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR = TransferableRepositoryEntry.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR;
 
-	public static final DataFlavor LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR = new DataFlavor(
-			DataFlavor.javaJVMLocalObjectMimeType + ";class=" + RepositoryLocationList.class.getName(),
-			"repository locations");
+	public static final DataFlavor LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR = TransferableRepositoryEntry.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR;
 
 	private static final DataFlavor[] DATA_FLAVORS = { TransferableOperator.LOCAL_TRANSFERRED_OPERATORS_FLAVOR,
 			DataFlavor.stringFlavor };

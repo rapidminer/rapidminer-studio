@@ -1,27 +1,28 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing.join;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.utils.ExampleSetBuilder;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
@@ -74,7 +76,10 @@ import com.rapidminer.tools.container.Pair;
  * </p>
  *
  * @author Ingo Mierswa, Tobias Malbrecht, Marius Helf
+ *
+ * @deprecated Use {@link BeltTableJoin} instead
  */
+@Deprecated
 public class ExampleSetJoin extends AbstractExampleSetJoin {
 
 	public static class DoubleArrayWrapper {
@@ -207,6 +212,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 		// the attributes that are used in the left and the right table as key attributes:
 
 		Pair<Attribute[], Attribute[]> keyAttributes = getKeyAttributes(leftExampleSet, rightExampleSet);
+		copyMappings(joinType, keyAttributes, unionAttributeList);
 
 		switch (joinType) {
 			case JOIN_TYPE_INNER:
@@ -232,11 +238,100 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	}
 
 	/**
-	 * Returns a Pair that contains two arrays of attributes of equals lenghts. Attributes in these
-	 * arrays with the same index resemble attributes which must be equal during the join operation
-	 * to match an example. Only if all key attributes match, the example match. Thus, each returned
-	 * array defines a key for the example sets, whereby the the first entry of the pair is for the
-	 * left example set, the second one for the right example set.
+	 * Checks if the mappings of the keyAttributes or their corresponding unionAttributes need to be copied depending on
+	 * the joinType.
+	 *
+	 * @param joinType
+	 *            the type of the join
+	 * @param keyAttributes
+	 *            the attributes to copy
+	 * @param unionAttributes
+	 *            the final attributes of the joined set
+	 */
+	private void copyMappings(int joinType, Pair<Attribute[], Attribute[]> keyAttributes,
+			List<Attribute> unionAttributes) {
+		// for right and outer the method addRightOnlyOccurences is called which might change the mappings of the union
+		// attribute corresponding to the left keyAttribute
+		if (joinType == JOIN_TYPE_RIGHT || joinType == JOIN_TYPE_OUTER) {
+			copyUnionMappings(keyAttributes, unionAttributes);
+		}
+
+		// no id is used and inner or left then createKeyMapping(right,left) is called and left keyAttribute mappings
+		// changed, outer calls left
+		boolean useId = getParameterAsBoolean(PARAMETER_USE_ID);
+		if (!useId && (joinType == JOIN_TYPE_INNER || joinType == JOIN_TYPE_LEFT || joinType == JOIN_TYPE_OUTER)) {
+			copyMappings(keyAttributes, true);
+		}
+
+		// no id is used and right then createKeyMapping(left,right) is called and right keyAttribute mappings changed
+		if (!useId && joinType == JOIN_TYPE_RIGHT) {
+			copyMappings(keyAttributes, false);
+		}
+	}
+
+	/**
+	 * Copies the mapping of the union attributes corresponding to the left key Attributes.
+	 *
+	 * @param keyAttributes
+	 *            the key attributes
+	 * @param unionAttributeList
+	 *            the final attributes of the joined set
+	 */
+	private void copyUnionMappings(Pair<Attribute[], Attribute[]> keyAttributes, List<Attribute> unionAttributeList) {
+		Attribute[] copyAttributes = keyAttributes.getFirst();
+		for (Attribute attribute : copyAttributes) {
+			if (attribute.isNominal()) {
+				Attribute unionAtt = findAttribute(unionAttributeList, attribute.getName());
+				if (unionAtt != null) {
+					unionAtt.setMapping((NominalMapping) unionAtt.getMapping().clone());
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Finds the attribute with the given name in the given list.
+	 *
+	 * @param attributeList
+	 *            the list to check
+	 * @param name
+	 *            the attribute name to look for
+	 * @return the attribute with the name or {@code null}
+	 */
+	private Attribute findAttribute(List<Attribute> attributeList, String name) {
+		for (Attribute unionAttribute : attributeList) {
+			if (unionAttribute.getName().equals(name)) {
+				return unionAttribute;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Copies the mappings of either the left or the right key attributes.
+	 *
+	 * @param keyAttributes
+	 *            the key-attributes to copy
+	 * @param left
+	 *            if true the left key attributes are copied, otherwise the right
+	 */
+	private void copyMappings(Pair<Attribute[], Attribute[]> keyAttributes, boolean left) {
+		Attribute[] copyAttributes = left ? keyAttributes.getFirst() : keyAttributes.getSecond();
+		for (Attribute attribute : copyAttributes) {
+			if (attribute.isNominal()) {
+				NominalMapping newMapping = (NominalMapping) attribute.getMapping().clone();
+				attribute.setMapping(newMapping);
+			}
+		}
+
+	}
+
+	/**
+	 * Returns a Pair that contains two arrays of attributes of equals lenghts. Attributes in these arrays with the same
+	 * index resemble attributes which must be equal during the join operation to match an example. Only if all key
+	 * attributes match, the example match. Thus, each returned array defines a key for the example sets, whereby the
+	 * the first entry of the pair is for the left example set, the second one for the right example set.
 	 */
 	private Pair<Attribute[], Attribute[]> getKeyAttributes(ExampleSet leftExampleSet, ExampleSet rightExampleSet)
 			throws OperatorException {
@@ -354,7 +449,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 	private ExampleSetBuilder performLeftJoin(ExampleSet leftExampleSet, ExampleSet rightExampleSet,
 			List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList,
 			Pair<Attribute[], Attribute[]> keyAttributes, Set<DoubleArrayWrapper> matchedExamplesInRightTable)
-			throws ProcessStoppedException {
+					throws ProcessStoppedException {
 		ExampleSetBuilder builder = ExampleSets.from(unionAttributeList);
 
 		Attribute[] leftKeyAttributes = null;
@@ -381,7 +476,7 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 					addCombinedOccurence(originalAttributeSources, unionAttributeList, builder, leftExample, rightExample);
 					if (matchedExamplesInRightTable != null) {
 						matchedExamplesInRightTable
-								.add(new DoubleArrayWrapper(getKeyValues(rightExample, rightKeyAttributes)));
+						.add(new DoubleArrayWrapper(getKeyValues(rightExample, rightKeyAttributes)));
 					}
 				}
 			} else { // no rows with this key in right table
@@ -545,7 +640,9 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 			boolean keepBoth, boolean removeDoubleAttributes) {
 		double[] unionDataRow = new double[unionAttributeList.size()];
 		int attributeIndex = 0;
+		Iterator<Attribute> unionIterator = unionAttributeList.iterator();
 		for (AttributeSource attributeSource : originalAttributeSources) {
+			Attribute unionAttribute = unionIterator.next();
 			if (attributeSource.getSource() == AttributeSource.FIRST_SOURCE) {
 				// since keys attributes are always taken from left example set, ID value must be
 				// fetched
@@ -569,10 +666,9 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
 						if (leftKeyAttributes[id].isNominal()) {
 							// consider different mapping in left and right attribute
 							Attribute rightAttribute = rightKeyAttributes[id];
-							Attribute leftAttribute = leftKeyAttributes[id];
 							int rightIndex = (int) rightExample.getValue(rightAttribute);
 							String valueAsString = rightAttribute.getMapping().mapIndex(rightIndex);
-							int leftIndex = leftAttribute.getMapping().mapString(valueAsString);
+							int leftIndex = unionAttribute.getMapping().mapString(valueAsString);
 							unionDataRow[attributeIndex] = leftIndex;
 						} else {
 							unionDataRow[attributeIndex] = rightExample.getValue(rightKeyAttributes[id]);

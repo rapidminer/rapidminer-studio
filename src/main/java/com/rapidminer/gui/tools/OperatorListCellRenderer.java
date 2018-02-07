@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -20,16 +20,11 @@ package com.rapidminer.gui.tools;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.util.logging.Level;
-
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
 import javax.swing.JList;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.tools.LogService;
 
 
 /**
@@ -63,15 +58,6 @@ public class OperatorListCellRenderer extends DefaultListCellRenderer {
 			label.setBackground(SwingTools.LIGHTEST_BLUE);
 		}
 
-		Operator operator = null;
-		try {
-			operator = operatorDescription.createOperatorInstance();
-		} catch (OperatorCreationException e) {
-			// tries to create operator
-			LogService.getRoot().log(Level.WARNING,
-					"com.rapidminer.gui.tools.OperatorListCellRenderer.problem_during_creating_of_operator_instance",
-					e.getMessage());
-		}
 		String descriptionString = operatorDescription.getLongDescriptionHTML();
 		if (descriptionString == null) {
 			descriptionString = operatorDescription.getShortDescription();
@@ -79,8 +65,7 @@ public class OperatorListCellRenderer extends DefaultListCellRenderer {
 		StringBuffer toolTipText = new StringBuffer("<b>Description:</b> " + descriptionString);
 		label.setToolTipText(SwingTools.transformToolTipText(toolTipText.toString(), false, false));
 
-		if (operatorDescription.getDeprecationInfo() != null || operator != null
-				&& operator.getOperatorDescription().getDeprecationInfo() != null) {
+		if (operatorDescription.isDeprecated()) {
 			label.setForeground(Color.LIGHT_GRAY);
 		}
 		label.setBorder(null);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -41,7 +41,7 @@ import javax.swing.SwingConstants;
  * @author Michael Knopf
  * @since 7.0.0
  */
-class CompositeButton extends JButton {
+public class CompositeButton extends JButton {
 
 	private static final long serialVersionUID = 1L;
 
@@ -52,10 +52,10 @@ class CompositeButton extends JButton {
 	 * Creates a new {@code CompositeButton} with the given label to be used at the given position.
 	 *
 	 * @param label
-	 *            the button label
+	 * 		the button label
 	 * @param position
-	 *            the position in the composite element ({@link SwingConstants#LEFT},
-	 *            {@link SwingConstants#CENTER}, or {@link SwingConstants#RIGHT})
+	 * 		the position in the composite element ({@link SwingConstants#LEFT},
+	 * 		{@link SwingConstants#CENTER}, or {@link SwingConstants#RIGHT})
 	 */
 	public CompositeButton(String label, int position) {
 		super(label);
@@ -69,11 +69,11 @@ class CompositeButton extends JButton {
 	 * Creates a new {@code CompositeButton} with the given {@link Action} to be used at the given
 	 * position.
 	 *
-	 * @param label
-	 *            the button action
+	 * @param action
+	 * 		the button action
 	 * @param position
-	 *            the position in the composite element ({@link SwingConstants#LEFT},
-	 *            {@link SwingConstants#CENTER}, or {@link SwingConstants#RIGHT})
+	 * 		the position in the composite element ({@link SwingConstants#LEFT},
+	 * 		{@link SwingConstants#CENTER}, or {@link SwingConstants#RIGHT})
 	 */
 	public CompositeButton(Action action, int position) {
 		super(action);

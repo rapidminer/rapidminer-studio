@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -193,6 +193,7 @@ public final class UsageStatsScheduler  {
 				stopTimer();
 				timerDate = timeToFire;
 				timer = new Timer("UsageStatTimer", true);
+				UsageStatistics.getInstance().setNextTransmission(timeToFire);
 				timer.schedule(new TimerTask() {
 
 					@Override
@@ -201,7 +202,6 @@ public final class UsageStatsScheduler  {
 					}
 
 				}, timerDate);
-				UsageStatistics.getInstance().setNextTransmission(timeToFire);
 			}
 		}
 
@@ -219,6 +219,9 @@ public final class UsageStatsScheduler  {
 		stopTimer();
 
 		if (shouldTransmitOnShutdown()) {
+			if (UsageStatistics.getInstance().getNextTransmission() == null) {
+				UsageStatistics.getInstance().setNextTransmission(getTransmissionDate(UsageStatistics.Reason.SHUTDOWN));
+			}
 			transmit(UsageStatistics.Reason.SHUTDOWN, true);
 			UsageStatistics.getInstance().save();
 		}

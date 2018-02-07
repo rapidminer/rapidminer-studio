@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,14 +18,10 @@
 */
 package com.rapidminer.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
@@ -52,6 +48,8 @@ public class DockableMenu extends ResourceMenu {
 	private static final long serialVersionUID = -5602297374075268751L;
 
 	private static final List<String> HIDE_IN_DOCKABLE_MENU_PREFIX_REGISTRY = new LinkedList<>();
+
+	private static final String DOCKABLE_HTML = "<html><div style='margin-left:5'><b>%s</b><br/>%s</div></html>";
 
 	/**
 	 * Here you can register prefixes that will be used to test if a {@link DockableState} start
@@ -95,13 +93,7 @@ public class DockableMenu extends ResourceMenu {
 		DockableState[] dockables = dockingContext.getDesktopList().get(0).getDockables();
 		List<DockableState> sorted = new LinkedList<>();
 		sorted.addAll(Arrays.asList(dockables));
-		Collections.sort(sorted, new Comparator<DockableState>() {
-
-			@Override
-			public int compare(DockableState o1, DockableState o2) {
-				return o1.getDockable().getDockKey().getName().compareTo(o2.getDockable().getDockKey().getName());
-			}
-		});
+		sorted.sort(Comparator.comparing(o -> o.getDockable().getDockKey().getName()));
 		for (final DockableState state : sorted) {
 			if (state.getDockable() instanceof DummyDockable) {
 				continue;
@@ -125,22 +117,18 @@ public class DockableMenu extends ResourceMenu {
 			String text = dockKey.getName();
 			if (SystemInfoUtilities.getOperatingSystem() != OperatingSystem.OSX) {
 				// OS X cannot use html in menus so only do it for other OS
-				text = "<html><p style='margin-left:5'><b>" + dockKey.getName() + "</b><br/>" + description + "</p></html>";
+				text = String.format(DOCKABLE_HTML, dockKey.getName(), description);
 			}
 			JCheckBoxMenuItem item = new JCheckBoxMenuItem(text, dockKey.getIcon());
 
 			item.setSelected(!state.isClosed());
-			item.addActionListener(new ActionListener() {
+			item.addActionListener(e -> {
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					if (state.isClosed()) {
-						dockingContext.getDesktopList().get(0).addDockable(state.getDockable());
-					} else {
-						dockingContext.getDesktopList().get(0).close(state.getDockable());
-					}
+				if (state.isClosed()) {
+					dockingContext.getDesktopList().get(0).addDockable(state.getDockable());
+				} else {
+					dockingContext.getDesktopList().get(0).close(state.getDockable());
 				}
-
 			});
 
 			// special handling for results overview dockable in Results perspective
@@ -159,5 +147,24 @@ public class DockableMenu extends ResourceMenu {
 
 	public DockingContext getDockingContext() {
 		return dockingContext;
+	}
+
+
+	/**
+	 * Checks if the given dock key belongs to a dockable that should not appear in the dockable menu.
+	 *
+	 * @param dockKey
+	 * 		the key to test
+	 * @return {@code true} if the key belongs to a dockable that is hidden from the menu; {@code false} otherwise
+	 * @since 8.1
+	 */
+	public static boolean isDockableHiddenFromMenu(final DockKey dockKey) {
+		for (String prefix : HIDE_IN_DOCKABLE_MENU_PREFIX_REGISTRY) {
+			if (dockKey.getKey().startsWith(prefix)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -27,6 +27,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ConditionedExampleSet;
 import com.rapidminer.example.set.NoMissingAttributeValueCondition;
+import com.rapidminer.example.set.RemappedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.AbstractModel;
@@ -75,12 +76,13 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
-		exampleSet = (ExampleSet) exampleSet.clone();
 		OperatorProgress progress = null;
 		if (getShowProgress() && getOperator() != null && getOperator().getProgress() != null) {
 			progress = getOperator().getProgress();
 			progress.setTotal(100);
 		}
+
+		exampleSet = RemappedExampleSet.create(exampleSet, getTrainingHeader(), false, true);
 
 		Attributes attributes = exampleSet.getAttributes();
 

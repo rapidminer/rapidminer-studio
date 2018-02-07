@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -55,6 +55,7 @@ import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEve
 import com.rapidminer.gui.processeditor.ExtendedProcessEditor;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.io.process.AnnotationProcessXMLFilter;
+import com.rapidminer.io.process.AutoModelProcessXMLFilter;
 import com.rapidminer.io.process.BackgroundImageProcessXMLFilter;
 import com.rapidminer.io.process.GUIProcessXMLFilter;
 import com.rapidminer.io.process.ProcessLayoutXMLFilter;
@@ -86,6 +87,10 @@ import com.rapidminer.tools.parameter.ParameterChangeListener;
  * Note that the model itself does not fire any events. To trigger events, call any of the fireXYZ
  * methods. This is done for performance reasons and to support batch updates and only trigger
  * events when really needed.
+ * </p>
+ * <p>
+ * The model should be disposed of if it is no longer needed using the {@link #dispose()} method.
+ * Take note that it can not be reliably used after that call.
  * </p>
  *
  * @author Marco Boeck, Jan Czogalla
@@ -155,6 +160,8 @@ public final class ProcessRendererModel {
 	/** whether snap to grid is enabled */
 	private boolean snapToGrid;
 
+	private ParameterChangeListener paramListener;
+
 	/** source port of the current connection */
 	private OutputPort selectedConnectionSource;
 
@@ -210,6 +217,7 @@ public final class ProcessRendererModel {
 	static {
 		if (!RapidMiner.getExecutionMode().isHeadless()) {
 			ProcessXMLFilterRegistry.registerFilter(new GUIProcessXMLFilter());
+			ProcessXMLFilterRegistry.registerFilter(new AutoModelProcessXMLFilter());
 		}
 	}
 
@@ -226,7 +234,7 @@ public final class ProcessRendererModel {
 		this.hoveringProcessIndex = -1;
 
 		// listen for snapToGrid changes
-		ParameterService.registerParameterChangeListener(new ParameterChangeListener() {
+		paramListener = new ParameterChangeListener() {
 
 			@Override
 			public void informParameterSaved() {
@@ -239,7 +247,8 @@ public final class ProcessRendererModel {
 					setSnapToGrid(Boolean.parseBoolean(value));
 				}
 			}
-		});
+		};
+		ParameterService.registerParameterChangeListener(paramListener);
 
 		// listen for selection changes in the ProcessRendererView and notify all registered process
 		// editors
@@ -1929,5 +1938,17 @@ public final class ProcessRendererModel {
 		for (ProcessStorageListener l : list) {
 			l.stored(process);
 		}
+	}
+
+	/**
+	 * Disposes of this model. Removes the global {@link ParameterChangeListener} and clears the
+	 * {@link NewProcessUndoManager}. This should be called if the model is no longer used and is
+	 * expected to be garbage collected. It can not be used reliably after this call.
+	 *
+	 * @since 8.1
+	 */
+	public void dispose() {
+		undoManager.reset();
+		ParameterService.removeParameterChangeListener(paramListener);
 	}
 }

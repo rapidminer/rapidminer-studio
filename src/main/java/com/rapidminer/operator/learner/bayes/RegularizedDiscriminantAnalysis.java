@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -36,6 +36,7 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.AbstractLearner;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.math.MathFunctions;
@@ -61,6 +62,8 @@ public class RegularizedDiscriminantAnalysis extends AbstractLearner {
 
 	/** The parameter name of the alpha parameter */
 	public static final String PARAMETER_ALPHA = "alpha";
+
+	public static final String PARAMETER_APPROXIMATE_INVERSE = "approximate_covariance_inverse";
 
 	public RegularizedDiscriminantAnalysis(OperatorDescription description) {
 		super(description);
@@ -223,8 +226,12 @@ public class RegularizedDiscriminantAnalysis extends AbstractLearner {
 	protected static Matrix[] getLinearInverseCovarianceMatrices(ExampleSet exampleSet, String[] labels, Operator op)
 			throws OperatorException {
 		boolean checkForStop = op != null;
+		boolean approximateInverse = op == null || op.getParameterAsBoolean(PARAMETER_APPROXIMATE_INVERSE);
 		Matrix[] classInverseCovariances = new Matrix[labels.length];
-		Matrix inverse = MathFunctions.invertMatrix(CovarianceMatrix.getCovarianceMatrix(exampleSet, op));
+		Matrix inverse = MathFunctions.invertMatrix(CovarianceMatrix.getCovarianceMatrix(exampleSet, op), approximateInverse);
+		if (inverse == null){
+			throw new UserError(op, "regularized_discriminant_analysis.singular_covariance_matrix");
+		}
 		for (int i = 0; i < labels.length; i++) {
 			if (checkForStop) {
 				op.checkForStop();
@@ -249,6 +256,7 @@ public class RegularizedDiscriminantAnalysis extends AbstractLearner {
 	protected static Matrix[] getQuadraticInverseCovarianceMatrices(ExampleSet exampleSet, String[] labels, Operator op)
 			throws OperatorException {
 		boolean checkForStop = op != null;
+		boolean approximateInverse = op == null || op.getParameterAsBoolean(PARAMETER_APPROXIMATE_INVERSE);
 		Matrix[] classInverseCovariances = new Matrix[labels.length];
 		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
 		SplittedExampleSet labelSet = SplittedExampleSet.splitByAttribute(exampleSet, exampleSet.getAttributes().getLabel());
@@ -265,7 +273,10 @@ public class RegularizedDiscriminantAnalysis extends AbstractLearner {
 				op.checkForStop();
 			}
 			// calculate inverse matrix
-			Matrix inverse = CovarianceMatrix.getCovarianceMatrix(labelSet, op).inverse();
+			Matrix inverse = MathFunctions.invertMatrix(CovarianceMatrix.getCovarianceMatrix(labelSet, op), approximateInverse);
+			if (inverse == null){
+				throw new UserError(op, "regularized_discriminant_analysis.singular_covariance_matrix");
+			}
 			classInverseCovariances[labelIndex] = inverse;
 			labelIndex++;
 		}
@@ -336,6 +347,8 @@ public class RegularizedDiscriminantAnalysis extends AbstractLearner {
 					0d, 1d, 0.5d, false));
 		}
 
+		ParameterType type = new ParameterTypeBoolean(PARAMETER_APPROXIMATE_INVERSE, "Indicate whether covariance matrix inverse should be approximated if a direct inverse does not exist.", true, true);
+		list.add(type);
 		return list;
 	}
 

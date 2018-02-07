@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -48,6 +48,9 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 
 	public static final String RESULT = "result";
 	public static final String DESIGN = "design";
+
+	public static final String MODEL_WIZARD = "model_wizard";
+	public static final String HADOOP_DATA = "hadoop_data";
 
 	private final Map<String, Perspective> perspectives = new LinkedHashMap<>();
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -184,7 +184,7 @@ public class ExcelWorkbookPane extends JPanel {
 
 	public void setSelection(ExcelWorkbookSelection selection) {
 		final int sheetIndex = selection.getSheetIndex();
-		if (sheetIndex < sheetsPane.getTabCount()) {
+		if (sheetIndex < sheetsPane.getTabCount() && sheetIndex > -1) {
 			sheetsPane.setSelectedIndex(sheetIndex);
 			if (tables.length > sheetIndex) {
 				tables[sheetIndex].clearSelection();

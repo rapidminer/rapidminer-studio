@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.actions.export;
 
-import com.rapidminer.gui.tools.PrintingTools;
-import com.rapidminer.gui.tools.ResourceAction;
-
 import java.awt.event.ActionEvent;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.gui.tools.PrintingTools;
+import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**
@@ -36,7 +36,7 @@ import java.util.List;
 public class ShowPrintAndExportDialogAction extends ResourceAction {
 
 	private static final long serialVersionUID = 1L;
-	private PrintableComponent comp;
+	private transient PrintableComponent comp;
 
 	/**
 	 * Creates a export action for the single component provided.

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -87,7 +87,7 @@ public class StrictDecimalFormat extends DecimalFormat {
 		 * throw an error if a parse error has occurred somewhere in the source string, not only at
 		 * the beginning as in {@link NumberFormat}
 		 */
-		if (parsePosition.getIndex() < source.length()) {
+		if (result == null || parsePosition.getIndex() < source.length()) {
 			// try also with lowercase "e" as the exponent symbol (generally, lowercase version of
 			// the exponent separator)
 			String exponentSeparator = getDecimalFormatSymbols().getExponentSeparator();

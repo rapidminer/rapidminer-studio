@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -234,6 +234,8 @@ final class ExcelDataSource extends FileDataSource {
 
 			configuration.setWorkbookFile(getLocation().toFile());
 			configuration.setSheet(getResultSetConfiguration().getSheet());
+			configuration.setSheetByName(getResultSetConfiguration().getSheetByName());
+			configuration.setSheetSelectionMode(getResultSetConfiguration().getSheetSelectionMode());
 			configuration.setColumnOffset(getResultSetConfiguration().getColumnOffset());
 			configuration.setColumnLast(getResultSetConfiguration().getColumnLast());
 			configuration.setEncoding(getResultSetConfiguration().getEncoding());

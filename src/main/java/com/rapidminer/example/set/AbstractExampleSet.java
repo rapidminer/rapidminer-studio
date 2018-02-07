@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -33,7 +33,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -544,5 +543,22 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 		}
 
 		return Double.NaN;
+	}
+
+	/**
+	 * Returns {@code true} if and only if the view implemented by this {@link ExampleSet} is thread-safe with respect
+	 * to read operations. This does not guarantee the thread-safety of the entire data set: both the underlying {@link
+	 * com.rapidminer.example.table.ExampleTable} and the set's attributes might be unsafe to be read from concurrently
+	 * and thus need to be checked separately.
+	 *
+	 * <p>A complete check is implemented by
+	 * {@link com.rapidminer.example.utils.ExampleSets#createThreadSafeCopy(ExampleSet)} which only creates a deep copy
+	 * if the thread-safety of the input example set is not guaranteed.
+	 *
+	 * @return {@code true} iff the view implemented by this example set is thread-safe w.r.t. to read operations
+	 * @see com.rapidminer.example.utils.ExampleSets#createThreadSafeCopy(ExampleSet)
+	 */
+	public boolean isThreadSafeView() {
+		return false;
 	}
 }

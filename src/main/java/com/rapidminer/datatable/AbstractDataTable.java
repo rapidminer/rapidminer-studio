@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,11 +21,12 @@ package com.rapidminer.datatable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.jfree.data.Range;
@@ -48,8 +49,8 @@ import com.rapidminer.tools.container.Pair;
 public abstract class AbstractDataTable implements DataTable, Tableable {
 
 	/** The list of data table listeners. */
-	private List<WeakReference<DataTableListener>> weakReferencedListeners = new LinkedList<>();
-	private List<DataTableListener> listeners = new LinkedList<>();
+	private List<WeakReference<DataTableListener>> weakReferencedListeners = Collections.synchronizedList(new ArrayList<>());
+	private List<DataTableListener> listeners = Collections.synchronizedList(new ArrayList<>());
 
 	/** The name of the table. */
 	private String name;
@@ -116,10 +117,11 @@ public abstract class AbstractDataTable implements DataTable, Tableable {
 
 	protected void fireEvent() {
 		// copy to avoid ConcurrentModification
-		List<WeakReference<DataTableListener>> clone = new LinkedList<>(weakReferencedListeners);
-		Iterator<WeakReference<DataTableListener>> i = clone.iterator();
-		while (i.hasNext()) {
-			WeakReference<DataTableListener> reference = i.next();
+		List<WeakReference<DataTableListener>> clonedWeakListeners;
+		synchronized (weakReferencedListeners) {
+			clonedWeakListeners = new ArrayList<>(weakReferencedListeners);
+		}
+		for (WeakReference<DataTableListener> reference : clonedWeakListeners) {
 			DataTableListener listener = reference.get();
 			if (listener != null) {
 				listener.dataTableUpdated(this);
@@ -128,7 +130,11 @@ public abstract class AbstractDataTable implements DataTable, Tableable {
 			}
 		}
 
-		for (DataTableListener l : listeners) {
+		List<DataTableListener> clonedListeners;
+		synchronized (listeners) {
+			clonedListeners = new ArrayList<>(listeners);
+		}
+		for (DataTableListener l : clonedListeners) {
 			l.dataTableUpdated(this);
 		}
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -31,6 +31,7 @@ import java.util.Set;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
@@ -248,7 +249,22 @@ public class MissingValueReplenishment extends ValueReplenishment {
 						throw new UserError(this, 218, PARAMETER_REPLENISHMENT_VALUE, valueString);
 					}
 				} else if (attribute.isNominal()) {
-					return attribute.getMapping().mapString(valueString);
+					int categoryValue = attribute.getMapping().getIndex(valueString);
+					if (categoryValue < 0) {
+						if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.BINOMINAL)) {
+							if (attribute.getMapping().size() < 2) {
+								// clone mapping if possible to add additional value
+								attribute.setMapping((NominalMapping) attribute.getMapping().clone());
+							}
+							return attribute.getMapping().mapString(valueString);
+						} else {
+							// attribute#setMapping clones the input parameter for polynomial attributes
+							attribute.setMapping(attribute.getMapping());
+							return attribute.getMapping().mapString(valueString);
+						}
+					} else {
+						return categoryValue;
+					}
 				} else {	// any numerical type
 					try {
 						double value = Double.parseDouble(valueString);

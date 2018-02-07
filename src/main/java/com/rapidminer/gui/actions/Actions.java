@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -94,9 +94,9 @@ public class Actions implements ProcessEditor {
 			new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_BEFORE),
 			new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_AFTER) };
 
-	public transient final ToggleAllBreakpointsItem TOGGLE_ALL_BREAKPOINTS = new ToggleAllBreakpointsItem(this);
+	public final ToggleAllBreakpointsItem TOGGLE_ALL_BREAKPOINTS = new ToggleAllBreakpointsItem();
 
-	public transient final Action MAKE_DIRTY_ACTION = new ResourceAction(true, "make_dirty") {
+	public final Action MAKE_DIRTY_ACTION = new ResourceAction(true, "make_dirty") {
 
 		private static final long serialVersionUID = -1260942717363137733L;
 
@@ -112,7 +112,7 @@ public class Actions implements ProcessEditor {
 		}
 	};
 
-	private transient final Action SHOW_PROBLEM_ACTION = new ResourceAction(true, "show_potential_problem") {
+	private final Action SHOW_PROBLEM_ACTION = new ResourceAction(true, "show_potential_problem") {
 
 		private static final long serialVersionUID = -1260942717363137733L;
 

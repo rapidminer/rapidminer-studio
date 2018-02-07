@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -188,7 +188,7 @@ public class I18N {
 			}
 
 		} catch (MissingResourceException e) {
-			LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.I18N.missing_key", key);
+			LogService.getRoot().log(Level.FINEST, "com.rapidminer.tools.I18N.missing_key", key);
 			return key;
 		}
 	}

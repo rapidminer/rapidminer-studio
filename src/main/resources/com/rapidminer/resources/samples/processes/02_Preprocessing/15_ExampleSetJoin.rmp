@@ -58,7 +58,7 @@
         <parameter key="invert_selection" value="true"/>
         <parameter key="include_special_attributes" value="true"/>
       </operator>
-      <operator activated="true" class="join" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ExampleSetJoin" width="90" x="447" y="34">
+      <operator activated="true" class="concurrency:join" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="ExampleSetJoin" width="90" x="447" y="34">
         <parameter key="remove_double_attributes" value="false"/>
         <parameter key="join_type" value="inner"/>
         <parameter key="use_id_attribute_as_key" value="true"/>

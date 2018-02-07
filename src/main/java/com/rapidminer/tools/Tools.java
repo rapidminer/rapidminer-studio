@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -66,10 +67,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
@@ -84,6 +82,7 @@ import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.io.process.XMLImporter;
+import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessStoppedException;
@@ -188,7 +187,7 @@ public class Tools {
 	/** the current settings value of number of fraction digits shown */
 	private static int numberOfFractionDigits;
 
-	private static final LinkedList<ResourceSource> ALL_RESOURCE_SOURCES = new LinkedList<>();
+	private static final List<ResourceSource> ALL_RESOURCE_SOURCES = Collections.synchronizedList(new LinkedList<>());
 
 	public static final String RESOURCE_PREFIX = "com/rapidminer/resources/";
 
@@ -1004,7 +1003,7 @@ public class Tools {
 
 	/** Adds a new resource source before the others. Might be used by plugins etc. */
 	public static void prependResourceSource(ResourceSource source) {
-		ALL_RESOURCE_SOURCES.addFirst(source);
+		ALL_RESOURCE_SOURCES.add(0, source);
 	}
 
 	public static URL getResource(ClassLoader loader, String name) {
@@ -1022,12 +1021,12 @@ public class Tools {
 	 * only allowed to use '/' as separator instead of File.separator!
 	 */
 	public static URL getResource(String name) {
-		Iterator<ResourceSource> i = ALL_RESOURCE_SOURCES.iterator();
-		while (i.hasNext()) {
-			ResourceSource source = i.next();
-			URL url = source.getResource(name);
-			if (url != null) {
-				return url;
+		synchronized (ALL_RESOURCE_SOURCES) {
+			for (ResourceSource source : ALL_RESOURCE_SOURCES) {
+				URL url = source.getResource(name);
+				if (url != null) {
+					return url;
+				}
 			}
 		}
 
@@ -1079,8 +1078,7 @@ public class Tools {
 		try (FileInputStream inStream = new FileInputStream(file)) {
 
 			try {
-				DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+				DocumentBuilder documentBuilder = XMLTools.createDocumentBuilder();
 				Document processXmlDocument = documentBuilder.parse(inStream);
 				XPathFactory xPathFactory = XPathFactory.newInstance();
 				XPath xPath = xPathFactory.newXPath();
@@ -1092,8 +1090,6 @@ public class Tools {
 			} catch (XPathExpressionException e) {
 				useFallback = true;
 			} catch (SAXException e) {
-				useFallback = true;
-			} catch (ParserConfigurationException e) {
 				useFallback = true;
 			} catch (IOException e) {
 				useFallback = true;

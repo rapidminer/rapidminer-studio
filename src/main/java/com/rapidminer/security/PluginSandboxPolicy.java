@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -210,11 +210,7 @@ public final class PluginSandboxPolicy extends Policy {
 	 *
 	 */
 	private static boolean isGroovyScript(ProtectionDomain domain) {
-		if (domain.getCodeSource().getLocation() != null
-				&& domain.getCodeSource().getLocation().getPath().contains(ScriptingOperator.GROOVY_DOMAIN)) {
-			return true;
-		}
-		return false;
+		return domain.getCodeSource().getLocation() != null  && domain.getCodeSource().getLocation().getPath().contains(ScriptingOperator.GROOVY_DOMAIN);
 	}
 
 	/**
@@ -226,10 +222,7 @@ public final class PluginSandboxPolicy extends Policy {
 	 *
 	 */
 	private static boolean isUnknown(ProtectionDomain domain) {
-		if (domain == null || domain.getCodeSource() == null) {
-			return true;
-		}
-		return false;
+		return domain == null || domain.getCodeSource() == null;
 	}
 
 	/**
@@ -274,36 +267,38 @@ public final class PluginSandboxPolicy extends Policy {
 
 		permissions.add(new PropertyPermission("*", "read"));
 
-		AccessController.doPrivileged(new PrivilegedAction<Void>() {
+		AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
 
-			@Override
-			public Void run() {
-				String userHome = System.getProperty("user.home");
-				String tmpDir = System.getProperty("java.io.tmpdir");
-				String pluginKey = loader.getPluginKey();
+			String userHome = System.getProperty("user.home");
+			String tmpDir = System.getProperty("java.io.tmpdir");
+			String pluginKey = loader.getPluginKey();
 
-				// delete access to the general temp directory
-				permissions.add(new FilePermission(tmpDir, "read, write"));
-				permissions.add(new FilePermission(tmpDir + "/-", "read, write, delete"));
+			// delete access to the general temp directory
+			permissions.add(new FilePermission(tmpDir, "read, write"));
+			permissions.add(new FilePermission(tmpDir + "/-", "read, write, delete"));
 
-				// extensions can only delete files in their own subfolder of the
-				// .RapidMiner/extensions/workspace folder
-				if (pluginKey != null) {
-					String pluginFolder = pluginKey;
+			// extensions can only delete files in their own subfolder of the
+			// .RapidMiner/extensions/workspace folder
+			if (pluginKey != null) {
 
-					permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions", "read"));
-					permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions/workspace", "read"));
-					permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions/workspace/" + pluginFolder,
-							"read, write"));
-					permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions/workspace/" + pluginFolder + "/-",
-							"read, write, delete"));
-				}
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions", "read"));
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions/workspace", "read"));
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions/workspace/" + pluginKey,
+						"read, write"));
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/extensions/workspace/" + pluginKey + "/-",
+						"read, write, delete"));
 
-				// unfortunately currently we have to give all location permissons to read/write
-				// files to not block extensions that add "Read/Write xyz" operators
-				permissions.add(new FilePermission("<<ALL FILES>>", "read, write"));
-				return null;
+				// global search permissions
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/internal cache/search/",
+						"read, write"));
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/internal cache/search/-",
+						"read, write, delete"));
 			}
+
+			// unfortunately currently we have to give all location permissons to read/write
+			// files to not block extensions that add "Read/Write xyz" operators
+			permissions.add(new FilePermission("<<ALL FILES>>", "read, write"));
+			return null;
 		});
 
 		addCommonPermissions(permissions);
@@ -317,9 +312,8 @@ public final class PluginSandboxPolicy extends Policy {
 	 * @return the permissions, never {@code null}
 	 */
 	private static PermissionCollection createUnknownSourcePermissions() {
-		Permissions permissions = new Permissions();
 		// empty permissions, not allowed to do anything
-		return permissions;
+		return new Permissions();
 	}
 
 	/**
@@ -399,6 +393,10 @@ public final class PluginSandboxPolicy extends Policy {
 	 *             during verification of all certificates. Can be {@code null}
 	 */
 	private static void verifyCertificates(Certificate[] certificates) throws GeneralSecurityException {
+		if (certificates == null || certificates.length == 0) {
+			throw new GeneralSecurityException("No code certificates found!");
+		}
+
 		GeneralSecurityException lastException = null;
 		boolean verified = false;
 		for (Certificate certificate : certificates) {
@@ -425,13 +423,7 @@ public final class PluginSandboxPolicy extends Policy {
 	private static boolean isSecurityEnforced() {
 		// no need to synchronize, if this is entered multiple times it's fine
 		if (enforced == null) {
-			enforced = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-
-				@Override
-				public Boolean run() {
-					return Boolean.parseBoolean(System.getProperty(PROPERTY_SECURITY_ENFORCED));
-				}
-			});
+			enforced = AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> Boolean.parseBoolean(System.getProperty(PROPERTY_SECURITY_ENFORCED)));
 
 			if (enforced) {
 				LogService.getRoot().log(Level.INFO,

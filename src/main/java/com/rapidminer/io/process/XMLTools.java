@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -15,7 +15,7 @@
  * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.io.process;
 
 import java.io.ByteArrayInputStream;
@@ -31,6 +31,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -41,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
-
 import javax.xml.XMLConstants;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -71,6 +72,7 @@ import org.xml.sax.SAXException;
 
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.XMLParserException;
 
 
 /**
@@ -80,20 +82,84 @@ import com.rapidminer.tools.XMLException;
  */
 public class XMLTools {
 
-	private static final Map<URI, Validator> VALIDATORS = new HashMap<URI, Validator>();
 
-	private final static DocumentBuilderFactory BUILDER_FACTORY;
+	/**
+	 * Util class, no instance.
+	 */
+	private XMLTools() {
+		throw new UnsupportedOperationException("Not to be instantiated");
+	}
+
+	private static final Map<URI, Validator> VALIDATORS = new HashMap<>();
+
+	private static final DocumentBuilderFactory BUILDER_FACTORY;
 
 	public static final String SCHEMA_URL_PROCESS = "http://www.rapidminer.com/xml/schema/RapidMinerProcess";
 
+	private static final String FEATURE_FAILED_LOG_MSG = "ParserConfigurationException was thrown. The feature '{0}' is probably not supported by your XML processor.";
+	private static final String CONTENTS_OF_TAG_0_MUST_BE_1_BUT_FOUND_2_LOG_MSG = "Contents of tag <{0}> must be {1}, but found '{2}'.";
+	private static final String INTEGER_STRING = "integer";
+
+
+	/**
+	 * Security guideline from OWASP https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet#Java
+	 */
 	static {
-		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-		domFactory.setNamespaceAware(true);
-		BUILDER_FACTORY = domFactory;
+		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		documentBuilderFactory.setNamespaceAware(true);
+		String feature = null;
+		try {
+			// This is the PRIMARY defense. If DTDs (doctypes) are disallowed, almost all XML entity attacks are prevented
+			// Xerces 2 only - http://xerces.apache.org/xerces2-j/features.html#disallow-doctype-decl
+			feature = "http://apache.org/xml/features/disallow-doctype-decl";
+			documentBuilderFactory.setFeature(feature, true);
+		} catch (ParserConfigurationException e) {
+			// This should catch a failed setFeature feature
+			LogService.getRoot().log(Level.INFO, MessageFormat.format(FEATURE_FAILED_LOG_MSG, feature));
+		}
+		try {
+			// If you can't completely disable DTDs, then at least do the following:
+			// Xerces 1 - http://xerces.apache.org/xerces-j/features.html#external-general-entities
+			// Xerces 2 - http://xerces.apache.org/xerces2-j/features.html#external-general-entities
+			// JDK7+ - http://xml.org/sax/features/external-general-entities
+			feature = "http://xml.org/sax/features/external-general-entities";
+			documentBuilderFactory.setFeature(feature, false);
+		} catch (ParserConfigurationException e) {
+			// This should catch a failed setFeature feature
+			LogService.getRoot().log(Level.INFO, MessageFormat.format(FEATURE_FAILED_LOG_MSG, feature));
+		}
+		try {
+			// Xerces 1 - http://xerces.apache.org/xerces-j/features.html#external-parameter-entities
+			// Xerces 2 - http://xerces.apache.org/xerces2-j/features.html#external-parameter-entities
+			// JDK7+ - http://xml.org/sax/features/external-parameter-entities
+			feature = "http://xml.org/sax/features/external-parameter-entities";
+			documentBuilderFactory.setFeature(feature, false);
+		} catch (ParserConfigurationException e) {
+			// This should catch a failed setFeature feature
+			LogService.getRoot().log(Level.INFO, MessageFormat.format(FEATURE_FAILED_LOG_MSG, feature));
+		}
+		try {
+			// Disable external DTDs as well
+			feature = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+			documentBuilderFactory.setFeature(feature, false);
+		} catch (ParserConfigurationException e) {
+			// This should catch a failed setFeature feature
+			LogService.getRoot().log(Level.INFO, MessageFormat.format(FEATURE_FAILED_LOG_MSG, feature));
+		}
+		// and these as well, per Timothy Morgan's 2014 paper: "XML Schema, DTD, and Entity Attacks"
+		documentBuilderFactory.setXIncludeAware(false);
+		documentBuilderFactory.setExpandEntityReferences(false);
+
+		// And, per Timothy Morgan: "If for some reason support for inline DOCTYPEs are a requirement, then
+		// ensure the entity settings are disabled (as shown above) and beware that SSRF attacks
+		// (http://cwe.mitre.org/data/definitions/918.html) and denial
+		// of service attacks (such as billion laughs or decompression bombs via "jar:") are a risk."
+
+		BUILDER_FACTORY = documentBuilderFactory;
 	}
 
 	/**
-	 * Creates a new {@link DocumentBuilder} instance.
+	 * Creates a new {@link DocumentBuilder} instance that is secured against XXE attacks.
 	 *
 	 * Needed because DocumentBuilder is not thread-safe and crashes when different threads try to
 	 * parse at the same time.
@@ -102,14 +168,14 @@ public class XMLTools {
 	 * @throws IOException
 	 *             if it fails to create a {@link DocumentBuilder}
 	 */
-	private static DocumentBuilder createDocumentBuilder() throws IOException {
+	public static DocumentBuilder createDocumentBuilder() throws XMLParserException {
 		try {
 			synchronized (BUILDER_FACTORY) {
 				return BUILDER_FACTORY.newDocumentBuilder();
 			}
 		} catch (ParserConfigurationException e) {
 			LogService.getRoot().log(Level.WARNING, "Unable to create document builder", e);
-			throw new IOException(e);
+			throw new XMLParserException(e);
 		}
 	}
 
@@ -125,9 +191,7 @@ public class XMLTools {
 				Validator validator;
 				try {
 					validator = factory.newSchema(schemaURI.toURL()).newValidator();
-				} catch (SAXException e) {
-					throw new XMLException("Cannot parse XML schema: " + e.getMessage(), e);
-				} catch (MalformedURLException e) {
+				} catch (SAXException | MalformedURLException e) {
 					throw new XMLException("Cannot parse XML schema: " + e.getMessage(), e);
 				}
 				VALIDATORS.put(schemaURI, validator);
@@ -179,8 +243,7 @@ public class XMLTools {
 	}
 
 	public static Document parse(String string) throws SAXException, IOException {
-		return createDocumentBuilder().parse(new ByteArrayInputStream(string.getBytes(Charset.forName("UTF-8"))));
-		// new ReaderInputStream(new StringReader(string)));
+		return createDocumentBuilder().parse(new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8)));
 	}
 
 	public static Document parse(InputStream in) throws SAXException, IOException {
@@ -193,9 +256,8 @@ public class XMLTools {
 
 	public static String toString(Document document) throws XMLException {
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		Charset utf8 = Charset.forName("UTF-8");
-		stream(document, buf, utf8);
-		return new String(buf.toByteArray(), utf8);
+		stream(document, buf, StandardCharsets.UTF_8);
+		return new String(buf.toByteArray(), StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -213,20 +275,10 @@ public class XMLTools {
 	}
 
 	public static void stream(Document document, File file, Charset encoding) throws XMLException {
-
-		OutputStream out = null;
-		try {
-			out = new FileOutputStream(file);
+		try(OutputStream out = new FileOutputStream(file)) {
 			stream(document, out, encoding);
 		} catch (IOException e) {
 			throw new XMLException("Cannot save XML to " + file + ": " + e, e);
-		} finally {
-			if (out != null) {
-				try {
-					out.close();
-				} catch (IOException e) {
-				}
-			}
 		}
 	}
 
@@ -238,7 +290,7 @@ public class XMLTools {
 		// we wrap this in a Writer to fix a Java bug
 		// see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6296446
 		if (encoding == null) {
-			encoding = Charset.forName("UTF-8");
+			encoding = StandardCharsets.UTF_8;
 		}
 		stream(source, new StreamResult(new OutputStreamWriter(out, encoding)), encoding);
 	}
@@ -275,9 +327,7 @@ public class XMLTools {
 			if (encoding != null) {
 				transformer.setOutputProperty(OutputKeys.ENCODING, encoding.name());
 			}
-		} catch (TransformerConfigurationException e) {
-			throw new XMLException("Cannot transform XML: " + e, e);
-		} catch (TransformerFactoryConfigurationError e) {
+		} catch (TransformerConfigurationException | TransformerFactoryConfigurationError e) {
 			throw new XMLException("Cannot transform XML: " + e, e);
 		}
 		try {
@@ -343,7 +393,7 @@ public class XMLTools {
 		try {
 			return Integer.parseInt(string);
 		} catch (NumberFormatException e) {
-			throw new XMLException("Contents of tag <" + tag + "> must be integer, but found '" + string + "'.");
+			throw new XMLException(MessageFormat.format(CONTENTS_OF_TAG_0_MUST_BE_1_BUT_FOUND_2_LOG_MSG, tag, INTEGER_STRING, string));
 		}
 	}
 
@@ -361,7 +411,7 @@ public class XMLTools {
 		try {
 			return Integer.parseInt(string);
 		} catch (NumberFormatException e) {
-			throw new XMLException("Contents of tag <" + tag + "> must be integer, but found '" + string + "'.");
+			throw new XMLException(MessageFormat.format(CONTENTS_OF_TAG_0_MUST_BE_1_BUT_FOUND_2_LOG_MSG, tag, INTEGER_STRING, string));
 		}
 	}
 
@@ -376,7 +426,7 @@ public class XMLTools {
 		try {
 			return Long.parseLong(string);
 		} catch (NumberFormatException e) {
-			throw new XMLException("Contents of tag <" + tag + "> must be integer, but found '" + string + "'.");
+			throw new XMLException(MessageFormat.format(CONTENTS_OF_TAG_0_MUST_BE_1_BUT_FOUND_2_LOG_MSG, tag, INTEGER_STRING, string));
 		}
 	}
 
@@ -394,7 +444,7 @@ public class XMLTools {
 		try {
 			return Long.parseLong(string);
 		} catch (NumberFormatException e) {
-			throw new XMLException("Contents of tag <" + tag + "> must be integer, but found '" + string + "'.");
+			throw new XMLException(MessageFormat.format(CONTENTS_OF_TAG_0_MUST_BE_1_BUT_FOUND_2_LOG_MSG, tag, INTEGER_STRING, string));
 		}
 	}
 
@@ -412,7 +462,7 @@ public class XMLTools {
 		try {
 			return Double.parseDouble(string);
 		} catch (NumberFormatException e) {
-			throw new XMLException("Contents of tag <" + tag + "> must be double, but found '" + string + "'.");
+			throw new XMLException(MessageFormat.format(CONTENTS_OF_TAG_0_MUST_BE_1_BUT_FOUND_2_LOG_MSG, tag, "double", string));
 		}
 	}
 
@@ -430,7 +480,7 @@ public class XMLTools {
 		try {
 			return Boolean.parseBoolean(string);
 		} catch (NumberFormatException e) {
-			throw new XMLException("Contents of tag <" + tagName + "> must be true or false, but found '" + string + "'.");
+			throw new XMLException(MessageFormat.format(CONTENTS_OF_TAG_0_MUST_BE_1_BUT_FOUND_2_LOG_MSG, tagName, "true or false", string));
 		}
 	}
 
@@ -549,14 +599,12 @@ public class XMLTools {
 	 * given element and have the given tag name.
 	 */
 	public static Collection<Element> getChildElements(Element father, String tagName) {
-		LinkedList<Element> elements = new LinkedList<Element>();
+		List<Element> elements = new LinkedList<>();
 		NodeList list = father.getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
-			if (node instanceof Element) {
-				if (node.getNodeName().equals(tagName)) {
-					elements.add((Element) node);
-				}
+			if (node instanceof Element && node.getNodeName().equals(tagName)) {
+				elements.add((Element) node);
 			}
 		}
 		return elements;
@@ -567,7 +615,7 @@ public class XMLTools {
 	 * given element.
 	 */
 	public static Collection<Element> getChildElements(Element father) {
-		LinkedList<Element> elements = new LinkedList<Element>();
+		List<Element> elements = new LinkedList<>();
 		NodeList list = father.getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -628,7 +676,7 @@ public class XMLTools {
 		try {
 			DocumentBuilder builder = createDocumentBuilder();
 			return builder.newDocument();
-		} catch (IOException e) {
+		} catch (XMLParserException e) {
 			return null;
 		}
 	}
@@ -652,13 +700,11 @@ public class XMLTools {
 		Element found = null;
 		for (int i = 0; i < children.getLength(); i++) {
 			Node n = children.item(i);
-			if (n instanceof Element) {
-				if (((Element) n).getTagName().equals(xmlTagName)) {
-					if (found != null) {
-						throw new XMLException("Tag <" + xmlTagName + "> in <" + element.getTagName() + "> must be unique.");
-					} else {
-						found = (Element) n;
-					}
+			if (n instanceof Element && ((Element) n).getTagName().equals(xmlTagName)) {
+				if (found != null) {
+					throw new XMLException("Tag <" + xmlTagName + "> in <" + element.getTagName() + "> must be unique.");
+				} else {
+					found = (Element) n;
 				}
 			}
 		}
@@ -710,12 +756,12 @@ public class XMLTools {
 	 * this algorithm: 1. Check whether the last element is of same type Yes: if paths of elements
 	 * are of same structure, keep it, but remove counters where necessary if not,
 	 */
-	public static String getXPath(Document document, Element... elements) {
-		Map<String, List<Element>> elementTypeElementsMap = new HashMap<String, List<Element>>();
+	public static String getXPath( Element... elements) {
+		Map<String, List<Element>> elementTypeElementsMap = new HashMap<>();
 		for (Element element : elements) {
 			List<Element> typeElements = elementTypeElementsMap.get(element.getTagName());
 			if (typeElements == null) {
-				typeElements = new LinkedList<Element>();
+				typeElements = new LinkedList<>();
 				elementTypeElementsMap.put(element.getTagName(), typeElements);
 			}
 			typeElements.add(element);

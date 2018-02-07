@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -54,6 +54,12 @@ public class SelectAllAction extends ResourceAction {
 		for (ExecutionUnit unit : view.getModel().getProcesses()) {
 			selected.addAll(unit.getOperators());
 		}
+
+		// On an empty process, select the displayed operator chain instead
+		if (selected.isEmpty()) {
+			selected.add(view.getModel().getDisplayedChain());
+		}
+
 		view.getModel().addOperatorsToSelection(selected);
 		view.getModel().fireOperatorSelectionChanged(selected);
 	}

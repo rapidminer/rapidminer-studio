@@ -63,8 +63,8 @@ dependencies {
 	compile('net.sourceforge.jexcelapi:jxl:2.6.12') { exclude group: 'log4j', module: 'log4j' }
 
 	// Apache POI for  manipulating various file formats based upon Office Open XML standards (http://poi.apache.org/)
-	compile 'org.apache.poi:poi-ooxml:3.13'
-	compile 'org.apache.poi:poi-scratchpad:3.13'
+	compile 'org.apache.poi:poi-ooxml:3.17'
+	compile 'org.apache.poi:poi-scratchpad:3.17'
 
 	// JGoodies Looks for TODO (http://www.jgoodies.com/freeware/libraries/looks/)
 	compile 'com.jgoodies:looks:2.2.2'
@@ -86,13 +86,16 @@ dependencies {
 	compile 'org.swinglabs.swingx:swingx-all:1.6.5'
 
 	// XStreams for generic XML serialization (http://xstream.codehaus.org/)
-	compile 'com.thoughtworks.xstream:xstream:1.4.7'
+	compile 'com.thoughtworks.xstream:xstream:1.4.10'
 
 	// XMLRPC for XMLRPC connections to Bugzilla (http://ws.apache.org/xmlrpc/)
 	compile('org.apache.xmlrpc:xmlrpc-client:3.1.3') { exclude group: 'junit', module: 'junit' }
 
 	// HttpClient used by the Bugzilla XML RPC client (http://hc.apache.org/httpcomponents-client)
 	compile 'commons-httpclient:commons-httpclient:3.1'
+
+	// FileUtils useful for various things
+	compile 'commons-io:commons-io:2.6'
 
 	// JAMA for matrix calculations (http://math.nist.gov/javanumerics/jama/)
 	compile 'gov.nist.math:jama:1.0.3'
@@ -129,7 +132,7 @@ dependencies {
 	compile 'com.github.tdbear:microba:0.4.4.3'
 	
 	// Apache Tika for file MIME type detection (https://tika.apache.org/)
-	compile 'org.apache.tika:tika-core:1.11'
+	compile 'org.apache.tika:tika-core:1.17'
 	
 	// The xalan version used by the JRE for XML handling contains a bug which results in XSLT not working with an enabled SecurityManager
 	// Using this version manually to override the JRE fixes the problem. Otherwise all our operator documentation would not work at all 
@@ -142,6 +145,16 @@ dependencies {
 	// up until 7.4.1 this was a transitive dependency coming from license-commons (jackson version 2.4.0)
 	compile 'com.fasterxml.jackson.core:jackson-core:2.6.6'
 	compile 'com.fasterxml.jackson.core:jackson-databind:2.6.6'
+
+	// Advanced Search functionality via Lucene
+	compile 'org.apache.lucene:lucene-queryparser:7.2.0'
+	// Highlight Lucene search result matches
+	compile 'org.apache.lucene:lucene-highlighter:7.2.0'
+	compile 'org.jsoup:jsoup:1.8.3'
+
+	// tests require mockito
+	testCompile 'org.mockito:mockito-core:2.13.0'
+
 }
 
 task wrapper(type: Wrapper) { gradleVersion = '4.0.1' }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,17 +18,17 @@
 */
 package com.rapidminer.studio.concurrency.internal;
 
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import com.rapidminer.Process;
+import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.PortUserError;
 import com.rapidminer.operator.UserError;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.Ports;
 
 
 /**
@@ -45,6 +45,19 @@ public enum ExecutionExceptionHandling {
 
 	/** the singleton instance */
 	INSTANCE;
+
+	/**
+	 * Finds the corresponding Port in original Ports by the index of the source Port in source Ports.
+	 */
+	private Port getMatchingPort(Port sourcePort, Ports<?> sourcePorts, Ports<?> originalPorts) {
+		for (int i = 0; i < sourcePorts.getNumberOfPorts(); i++) {
+			if (sourcePorts.getPortByIndex(i).equals(sourcePort)) {
+				return originalPorts.getPortByIndex(i);
+			}
+		}
+
+		return null;
+	}
 
 	/**
 	 * Tries to get the underlying cause of an {@link ExecutionException} which occurred while using
@@ -96,22 +109,38 @@ public enum ExecutionExceptionHandling {
 				}
 				if (sourceOperator != null && cause instanceof PortUserError) {
 					PortUserError portError = (PortUserError) error;
-					List<InputPort> inputPorts = sourceOperator.getInputPorts().getAllPorts();
 					Port errorPort = portError.getPort();
-					boolean portFound = false;
-					for (int i = 0; i < inputPorts.size(); i++) {
-						if (inputPorts.get(i).equals(errorPort)) {
-							portError.setPort(error.getOperator().getInputPorts().getAllPorts().get(i));
-							portFound = true;
-							break;
-						}
+
+					Port originalPort = getMatchingPort(errorPort, sourceOperator.getInputPorts(), error.getOperator().getInputPorts());
+					if (originalPort != null) {
+						portError.setPort(originalPort);
+						return portError;
 					}
-					if (!portFound) {
-						List<OutputPort> outputPorts = sourceOperator.getOutputPorts().getAllPorts();
-						for (int i = 0; i < outputPorts.size(); i++) {
-							if (outputPorts.get(i).equals(errorPort)) {
-								portError.setPort(error.getOperator().getOutputPorts().getAllPorts().get(i));
-								break;
+
+					originalPort = getMatchingPort(errorPort, sourceOperator.getOutputPorts(), error.getOperator().getOutputPorts());
+					if (originalPort != null) {
+						portError.setPort(originalPort);
+						return portError;
+					}
+
+					if (sourceOperator instanceof OperatorChain) {
+						OperatorChain sourceOperatorChain = (OperatorChain) sourceOperator;
+						OperatorChain originalOperatorChain = (OperatorChain) error.getOperator();
+
+						for (int i = 0; i < sourceOperatorChain.getNumberOfSubprocesses(); i++) {
+							ExecutionUnit sourceExecutionUnit = sourceOperatorChain.getSubprocess(i);
+							ExecutionUnit originalExecutionUnit = originalOperatorChain.getSubprocess(i);
+
+							originalPort = getMatchingPort(errorPort, sourceExecutionUnit.getInnerSinks(), originalExecutionUnit.getInnerSinks());
+							if (originalPort != null) {
+								portError.setPort(originalPort);
+								return portError;
+							}
+
+							originalPort = getMatchingPort(errorPort, sourceExecutionUnit.getInnerSources(), originalExecutionUnit.getInnerSources());
+							if (originalPort != null) {
+								portError.setPort(originalPort);
+								return portError;
 							}
 						}
 					}

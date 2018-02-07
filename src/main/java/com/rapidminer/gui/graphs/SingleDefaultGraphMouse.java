@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 RapidMiner GmbH
+ * Copyright (C) 2001-2018 RapidMiner GmbH
  */
 package com.rapidminer.gui.graphs;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -419,7 +419,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 			ExampleSet exampleSet, Operator op) throws WriteException, ProcessStoppedException {
 
 		Font headerFont = wb.createFont();
-		headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		headerFont.setBold(true);
 
 		CellStyle headerStyle = wb.createCellStyle();
 		headerStyle.setFont(headerFont);
@@ -440,7 +440,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 		// body font
 		Font bodyFont = wb.createFont();
-		bodyFont.setBoldweight(Font.BOLDWEIGHT_NORMAL);
+		bodyFont.setBold(false);
 
 		CreationHelper createHelper = wb.getCreationHelper();
 

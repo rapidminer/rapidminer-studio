@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,16 +19,15 @@
 package com.rapidminer.gui.tools.components.composite;
 
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.awt.geom.RoundRectangle2D;
-
+import java.io.Serializable;
 import javax.swing.AbstractButton;
 import javax.swing.SwingConstants;
 
-import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.RapidLookTools;
 
@@ -39,7 +38,7 @@ import com.rapidminer.gui.look.RapidLookTools;
  * @author Michael Knopf
  * @since 7.0.0
  */
-class CompositeButtonPainter {
+public class CompositeButtonPainter implements Serializable {
 
 	/** The (composite) button */
 	private final AbstractButton button;
@@ -81,7 +80,7 @@ class CompositeButtonPainter {
 	 * @param g
 	 *            the graphics context
 	 */
-	void paintComponent(Graphics g) {
+	public void paintComponent(Graphics g) {
 		RectangularShape rectangle;
 		int radius = RapidLookAndFeel.CORNER_DEFAULT_RADIUS;
 		switch (position) {
@@ -103,27 +102,29 @@ class CompositeButtonPainter {
 	/**
 	 * Draws the component border.
 	 *
-	 * @param graphics
+	 * @param g
 	 *            the graphics context
 	 */
-	void paintBorder(Graphics graphics) {
-		Graphics2D g = (Graphics2D) graphics.create();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-		g.setColor(Colors.BUTTON_BORDER);
-
+	public void paintBorder(Graphics g) {
+		Shape borderShape;
 		int radius = RapidLookAndFeel.CORNER_DEFAULT_RADIUS;
 		switch (position) {
 			case SwingConstants.LEFT:
-				g.drawRoundRect(0, 0, button.getWidth() + radius, button.getHeight() - 1, radius, radius);
+				borderShape = new RoundRectangle2D.Double(0, 0, button.getWidth() + radius, button.getHeight() - 1, radius, radius);
+				RapidLookTools.drawButtonBorder(button, g, borderShape);
 				break;
 			case SwingConstants.CENTER:
-				g.drawRect(0, 0, button.getWidth() + radius, button.getHeight() - 1);
+				borderShape = new Rectangle2D.Double(0, 0, button.getWidth() + radius, button.getHeight() - 1);
+				RapidLookTools.drawButtonBorder(button, g, borderShape);
 				break;
 			default:
-				g.drawRoundRect(-radius, 0, button.getWidth() + radius - 1, button.getHeight() - 1, radius, radius);
-				g.drawLine(0, 0, 0, button.getHeight());
+				borderShape = new RoundRectangle2D.Double(-radius, 0, button.getWidth() + radius - 1, button.getHeight() - 1, radius, radius);
+				RapidLookTools.drawButtonBorder(button, g, borderShape);
+				// special case, right button has a left border
+				borderShape = new Line2D.Double(0, 0, 0, button.getHeight());
+				RapidLookTools.drawButtonBorder(button, g, borderShape);
 				break;
 		}
+
 	}
 }

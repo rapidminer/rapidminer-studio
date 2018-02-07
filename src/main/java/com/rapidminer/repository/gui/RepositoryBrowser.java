@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -25,7 +25,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -43,12 +42,14 @@ import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceDockKey;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.DropDownPopupButton;
-import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider;
 import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.gui.actions.NewRepositoryAction;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 
@@ -62,15 +63,7 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final Action ADD_REPOSITORY_ACTION = new ResourceAction(true, "add_repository") {
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void loggedActionPerformed(ActionEvent e) {
-			addRepository();
-		}
-	};
+	public static final Action ADD_REPOSITORY_ACTION = new NewRepositoryAction();
 
 	private static final Action SORT_REPOSITORY_ACTION = new ResourceAction(true, "repository_sort_submenu") {
 
@@ -96,17 +89,23 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		if (dragListener != null) {
 			((AbstractPatchedTransferHandler) tree.getTransferHandler()).addDragListener(dragListener);
 		}
-		tree.addRepositorySelectionListener(new RepositorySelectionListener() {
+		tree.addRepositorySelectionListener(e -> {
 
-			@Override
-			public void repositoryLocationSelected(RepositorySelectionEvent e) {
-				Entry entry = e.getEntry();
-				if (entry instanceof ProcessEntry) {
-					RepositoryTree.openProcess((ProcessEntry) entry);
-				} else if (entry instanceof IOObjectEntry) {
-					OpenAction.showAsResult((IOObjectEntry) entry);
-				}
+			Entry entry = e.getEntry();
+
+			// skip folder double-clicks
+			if (entry instanceof Folder) {
+				return;
 			}
+
+			if (entry instanceof ProcessEntry) {
+				RepositoryTree.openProcess((ProcessEntry) entry);
+			} else if (entry instanceof IOObjectEntry) {
+				OpenAction.showAsResult((IOObjectEntry) entry);
+			} else {
+				SwingTools.showVerySimpleErrorMessage("no_data_or_process");
+			}
+
 		});
 
 		setLayout(new BorderLayout());
@@ -136,14 +135,7 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		northPanel.add(addDataButton, c);
 
 		DropDownPopupButton furtherActionsButton = new DropDownPopupButton("gui.action.further_repository_actions",
-				new PopupMenuProvider() {
-
-					@Override
-					public JPopupMenu getPopupMenu() {
-						return furtherActionsMenu;
-					}
-
-				});
+				() -> furtherActionsMenu);
 		furtherActionsButton.setPreferredSize(new Dimension(50, 30));
 
 		c.gridx = 1;
@@ -155,10 +147,6 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 		JScrollPane scrollPane = new ExtendedJScrollPane(tree);
 		scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TEXTFIELD_BORDER));
 		add(scrollPane, BorderLayout.CENTER);
-	}
-
-	private static void addRepository() {
-		NewRepositoryDialog.createNew();
 	}
 
 	/**
@@ -189,7 +177,7 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 	}
 
 	/**
-	 * @param storedRepositoryLocation
+	 * @param storedRepositoryLocation the repository location that should be displayed in the browser
 	 */
 	public void expandToRepositoryLocation(RepositoryLocation storedRepositoryLocation) {
 		tree.expandAndSelectIfExists(storedRepositoryLocation);

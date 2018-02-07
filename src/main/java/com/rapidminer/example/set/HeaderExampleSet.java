@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -43,6 +43,19 @@ public class HeaderExampleSet extends AbstractExampleSet {
 	public HeaderExampleSet(ExampleSet parent) {
 		cloneAnnotationsFrom(parent);
 		this.attributes = (Attributes) parent.getAttributes().clone();
+	}
+
+
+	/**
+	 * Creates a new header example set with the given attribute. The attributes are not cloned automatically and must
+	 * be cloned before calling this constructor if they are shared with another {@link ExampleSet}.
+	 *
+	 * @param attributes
+	 *            the attributes for the header example set
+	 * @since 8.1.0
+	 */
+	public HeaderExampleSet(Attributes attributes) {
+		this.attributes = attributes;
 	}
 
 	/** Header example set clone constructor. */

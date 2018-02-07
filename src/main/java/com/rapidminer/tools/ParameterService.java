@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.AccessControlException;
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -172,11 +173,6 @@ public class ParameterService {
 	 * might be removed in further versions.
 	 */
 	public static void setParameterValue(String key, String value) {
-		// this might be removed later. It remains only for compatibility
-		if (System.getProperty(key) == null) {
-			System.setProperty(key, value);
-		}
-
 		// Before changing, check if the Parameter is protected
 		if (RapidMiner.isParameterProtected(key)) {
 			// If yes, only extensions with enough permissions should be allowed to change it

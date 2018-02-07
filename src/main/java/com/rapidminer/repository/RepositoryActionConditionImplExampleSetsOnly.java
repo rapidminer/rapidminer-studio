@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,11 +18,10 @@
 */
 package com.rapidminer.repository;
 
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
-import com.rapidminer.repository.internal.remote.RemoteIOObjectEntry;
-
 import java.util.List;
+
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
 
 
 /**
@@ -37,32 +36,21 @@ public class RepositoryActionConditionImplExampleSetsOnly implements RepositoryA
 
 	@Override
 	public boolean evaluateCondition(List<Entry> entryList) {
-		if (entryList == null) {
+		if (entryList == null || entryList.isEmpty()) {
 			return false;
 		}
 
 		for (Entry givenEntry : entryList) {
-
 			// make sure each entry is an ExampleSet, if not condition evaluates to false
-			if (givenEntry instanceof IOObjectEntry) {
-				IOObjectEntry entry = (IOObjectEntry) givenEntry;
-				try {
-					if (!(entry.retrieveMetaData() instanceof ExampleSetMetaData)) {
-						return false;
-					}
-				} catch (RepositoryException e) {
-					return false;
-				}
-			} else if (givenEntry instanceof RemoteIOObjectEntry) {
-				RemoteIOObjectEntry entry = (RemoteIOObjectEntry) givenEntry;
-				try {
-					if (!(entry.retrieveMetaData() instanceof ExampleSetMetaData)) {
-						return false;
-					}
-				} catch (RepositoryException e) {
-					return false;
-				}
-			} else {
+			if (!(givenEntry instanceof IOObjectEntry)) {
+				return false;
+			}
+
+			IOObjectEntry entry = (IOObjectEntry) givenEntry;
+			if (entry.getObjectClass() == null) {
+				return false;
+			}
+			if (!ExampleSet.class.isAssignableFrom(entry.getObjectClass())) {
 				return false;
 			}
 		}

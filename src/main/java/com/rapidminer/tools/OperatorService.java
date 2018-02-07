@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -35,15 +35,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.processeditor.search.OperatorGlobalSearch;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -55,6 +53,7 @@ import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.tools.OperatorCreationHook;
+import com.rapidminer.search.GlobalSearchable;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
 import com.rapidminer.tools.documentation.OperatorDocumentation;
 import com.rapidminer.tools.documentation.XMLOperatorDocBundle;
@@ -123,7 +122,14 @@ public class OperatorService {
 
 	private static final GroupTreeRoot groupTreeRoot = new GroupTreeRoot();
 
+	private static GlobalSearchable operatorSearchable;
+
 	public static void init() {
+		// this serves 2 purposes:
+		// 1: Add Global Search capabilities for operators by registering OperatorServiceListener
+		// 2: Keep reference so that weak listener reference is not killed via GC
+		operatorSearchable = new OperatorGlobalSearch();
+
 		URL mainOperators = getMainOperators();
 		if (mainOperators == null) {
 			LogService.getRoot().log(Level.SEVERE,
@@ -256,7 +262,7 @@ public class OperatorService {
 		String version = null;
 		Document document = null;
 		try {
-			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(operatorsXML);
+			document = XMLTools.createDocumentBuilder().parse(operatorsXML);
 			if (!document.getDocumentElement().getTagName().toLowerCase().equals("operators")) {
 				LogService.getRoot().log(Level.SEVERE,
 						"com.rapidminer.tools.OperatorService.operator_description_file_outermost_tag", name);

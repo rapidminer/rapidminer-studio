@@ -140,4 +140,9 @@
 		</group>
 
 	</group>
+	<group key="search">
+		<group key="rapidminer.preferences.subgroup.search.repository">
+			<property key="rapidminer.search.repository.enable_full_indexing" />
+		</group>
+	</group>
 </settings>

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -44,7 +44,7 @@ public class PortUserError extends UserError {
 	/**
 	 * Creates a new user error for a port.
 	 *
-	 * @param operator
+	 * @param port
 	 *            The {@link Port} which caused the error.
 	 * @param code
 	 *            The error code referring to a message in the file
@@ -60,7 +60,7 @@ public class PortUserError extends UserError {
 	/**
 	 * Creates a new user error for a port.
 	 *
-	 * @param operator
+	 * @param port
 	 *            The {@link Port} which caused the error.
 	 * @param errorId
 	 *            The error id referring to a message in the file

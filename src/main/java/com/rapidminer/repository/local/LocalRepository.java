@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -101,8 +101,9 @@ public class LocalRepository extends SimpleFolder implements Repository {
 
 	@Override
 	public boolean rename(String newName) {
+		String formerName = getName();
 		setName(newName);
-		fireEntryRenamed(this);
+		fireEntryMoved(this, null, formerName);
 		return true;
 	}
 
@@ -125,11 +126,16 @@ public class LocalRepository extends SimpleFolder implements Repository {
 		listeners.remove(RepositoryListener.class, l);
 	}
 
-	protected void fireEntryRenamed(final Entry entry) {
+	protected void fireEntryChanged(final Entry entry) {
 		for (RepositoryListener l : listeners.getListeners(RepositoryListener.class)) {
 			l.entryChanged(entry);
 		}
+	}
 
+	protected void fireEntryMoved(final Entry newEntry, Folder formerParent, String formerName) {
+		for (RepositoryListener l : listeners.getListeners(RepositoryListener.class)) {
+			l.entryMoved(newEntry, formerParent, formerName);
+		}
 	}
 
 	protected void fireEntryAdded(final Entry newEntry, final Folder parent) {

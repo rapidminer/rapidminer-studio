@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -57,7 +57,9 @@ public class ParallelDecisionTreeLeafCreator {
 					average += labelColumn[selected] * weight;
 					count += weight;
 				}
-				average /= count;
+				if (count != 0) {
+					average /= count;
+				}
 			}
 			((RegressionTree) node).setLeaf(average);
 			node.addCount(COUNT, selectedExamples.length);

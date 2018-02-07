@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,13 +18,6 @@
 */
 package com.rapidminer.operator.meta;
 
-import com.rapidminer.Process;
-import com.rapidminer.RapidMiner;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.operator.performance.PerformanceVector;
-import com.rapidminer.tools.Tools;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
@@ -45,6 +37,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.rapidminer.Process;
+import com.rapidminer.RapidMiner;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.operator.performance.PerformanceVector;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -184,9 +184,9 @@ public class ParameterSet extends ResultObjectAdapter implements Iterable<Parame
 		ParameterSet parameterSet = new ParameterSet();
 		Document document = null;
 		try {
-			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
-		} catch (SAXException | ParserConfigurationException e1) {
-			throw new IOException(e1.getMessage());
+			document = XMLTools.createDocumentBuilder().parse(in);
+		} catch (SAXException e) {
+			throw new IOException(e.getMessage());
 		}
 
 		Element parametersElement = document.getDocumentElement();

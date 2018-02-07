@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,17 +18,18 @@
 */
 package com.rapidminer.gui;
 
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.logging.Level;
-
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 
+import com.rapidminer.gui.actions.WorkspaceAction;
 import com.rapidminer.gui.processeditor.ProcessLogTab;
 import com.rapidminer.gui.processeditor.results.ResultTab;
-import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.FileSystemService;
+import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
@@ -54,19 +55,6 @@ public class PerspectiveController {
 	private final DockingContext context;
 
 	private final PerspectiveModel model;
-
-	private final Action restoreDefaultAction = new ResourceAction("restore_predefined_perspective_default") {
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void loggedActionPerformed(final ActionEvent e) {
-			if (!getModel().getSelectedPerspective().isUserDefined()) {
-				getModel().restoreDefault(getModel().getSelectedPerspective().getName());
-				getModel().getSelectedPerspective().apply(context);
-			}
-		}
-	};
 
 	/**
 	 * Creates a new {@link PerspectiveController} with the given docking context.
@@ -100,7 +88,7 @@ public class PerspectiveController {
 	/**
 	 * Displays the given perspective, identified by the name.
 	 *
-	 * @param perspective
+	 * @param perspectiveName
 	 *            the perspective which should be shown.
 	 */
 	public void showPerspective(final String perspectiveName) {
@@ -125,7 +113,7 @@ public class PerspectiveController {
 				ActionStatisticsCollector.getInstance().stopTimer(oldPerspective);
 			}
 			perspective.apply(context);
-			getRestoreDefaultAction().setEnabled(!perspective.isUserDefined());
+			RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION.setEnabled(!perspective.isUserDefined());
 			ActionStatisticsCollector.getInstance().startTimer(perspective, ActionStatisticsCollector.TYPE_PERSPECTIVE,
 					perspective.getName(), null);
 			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PERSPECTIVE, perspective.getName(),
@@ -278,6 +266,13 @@ public class PerspectiveController {
 		return perspective;
 	}
 
+	public void restoreDefaultPerspective() {
+		if (!getModel().getSelectedPerspective().isUserDefined()) {
+			getModel().restoreDefault(getModel().getSelectedPerspective().getName());
+			getModel().getSelectedPerspective().apply(context);
+		}
+	}
+
 	/**
 	 * Getter for the underlying model.
 	 *
@@ -291,9 +286,39 @@ public class PerspectiveController {
 	 * Getter for the restore default action for a predefined perspective.
 	 *
 	 * @return the restore default {@link Action}
+	 * @deprecated use RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION instead
 	 */
+	@Deprecated
 	public Action getRestoreDefaultAction() {
-		return restoreDefaultAction;
+		return RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION;
+	}
+
+	/**
+	 * Creates the workspace switch action for the given perspective.
+	 *
+	 * @param p
+	 * 		the perspective
+	 * @return the action, never {@code null}
+	 * @since 8.1
+	 */
+	public WorkspaceAction createPerspectiveAction(final Perspective p) {
+		String name = p.getName();
+		WorkspaceAction action = new WorkspaceAction(name);
+
+		if (p.isUserDefined()) {
+			action.putValue(Action.ACTION_COMMAND_KEY, "perspective-" + name);
+			action.putValue(Action.NAME, name);
+			ImageIcon createIconSmall = SwingTools
+					.createIcon("16/" + I18N.getMessage(I18N.getGUIBundle(), "gui.action.workspace_user.icon"));
+			ImageIcon createIconLarge = SwingTools
+					.createIcon("24/" + I18N.getMessage(I18N.getGUIBundle(), "gui.action.workspace_user.icon"));
+			action.putValue(Action.LARGE_ICON_KEY, createIconLarge);
+			action.putValue(Action.SMALL_ICON, createIconSmall);
+			action.putValue(Action.SHORT_DESCRIPTION,
+					I18N.getMessage(I18N.getGUIBundle(), "gui.action.workspace_user.tip", name));
+		}
+
+		return action;
 	}
 
 	/**

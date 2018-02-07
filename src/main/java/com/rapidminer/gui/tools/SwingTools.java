@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -57,6 +57,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -770,6 +771,33 @@ public class SwingTools {
 			result.append(Tools.getLineSeparator());
 		}
 		return result.toString();
+	}
+
+	/**
+	 * Capitalizes every first letter in a string. Note that if a string contains multiple words separated by a whitespace, each word will be capitalized.
+	 * If the string contains more than a single whitespace between words, the spaces are reduced to a single whitespace.
+	 *
+	 * @param string
+	 * 		the string to capitalize
+	 * @return the capitalized string with a single whitespace between words, never {@code null}
+	 * @since 8.1
+	 */
+	public static String capitalizeString(final String string) {
+		if (string == null) {
+			throw new IllegalArgumentException("string must not be nulL!");
+		}
+		if (string.trim().isEmpty()) {
+			return "";
+		}
+
+		StringBuilder sb = new StringBuilder();
+		for (String split : string.split("\\s+")) {
+			sb.append(split.substring(0, 1).toUpperCase(Locale.ENGLISH));
+			sb.append(split.substring(1));
+			sb.append(' ');
+		}
+
+		return sb.toString().trim();
 	}
 
 	/**
@@ -1889,11 +1917,13 @@ public class SwingTools {
 	 * @return
 	 */
 	public static Color darkenColor(final Color color, final float factor) {
+		int initialAlpha = Math.min(255, (int) (color.getAlpha() * 1.1f));
 		// convert to H(ue) S(aturation) B(rightness), which is designed for
 		// this kind of operation
 		float hsb[] = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
 		// turn down brightness and return color
-		return Color.getHSBColor(hsb[0], hsb[1], factor * hsb[2]);
+		Color returnColor = Color.getHSBColor(hsb[0], hsb[1], factor * hsb[2]);
+		return new Color(returnColor.getRed(), returnColor.getGreen(), returnColor.getBlue(), initialAlpha);
 	}
 
 	/**
@@ -1907,11 +1937,13 @@ public class SwingTools {
 	 * @return color with changed saturation
 	 */
 	public static Color saturateColor(final Color color, final float factor) {
+		int initialAlpha = color.getAlpha();
 		// convert to H(ue) S(aturation) B(rightness), which is designed for
 		// this kind of operation
 		float hsb[] = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
 		// adjust saturation and return color
-		return Color.getHSBColor(hsb[0], factor * hsb[1], hsb[2]);
+		Color returnColor = Color.getHSBColor(hsb[0], factor * hsb[1], hsb[2]);
+		return new Color(returnColor.getRed(), returnColor.getGreen(), returnColor.getBlue(), initialAlpha);
 	}
 
 	/**
@@ -1921,11 +1953,13 @@ public class SwingTools {
 	 * @return
 	 */
 	public static Color brightenColor(final Color color) {
+		int initialAlpha = (int) (color.getAlpha() * 0.9f);
 		// convert to H(ue) S(aturation) B(rightness), which is designed for
 		// this kind of operation
 		float hsb[] = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
 		// turn up brightness and return color
-		return Color.getHSBColor(hsb[0], hsb[1], 0.5f * (1f + hsb[2]));
+		Color returnColor = Color.getHSBColor(hsb[0], hsb[1], 0.5f * (1f + hsb[2]));
+		return new Color(returnColor.getRed(), returnColor.getGreen(), returnColor.getBlue(), initialAlpha);
 	}
 
 	/**

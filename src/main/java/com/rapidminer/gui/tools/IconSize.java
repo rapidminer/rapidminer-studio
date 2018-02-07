@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -20,14 +20,14 @@ package com.rapidminer.gui.tools;
 
 /**
  * This enumeration hold the information about all available icon sizes (mainly used for actions).
- * Currently, only icon sizes 24 and 32 are supported. 32 should be used for tool bars and 24 in
- * menus.
+ * Currently, only icon sizes 16, 24, and 48 are supported. 16 should be used for small entries (e.g. lists) and 24 in
+ * menus, while 48 can be used for large panels.
  * 
  * @author Ingo Mierswa
  */
 public enum IconSize {
 
-	SMALL(16), LARGE(24);
+	SMALL(16), LARGE(24), HUGE(48);
 
 	private int size;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,17 +21,12 @@ package com.rapidminer.gui;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.Action;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
-import com.rapidminer.gui.actions.WorkspaceAction;
+import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceMenu;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 
@@ -96,18 +91,8 @@ public class PerspectiveMenu extends ResourceMenu {
 		perspectiveMap.clear();
 		workspaceMenuGroup = new ButtonGroup();
 		for (Perspective p : perspectives) {
-			String name = p.getName();
-			Action action = new WorkspaceAction(PerspectiveMenu.this.perspectiveController, p, name);
-			if (p.isUserDefined()) {
-				action.putValue(Action.ACTION_COMMAND_KEY, "perspective-" + name);
-				action.putValue(Action.NAME, name);
-				ImageIcon createIcon = SwingTools
-						.createIcon("16/" + I18N.getMessage(I18N.getGUIBundle(), "gui.action.workspace_user.icon"));
-				action.putValue(Action.LARGE_ICON_KEY, createIcon);
-				action.putValue(Action.SMALL_ICON, createIcon);
-				action.putValue(Action.SHORT_DESCRIPTION,
-						I18N.getMessage(I18N.getGUIBundle(), "gui.action.workspace_user.tip", name));
-			}
+			ResourceAction action = perspectiveController.createPerspectiveAction(p);
+
 			JMenuItem menuItem = new JRadioButtonMenuItem(action);
 			add(menuItem);
 			perspectiveMap.put(p.getName(), menuItem);

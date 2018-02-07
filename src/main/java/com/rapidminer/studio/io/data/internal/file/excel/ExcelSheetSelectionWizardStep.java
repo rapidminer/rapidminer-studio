@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -143,6 +143,7 @@ final class ExcelSheetSelectionWizardStep extends AbstractWizardStep {
 
 			// update the selected sheet
 			configuration.setSheet(workbookSelectionPanel.getSheetIndex());
+			configuration.setSheetSelectionMode(ExcelResultSetConfiguration.SheetSelectionMode.BY_INDEX);
 
 			// update the cell range selection
 			configuration.setColumnOffset(selection.getColumnIndexStart());

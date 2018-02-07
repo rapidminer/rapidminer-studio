@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,6 +18,12 @@
 */
 package com.rapidminer.example.set;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -25,12 +31,6 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.Annotations;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
 
 
 /**
@@ -212,4 +212,10 @@ public class MappedExampleSet extends AbstractExampleSet {
 	public void cleanup() {
 		parent.cleanup();
 	}
+
+	@Override
+	public boolean isThreadSafeView() {
+		return parent instanceof AbstractExampleSet && ((AbstractExampleSet) parent).isThreadSafeView();
+	}
+
 }

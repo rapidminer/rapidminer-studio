@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,22 +18,22 @@
 */
 package com.rapidminer.gui.tools.components;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Graphics;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingConstants;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
 import com.rapidminer.gui.tools.Ionicon;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.components.composite.CompositeButtonPainter;
 import com.rapidminer.tools.I18N;
 
 
@@ -55,6 +55,11 @@ public class DropDownPopupButton extends JButton {
 	 * The default color used for text and arrow.
 	 */
 	private static final String DEFAULT_COLOR = "4F4F4F";
+
+	/**
+	 * at least this amount of ms have passed before the popup can be opened again.
+	 */
+	private static final int POPUP_CLOSE_DELTA = 250;
 
 	/**
 	 * Interface providing a method to obtain a {@link JPopupMenu}.
@@ -82,6 +87,9 @@ public class DropDownPopupButton extends JButton {
 		private ResourceAction action;
 
 		private JPopupMenu popupMenu = new JPopupMenu();
+
+		/** -1 means regular button, otherwise {@link com.rapidminer.gui.tools.components.composite.CompositeButton} */
+		private int position = -1;
 
 		/**
 		 * Sets the action that specifies the text, icon and tooltip of the button created by this
@@ -131,19 +139,29 @@ public class DropDownPopupButton extends JButton {
 		}
 
 		/**
+		 * Optional. If specified, the button will not be a standalone button, but rather be assumed to be part of multiple buttons
+		 * directly next to each other, see {@link com.rapidminer.gui.tools.components.composite.CompositeButton}.
+		 *
+		 * @param position
+		 * 		the position in the composite element ({@link SwingConstants#LEFT},
+		 * 		{@link SwingConstants#CENTER}, or {@link SwingConstants#RIGHT})
+		 * @return the builder
+		 * @since 8.1
+		 */
+		public DropDownPopupButtonBuilder setComposite(int position) {
+			this.position = position;
+			return this;
+		}
+
+		/**
 		 * Creates a {@link DropDownPopupButton} from the given data.
 		 *
 		 * @return the button created with the given data
 		 */
 		public DropDownPopupButton build() {
-			return new DropDownPopupButton(action, new PopupMenuProvider() {
-
-				@Override
-				public JPopupMenu getPopupMenu() {
-					return popupMenu;
-				}
-
-			});
+			DropDownPopupButton button =  new DropDownPopupButton(action, () -> popupMenu);
+			button.setComposite(position);
+			return button;
 		}
 
 	}
@@ -160,6 +178,11 @@ public class DropDownPopupButton extends JButton {
 	private long lastPopupCloseTime;
 
 	private final PopupMenuProvider menuProvider;
+
+	private int position = -1;
+
+	/** Paints the component background and border. */
+	private CompositeButtonPainter painter;
 
 	// small hack to prevent the popup from opening itself when you click
 	// the button to actually close it
@@ -226,30 +249,64 @@ public class DropDownPopupButton extends JButton {
 		setupAction();
 	}
 
+	/**
+	 * Makes this a composite button, i.e. one that is part of other buttons right next to each other with no space in between.
+	 *
+	 * @param position
+	 * 		a value of {@code -1} means regular button, otherwise see {@link com.rapidminer.gui.tools.components.composite.CompositeButton}
+	 */
+	private void setComposite(int position) {
+		this.position = position;
+		if (position !=-1) {
+			super.setContentAreaFilled(false);
+			super.setBorderPainted(false);
+			painter = new CompositeButtonPainter(this, position);
+		} else {
+			super.setContentAreaFilled(true);
+			super.setBorderPainted(true);
+			painter = null;
+		}
+	}
+
 	private void setupAction() {
-		addActionListener(new ActionListener() {
+		addActionListener(e -> {
+			JPopupMenu popupMenu = menuProvider.getPopupMenu();
 
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				JPopupMenu popupMenu = menuProvider.getPopupMenu();
-
-				if (!popupMenu.isVisible()) {
-					// hack to prevent filter popup from opening itself again
-					// when you click the button to actually close it while it
-					// is open
-					if (System.currentTimeMillis() - lastPopupCloseTime < 250) {
-						return;
-					}
-					popupMenu.addPopupMenuListener(popupListener);
-					for (PopupMenuListener listener : otherListeners) {
-						popupMenu.addPopupMenuListener(listener);
-					}
-
-					popupMenu.show(DropDownPopupButton.this, 0, DropDownPopupButton.this.getHeight() - 1);
-					popupMenu.requestFocusInWindow();
+			if (!popupMenu.isVisible()) {
+				// hack to prevent filter popup from opening itself again
+				// when you click the button to actually close it while it
+				// is open
+				if (System.currentTimeMillis() - lastPopupCloseTime < POPUP_CLOSE_DELTA) {
+					return;
 				}
+				popupMenu.addPopupMenuListener(popupListener);
+				for (PopupMenuListener listener : otherListeners) {
+					popupMenu.addPopupMenuListener(listener);
+				}
+
+				popupMenu.show(DropDownPopupButton.this, 0, DropDownPopupButton.this.getHeight() - 1);
+				popupMenu.requestFocusInWindow();
 			}
 		});
+	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		if (position != -1) {
+			painter.paintComponent(g);
+		}
+
+		// still super.paint because otherwise text is not painted etc.
+		super.paintComponent(g);
+	}
+
+	@Override
+	protected void paintBorder(Graphics g) {
+		if (position != -1) {
+			painter.paintBorder(g);
+		} else {
+			super.paintBorder(g);
+		}
 	}
 
 	@Override

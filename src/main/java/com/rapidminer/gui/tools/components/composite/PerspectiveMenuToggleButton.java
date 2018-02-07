@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,11 +21,8 @@ package com.rapidminer.gui.tools.components.composite;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -36,9 +33,9 @@ import javax.swing.SwingUtilities;
 
 import com.rapidminer.gui.Perspective;
 import com.rapidminer.gui.PerspectiveController;
-import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.NewPerspectiveAction;
 import com.rapidminer.gui.actions.WorkspaceAction;
+import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.tools.I18N;
@@ -93,27 +90,32 @@ class PerspectiveMenuToggleButton extends CompositeMenuToggleButton {
 			item.setText(item.getText() + BLANKS);
 			item.setLayout(new BorderLayout());
 
+			// the first call to this method is triggered by the super() call in the constructor, thus the perspective controller is null
+			// this is the case for non-user defined perspectives which are neither "design" nor "result". Don't want the remove button for those
+			boolean userDefined = false;
+			if (applicationPerspectiveController != null) {
+				Perspective perspective = applicationPerspectiveController.getModel().getPerspective(String.valueOf(action.getValue(ResourceAction.NAME)));
+				userDefined = perspective != null && perspective.isUserDefined();
+			}
+
 			final JButton removePerspectiveButton = new JButton(REMOVE_PERSPECTIVE_ICON);
 			removePerspectiveButton.setMargin(new Insets(0, 0, 0, 0));
 			removePerspectiveButton.setBorderPainted(false);
 			removePerspectiveButton.setOpaque(false);
 			removePerspectiveButton.setContentAreaFilled(false);
 			removePerspectiveButton.setVisible(false);
-			removePerspectiveButton.addActionListener(new ActionListener() {
+			removePerspectiveButton.addActionListener(e -> {
+				if (action instanceof WorkspaceAction) {
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					if (action instanceof WorkspaceAction) {
-						popupMenu.setVisible(false);
-						removePerspectiveButton.setIcon(REMOVE_PERSPECTIVE_ICON);
-						removePerspectiveButton.setVisible(false);
-						if (SwingTools.showConfirmDialog("delete_perspective", ConfirmDialog.YES_NO_OPTION,
-								((WorkspaceAction) action).getPerspective().getName()) == ConfirmDialog.YES_OPTION) {
-							applicationPerspectiveController.removePerspective(((WorkspaceAction) action).getPerspective());
-						}
+					String perspectiveName = ((WorkspaceAction) action).getPerspectiveName();
+					popupMenu.setVisible(false);
+					removePerspectiveButton.setIcon(REMOVE_PERSPECTIVE_ICON);
+					removePerspectiveButton.setVisible(false);
+					if (SwingTools.showConfirmDialog("delete_perspective", ConfirmDialog.YES_NO_OPTION, perspectiveName) == ConfirmDialog.YES_OPTION) {
+						applicationPerspectiveController.removePerspective(perspectiveName);
 					}
-
 				}
+
 			});
 
 			removePerspectiveButton.addMouseListener(new MouseAdapter() {
@@ -130,15 +132,15 @@ class PerspectiveMenuToggleButton extends CompositeMenuToggleButton {
 					item.dispatchEvent(SwingUtilities.convertMouseEvent(e.getComponent(), e, item));
 				}
 			});
-			item.add(removePerspectiveButton, BorderLayout.EAST);
 
-			item.addActionListener(new ActionListener() {
+			// only add the remove button for user-defined perspectives
+			if (userDefined) {
+				item.add(removePerspectiveButton, BorderLayout.EAST);
+			}
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					removePerspectiveButton.setVisible(false);
-					updateSelectionStatus();
-				}
+			item.addActionListener(e -> {
+				removePerspectiveButton.setVisible(false);
+				updateSelectionStatus();
 			});
 
 			item.addMouseListener(new MouseAdapter() {
@@ -159,13 +161,14 @@ class PerspectiveMenuToggleButton extends CompositeMenuToggleButton {
 			popupMenuGroup.add(item);
 			popupMenu.add(item);
 		}
+
 	}
 
 	/**
 	 * Adds the new perspective action to the menu.
 	 */
 	private void addNewPerspectiveAction() {
-		Action newPerspectiveAction = new NewPerspectiveAction(RapidMinerGUI.getMainFrame());
+		Action newPerspectiveAction = new NewPerspectiveAction();
 		newPerspectiveAction.putValue(Action.LARGE_ICON_KEY, null);
 		newPerspectiveAction.putValue(Action.SMALL_ICON, null);
 
@@ -174,5 +177,6 @@ class PerspectiveMenuToggleButton extends CompositeMenuToggleButton {
 
 		popupMenu.addSeparator();
 		popupMenu.add(item);
+		popupMenu.addSeparator();
 	}
 }

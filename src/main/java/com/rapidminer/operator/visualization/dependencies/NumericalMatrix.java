@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -27,7 +27,8 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.tools.Tools;
 
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 
 
 /**
@@ -48,7 +49,7 @@ public class NumericalMatrix extends ResultObjectAdapter {
 
 	private String[] rowNames;
 
-	private NumberFormat formatter;
+	private DecimalFormat formatter;
 
 	private String name;
 
@@ -62,11 +63,18 @@ public class NumericalMatrix extends ResultObjectAdapter {
 		this(name, columnNames, new Matrix(columnNames.length, columnNames.length), symmetrical);
 	}
 
-	public NumericalMatrix(String name, String[] columnNames, Matrix matrix, boolean symmetrical) {
-		this.name = name;
-		formatter = NumberFormat.getInstance();
+	private NumericalMatrix() {
+		formatter = new DecimalFormat();
+		DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
+		decimalFormatSymbols.setNaN("?");
+		formatter.setDecimalFormatSymbols(decimalFormatSymbols);
 		formatter.setMaximumFractionDigits(3);
 		formatter.setMinimumFractionDigits(3);
+	}
+
+	public NumericalMatrix(String name, String[] columnNames, Matrix matrix, boolean symmetrical) {
+		this();
+		this.name = name;
 		this.columnNames = columnNames;
 		this.rowNames = columnNames;
 		this.matrix = matrix;
@@ -74,10 +82,8 @@ public class NumericalMatrix extends ResultObjectAdapter {
 	}
 
 	public NumericalMatrix(String name, String[] rowNames, String[] columnNames, Matrix matrix) {
+		this();
 		this.name = name;
-		formatter = NumberFormat.getInstance();
-		formatter.setMaximumFractionDigits(3);
-		formatter.setMinimumFractionDigits(3);
 		this.rowNames = rowNames;
 		this.columnNames = columnNames;
 		this.matrix = matrix;

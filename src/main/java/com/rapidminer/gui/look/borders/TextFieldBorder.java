@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,12 +23,18 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.RenderingHints;
-
+import java.awt.Shape;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
+import javax.swing.JComponent;
+import javax.swing.SwingConstants;
 import javax.swing.border.AbstractBorder;
 import javax.swing.plaf.UIResource;
 
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.look.RapidLookAndFeel;
+import com.rapidminer.gui.look.RapidLookTools;
 
 
 /**
@@ -47,17 +53,66 @@ public class TextFieldBorder extends AbstractBorder implements UIResource {
 
 		g2.translate(x, y);
 
-		if (c.isEnabled()) {
-			if (c.isFocusOwner()) {
-				g2.setColor(Colors.TEXTFIELD_BORDER_FOCUS);
+		boolean darkBorder = c instanceof JComponent && Boolean.parseBoolean(String.valueOf(((JComponent) c).getClientProperty(RapidLookTools.PROPERTY_INPUT_DARK_BORDER)));
+		if (darkBorder) {
+			if (c.isEnabled()) {
+				if (c.isFocusOwner()) {
+					g2.setColor(Colors.TEXTFIELD_BORDER_DARK_FOCUS);
+				} else {
+					g2.setColor(Colors.TEXTFIELD_BORDER_DARK);
+				}
 			} else {
-				g2.setColor(Colors.TEXTFIELD_BORDER);
+				g2.setColor(Colors.TEXTFIELD_BORDER_DARK_DISABLED);
 			}
 		} else {
-			g2.setColor(Colors.TEXTFIELD_BORDER_DISABLED);
+			if (c.isEnabled()) {
+				if (c.isFocusOwner()) {
+					g2.setColor(Colors.TEXTFIELD_BORDER_FOCUS);
+				} else {
+					g2.setColor(Colors.TEXTFIELD_BORDER);
+				}
+			} else {
+				g2.setColor(Colors.TEXTFIELD_BORDER_DISABLED);
+			}
 		}
 
-		g2.drawRoundRect(0, 0, w - 1, h - 1, RapidLookAndFeel.CORNER_DEFAULT_RADIUS, RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+		// composite field, aka part of other components directly adjacent to it?
+		int position = -1;
+		if (c instanceof JComponent) {
+			Object composite = ((JComponent) c).getClientProperty(RapidLookTools.PROPERTY_INPUT_TYPE_COMPOSITE);
+			if (composite != null) {
+				try {
+					position = Integer.valueOf(String.valueOf(composite));
+				} catch (NumberFormatException e) {
+					// stay with -1 aka standalone
+				}
+			}
+
+		}
+
+		int radius = RapidLookAndFeel.CORNER_DEFAULT_RADIUS;
+		Shape borderShape;
+		switch (position) {
+			case SwingConstants.LEFT:
+				borderShape = new RoundRectangle2D.Double(0, 0, w + radius, h - 1, radius, radius);
+				g2.draw(borderShape);
+				break;
+			case SwingConstants.CENTER:
+				borderShape = new Rectangle2D.Double(0, 0, w + radius, h - 1);
+				g2.draw(borderShape);
+				break;
+			case SwingConstants.RIGHT:
+				borderShape = new RoundRectangle2D.Double(-radius, 0, w + radius - 1, h - 1, radius, radius);
+				g2.draw(borderShape);
+				// special case, right field has a left border
+				borderShape = new Line2D.Double(0, 0, 0, h);
+				g2.draw(borderShape);
+				break;
+			default:
+				borderShape = new RoundRectangle2D.Double(0, 0, w - 1, h - 1, radius, radius);
+				g2.draw(borderShape);
+				break;
+		}
 
 		g2.translate(-x, -y);
 	}

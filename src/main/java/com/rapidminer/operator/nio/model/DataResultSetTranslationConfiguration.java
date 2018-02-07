@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -22,6 +22,7 @@ import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.ANNO
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_ANNOTATIONS;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_DATE_FORMAT;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_FIRST_ROW_AS_NAMES;
+import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_READ_AS_POLYNOMINAL;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_LOCALE;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_META_DATA;
 
@@ -81,7 +82,7 @@ public class DataResultSetTranslationConfiguration {
 	 * This constructor can be used to generate an empty configuration just depending on the given
 	 * resultSet
 	 *
-	 * @param resultSet
+	 * @param readerOperator
 	 * @throws OperatorException
 	 */
 	public DataResultSetTranslationConfiguration(AbstractDataResultSetReader readerOperator) {
@@ -376,7 +377,7 @@ public class DataResultSetTranslationConfiguration {
 	public static ColumnMetaData[] readColumnMetaData(AbstractDataResultSetReader readerOperator) {
 		// initializing data structures
 		List<String[]> metaDataSettings;
-		if (readerOperator.isParameterSet(PARAMETER_META_DATA)) {
+		if (readerOperator.isParameterSet(PARAMETER_META_DATA) && !readerOperator.getParameterAsBoolean(PARAMETER_READ_AS_POLYNOMINAL)) {
 			try {
 				metaDataSettings = readerOperator.getParameterList(PARAMETER_META_DATA);
 			} catch (UndefinedParameterError e) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -80,7 +80,7 @@ class ExcelSheetSelectionWizardStep extends WizardStep {
 
 	@Override
 	protected boolean performLeavingAction(WizardStepDirection direction) {
-		if (direction == WizardStepDirection.FORWARD) {
+		if (direction == WizardStepDirection.FORWARD || direction == WizardStepDirection.FINISH) {
 			ExcelWorkbookSelection selection = workbookSelectionPanel.getSelection();
 
 			// empty workbooks (i.e. without any column) cannot leave
@@ -89,6 +89,7 @@ class ExcelSheetSelectionWizardStep extends WizardStep {
 			}
 
 			configuration.setSheet(selection.getSheetIndex());
+			configuration.setSheetSelectionMode(ExcelResultSetConfiguration.SheetSelectionMode.BY_INDEX);
 			configuration.setColumnOffset(selection.getColumnIndexStart());
 			configuration.setColumnLast(selection.getColumnIndexEnd());
 			configuration.setRowOffset(selection.getRowIndexStart());

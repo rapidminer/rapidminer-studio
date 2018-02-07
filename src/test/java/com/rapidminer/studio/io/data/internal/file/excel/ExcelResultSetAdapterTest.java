@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -38,7 +38,6 @@ import com.rapidminer.operator.nio.model.DataResultSet;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.studio.io.data.internal.ResultSetAdapter;
 import com.rapidminer.studio.io.data.internal.file.FileDataSourceTestUtils;
-import com.rapidminer.studio.io.data.internal.file.excel.ExcelResultSetAdapter;
 
 
 /**
@@ -172,7 +171,8 @@ public class ExcelResultSetAdapterTest {
 
 			// configure data import
 			configuration.setWorkbookFile(testFile);
-			configuration.setSheet(2);
+			configuration.setSheetByName("Tabelle2");
+			configuration.setSheetSelectionMode(ExcelResultSetConfiguration.SheetSelectionMode.BY_NAME);
 			configuration.setDatePattern(datePattern);
 
 			SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -55,6 +55,7 @@ import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.ParameterTypeTupel;
 import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
+import com.rapidminer.parameter.conditions.ParameterCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
@@ -86,6 +87,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	public static final String PARAMETER_COLUMN_SELECTED = "column_selected";
 	public static final String PARAMETER_COLUMN_VALUE_TYPE = "attribute_value_type";
 	public static final String PARAMETER_COLUMN_ROLE = "attribute_role";
+	public static final String PARAMETER_READ_AS_POLYNOMINAL = "read_all_values_as_polynominal";
 
 	public static final String PARAMETER_DATE_FORMAT = "date_format";
 	public static final String PARAMETER_TIME_ZONE = "time_zone";
@@ -164,9 +166,14 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 			configuration.setNumberFormat(numberFormat);
 		}
 
-		if (configComplete) {
+		if (configComplete && getParameterAsBoolean(PARAMETER_READ_AS_POLYNOMINAL)) {
+			for (ColumnMetaData metaData : configuration.getColumnMetaData()) {
+				metaData.setAttributeValueType(Ontology.POLYNOMINAL);
+			}
+		} else if (configComplete) {
 			translator.guessValueTypes(configuration, dataResultSet, null);
 		}
+
 		return translator.read(dataResultSet, configuration, false, null);
 	}
 
@@ -201,7 +208,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	/**
 	 * Returns either the selected file referenced by the value of the parameter with the name
 	 * {@link #getFileParameterName()} or the file delivered at {@link #fileInputPort}. Which of
-	 * these options is chosen is determined by the parameter {@link #PARAMETER_DESTINATION_TYPE}.
+	 * these options is chosen is determined by the parameter {@link com.rapidminer.operator.nio.file.WriteFileOperator#PARAMETER_DESTINATION_TYPE}.
 	 * */
 	public File getSelectedFile() throws OperatorException {
 		return filePortHandler.getSelectedFile();
@@ -291,6 +298,10 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 
 		types.addAll(super.getParameterTypes());
 
+		types.add(new ParameterTypeBoolean(PARAMETER_READ_AS_POLYNOMINAL,
+				"Type guessing and manual meta data handling is disabled and everything is read as polynominal.", false, true));
+		ParameterCondition dependsOnGuessValue = new BooleanParameterCondition(this, PARAMETER_READ_AS_POLYNOMINAL, false, false);
+
 		type = new ParameterTypeList(PARAMETER_META_DATA, "The meta data information", //
 				new ParameterTypeInt(PARAMETER_COLUMN_INDEX, "The column index", 0, Integer.MAX_VALUE), //
 				new ParameterTypeTupel(PARAMETER_COLUMN_META_DATA, "The meta data definition of one column", //
@@ -302,9 +313,13 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 								Attributes.KNOWN_ATTRIBUTE_TYPES, AttributeColumn.REGULAR)),
 				true);
 
+		type.registerDependencyCondition(dependsOnGuessValue);
+
 		types.add(type);
-		types.add(new ParameterTypeBoolean(PARAMETER_ERROR_TOLERANT,
-				"Values which does not match to the specified value typed are considered as missings.", true, true));
+		type = new ParameterTypeBoolean(PARAMETER_ERROR_TOLERANT,
+				"Values which does not match to the specified value typed are considered as missings.", true, true);
+		type.registerDependencyCondition(dependsOnGuessValue);
+		types.add(type);
 
 		DataManagementParameterHelper.addParameterTypes(types, this);
 		return types;

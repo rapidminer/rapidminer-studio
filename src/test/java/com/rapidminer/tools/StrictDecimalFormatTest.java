@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -89,6 +89,35 @@ public class StrictDecimalFormatTest {
 			strictDecimalFormatComma.parse("1.2337");
 			fail();
 		} catch (ParseException e) {
+			assertNotNull(e.getMessage());
+		}
+	}
+
+	@Test
+	public void parseEmptyStrings() {
+		StrictDecimalFormat strictDecimalFormatComma = new StrictDecimalFormat();
+		try {
+			strictDecimalFormatComma.parse("");
+			fail();
+		} catch (ParseException e){
+			assertNotNull(e.getMessage());
+		}
+		try {
+			strictDecimalFormatComma.parse(" ");
+			fail();
+		} catch (ParseException e){
+			assertNotNull(e.getMessage());
+		}
+		try {
+			strictDecimalFormatComma.parse("\n");
+			fail();
+		} catch (ParseException e){
+			assertNotNull(e.getMessage());
+		}
+		try {
+			strictDecimalFormatComma.parse("\t");
+			fail();
+		} catch (ParseException e){
 			assertNotNull(e.getMessage());
 		}
 	}

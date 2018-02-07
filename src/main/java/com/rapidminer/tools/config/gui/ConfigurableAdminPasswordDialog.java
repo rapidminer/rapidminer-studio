@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -165,7 +165,6 @@ public class ConfigurableAdminPasswordDialog extends ButtonDialog {
 		c.gridy += 1;
 		mainPanel.add(userLabel, c);
 		c.gridx += 1;
-		userField.setEditable(false);
 		userField.setMinimumSize(userField.getPreferredSize());
 		mainPanel.add(userField, c);
 		c.gridx += 1;

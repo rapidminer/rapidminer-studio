@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,6 +18,7 @@
 */
 package com.rapidminer.repository.gui.actions;
 
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Repository;
@@ -43,18 +44,25 @@ public class RenameRepositoryEntryAction extends AbstractRepositoryAction<Entry>
 		if (entry instanceof Repository) {
 			return;
 		}
+
 		String name = SwingTools.showRepositoryEntryInputDialog("file_chooser.rename", entry.getName(), entry.getName());
 		if ((name != null) && !name.equals(entry.getName())) {
-			boolean success = false;
-			try {
-				success = entry.rename(name);
-			} catch (Exception e) {
-				SwingTools.showSimpleErrorMessage("cannot_rename_entry", e, entry.getName(), name, e.getMessage());
-				return;
-			}
-			if (!success) {
-				SwingTools.showVerySimpleErrorMessage("cannot_rename_entry", entry.getName(), name);
-			}
+			// don't rename in EDT, RemoteRepository could block entire UI
+			new ProgressThread("repository_rename") {
+				@Override
+				public void run() {
+					boolean success;
+					try {
+						success = entry.rename(name);
+					} catch (Exception e) {
+						SwingTools.showSimpleErrorMessage("cannot_rename_entry", e, entry.getName(), name, e.getMessage());
+						return;
+					}
+					if (!success) {
+						SwingTools.showVerySimpleErrorMessage("cannot_rename_entry", entry.getName(), name);
+					}
+				}
+			}.start();
 		}
 	}
 

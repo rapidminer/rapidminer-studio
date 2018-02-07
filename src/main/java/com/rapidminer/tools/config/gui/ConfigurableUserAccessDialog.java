@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -30,6 +30,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -140,19 +141,18 @@ public class ConfigurableUserAccessDialog extends ButtonDialog {
 
 			@Override
 			public void run() {
-				List<String> allGroups;
+				Collection<String> allGroups;
 
 				try {
 					allGroups = configurable.getSource().getContentManager().getAllGroupNames();
 				} catch (PasswordInputCanceledException | RepositoryException e) {
-					allGroups = new ArrayList<>(
-							ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable));
+					allGroups = ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable);
 				}
 
 				final Set<String> permittedGroups = ConfigurationManager.getInstance()
 						.getPermittedGroupsForConfigurable(configurable);
 
-				final List<String> allGroupsFinal = allGroups;
+				final Collection<String> allGroupsFinal = allGroups;
 
 				SwingUtilities.invokeLater(new Runnable() {
 

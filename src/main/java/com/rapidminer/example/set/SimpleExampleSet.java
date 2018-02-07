@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -183,5 +183,10 @@ public class SimpleExampleSet extends AbstractExampleSet {
 			ColumnarExampleTable table = (ColumnarExampleTable) exampleTable;
 			this.exampleTable = table.columnCleanupClone(attributes);
 		}
+	}
+
+	@Override
+	public boolean isThreadSafeView() {
+		return true;
 	}
 }

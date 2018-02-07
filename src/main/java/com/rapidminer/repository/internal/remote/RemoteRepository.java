@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,7 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
-import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.ConnectionRepository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.PasswordInputCanceledException;
 
@@ -38,7 +38,7 @@ import com.rapidminer.tools.PasswordInputCanceledException;
  * @since 6.5.0
  *
  */
-public interface RemoteRepository extends Repository, RemoteFolder {
+public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 
 	public static final String TAG_REMOTE_REPOSITORY = "remoteRepository";
 
@@ -88,11 +88,6 @@ public interface RemoteRepository extends Repository, RemoteFolder {
 	 * @return whether the password input dialog has been canceled by the user
 	 */
 	boolean isPasswordInputCanceled();
-
-	/**
-	 * @return whether the {@link RemoteRepository} is connected (online) or disconneted (offline).
-	 */
-	boolean isConnected();
 
 	/**
 	 * Checks if the server is reachable at the moment with the current login; repeatedly shows the
@@ -198,16 +193,30 @@ public interface RemoteRepository extends Repository, RemoteFolder {
 	 * Registers a {@link ConnectionListener}.
 	 *
 	 * @param listener
-	 *            the {@link ConnectionListener} to register
+	 * 		the {@link ConnectionListener} to register
+	 * @deprecated Only here for legacy compatibility reasons. Use {@link ConnectionRepository#addConnectionListener(com.rapidminer.repository.ConnectionListener)} instead.
 	 */
+	@Deprecated
 	void addConnectionListener(ConnectionListener listener);
 
 	/**
 	 * Removes a registered {@link ConnectionListener}.
 	 *
 	 * @param listener
-	 *            the {@link ConnectionListener} to remove
+	 * 		the {@link ConnectionListener} to remove
+	 * @deprecated Only here for legacy compatibility reasons. Use {@link ConnectionRepository#removeConnectionListener(com.rapidminer.repository.ConnectionListener)} instead.
 	 */
+	@Deprecated
 	void removeConnectionListener(ConnectionListener listener);
+
+	/**
+	 * Checks if the specified file name is blacklisted or not. Will return {@code false} by default.
+	 * @param originalFilename the name of the file to be pushed
+	 * @return {@code true} if the file is blacklisted, {@code false} otherwise
+	 * @since 8.1
+	 * @throws IOException if a connection error occurs
+	 * @throws RepositoryException if a repository error occurs
+	 */
+	default boolean isFileExtensionBlacklisted(String originalFilename) throws IOException, RepositoryException {return false;}
 
 }

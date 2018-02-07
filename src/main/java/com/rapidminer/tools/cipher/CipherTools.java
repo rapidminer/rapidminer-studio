@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -112,15 +112,7 @@ public class CipherTools {
 				base64 = Base64.encodeBytes(outputBytes);
 			}
 			return base64;
-		} catch (NoSuchAlgorithmException e) {
-			throw new CipherException("Failed to encrypt text: " + e.getMessage());
-		} catch (NoSuchPaddingException e) {
-			throw new CipherException("Failed to encrypt text: " + e.getMessage());
-		} catch (InvalidKeyException e) {
-			throw new CipherException("Failed to encrypt text: " + e.getMessage());
-		} catch (IllegalBlockSizeException e) {
-			throw new CipherException("Failed to encrypt text: " + e.getMessage());
-		} catch (BadPaddingException e) {
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
 			throw new CipherException("Failed to encrypt text: " + e.getMessage());
 		}
 	}
@@ -168,17 +160,7 @@ public class CipherTools {
 			byte[] outputBytes = cipher.doFinal(encrypted);
 			String ret = new String(outputBytes);
 			return ret;
-		} catch (NoSuchAlgorithmException e) {
-			throw new CipherException("Failed to decrypt text: " + e.getMessage());
-		} catch (NoSuchPaddingException e) {
-			throw new CipherException("Failed to decrypt text: " + e.getMessage());
-		} catch (IOException e) {
-			throw new CipherException("Failed to decrypt text: " + e.getMessage());
-		} catch (InvalidKeyException e) {
-			throw new CipherException("Failed to decrypt text: " + e.getMessage());
-		} catch (IllegalBlockSizeException e) {
-			throw new CipherException("Failed to decrypt text: " + e.getMessage());
-		} catch (BadPaddingException e) {
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException | IOException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | IllegalArgumentException e) {
 			throw new CipherException("Failed to decrypt text: " + e.getMessage());
 		}
 	}

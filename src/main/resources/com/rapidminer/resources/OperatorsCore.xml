@@ -118,6 +118,26 @@
 				<class>com.rapidminer.operator.meta.LearningCurveOperator</class>
 				<replaces>LearningCurve</replaces>
 			</operator>
+			<operator>
+				<deprecatedSince>8.1</deprecatedSince>
+				<key>join</key>
+				<class>com.rapidminer.operator.preprocessing.join.ExampleSetJoin
+				</class>
+				<replaces>ExampleSetJoin</replaces>
+			</operator>
+			<operator>
+				<deprecatedSince>8.1</deprecatedSince>
+				<key>correlation_matrix</key>
+				<class>com.rapidminer.operator.visualization.dependencies.CorrelationMatrixOperator
+				</class>
+				<replaces>CorrelationMatrix</replaces>
+			</operator>
+			<operator>
+				<deprecatedSince>8.1</deprecatedSince>
+				<key>k_means</key>
+				<class>com.rapidminer.operator.clustering.clusterer.KMeans</class>
+				<replaces>KMeans</replaces>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -609,12 +629,7 @@
 						<class>com.rapidminer.operator.preprocessing.join.ExampleSetMerge
 						</class>
 						<replaces>ExampleSetMerge</replaces>
-					</operator>
-					<operator>
-						<key>join</key>
-						<class>com.rapidminer.operator.preprocessing.join.ExampleSetJoin
-						</class>
-						<replaces>ExampleSetJoin</replaces>
+						<priority>100</priority>
 					</operator>
 					<operator>
 						<key>set_minus</key>
@@ -1241,11 +1256,6 @@
 			<group key="segmentation">
 				<icon>chart_dot.png</icon>
 				<operator>
-					<key>k_means</key>
-					<class>com.rapidminer.operator.clustering.clusterer.KMeans</class>
-					<replaces>KMeans</replaces>
-				</operator>
-				<operator>
 					<key>k_means_kernel</key>
 					<class>com.rapidminer.operator.clustering.clusterer.KernelKMeans
 					</class>
@@ -1352,12 +1362,6 @@
 			</group>
 			<group key="correlations">
 				<icon>table_selection_range.png</icon>
-				<operator>
-					<key>correlation_matrix</key>
-					<class>com.rapidminer.operator.visualization.dependencies.CorrelationMatrixOperator
-					</class>
-					<replaces>CorrelationMatrix</replaces>
-				</operator>
 				<operator>
 					<key>covariance_matrix</key>
 					<class>com.rapidminer.operator.visualization.dependencies.CovarianceMatrixOperator

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -140,8 +140,9 @@ public class ExampleSetPrecondition extends AbstractPrecondition {
 								// ID-Tagging
 								if (name.equals(Attributes.ID_NAME)) {
 									OperatorDescription[] ods = OperatorService.getOperatorDescriptions(IdTagging.class);
-									fixes.add(new OperatorInsertionQuickFix("insert_id_tagging", new Object[] { ods[0]
-											.getName() }, 10, inputPort) {
+									fixes.add(new OperatorInsertionQuickFix("insert_id_tagging",
+											new Object[] { ods.length > 0 ? ods[0].getName() : "" },
+											10, inputPort) {
 
 										@Override
 										public Operator createOperator() throws OperatorCreationException {

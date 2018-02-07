@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -670,7 +670,6 @@ public class RapidMiner {
 	 * {@link LicenseLocation} from {@link ProductConstraintManager} will be used.
 	 */
 	public static void init(final Product product, final LicenseLocation licenseLocation) {
-
 		RapidMiner.splashMessage("init_i18n");
 		I18N.getErrorBundle();
 
@@ -734,6 +733,10 @@ public class RapidMiner {
 		Plugin.initAll();
 		Plugin.initPluginSplashTexts(RapidMiner.splashScreen);
 
+		// initialize renderers
+		RapidMiner.splashMessage("init_renderers");
+		RendererService.init();
+
 		RapidMiner.splashMessage("init_ops");
 		OperatorService.init();
 
@@ -746,9 +749,7 @@ public class RapidMiner {
 		RapidMiner.splashMessage("init_configurables");
 		ConfigurationManager.getInstance().initialize();
 
-		// initialize renderers
-		RapidMiner.splashMessage("init_renderers");
-		RendererService.init();
+
 
 		// initialize xml serialization
 		RapidMiner.splashMessage("xml_serialization");

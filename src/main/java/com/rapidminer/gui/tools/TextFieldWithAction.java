@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -28,7 +28,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -63,7 +62,11 @@ public class TextFieldWithAction extends JPanel {
 
 	private ImageIcon hoverActionIcon = null;
 
+	private ImageIcon defaultIcon = null;
+	private ImageIcon forceIcon = null;
+
 	private JTextField field;
+	private JLabel actionLabel;
 
 	/**
 	 * Creates a new {@link TextFieldWithAction} instance.
@@ -85,8 +88,8 @@ public class TextFieldWithAction extends JPanel {
 	 *            the textfield into which the action icon should be placed
 	 * @param action
 	 *            the action to invoke when clicking the icon in the textfield
-	 * @param hoverAction
-	 *            the action to invoke when hovering the icon in the textfield
+	 * @param hoverIcon
+	 *            the icon to display when hovering over the textfield
 	 */
 	public TextFieldWithAction(final JTextField field, final ResourceAction action, final ImageIcon hoverIcon) {
 		if (field == null) {
@@ -107,15 +110,22 @@ public class TextFieldWithAction extends JPanel {
 		actionIcon = SwingTools.createIcon("16/" + action.getIconName(), action.getIconType() == IconType.MONO);
 		hoverActionIcon = hoverIcon;
 
-		final JLabel actionLabel = new JLabel(actionIcon) {
+		actionLabel = new JLabel(actionIcon) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void paintComponent(Graphics g) {
+				Graphics2D g2 = (Graphics2D) g;
+
+				// force icon set? Always show that.
+				if (forceIcon != null) {
+					super.paintComponent(g2);
+					return;
+				}
+
 				// override this so the action is only visible, when there is text in the text field
-				if (!(field.getText().isEmpty() || field.getText() == null)) {
-					Graphics2D g2 = (Graphics2D) g;
+				if (!(field.getText() == null || field.getText().isEmpty())) {
 
 					// only in the case there is no hover action icon given
 					if (hoverActionIcon == null && hovered) {
@@ -131,6 +141,9 @@ public class TextFieldWithAction extends JPanel {
 					}
 
 					super.paintComponent(g2);
+				} else if (defaultIcon != null) {
+					// no text but a default icon? Paint it.
+					defaultIcon.paintIcon(this, g2, 0, 0);
 				}
 			}
 		};
@@ -146,6 +159,10 @@ public class TextFieldWithAction extends JPanel {
 
 			@Override
 			public void mouseEntered(MouseEvent e) {
+				if (forceIcon != null) {
+					return;
+				}
+
 				hovered = true;
 				if (hoverActionIcon != null) {
 					actionLabel.setIcon(hoverActionIcon);
@@ -155,6 +172,10 @@ public class TextFieldWithAction extends JPanel {
 
 			@Override
 			public void mouseExited(MouseEvent e) {
+				if (forceIcon != null) {
+					return;
+				}
+
 				hovered = false;
 				if (hoverActionIcon != null) {
 					actionLabel.setIcon(actionIcon);
@@ -223,6 +244,33 @@ public class TextFieldWithAction extends JPanel {
 	@Override
 	public boolean hasFocus() {
 		return field.isFocusOwner();
+	}
+
+	/**
+	 * Sets the icon which is painted if no text is in this textfield.
+	 *
+	 * @param defaultIcon
+	 * 		the icon to paint if no text has been entered. If not specified, no icon will be painted
+	 * @since 8.1
+	 */
+	public void setDefaultIcon(ImageIcon defaultIcon) {
+		this.defaultIcon = defaultIcon;
+	}
+
+	/**
+	 * Forces the given icon to be visible no matter how the user interacts with the text field. To unset, call again with {@code null}.
+	 *
+	 * @param forceIcon
+	 * 		the icon which should always be painted regardless of state of the text field. Set to {@code null} to remove the forced icon
+	 * @since 8.1
+	 */
+	public void setForceIcon(ImageIcon forceIcon) {
+		this.forceIcon = forceIcon;
+		if (forceIcon != null) {
+			actionLabel.setIcon(forceIcon);
+		} else {
+			actionLabel.setIcon(actionIcon);
+		}
 	}
 
 }

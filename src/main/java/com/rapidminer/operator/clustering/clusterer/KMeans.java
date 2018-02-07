@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -48,7 +48,9 @@ import de.dfki.madm.operator.KMeanspp;
  * attribute if not present yet.
  *
  * @author Sebastian Land
+ * @deprecated since 8.1, replaced by the KMeans in the Concurrency extension
  */
+@Deprecated
 public class KMeans extends RMAbstractClusterer {
 
 	/** The parameter name for &quot;the maximal number of clusters&quot; */

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,7 +18,10 @@
 */
 package com.rapidminer.gui.security;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -34,9 +37,16 @@ public class CredentialsTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean showPasswords;
+	/** Bad luck if your future password consist of 14 stars */
+	private static final String HIDDEN_PASSWORD = "**************";
+	// column information
+	private static final int COLUMN_USER_INDEX = 2;
+	private static final int COLUMN_PASSWORD_INDEX = 3;
+	private static final int COLUMN_COUNT = 4;
+
 	private Wallet wallet;
-	private LinkedList<String> listOfWalletKeys = new LinkedList<String>();
+	private List<String> listOfWalletKeys = new LinkedList<>();
+	private Map<String, Boolean> modifiedPasswords = new HashMap<>();
 
 	public CredentialsTableModel(Wallet wallet) {
 		this.wallet = wallet;
@@ -44,11 +54,8 @@ public class CredentialsTableModel extends AbstractTableModel {
 
 	@Override
 	public int getColumnCount() {
-		if (isShowPasswords()) {
-			return 4;
+		return COLUMN_COUNT;
 		}
-		return 3;
-	}
 
 	@Override
 	public int getRowCount() {
@@ -70,10 +77,10 @@ public class CredentialsTableModel extends AbstractTableModel {
 				return getWallet().extractIdFromKey(listOfWalletKeys.get(rowIndex));
 			case 1:
 				return userCredential.getURL();
-			case 2:
+			case COLUMN_USER_INDEX:
 				return userCredential.getUsername();
-			case 3:
-				return new String(userCredential.getPassword());
+			case COLUMN_PASSWORD_INDEX:
+				return HIDDEN_PASSWORD;
 			default:
 				throw new RuntimeException("No such column: " + columnIndex); // cannot happen
 		}
@@ -94,10 +101,11 @@ public class CredentialsTableModel extends AbstractTableModel {
 		// uses list of keys directly which may or may not contain ID attribute, therefore this call
 		// is correct
 		UserCredential userCredential = getWallet().getEntry(listOfWalletKeys.get(row));
-		if (col == 2) {
+		if (col == COLUMN_USER_INDEX) {
 			userCredential.setUser((String) value);
 		}
-		if (col == 3) {
+		if (col == COLUMN_PASSWORD_INDEX && !HIDDEN_PASSWORD.equals(((String) value).trim())) {
+			modifiedPasswords.put(listOfWalletKeys.get(row), true);
 			userCredential.setPassword(((String) value).toCharArray());
 		}
 
@@ -112,22 +120,13 @@ public class CredentialsTableModel extends AbstractTableModel {
 				return "ID";
 			case 1:
 				return "URL";
-			case 2:
+			case COLUMN_USER_INDEX:
 				return "Username";
-			case 3:
+			case COLUMN_PASSWORD_INDEX:
 				return "Password";
 			default:
 				throw new RuntimeException("No such column: " + column); // cannot happen
 		}
-	}
-
-	public void setShowPasswords(boolean showPasswords) {
-		this.showPasswords = showPasswords;
-		fireTableStructureChanged();
-	}
-
-	public boolean isShowPasswords() {
-		return showPasswords;
 	}
 
 	@SuppressWarnings("deprecation")

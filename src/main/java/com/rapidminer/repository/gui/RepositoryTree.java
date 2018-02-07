@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -22,6 +22,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -40,7 +41,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JComponent;
@@ -1109,6 +1109,32 @@ public class RepositoryTree extends JTree {
 	}
 
 	/**
+	 * Similar as {@link #scrollPathToVisible(TreePath)}, but centers it instead. Used for explicit highlighting.
+	 *
+	 * @param path
+	 * 		the path to center
+	 * 	@since 8.1
+	 */
+	private void scrollPathToVisibleCenter(TreePath path) {
+		if (path == null) {
+			return;
+		}
+
+		// set y and height in a way that the path always appears in the center
+		Rectangle bounds = getPathBounds(path);
+		if (bounds != null) {
+			Rectangle visibleRect = getVisibleRect();
+			// try to stay as far left as possible. If very deep folder structure, let Swing decide where to start
+			if ((bounds.x + 50) < visibleRect.x + visibleRect.width) {
+				bounds.x = 0;
+			}
+			bounds.y = bounds.y - visibleRect.height / 2;
+			bounds.height = visibleRect.height;
+			scrollRectToVisible(bounds);
+		}
+	}
+
+	/**
 	 * Selects as much as possible of the selected path to the given location. Returns true if the
 	 * given location references a folder.
 	 */
@@ -1170,7 +1196,7 @@ public class RepositoryTree extends JTree {
 		} else {
 			expandIfExists(location, null);
 		}
-		scrollPathToVisible(getSelectionPath());
+		scrollPathToVisibleCenter(getSelectionPath());
 	}
 
 	private void showPopup(MouseEvent e) {

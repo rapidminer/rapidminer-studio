@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -24,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -79,7 +78,7 @@ public class FileRepositoryProvider implements RepositoryProvider {
 		if (file.exists()) {
 			LOGGER.config("Loading repositories from " + file);
 			try {
-				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
+				Document doc = XMLTools.createDocumentBuilder().parse(file);
 				if (!doc.getDocumentElement().getTagName().equals(TAG_REPOSITORIES)) {
 					LOGGER.warning("Broken repositories file. Root element must be <reposities>.");
 					return result;
@@ -102,7 +101,9 @@ public class FileRepositoryProvider implements RepositoryProvider {
 								if (tagName.equals(factory.getXMLTag())) {
 									try {
 										result.add(factory.fromXML(element));
-									} catch (RepositoryException | XMLException e) {
+									} catch (NoClassDefFoundError | Exception e) {
+										// this is needed to catch "NoClassDefFoundError"s when having a repository
+										// from an extension that references some illegal class that is no longer available
 										failedToLoad.add(element);
 										LOGGER.log(Level.WARNING, "Cannot read custom repository entry.", e);
 									}
@@ -117,7 +118,7 @@ public class FileRepositoryProvider implements RepositoryProvider {
 						}
 					}
 				}
-			} catch (RuntimeException | SAXException | IOException | ParserConfigurationException e) {
+			} catch (RuntimeException | SAXException | IOException e) {
 				LOGGER.log(Level.WARNING, "Cannot read repository configuration file '" + file + "': " + e, e);
 			}
 		}

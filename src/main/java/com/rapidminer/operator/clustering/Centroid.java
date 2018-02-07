@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -56,6 +56,13 @@ public class Centroid implements Serializable {
 		numberOfAssigned++;
 		for (int i = 0; i < exampleValues.length; i++) {
 			centroidSum[i] += exampleValues[i];
+		}
+	}
+
+	public void assignMultipleExamples(double[] summedExampleValuesAndNumberOfExamples) {
+		numberOfAssigned = (int) summedExampleValuesAndNumberOfExamples[summedExampleValuesAndNumberOfExamples.length - 1];
+		for (int i = 0; i < summedExampleValuesAndNumberOfExamples.length - 1; i++) {
+			centroidSum[i] += summedExampleValuesAndNumberOfExamples[i];
 		}
 	}
 

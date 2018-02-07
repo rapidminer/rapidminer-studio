@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,42 +19,35 @@
 package com.rapidminer.gui;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.net.URI;
+import java.awt.Insets;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.rapidminer.gui.actions.AboutAction;
-import com.rapidminer.gui.actions.BrowseAction;
-import com.rapidminer.gui.actions.RedoAction;
-import com.rapidminer.gui.actions.UndoAction;
 import com.rapidminer.gui.actions.WorkspaceAction;
-import com.rapidminer.gui.actions.startup.TutorialAction;
 import com.rapidminer.gui.look.Colors;
-import com.rapidminer.gui.osx.OSXAdapter;
-import com.rapidminer.gui.tools.ResourceActionAdapter;
+import com.rapidminer.gui.search.GlobalSearchPanel;
+import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceLabel;
-import com.rapidminer.gui.tools.components.DropDownPopupButton.DropDownPopupButtonBuilder;
 import com.rapidminer.gui.tools.components.composite.PerspectiveToggleGroup;
 import com.rapidminer.gui.tools.components.composite.SplitButton;
 import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
-import com.rapidminer.tools.SystemInfoUtilities;
-import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 
 
 /**
@@ -68,18 +61,24 @@ import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
  */
 public class MainToolBar extends JPanel {
 
-	private static final Dimension PERSPECTIVES_SIZE = new Dimension(120, 32);
+	private static final Dimension PERSPECTIVES_SIZE = new Dimension(100, 32);
 
 	private static final long serialVersionUID = 1L;
+
+	/** How many views should be shown by default as buttons */
+	private static final int DEFAULT_PRIMARY_VISIBLE = 3;
 
 	/** Split button containing all run actions. */
 	private SplitButton runActions;
 
+	/** Panel containing all clickable actions */
+	private JPanel actionsPanel;
+
 	/** Panel which contains the perspective group and a label */
 	private JPanel perspectivesPanel;
 
-	/** Panel which contains the resource button */
-	private JPanel resourcesPanel;
+	/** Label contained in the {@link #perspectivesPanel} */
+	private final ResourceLabel perspectivesLabel;
 
 	/** Displays the available perspectives */
 	private PerspectiveToggleGroup perspectivesGroup;
@@ -113,15 +112,14 @@ public class MainToolBar extends JPanel {
 		// preferred width.
 		setLayout(new GridBagLayout());
 
-		GridBagConstraints constrainst = new GridBagConstraints();
+		GridBagConstraints gbc = new GridBagConstraints();
 
 		// left column
-		constrainst.gridx = 0;
-		constrainst.weightx = 1;
-		constrainst.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridx = 0;
+		gbc.weightx = 1;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
 
 		// action button panel
-		JPanel actionsPanel;
 		{
 			FlowLayout actionsLayout = new FlowLayout(FlowLayout.LEFT);
 			actionsLayout.setVgap(0);
@@ -142,16 +140,6 @@ public class MainToolBar extends JPanel {
 
 			actionsPanel.add(Box.createRigidArea(new Dimension(10, 0)));
 
-			JButton undoButton = new JButton(new UndoAction(mainframe));
-			undoButton.setHideActionText(true);
-			actionsPanel.add(undoButton);
-
-			JButton redoButton = new JButton(new RedoAction(mainframe));
-			redoButton.setHideActionText(true);
-			actionsPanel.add(redoButton);
-
-			actionsPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-
 			runActions = new SplitButton(mainframe.RUN_ACTION);
 			runActions.SetHideActionText(true);
 			actionsPanel.add(runActions);
@@ -160,13 +148,13 @@ public class MainToolBar extends JPanel {
 			stopButton.setHideActionText(true);
 			actionsPanel.add(stopButton);
 
-			add(actionsPanel, constrainst);
+			add(actionsPanel, gbc);
 		}
 
 		// middle column
-		constrainst.gridx += 1;
-		constrainst.weightx = 0;
-		constrainst.fill = GridBagConstraints.NONE;
+		gbc.gridx += 1;
+		gbc.weightx = 0;
+		gbc.fill = GridBagConstraints.NONE;
 
 		// perspectives panel
 		{
@@ -175,88 +163,59 @@ public class MainToolBar extends JPanel {
 
 			perspectivesPanel = new JPanel(perspectiveLayout);
 			perspectivesPanel.setOpaque(false);
-			ResourceLabel viewPerspectiveLabel = new ResourceLabel("workspace_views");
-			viewPerspectiveLabel.setForeground(Color.GRAY);
-			perspectivesPanel.add(viewPerspectiveLabel);
+			perspectivesLabel = new ResourceLabel("workspace_views");
+			perspectivesLabel.setForeground(Color.GRAY);
+			perspectivesPanel.add(perspectivesLabel);
 
+			PerspectiveToggleGroup.init();
 			final PerspectiveController perspectiveController = mainframe.getPerspectiveController();
 			PerspectiveModel perspectiveModel = perspectiveController.getModel();
-			perspectiveModel.addObserver(new Observer<List<Perspective>>() {
-
-				@Override
-				public void update(Observable<List<Perspective>> observable, List<Perspective> perspectives) {
-					updatePerspectivePanel(perspectiveController, perspectives);
-					Action perspectiveAction = perspectiveActionMap.get(perspectiveName);
-					if (perspectiveAction != null) {
-						perspectivesGroup.setSelected(perspectiveAction);
-					}
+			perspectiveModel.addObserver((observable, perspectives) -> {
+				updatePerspectivePanel(perspectiveController, perspectives);
+				Action perspectiveAction = perspectiveActionMap.get(perspectiveName);
+				if (perspectiveAction != null) {
+					perspectivesGroup.setSelected(perspectiveAction);
 				}
 			}, true);
-			perspectiveModel.addPerspectiveChangeListener(new PerspectiveChangeListener() {
-
-				@Override
-				public void perspectiveChangedTo(Perspective perspective) {
-					perspectiveName = perspective.getName();
-					Action perspectiveAction = perspectiveActionMap.get(perspectiveName);
-					if (perspectiveAction != null) {
-						perspectivesGroup.setSelected(perspectiveAction);
-					}
-
+			perspectiveModel.addPerspectiveChangeListener(perspective -> {
+				perspectiveName = perspective.getName();
+				Action perspectiveAction = perspectiveActionMap.get(perspectiveName);
+				if (perspectiveAction != null) {
+					perspectivesGroup.setSelected(perspectiveAction);
 				}
+
 			});
-
 			updatePerspectivePanel(perspectiveController, perspectiveController.getModel().getAllPerspectives());
-
-			add(perspectivesPanel, constrainst);
+			addComponentListener(new MainToolBarResizer(perspectiveController));
+			add(perspectivesPanel, gbc);
 		}
 
-		// right column
-		constrainst.gridx += 1;
-		constrainst.weightx = 1;
-		constrainst.fill = GridBagConstraints.HORIZONTAL;
+		// Filler
+		gbc.gridx += 1;
+		gbc.weightx = 1;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		add(new JLabel(), gbc);
 
-		{
-			resourcesPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-			resourcesPanel.setOpaque(false);
-			resourcesPanel.setPreferredSize(actionsPanel.getPreferredSize());
+		// Global Search
+		gbc.gridx += 1;
+		gbc.weightx = 0;
+		gbc.fill = GridBagConstraints.NONE;
+		gbc.insets = new Insets(0, 0, 0, 5);
+		add(GlobalSearchPanel.getInstance(), gbc);
 
-			resourcesPanel.add(createResourcesButton());
-
-			add(resourcesPanel, constrainst);
-		}
+		// help section
+		gbc.gridx += 1;
+		gbc.weightx = 0;
+		gbc.fill = GridBagConstraints.NONE;
 
 	}
 
-	/**
-	 * @return a dropdown button with a menu containing a links to the tutorial, the online
-	 *         documentation, the forum, the support and the about box
-	 */
-	private Component createResourcesButton() {
-		DropDownPopupButtonBuilder builder = new DropDownPopupButtonBuilder();
-		builder.with(new ResourceActionAdapter("toolbar_resources"));
-
-		builder.add(new TutorialAction());
-
-		builder.add(new BrowseAction("toolbar_resources.documentation",
-				URI.create("http://redirects.rapidminer.com/app/studio/7.2/documentation/main_tool_bar")));
-		builder.add(new BrowseAction("toolbar_resources.help_forum",
-				URI.create("http://redirects.rapidminer.com/app/studio/7.2/forum/main_tool_bar")));
-		builder.add(new BrowseAction("toolbar_resources.support",
-				URI.create("http://redirects.rapidminer.com/app/studio/7.2/support/main_tool_bar")));
-
-		// put "About RapidMiner Studio" action as last action if not on ox
-		if (SystemInfoUtilities.getOperatingSystem() != OperatingSystem.OSX || !OSXAdapter.isAdapted()) {
-			builder.addSeparator();
-			builder.add(new AboutAction((MainFrame) ApplicationFrame.getApplicationFrame()));
-		}
-		return builder.build();
-	}
 
 	public void update() {
 		List<MenuItemFactory> factories = RunActionRegistry.INSTANCE.getFacories();
-		for (int i = 0; i < factories.size(); i++) {
+		for (MenuItemFactory factory : factories) {
 			runActions.getPopupMenu().addSeparator();
-			for (MenuItemFactory.MenuEntry entry : factories.get(i).create()) {
+			for (MenuItemFactory.MenuEntry entry : factory.create()) {
 				if (entry.isAction()) {
 					runActions.getPopupMenu().add(entry.getAction());
 				} else if (entry.isMenu()) {
@@ -278,16 +237,17 @@ public class MainToolBar extends JPanel {
 	 *            all available perspectives
 	 */
 	private void updatePerspectivePanel(final PerspectiveController perspectiveController,
-			Collection<Perspective> perspectives) {
+										Collection<Perspective> perspectives) {
 		if (perspectivesGroup != null) {
 			perspectivesPanel.remove(perspectivesGroup);
 		}
 		perspectiveActionMap.clear();
-		List<Action> primaryActionList = new ArrayList<>();
-		List<Action> secondaryActionList = new ArrayList<>();
+		List<Action> knownActionList = new ArrayList<>();
+		List<Action> nonUserActionList = new ArrayList<>();
+		List<Action> userDefinedActionList = new ArrayList<>();
 		for (Perspective p : perspectives) {
 			String name = p.getName();
-			Action action = new WorkspaceAction(perspectiveController, p, name);
+			Action action = new WorkspaceAction(name);
 			action.putValue(Action.LARGE_ICON_KEY, null);
 			action.putValue(Action.SMALL_ICON, null);
 			if (p.isUserDefined()) {
@@ -296,26 +256,187 @@ public class MainToolBar extends JPanel {
 				action.putValue(Action.SHORT_DESCRIPTION,
 						I18N.getMessage(I18N.getGUIBundle(), "gui.action.workspace_user.tip", name));
 			}
-			if (!p.isUserDefined()) {
-				primaryActionList.add(action);
-			} else {
-				secondaryActionList.add(action);
+
+			// Add Design, Result, Model Wizard and Hadoop Data to known actions, since they are supported and should
+			// be in this exact order
+			switch (p.getName()) {
+				case PerspectiveModel.DESIGN:
+				case PerspectiveModel.RESULT:
+				case PerspectiveModel.HADOOP_DATA:
+					knownActionList.add(action);
+					break;
+				case PerspectiveModel.MODEL_WIZARD:
+					// ensure model wizard view is in front of hadoop data view
+					// design and result are the first to be added (see PerspectiveModel#makePredefined), so this will not fail
+					knownActionList.add(2, action);
+					break;
+				default:
+					if (!p.isUserDefined()) {
+						nonUserActionList.add(action);
+					} else {
+						userDefinedActionList.add(action);
+					}
 			}
+
 			perspectiveActionMap.put(p.getName(), action);
 		}
 
-		if (primaryActionList.size() > 1) {
-			perspectivesGroup = new PerspectiveToggleGroup(perspectiveController, PERSPECTIVES_SIZE,
-					primaryActionList.toArray(new Action[primaryActionList.size()]));
+		nonUserActionList.sort(Comparator.comparing(a -> String.valueOf(a.getValue(ResourceAction.NAME))));
+		userDefinedActionList.sort(Comparator.comparing(a -> String.valueOf(a.getValue(ResourceAction.NAME))));
+
+		// combine actions that might be displayed as their own buttons
+		List<Action> displayableActionList = new ArrayList<>(knownActionList);
+		displayableActionList.addAll(nonUserActionList);
+
+		boolean hasUserDefined = !userDefinedActionList.isEmpty();
+		VisibilitySettings visibility = calculateVisibility(displayableActionList.size(), hasUserDefined);
+		// primary actions and secondary actions
+		Action[][] actions = createActionArrays(displayableActionList, visibility.primary);
+
+		perspectivesGroup = null;
+		if (actions[0] != null && actions[0].length > 1) {
+			perspectivesGroup = new PerspectiveToggleGroup(perspectiveController, PERSPECTIVES_SIZE, actions[0]);
 		}
-		if (perspectivesGroup != null && secondaryActionList.size() > 0) {
-			perspectivesGroup.addSeconderyActions(secondaryActionList.toArray(new Action[secondaryActionList.size()]));
+		// check for user views to keep order of popup items the same (non-user, create view, user)
+		if (perspectivesGroup != null && (actions[1].length > 0 || hasUserDefined)) {
+			perspectivesGroup.addSeconderyActions(actions[1]);
+		}
+		if (perspectivesGroup != null && hasUserDefined) {
+			perspectivesGroup.addSeconderyActions(userDefinedActionList.toArray(new Action[0]));
 		}
 		if (perspectivesGroup != null) {
+			perspectivesLabel.setVisible(visibility.showLabel);
+			if (!visibility.fullMoreButton) {
+				perspectivesGroup.minimizeSecondaryButton();
+			}
 			perspectivesPanel.add(perspectivesGroup);
 			perspectivesPanel.validate();
 			perspectivesPanel.repaint();
 		}
+	}
+
+	/**
+	 * Calculates how many actions should be visible (i.e. primary buttons) and if the {@link #perspectivesLabel} and
+	 * "More" button (i.e. secondary button) should be visible/minimized. Will return the result in a
+	 * {@link VisibilitySettings} object.
+	 *
+	 * @param numberOfActions
+	 * 		number of displayable actions
+	 * @param hasUserDefined
+	 * 		if user defined views are registered
+	 * @return the visibility settings
+	 * @since 8.1
+	 */
+	private VisibilitySettings calculateVisibility(int numberOfActions, boolean hasUserDefined) {
+		int toolBarWidth = getWidth();
+		if (toolBarWidth == 0) {
+			VisibilitySettings visibility = new VisibilitySettings();
+			// not yet initialised; build default (3 primary actions, views label, full "More" button)
+			visibility.primary = numberOfActions;
+			if (visibility.primary > DEFAULT_PRIMARY_VISIBLE) {
+				visibility.primary = DEFAULT_PRIMARY_VISIBLE;
+			}
+			visibility.showLabel = visibility.fullMoreButton = true;
+			return visibility;
+		}
+
+		VisibilitySettings visibility = new VisibilitySettings();
+		int labelWidth = perspectivesLabel.getPreferredSize().width + 5; //insets
+		int moreButtonWidth = PerspectiveToggleGroup.getDefaultSecondaryButtonSize().width;
+		int moreButtonMinWidth = PerspectiveToggleGroup.getMinimizedSecondaryButtonSize().width;
+		int actionsWidth = actionsPanel.getPreferredSize().width;
+		int searchWidth = GlobalSearchPanel.PREFERRED_WIDTH + 5; //insets
+		int availableWidth = toolBarWidth - actionsWidth - searchWidth - 10; //insets?
+
+		// make sure to not calculate too much
+		visibility.primary = Math.min(DEFAULT_PRIMARY_VISIBLE, numberOfActions);
+		if (visibility.primary >= numberOfActions && !hasUserDefined) {
+			// no secondary actions => no "More" button
+			moreButtonWidth = moreButtonMinWidth = 0;
+		}
+
+		int primaryWidthNeeded = visibility.primary * PERSPECTIVES_SIZE.width;
+		if (availableWidth >= labelWidth + primaryWidthNeeded + moreButtonWidth) {
+			// everything can be shown
+			visibility.primary = availableWidth - labelWidth - moreButtonWidth;
+			visibility.primary /= PERSPECTIVES_SIZE.width;
+			visibility.showLabel = visibility.fullMoreButton = true;
+		} else {
+			// check if label should be hidden or "more" button be minimized
+			availableWidth -= primaryWidthNeeded;
+			visibility.showLabel = availableWidth >= labelWidth + moreButtonMinWidth;
+			if (moreButtonMinWidth != 0) {
+				visibility.fullMoreButton = !visibility.showLabel && availableWidth >= moreButtonWidth;
+			}
+		}
+		return visibility;
+	}
+
+	/**
+	 * Returns a filled action matrix with all provided actions. Will split the actions according to {@code primaryVisible}.
+	 *
+	 * @param actionList
+	 * 		list of displayable actions
+	 * @param primaryVisible
+	 * 		limit of visible primary actions
+	 * @return the filled action matrix
+	 * @since 8.1
+	 */
+	private Action[][] createActionArrays(List<Action> actionList, int primaryVisible) {
+		Action[][] actions = new Action[2][];
+		Iterator<Action> actionIterator = actionList.iterator();
+		if (primaryVisible > actionList.size()){
+			primaryVisible = actionList.size();
+		}
+		actions[0] = new Action[primaryVisible];
+		actions[1] = new Action[actionList.size() - primaryVisible];
+		int i = 0;
+		for (; i < primaryVisible; i++) {
+			actions[0][i] = actionIterator.next();
+		}
+		while (actionIterator.hasNext()) {
+			actions[1][i - primaryVisible] = actionIterator.next();
+			i++;
+		}
+		return actions;
+	}
+
+	/**
+	 * Simple resize listener for the {@link MainToolBar}. Will update on resize events if {@link #shouldUpdate()}
+	 * returns {@code true};
+	 *
+	 * @author Jan Czogalla
+	 * @since 8.1
+	 */
+	private class MainToolBarResizer extends ComponentAdapter {
+
+		PerspectiveController perspectiveController;
+
+		MainToolBarResizer(PerspectiveController perspectiveController) {
+			this.perspectiveController = perspectiveController;
+		}
+
+		@Override
+		public void componentResized(ComponentEvent e) {
+			if (e.getComponent() != MainToolBar.this) {
+				return;
+			}
+			if (shouldUpdate()) {
+				updatePerspectivePanel(perspectiveController, perspectiveController.getModel().getAllPerspectives());
+			}
+		}
+
+		/** Whether to update {@link #perspectivesPanel} on resize. */
+		private boolean shouldUpdate() {
+			return true;
+		}
+	}
+
+	/** Simple POJO to store visibility for the {@link #calculateVisibility(int, boolean)} method. */
+	private static class VisibilitySettings {
+		int primary;
+		boolean showLabel;
+		boolean fullMoreButton;
 	}
 
 }

@@ -15,7 +15,7 @@
       <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Iris"/>
       </operator>
-      <operator activated="true" class="k_means" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="KMeans" width="90" x="179" y="34">
+      <operator activated="true" class="concurrency:k_means" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="KMeans" width="90" x="179" y="34">
         <parameter key="add_cluster_attribute" value="true"/>
         <parameter key="add_as_label" value="false"/>
         <parameter key="remove_unlabeled" value="false"/>

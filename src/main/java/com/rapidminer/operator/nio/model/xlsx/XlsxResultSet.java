@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -51,6 +51,7 @@ import com.rapidminer.operator.nio.model.DateFormatProvider;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.operator.nio.model.ParseException;
 import com.rapidminer.operator.nio.model.ParsingError;
+import com.rapidminer.operator.nio.model.ExcelSheetSelection;
 import com.rapidminer.operator.nio.model.xlsx.XlsxUtilities.XlsxCell;
 import com.rapidminer.operator.nio.model.xlsx.XlsxWorkbookParser.XlsxWorkbook;
 import com.rapidminer.operator.nio.model.xlsx.XlsxWorkbookRelationParser.XlsxWorkbookRel;
@@ -155,6 +156,10 @@ public class XlsxResultSet implements DataResultSet {
 	 *            from within an operator.
 	 * @param configuration
 	 *            the result set configuration
+	 * @param sheetIndex
+	 *            index of the selected sheet
+	 * @param readMode
+	 *            the current read mode
 	 * @param provider
 	 *            a {@link DateFormatProvider}, can be {@code null} in which case the date format is
 	 *            fixed by the current value of {@link configuration#getDatePattern()}
@@ -163,6 +168,31 @@ public class XlsxResultSet implements DataResultSet {
 	 *             parsed
 	 */
 	public XlsxResultSet(Operator callingOperator, final ExcelResultSetConfiguration configuration, int sheetIndex,
+						 XlsxReadMode readMode, final DateFormatProvider provider) throws UserError {
+		this(callingOperator, configuration, ExcelSheetSelection.byIndex(sheetIndex), readMode, provider);
+	}
+
+	/**
+	 * Configures the Excel result set with the provided configuration object. Also parses multiple
+	 * XML configuration files included in the XLSX file and creates the worksheet parser.
+	 *
+	 * @param callingOperator
+	 *            the calling operator. <code>null</code> is allowed in case the class isn't created
+	 *            from within an operator.
+	 * @param configuration
+	 *            the result set configuration
+	 * @param sheetSelection
+	 *            the selected sheet
+	 * @param readMode
+	 *            current read mode
+	 * @param provider
+	 *            a {@link DateFormatProvider}, can be {@code null} in which case the date format is
+	 *            fixed by the current value of {@link configuration#getDatePattern()}
+	 * @throws UserError
+	 *             in case something is configured in a wrong way so that the XLSX file cannot be
+	 *             parsed
+	 */
+	public XlsxResultSet(Operator callingOperator, final ExcelResultSetConfiguration configuration, ExcelSheetSelection sheetSelection,
 			XlsxReadMode readMode, final DateFormatProvider provider) throws UserError {
 
 		// Check file presence
@@ -178,6 +208,8 @@ public class XlsxResultSet implements DataResultSet {
 
 				// Parse workbook XML which contains a list of sheets with name, rId, sheetId
 				xlsxWorkbook = new XlsxWorkbookParser().parseZipEntry(zipFile);
+
+				int sheetIndex = xlsxWorkbook.xlsxWorkbookSheets.indexOf(sheetSelection.selectSheetFrom(xlsxWorkbook.xlsxWorkbookSheets));
 
 				// Parse workbook relations XML which contains the path of shared strings
 				// and the mapping of relationship IDs and paths of worksheets
@@ -219,7 +251,7 @@ public class XlsxResultSet implements DataResultSet {
 			// initialize worksheet parser
 			this.worksheetParser = new XlsxSheetContentParser(xlsxFile, workbookRelations.worksheetsPath, sharedStrings,
 					numberFormats, sheetMetaData, XML_STREAM_FACTORY, encoding);
-		} catch (IOException | XMLStreamException e) {
+		} catch (IOException | XMLStreamException | ExcelSheetSelection.SheetNotFoundException e) {
 			throw new UserError(callingOperator, e, 321, configuration.getFile(), e.getMessage());
 		} catch (ParserConfigurationException | SAXException e) {
 			throw new UserError(callingOperator, e, 401, e.getMessage());
@@ -277,6 +309,8 @@ public class XlsxResultSet implements DataResultSet {
 	 *            from within an operator.
 	 * @param configuration
 	 *            the result set configuration
+	 * @param sheetIndex
+	 *            index of the selected sheet
 	 * @throws UserError
 	 *             in case something is configured in a wrong way so that the XLSX file cannot be
 	 *             parsed
@@ -284,6 +318,26 @@ public class XlsxResultSet implements DataResultSet {
 	public XlsxResultSet(Operator callingOperator, ExcelResultSetConfiguration configuration, int sheetIndex,
 			XlsxReadMode readMode) throws UserError {
 		this(callingOperator, configuration, sheetIndex, readMode, null);
+	}
+
+	/**
+	 * Configures the Excel result set with the provided configuration object. Also parses multiple
+	 * XML configuration files included in the XLSX file and creates the worksheet parser.
+	 *
+	 * @param callingOperator
+	 *            the calling operator. <code>null</code> is allowed in case the class isn't created
+	 *            from within an operator.
+	 * @param configuration
+	 *            the result set configuration
+	 * @param sheetSelection
+	 *            the selected sheet
+	 * @throws UserError
+	 *             in case something is configured in a wrong way so that the XLSX file cannot be
+	 *             parsed
+	 */
+	public XlsxResultSet(Operator callingOperator, ExcelResultSetConfiguration configuration, ExcelSheetSelection sheetSelection,
+			XlsxReadMode readMode) throws UserError {
+		this(callingOperator, configuration, sheetSelection, readMode, null);
 	}
 
 	@Override

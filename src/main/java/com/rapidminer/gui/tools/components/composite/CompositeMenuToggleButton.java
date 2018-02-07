@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,10 +19,7 @@
 package com.rapidminer.gui.tools.components.composite;
 
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Enumeration;
-
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
@@ -57,6 +54,8 @@ class CompositeMenuToggleButton extends CompositeToggleButton {
 	private static final String DOWN_ARROW_ADDER = "<html>%s<span style=\"color: 4F4F4F;\">" + Ionicon.ARROW_DOWN_B.getHtml()
 			+ "</span></html>";
 
+	private static final int POPUP_CLOSE_DELTA = 250;
+
 	protected int arrowSize;
 
 	protected String text;
@@ -72,8 +71,8 @@ class CompositeMenuToggleButton extends CompositeToggleButton {
 	 * Creates a new {@code CompositeMenuToggleButton} with the given {@link Action} to be used at
 	 * the given position.
 	 *
-	 * @param action
-	 *            the button action
+	 * @param actions
+	 *            the button actions
 	 * @param position
 	 *            the position in the composite element ({@link SwingConstants#LEFT},
 	 *            {@link SwingConstants#CENTER}, or {@link SwingConstants#RIGHT})
@@ -98,19 +97,15 @@ class CompositeMenuToggleButton extends CompositeToggleButton {
 		});
 
 		// display pop up menu below drop down button (if possible)
-		addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setSelected(isPopupMenuItemSelected());
-				// hack to prevent filter popup from opening itself again
-				// when you click the button to actually close it while it
-				// is open
-				if (System.currentTimeMillis() - lastPopupCloseTime < 250) {
-					return;
-				}
-				popupMenu.show(CompositeMenuToggleButton.this, 0, getHeight() - 1);
+		addActionListener(e -> {
+			setSelected(isPopupMenuItemSelected());
+			// hack to prevent filter popup from opening itself again
+			// when you click the button to actually close it while it
+			// is open
+			if (System.currentTimeMillis() - lastPopupCloseTime < POPUP_CLOSE_DELTA) {
+				return;
 			}
+			popupMenu.show(CompositeMenuToggleButton.this, 0, getHeight() - 1);
 		});
 	}
 
@@ -124,13 +119,7 @@ class CompositeMenuToggleButton extends CompositeToggleButton {
 		for (Action action : actions) {
 			JRadioButtonMenuItem item = new JRadioButtonMenuItem(action);
 
-			item.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					updateSelectionStatus();
-				}
-			});
+			item.addActionListener(e -> updateSelectionStatus());
 			popupMenuGroup.add(item);
 			popupMenu.add(item);
 		}

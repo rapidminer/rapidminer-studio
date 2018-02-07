@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,6 +21,7 @@ package com.rapidminer.gui.actions;
 import java.awt.event.ActionEvent;
 
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.EditBlockingProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.ExecutionUnit;
@@ -39,12 +40,18 @@ public class AutoWireAction extends ResourceAction {
 
 	private static final long serialVersionUID = -4597160351305617508L;
 
-	private final MainFrame mainFrame;
 
-	public AutoWireAction(MainFrame mainFrame) {
+	public AutoWireAction() {
 		super(true, "wire");
 		setCondition(OPERATOR_SELECTED, MANDATORY);
-		this.mainFrame = mainFrame;
+	}
+
+	/**
+	 * @deprecated use {@link #AutoWireAction()} instead
+	 */
+	@Deprecated
+	public AutoWireAction(MainFrame mainFrame) {
+		this();
 	}
 
 	@Override
@@ -53,7 +60,7 @@ public class AutoWireAction extends ResourceAction {
 
 			@Override
 			public void execute() {
-				Operator op = mainFrame.getFirstSelectedOperator();
+				Operator op = RapidMinerGUI.getMainFrame().getFirstSelectedOperator();
 				if (op == null) {
 					return;
 				}

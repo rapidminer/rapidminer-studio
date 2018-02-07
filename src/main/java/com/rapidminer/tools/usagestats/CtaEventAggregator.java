@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -112,6 +112,10 @@ enum CtaEventAggregator {
 	private static final BlackListItem[] BLACKLIST = new BlackListItem[] {
 			// the argument of logged exceptions are too long and irrelevant
 			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
+					null), true, true, false),
+			new BlackListItem(new Key(ActionStatisticsCollector.PREFIX_TYPE_AUTOMODEL_GENERATED + ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
+					null), true, true, false),
+			new BlackListItem(new Key(ActionStatisticsCollector.PREFIX_TYPE_AUTOMODEL_EXPORTED + ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
 					null), true, true, false),
 			// progress-thread typed logs are irrelevant
 			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, null,

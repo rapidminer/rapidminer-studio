@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -171,7 +171,6 @@ public class RepositoryTreeModel implements TreeModel {
 				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 					l.treeStructureChanged(e);
 				}
-				treeUtil.locateExpandedEntries();
 			});
 			if (parentTree != null) {
 				SwingUtilities.invokeLater(() -> treeUtil.restoreExpansionState(parentTree));
@@ -371,6 +370,9 @@ public class RepositoryTreeModel implements TreeModel {
 									for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 										l.treeNodesInserted(insertEvent);
 									}
+								}
+								for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+									l.treeStructureChanged(new TreeModelEvent(RepositoryTreeModel.this, getPathTo(folder)));
 								}
 							} finally {
 								if (!folderBroken.get()) {

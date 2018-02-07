@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -28,9 +28,6 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -42,6 +39,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.LoggingHandler;
 import com.rapidminer.tools.Ontology;
@@ -128,8 +126,8 @@ public class AttributeDataSource {
 
 	/** Returns a list of {@link AttributeDataSource}s read from the file. */
 	public static AttributeDataSources createAttributeDataSources(File attributeDescriptionFile, boolean sourceColRequired,
-			LoggingHandler logging) throws XMLException, ParserConfigurationException, SAXException, IOException {
-		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(attributeDescriptionFile);
+			LoggingHandler logging) throws XMLException, SAXException, IOException {
+		Document document = XMLTools.createDocumentBuilder().parse(attributeDescriptionFile);
 
 		Element attributeSet = document.getDocumentElement();
 		if (!attributeSet.getTagName().equals("attributeset")) {

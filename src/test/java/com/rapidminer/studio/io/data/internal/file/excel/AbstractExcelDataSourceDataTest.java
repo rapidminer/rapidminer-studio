@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -33,6 +33,7 @@ import com.rapidminer.core.io.data.DataSet;
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.DataSetRow;
 import com.rapidminer.core.io.data.ParseException;
+import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.studio.io.data.HeaderRowBehindStartRowException;
 import com.rapidminer.studio.io.data.HeaderRowNotFoundException;
 import com.rapidminer.studio.io.data.StartRowNotFoundException;
@@ -329,7 +330,8 @@ public abstract class AbstractExcelDataSourceDataTest {
 
 		try (ExcelDataSource dataSource = new ExcelDataSource()) {
 			dataSource.setLocation(testFile.toPath());
-			dataSource.getResultSetConfiguration().setSheet(3);
+			dataSource.getResultSetConfiguration().setSheetByName("Tabelle3");
+			dataSource.getResultSetConfiguration().setSheetSelectionMode(ExcelResultSetConfiguration.SheetSelectionMode.BY_NAME);
 			dataSource.getResultSetConfiguration().setRowOffset(0);
 			dataSource.setHeaderRowIndex(0);
 			configureDataSource(dataSource);

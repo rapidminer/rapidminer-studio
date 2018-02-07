@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,6 +19,7 @@
 package com.rapidminer.tools.math;
 
 import Jama.Matrix;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -71,6 +72,13 @@ public class MathFunctions {
 	protected static final double DIVIDER_COEFFICIENTS_3[] = { 1.00000000000000000000E0, 6.02427039364742014255E0,
 			3.67983563856160859403E0, 1.37702099489081330271E0, 2.16236993594496635890E-1, 1.34204006088543189037E-2,
 			3.28014464682127739104E-4, 2.89247864745380683936E-6, 6.79019408009981274425E-9, };
+
+	// constants for invertMatrix
+	private static final int INVERSE_ITERATIONS = 5;
+	private static final double MINIMUM_ADDITION = Double.MIN_VALUE * Math.pow(10, INVERSE_ITERATIONS);
+	private static final double MINIMUM_THRESHOLD = Double.MIN_VALUE * 100;
+	private static final double ADDITION_FACTOR = 1.01;
+
 
 	/**
 	 * returns tangens hyperbolicus of <tt>x</tt>, i.e. <i>y = tanh(x) = (e^x - e^-x) / (e^x +
@@ -184,7 +192,7 @@ public class MathFunctions {
 
 	/** This method calculates the correlation between two (numerical) attributes of an example set. */
 	public static double correlation(ExampleSet exampleSet, Attribute firstAttribute, Attribute secondAttribute,
-			boolean squared) {
+									 boolean squared) {
 		double sumProd = 0.0d;
 		double sumFirst = 0.0d;
 		double sumSecond = 0.0d;
@@ -330,6 +338,10 @@ public class MathFunctions {
 		return result;
 	}
 
+	/**
+	 * @deprecated since 8.1; please use {@link #invertMatrix(Matrix, boolean)} instead.
+	 */
+	@Deprecated
 	public static Matrix invertMatrix(Matrix m) {
 		double startFactor = 0.1d;
 		while (true) {
@@ -345,5 +357,35 @@ public class MathFunctions {
 				startFactor *= 10d;
 			}
 		}
+	}
+
+	/**
+	 * Tries to invert the given {@link Matrix}. If that is not possible and {@code approximate} is set to {@true}, an approximate inversion will be calculated.
+	 * To do this, a small value is added to the diagonal of the matrix and then used for inversion. This procedure will be repeated only {@value #INVERSE_ITERATIONS} times.
+	 *
+	 * @param m
+	 * 		the matrix to invert
+	 * @param approximate
+	 * 		if an approximation should be calculated
+	 * @return the (approximated) inverted matrix or {@code null} if no inverse could be calculated
+	 * @since 8.1
+	 */
+	public static Matrix invertMatrix(Matrix m, boolean approximate) {
+		int dimension = Math.min(m.getRowDimension(), m.getColumnDimension());
+		for (int i = 0; i < INVERSE_ITERATIONS; i++) {
+			try {
+				return m.inverse();
+			} catch (Exception e) {
+				if (!approximate) {
+					return null;
+				}
+				for (int x = 0; x < dimension; x++) {
+					double value = m.get(x, x);
+					value = Math.abs(value) <= MINIMUM_THRESHOLD ? MINIMUM_ADDITION : value * ADDITION_FACTOR;
+					m.set(x, x, value);
+				}
+			}
+		}
+		return null;
 	}
 }

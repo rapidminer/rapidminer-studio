@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -365,7 +365,7 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 						"PAGE_DOWN", "scrollDown", "shift PAGE_DOWN", "scrollDownExtendSelection", CONTROL_ID + " A",
 						"selectAll", CONTROL_ID + " SLASH", "selectAll", CONTROL_ID + " BACK_SLASH", "clearSelection" }),
 				// MenuBar
-				"MenuBar.font", fontDialog12, "MenuBar.windowBindings", new Object[] { "F10", "takeFocus" }
+				"MenuBar.font", fontDialog12, "MenuBar.windowBindings", new Object[] {}
 
 				, "MenuBar.selectionForeground", Colors.TEXT_HIGHLIGHT_FOREGROUND,
 				// Menu Item
@@ -438,7 +438,7 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 				new UIDefaults.LazyInputMap(new Object[] { "UP", "negativeIncrement", "DOWN", "positiveIncrement", "LEFT",
 						"negativeIncrement", "RIGHT", "positiveIncrement", "KP_UP", "negativeIncrement", "KP_DOWN",
 						"positiveIncrement", "KP_LEFT", "negativeIncrement", "KP_RIGHT", "positiveIncrement", "HOME",
-						"selectMin", "END", "selectMax", "F8", "startResize", "F6", "toggleFocus", CONTROL_ID + " TAB",
+						"selectMin", "END", "selectMax", "HOME", "toggleFocus", CONTROL_ID + " TAB",
 						"focusOutForward", CONTROL_ID + " shift TAB", "focusOutBackward" }),
 
 				"SplitPaneDivider.border", null,

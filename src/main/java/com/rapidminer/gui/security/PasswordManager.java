@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -22,7 +22,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-
 import javax.swing.Action;
 import javax.swing.DefaultRowSorter;
 import javax.swing.JButton;
@@ -31,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
 import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.actions.ManagePasswordsAction;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
@@ -47,29 +47,16 @@ import com.rapidminer.tools.GlobalAuthenticator;
  */
 public class PasswordManager extends ButtonDialog {
 
-	public static final Action OPEN_WINDOW = new ResourceAction("password_manager") {
-
-		{
-			setCondition(EDIT_IN_PROGRESS, DONT_CARE);
-		}
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void loggedActionPerformed(ActionEvent e) {
-			new PasswordManager().setVisible(true);
-		}
-	};
+	public static final Action OPEN_WINDOW = new ManagePasswordsAction();
 
 	private static final long serialVersionUID = 1L;
-	private JButton showPasswordsButton;
 	private CredentialsTableModel credentialsModel;
 	private Wallet clone;
 
 	public PasswordManager() {
 
-		super(ApplicationFrame.getApplicationFrame(), "password_manager", ModalityType.MODELESS, new Object[] {});
-		this.clone = Wallet.getInstance().clone();
+		super(ApplicationFrame.getApplicationFrame(), "password_manager", ModalityType.MODELESS, new Object[0]);
+		this.clone = new Wallet(Wallet.getInstance());
 
 		credentialsModel = new CredentialsTableModel(clone);
 		final JTable table = new JTable(credentialsModel);
@@ -78,18 +65,7 @@ public class PasswordManager extends ButtonDialog {
 		JScrollPane scrollPane = new ExtendedJScrollPane(table);
 		scrollPane.setBorder(null);
 		JPanel main = new JPanel(new BorderLayout());
-		final JPanel showpasswordPanel = new JPanel(new BorderLayout());
 		main.add(scrollPane, BorderLayout.CENTER);
-
-		ResourceAction showPasswordsAction = new ResourceAction("password_manager_showpasswords") {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void loggedActionPerformed(ActionEvent e) {
-				updateButton();
-			}
-		};
 
 		ResourceAction removePasswordAction = new ResourceAction("password_manager_remove_row") {
 
@@ -110,9 +86,6 @@ public class PasswordManager extends ButtonDialog {
 		};
 
 		JPanel buttonPanel = new JPanel(new BorderLayout());
-		showPasswordsButton = new JButton(showPasswordsAction);
-		showpasswordPanel.add(makeButtonPanel(showPasswordsButton));
-		buttonPanel.add(showpasswordPanel, BorderLayout.WEST);
 		buttonPanel.add(makeButtonPanel(new JButton(removePasswordAction), makeOkButton("password_manager_save"),
 				makeCancelButton()), BorderLayout.EAST);
 		layoutDefault(main, buttonPanel, LARGE);
@@ -124,34 +97,5 @@ public class PasswordManager extends ButtonDialog {
 		clone.saveCache();
 		GlobalAuthenticator.refreshProxyAuthenticators();
 		super.ok();
-	}
-
-	private void updateButton() {
-		credentialsModel.setShowPasswords(!credentialsModel.isShowPasswords());
-		if (!credentialsModel.isShowPasswords()) {
-			// The Show Password Button
-			ResourceAction showPasswords = new ResourceAction("password_manager_showpasswords") {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void loggedActionPerformed(ActionEvent e) {
-					updateButton();
-				}
-			};
-			showPasswordsButton.setAction(showPasswords);
-		} else {
-			// The Hide Password Button
-			ResourceAction hidePasswords = new ResourceAction("password_manager_hidepasswords") {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void loggedActionPerformed(ActionEvent e) {
-					updateButton();
-				}
-			};
-			showPasswordsButton.setAction(hidePasswords);
-		}
 	}
 }

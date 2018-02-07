@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,10 +18,10 @@
 */
 package com.rapidminer.repository;
 
-import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
 
 
 /**
@@ -50,11 +50,13 @@ public interface Repository extends Folder {
 	public abstract boolean shouldSave();
 
 	/**
-	 * Called after the repository is added. Currently unused, but may be useful. Was once used to
-	 * fetch JDBC connection entries from remote server.
+	 * Called after the repository is added.
 	 */
 	public void postInstall();
 
+	/**
+	 * Called directly before the repository is removed.
+	 */
 	public void preRemove();
 
 	/** Returns true if the repository is configurable. In that case, */

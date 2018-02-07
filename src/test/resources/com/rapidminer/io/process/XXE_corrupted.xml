@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE testingxxe [<!ENTITY xxe SYSTEM "http://localhost:8080/does.not.exist" >]>
+<process version="7.5.004-SNAPSHOT">
+    <context>
+        <input/>
+        <output/>
+        <macros/>
+    </context>
+    <operator activated="true" class="process" compatibility="7.5.004-SNAPSHOT" expanded="true" name="Process">
+        <parameter key="logverbosity" value="init"/>
+        <parameter key="haxor" value="xxe">&xxe;</parameter>
+        <parameter key="random_seed" value="2001"/>
+        <parameter key="send_mail" value="never"/>
+        <parameter key="notification_email" value="jpuente@rapidminer.com"/>
+        <parameter key="process_duration_for_mail" value="30"/>
+        <parameter key="encoding" value="SYSTEM"/>
+        <process expanded="true">
+            <operator activated="true" class="generate_data" compatibility="7.5.004-SNAPSHOT" expanded="true" height="68" name="Generate Data (2)" width="90" x="45" y="34">
+                <parameter key="target_function" value="random"/>
+                <parameter key="number_examples" value="100"/>
+                <parameter key="number_of_attributes" value="100"/>
+                <parameter key="attributes_lower_bound" value="-10.0"/>
+                <parameter key="attributes_upper_bound" value="10.0"/>
+                <parameter key="gaussian_standard_deviation" value="10.0"/>
+                <parameter key="largest_radius" value="10.0"/>
+                <parameter key="use_local_random_seed" value="false"/>
+                <parameter key="local_random_seed" value="1992"/>
+                <parameter key="datamanagement" value="double_array"/>
+                <parameter key="data_management" value="auto"/>
+            </operator>
+            <operator activated="true" class="store" compatibility="7.5.004-SNAPSHOT" expanded="true" height="68" name="Store (2)" width="90" x="179" y="34">
+                <parameter key="repository_entry" value="tmp/data"/>
+            </operator>
+            <operator activated="true" class="concurrency:loop" compatibility="7.5.004-SNAPSHOT" expanded="true" height="82" name="Loop" width="90" x="313" y="34">
+                <parameter key="number_of_iterations" value="100"/>
+                <parameter key="iteration_macro" value="i"/>
+                <parameter key="reuse_results" value="false"/>
+                <parameter key="enable_parallel_execution" value="true"/>
+                <process expanded="true">
+                    <operator activated="true" class="generate_data" compatibility="7.5.004-SNAPSHOT" expanded="true" height="68" name="Generate Data" width="90" x="45" y="34">
+                        <parameter key="target_function" value="random"/>
+                        <parameter key="number_examples" value="100"/>
+                        <parameter key="number_of_attributes" value="100"/>
+                        <parameter key="attributes_lower_bound" value="-10.0"/>
+                        <parameter key="attributes_upper_bound" value="10.0"/>
+                        <parameter key="gaussian_standard_deviation" value="10.0"/>
+                        <parameter key="largest_radius" value="10.0"/>
+                        <parameter key="use_local_random_seed" value="false"/>
+                        <parameter key="local_random_seed" value="1992"/>
+                        <parameter key="datamanagement" value="double_array"/>
+                        <parameter key="data_management" value="auto"/>
+                    </operator>
+                    <operator activated="true" class="delay" compatibility="7.5.004-SNAPSHOT" expanded="true" height="82" name="Delay" width="90" x="179" y="34">
+                        <parameter key="delay" value="random"/>
+                        <parameter key="delay_amount" value="1000"/>
+                        <parameter key="min_delay_amount" value="0"/>
+                        <parameter key="max_delay_amount" value="1"/>
+                    </operator>
+                    <operator activated="true" class="store" compatibility="7.5.004-SNAPSHOT" expanded="true" height="68" name="Store (3)" width="90" x="313" y="34">
+                        <parameter key="repository_entry" value="tmp/data%{i}"/>
+                    </operator>
+                    <connect from_op="Generate Data" from_port="output" to_op="Delay" to_port="through 1"/>
+                    <connect from_op="Delay" from_port="through 1" to_op="Store (3)" to_port="input"/>
+                    <connect from_op="Store (3)" from_port="through" to_port="output 1"/>
+                    <portSpacing port="source_input 1" spacing="0"/>
+                    <portSpacing port="source_input 2" spacing="0"/>
+                    <portSpacing port="sink_output 1" spacing="0"/>
+                    <portSpacing port="sink_output 2" spacing="0"/>
+                    <description align="center" color="yellow" colored="false" height="105" resized="false" width="180" x="380" y="83">Type your comment</description>
+                </process>
+            </operator>
+            <connect from_op="Generate Data (2)" from_port="output" to_op="Store (2)" to_port="input"/>
+            <connect from_op="Store (2)" from_port="through" to_op="Loop" to_port="input 1"/>
+            <portSpacing port="source_input 1" spacing="0"/>
+            <portSpacing port="sink_result 1" spacing="0"/>
+            <description align="center" color="yellow" colored="false" height="50" resized="true" width="194" x="62" y="111">Prevent Repository folder already exists</description>
+        </process>
+    </operator>
+</process>

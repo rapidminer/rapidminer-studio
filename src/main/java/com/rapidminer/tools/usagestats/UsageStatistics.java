@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -34,7 +34,6 @@ import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.Random;
 import java.util.logging.Level;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -119,7 +118,7 @@ public class UsageStatistics {
 			try {
 				LogService.getRoot().log(Level.CONFIG,
 						"com.rapidminer.gui.tools.usagestats.UsageStatistics.loading_operator_statistics");
-				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
+				Document doc = XMLTools.createDocumentBuilder().parse(file);
 				Element root = doc.getDocumentElement();
 				String lastResetString = root.getAttribute("last-reset");
 				Date lastReset = parseDate(lastResetString);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -31,6 +31,7 @@ import javax.swing.JPopupMenu;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.DropDownPopupButton;
+import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.tools.I18N;
 
 
@@ -125,8 +126,18 @@ public class RefreshConfigurablesDropDownButton extends DropDownPopupButton {
 
 		/** reloads the configurables of all connected servers */
 		private void refreshAllConfigurables() {
+			refreshConfigurables(remoteControllers.keySet().toArray(new String[0]));
+		}
 
-			for (String serverName : remoteControllers.keySet()) {
+		/** reloads the configurables of the selected servers */
+		private void refreshConfigurables(String... serverNames) {
+
+			// show dialog if necessary
+			if (!userAcceptsDataLoss(serverNames)) {
+				return;
+			}
+
+			for (String serverName : serverNames) {
 				ConfigurableController controller = remoteControllers.get(serverName);
 
 				// if the connection to the server is established
@@ -137,15 +148,31 @@ public class RefreshConfigurablesDropDownButton extends DropDownPopupButton {
 			}
 		}
 
-		/** reloads the configurables of the selected server */
-		private void refreshConfigurables(String serverName) {
-			ConfigurableController controller = remoteControllers.get(serverName);
 
-			// if the connection to the server is established
-			if (controller.getModel().getSource().isConnected()) {
-				// refresh the configurables
-				controller.getView().refreshConfigurables(serverName);
+		/**
+		 * Displays a confirm dialog if unsaved changes would be lost
+		 *
+		 * @param serverNames
+		 * @return false if the refresh should be cancelled
+		 */
+		private boolean userAcceptsDataLoss(String... serverNames) {
+			for (String serverName : serverNames) {
+				ConfigurableController controller = remoteControllers.get(serverName);
+				//Don't check if not connected
+				if (!controller.getModel().getSource().isConnected()) {
+					continue;
+				}
+				//Update the model from the current view
+				controller.getView().updateModel();
+				//Check if modes has changed
+				if (controller.getModel().isModified()) {
+					//Ask if refresh should continue
+					return SwingTools.showConfirmDialog(remoteControllers.values().iterator().next().getView(), "configurable_confirm_refresh",
+							ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.YES_OPTION;
+				}
 			}
+			//No changes, refresh
+			return true;
 		}
 
 	}

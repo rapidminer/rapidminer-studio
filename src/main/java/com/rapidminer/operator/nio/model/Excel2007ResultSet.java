@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -113,9 +113,11 @@ public class Excel2007ResultSet implements DataResultSet {
 			throw new UserError(callingOperator, "file_consumer.no_file_defined");
 		}
 		try {
-			sheet = workbook.getSheetAt(configuration.getSheet());
+			sheet = configuration.selectSheetFrom(workbook);
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
 			throw new UserError(callingOperator, 953, configuration.getSheet() + 1);
+		} catch (ExcelSheetSelection.SheetNotFoundException e) {
+			throw new UserError(callingOperator, 321, configuration.getFile(), e.getMessage());
 		}
 		Row row = sheet.getRow(sheet.getFirstRowNum());
 		if (row == null) {

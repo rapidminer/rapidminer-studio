@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -112,12 +112,15 @@ public class RepositoryTreeUtil {
 	public void restoreExpansionState(JTree tree) {
 		for (int i = 0; i < tree.getRowCount(); i++) {
 			TreePath path = tree.getPathForRow(i);
-			Object entryObject = path.getLastPathComponent();
-			if (entryObject instanceof Entry) {
-				Entry entry = (Entry) entryObject;
-				String absoluteLocation = entry.getLocation().getAbsoluteLocation();
-				if (expandedRepositories.contains(absoluteLocation) || expandedNodes.contains(absoluteLocation)) {
-					tree.expandPath(path);
+			// sanity check for concurrent refreshes
+			if (path != null) {
+				Object entryObject = path.getLastPathComponent();
+				if (entryObject instanceof Entry) {
+					Entry entry = (Entry) entryObject;
+					String absoluteLocation = entry.getLocation().getAbsoluteLocation();
+					if (expandedRepositories.contains(absoluteLocation) || expandedNodes.contains(absoluteLocation)) {
+						tree.expandPath(path);
+					}
 				}
 			}
 		}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,7 +21,6 @@ package com.rapidminer.studio.io.data.internal.file.binary;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
 import javax.swing.JPanel;
 
 import com.rapidminer.core.io.gui.ImportWizard;
@@ -33,6 +32,7 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.internal.remote.RemoteFolder;
 import com.rapidminer.studio.io.gui.internal.steps.AbstractToRepositoryStep;
 
 
@@ -75,6 +75,11 @@ public class DumpToRepositoryStep extends AbstractToRepositoryStep<BinaryImportD
 			@Override
 			public void run() {
 				try {
+					String originalFilename = source.getLocation().getFileName().toString();
+					if (parent instanceof RemoteFolder &&
+							((RemoteFolder) parent).getRepository().isFileExtensionBlacklisted(originalFilename)) {
+						throw new RepositoryException("File extension blacklisted for " + originalFilename);
+					}
 					parent.createBlobEntry(entryLocation.getName());
 					Entry newEntry = entryLocation.locateEntry();
 					if (newEntry == null) {
@@ -82,7 +87,7 @@ public class DumpToRepositoryStep extends AbstractToRepositoryStep<BinaryImportD
 					}
 					BlobEntry blob = (BlobEntry) newEntry;
 					try (FileInputStream fileInputStream = new FileInputStream(source.getLocation().toFile());
-							OutputStream outputStream = blob.openOutputStream(getChooser().getMediaType())) {
+						 OutputStream outputStream = blob.openOutputStream(getChooser().getMediaType())) {
 						byte[] buffer = new byte[1024 * 20];
 						int length;
 						while ((length = fileInputStream.read(buffer)) != -1) {

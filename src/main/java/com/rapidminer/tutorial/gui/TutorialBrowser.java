@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -38,7 +38,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -52,7 +51,6 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.text.Document;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -67,6 +65,7 @@ import org.w3c.dom.ls.LSSerializer;
 import org.xml.sax.InputSource;
 
 import com.rapidminer.Process;
+import com.rapidminer.gui.DockableMenu;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.look.Colors;
@@ -77,6 +76,7 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.LinkLocalButton;
+import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.studio.internal.NoStartupDialogRegistreredException;
 import com.rapidminer.studio.internal.StartupDialogProvider.ToolbarButton;
@@ -111,6 +111,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 
 	{
 		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
+		DockableMenu.registerHideInDockableMenuPrefix(TUTORIAL_BROWSER_DOCK_KEY);
 	}
 
 	public static final RelativeDockablePosition POSITION = new RelativeDockablePosition(0, 1, 0.15, 1);
@@ -399,8 +400,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 						}
 
 						final List<String> steps = new ArrayList<>();
-						DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-						DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+						DocumentBuilder dBuilder = XMLTools.createDocumentBuilder();
 						org.w3c.dom.Document doc = dBuilder.parse(new InputSource(stepFileStream));
 						doc.getDocumentElement().normalize();
 

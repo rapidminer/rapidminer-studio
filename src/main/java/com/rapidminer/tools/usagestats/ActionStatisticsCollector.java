@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -37,12 +37,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.swing.AbstractButton;
 import javax.swing.Action;
-import javax.swing.JPasswordField;
 import javax.swing.JToggleButton;
-import javax.swing.text.JTextComponent;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -55,6 +52,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.components.AbstractLinkButton;
+import com.rapidminer.io.process.AutoModelProcessXMLFilter;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -63,6 +61,7 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.repository.search.RepositoryGlobalSearch;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.container.Pair;
 
@@ -200,7 +199,18 @@ public enum ActionStatisticsCollector {
 	public static final String ARG_CTA_LIMIT_DECREASED_TIMEFRAME = "decreased_timeframe";
 	public static final String VALUE_MODE = "mode";
 	public static final String VALUE_CONSTANT_START = "start";
-	
+
+	/** introduced in 8.1 for the new Global Search */
+	private static final String TYPE_GLOBAL_SEARCH = "global_search";
+	public static final String VALUE_TIMEOUT = "timeout";
+	public static final String VALUE_FOCUS_LOST = "focus_lost";
+	public static final String VALUE_ACTION = "action";
+	public static final String ARG_GLOBAL_SEARCH_SPACER = "|";
+	public static final String ARG_GLOBAL_SEARCH_CATEGORY_ALL = "all";
+	/** introduced in 8.1 */
+	public static final String PREFIX_TYPE_AUTOMODEL_GENERATED = "am_gen_";
+	public static final String PREFIX_TYPE_AUTOMODEL_EXPORTED = "am_exp_";
+
 	/** conversion constant for bytes to megabytes */
 	private static final int BYTE_TO_MB = 1024 * 1024;
 
@@ -209,6 +219,51 @@ public enum ActionStatisticsCollector {
 
 	private static final boolean DISABLED = RapidMiner.getExecutionMode().isHeadless()
 			&& RapidMiner.getExecutionMode() != RapidMiner.ExecutionMode.COMMAND_LINE;
+
+
+	/**
+	 * Log usage of the global search.
+	 *
+	 * @param value
+	 * 		one of timeout or focus_lost
+	 * @param searchTerm
+	 * 		the term that lead to this result
+	 * @param categoryId
+	 * 		the category that was searched
+	 * @param numResults
+	 * 		the potential amount of hits
+	 * @since 8.1
+	 */
+	public void logGlobalSearch(String value, String searchTerm, String categoryId, long numResults) {
+		StringBuilder arg = new StringBuilder();
+		arg.append(searchTerm).append(ARG_GLOBAL_SEARCH_SPACER);
+		arg.append(categoryId).append(ARG_GLOBAL_SEARCH_SPACER);
+		arg.append(numResults);
+		log(TYPE_GLOBAL_SEARCH, value, arg.toString());
+	}
+
+	/**
+	 * Log actions executed through global search.
+	 *
+	 * @param searchTerm
+	 * 		the search executed to run the action
+	 * @param categoryId
+	 * 		the category that was searched
+	 * @param chosenItemIdentifier
+	 * 		name of the item the user picked
+	 * @since 8.1
+	 */
+	public void logGlobalSearchAction(String searchTerm, String categoryId, String chosenItemIdentifier) {
+		String myChosenItem = chosenItemIdentifier;
+		if (RepositoryGlobalSearch.CATEGORY_ID.equalsIgnoreCase(categoryId)) {
+			myChosenItem = "";
+		}
+		StringBuilder arg = new StringBuilder();
+		arg.append(searchTerm).append(ARG_GLOBAL_SEARCH_SPACER);
+		arg.append(categoryId).append(ARG_GLOBAL_SEARCH_SPACER);
+		arg.append(myChosenItem);
+		log(TYPE_GLOBAL_SEARCH, VALUE_ACTION, arg.toString());
+	}
 
 	/**
 	 * A Key defines an identifier that is used to store some collected usage data associated with it. It has 3 levels,
@@ -279,7 +334,7 @@ public enum ActionStatisticsCollector {
 			}
 
 			AggregationIndicator(String name, BiFunction<Long, Long, Long> dataCombiner,
-					Function<Long, Long> dataTransformer) {
+								 Function<Long, Long> dataTransformer) {
 				this.name = name;
 				this.dataCombiner = dataCombiner;
 				this.dataTransformer = dataTransformer;
@@ -330,7 +385,7 @@ public enum ActionStatisticsCollector {
 				} else {
 					Set<LabelIndicator> labelIndicators = EnumSet.noneOf(LabelIndicator.class);
 					LabelIndicator[] lis = LabelIndicator.values();
-					for (int i = lis.length - 1; i >= 0; -- i) {
+					for (int i = lis.length - 1; i >= 0; --i) {
 						if (argWithIndicators.endsWith(lis[i].toString())) {
 							labelIndicators.add(lis[i]);
 							argWithIndicators = argWithIndicators.substring(0, argWithIndicators.length() - lis[i].toString().length());
@@ -386,12 +441,12 @@ public enum ActionStatisticsCollector {
 		}
 
 		public Key(String type, String value, String arg, Set<LabelIndicator> labelIndicators,
-				AggregationIndicator aggregationIndicator) {
+				   AggregationIndicator aggregationIndicator) {
 			this.type = type;
 			this.value = value;
 			this.arg = arg;
 			this.labelIndicators = labelIndicators == null ? EnumSet.noneOf(LabelIndicator.class) : labelIndicators;
-			this.aggregationIndicator = aggregationIndicator == null ? AggregationIndicator.SUM: aggregationIndicator;
+			this.aggregationIndicator = aggregationIndicator == null ? AggregationIndicator.SUM : aggregationIndicator;
 			argWithIndicators = computeArgWithIndicators();
 		}
 
@@ -642,7 +697,7 @@ public enum ActionStatisticsCollector {
 
 			}
 			// log the memory volume used
-			logMemory();
+			logMemory(process);
 		}
 
 		@Override
@@ -691,37 +746,37 @@ public enum ActionStatisticsCollector {
 
 		RapidMinerGUI.getMainFrame().getDockingDesktop().addDockableStateChangeListener(e ->
 				log(TYPE_DOCKABLE, e.getNewState().getDockable().getDockKey().getKey(),
-				e.getNewState().getLocation().toString())
+						e.getNewState().getLocation().toString())
 		);
 	}
 
 	/**
 	 * Logs an {@link ActionEvent} to statistics, with the detailed circumstances of the event.
-	 * 
+	 *
 	 * @param action
 	 * @param actionEvent
 	 */
 	public void logAction(Action action, ActionEvent actionEvent) {
-		String actionCommand = actionEvent.getActionCommand();
-		if (actionCommand != null) {
-			Object source = actionEvent.getSource();
-			StringBuilder arg = new StringBuilder(source.getClass().getName());
-			arg.append("|");
-			arg.append(actionCommand);
-			if (source instanceof AbstractButton) {
-				arg.append("|");
-				arg.append(((AbstractButton) source).getText());
-				arg.append("|");
-				arg.append(((AbstractButton) source).isSelected());
-			} else if (source instanceof JTextComponent && !(source instanceof JPasswordField)) {
-				arg.append("|");
-				arg.append(((JTextComponent) source).getText());
+		StringBuilder arg = new StringBuilder();
+		if (actionEvent != null) {
+			String actionCommand = actionEvent.getActionCommand();
+			if (actionCommand != null) {
+				Object source = actionEvent.getSource();
+				if (source != null) {
+					arg.append(source.getClass().getName());
+					arg.append("|");
+					arg.append(actionCommand);
+					if (source instanceof AbstractButton) {
+						arg.append("|");
+						arg.append(((AbstractButton) source).isSelected());
+					}
+				}
 			}
-			if (action instanceof ResourceAction) {
-				log(TYPE_RESOURCE_ACTION, ((ResourceAction) action).getKey(), arg.toString());
-			} else {
-				log(TYPE_SIMPLE_ACTION, (String) action.getValue(Action.NAME), arg.toString());
-			}
+		}
+		if (action instanceof ResourceAction) {
+			log(TYPE_RESOURCE_ACTION, ((ResourceAction) action).getKey(), arg.toString());
+		} else if (action.getValue(Action.NAME) != null) {
+			log(TYPE_SIMPLE_ACTION, String.valueOf(action.getValue(Action.NAME)), arg.toString());
 		}
 	}
 
@@ -755,6 +810,25 @@ public enum ActionStatisticsCollector {
 		}
 	}
 
+	private static String prefixAutoModelUsage(Operator operator) {
+		if (operator == null) {
+			return "";
+		}
+
+		AutoModelProcessXMLFilter.AutoModelState autoModelState = AutoModelProcessXMLFilter.getAutoModelState(operator);
+		if (autoModelState == null) {
+			return "";
+		}
+		switch (autoModelState) {
+			case GENERATED:
+				return PREFIX_TYPE_AUTOMODEL_GENERATED;
+			case EXPORTED:
+				return PREFIX_TYPE_AUTOMODEL_EXPORTED;
+			default:
+				return "";
+		}
+	}
+
 	/**
 	 * Logs the operator execution event and adds the {@link ProcessListener} logging the operator
 	 * volumes.
@@ -766,50 +840,62 @@ public enum ActionStatisticsCollector {
 		if (process == null) {
 			return;
 		}
+
+		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+
 		// add listener for operator port volume logging
 		process.getRootOperator().addProcessListener(operatorVolumeListener);
 		List<Operator> allInnerOperators = process.getRootOperator().getAllInnerOperators();
 		int size = 0;
 		for (Operator op : allInnerOperators) {
 			if (op.isEnabled()) {
-				log(TYPE_OPERATOR, op.getOperatorDescription().getKey(), OPERATOR_EVENT_EXECUTION);
-				++ size;
+				log(op, OPERATOR_EVENT_EXECUTION);
+				++size;
 			}
 		}
-		log(TYPE_PROCESS, VALUE_OPERATOR_COUNT, Integer.toString(size));
-		startTimer(process, TYPE_PROCESS, VALUE_EXECUTION, ARG_RUNTIME);
+		log(autoModelPrefix + TYPE_PROCESS, VALUE_OPERATOR_COUNT, Integer.toString(size));
+		startTimer(process, autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_RUNTIME);
 	}
 
 	/**
 	 * Logs process execution success
 	 */
-	public void logExecutionSuccess() {
-		log(TYPE_PROCESS, VALUE_EXECUTION, ARG_SUCCESS);
+	public void logExecutionSuccess(Process process) {
+		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+
+		log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_SUCCESS);
 	}
 
 	/**
 	 * Logs process execution start
 	 */
-	public void logExecutionStarted() {
-		log(TYPE_PROCESS, VALUE_EXECUTION, ARG_STARTED);
+	public void logExecutionStarted(Process process) {
+		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+
+		log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_STARTED);
 	}
 
 	/**
 	 * Logs the details of the exception thrown during process execution.
 	 * The argument holds all information about the exception, i.e. related operator,
 	 * error name, stacktrace.
-	 * 
+	 *
 	 * @param process
 	 *            The process being executed when the exception was thrown.
 	 * @param e
 	 *             The exception to be logged.
 	 */
 	public void logExecutionException(Process process, Exception e) {
+		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+
 		if (e instanceof ProcessStoppedException) {
-			log(TYPE_PROCESS, VALUE_EXECUTION, ARG_STOPPED);
- 		} else {
-			log(TYPE_PROCESS, VALUE_EXECUTION, ARG_FAILED);
-			StringBuilder exception = new StringBuilder(process.getCurrentOperator().getOperatorDescription().getKey());
+			log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_STOPPED);
+		} else {
+			log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_FAILED);
+			StringBuilder exception = new StringBuilder();
+			if (process.getCurrentOperator() != null) {
+				exception.append(process.getCurrentOperator().getOperatorDescription().getKey());
+			}
 			if (e instanceof UserError) {
 				UserError ue = (UserError) e;
 				exception.append("|ue|");
@@ -819,11 +905,11 @@ public enum ActionStatisticsCollector {
 				exception.append("|");
 			} else {
 				exception.append("|ex|");
-				exception.append(e.toString());
+				exception.append(e.getClass());
 				exception.append("||");
 			}
 			exception.append(getExceptionStackTraceAsString(e));
-			log(TYPE_PROCESS, VALUE_EXCEPTION, exception.toString());
+			log(autoModelPrefix + TYPE_PROCESS, VALUE_EXCEPTION, exception.toString());
 		}
 	}
 
@@ -889,7 +975,9 @@ public enum ActionStatisticsCollector {
 	 *            the columns of the example set at the port
 	 */
 	private void logInputVolume(Operator operator, InputPort port, int rows, int columns) {
-		logVolume(TYPE_INPUT_VOLUME, operator, port, rows, columns);
+		String autoModelPrefix = prefixAutoModelUsage(operator);
+
+		logVolume(autoModelPrefix + TYPE_INPUT_VOLUME, operator, port, rows, columns);
 	}
 
 	/**
@@ -906,14 +994,18 @@ public enum ActionStatisticsCollector {
 	 *            the columns of the example set at the port
 	 */
 	private void logOutputVolume(Operator operator, OutputPort port, int rows, int columns) {
-		logVolume(TYPE_OUTPUT_VOLUME, operator, port, rows, columns);
+		String autoModelPrefix = prefixAutoModelUsage(operator);
+
+		logVolume(autoModelPrefix + TYPE_OUTPUT_VOLUME, operator, port, rows, columns);
 	}
 
 	public void log(Operator op, String event) {
 		if (op == null) {
 			return;
 		}
-		log(TYPE_OPERATOR, op.getOperatorDescription().getKey(), event);
+		String autoModelPrefix = prefixAutoModelUsage(op);
+
+		log(autoModelPrefix + TYPE_OPERATOR, op.getOperatorDescription().getKey(), event);
 	}
 
 	/** Adds 1 to the aggregated value */
@@ -931,15 +1023,19 @@ public enum ActionStatisticsCollector {
 	 *            the execution time (in milliseconds) to log
 	 */
 	private void logOperatorExecutionTime(Operator operator, long executionTime) {
-		logCountSumMinMax(TYPE_OPERATOR, operator.getOperatorDescription().getKey(), OPERATOR_RUNTIME, executionTime);
+		String autoModelPrefix = prefixAutoModelUsage(operator);
+
+		logCountSumMinMax(autoModelPrefix + TYPE_OPERATOR, operator.getOperatorDescription().getKey(), OPERATOR_RUNTIME, executionTime);
 	}
 
 	/**
 	 * Logs sum, max and count of the total memory currently used.
 	 */
-	private void logMemory() {
+	private void logMemory(Process process) {
+		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+
 		long totalSize = Runtime.getRuntime().totalMemory() / BYTE_TO_MB;
-		Key key = new Key(TYPE_MEMORY, MEMORY_USED, MEMORY_ARG);
+		Key key = new Key(autoModelPrefix + TYPE_MEMORY, MEMORY_USED, MEMORY_ARG);
 		log(key, totalSize);
 		logMax(key, totalSize);
 		logCount(key, totalSize);

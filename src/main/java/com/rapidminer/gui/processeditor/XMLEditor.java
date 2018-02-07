@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -128,10 +128,11 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 			Operator currentOperator = selection.get(0);
 			String name = currentOperator.getName();
 			String text = this.editor.getText();
-			int result = text.indexOf("\"" + name + "\"");
-			if (result >= 0) {
-				this.editor.select(result + 1, result + name.length() + 1);
-				this.editor.setCaretPosition(result + name.length() + 1);
+			int start = text.indexOf("\"" + name + "\"");
+			int end = start + name.length() + 1;
+			if (start >= 0 && editor.getDocument().getLength() > end) {
+				this.editor.select(start + 1, end);
+				this.editor.setCaretPosition(end);
 			}
 		}
 	}

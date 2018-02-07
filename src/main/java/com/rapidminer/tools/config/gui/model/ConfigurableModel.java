@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,6 +18,7 @@
 */
 package com.rapidminer.tools.config.gui.model;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,6 +27,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.event.EventListenerList;
 import javax.xml.ws.WebServiceException;
@@ -46,6 +49,8 @@ import com.rapidminer.tools.config.gui.ConfigurableDialog;
 import com.rapidminer.tools.config.gui.event.ConfigurableEvent;
 import com.rapidminer.tools.config.gui.event.ConfigurableEvent.EventType;
 import com.rapidminer.tools.config.gui.event.ConfigurableModelEventListener;
+import com.rapidminer.tools.config.jwt.JwtClaim;
+import com.rapidminer.tools.config.jwt.JwtReader;
 import com.rapidminer.tools.container.Pair;
 
 
@@ -57,6 +62,7 @@ import com.rapidminer.tools.container.Pair;
  */
 public class ConfigurableModel implements Observer<Pair<EventType, Configurable>> {
 
+	private static final Logger LOGGER = Logger.getLogger(ConfigurableModel.class.getName());
 	/** comparator for Configurables */
 	private static Comparator<Configurable> COMPARATOR = new ConfigurationManager.ConfigurableComparator();
 
@@ -65,6 +71,9 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 
 	/** the list of all {@link Configurable}s in this model */
 	private List<Configurable> listOfConfigurables;
+
+	/** Shared lock for backup modifications */
+	private Object backupLock = new Object();
 
 	/**
 	 * this map stores the original parameters for each {@link Configurable} which existed during
@@ -110,6 +119,16 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	private boolean adminRights = false;
 
 	/**
+	 * defines whether {@link #adminRights} variable was initialized
+	 */
+	private volatile boolean adminRightsInitialized = false;
+
+	/**
+	 * lock for {@link #adminRights} initialization
+	 */
+	private Object adminRightsInitLock = new Object();
+
+	/**
 	 * Creates a new {@link ConfigurableModel} instance including all available {@link Configurable}
 	 * s.
 	 */
@@ -153,7 +172,6 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 		this.originalNames = new HashMap<>();
 		this.originalPermittedUserGroups = new HashMap<>();
 		this.source = source;
-		checkForAdminRights();
 		if (source != null) {
 			originalCredentials = Wallet.getInstance().getEntry(source.getAlias(), source.getBaseUrl().toString());
 			if (originalCredentials == null) {
@@ -180,7 +198,7 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 				originalParameters.put(configurable, new HashMap<>(parameterMap));
 				originalNames.put(configurable, configurable.getName());
 				originalPermittedUserGroups.put(configurable,
-				        ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable));
+						ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable));
 			}
 		}
 
@@ -194,20 +212,27 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 * need to be stored separately.
 	 */
 	private void updateBackup() {
-		for (Configurable configurable : listOfConfigurables) {
-			// copy key-value pairs and save them in new map
-			Map<String, String> parameterMap = new HashMap<>();
-			for (String key : configurable.getParameters().keySet()) {
-				if (configurable instanceof AbstractConfigurable) {
-					parameterMap.put(key, ((AbstractConfigurable) configurable).getParameterAsXMLString(key));
-				} else {
-					parameterMap.put(key, configurable.getParameter(key));
+		synchronized (backupLock) {
+			originalParameters.clear();
+			originalNames.clear();
+			originalPermittedUserGroups.clear();
+			synchronized (listOfConfigurables) {
+				for (Configurable configurable : listOfConfigurables) {
+					// copy key-value pairs and save them in new map
+					Map<String, String> parameterMap = new HashMap<>();
+					for (String key : configurable.getParameters().keySet()) {
+						if (configurable instanceof AbstractConfigurable) {
+							parameterMap.put(key, ((AbstractConfigurable) configurable).getParameterAsXMLString(key));
+						} else {
+							parameterMap.put(key, configurable.getParameter(key));
+						}
+					}
+					originalParameters.put(configurable, parameterMap);
+					originalNames.put(configurable, configurable.getName());
+					originalPermittedUserGroups.put(configurable,
+							ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable));
 				}
 			}
-			originalParameters.put(configurable, new HashMap<>(parameterMap));
-			originalNames.put(configurable, configurable.getName());
-			originalPermittedUserGroups.put(configurable,
-			        ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable));
 		}
 	}
 
@@ -233,6 +258,52 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 				}
 			}
 		}
+	}
+
+	/**
+	 * Check if the model contains unsaved data
+	 *
+	 * @return true if the model was modified since the last refresh
+	 */
+	public boolean isModified(){
+		//Fetch local copies of the original data
+		Map<Configurable, Set<String>> originalPermittedUserGroups = getBackupPermittedUserGroups();
+		Map<Configurable, Map<String, String>> originalParameters = getBackupParameters();
+		Map<Configurable, String> originalNames = getBackupNames();
+
+		//Check size
+		if (listOfConfigurables.size() != originalPermittedUserGroups.size()){
+			return true;
+		}
+		for(Configurable configurable: listOfConfigurables){
+			//Compare names // find missing
+			if(!configurable.getName().equals(originalNames.get(configurable))){
+				return true;
+			}
+			//Compare parameters
+			Map<String, String> originalParameterMap = originalParameters.get(configurable);
+			if (configurable.getParameters().size() != originalParameterMap.size()) {
+				return true;
+			}
+			for (Map.Entry<String, String> parameterEntry : originalParameterMap.entrySet()) {
+				if (!parameterEntry.getValue().toString()
+						.equals(configurable.getParameter(parameterEntry.getKey()).toString())) {
+					// If the string comparison of the 2 objects with equals() returns false
+					return true;
+				}
+			}
+			//Compare groups
+			Set<String> originalGroups = originalPermittedUserGroups.get(configurable);
+			Set<String> currentGroups = ConfigurationManager.getInstance().getPermittedGroupsForConfigurable(configurable);
+
+			if(originalGroups.size() != currentGroups.size()){
+				return true;
+			}
+			if(!originalGroups.containsAll(currentGroups)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -262,9 +333,11 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 */
 	public List<String> getListOfUniqueNamesForType(String typeId) {
 		List<String> list = new LinkedList<>();
-		for (Configurable c : listOfConfigurables) {
-			if (c.getTypeId().equals(typeId)) {
-				list.add(c.getName());
+		synchronized (listOfConfigurables) {
+			for (Configurable c : listOfConfigurables) {
+				if (c.getTypeId().equals(typeId)) {
+					list.add(c.getName());
+				}
 			}
 		}
 
@@ -285,7 +358,9 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 * @return
 	 */
 	public Map<Configurable, Map<String, String>> getBackupParameters() {
-		return new HashMap<>(originalParameters);
+		synchronized (backupLock) {
+			return new HashMap<>(originalParameters);
+		}
 	}
 
 	/**
@@ -295,7 +370,9 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 * @return
 	 */
 	public Map<Configurable, String> getBackupNames() {
-		return new HashMap<>(originalNames);
+		synchronized (backupLock) {
+			return new HashMap<>(originalNames);
+		}
 	}
 
 	/**
@@ -305,7 +382,9 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 * @return
 	 */
 	public Map<Configurable, Set<String>> getBackupPermittedUserGroups() {
-		return originalPermittedUserGroups;
+		synchronized (backupLock) {
+			return new HashMap<>(originalPermittedUserGroups);
+		}
 	}
 
 	/**
@@ -316,6 +395,8 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 		if (!wasVersionCheckDone()) {
 			try {
 				checkVersion();
+				/**also initialize the {@link adminRights} variable**/
+				checkForAdminRights();
 			} catch (WebServiceException e) {
 				// no connection possible
 				return false;
@@ -337,18 +418,22 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 * checks whether the user logged in has admin rights
 	 */
 	public void checkForAdminRights() {
-		if (source == null) {
-			adminRights = true;
-		} else if (source.getUsername().equals(ConfigurationManager.RM_SERVER_CONFIGURATION_USER_ADMIN)) {
-			adminRights = true;
-		}
+		final boolean local = source == null;
+		adminRightsInitialized = true;
+		adminRights = local || hasAdminRightsOnServer();
 	}
 
 	/**
-	 *
 	 * @return whether the user is allowed to edit, add, remove and save configurables
 	 */
 	public boolean hasAdminRights() {
+		if(!adminRightsInitialized){
+			synchronized (adminRightsInitLock){
+				if(!adminRightsInitialized) {
+					checkForAdminRights();
+				}
+			}
+		}
 		return adminRights;
 	}
 
@@ -389,7 +474,9 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 * @return
 	 */
 	public List<Configurable> getConfigurables() {
-		return new LinkedList<>(listOfConfigurables);
+		synchronized (listOfConfigurables) {
+			return new LinkedList<>(listOfConfigurables);
+		}
 	}
 
 	/**
@@ -487,7 +574,15 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 		if (source != null) {
 			for (Configurable originalConfig : originalNames.keySet()) {
 				ConfigurationManager.getInstance().removeConfigurable(originalConfig.getTypeId(),
-				        originalNames.get(originalConfig), source.getName());
+						originalNames.get(originalConfig), source.getName());
+				listOfConfigurables.remove(originalConfig);
+			}
+			synchronized (listOfConfigurables) {
+				for (Configurable newConfig : listOfConfigurables) {
+					ConfigurationManager.getInstance().removeConfigurable(newConfig.getTypeId(),
+							newConfig.getName(), source.getName());
+					fireConfigurableRemovedEvent(newConfig);
+				}
 			}
 			listOfConfigurables.clear();
 		}
@@ -513,7 +608,7 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 		}
 		try {
 			// clear the cache
-			source.refresh();
+			ConfigurationManager.getInstance().refresh(source);
 		} catch (RepositoryException e) {
 			// if no connection could be established
 			firstException = e;
@@ -545,4 +640,23 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 			}
 		}
 	}
+
+	/**
+	 * Check if the user has admin rights on a remote repository
+	 *
+	 * @return true if user has admin rights
+	 */
+	private boolean hasAdminRightsOnServer() {
+		try {
+			JwtClaim userInfo = new JwtReader().readClaim(getSource());
+			if (userInfo != null) {
+				return userInfo.isAdmin();
+			}
+		} catch (IOException | RepositoryException e) {
+			adminRightsInitialized = false;
+			LOGGER.log(Level.INFO, "Could not retrieve JSON Web Token from server " + (source == null ? "" : source.getBaseUrl()), e);
+		}
+		return false;
+	}
+
 }

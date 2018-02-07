@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,11 +19,11 @@
 package com.rapidminer.gui.actions;
 
 import java.awt.event.ActionEvent;
-
 import javax.swing.Icon;
 
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 
@@ -42,22 +42,27 @@ public class RunAction extends ResourceAction {
 	private static final Icon ICON_RESUME_SMALL = SwingTools.createIcon("16/media_step_forward.png");
 	private static final Icon ICON_RESUME_LARGE = SwingTools.createIcon("24/media_step_forward.png");
 
-	private final MainFrame mainFrame;
-
-	public RunAction(MainFrame mainFrame) {
+	public RunAction() {
 		super("run");
-		this.mainFrame = mainFrame;
 		setCondition(PROCESS_RUNNING, DISALLOWED);
 		setCondition(EDIT_IN_PROGRESS, DISALLOWED);
+	}
+
+	/**
+	 * @deprecated use {@link #RunAction()} instead
+	 */
+	@Deprecated
+	public RunAction(MainFrame mainFrame) {
+		this();
 	}
 
 	@Override
 	public void loggedActionPerformed(ActionEvent e) {
 		// small hack to force currently active parameter editor to save the changes due to focus
 		// lost event
-		mainFrame.getProcessPanel().requestFocus();
+		RapidMinerGUI.getMainFrame().getProcessPanel().requestFocus();
 
-		mainFrame.runProcess();
+		RapidMinerGUI.getMainFrame().runProcess();
 	}
 
 	public void setState(int processState) {

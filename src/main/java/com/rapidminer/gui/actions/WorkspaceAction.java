@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -20,9 +20,7 @@ package com.rapidminer.gui.actions;
 
 import java.awt.event.ActionEvent;
 
-import com.rapidminer.gui.PerspectiveController;
-import com.rapidminer.gui.ApplicationPerspectives;
-import com.rapidminer.gui.Perspective;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 
 
@@ -30,44 +28,27 @@ import com.rapidminer.gui.tools.ResourceAction;
  *
  * @author Simon Fischer
  */
-@SuppressWarnings("deprecation")
 public class WorkspaceAction extends ResourceAction {
 
 	private static final long serialVersionUID = 1L;
 
-	private final ApplicationPerspectives perspectives;
+	private final String name;
 
-	private final PerspectiveController perspectiveController;
 
-	private final Perspective perspective;
-
-	public WorkspaceAction(ApplicationPerspectives perspectives, Perspective perspective, String name) {
+	public WorkspaceAction(String name) {
 		super(true, "workspace_" + name);
-		this.perspective = perspective;
-		this.perspectives = perspectives;
-		this.perspectiveController = null;
-	}
-
-	public WorkspaceAction(PerspectiveController perspectiveController, Perspective perspective, String name) {
-		super(true, "workspace_" + name);
-		this.perspective = perspective;
-		this.perspectives = null;
-		this.perspectiveController = perspectiveController;
+		this.name = name;
 	}
 
 	@Override
 	public void loggedActionPerformed(ActionEvent e) {
-		if (perspectiveController != null) {
-			perspectiveController.showPerspective(perspective.getName());
-		} else {
-			perspectives.showPerspective(perspective.getName());
-		}
+		RapidMinerGUI.getMainFrame().getPerspectiveController().showPerspective(name);
 	}
 
 	/**
-	 * Returns the {@link Perspective} for this action.
+	 * Returns the name of the perspective for this action.
 	 */
-	public Perspective getPerspective() {
-		return perspective;
+	public String getPerspectiveName() {
+		return name;
 	}
 }

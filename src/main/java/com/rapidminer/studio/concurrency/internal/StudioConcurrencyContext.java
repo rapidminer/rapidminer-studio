@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -139,20 +139,18 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 			}
 		}
 
+		ForkJoinPool forkJoinPool = AccessController.doPrivileged(
+				(PrivilegedAction<ForkJoinPool>) this::getForkJoinPool);
 		// handle submissions from inside and outside the pool differently
 		Thread currentThread = Thread.currentThread();
 		if (currentThread instanceof ForkJoinWorkerThread
-				&& ((ForkJoinWorkerThread) currentThread).getPool() == getForkJoinPool()) {
+				&& ((ForkJoinWorkerThread) currentThread).getPool() == forkJoinPool) {
 			return RecursiveWrapper.call(callables);
 		} else {
 			final List<Future<T>> futures = new ArrayList<>(callables.size());
-			AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
-
-				for (Callable<T> callable : callables) {
-					futures.add(getForkJoinPool().submit(callable));
-				}
-				return null;
-			});
+			for (Callable<T> callable : callables) {
+				futures.add(forkJoinPool.submit(callable));
+			}
 			return collectResults(futures);
 		}
 	}
@@ -175,16 +173,25 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 			}
 		}
 
-		// submit callables without further checks
-		final List<Future<T>> futures = new ArrayList<>(callables.size());
-		AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
-
+		ForkJoinPool forkJoinPool = AccessController.doPrivileged(
+				(PrivilegedAction<ForkJoinPool>) this::getForkJoinPool);
+		// handle submissions from inside and outside the pool differently
+		Thread currentThread = Thread.currentThread();
+		if (currentThread instanceof ForkJoinWorkerThread
+				&& ((ForkJoinWorkerThread) currentThread).getPool() == forkJoinPool) {
+			final List<Future<T>> futures = new ArrayList<>(callables.size());
 			for (Callable<T> callable : callables) {
-				futures.add(getForkJoinPool().submit(callable));
+				futures.add(ForkJoinTask.adapt(callable).fork());
 			}
-			return null;
-		});
-		return futures;
+			return futures;
+		} else {
+			// submit callables without further checks
+			final List<Future<T>> futures = new ArrayList<>(callables.size());
+			for (Callable<T> callable : callables) {
+				futures.add(forkJoinPool.submit(callable));
+			}
+			return futures;
+		}
 	}
 
 	@Override
@@ -242,7 +249,8 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 	@Override
 	public int getParallelism() {
 		if (pool != null) {
-			return getForkJoinPool().getParallelism();
+			return AccessController.doPrivileged((PrivilegedAction<ForkJoinPool>) this::getForkJoinPool)
+					.getParallelism();
 		} else {
 			return getDesiredParallelismLevel();
 		}
@@ -261,7 +269,8 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 	}
 
 	@Override
-	public <T> List<T> invokeAll(final List<ForkJoinTask<T>> tasks) throws ExecutionException, ExecutionStoppedException {
+	public <T> List<T> invokeAll(final List<ForkJoinTask<T>> tasks) throws ExecutionException,
+			ExecutionStoppedException {
 		throw new UnsupportedOperationException();
 	}
 
@@ -292,7 +301,8 @@ public class StudioConcurrencyContext implements ConcurrencyContext {
 			}
 			int desiredParallelismLevel = getDesiredParallelismLevel();
 			pool = new ForkJoinPool(desiredParallelismLevel);
-			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.concurrency.concurrency_context.pool_creation",
+			LogService.getRoot().log(Level.CONFIG,
+					"com.rapidminer.concurrency.concurrency_context.pool_creation",
 					desiredParallelismLevel);
 			return pool;
 		} finally {

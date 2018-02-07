@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,10 +18,11 @@
 */
 package com.rapidminer.gui.actions;
 
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.tools.ResourceAction;
-
 import java.awt.event.ActionEvent;
+
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**
@@ -33,17 +34,23 @@ public class UndoAction extends ResourceAction {
 
 	private static final long serialVersionUID = 4767902062440337756L;
 
-	private MainFrame mainFrame;
 
-	public UndoAction(MainFrame mainFrame) {
+	public UndoAction() {
 		super("undo");
-		this.mainFrame = mainFrame;
 		setCondition(EDIT_IN_PROGRESS, DISALLOWED);
 		setCondition(PROCESS_RENDERER_HAS_UNDO_STEPS, MANDATORY);
 	}
 
+	/**
+	 * @deprecated use {@link #UndoAction()} instead
+	 */
+	@Deprecated
+	public UndoAction(MainFrame mainFrame) {
+		this();
+	}
+
 	@Override
 	public void loggedActionPerformed(ActionEvent e) {
-		this.mainFrame.undo();
+		RapidMinerGUI.getMainFrame().undo();
 	}
 }

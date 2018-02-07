@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,13 +18,14 @@
 */
 package com.rapidminer.gui.operatortree.actions;
 
+import java.awt.event.ActionEvent;
+
 import com.rapidminer.BreakpointListener;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.Actions;
 import com.rapidminer.gui.actions.ToggleAction;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
-
-import java.awt.event.ActionEvent;
 
 
 /**
@@ -36,16 +37,22 @@ public class ToggleAllBreakpointsItem extends ToggleAction {
 
 	private static final long serialVersionUID = 1727841552148351670L;
 
-	private final Actions actions;
 
-	public ToggleAllBreakpointsItem(final Actions actions) {
+	public ToggleAllBreakpointsItem() {
 		super(true, "toggle_all_breakpoints");
-		this.actions = actions;
+	}
+
+	/**
+	 * @deprecated use {@link #ToggleAllBreakpointsItem()} instead
+	 */
+	@Deprecated
+	public ToggleAllBreakpointsItem(final Actions actions) {
+		this();
 	}
 
 	@Override
 	public void actionToggled(ActionEvent e) {
-		Operator rootOp = actions.getRootOperator();
+		Operator rootOp = RapidMinerGUI.getMainFrame().getActions().getRootOperator();
 		if (rootOp != null) {
 			for (Operator op : ((OperatorChain) rootOp).getAllInnerOperators()) {
 				op.setBreakpoint(BreakpointListener.BREAKPOINT_BEFORE, false);

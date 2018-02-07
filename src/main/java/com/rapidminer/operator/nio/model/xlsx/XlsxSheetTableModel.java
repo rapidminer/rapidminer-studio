@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -28,6 +28,7 @@ import com.rapidminer.operator.nio.ImportWizardUtils;
 import com.rapidminer.operator.nio.model.DefaultPreview;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.operator.nio.model.ParseException;
+import com.rapidminer.operator.nio.model.ExcelSheetSelection;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet.XlsxReadMode;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
@@ -58,6 +59,7 @@ public class XlsxSheetTableModel extends AbstractTableModel {
 	private final int sheetRowCount;
 
 	/**
+	 * @param configuration
 	 * @param sheetIndex
 	 *            the selected sheet
 	 * @param readMode
@@ -67,7 +69,24 @@ public class XlsxSheetTableModel extends AbstractTableModel {
 	 *            the listener to report the progress to
 	 */
 	public XlsxSheetTableModel(ExcelResultSetConfiguration configuration, int sheetIndex, XlsxReadMode readMode,
-			String absolutePath, ProgressListener progressListener) throws OperatorException, ParseException {
+							   String absolutePath, ProgressListener progressListener) throws OperatorException, ParseException {
+		this(configuration, ExcelSheetSelection.byIndex(sheetIndex), readMode, absolutePath, progressListener);
+	}
+
+
+
+	/**
+	 * @param configuration
+	 * @param sheetSelection
+	 *            the selected sheet
+	 * @param readMode
+	 * @param absolutePath
+	 *            the absolute path of the Excel file
+	 * @param progressListener
+	 *            the listener to report the progress to
+	 */
+	public XlsxSheetTableModel(ExcelResultSetConfiguration configuration, ExcelSheetSelection sheetSelection, XlsxReadMode readMode,
+							   String absolutePath, ProgressListener progressListener) throws OperatorException, ParseException {
 
 		isPreview = readMode == XlsxReadMode.WIZARD_PREVIEW;
 
@@ -91,7 +110,7 @@ public class XlsxSheetTableModel extends AbstractTableModel {
 		 * Keep track of the row count ourselves so we can omit empty rows at the end of the Excel
 		 * file
 		 */
-		try (XlsxResultSet xlsxResultSet = new XlsxResultSet(null, configuration, sheetIndex, readMode)) {
+		try (XlsxResultSet xlsxResultSet = new XlsxResultSet(null, configuration, sheetSelection, readMode)) {
 			int numberOfRows = xlsxResultSet.getNumberOfRows();
 			int initialCapacity = numberOfRows != -1 ? numberOfRows : XlsxSheetMetaDataParser.MAXIMUM_XLSX_ROW_INDEX + 1;
 			this.sheetContentCache = new ArrayList<>(initialCapacity);

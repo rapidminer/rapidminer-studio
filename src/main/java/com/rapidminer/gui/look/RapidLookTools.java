@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -27,7 +27,6 @@ import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.RoundRectangle2D;
-
 import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
 import javax.swing.JComboBox;
@@ -77,6 +76,37 @@ public final class RapidLookTools {
 	 * @since 7.0.0
 	 */
 	public static final String PROPERTY_INPUT_BACKGROUND_DARK = "input_dark_bg";
+
+	/**
+	 * If buttons should be highlighted in orange or not. Set to {@code true} or {@code false}. Default is {@code false}.
+	 *
+	 * @since 8.1
+	 */
+	public static final String PROPERTY_BUTTON_HIGHLIGHT = "button_highlight";
+
+	/**
+	 * If buttons should have a darker border. Set to {@code true} or {@code false}. Default is {@code false}.
+	 *
+	 * @since 8.1
+	 */
+	public static final String PROPERTY_BUTTON_DARK_BORDER = "button_dark_border";
+
+	/**
+	 * If input fields should have a darker border. Set to {@code true} or {@code false}. Default is {@code false}.
+	 *
+	 * @since 8.1
+	 */
+	public static final String PROPERTY_INPUT_DARK_BORDER = "input_dark_border";
+
+	/**
+	 * If input fields should be part of a composite input/button. Normally, each component has rounded borders all around so they look good as a standalone field.
+	 * If you want to have inputs and buttons right next to each other with no padding, this would look ugly.
+	 * Setting this to either {@link javax.swing.SwingConstants#LEFT}, {@link javax.swing.SwingConstants#CENTER} or {@link javax.swing.SwingConstants#RIGHT}
+	 * will produce a composite input border which is not rounded on the right, both sides, or the left respectively. Default is {@code -1}, aka standalone with round borders all around.
+	 *
+	 * @since 8.1
+	 */
+	public static final String PROPERTY_INPUT_TYPE_COMPOSITE = "input_type_composite";
 
 	static {
 		try {
@@ -202,15 +232,29 @@ public final class RapidLookTools {
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		if (b.isEnabled()) {
-			if (b.hasFocus()) {
-				g2.setColor(Colors.BUTTON_BORDER_FOCUS);
+		boolean darkBorder = Boolean.parseBoolean(String.valueOf(b.getClientProperty(RapidLookTools.PROPERTY_BUTTON_DARK_BORDER)));
+		if (darkBorder) {
+			if (b.isEnabled()) {
+				if (b.hasFocus()) {
+					g2.setColor(Colors.BUTTON_BORDER_DARK_FOCUS);
+				} else {
+					g2.setColor(Colors.BUTTON_BORDER_DARK);
+				}
 			} else {
-				g2.setColor(Colors.BUTTON_BORDER);
+				g2.setColor(Colors.BUTTON_BORDER_DARK_DISABLED);
 			}
 		} else {
-			g2.setColor(Colors.BUTTON_BORDER_DISABLED);
+			if (b.isEnabled()) {
+				if (b.hasFocus()) {
+					g2.setColor(Colors.BUTTON_BORDER_FOCUS);
+				} else {
+					g2.setColor(Colors.BUTTON_BORDER);
+				}
+			} else {
+				g2.setColor(Colors.BUTTON_BORDER_DISABLED);
+			}
 		}
+
 
 		g2.draw(shape);
 	}
@@ -227,25 +271,45 @@ public final class RapidLookTools {
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 		int h = (int) shape.getBounds().getHeight();
-		if (b.isEnabled()) {
-			if (b.getModel().isPressed() || b.getModel().isSelected()) {
-				Paint gp = new GradientPaint(0, 0, Colors.BUTTON_BACKGROUND_PRESSED_GRADIENT_START, 0, h,
-						Colors.BUTTON_BACKGROUND_PRESSED_GRADIENT_END);
-				g2.setPaint(gp);
-			} else if (b.getModel().isRollover()) {
-				Paint gp = new GradientPaint(0, 0, Colors.BUTTON_BACKGROUND_ROLLOVER_GRADIENT_START, 0, h,
-						Colors.BUTTON_BACKGROUND_ROLLOVER_GRADIENT_END);
-				g2.setPaint(gp);
+		ColorUIResource colorGradientStart;
+		ColorUIResource colorGradientEnd;
+		boolean highlighted = Boolean.parseBoolean(String.valueOf(b.getClientProperty(PROPERTY_BUTTON_HIGHLIGHT)));
+		if (highlighted) {
+			if (b.isEnabled()) {
+				if (b.getModel().isPressed() || b.getModel().isSelected()) {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_PRESSED_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_PRESSED_GRADIENT_END;
+				} else if (b.getModel().isRollover()) {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_ROLLOVER_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_ROLLOVER_GRADIENT_END;
+				} else {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_GRADIENT_END;
+				}
 			} else {
-				Paint gp = new GradientPaint(0, 0, Colors.BUTTON_BACKGROUND_GRADIENT_START, 0, h,
-						Colors.BUTTON_BACKGROUND_GRADIENT_END);
-				g2.setPaint(gp);
+				colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_START;
+				colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_END;
 			}
 		} else {
-			Paint gp = new GradientPaint(0, 0, Colors.BUTTON_BACKGROUND_DISABLED_GRADIENT_START, 0, h,
-					Colors.BUTTON_BACKGROUND_DISABLED_GRADIENT_END);
-			g2.setPaint(gp);
+			if (b.isEnabled()) {
+				if (b.getModel().isPressed() || b.getModel().isSelected()) {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_PRESSED_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_PRESSED_GRADIENT_END;
+				} else if (b.getModel().isRollover()) {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_ROLLOVER_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_ROLLOVER_GRADIENT_END;
+				} else {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_GRADIENT_END;
+				}
+			} else {
+				colorGradientStart = Colors.BUTTON_BACKGROUND_DISABLED_GRADIENT_START;
+				colorGradientEnd = Colors.BUTTON_BACKGROUND_DISABLED_GRADIENT_END;
+			}
 		}
+
+		Paint gp = new GradientPaint(0, 0, colorGradientStart, 0, h, colorGradientEnd);
+		g2.setPaint(gp);
 
 		g2.fill(shape);
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -127,7 +127,7 @@ public class ManagedExtension {
 	}
 
 	private File findFile() {
-		return findFile(selectedVersion.getShortLongVersion());
+		return findFile(getSelectedShortLongVersion());
 	}
 
 	private File findFile(String version) {
@@ -172,13 +172,17 @@ public class ManagedExtension {
 		return FileSystemService.getUserConfigFile("managed");
 	}
 
+	private String getSelectedShortLongVersion() {
+		return selectedVersion == null ? null : selectedVersion.getShortLongVersion();
+	}
+
 	private Element toXML(Document doc) {
 		Element result = doc.createElement("extension");
 		XMLTools.setTagContents(result, "id", packageID);
 		XMLTools.setTagContents(result, "name", name);
 		XMLTools.setTagContents(result, "active", "" + active);
 		XMLTools.setTagContents(result, "license", license);
-		XMLTools.setTagContents(result, "selected-version", selectedVersion.getShortLongVersion());
+		XMLTools.setTagContents(result, "selected-version", getSelectedShortLongVersion());
 		for (VersionNumber v : installedVersions) {
 			Element elem = doc.createElement("installed-version");
 			result.appendChild(elem);

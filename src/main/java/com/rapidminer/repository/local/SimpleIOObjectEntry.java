@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -128,6 +128,7 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 			l.setTotal(100);
 			l.setCompleted(10);
 		}
+		boolean existed = getDataFile().exists();
 		MetaData md = MetaData.forIOObject(data);
 		// Serialize Non-ExampleSets as IOO
 		try (FileOutputStream fos = new FileOutputStream(getDataFile()); OutputStream out = new BufferedOutputStream(fos)) {
@@ -155,6 +156,10 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 		}
 		this.metaData = new WeakReference<>(md);
 		putProperty(PROPERTY_IOOBJECT_CLASS, data.getClass().getName());
+
+		if (existed) {
+			getRepository().fireEntryChanged(this);
+		}
 	}
 
 	@Override

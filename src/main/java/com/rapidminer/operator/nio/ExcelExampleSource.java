@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -36,9 +36,12 @@ import com.rapidminer.operator.nio.model.DataResultSetTranslationConfiguration;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeConfiguration;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
+import com.rapidminer.parameter.conditions.EqualStringCondition;
+import com.rapidminer.parameter.conditions.NonEqualStringCondition;
 import com.rapidminer.tools.io.Encoding;
 
 
@@ -76,9 +79,34 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 	public static final String PARAMETER_EXCEL_FILE = "excel_file";
 
 	/**
+	 * The parameter name for &quot;The sheet selection mode.&quot;
+	 */
+	public static final String PARAMETER_SHEET_SELECTION = "sheet_selection";
+
+	/**
 	 * The parameter name for &quot;The number of the sheet which should be imported.&quot;
 	 */
 	public static final String PARAMETER_SHEET_NUMBER = "sheet_number";
+
+	/**
+	 * The parameter name for &quot;The name of the sheet which should be imported.&quot;
+	 */
+	public static final String PARAMETER_SHEET_NAME = "sheet_name";
+
+	/**
+	 * {@link #SHEET_SELECTION_MODES} index - select by number
+	 */
+	public static final int SHEET_SELECT_BY_INDEX = 0;
+
+	/**
+	 * {@link #SHEET_SELECTION_MODES} index - select by name
+	 */
+	public static final int SHEET_SELECT_BY_NAME = 1;
+
+	/**
+	 * Selection modes for sheets
+	 */
+	private static final String[] SHEET_SELECTION_MODES = {PARAMETER_SHEET_NUMBER.replace("_", " "), PARAMETER_SHEET_NAME.replace("_", " ")};
 
 	/**
 	 * The parameter name for &quot;Indicates which column should be used for the label attribute
@@ -167,9 +195,20 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 		types.add(type);
 
 		types.add(makeFileParameterType());
+		ParameterTypeCategory sheetSelection = new ParameterTypeCategory(PARAMETER_SHEET_SELECTION,
+				"Select the sheet by index or by name.",
+				SHEET_SELECTION_MODES, SHEET_SELECT_BY_INDEX);
+		types.add(sheetSelection);
 
-		types.add(new ParameterTypeInt(PARAMETER_SHEET_NUMBER, "The number of the sheet which should be imported.", 1,
-				Integer.MAX_VALUE, 1, false));
+		ParameterTypeString selectBySheetName = new ParameterTypeString(PARAMETER_SHEET_NAME, "The name of the sheet which should be imported.", true, false);
+		selectBySheetName.registerDependencyCondition(new EqualStringCondition(this, PARAMETER_SHEET_SELECTION, false, String.valueOf(SHEET_SELECT_BY_NAME), SHEET_SELECTION_MODES[SHEET_SELECT_BY_NAME]));
+		types.add(selectBySheetName);
+
+		ParameterTypeInt selectBySheetNumber = new ParameterTypeInt(PARAMETER_SHEET_NUMBER, "The number of the sheet which should be imported.", 1,
+				Integer.MAX_VALUE, 1, false);
+		selectBySheetNumber.registerDependencyCondition(new NonEqualStringCondition(this, PARAMETER_SHEET_SELECTION, false, String.valueOf(SHEET_SELECT_BY_NAME), SHEET_SELECTION_MODES[SHEET_SELECT_BY_NAME]));
+		types.add(selectBySheetNumber);
+
 		types.add(new ParameterTypeString(PARAMETER_IMPORTED_CELL_RANGE,
 				"Cells to import, in Excel notation, e.g. B2:D25 or B2 for an open interval.", "A1"));
 

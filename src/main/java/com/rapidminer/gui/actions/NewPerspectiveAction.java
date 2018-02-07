@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.PerspectiveController;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.InputDialog;
@@ -64,20 +65,26 @@ public class NewPerspectiveAction extends ResourceAction {
 		}
 	}
 
-	private final MainFrame mainFrame;
 
-	public NewPerspectiveAction(MainFrame mainFrame) {
+	public NewPerspectiveAction() {
 		super("new_perspective");
-		this.mainFrame = mainFrame;
 		setCondition(EDIT_IN_PROGRESS, DONT_CARE);
+	}
+
+	/**
+	 * @deprecated use {@link #NewPerspectiveAction()} instead
+	 */
+	@Deprecated
+	public NewPerspectiveAction(MainFrame mainFrame) {
+		this();
 	}
 
 	@Override
 	public void loggedActionPerformed(ActionEvent e) {
-		NewPerspectiveDialog dialog = new NewPerspectiveDialog(mainFrame.getPerspectiveController());
+		NewPerspectiveDialog dialog = new NewPerspectiveDialog(RapidMinerGUI.getMainFrame().getPerspectiveController());
 		dialog.setVisible(true);
 		if (dialog.isOk()) {
-			mainFrame.getPerspectiveController().createUserPerspective(dialog.getInputText(), true);
+			RapidMinerGUI.getMainFrame().getPerspectiveController().createUserPerspective(dialog.getInputText(), true);
 		}
 	}
 }

@@ -2168,7 +2168,7 @@
     <shortName>Performance</shortName>
   </operator>
     <operator>
-        <name>k-Means</name>
+        <name>k-Means (Deprecated)</name>
         <synopsis>Clustering with k-means</synopsis>
         <help>This operator represents an implementation of k-means. This
             operator will create a cluster attribute if not present yet.</help>
@@ -2759,7 +2759,7 @@
     <key>featurevaluetypefilter</key>
   </operator>
     <operator>
-        <name>Join</name>
+        <name>Join (Deprecated)</name>
         <synopsis>Build the join of two example sets using the id attributes
             of the sets in order to identify the same examples.</synopsis>
         <help>&lt;p&gt; Build the join of two example sets using the id
@@ -5846,7 +5846,7 @@
     <key>examplevisualizer</key>
   </operator>
     <operator>
-        <name>Correlation Matrix</name>
+        <name>Correlation Matrix (Deprecated)</name>
         <synopsis>Determines the correlation between all attributes and can
             produce a weight vector based on correlations.</synopsis>
         <help>&lt;p&gt;This operator calculates the correlation matrix between

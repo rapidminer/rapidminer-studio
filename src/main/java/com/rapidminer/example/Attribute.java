@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -151,9 +151,9 @@ public interface Attribute extends Cloneable, Serializable {
 	public NominalMapping getMapping();
 
 	/**
-	 * Returns the nominal mapping between nominal values and internal double representations.
-	 * Please note that invoking this method might result in an exception for non-nominal
-	 * attributes.
+	 * Sets the nominal mapping between nominal values and internal double representations. Please note that invoking
+	 * this method might result in an exception for non-nominal attributes. This method might copy the input parameter
+	 * before storing it.
 	 */
 	public void setMapping(NominalMapping nominalMapping);
 

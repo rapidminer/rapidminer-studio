@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -712,14 +712,7 @@ public class ConfigurableDialog extends ButtonDialog {
 		parameterPanel.removeAll();
 
 		// save previously edited parameters
-		if (configParamPanel != null && previousConfigurable != null) {
-			if (previousConfigurable.getSource() == null) {
-				localController.saveConfigurable(previousConfigurable, configParamPanel.getParameters());
-			} else {
-				remoteControllers.get(previousConfigurable.getSource().getName()).saveConfigurable(previousConfigurable,
-						configParamPanel.getParameters());
-			}
-		}
+		updateModel();
 		if (config != null) {
 			try {
 				// stripped text depending on the size of the panel
@@ -2051,5 +2044,19 @@ public class ConfigurableDialog extends ButtonDialog {
 		remoteControllers.get(source).getModel().resetConfigurables();
 		// reload the configurables (contains resetConnection)
 		updateConfigurables(source, remoteTaskPanes.get(source));
+	}
+
+	/**
+	 * Updates the underlying {@link ConfigurableModel} with the currently displayed parameter data
+	 */
+	public void updateModel(){
+		if (configParamPanel != null && previousConfigurable != null) {
+			if (previousConfigurable.getSource() == null) {
+				localController.saveConfigurable(previousConfigurable, configParamPanel.getParameters());
+			} else {
+				remoteControllers.get(previousConfigurable.getSource().getName()).saveConfigurable(previousConfigurable,
+						configParamPanel.getParameters());
+			}
+		}
 	}
 }

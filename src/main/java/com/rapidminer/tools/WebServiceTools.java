@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -26,9 +26,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
 import java.util.logging.Level;
-
 import javax.xml.ws.BindingProvider;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
 
 
@@ -154,6 +157,30 @@ public class WebServiceTools {
 		return connection.getInputStream();
 	}
 
+	/**
+	 * Tries to create an instance of the defined entity class from a JSON String.
+	 *
+	 * @param jsonString
+	 * 		the JSON as string
+	 * @param entityClass
+	 * 		the class to parse the json string into
+	 * @param failOnUnknown
+	 * 		if {@code true}, parsing will fail with a {@link JsonMappingException} if unknown properties are encountered
+	 * @return the parsed object
+	 * @throws JsonParseException
+	 * 		see {@link ObjectMapper#readValue(String, Class)}
+	 * @throws JsonMappingException
+	 * 		see {@link ObjectMapper#readValue(String, Class)}
+	 * @throws IOException
+	 * 		see {@link ObjectMapper#readValue(String, Class)}
+	 * @since 8.1
+	 */
+	public static <T> T parseJsonString(String jsonString, Class<T> entityClass, boolean failOnUnknown) throws JsonParseException, JsonMappingException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, failOnUnknown);
+		return mapper.readValue(jsonString, entityClass);
+	}
+
 	/** Clears all (Java-)cached credentials for Web services. */
 	public static void clearAuthCache() {
 		try {
@@ -169,4 +196,5 @@ public class WebServiceTools {
 			LogService.getRoot().log(Level.WARNING, "Could not clear auth cache!", t);
 		}
 	}
+
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -86,7 +86,7 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 		acquireReadLock();
 		try {
 			if (isLoaded()) {
-				return Collections.unmodifiableList(data);
+				return Collections.unmodifiableList(new ArrayList<>(data));
 			}
 		} finally {
 			releaseReadLock();
@@ -94,7 +94,7 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 		acquireWriteLock();
 		try {
 			ensureLoaded();
-			return Collections.unmodifiableList(data);
+			return Collections.unmodifiableList(new ArrayList<>(data));
 		} finally {
 			releaseWriteLock();
 		}
@@ -105,7 +105,7 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 		acquireReadLock();
 		try {
 			if (isLoaded()) {
-				return Collections.unmodifiableList(folders);
+				return Collections.unmodifiableList(new ArrayList<>(folders));
 			}
 		} finally {
 			releaseReadLock();
@@ -113,7 +113,7 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 		acquireWriteLock();
 		try {
 			ensureLoaded();
-			return Collections.unmodifiableList(folders);
+			return Collections.unmodifiableList(new ArrayList<>(folders));
 		} finally {
 			releaseWriteLock();
 		}

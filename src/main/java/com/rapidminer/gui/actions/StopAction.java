@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,10 +18,11 @@
 */
 package com.rapidminer.gui.actions;
 
-import com.rapidminer.gui.MainFrame;
-import com.rapidminer.gui.tools.ResourceAction;
-
 import java.awt.event.ActionEvent;
+
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**
@@ -33,16 +34,22 @@ public class StopAction extends ResourceAction {
 
 	private static final long serialVersionUID = 1181186062812851781L;
 
-	private final MainFrame mainFrame;
 
-	public StopAction(MainFrame mainFrame) {
+	public StopAction() {
 		super("stop");
 		setCondition(PROCESS_STOPPED, DISALLOWED);
-		this.mainFrame = mainFrame;
+	}
+
+	/**
+	 * @deprecated use {@link #StopAction()} instead
+	 */
+	@Deprecated
+	public StopAction(MainFrame mainFrame) {
+		this();
 	}
 
 	@Override
 	public void loggedActionPerformed(ActionEvent e) {
-		this.mainFrame.stopProcess();
+		RapidMinerGUI.getMainFrame().stopProcess();
 	}
 }

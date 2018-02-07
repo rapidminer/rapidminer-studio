@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,6 +38,9 @@ public class Colors {
 	private static final ColorUIResource INPUT_BORDER = new ColorUIResource(187, 187, 187);
 	private static final ColorUIResource INPUT_BORDER_DISABLED = new ColorUIResource(227, 227, 227);
 	private static final ColorUIResource INPUT_BORDER_FOCUS = new ColorUIResource(145, 145, 145);
+	private static final ColorUIResource INPUT_BORDER_DARK = new ColorUIResource(157, 157, 157);
+	private static final ColorUIResource INPUT_BORDER_DARK_DISABLED = INPUT_BORDER_DISABLED;
+	private static final ColorUIResource INPUT_BORDER_DARK_FOCUS = new ColorUIResource(115, 115, 115);
 
 	public static final ColorUIResource SELECTION_FOREGROUND = new ColorUIResource(155, 155, 155);
 	public static final ColorUIResource SELECTION_FOREGROUND_DISABLED = new ColorUIResource(209, 208, 208);
@@ -55,6 +58,9 @@ public class Colors {
 	public static final ColorUIResource TEXTFIELD_BORDER = INPUT_BORDER;
 	public static final ColorUIResource TEXTFIELD_BORDER_DISABLED = INPUT_BORDER_DISABLED;
 	public static final ColorUIResource TEXTFIELD_BORDER_FOCUS = INPUT_BORDER_FOCUS;
+	public static final ColorUIResource TEXTFIELD_BORDER_DARK = INPUT_BORDER_DARK;
+	public static final ColorUIResource TEXTFIELD_BORDER_DARK_DISABLED = INPUT_BORDER_DARK_DISABLED;
+	public static final ColorUIResource TEXTFIELD_BORDER_DARK_FOCUS = INPUT_BORDER_DARK_FOCUS;
 
 	public static final ColorUIResource TEXT_FOREGROUND = new ColorUIResource(0, 0, 0);
 	public static final ColorUIResource TEXT_HIGHLIGHT_BACKGROUND = new ColorUIResource(178, 215, 255);
@@ -64,6 +70,9 @@ public class Colors {
 	public static final ColorUIResource BUTTON_BORDER = new ColorUIResource(177, 177, 177);
 	public static final ColorUIResource BUTTON_BORDER_DISABLED = new ColorUIResource(200, 200, 200);
 	public static final ColorUIResource BUTTON_BORDER_FOCUS = INPUT_BORDER_FOCUS;
+	public static final ColorUIResource BUTTON_BORDER_DARK = INPUT_BORDER_DARK;
+	public static final ColorUIResource BUTTON_BORDER_DARK_DISABLED = BUTTON_BORDER_DISABLED;
+	public static final ColorUIResource BUTTON_BORDER_DARK_FOCUS = INPUT_BORDER_DARK_FOCUS;
 	public static final ColorUIResource BUTTON_BACKGROUND_GRADIENT_START = new ColorUIResource(240, 240, 240);
 	public static final ColorUIResource BUTTON_BACKGROUND_GRADIENT_END = new ColorUIResource(218, 218, 218);
 	public static final ColorUIResource BUTTON_BACKGROUND_ROLLOVER_GRADIENT_START = new ColorUIResource(225, 225, 225);
@@ -72,6 +81,14 @@ public class Colors {
 	public static final ColorUIResource BUTTON_BACKGROUND_PRESSED_GRADIENT_END = new ColorUIResource(230, 230, 230);
 	public static final ColorUIResource BUTTON_BACKGROUND_DISABLED_GRADIENT_START = new ColorUIResource(210, 210, 210);
 	public static final ColorUIResource BUTTON_BACKGROUND_DISABLED_GRADIENT_END = new ColorUIResource(210, 210, 210);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_GRADIENT_START = new ColorUIResource(247, 120, 79);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_GRADIENT_END = new ColorUIResource(232, 86, 39);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_ROLLOVER_GRADIENT_START = new ColorUIResource(232, 105, 64);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_ROLLOVER_GRADIENT_END = new ColorUIResource(217, 90, 49);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_PRESSED_GRADIENT_START = new ColorUIResource(210, 83, 42);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_PRESSED_GRADIENT_END = new ColorUIResource(237, 110, 69);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_START = BUTTON_BACKGROUND_DISABLED_GRADIENT_START;
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_END = BUTTON_BACKGROUND_DISABLED_GRADIENT_END;
 
 	public static final ColorUIResource COMBOBOX_BACKGROUND = INPUT_BACKGROUND;
 	public static final ColorUIResource COMBOBOX_BACKGROUND_DARK = INPUT_BACKGROUND_DARK;

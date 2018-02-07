@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -50,7 +50,9 @@ import com.rapidminer.tools.math.MathFunctions;
  * </p>
  *
  * @author Ingo Mierswa
+ * @deprecated since 8.1, replaced by the BeltCorrelationMatrix in the Concurrency extension
  */
+@Deprecated
 public class CorrelationMatrixOperator extends Operator {
 
 	public static final String PARAMETER_CREATE_WEIGHTS = "create_weights";

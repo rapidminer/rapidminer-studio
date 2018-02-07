@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,6 +21,7 @@ package com.rapidminer.gui.actions;
 import java.awt.event.ActionEvent;
 
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.operator.DebugMode;
 
 
@@ -31,23 +32,35 @@ import com.rapidminer.operator.DebugMode;
  */
 public class PropagateRealMetaDataAction extends ToggleAction {
 
-	private MainFrame mainFrame;
-
 	private static final long serialVersionUID = -1317229512005928906L;
 
-	public PropagateRealMetaDataAction(MainFrame mainFrame) {
-		super(true, "process_debug_mode");
 
-		this.mainFrame = mainFrame;
+	public PropagateRealMetaDataAction() {
+		super(true, "process_debug_mode");
+	}
+
+	/**
+	 * @deprecated use {@link #PropagateRealMetaDataAction()} instead
+	 */
+	@Deprecated
+	public PropagateRealMetaDataAction(MainFrame mainFrame) {
+		this();
 	}
 
 	@Override
 	public void actionToggled(ActionEvent e) {
-		if (isSelected()) {
-			mainFrame.getProcess().setDebugMode(DebugMode.COLLECT_METADATA_AFTER_EXECUTION);
+		if (!isSelected()) {
+			RapidMinerGUI.getMainFrame().getProcess().setDebugMode(DebugMode.COLLECT_METADATA_AFTER_EXECUTION);
 		} else {
-			mainFrame.getProcess().setDebugMode(DebugMode.DEBUG_OFF);
+			RapidMinerGUI.getMainFrame().getProcess().setDebugMode(DebugMode.DEBUG_OFF);
 		}
+
+		// state changed, update Global Search to keep in sync
+		addToGlobalSearch();
 	}
 
+	@Override
+	public boolean isSelected() {
+		return RapidMinerGUI.getMainFrame() != null && RapidMinerGUI.getMainFrame().getProcess().getDebugMode() == DebugMode.COLLECT_METADATA_AFTER_EXECUTION;
+	}
 }

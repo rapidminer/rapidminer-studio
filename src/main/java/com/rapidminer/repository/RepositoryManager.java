@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.event.EventListenerList;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.tools.RepositoryGuiTools;
@@ -38,6 +39,7 @@ import com.rapidminer.repository.internal.db.DBRepository;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.repository.local.LocalRepository;
 import com.rapidminer.repository.resource.ResourceRepository;
+import com.rapidminer.repository.search.RepositoryGlobalSearch;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -74,6 +76,8 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 
 	private final List<Repository> repositories = new LinkedList<>();
 
+	private final EventListenerList listeners = new EventListenerList();
+
 	/**
 	 * listener which reacts on repository changes like renaming and sorts the list of repositories
 	 */
@@ -95,6 +99,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		@Override
 		public void entryAdded(Entry newEntry, Folder parent) {}
 	};
+
 
 	/**
 	 * Ordered types of {@link Repository}s
@@ -169,7 +174,9 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			sampleRepository = new ResourceRepository(SAMPLE_REPOSITORY_NAME, "samples");
 		}
 		repositories.add(sampleRepository);
+		fireRepositoryWasAdded(sampleRepository);
 		sortRepositories();
+
 
 		// only load local repositories, custom repositories will be loaded after initialization
 		load(LocalRepository.class);
@@ -178,6 +185,8 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	public static void init() {
 		synchronized (INSTANCE_LOCK) {
 			instance = new RepositoryManager();
+			// initialize Repository Global Search
+			new RepositoryGlobalSearch();
 			instance.postInstall();
 		}
 	}
@@ -212,6 +221,9 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	private void postInstall() {
 		for (Repository repository : getRepositories()) {
 			repository.postInstall();
+
+			// the original firings were during init phase of the RepositoryManager, nobody could have listened yet. Fire again
+			fireRepositoryWasAdded(repository);
 		}
 	}
 
@@ -219,6 +231,36 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		synchronized (INSTANCE_LOCK) {
 			FACTORIES.add(factory);
 		}
+	}
+
+	/**
+	 * Adds the given listener to be notified of repository additions and removals.
+	 *
+	 * @param l
+	 * 		the listener, must not be {@code null}
+	 * @since 8.1
+	 */
+	public void addRepositoryManagerListener(RepositoryManagerListener l) {
+		if (l == null) {
+			throw new IllegalArgumentException("l must not be null!");
+		}
+
+		listeners.add(RepositoryManagerListener.class, l);
+	}
+
+	/**
+	 * Removes the given listener.
+	 *
+	 * @param l
+	 * 		the listener, must not be {@code null}
+	 * @since 8.1
+	 */
+	public void removeRepositoryManagerListener(RepositoryManagerListener l) {
+		if (l == null) {
+			throw new IllegalArgumentException("l must not be null!");
+		}
+
+		listeners.remove(RepositoryManagerListener.class, l);
 	}
 
 	/**
@@ -230,6 +272,17 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		LOGGER.config("Adding repository " + repository.getName());
 		repositories.add(repository);
 		repository.addRepositoryListener(repositoryListener);
+
+		if (instance != null) {
+			save();
+		}
+		sortRepositories();
+
+		// observer is kept for legacy reasons
+		fireUpdate(repository);
+		// since 8.1, this is the new way to detect changes to the repository manager
+		fireRepositoryWasAdded(repository);
+
 		if (instance != null) {
 			// we cannot call post install during init(). The reason is that
 			// post install may access RepositoryManager.getInstance() which will be null and hence
@@ -237,8 +290,6 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			repository.postInstall();
 			save();
 		}
-		sortRepositories();
-		fireUpdate(repository);
 	}
 
 	/**
@@ -250,7 +301,11 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		repository.preRemove();
 		repository.removeRepositoryListener(repositoryListener);
 		repositories.remove(repository);
+
+		// observer is kept for legacy reasons
 		fireUpdate(null);
+		// since 8.1, this is the new way to detect changes to the repository manager
+		fireRepositoryWasRemoved(repository);
 	}
 
 	public List<Repository> getRepositories() {
@@ -776,5 +831,30 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	 */
 	private void sortRepositories() {
 		Collections.sort(repositories, RepositoryTools.REPOSITORY_COMPARATOR);
+	}
+
+
+	/**
+	 * Notifies all {@link RepositoryManagerListener}s that a repository was added to this manager.
+	 *
+	 * @param repository
+	 * 		the added repository
+	 */
+	private void fireRepositoryWasAdded(Repository repository) {
+		for (RepositoryManagerListener l : listeners.getListeners(RepositoryManagerListener.class)) {
+			l.repositoryWasAdded(repository);
+		}
+	}
+
+	/**
+	 * Notifies all {@link RepositoryManagerListener}s that a repository will be removed from this manager.
+	 *
+	 * @param repository
+	 * 		the removed repository
+	 */
+	private void fireRepositoryWasRemoved(Repository repository) {
+		for (RepositoryManagerListener l : listeners.getListeners(RepositoryManagerListener.class)) {
+			l.repositoryWasRemoved(repository);
+		}
 	}
 }

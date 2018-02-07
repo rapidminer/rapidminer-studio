@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -42,9 +42,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
 import javax.swing.event.EventListenerList;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -58,6 +56,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadStoppedException;
 import com.rapidminer.io.process.XMLImporter;
+import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.license.violation.LicenseViolation;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.DebugMode;
@@ -105,6 +104,7 @@ import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.WrapperLoggingHandler;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.XMLParserException;
 import com.rapidminer.tools.container.Pair;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
@@ -1192,7 +1192,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	 */
 	public final IOContainer run(final IOContainer input, int logVerbosity, final Map<String, String> macroMap,
 			final boolean storeOutput) throws OperatorException {
-		ActionStatisticsCollector.getInstance().logExecutionStarted();
+		ActionStatisticsCollector.getInstance().logExecutionStarted(this);
 		try {
 			// make sure the process flow filter is registered
 			ProcessFlowFilter filter = ProcessFlowFilterRegistry.INSTANCE.getProcessFlowFilter();
@@ -1322,7 +1322,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 				getLogger().log(Level.INFO, () -> "Process finished successfully after " + Tools.formatDuration(end - start));
 			}
 
-			ActionStatisticsCollector.getInstance().logExecutionSuccess();
+			ActionStatisticsCollector.getInstance().logExecutionSuccess(this);
 
 			return result;
 		} catch (ProcessStoppedException e) {
@@ -1502,7 +1502,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 			progressListener.setCompleted(0);
 		}
 		try {
-			Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(in));
+			Document document = XMLTools.createDocumentBuilder().parse(new InputSource(in));
 			if (progressListener != null) {
 				progressListener.setCompleted(20);
 			}
@@ -1512,7 +1512,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 			nameMapBackup = operatorNameMap;
 			rootOperator.clear(Port.CLEAR_ALL);
-		} catch (javax.xml.parsers.ParserConfigurationException e) {
+		} catch (XMLParserException e) {
 			throw new XMLException(e.toString(), e);
 		} catch (SAXException e) {
 			throw new XMLException("Cannot parse document: " + e.getMessage(), e);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -70,6 +70,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 			.createIcon("48/" + I18N.getMessage(I18N.getGUIBundle(), "gui.constraint.operator.unsupported_datasource.icon"));
 
 	private static final int DEFAULT_PRIORITY = 0;
+	private static final String DEPRECATED_GROUP_KEY = "deprecated";
 
 	public static final String EXTENSIONS_GROUP_IDENTIFIER = "extensions";
 
@@ -375,7 +376,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	}
 
 	public boolean isDeprecated() {
-		return getDeprecationInfo() != null;
+		return getDeprecationInfo() != null || getGroup().endsWith(DEPRECATED_GROUP_KEY);
 	}
 
 	public String getProviderName() {

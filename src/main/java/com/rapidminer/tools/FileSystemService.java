@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -37,9 +37,15 @@ public class FileSystemService {
 	/** folder in which extensions have their workspace */
 	private static final String RAPIDMINER_EXTENSIONS_FOLDER = "extensions";
 	/** folder in which extensions get their own folder to work with files */
-	private static final String RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER = "workspace";
+	public static final String RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER = "workspace";
 	/** folder which can be used to share data between extensions */
 	private static final String RAPIDMINER_SHARED_DATA = "shared data";
+	/** folder which can be used for internal caching of the Global Search feature */
+	private static final String RAPIDMINER_INTERNAL_CACHE = "internal cache";
+	/** folder which can be used for internal caching of the Global Search feature */
+	private static final String RAPIDMINER_INTERNAL_CACHE_SEARCH = "search";
+
+	public static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL = "internal cache/search";
 
 	/** folder which can be used to load additional building blocks */
 	public static final String RAPIDMINER_BUILDINGBLOCKS = "buildingblocks";
@@ -76,52 +82,16 @@ public class FileSystemService {
 		File extensionsWorkspaceFolder = new File(extensionsWorkspaceRootFolder, RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER);
 		File sharedDataDir = new File(userHomeDir, RAPIDMINER_SHARED_DATA);
 		File buildingBlocksFolder = new File(userHomeDir, RAPIDMINER_BUILDINGBLOCKS);
+		File internalCacheFolder = new File(userHomeDir, RAPIDMINER_INTERNAL_CACHE);
+		File internalCacheSearchFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_SEARCH);
 
-		if (!userHomeDir.exists()) {
-			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory", userHomeDir);
-			boolean result = userHomeDir.mkdir();
-			if (!result) {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", userHomeDir);
-			}
-		}
-		if (!extensionsWorkspaceRootFolder.exists()) {
-			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
-					extensionsWorkspaceRootFolder);
-			boolean result = extensionsWorkspaceRootFolder.mkdir();
-			if (!result) {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.FileSystemService.creating_home_directory_error",
-						extensionsWorkspaceRootFolder);
-			}
-		}
-		if (!extensionsWorkspaceFolder.exists()) {
-			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
-					extensionsWorkspaceFolder);
-			boolean result = extensionsWorkspaceFolder.mkdir();
-			if (!result) {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", extensionsWorkspaceFolder);
-			}
-		}
-		if (!sharedDataDir.exists()) {
-			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
-					sharedDataDir);
-			boolean result = sharedDataDir.mkdir();
-			if (!result) {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", sharedDataDir);
-			}
-		}
-		if (!buildingBlocksFolder.exists()) {
-			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory",
-					buildingBlocksFolder);
-			boolean result = buildingBlocksFolder.mkdir();
-			if (!result) {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", buildingBlocksFolder);
-			}
-		}
+		checkAndCreateFolder(userHomeDir);
+		checkAndCreateFolder(extensionsWorkspaceRootFolder);
+		checkAndCreateFolder(internalCacheFolder);
+		checkAndCreateFolder(internalCacheSearchFolder);
+		checkAndCreateFolder(extensionsWorkspaceFolder);
+		checkAndCreateFolder(sharedDataDir);
+		checkAndCreateFolder(buildingBlocksFolder);
 		return userHomeDir;
 	}
 
@@ -184,6 +154,24 @@ public class FileSystemService {
 			return null;
 		} else {
 			return new File(new File(root, "resources"), name);
+		}
+	}
+
+
+	/**
+	 * Tries to create the given folder location if it does not yet exist.
+	 *
+	 * @param newFolder
+	 * 		the folder location in question.
+	 */
+	private static void checkAndCreateFolder(File newFolder) {
+		if (!newFolder.exists()) {
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.FileSystemService.creating_directory", newFolder);
+			boolean result = newFolder.mkdir();
+			if (!result) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.FileSystemService.creating_home_directory_error", newFolder);
+			}
 		}
 	}
 

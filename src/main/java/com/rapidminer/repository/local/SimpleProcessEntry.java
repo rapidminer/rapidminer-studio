@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2017 by RapidMiner and the contributors
+ * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -52,7 +52,11 @@ public class SimpleProcessEntry extends SimpleDataEntry implements ProcessEntry 
 	@Override
 	public void storeXML(String xml) throws RepositoryException {
 		try {
+			boolean existed = getFile().exists();
 			Tools.writeTextFile(getFile(), xml);
+			if (existed) {
+				getRepository().fireEntryChanged(this);
+			}
 		} catch (IOException e) {
 			throw new RepositoryException("Cannot write " + getFile() + ": " + e, e);
 		}
