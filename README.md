@@ -95,7 +95,7 @@ class CliLauncher {
 
 ## Diving in
 
-* Create your own [Extension](http://docs.rapidminer.com/developers/creating-your-own-extension/)
+* Create your own [Extension](https://docs.rapidminer.com/latest/developers/creating-your-own-extension/)
 * [Integrate](http://community.rapidminer.com/t5/Become-a-RapidMiner-Developer/Frequently-Asked-Questions-Development/m-p/19782) RapidMiner Studio Core into your project
 * And much more at our [Developer Board](http://community.rapidminer.com/t5/Become-a-RapidMiner-Developer/bd-p/BARDDBoard)
 
