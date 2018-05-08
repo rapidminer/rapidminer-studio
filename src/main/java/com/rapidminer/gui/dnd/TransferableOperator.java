@@ -27,6 +27,8 @@ import java.util.List;
 
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.usagestats.DefaultUsageLoggable;
+import com.rapidminer.tools.usagestats.UsageLoggable;
 
 
 /**
@@ -35,7 +37,7 @@ import com.rapidminer.tools.Tools;
  * @see com.rapidminer.gui.operatortree.OperatorTree
  * @author Helge Homburg, Michael Knopf, Adrian Wilke
  */
-public class TransferableOperator implements Transferable {
+public class TransferableOperator extends DefaultUsageLoggable implements Transferable {
 
 	public static final DataFlavor LOCAL_TRANSFERRED_OPERATORS_FLAVOR = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType
 			+ ";class=" + Operator.class.getName(), "RapidMiner operator");
@@ -63,7 +65,11 @@ public class TransferableOperator implements Transferable {
 
 	@Override
 	public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
-
+		if (flavor.equals(UsageLoggable.USAGE_FLAVOR)){
+			// trigger usage stats if applicable
+			logUsageStats();
+			return null;
+		}
 		if (flavor.equals(LOCAL_TRANSFERRED_OPERATORS_FLAVOR)) {
 			return this.clonedOperators;
 		}
@@ -73,9 +79,8 @@ public class TransferableOperator implements Transferable {
 				b.append(op.getXML(false));
 			}
 			return b.toString();
-		} else {
-			throw new UnsupportedFlavorException(flavor);
 		}
+		throw new UnsupportedFlavorException(flavor);
 	}
 
 	@Override
@@ -94,4 +99,5 @@ public class TransferableOperator implements Transferable {
 	protected Operator[] getOperators() {
 		return this.originalOperators;
 	}
+
 }

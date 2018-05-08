@@ -29,13 +29,17 @@ import java.awt.dnd.DragSource;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Collections;
 import java.util.logging.Level;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingWorker;
 import javax.swing.border.Border;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 
 import org.apache.lucene.document.Document;
 
@@ -54,6 +58,7 @@ import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.documentation.GroupDocumentation;
+import com.rapidminer.tools.usagestats.DefaultUsageLoggable;
 
 
 /**
@@ -67,7 +72,7 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 	/**
 	 * Drag & Drop support for operators.
 	 */
-	private static final class OperatorDragGesture implements DragGestureListener {
+	private static final class OperatorDragGesture extends DefaultUsageLoggable implements DragGestureListener {
 
 		private final Operator operator;
 
@@ -90,8 +95,15 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 			}
 
 			// set the recommended operator as the Transferable
-			event.startDrag(cursor, new TransferableOperator(new Operator[]{operator}));
+			TransferableOperator transferable = new TransferableOperator(new Operator[]{operator});
+			if (usageLogger != null) {
+				transferable.setUsageStatsLogger(usageLogger);
+			} else if (usageObject != null) {
+				transferable.setUsageObject(usageObject);
+			}
+			event.startDrag(cursor, transferable);
 		}
+
 	}
 
 	private static final Border ICON_EMPTY_BORDER = BorderFactory.createEmptyBorder(0, 5, 0, 15);
@@ -130,7 +142,7 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 		name = GlobalSearchGUIUtilities.INSTANCE.createHTMLHighlightFromString(name, bestFragments);
 
 		// add the "drag here" label to the process panel
-		mainListPanel.addMouseListener(new MouseAdapter() {
+		MouseListener hoverAdapter = new MouseAdapter() {
 
 			@Override
 			public void mouseEntered(MouseEvent e) {
@@ -141,19 +153,25 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 			public void mouseExited(MouseEvent e) {
 				handleHoverOverOperator(false);
 			}
+		};
+		mainListPanel.addMouseListener(hoverAdapter);
 
-			/**
-			 * Handle the hover-over-operator events.
-			 *
-			 * @param hovered
-			 * 		{@code true} if hovering over an operator; {@code false} otherwise
-			 */
-			private void handleHoverOverOperator(final boolean hovered) {
-				ProcessRendererModel modelRenderer = RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer()
-						.getModel();
+		// remove hover listener when ancestor is being removed
+		// reason is that it takes enough time after inserting an operator for the original hover listener to fire again
+		mainListPanel.addAncestorListener(new AncestorListener() {
+			@Override
+			public void ancestorAdded(AncestorEvent event) {
+				// not needed
+			}
 
-				modelRenderer.setOperatorSourceHovered(hovered);
-				modelRenderer.fireMiscChanged();
+			@Override
+			public void ancestorRemoved(AncestorEvent event) {
+				mainListPanel.removeMouseListener(hoverAdapter);
+			}
+
+			@Override
+			public void ancestorMoved(AncestorEvent event) {
+				// not needed
 			}
 		});
 
@@ -183,6 +201,9 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 			MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 			mainFrame.getActions().insert(Collections.singletonList(operator));
 			mainFrame.getPerspectiveController().showPerspective(PerspectiveModel.DESIGN);
+
+			// make sure "drop here" message vanishes after insert
+			handleHoverOverOperator(false);
 		} catch (OperatorCreationException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.processeditor.global_search.OperatorSearchManager.error.operator_creation_error", e.getMessage());
 		}
@@ -196,12 +217,19 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 			return;
 		}
 
-		try {
-			Operator operator = OperatorService.getOperatorDescription(operatorKey).createOperatorInstance();
-			RapidMinerGUI.getMainFrame().getOperatorDocViewer().setDisplayedOperator(operator);
-		} catch (OperatorCreationException e) {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.processeditor.global_search.OperatorSearchManager.error.operator_browse_error", e.getMessage());
-		}
+		new SwingWorker<Void, Void>() {
+
+			@Override
+			protected Void doInBackground() {
+				try {
+					Operator operator = OperatorService.getOperatorDescription(operatorKey).createOperatorInstance();
+					RapidMinerGUI.getMainFrame().getOperatorDocViewer().setDisplayedOperator(operator);
+				} catch (OperatorCreationException e) {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.processeditor.global_search.OperatorSearchManager.error.operator_browse_error", e.getMessage());
+				}
+				return null;
+			}
+		}.execute();
 	}
 
 	@Override
@@ -222,6 +250,20 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 		} catch (OperatorCreationException e) {
 			return null;
 		}
+	}
+
+	/**
+	 * Handle the hover-over-operator events.
+	 *
+	 * @param hovered
+	 * 		{@code true} if hovering over an operator; {@code false} otherwise
+	 */
+	private void handleHoverOverOperator(final boolean hovered) {
+		ProcessRendererModel modelRenderer = RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer()
+				.getModel();
+
+		modelRenderer.setOperatorSourceHovered(hovered);
+		modelRenderer.fireMiscChanged();
 	}
 
 	/**

@@ -18,6 +18,13 @@
 */
 package com.rapidminer.operator.learner.meta;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -35,13 +42,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -274,9 +274,11 @@ public class HierarchicalMultiClassLearner extends AbstractMetaLearner {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeList(PARAMETER_HIERARCHY, "The hierarchy...", new ParameterTypeString(
+		ParameterType type = new ParameterTypeList(PARAMETER_HIERARCHY, "The hierarchy...", new ParameterTypeString(
 				PARAMETER_PARENT_CLASS, "The parent class.", false), new ParameterTypeString(PARAMETER_CHILD_CLASS,
-				"The child class.", false)));
+				"The child class.", false));
+		type.setPrimary(true);
+		types.add(type);
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
 	}

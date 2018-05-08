@@ -28,12 +28,15 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
-
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.UIManager;
 
+import com.rapidminer.Process;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.tools.SwingTools;
@@ -46,6 +49,7 @@ import com.rapidminer.operator.ports.IncompatibleMDClassException;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.PortOwner;
 import com.rapidminer.operator.ports.metadata.CollectionMetaData;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.rapidminer.operator.ports.metadata.MetaData;
@@ -58,7 +62,7 @@ import com.rapidminer.tools.plugin.Plugin;
 /**
  * Contains utility methods which are helpful for drawing a process via Java2D.
  *
- * @author Marco Boeck
+ * @author Marco Boeck, Jan Czogalla
  * @since 6.4.0
  *
  */
@@ -95,13 +99,13 @@ public final class ProcessDrawUtils {
 	 * This method adds the colors of the given property file to the global group colors.
 	 *
 	 * @param groupProperties
-	 *            the properties group name
+	 * 		the properties group name
 	 * @param pluginName
-	 *            the name of the plugin
+	 * 		the name of the plugin
 	 * @param classLoader
-	 *            the classloader responsible who registered the colors
+	 * 		the classloader responsible who registered the colors
 	 * @param provider
-	 *            the extension for the registered group color
+	 * 		the extension for the registered group color
 	 */
 	public static void registerAdditionalGroupColors(final String groupProperties, final String pluginName,
 			final ClassLoader classLoader, final Plugin provider) {
@@ -112,13 +116,13 @@ public final class ProcessDrawUtils {
 	 * This method adds the colors of the given property file to the io object colors.
 	 *
 	 * @param groupProperties
-	 *            the properties group name
+	 * 		the properties group name
 	 * @param pluginName
-	 *            the name of the plugin
+	 * 		the name of the plugin
 	 * @param classLoader
-	 *            the classloader responsible who registered the colors
+	 * 		the classloader responsible who registered the colors
 	 * @param provider
-	 *            the extension to registered IOObjects for
+	 * 		the extension to registered IOObjects for
 	 */
 	public static void registerAdditionalObjectColors(final String groupProperties, final String pluginName,
 			final ClassLoader classLoader, final Plugin provider) {
@@ -134,7 +138,7 @@ public final class ProcessDrawUtils {
 	 * Returns the color specified for the given type of metadata.
 	 *
 	 * @param md
-	 *            the metadata or {@code null}
+	 * 		the metadata or {@code null}
 	 * @return a color, never {@code null}
 	 */
 	public static Color getColorFor(final MetaData md) {
@@ -157,11 +161,11 @@ public final class ProcessDrawUtils {
 	 * Returns a color for the given {@link Port} depending on the metadata at the port.
 	 *
 	 * @param port
-	 *            the port for which a color should be retrieved
+	 * 		the port for which a color should be retrieved
 	 * @param defaultColor
-	 *            the default color if the port has no data
+	 * 		the default color if the port has no data
 	 * @param enabled
-	 *            if the port is enabled
+	 * 		if the port is enabled
 	 * @return a color, never {@code null}
 	 */
 	public static Color getColorFor(final Port port, final Color defaultColor, final boolean enabled) {
@@ -202,7 +206,7 @@ public final class ProcessDrawUtils {
 	 * not check if snapping is enabled!
 	 *
 	 * @param point
-	 *            the point which should snap to the nearest possible grid position
+	 * 		the point which should snap to the nearest possible grid position
 	 * @return the nearest position on the grid, never {@code null}
 	 */
 	public static Point snap(final Point2D point) {
@@ -212,12 +216,10 @@ public final class ProcessDrawUtils {
 
 		int snappedX = (int) point.getX() - ProcessDrawer.GRID_X_OFFSET;
 		int factor = (snappedX + ProcessDrawer.GRID_WIDTH / 2) / ProcessDrawer.GRID_WIDTH;
-		snappedX /= ProcessDrawer.GRID_WIDTH;
 		snappedX = factor * ProcessDrawer.GRID_WIDTH + ProcessDrawer.GRID_X_OFFSET;
 
 		int snappedY = (int) point.getY() - ProcessDrawer.GRID_Y_OFFSET;
 		factor = (snappedY + ProcessDrawer.GRID_HEIGHT / 2) / ProcessDrawer.GRID_HEIGHT;
-		snappedY /= ProcessDrawer.GRID_HEIGHT;
 		snappedY = factor * ProcessDrawer.GRID_HEIGHT + ProcessDrawer.GRID_Y_OFFSET;
 
 		return new Point(snappedX, snappedY);
@@ -227,9 +229,9 @@ public final class ProcessDrawUtils {
 	 * Calculates a {@link Rectangle2D} from the specified start and end point.
 	 *
 	 * @param start
-	 *            the starting point
+	 * 		the starting point
 	 * @param end
-	 *            the end point
+	 * 		the end point
 	 * @return the rectangle or {@code null} if the start/end point was {@code null}
 	 */
 	public static Rectangle2D createRectangle(final Point start, final Point end) {
@@ -245,9 +247,9 @@ public final class ProcessDrawUtils {
 	 * Draws a shadow around the given rectangle.
 	 *
 	 * @param rect
-	 *            the rectangle which should get a shadow
+	 * 		the rectangle which should get a shadow
 	 * @param g2
-	 *            the graphics context to draw the shadow on
+	 * 		the graphics context to draw the shadow on
 	 */
 	public static void drawShadow(final Rectangle2D rect, final Graphics2D g2) {
 		Graphics2D g2S = (Graphics2D) g2.create();
@@ -281,13 +283,12 @@ public final class ProcessDrawUtils {
 	 * Creates a spline connector shape from one {@link Port} to another.
 	 *
 	 * @param fromPort
-	 *            the origin port
+	 * 		the origin port
 	 * @param toPort
-	 *            the end port
+	 * 		the end port
 	 * @param model
-	 *            the model required to create port locations
-	 * @return the shape representing the connection or {@code null} if the ports have no location
-	 *         yet
+	 * 		the model required to create port locations
+	 * @return the shape representing the connection or {@code null} if the ports have no location yet
 	 */
 	public static Shape createConnector(final OutputPort fromPort, final Port toPort, final ProcessRendererModel model) {
 		Point2D from = ProcessDrawUtils.createPortLocation(fromPort, model);
@@ -305,9 +306,9 @@ public final class ProcessDrawUtils {
 	 * Creates a spline connector shape from one {@link Point2D} to another.
 	 *
 	 * @param from
-	 *            the starting point
+	 * 		the starting point
 	 * @param to
-	 *            the end point
+	 * 		the end point
 	 * @return the shape representing the connection, never {@code null}
 	 */
 	public static Shape createConnectionSpline(final Point2D from, final Point2D to) {
@@ -334,16 +335,23 @@ public final class ProcessDrawUtils {
 	 * Returns the location of the given {@link Port}.
 	 *
 	 * @param port
-	 *            the location for this port will be returned
+	 * 		the location for this port will be returned
 	 * @param model
-	 *            the model required to create port locations
+	 * 		the model required to create port locations
 	 * @return the point or {@code null} if the port has no location yet
 	 */
 	public static Point createPortLocation(final Port port, final ProcessRendererModel model) {
 		if (port.getPorts() == null) {
 			return new Point(0, 0);
 		}
-		Operator op = port.getPorts().getOwner().getOperator();
+		PortOwner portOwner = port.getPorts().getOwner();
+		Operator op = portOwner.getOperator();
+		boolean isDisplayed = op == model.getDisplayedChain();
+		Rectangle2D operatorRect = model.getOperatorRect(op);
+		if (!isDisplayed && operatorRect == null) {
+			// called before notification of added operator was received, no location set yet
+			return null;
+		}
 		int index = port.getPorts().getAllPorts().indexOf(port);
 		int addOffset = 0;
 		int xOffset = 0;
@@ -351,54 +359,35 @@ public final class ProcessDrawUtils {
 			addOffset += model.getPortSpacing(port.getPorts().getPortByIndex(i));
 		}
 
-		ExecutionUnit process;
-		Point point;
-		if (op == model.getDisplayedChain()) {
+		int x;
+		int y;
+		if (isDisplayed) {
 			// this is an inner port
-			process = port.getPorts().getOwner().getConnectionContext();
-			if (port instanceof OutputPort) {
-				point = new Point(0 + xOffset, ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET
-						+ index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
-			} else {
-				point = new Point((int) Math.ceil(model.getProcessWidth(process) * (1 / model.getZoomFactor()) - xOffset),
-						ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET
-								+ index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset);
-			}
+			ExecutionUnit process = portOwner.getConnectionContext();
+			x = port instanceof OutputPort ? xOffset : (int) Math.ceil(model.getProcessWidth(process) * (1 / model.getZoomFactor()) - xOffset);
+			y = ProcessDrawer.OPERATOR_MIN_HEIGHT / 2 + ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset;
 		} else {
 			// this is an outer port of a nested operator
-			process = op.getExecutionUnit();
-			Rectangle2D opRect = model.getOperatorRect(op);
 
-			// called before notifaction of added operator was received, no location set yet
-			if (opRect == null) {
-				return null;
-			}
-
-			if (port instanceof InputPort) {
-				point = new Point((int) Math.ceil(opRect.getX()), (int) Math.ceil(
-						opRect.getY() + ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset));
-			} else {
-				point = new Point((int) Math.ceil(opRect.getMaxX()), (int) Math.ceil(
-						opRect.getY() + ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2 + addOffset));
-			}
+			y = (int) Math.ceil(operatorRect.getY() + ProcessDrawer.PORT_OFFSET + index * ProcessDrawer.PORT_SIZE * 3 / 2d + addOffset);
+			x = (int) Math.ceil(port instanceof InputPort ? operatorRect.getX() : operatorRect.getMaxX());
 		}
-		return point;
+		return new Point(x, y);
 	}
 
 	/**
 	 * Returns the absolute point for a given point in a process.
 	 *
 	 * @param p
-	 *            the relative point which is relative to the displayed process
+	 * 		the relative point which is relative to the displayed process
 	 * @param processIndex
-	 *            the index of the process in question
+	 * 		the index of the process in question
 	 * @param model
-	 *            the model required to calculate the absolute location
-	 * @return the absolute point (relative to the process renderer view) or {@code null} if the
-	 *         process index is invalid
+	 * 		the model required to calculate the absolute location
+	 * @return the absolute point (relative to the process renderer view) or {@code null} if the process index is invalid
 	 */
 	public static Point convertToAbsoluteProcessPoint(final Point p, final int processIndex,
-			final ProcessRendererModel model) {
+													  final ProcessRendererModel model) {
 		double xOffset = 0;
 		for (int i = 0; i < model.getProcesses().size(); i++) {
 			if (i == processIndex) {
@@ -413,13 +402,12 @@ public final class ProcessDrawUtils {
 	 * Returns the relative point for a given absolute point.
 	 *
 	 * @param p
-	 *            the relative point which is relative to the displayed process
+	 * 		the relative point which is relative to the displayed process
 	 * @param processIndex
-	 *            the index of the process in question
+	 * 		the index of the process in question
 	 * @param model
-	 *            the model required to calculate the relative location
-	 * @return the relative point which is relative to the displayed process or {@code null} if the
-	 *         process index is invalid
+	 * 		the model required to calculate the relative location
+	 * @return the relative point which is relative to the displayed process or {@code null} if the process index is invalid
 	 */
 	public static Point convertToRelativePoint(final Point p, final int processIndex, final ProcessRendererModel model) {
 		double xOffset = 0;
@@ -436,11 +424,11 @@ public final class ProcessDrawUtils {
 	 * Abbreviates the string using {@code ...} if necessary.
 	 *
 	 * @param string
-	 *            the string to shorten
+	 * 		the string to shorten
 	 * @param g2
-	 *            the graphics context
+	 * 		the graphics context
 	 * @param maxWidth
-	 *            the max width in px the string is allowed to use
+	 * 		the max width in px the string is allowed to use
 	 * @return the shorted string, never {@code null}
 	 */
 	public static String fitString(String string, final Graphics2D g2, final int maxWidth) {
@@ -468,9 +456,8 @@ public final class ProcessDrawUtils {
 	 * Returns whether the specified {@link Operator} has at least one free input and output port.
 	 *
 	 * @param operator
-	 *            the operator in question
-	 * @return {@code true} if the operator has one free input and output port ; {@code false}
-	 *         otherwise
+	 * 		the operator in question
+	 * @return {@code true} if the operator has one free input and output port ; {@code false} otherwise
 	 */
 	public static boolean hasOperatorFreePorts(final Operator operator) {
 		if (operator == null) {
@@ -501,9 +488,8 @@ public final class ProcessDrawUtils {
 	 * free input and output port.
 	 *
 	 * @param operator
-	 *            the operator in question
-	 * @return {@code true} if the operator has one free input and output port ; {@code false}
-	 *         otherwise
+	 * 		the operator in question
+	 * @return {@code true} if the operator has one free input and output port ; {@code false} otherwise
 	 */
 	public static boolean canOperatorBeInsertedIntoConnection(final ProcessRendererModel model, final Operator operator) {
 		if (operator == null) {
@@ -511,6 +497,12 @@ public final class ProcessDrawUtils {
 		}
 
 		OutputPort hoveringConnectionSource = model.getHoveringConnectionSource();
+		// prevent loops to self
+		if (hoveringConnectionSource != null && (operator.getOutputPorts().containsPort(hoveringConnectionSource) ||
+				operator.getInputPorts().containsPort(hoveringConnectionSource.getDestination()))) {
+			return false;
+		}
+
 		MetaData md = null;
 		try {
 			md = hoveringConnectionSource != null ? hoveringConnectionSource.getMetaData(MetaData.class) : null;
@@ -520,16 +512,9 @@ public final class ProcessDrawUtils {
 		}
 		boolean hasFreeInput = false;
 		for (InputPort port : operator.getInputPorts().getAllPorts()) {
-			if (!port.isConnected()) {
-				if (md != null) {
-					if (port.isInputCompatible(md, CompatibilityLevel.PRE_VERSION_5)) {
-						hasFreeInput = true;
-						break;
-					}
-				} else {
-					hasFreeInput = true;
-					break;
-				}
+			if (!port.isConnected() && (md == null || port.isInputCompatible(md, CompatibilityLevel.PRE_VERSION_5))) {
+				hasFreeInput = true;
+				break;
 			}
 		}
 		if (!hasFreeInput) {
@@ -547,24 +532,23 @@ public final class ProcessDrawUtils {
 	 * Returns the height for the specified {@link Operator}.
 	 *
 	 * @param operator
-	 *            the operator in question
+	 * 		the operator in question
 	 * @return
 	 */
 	public static double calcHeighForOperator(Operator operator) {
 		double calcHeight = 40 + ProcessRendererModel.PORT_SIZE * 3 / 2
 				* Math.max(operator.getInputPorts().getNumberOfPorts(), operator.getOutputPorts().getNumberOfPorts());
-		double height = Math.max(ProcessRendererModel.MIN_OPERATOR_HEIGHT, calcHeight);
-		return height;
+		return Math.max(ProcessRendererModel.MIN_OPERATOR_HEIGHT, calcHeight);
 	}
 
 	/**
 	 * Returns the given icon in an appropriate enabled/disabled state.
 	 *
 	 * @param operator
-	 *            if the operator is enabled, returns the passed icon directly, otherwise it is
-	 *            displayed as disabled
+	 * 		if the operator is enabled, returns the passed icon directly, otherwise it is
+	 * 		displayed as disabled
 	 * @param icon
-	 *            the icon
+	 * 		the icon
 	 * @return the original icon (if the given operator is enabled) or the icon in a disabled state
 	 */
 	public static ImageIcon getIcon(final Operator operator, final ImageIcon icon) {
@@ -586,20 +570,153 @@ public final class ProcessDrawUtils {
 	 * </p>
 	 *
 	 * @param model
-	 *            the model required to calculate the size
+	 * 		the model required to calculate the size
 	 * @param unit
-	 *            the process for which the initial size should be created
+	 * 		the process for which the initial size should be created
 	 * @param width
-	 *            the total width which is available
+	 * 		the total width which is available
 	 * @param height
-	 *            the total height which is available
+	 * 		the total height which is available
 	 * @return the size, never {@code null}
 	 * @since 7.5
 	 */
-	public static Dimension calculatePreferredSize(final ProcessRendererModel model, final ExecutionUnit unit, int width,
-			int height) {
+	public static Dimension calculatePreferredSize(final ProcessRendererModel model, final ExecutionUnit unit, int width, int height) {
 		int processes = model.getProcesses().size();
 		int wallSpace = (processes - 1) * 2 * ProcessDrawer.WALL_WIDTH;
 		return new Dimension((width - wallSpace) / processes, height);
+	}
+
+	/**
+	 * Ensures that each operator in the given {@link Process} has a location. Uses the given
+	 * {@link ProcessRendererModel} to determine layout properties.
+	 *
+	 * @param process
+	 * 		the process in question
+	 * @param model
+	 * 		the reference process model
+	 * @return the list of operators that did not have a location and now have one
+	 * @see #ensureOperatorsHaveLocation(ExecutionUnit, ProcessRendererModel)
+	 * @since 8.2
+	 */
+	public static List<Operator> ensureOperatorsHaveLocation(Process process, ProcessRendererModel model) {
+		return ensureOperatorsHaveLocation(process.getRootOperator().getSubprocess(0), model);
+	}
+
+	/**
+	 * Ensures that each operator in the given {@link ExecutionUnit} has a location. Uses the given
+	 * {@link ProcessRendererModel} to determine layout properties.
+	 *
+	 * @param unit
+	 * 		the execution unit in question
+	 * @param model
+	 * 		the reference process model
+	 * @return the list of operators that did not have a location and now have one
+	 * @since 8.2
+	 */
+	public static List<Operator> ensureOperatorsHaveLocation(ExecutionUnit unit, ProcessRendererModel model) {
+		List<Operator> movedOperators = new LinkedList<>();
+		for (Operator op : unit.getAllInnerOperators()) {
+
+			// check if all operators have positions, if not, set them now
+			Rectangle2D rect = model.getOperatorRect(op);
+			if (rect == null) {
+				rect = createOperatorPosition(op, model);
+				model.setOperatorRect(op, rect);
+				movedOperators.add(op);
+			}
+		}
+		return movedOperators;
+	}
+
+	/**
+	 * Returns a {@link Rectangle2D} representing an {@link Operator}. First tries to look up the
+	 * data from the model, if that fails it determines a position automatically. Uses the given
+	 * {@link ProcessRendererModel} to determine layout properties.
+	 *
+	 * @param op
+	 * 		the operator for which a rectangle should be created
+	 * @param model
+	 * 		the reference process model
+	 * @return the rectangle representing the operator, never {@code null}
+	 * @since 8.2
+	 */
+	public static Rectangle2D createOperatorPosition(Operator op, ProcessRendererModel model) {
+		return createOperatorPosition(op, model, null);
+	}
+
+	/**
+	 * Returns a {@link Rectangle2D} representing an {@link Operator}. First tries to look up the
+	 * data from the model, if that fails it determines a position automatically. Uses the given
+	 * {@link ProcessRendererModel} to determine layout properties. May use a supplied {@link BiFunction}
+	 * to check some dependencies
+	 *
+	 * @param op
+	 * 		the operator for which a rectangle should be created
+	 * @param model
+	 * 		the reference process model
+	 * @param checkDependencies
+	 * 		an optional dependency check
+	 * @return the rectangle representing the operator, never {@code null}
+	 * @since 8.2
+	 */
+	public static Rectangle2D createOperatorPosition(Operator op, ProcessRendererModel model, BiFunction<Operator, ProcessRendererModel, Boolean> checkDependencies) {
+		Rectangle2D rect = model.getOperatorRect(op);
+		if (rect != null) {
+			return rect;
+		}
+
+		// if connected (e.g. because inserted by quick fix), place in the middle
+		if (op.getInputPorts().getNumberOfPorts() > 0 && op.getOutputPorts().getNumberOfPorts() > 0
+				&& op.getInputPorts().getPortByIndex(0).isConnected()
+				&& op.getOutputPorts().getPortByIndex(0).isConnected()
+				// see ProcessRendererController#isDependenciesOk
+				&& (checkDependencies == null || checkDependencies.apply(op, model))) {
+			Point2D sourcePos = ProcessDrawUtils.createPortLocation(op.getInputPorts().getPortByIndex(0).getSource(), model);
+			Point2D destPos = ProcessDrawUtils.createPortLocation(op.getOutputPorts().getPortByIndex(0).getDestination(),
+					model);
+			if (sourcePos != null && destPos != null) {
+				double x = Math.floor((sourcePos.getX() + destPos.getX()) / 2d - ProcessDrawer.OPERATOR_WIDTH / 2d);
+				double y = Math.floor((sourcePos.getY() + destPos.getY()) / 2d - ProcessDrawer.PORT_OFFSET);
+				return new Rectangle2D.Double(x, y, ProcessDrawer.OPERATOR_WIDTH, calcHeighForOperator(op));
+			}
+		}
+		// otherwise, or, if positions were not known in previous approach, position according to index
+		int index = 0;
+		ExecutionUnit unit = op.getExecutionUnit();
+		if (unit != null) {
+			index = unit.getOperators().indexOf(op);
+		}
+		return autoPosition(op, index, model);
+	}
+
+	/**
+	 * Calculates the position of an operator. Will never set the rectangle in the operator. Uses
+	 * the given {@link ProcessRendererModel} to determine layout properties.
+	 *
+	 * @param index
+	 * 		the operators index in the surrounding {@link ExecutionUnit}
+	 * @param model
+	 * 		the reference process model
+	 * @return the position and size of the operator, never {@code null}
+	 * @since 8.2
+	 */
+	public static Rectangle2D autoPosition(Operator op, int index, ProcessRendererModel model) {
+		int maxPerRow = (int) Math.max(1,
+				Math.floor(model.getProcessWidth(op.getExecutionUnit()) / (ProcessDrawer.GRID_AUTOARRANGE_WIDTH + 10)));
+		int col = index % maxPerRow;
+		int row = index / maxPerRow;
+		Rectangle2D old = model.getOperatorRect(op);
+
+		double x = col * ProcessDrawer.GRID_AUTOARRANGE_WIDTH + ProcessDrawer.GRID_X_OFFSET;
+		double y = ProcessDrawer.GRID_AUTOARRANGE_HEIGHT * row + ProcessDrawer.GRID_Y_OFFSET;
+		double width = Math.floor(old != null ? old.getWidth() : ProcessDrawer.OPERATOR_WIDTH);
+		double height = Math.floor(old != null ? old.getHeight() : ProcessDrawer.OPERATOR_MIN_HEIGHT);
+
+		if (model.isSnapToGrid()) {
+			Point snappedPoint = snap(new Point2D.Double(x, y));
+			x = snappedPoint.getX();
+			y = snappedPoint.getY();
+		}
+		return new Rectangle2D.Double(x, y, width, height);
 	}
 }

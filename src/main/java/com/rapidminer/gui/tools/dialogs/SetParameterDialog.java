@@ -18,9 +18,6 @@
 */
 package com.rapidminer.gui.tools.dialogs;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-
 import javax.swing.JButton;
 import javax.swing.JComponent;
 
@@ -46,7 +43,6 @@ public class SetParameterDialog extends ButtonDialog {
 
 	private final PropertyValueCellEditor editor;
 
-	private boolean canceled = false;
 
 	public SetParameterDialog(final Operator operator, final ParameterType type) {
 		super(ApplicationFrame.getApplicationFrame(), "set_parameter", ModalityType.MODELESS, new Object[] { type.getKey()
@@ -56,22 +52,7 @@ public class SetParameterDialog extends ButtonDialog {
 		editor = PropertyPanel.instantiateValueCellEditor(type, operator);
 		JComponent editorComponent = (JComponent) editor.getTableCellEditorComponent(null, type.getDefaultValue(), false, 0,
 				1);
-		editorComponent.addKeyListener(new KeyListener() {
 
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-					canceled = true;
-				}
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {}
-
-			@Override
-			public void keyTyped(KeyEvent e) {}
-
-		});
 		JButton okButton = makeOkButton("set_parameter_dialog_apply");
 		layoutDefault(editorComponent, okButton, makeCancelButton());
 		getRootPane().setDefaultButton(okButton);
@@ -87,7 +68,7 @@ public class SetParameterDialog extends ButtonDialog {
 		Object value = editor.getCellEditorValue();
 		if (value != null && ((String) value).length() != 0) {
 			operator.setParameter(type.getKey(), (String) value);
-			super.ok();
 		}
+		super.ok();
 	}
 }

@@ -212,7 +212,11 @@ public class ConfirmDialog extends ButtonDialog {
 	}
 
 	protected JButton makeNoButton() {
-		ResourceAction noAction = new ResourceAction("confirm.no") {
+		return makeNoButtonInternal("confirm.no");
+	}
+
+	protected JButton makeNoButtonInternal(String i18nKey) {
+		ResourceAction noAction = new ResourceAction(i18nKey) {
 
 			private static final long serialVersionUID = -8887199234055845095L;
 

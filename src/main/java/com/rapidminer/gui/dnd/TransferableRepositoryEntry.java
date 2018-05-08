@@ -24,6 +24,8 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.util.Arrays;
 
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.usagestats.DefaultUsageLoggable;
+import com.rapidminer.tools.usagestats.UsageLoggable;
 
 
 /**
@@ -32,20 +34,21 @@ import com.rapidminer.repository.RepositoryLocation;
  * @author Marco Boeck
  * @since 8.1
  */
-public class TransferableRepositoryEntry implements Transferable {
+public class TransferableRepositoryEntry extends DefaultUsageLoggable implements Transferable {
 
 
 	public static final DataFlavor LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR = new DataFlavor(
 			DataFlavor.javaJVMLocalObjectMimeType + ";class=" + RepositoryLocation.class.getName(), "repository location");
 
 	public static final DataFlavor LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR = new DataFlavor(
-			DataFlavor.javaJVMLocalObjectMimeType + ";class=" + RepositoryLocationList.class.getName(),
+			DataFlavor.javaJVMLocalObjectMimeType + ";class=\"" + RepositoryLocation[].class.getName() + "\"",
 			"repository locations");
 
 	private static final DataFlavor[] DATA_FLAVORS = { LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR, LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR,
 			DataFlavor.stringFlavor };
 
 	private final RepositoryLocation[] location;
+	private final DataFlavor contentFlavor;
 
 	/**
 	 * The transferable location(s).
@@ -54,38 +57,41 @@ public class TransferableRepositoryEntry implements Transferable {
 	 * 		the location(s) of the entry/entries which should be drag & dropped
 	 */
 	public TransferableRepositoryEntry(RepositoryLocation... location) {
-		if (location == null) {
-			throw new IllegalArgumentException("location must not be null!");
+		if (location == null || location.length == 0) {
+			throw new IllegalArgumentException("location must not be null or empty!");
 		}
 
 		this.location = location;
+		this.contentFlavor = location.length == 1? LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR : LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR;
 	}
 
 	@Override
 	public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+		if (flavor.equals(UsageLoggable.USAGE_FLAVOR)){
+			// trigger usage stats if applicable
+			logUsageStats();
+			return null;
+		}
 		if (flavor.equals(LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR)) {
 			return location[0];
-		} else if (flavor.equals(LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR)) {
-			return location;
-		} else if (flavor.equals(DataFlavor.stringFlavor)) {
-			if (location.length == 1) {
-				return location[0].toString();
-			} else {
-				return Arrays.toString(location);
-			}
-		} else {
-			throw new UnsupportedFlavorException(flavor);
 		}
+		if (flavor.equals(LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR)) {
+			return location;
+		}
+		if (flavor.equals(DataFlavor.stringFlavor)) {
+			return location.length == 1 ? location[0].toString() : Arrays.toString(location);
+		}
+		throw new UnsupportedFlavorException(flavor);
 	}
 
 	@Override
 	public boolean isDataFlavorSupported(DataFlavor flavor) {
-		return Arrays.asList(DATA_FLAVORS).contains(flavor);
+		return flavor.equals(contentFlavor) || flavor.equals(DataFlavor.stringFlavor);
 	}
 
 	@Override
 	public DataFlavor[] getTransferDataFlavors() {
-		return DATA_FLAVORS;
+		return new DataFlavor[]{contentFlavor, DataFlavor.stringFlavor};
 	}
 
 }

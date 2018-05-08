@@ -341,6 +341,7 @@ public class ProcessLogOperator extends Operator {
 				new ParameterTypeString(PARAMETER_COLUMN_NAME, "The name of the column in the process log."),
 				new ParameterTypeValue(PARAMETER_COLUMN_VALUE, "operator.OPERATORNAME.[value|parameter].VALUE_NAME"));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		types.add(new ParameterTypeCategory(PARAMETER_SORTING_TYPE,

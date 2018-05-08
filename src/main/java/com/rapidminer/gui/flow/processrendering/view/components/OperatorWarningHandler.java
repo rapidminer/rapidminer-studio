@@ -27,9 +27,11 @@ import com.rapidminer.gui.flow.processrendering.view.ProcessEventDecorator;
 import com.rapidminer.gui.tools.ProcessGUITools;
 import com.rapidminer.gui.tools.bubble.BubbleWindow;
 import com.rapidminer.operator.ExecutionUnit;
+import com.rapidminer.operator.InvalidRepositoryEntryError;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.metadata.ProcessNotInRepositoryMetaDataError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.container.Pair;
@@ -88,12 +90,11 @@ public class OperatorWarningHandler implements ProcessEventDecorator {
 			if (operator != null && !operator.getErrorList().isEmpty()) {
 
 				// calculate the bounding box of the warning icon as it is drawn by {@link
-				// ProcessDrawer#renderOperator()}
 				Rectangle2D frame = model.getOperatorRect(operator);
 
 				int iconX = (int) (frame.getX() + 3 + WARNING_ICON_SIZE);
 				int iconY = (int) (frame.getY() + frame.getHeight() - WARNING_ICON_SIZE - 2);
-				int size = (int) Math.ceil(WARNING_ICON_SIZE);
+				int size = WARNING_ICON_SIZE;
 
 				Rectangle2D boundingBox = new Rectangle2D.Float(iconX, iconY, size, size);
 
@@ -133,14 +134,8 @@ public class OperatorWarningHandler implements ProcessEventDecorator {
 	public void showOperatorWarning(Operator operator) {
 		Pair<Operator, ParameterType> missingParamPair = ProcessTools.getOperatorWithoutMandatoryParameter(operator);
 		if (missingParamPair != null) {
-			if (operatorWarningBubble != null) {
-				// if the required bubble is already shown kill it for toggle effect
-				if (!operatorWarningBubble.isKilled() && missingParamPair.equals(lastMissingParamPair)) {
-					operatorWarningBubble.killBubble(true);
-					return;
-				}
-				// kill wrong bubble and go on showing new bubble
-				operatorWarningBubble.killBubble(true);
+			if (shouldRefreshExistingBubble(missingParamPair.equals(lastMissingParamPair))) {
+				return;
 			}
 
 			operatorWarningBubble = ProcessGUITools.displayPrecheckMissingMandatoryParameterWarning(
@@ -154,21 +149,15 @@ public class OperatorWarningHandler implements ProcessEventDecorator {
 		}
 		lastMissingParamPair = null;
 
-		Port missingInputPort = ProcessTools.getMissingPortConnection(operator);
+		Pair<Port, ProcessSetupError> missingInputPort = ProcessTools.getMissingPortConnection(operator);
 		if (missingInputPort != null) {
-			if (operatorWarningBubble != null) {
-				// if the required bubble is already shown kill it for toggle effect
-				if (!operatorWarningBubble.isKilled() && missingInputPort.equals(lastMissingInputPort)) {
-					operatorWarningBubble.killBubble(true);
-					return;
-				}
-				// kill wrong bubble and go on showing new bubble
-				operatorWarningBubble.killBubble(true);
+			if (shouldRefreshExistingBubble(missingInputPort.equals(lastMissingInputPort))) {
+				return;
 			}
 			operatorWarningBubble = ProcessGUITools.displayPrecheckInputPortDisconnectedWarning(missingInputPort, false);
 
 			// set last values
-			lastMissingInputPort = missingInputPort;
+			lastMissingInputPort = missingInputPort.getFirst();
 			lastProcessSetupError = null;
 			return;
 		}
@@ -187,11 +176,37 @@ public class OperatorWarningHandler implements ProcessEventDecorator {
 					// kill wrong bubble and go on showing new bubble
 					operatorWarningBubble.killBubble(true);
 				}
-				operatorWarningBubble = ProcessGUITools.displayProcessSetupError(processSetupError);
+
+				if (processSetupError instanceof InvalidRepositoryEntryError) {
+					operatorWarningBubble = ProcessGUITools.displayPrecheckBrokenMandatoryParameterWarning(operator, ((InvalidRepositoryEntryError) processSetupError).getParameterKey());
+				} else if (processSetupError instanceof ProcessNotInRepositoryMetaDataError) {
+					operatorWarningBubble = ProcessGUITools.displayPrecheckProcessNotSavedWarning(operator, processSetupError);
+				} else {
+					operatorWarningBubble = ProcessGUITools.displayProcessSetupError(processSetupError);
+				}
 				lastProcessSetupError = processSetupError;
 				return;
 			}
 		}
 		lastProcessSetupError = null;
+	}
+
+	/**
+	 * Checks whether a bubble is currently existing and shown. Returns {@code true} iff the current bubble
+	 * was not killed and was showing, so that it only needs to be toggled and not created.
+	 *
+	 * @param isAlreadyShown if the current bubble is sufficient
+	 * @return whether the bubble should eb refreshed or created anew
+	 * @since 8.2
+	 */
+	private boolean shouldRefreshExistingBubble(boolean isAlreadyShown) {
+		if (operatorWarningBubble == null) {
+			return false;
+		}
+		boolean isAlreadyKilled = operatorWarningBubble.isKilled();
+		// if the required bubble is already shown kill it for toggle effect
+		// else kill wrong bubble and go on showing new bubble
+		operatorWarningBubble.killBubble(true);
+		return !isAlreadyKilled && isAlreadyShown;
 	}
 }

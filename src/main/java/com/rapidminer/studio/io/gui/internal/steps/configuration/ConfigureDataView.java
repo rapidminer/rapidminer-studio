@@ -71,6 +71,7 @@ import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.RowNumberTable;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 import com.rapidminer.studio.io.gui.internal.DataWizardEventType;
@@ -162,13 +163,7 @@ final class ConfigureDataView extends JPanel {
 		this.owner = owner;
 		validator = new ConfigureDataValidator();
 		errorTableModel = new ErrorWarningTableModel(validator);
-		errorTableModel.addTableModelListener(new TableModelListener() {
-
-			@Override
-			public void tableChanged(TableModelEvent e) {
-				fireStateChanged();
-			}
-		});
+		errorTableModel.addTableModelListener(e -> fireStateChanged());
 		collapsibleErrorTable = new CollapsibleErrorTable(errorTableModel);
 
 		setLayout(new BorderLayout());
@@ -179,20 +174,16 @@ final class ConfigureDataView extends JPanel {
 		JPanel errorHandlingPanel = new JPanel(new BorderLayout());
 		errorHandlingCheckBox = new JCheckBox(
 				I18N.getGUILabel("io.dataimport.step.data_column_configuration.replace_errors_checkbox.label"));
-		errorHandlingCheckBox.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				DataImportWizardUtils.logStats(DataWizardEventType.ERROR_HANDLING_CHANGED,
-						Boolean.toString(errorHandlingCheckBox.isSelected()));
-				errorTableModel.setFaultTolerant(errorHandlingCheckBox.isSelected());
-				tableModel.fireTableDataChanged();
-			}
+		errorHandlingCheckBox.addActionListener(e -> {
+			DataImportWizardUtils.logStats(DataWizardEventType.ERROR_HANDLING_CHANGED,
+					Boolean.toString(errorHandlingCheckBox.isSelected()));
+			errorTableModel.setFaultTolerant(errorHandlingCheckBox.isSelected());
+			tableModel.fireTableDataChanged();
 		});
 		errorHandlingPanel.add(errorHandlingCheckBox, BorderLayout.CENTER);
 		SwingTools.addTooltipHelpIconToLabel(ERROR_TOOLTIP_CONTENT, errorHandlingPanel, owner);
 
-		dateFormatField = new JComboBox<String>(ParameterTypeDateFormat.PREDEFINED_DATE_FORMATS);
+		dateFormatField = new JComboBox<>(ParameterTypeDateFormat.PREDEFINED_DATE_FORMATS);
 
 		dateFormatField.setEditable(true);
 		// do not fire action event when using keyboard to move up and down
@@ -207,7 +198,12 @@ final class ConfigureDataView extends JPanel {
 				}
 				String datePattern = (String) dateFormatField.getSelectedItem();
 				if (datePattern != null && !datePattern.isEmpty()) {
-					updateDateFormat(new SimpleDateFormat(datePattern));
+					try {
+						updateDateFormat(ParameterTypeDateFormat.createCheckedDateFormat(datePattern, null));
+					} catch (UserError userError) {
+						// reset
+						dateFormatField.setSelectedItem("");
+					}
 				}
 			}
 
@@ -281,13 +277,7 @@ final class ConfigureDataView extends JPanel {
 			@Override
 			public void run() {
 				getProgressListener().setTotal(100);
-				SwingTools.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						showNotificationLabel("io.dataimport.step.data_column_configuration.loading_preview");
-					}
-				});
+				SwingTools.invokeLater(() -> showNotificationLabel("io.dataimport.step.data_column_configuration.loading_preview"));
 
 				// load table model
 				try {
@@ -295,123 +285,111 @@ final class ConfigureDataView extends JPanel {
 					validator.setParsingErrors(tableModel.getParsingErrors());
 
 					// adapt view after table has been loaded
-					SwingTools.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-
-							// show error message in case preview is empty
-							if (tableModel.getRowCount() == 0) {
-								showErrorNotification("io.dataimport.step.data_column_configuration.no_data_available");
-								return;
-							}
-
-							// remove all components
-							centerPanel.removeAll();
-
-							// add preview table
-							ExtendedJTable previewTable = new ExtendedJTable(tableModel, false, false, false) {
-
-								private static final long serialVersionUID = 1L;
-
-								@Override
-								public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-									Component c = super.prepareRenderer(renderer, row, column);
-									ColumnMetaData metaData = dataSetMetaData.getColumnMetaData().get(column);
-									if (metaData.isRemoved()) {
-										c.setBackground(BACKGROUND_COLUMN_DISABLED);
-										c.setForeground(FOREGROUND_COLUMN_DISABLED);
-									} else {
-										String role = metaData.getRole();
-										if (role != null) {
-											c.setBackground(AttributeGuiTools.getColorForAttributeRole(role));
-										} else {
-											c.setBackground(Color.WHITE);
-										}
-										c.setForeground(Color.BLACK);
-									}
-									return c;
-								};
-							};
-							previewTable.setColumnSelectionAllowed(false);
-							previewTable.setCellSelectionEnabled(false);
-							previewTable.setRowSelectionAllowed(false);
-							previewTable.setColoredTableCellRenderer(ERROR_MARKING_CELL_RENDERER);
-							previewTable.setShowPopupMenu(false);
-
-							// ensure same background as JPanels in case of only few rows
-							previewTable.setBackground(Colors.PANEL_BACKGROUND);
-
-							TableColumnModel columnModel = previewTable.getColumnModel();
-
-							// set cell renderer for column headers
-							previewTable.setTableHeader(new JTableHeader(columnModel));
-							for (int columnIndex = 0; columnIndex < columnModel.getColumnCount(); columnIndex++) {
-								TableColumn column = columnModel.getColumn(columnIndex);
-								ConfigureDataTableHeader headerRenderer = new ConfigureDataTableHeader(previewTable,
-										columnIndex, dataSetMetaData, validator, ConfigureDataView.this);
-								column.setHeaderRenderer(headerRenderer);
-								column.setMinWidth(120);
-							}
-
-							previewTable.getTableHeader().setReorderingAllowed(false);
-
-							// Create a layered pane to display both, the data table and a
-							// "preview" overlay
-							JLayeredPane layeredPane = new JLayeredPane();
-							layeredPane.setLayout(new OverlayLayout(layeredPane));
-
-							/*
-							 * Hack to enlarge table columns in case of few columns. Add table to a
-							 * full size JPanel and add the table header to the scroll pane.
-							 */
-							JPanel tablePanel = new JPanel(new BorderLayout());
-							tablePanel.add(previewTable, BorderLayout.CENTER);
-
-							JScrollPane scrollPane = new ExtendedJScrollPane(tablePanel);
-							scrollPane.setColumnHeaderView(previewTable.getTableHeader());
-
-							scrollPane.setBorder(null);
-
-							// show row numbers
-							scrollPane.setRowHeaderView(new RowNumberTable(previewTable));
-							layeredPane.add(scrollPane, JLayeredPane.DEFAULT_LAYER);
-
-							// Add "Preview" overlay
-							JPanel previewPanel = new JPanel(new BorderLayout());
-							previewPanel.setOpaque(false);
-							JLabel previewLabel = new JLabel(I18N.getGUILabel("csv_format_specification.preview_background"),
-									SwingConstants.CENTER);
-							previewLabel.setFont(previewLabel.getFont().deriveFont(Font.BOLD, 180));
-							previewLabel.setForeground(DataImportWizardUtils.getPreviewFontColor());
-							previewPanel.add(previewLabel, BorderLayout.CENTER);
-							layeredPane.add(previewPanel, JLayeredPane.PALETTE_LAYER);
-
-							GridBagConstraints constraint = new GridBagConstraints();
-							constraint.fill = GridBagConstraints.BOTH;
-							constraint.weightx = 1.0;
-							constraint.weighty = 1.0;
-							centerPanel.add(layeredPane, constraint);
-
-							centerPanel.revalidate();
-							centerPanel.repaint();
-
-							upperPanel.setVisible(true);
-							setupErrorTable();
-
-							fireStateChanged();
+					SwingTools.invokeLater(() -> {
+						// show error message in case preview is empty
+						if (tableModel.getRowCount() == 0) {
+							showErrorNotification("io.dataimport.step.data_column_configuration.no_data_available");
+							return;
 						}
 
+						// remove all components
+						centerPanel.removeAll();
+
+						// add preview table
+						ExtendedJTable previewTable = new ExtendedJTable(tableModel, false, false, false) {
+
+							private static final long serialVersionUID = 1L;
+
+							@Override
+							public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+								Component c = super.prepareRenderer(renderer, row, column);
+								ColumnMetaData metaData = dataSetMetaData.getColumnMetaData().get(column);
+								if (metaData.isRemoved()) {
+									c.setBackground(BACKGROUND_COLUMN_DISABLED);
+									c.setForeground(FOREGROUND_COLUMN_DISABLED);
+								} else {
+									String role = metaData.getRole();
+									if (role != null) {
+										c.setBackground(AttributeGuiTools.getColorForAttributeRole(role));
+									} else {
+										c.setBackground(Color.WHITE);
+									}
+									c.setForeground(Color.BLACK);
+								}
+								return c;
+							}
+						};
+						previewTable.setColumnSelectionAllowed(false);
+						previewTable.setCellSelectionEnabled(false);
+						previewTable.setRowSelectionAllowed(false);
+						previewTable.setColoredTableCellRenderer(ERROR_MARKING_CELL_RENDERER);
+						previewTable.setShowPopupMenu(false);
+
+						// ensure same background as JPanels in case of only few rows
+						previewTable.setBackground(Colors.PANEL_BACKGROUND);
+
+						TableColumnModel columnModel = previewTable.getColumnModel();
+
+						// set cell renderer for column headers
+						previewTable.setTableHeader(new JTableHeader(columnModel));
+						for (int columnIndex = 0; columnIndex < columnModel.getColumnCount(); columnIndex++) {
+							TableColumn column = columnModel.getColumn(columnIndex);
+							ConfigureDataTableHeader headerRenderer = new ConfigureDataTableHeader(previewTable,
+									columnIndex, dataSetMetaData, validator, ConfigureDataView.this);
+							column.setHeaderRenderer(headerRenderer);
+							column.setMinWidth(120);
+						}
+
+						previewTable.getTableHeader().setReorderingAllowed(false);
+
+						// Create a layered pane to display both, the data table and a
+						// "preview" overlay
+						JLayeredPane layeredPane = new JLayeredPane();
+						layeredPane.setLayout(new OverlayLayout(layeredPane));
+
+						/*
+						 * Hack to enlarge table columns in case of few columns. Add table to a
+						 * full size JPanel and add the table header to the scroll pane.
+						 */
+						JPanel tablePanel = new JPanel(new BorderLayout());
+						tablePanel.add(previewTable, BorderLayout.CENTER);
+
+						JScrollPane scrollPane = new ExtendedJScrollPane(tablePanel);
+						scrollPane.setColumnHeaderView(previewTable.getTableHeader());
+
+						scrollPane.setBorder(null);
+
+						// show row numbers
+						scrollPane.setRowHeaderView(new RowNumberTable(previewTable));
+						layeredPane.add(scrollPane, JLayeredPane.DEFAULT_LAYER);
+
+						// Add "Preview" overlay
+						JPanel previewPanel = new JPanel(new BorderLayout());
+						previewPanel.setOpaque(false);
+						JLabel previewLabel = new JLabel(I18N.getGUILabel("csv_format_specification.preview_background"),
+								SwingConstants.CENTER);
+						previewLabel.setFont(previewLabel.getFont().deriveFont(Font.BOLD, 180));
+						previewLabel.setForeground(DataImportWizardUtils.getPreviewFontColor());
+						previewPanel.add(previewLabel, BorderLayout.CENTER);
+						layeredPane.add(previewPanel, JLayeredPane.PALETTE_LAYER);
+
+						GridBagConstraints constraint = new GridBagConstraints();
+						constraint.fill = GridBagConstraints.BOTH;
+						constraint.weightx = 1.0;
+						constraint.weighty = 1.0;
+						centerPanel.add(layeredPane, constraint);
+
+						centerPanel.revalidate();
+						centerPanel.repaint();
+
+						upperPanel.setVisible(true);
+						setupErrorTable();
+
+						fireStateChanged();
 					});
 				} catch (final DataSetException e) {
-					SwingTools.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-							showErrorNotification("io.dataimport.step.data_column_configuration.error_loading_data",
-									e.getMessage());
-						}
-					});
+					SwingTools.invokeLater(() -> showErrorNotification("io.dataimport.step.data_column_configuration.error_loading_data",
+							e.getMessage()));
 				} finally {
 					getProgressListener().complete();
 				}
@@ -554,23 +532,13 @@ final class ConfigureDataView extends JPanel {
 				try {
 					tableModel.reread(getProgressListener());
 				} catch (final DataSetException e) {
-					SwingTools.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-							showErrorNotification("io.dataimport.step.data_column_configuration.error_loading_data",
-									e.getMessage());
-						}
-					});
+					SwingTools.invokeLater(() -> showErrorNotification("io.dataimport.step.data_column_configuration.error_loading_data",
+							e.getMessage()));
 					return;
 				}
-				SwingTools.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						validator.setParsingErrors(tableModel.getParsingErrors());
-						tableModel.fireTableDataChanged();
-					}
+				SwingTools.invokeLater(() -> {
+					validator.setParsingErrors(tableModel.getParsingErrors());
+					tableModel.fireTableDataChanged();
 				});
 
 			}

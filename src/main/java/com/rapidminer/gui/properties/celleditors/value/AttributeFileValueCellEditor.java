@@ -45,9 +45,11 @@ public class AttributeFileValueCellEditor extends FileValueCellEditor {
 
 	private transient Operator exampleSource;
 
+	private JButton button;
+
 	public AttributeFileValueCellEditor(ParameterTypeAttributeFile type) {
 		super(type);
-		JButton button = new JButton(new ResourceAction(true, "edit_attributefile") {
+		button = new JButton(new ResourceAction(true, "edit_attributefile") {
 
 			private static final long serialVersionUID = 1L;
 
@@ -80,5 +82,10 @@ public class AttributeFileValueCellEditor extends FileValueCellEditor {
 	@Override
 	public boolean rendersLabel() {
 		return false;
+	}
+
+	@Override
+	public void activate() {
+		button.doClick();
 	}
 }

@@ -42,6 +42,5 @@
 			<question>How would you describe the form of the distribution chart for the new Total attribute?  You can find this in the <ui>Statistics</ui> tab or try to create a chart for this attribute.</question>
 			<question>Can you change the process so that it also calculates a new attribute <value>Squared</value> which is the squared amount for each transaction? What else do you need to change so that you see this new column after process execution?</question>
 		</questions>
-		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
 	</step>
 </steps>

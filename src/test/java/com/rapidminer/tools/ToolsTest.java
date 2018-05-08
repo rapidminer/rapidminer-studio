@@ -68,4 +68,18 @@ public class ToolsTest {
 		assertEquals("0.001", formatted);
 	}
 
+	@Test
+	public void testExcelColumnNames() {
+		// test error case
+		assertEquals("Negative indices should create \"error\" result.", "error", Tools.getExcelColumnName(-1));
+		// test base case
+		for (int i = 0; i < 26; i++) {
+			assertEquals("Index " + i + " creates wrong output.", "" + (char) ('A' + i), Tools.getExcelColumnName(i));
+		}
+		// edge cases
+		assertEquals("Index 26 creates wrong output", "AA", Tools.getExcelColumnName(26));
+		assertEquals("Index 51 creates wrong output", "AZ", Tools.getExcelColumnName(51));
+
+	}
+
 }

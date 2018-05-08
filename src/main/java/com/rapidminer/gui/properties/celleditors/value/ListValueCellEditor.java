@@ -18,20 +18,19 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.gui.properties.ListPropertyDialog;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeList;
-
 import java.awt.Component;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JTable;
+
+import com.rapidminer.gui.properties.ListPropertyDialog;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeList;
 
 
 /**
@@ -74,7 +73,6 @@ public class ListValueCellEditor extends AbstractCellEditor implements PropertyV
 			}
 		});
 		button.setMargin(new Insets(0, 0, 0, 0));
-		// button.setToolTipText(type.getDescription());
 		setButtonText();
 	}
 
@@ -109,6 +107,13 @@ public class ListValueCellEditor extends AbstractCellEditor implements PropertyV
 	@Override
 	public boolean rendersLabel() {
 		return false;
+	}
+
+	@Override
+	public void activate() {
+		if (button != null) {
+			button.doClick();
+		}
 	}
 
 }

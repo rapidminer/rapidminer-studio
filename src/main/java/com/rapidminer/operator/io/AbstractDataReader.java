@@ -139,7 +139,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 */
 	public static final String PARAMETER_COLUM_ROLE = "attribute_role";
 
-	public static final ArrayList<String> ROLE_NAMES = new ArrayList<String>();
+	public static final List<String> ROLE_NAMES = new ArrayList<>();
 
 	{
 		ROLE_NAMES.clear();
@@ -155,7 +155,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	/**
 	 * a list of errors which might occurred during the importing prozess.
 	 */
-	private List<OperatorException> importErrors = new LinkedList<OperatorException>();
+	private List<OperatorException> importErrors = new LinkedList<>();
 
 	protected abstract DataSet getDataSet() throws OperatorException, IOException;
 
@@ -207,7 +207,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 * @see AbstractDataReader#hasParseError(int, int)
 	 * @see AbstractDataReader#hasParseErrorInColumn(int)
 	 */
-	TreeMap<Integer, TreeSet<Integer>> errorCells = new TreeMap<Integer, TreeSet<Integer>>();
+	TreeMap<Integer, TreeSet<Integer>> errorCells = new TreeMap<>();
 
 	/**
 	 * The columns of the created {@link ExampleSet}.
@@ -215,7 +215,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 * @see AbstractDataReader#createExampleSet()
 	 * @see AbstractDataReader#guessValueTypes()
 	 */
-	private List<AttributeColumn> attributeColumns = new ArrayList<AttributeColumn>();
+	private List<AttributeColumn> attributeColumns = new ArrayList<>();
 
 	public void clearAllReaderSettings() {
 		clearReaderSettings();
@@ -232,13 +232,6 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		setParameter(PARAMETER_META_DATA, null);
 		setAttributeNamesDefinedByUser(false);
 	}
-
-	// public void clearOperatorMetaData() {
-	// // just meta data information for the gui
-	// metaDataFixed = false;
-	// guessedValueTypes = false;
-	// rowCountFromGuessing = 0;
-	// }
 
 	public AbstractDataReader(OperatorDescription description) {
 		super(description);
@@ -273,9 +266,6 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 * @return
 	 */
 	public List<AttributeColumn> getAllAttributeColumns() {
-		// List<AttributeColumn> list = new LinkedList<AttributeColumn>();
-		// list.addAll(attributeColumns);
-		// return list;
 		return Collections.unmodifiableList(attributeColumns);
 	}
 
@@ -567,7 +557,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		}
 		// too long
 		if (getAllAttributeColumns().size() > newNumberOfColumns) {
-			List<AttributeColumn> list = new ArrayList<AttributeColumn>();
+			List<AttributeColumn> list = new ArrayList<>();
 			for (int i = 0; i < newNumberOfColumns; i++) {
 				list.add(getAttributeColumn(i));
 			}
@@ -674,7 +664,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	public List<Object[]> getErrorPreviewAsList(ProgressListener progress) throws OperatorException {
 		List<Object[]> preview = getPreviewAsList(progress, true, false, -1);
-		List<Object[]> errorPreview = new LinkedList<Object[]>();
+		List<Object[]> errorPreview = new LinkedList<>();
 
 		Iterator<Object[]> it = preview.iterator();
 		int rowNum = 0;
@@ -723,7 +713,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 			throw new UserError(this, e, 403, e.getMessage());
 		}
 
-		List<Object[]> preview = new LinkedList<Object[]>();
+		List<Object[]> preview = new LinkedList<>();
 		// counting starts at one because the user sees it.
 		int currentRow = 1;
 
@@ -787,10 +777,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 							// information
 							if (values[i + 1] != null) {
 								if (column.valueSet.size() >= 2) {
-									if (!column.valueSet.contains(values[i + 1])) {
-										if (column.isActivated) {
-											foundParseError(i, rowCountFromGuessing);
-										}
+									if (!column.valueSet.contains(values[i + 1]) && column.isActivated) {
+										foundParseError(i, rowCountFromGuessing);
 									}
 								} else {
 									column.valueSet.add((String) values[i + 1]);
@@ -834,8 +822,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	private void foundParseError(int column, int row) {
 		TreeSet<Integer> treeSet = errorCells.get(column);
 		if (treeSet == null) {
-			treeSet = new TreeSet<Integer>();
-			errorCells.put(column, new TreeSet<Integer>());
+			treeSet = new TreeSet<>();
+			errorCells.put(column, new TreeSet<>());
 		}
 		treeSet.add(row);
 	}
@@ -882,7 +870,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 * @return a unique column name
 	 */
 	protected String getNewGenericColumnName(int column) {
-		HashSet<String> usedNames = new HashSet<String>();
+		HashSet<String> usedNames = new HashSet<>();
 		for (AttributeColumn col : getAllAttributeColumns()) {
 			usedNames.add(col.getName());
 		}
@@ -905,7 +893,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 * @return
 	 */
 	private String[] getGenericColumnNames(String[] proposedNames, String[] oldColumnNames) {
-		HashSet<String> usedNames = new HashSet<String>();
+		HashSet<String> usedNames = new HashSet<>();
 		for (AttributeColumn col : getAllAttributeColumns()) {
 			usedNames.add(col.getName());
 		}
@@ -1004,10 +992,8 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 							column.maxValue = number.doubleValue();
 						}
 						// try integer
-						if (column.canParseInteger) {
-							if (!Tools.isEqual(Math.round(number.doubleValue()), number.doubleValue())) {
-								column.canParseInteger = false;
-							}
+						if (column.canParseInteger && !Tools.isEqual(Math.round(number.doubleValue()), number.doubleValue())) {
+							column.canParseInteger = false;
 						}
 						// set the value
 						values[i] = number;
@@ -1033,22 +1019,16 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 						if (column.lastDate != null) {
 							lastDateCalendar.setTime(column.lastDate);
 							currDateCalendar.setTime(date);
-							if (!column.shouldBeDate) {
-								if (lastDateCalendar.get(Calendar.DAY_OF_MONTH) != currDateCalendar
-										.get(Calendar.DAY_OF_MONTH)
-										|| lastDateCalendar.get(Calendar.MONTH) != currDateCalendar.get(Calendar.MONTH)
-										|| lastDateCalendar.get(Calendar.YEAR) != currDateCalendar.get(Calendar.YEAR)) {
-									column.shouldBeDate = true;
-								}
+							if (!column.shouldBeDate && (lastDateCalendar.get(Calendar.DAY_OF_MONTH) != currDateCalendar.get(Calendar.DAY_OF_MONTH)
+									|| lastDateCalendar.get(Calendar.MONTH) != currDateCalendar.get(Calendar.MONTH)
+									|| lastDateCalendar.get(Calendar.YEAR) != currDateCalendar.get(Calendar.YEAR))) {
+								column.shouldBeDate = true;
 							}
-							if (!column.shouldBeTime) {
-								if (lastDateCalendar.get(Calendar.HOUR_OF_DAY) != currDateCalendar.get(Calendar.HOUR_OF_DAY)
-										|| lastDateCalendar.get(Calendar.MINUTE) != currDateCalendar.get(Calendar.MINUTE)
-										|| lastDateCalendar.get(Calendar.SECOND) != currDateCalendar.get(Calendar.SECOND)
-										|| lastDateCalendar.get(Calendar.MILLISECOND) != currDateCalendar
-												.get(Calendar.MILLISECOND)) {
-									column.shouldBeTime = true;
-								}
+							if (!column.shouldBeTime && (lastDateCalendar.get(Calendar.HOUR_OF_DAY) != currDateCalendar.get(Calendar.HOUR_OF_DAY)
+									|| lastDateCalendar.get(Calendar.MINUTE) != currDateCalendar.get(Calendar.MINUTE)
+									|| lastDateCalendar.get(Calendar.SECOND) != currDateCalendar.get(Calendar.SECOND)
+									|| lastDateCalendar.get(Calendar.MILLISECOND) != currDateCalendar.get(Calendar.MILLISECOND))) {
+								column.shouldBeTime = true;
 							}
 						}
 						column.lastDate = date;
@@ -1147,7 +1127,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 * @throws OperatorException
 	 */
 	private ExampleSet createExampleSet(int limitOfReadLines) throws OperatorException {
-		List<Attribute> activeAttributes = new ArrayList<Attribute>();
+		List<Attribute> activeAttributes = new ArrayList<>();
 
 		// load the attribute names/value types/ roles/... which are defined by
 		// the user
@@ -1174,7 +1154,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		}
 
 		// list of double arrays which holds the read values fpr each line
-		List<double[]> dataRows = new ArrayList<double[]>();
+		List<double[]> dataRows = new ArrayList<>();
 
 		int lineCount = 0; // debugging purpose
 		while (set.next() && (limitOfReadLines == -1 || limitOfReadLines > lineCount)) {
@@ -1247,7 +1227,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 	 */
 	@Override
 	public List<ParameterType> getParameterTypes() {
-		List<ParameterType> types = new LinkedList<ParameterType>();
+		List<ParameterType> types = new LinkedList<>();
 		types.addAll(super.getParameterTypes());
 
 		types.add(new ParameterTypeBoolean(PARAMETER_ERROR_TOLERANT,
@@ -1320,8 +1300,10 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		@Override
 		public void update(Observable<String> observable, String arg) {
 			String newFilename = getParameters().getParameterOrNull(parameterKey);
-			if (newFilename == null && oldFilename != null || newFilename != null && oldFilename == null
-					|| newFilename != null && oldFilename != null && !newFilename.equals(oldFilename)) {
+			if (oldFilename == newFilename) {
+				return;
+			}
+			if (oldFilename == null || newFilename == null || !newFilename.equals(oldFilename)) {
 				clearAllReaderSettings();
 				this.oldFilename = newFilename;
 			}
@@ -1546,7 +1528,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		 * The valueSet of this attribute, in case it is (bi)nominal. Only for the operator MetaData
 		 * purposes.
 		 */
-		protected Set<String> valueSet = new LinkedHashSet<String>();
+		protected Set<String> valueSet = new LinkedHashSet<>();
 
 		/**
 		 * The number of missing values which were read during the guessing. Only for the operator
@@ -1896,7 +1878,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		 * @param columnIndex
 		 * @return
 		 */
-		public abstract Date getDate(int columnIndex);
+		public abstract Date getDate(int columnIndex) throws OperatorException;
 
 		/**
 		 * Closes the data source. May tear down a database connection or close a file which is re`

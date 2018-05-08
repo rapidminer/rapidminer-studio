@@ -225,6 +225,11 @@ public class ExpressionValueCellEditor extends AbstractCellEditor implements Pro
 		return false;
 	}
 
+	@Override
+	public void activate() {
+		button.doClick();
+	}
+
 	/** set the text of the expression and update the panel */
 	protected void setText(String text) {
 		if (text == null) {

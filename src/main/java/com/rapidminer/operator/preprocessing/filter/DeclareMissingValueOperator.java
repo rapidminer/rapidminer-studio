@@ -48,6 +48,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.expression.ExampleResolver;
 import com.rapidminer.tools.expression.Expression;
 import com.rapidminer.tools.expression.ExpressionException;
@@ -257,7 +258,7 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> parameters = super.getParameterTypes();
 
-		parameters.addAll(subsetSelector.getParameterTypes());
+		parameters.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(subsetSelector.getParameterTypes(), true));
 
 		ParameterType type = new ParameterTypeCategory(PARAMETER_MODE, "Select the value type of the missing value",
 				VALUE_TYPES, 0);
@@ -280,6 +281,7 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 				"This parameter defines the expression which if true equals the missing value", getInputPort(), true, false);
 		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_MODE, VALUE_TYPES, true, 2));
 		type.setExpert(false);
+		type.setPrimary(true);
 		parameters.add(type);
 
 		return parameters;

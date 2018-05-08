@@ -47,7 +47,7 @@ import com.rapidminer.search.GlobalSearchable;
  * @author Andreas Timm
  * @since 8.1
  */
-public class GlobalSearchableTextTest implements GlobalSearchable {
+public class GlobalSearchableTextFakeImpl implements GlobalSearchable {
 
 	public static final String ROW = "ROW";
 	public static final String DATA = "DATA";
@@ -57,7 +57,7 @@ public class GlobalSearchableTextTest implements GlobalSearchable {
 	private boolean initialized = false;
 	private String CATEGORY_NAME = "texttest";
 
-	public GlobalSearchableTextTest() {
+	public GlobalSearchableTextFakeImpl() {
 
 	}
 
@@ -76,12 +76,12 @@ public class GlobalSearchableTextTest implements GlobalSearchable {
 		manager = new TextGlobalSearchManagerTest(CATEGORY_NAME, additionalFieldsDesc, docprovider, new GlobalSearchDefaultField(DATA, 0.5f));
 	}
 
-	public GlobalSearchableTextTest(String categoryId, DocumentProvider provider) {
+	public GlobalSearchableTextFakeImpl(String categoryId, DocumentProvider provider) {
 		this(categoryId);
 		createManager(provider);
 	}
 
-	public GlobalSearchableTextTest(String categoryId) {
+	public GlobalSearchableTextFakeImpl(String categoryId) {
 		super();
 		CATEGORY_NAME = categoryId;
 	}

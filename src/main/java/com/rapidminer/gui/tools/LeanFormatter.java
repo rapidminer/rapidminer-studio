@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
+import com.rapidminer.parameter.ParameterTypeDateFormat;
+
 
 /**
  * A simple log formatter for dates. It outputs the format "yyyy-MM-dd HH:mm:ss"
@@ -33,7 +35,7 @@ import java.util.logging.LogRecord;
  */
 public class LeanFormatter extends Formatter {
 
-	private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private final DateFormat dateFormat = new SimpleDateFormat(ParameterTypeDateFormat.DATE_TIME_FORMAT_YYYY_MM_DD_HH_MM_SS);
 
 	@Override
 	public String format(LogRecord record) {

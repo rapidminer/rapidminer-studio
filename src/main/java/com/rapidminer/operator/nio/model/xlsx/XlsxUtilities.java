@@ -26,6 +26,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 
 import com.rapidminer.operator.nio.ImportWizardUtils;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -283,7 +284,7 @@ public final class XlsxUtilities {
 	/**
 	 * Convert given Excel column index to column name, eg. '0=A', '26=AA'
 	 *
-	 * @param columnIndex
+	 * @param index
 	 *            the {@code 0} based column index
 	 * @return the column name
 	 */
@@ -291,14 +292,7 @@ public final class XlsxUtilities {
 		if (index < 0) {
 			throw new IllegalArgumentException("Indices below 0 are not allowed");
 		}
-		StringBuilder sb = new StringBuilder();
-		// increase by 1 as algorithm expects a 1 as starting point
-		index++;
-		while (index-- > 0) {
-			sb.append((char) ('A' + index % 26));
-			index /= 26;
-		}
-		return sb.reverse().toString();
+		return Tools.getExcelColumnName(index);
 	}
 
 	/**

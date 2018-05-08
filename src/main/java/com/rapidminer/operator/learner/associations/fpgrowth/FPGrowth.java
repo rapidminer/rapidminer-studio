@@ -91,7 +91,9 @@ import com.rapidminer.tools.Ontology;
  * </p>
  *
  * @author Sebastian Land, Ingo Mierswa, Marius Helf
+ * @deprecated since 8.2, replaced by the BeltFPGrowth in the Concurrency extension
  */
+@Deprecated
 public class FPGrowth extends Operator {
 
 	/**

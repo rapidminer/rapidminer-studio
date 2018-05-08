@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.repository;
 
+import java.util.List;
+
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
@@ -26,8 +28,6 @@ import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
-
-import java.util.List;
 
 
 /**
@@ -73,7 +73,9 @@ public class RepositoryEntryDeleteOperator extends AbstractRepositoryManagerOper
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
-		types.add(new ParameterTypeRepositoryLocation(ELEMENT_TO_DELETE, "Element that should be deleted", true, true, false));
+		ParameterType type = new ParameterTypeRepositoryLocation(ELEMENT_TO_DELETE, "Element that should be deleted", true, true, false);
+		type.setPrimary(true);
+		types.add(type);
 
 		return types;
 	}

@@ -18,45 +18,60 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.parameter.ParameterHandler;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeString;
-import com.rapidminer.parameter.UndefinedParameterError;
-
 import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterHandler;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
+import com.rapidminer.parameter.UndefinedParameterError;
 
 
 /**
  * A parser class for dates to be utilized inside date handling operators.
  * 
  * @author Sebastian Land
+ * @deprecated since 8.2; please use {@link ParameterTypeDateFormat}.
  */
+@Deprecated
 public class DateParser extends SimpleDateFormat {
 
 	private static final long serialVersionUID = -950183600865410299L;
 
-	public static final String PARAMETER_DATE_FORMAT = "date_format";
+	public static final String PARAMETER_DATE_FORMAT = ParameterTypeDateFormat.PARAMETER_DATE_FORMAT;
 
-	public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
+	public static final String DEFAULT_DATE_FORMAT = ParameterTypeDateFormat.DATE_FORMAT_YYYY_MM_DD;
 
-	public static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd hh:mm:ss";
+	public static final String DEFAULT_DATE_TIME_FORMAT = ParameterTypeDateFormat.DATE_TIME_FORMAT_YYYY_MM_DD_HH_MM_SS;
 
 	public DateParser(String dateFormat) {
 		super(dateFormat);
 	}
 
+	/**
+	 * @deprecated since 8.2; please use {@link ParameterTypeDateFormat#createCheckedDateFormat(Operator, String, Locale, boolean)}
+	 * or one of its convenience methods.
+	 */
+	@Deprecated
 	public static DateParser getInstance(ParameterHandler handler) throws UndefinedParameterError {
-		String dateFormat = handler.getParameterAsString(PARAMETER_DATE_FORMAT);
+		String dateFormat = handler.getParameterAsString(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT);
 		return new DateParser(dateFormat);
 	}
 
-	// TODO add ParameterTypeDate and corresponding ValueCellEditor
-	// TODO integrate this parser into Nominal2Date, etc
+	/**
+	 * @deprecated since 8.2; please use one of {@link ParameterTypeDateFormat ParameterTypeDateFormats} constructors
+	 * to add a {@value ParameterTypeDateFormat#PARAMETER_DATE_FORMAT} parameter to your operator.
+	 */
+	@Deprecated
 	public static List<ParameterType> getParameterTypes(ParameterHandler handler) {
 		List<ParameterType> types = new LinkedList<ParameterType>();
-		types.add(new ParameterTypeString(PARAMETER_DATE_FORMAT, "The format pattern of date values.", DEFAULT_DATE_FORMAT));
+		ParameterTypeDateFormat type = new ParameterTypeDateFormat();
+		type.setDescription("The format pattern of date values.");
+		type.setDefaultValue(ParameterTypeDateFormat.DATE_FORMAT_YYYY_MM_DD);
+		types.add(type);
 		return types;
 	}
 }

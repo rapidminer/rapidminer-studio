@@ -36,6 +36,7 @@ import com.rapidminer.operator.tools.AttributeSubsetSelector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.container.Pair;
 
 
@@ -48,10 +49,12 @@ import com.rapidminer.tools.container.Pair;
  */
 public abstract class PreprocessingOperator extends AbstractDataProcessing {
 
-	private final OutputPort modelOutput = getOutputPorts().createPort("preprocessing model");
-
-	protected final AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getExampleSetInputPort(),
-			getFilterValueTypes());
+	/**
+	 * the name of the preprocessing model output port
+	 *
+	 * @since 8.2.0
+	 */
+	public static final String PREPROCESSING_MODEL_OUTPUT_PORT_NAME = "preprocessing model";
 
 	/**
 	 * The parameter name for &quot;Indicates if the preprocessing model should also be
@@ -64,6 +67,12 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 	 * of directly changing the data.
 	 */
 	public static final String PARAMETER_CREATE_VIEW = "create_view";
+
+	private final OutputPort modelOutput = getOutputPorts().createPort(PREPROCESSING_MODEL_OUTPUT_PORT_NAME);
+
+	protected final AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getExampleSetInputPort(),
+			getFilterValueTypes());
+
 
 	public PreprocessingOperator(OperatorDescription description) {
 		super(description);
@@ -210,7 +219,7 @@ public abstract class PreprocessingOperator extends AbstractDataProcessing {
 		type.setHidden(!isSupportingView());
 		types.add(type);
 
-		types.addAll(attributeSelector.getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(attributeSelector.getParameterTypes(), true));
 		return types;
 	}
 

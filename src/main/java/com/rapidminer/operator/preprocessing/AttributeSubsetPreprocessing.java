@@ -18,6 +18,12 @@
 */
 package com.rapidminer.operator.preprocessing;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
@@ -49,12 +55,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import com.rapidminer.tools.ProcessTools;
 
 
 /**
@@ -640,7 +641,7 @@ public class AttributeSubsetPreprocessing extends OperatorChain {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.addAll(attributeSelector.getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(attributeSelector.getParameterTypes(), true));
 
 		ParameterType type = new ParameterTypeCategory(PARAMETER_NAME_CONFLICT_HANDLING,
 				"Decides how to deal with duplicate attribute names.", HANDLE_NAME_CONFLICT_MODES, 0);

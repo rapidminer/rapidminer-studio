@@ -124,8 +124,10 @@ public class MetaCost extends AbstractMetaLearner {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeMatrix(PARAMETER_COST_MATRIX, "The cost matrix in Matlab single line format",
-				"Cost Matrix", "Predicted Class", "True Class", true, false));
+		ParameterType type = new ParameterTypeMatrix(PARAMETER_COST_MATRIX, "The cost matrix in Matlab single line format",
+				"Cost Matrix", "Predicted Class", "True Class", true, false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeDouble(PARAMETER_USE_SUBSET_FOR_TRAINING,
 				"Fraction of examples used for training. Must be greater than 0 and should be lower than 1.", 0, 1, 1.0));
 		types.add(new ParameterTypeInt(PARAMETER_ITERATIONS, "The number of iterations (base models).", 1, Integer.MAX_VALUE,

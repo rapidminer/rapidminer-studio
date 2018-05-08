@@ -31,8 +31,8 @@ public class ConnectToQuickFix extends AbstractQuickFix {
 	private OutputPort outputPort;
 
 	public ConnectToQuickFix(InputPort inputPort, OutputPort outputPort) {
-		super(MAX_RATING, false, inputPort.isConnected() ? "reconnect_to" : "connect_to", new Object[] { outputPort
-				.getSpec() });
+		super(MAX_RATING, false, inputPort.isConnected() ? "reconnect_to" : "connect_to", outputPort
+				.getSpec());
 		this.inputPort = inputPort;
 		this.outputPort = outputPort;
 	}

@@ -60,6 +60,7 @@ enum CtaDataSource {
 	/** SQL Statements */
 	private static final String CREATE_EVENT_TABLE_STATEMENT = "CREATE CACHED TABLE IF NOT EXISTS event ( type VARCHAR, value VARCHAR, argument VARCHAR, count BIGINT, timestamp TIMESTAMP DEFAULT NOW())";
 	private static final String CREATE_RULE_TABLE_STATEMENT = "CREATE CACHED TABLE IF NOT EXISTS rule ( id VARCHAR, triggered TIMESTAMP DEFAULT NOW(), action VARCHAR)";
+	private static final String CREATE_CONSTANTS_TABLE_STATEMENT = "CREATE CACHED TABLE IF NOT EXISTS studio_constants ( con VARCHAR PRIMARY KEY, val VARCHAR)";
 	private static final String CREATE_EVENT_INDEX = "CREATE INDEX IF NOT EXISTS event_index ON event(type, value, argument)";
 	private static final String CREATE_RULE_INDEX = "CREATE INDEX IF NOT EXISTS id_index ON rule(id)";
 
@@ -102,8 +103,11 @@ enum CtaDataSource {
 			try (Statement stmt = connection.createStatement()) {
 				stmt.executeUpdate(CREATE_EVENT_TABLE_STATEMENT);
 				stmt.executeUpdate(CREATE_RULE_TABLE_STATEMENT);
+				stmt.executeUpdate(CREATE_CONSTANTS_TABLE_STATEMENT);
 				stmt.executeUpdate(CREATE_EVENT_INDEX);
 				stmt.executeUpdate(CREATE_RULE_INDEX);
+			} catch (SQLException e) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.usagestats.CtaDataSource.open.failed", e);
 			}
 		}
 		return connection;

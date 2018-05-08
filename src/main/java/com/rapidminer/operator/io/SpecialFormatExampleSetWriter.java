@@ -18,6 +18,19 @@
 */
 package com.rapidminer.operator.io;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.zip.GZIPOutputStream;
+
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleFormatter;
 import com.rapidminer.example.ExampleSet;
@@ -33,19 +46,6 @@ import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.io.Encoding;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.zip.GZIPOutputStream;
 
 
 /**
@@ -196,8 +196,10 @@ public class SpecialFormatExampleSetWriter extends AppendingExampleSetWriter {
 
 	@Override
 	public List<ParameterType> getParameterTypes() {
-		List<ParameterType> types = new LinkedList<ParameterType>();
-		types.add(new ParameterTypeFile(PARAMETER_EXAMPLE_SET_FILE, "File to save the example set to.", "dat", false));
+		List<ParameterType> types = new LinkedList<>();
+		ParameterType type = new ParameterTypeFile(PARAMETER_EXAMPLE_SET_FILE, "File to save the example set to.", "dat", false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeString(PARAMETER_SPECIAL_FORMAT, "Format string to use for output.", false));
 		types.add(new ParameterTypeInt(PARAMETER_FRACTION_DIGITS,
 				"The number of fraction digits in the output file (-1: all possible digits).", -1, Integer.MAX_VALUE, -1));

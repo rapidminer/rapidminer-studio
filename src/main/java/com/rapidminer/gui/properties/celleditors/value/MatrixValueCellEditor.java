@@ -18,18 +18,17 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractCellEditor;
+import javax.swing.JButton;
+import javax.swing.JTable;
+
 import com.rapidminer.gui.properties.MatrixPropertyDialog;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterTypeMatrix;
 import com.rapidminer.tools.math.StringToMatrixConverter;
-
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractCellEditor;
-import javax.swing.JButton;
-import javax.swing.JTable;
 
 
 /**
@@ -118,5 +117,10 @@ public class MatrixValueCellEditor extends AbstractCellEditor implements Propert
 	@Override
 	public boolean rendersLabel() {
 		return false;
+	}
+
+	@Override
+	public void activate() {
+		button.doClick();
 	}
 }

@@ -42,12 +42,10 @@ import com.rapidminer.operator.io.AbstractExampleSource;
 import com.rapidminer.operator.nio.file.FileInputPortHandler;
 import com.rapidminer.operator.nio.file.FileObject;
 import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.io.Encoding;
@@ -271,23 +269,10 @@ public class ExcelFormatExampleSource extends AbstractExampleSource {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
-		/*
-		 * ParameterType fileParam = new ParameterTypeFile(PARAMETER_EXCEL_FILE,
-		 * "Name of the excel file to read the data from.", "xls", false);
-		 * fileParam.registerDependencyCondition(new InputPortNotConnectedCondition(this, new
-		 * PortProvider() {
-		 *
-		 * @Override public Port getPort() { return fileInputPort; } }, true));
-		 * types.add(fileParam);
-		 */
-		types.add(FileInputPortHandler.makeFileParameterType(this, PARAMETER_EXCEL_FILE,
-				"Name of the file to read the data from.", "xls", new PortProvider() {
-
-					@Override
-					public Port getPort() {
-						return fileInputPort;
-					}
-				}));
+		ParameterType type = FileInputPortHandler.makeFileParameterType(this, PARAMETER_EXCEL_FILE,
+				"Name of the file to read the data from.", "xls", () -> fileInputPort);
+		type.setPrimary(true);
+		types.add(type);
 
 		types.add(new ParameterTypeInt(PARAMETER_SHEET_NUMBER, "The number of the sheet which should be imported.", 1,
 				Integer.MAX_VALUE, 1, false));

@@ -332,7 +332,7 @@ public class ActionsGlobalSearchManager extends AbstractGlobalSearchManager {
 	private Document createDocumentFromPerspective(final Perspective perspective) {
 		WorkspaceAction action = RapidMinerGUI.getMainFrame().getPerspectiveController().createPerspectiveAction(perspective);
 		// make label a bit more descriptive
-		String name = perspective.getName().replaceAll("_", " ");
+		String name = action.getValue(ResourceAction.NAME) != null ? String.valueOf(action.getValue(ResourceAction.NAME)) : perspective.getName().replaceAll("_", " ");
 		action.putValue(ResourceAction.NAME, I18N.getMessage(I18N.getGUIBundle(), "gui.action.global_search.action.perspective.name", SwingTools.capitalizeString(name)));
 		return createDocument(action);
 	}

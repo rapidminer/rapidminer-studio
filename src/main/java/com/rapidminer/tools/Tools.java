@@ -1,18 +1,18 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
 */
@@ -929,6 +929,52 @@ public class Tools {
 	}
 
 	/**
+	 * Waits for the required threads to die first. Then waits for the process to die and writes log messages.
+	 * Terminates if exit value is not 0. Terminates if the RapidMiner process execution was stopped by the user.
+	 *
+	 * @param operator
+	 * 		The current operator that will be checked for RapidMiner process execution break.
+	 * @param process
+	 * 		The process that should finish
+	 * @param name
+	 * 		Processname for logoutput.
+	 * @param threadsToBeFinishedFirst
+	 * 		The required {@link Thread Threads} to be joined before waiting for the process. Commonly used to read all outputs in those before waiting for the process itself.
+	 * @throws OperatorException
+	 * 		If the program execution failed the error will be thrown via an UserError.
+	 *
+	 * @author Andreas Timm
+	 * @since 8.2
+	 */
+	public static void waitForDependentProcess(final Operator operator, final Process process, final String name, Thread... threadsToBeFinishedFirst)
+			throws OperatorException {
+		boolean allThreadsFinished = false;
+		while (!allThreadsFinished) {
+			allThreadsFinished = true;
+			for (Thread t : threadsToBeFinishedFirst) {
+				if (!t.isAlive()) {
+					continue;
+				}
+				allThreadsFinished = false;
+				try {
+					t.join(200);
+				} catch (InterruptedException e) {
+					try {
+						operator.checkForStop();
+					} catch (ProcessStoppedException e1) {
+						LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.Tools.terminating_process", name);
+						process.destroy();
+						throw e1;
+					}
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
+
+		waitForProcess(operator, process, name);
+	}
+
+	/**
 	 * Waits for process to die and writes log messages. Terminates if exit value is not 0.
 	 */
 	public static void waitForProcess(final Operator operator, final Process process, final String name)
@@ -984,7 +1030,7 @@ public class Tools {
 		if (exitValue == 0) {
 			LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.Tools.process_terminated_successfully", name);
 		} else {
-			throw new UserError(operator, 306, new Object[] { name, exitValue });
+			throw new UserError(operator, 306, new Object[]{name, exitValue});
 		}
 	}
 
@@ -1719,18 +1765,14 @@ public class Tools {
 		if (index < 0) {
 			return "error";
 		}
-		final Character[] alphabet = new Character[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-				'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
-
-		// index -= 1; // adjust so it matches 0-indexed array rather than
-		// 1-indexed column
-
-		int quotient = index / 26;
-		if (quotient > 0) {
-			return getExcelColumnName(quotient - 1) + alphabet[index % 26].toString();
-		} else {
-			return alphabet[index % 26].toString();
-		}
+		index++;
+		StringBuilder builder = new StringBuilder();
+		do {
+			index--; // adjust column number to offset thinking
+			builder.append((char) ('A' + (index % 26)));
+			index /= 26;
+		} while (index > 0);
+		return builder.reverse().toString();
 	}
 
 	/**

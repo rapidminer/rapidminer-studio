@@ -107,11 +107,11 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	 * @author Sabrina Kirstein
 	 *
 	 */
-	public static enum RepositoryType {
+	public enum RepositoryType {
 
 		/**
 		 * The order of repository types is very important as it is used in the
-		 * {@link RepositoryManager#repositoryComparator}
+		 * {@link RepositoryTools#REPOSITORY_COMPARATOR}
 		 */
 		RESOURCES, DB, LOCAL, REMOTE, OTHER;
 
@@ -208,7 +208,19 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	}
 
 	/**
-	 * Replaces the used {@link RepositoryProvider}. The {@link DefaultRepositoryProvider} will be
+	 * Refreshes the sample repository. Will be called by
+	 * {@link RapidMiner#init()} after {@link Plugin#initAll()} and {@link RepositoryManager#init()}
+	 */
+	public static void refreshSampleRepository() {
+		try {
+			sampleRepository.refresh();
+		} catch (Exception e) {
+			LOGGER.log(Level.INFO, "com.rapidminer.repository.RepositoryManager.sample_repository_refresh_failed", e);
+		}
+	}
+
+	/**
+	 * Replaces the used {@link RepositoryProvider}. The {@link FileRepositoryProvider} will be
 	 * used as default.
 	 *
 	 * @param repositoryProvider
@@ -394,7 +406,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	 * will stores the settings to a XML file. Use {@link #setProvider(RepositoryProvider)} to
 	 * replace this behavior.
 	 *
-	 * @see #load()
+	 * @see #load
 	 */
 	public void save() {
 		provider.save(getRepositories());
@@ -736,7 +748,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 						}
 					}
 					// missed entry -> refresh and try again
-					if (folder.canRefreshChild(splitted[index])) {
+					if (retryCount == 0 && folder.canRefreshChild(splitted[index])) {
 						folder.refresh();
 					} else {
 						break;
@@ -761,7 +773,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 						break;
 					} else {
 						// missed entry -> refresh and try again
-						if (folder.canRefreshChild(splitted[index])) {
+						if (retryCount == 0 && folder.canRefreshChild(splitted[index])) {
 							folder.refresh();
 						} else {
 							break;

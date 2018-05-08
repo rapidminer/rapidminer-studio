@@ -18,11 +18,11 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterType;
-
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterType;
 
 
 /**
@@ -36,17 +36,30 @@ import javax.swing.table.TableCellRenderer;
 public interface PropertyValueCellEditor extends TableCellEditor, TableCellRenderer {
 
 	/** This method can be implemented to perform operator specific settings. */
-	public void setOperator(Operator operator);
+	void setOperator(Operator operator);
 
 	/**
 	 * Returns true if this editor should also be used as renderer. Should not be the case for
 	 * components with frames around the component like JTextFields.
 	 */
-	public boolean useEditorAsRenderer();
+	boolean useEditorAsRenderer();
 
 	/**
 	 * Indicates whether this editor renders the parameter type key and does not need to be rendered
 	 * by the PropertyPanel.
 	 */
-	public boolean rendersLabel();
+	boolean rendersLabel();
+
+	/**
+	 * Activates this editor as if the user chose the main action (e.g. clicked the only button). Does nothing by default.
+	 * This is used for interacting with parameter editors, e.g. by double-clicking in the process view on an operator for the primary parameter type.
+	 * <p>
+	 * If your custom parameter type should be able to use the primary parameter functionality via {@link ParameterType#setPrimary(boolean)}, your editor must overwrite this method.
+	 * </p>
+	 *
+	 * @since 8.2
+	 */
+	default void activate() {
+		// does nothing by default
+	}
 }

@@ -15,7 +15,7 @@
  * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator;
 
 import java.security.AccessController;
@@ -97,7 +97,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	private final InputPorts innerInputPorts;
 	private final OutputPorts innerOutputPorts;
-	private Vector<Operator> operators = new Vector<Operator>();
+	private Vector<Operator> operators = new Vector<>();
 	private Vector<Operator> executionOrder;
 
 	/**
@@ -110,8 +110,8 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 */
 	private final Object userDataLock = new Object();
 
-	private final Observer<Port> delegatingPortObserver = new DelegatingObserver<Port, ExecutionUnit>(this, this);
-	private final Observer<Operator> delegatingOperatorObserver = new DelegatingObserver<Operator, ExecutionUnit>(this,
+	private final Observer<Port> delegatingPortObserver = new DelegatingObserver<>(this, this);
+	private final Observer<Operator> delegatingOperatorObserver = new DelegatingObserver<>(this,
 			this);
 
 	public ExecutionUnit(OperatorChain enclosingOperator, String name) {
@@ -130,7 +130,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 				// "+name+" (in "+enclosingOperator.getOperatorDescription().getName()+")");
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.operator.ExecutionUnit.process_name_does_not_follow_name_conventions",
-						new Object[] { name, enclosingOperator.getOperatorDescription().getName() });
+						new Object[]{name, enclosingOperator.getOperatorDescription().getName()});
 			}
 			index = name.indexOf(' ', index) + 1;
 		} while (index != 0);
@@ -145,7 +145,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	}
 
 	/**
-	 * Same as {@link #addOperator(Operator, boolean)}.
+	 * Same as {@link #addOperator(Operator, boolean) addOperator(Operator, true)}.
 	 */
 	public int addOperator(Operator operator) {
 		return addOperator(operator, true);
@@ -155,28 +155,40 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * Adds the operator to this execution unit.
 	 *
 	 * @param registerWithProcess
-	 *            Typically true. If false, the operator will not be registered with its parent
-	 *            process.
+	 * 		Typically true. If false, the operator will not be registered with its parent process.
 	 * @return the new index of the operator.
+	 * @see #addOperator(Operator, int, boolean) addOperator(Operator, -1, boolean)
 	 */
 	public int addOperator(Operator operator, boolean registerWithProcess) {
-		if (operator == null) {
-			throw new NullPointerException("operator cannot be null!");
-		}
-		if (operator instanceof ProcessRootOperator) {
-			throw new IllegalArgumentException(
-					"'Process' operator cannot be added. It must always be the top-level operator!");
-		}
-		operators.add(operator);
-		registerOperator(operator, registerWithProcess);
+		addOperator(operator, -1, registerWithProcess);
 		return operators.size() - 1;
 	}
 
 	/**
 	 * Adds the operator to this execution unit. The operator at this index and all subsequent
 	 * operators are shifted to the right. The operator is registered automatically.
+	 *
+	 * @see #addOperator(Operator, int, boolean) addOperator(Operator, index, true)
 	 */
 	public void addOperator(Operator operator, int index) {
+		addOperator(operator, index, true);
+	}
+
+	/**
+	 * Adds the operator to this execution unit. If the index is non-negative, the operator at that
+	 * index and all subsequent operators are shifted to the right. The operator is registered if so
+	 * specified.
+	 *
+	 * @param operator
+	 * 		the operator to be added
+	 * @param index
+	 * 		the position where to add the operator, or {@code -1} to simply append.
+	 * @param registerWithProcess
+	 * 		Typically true. If false, the operator will not be registered with its parent
+	 * 		process.
+	 * @since 8.2
+	 */
+	private void addOperator(Operator operator, int index, boolean registerWithProcess) {
 		if (operator == null) {
 			throw new NullPointerException("operator cannot be null!");
 		}
@@ -184,8 +196,12 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 			throw new IllegalArgumentException(
 					"'Process' operator cannot be added. It must always be the top-level operator!");
 		}
-		operators.add(index, operator);
-		registerOperator(operator, true);
+		if (index == -1) {
+			operators.add(operator);
+		} else {
+			operators.add(index, operator);
+		}
+		registerOperator(operator, registerWithProcess);
 	}
 
 	public int getIndexOfOperator(Operator operator) {
@@ -196,7 +212,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * Looks up {@link UserData} entries. Returns null if key is unknown.
 	 *
 	 * @param The
-	 *            key of the user data.
+	 * 		key of the user data.
 	 * @return The user data.
 	 */
 	public UserData<Object> getUserData(String key) {
@@ -213,9 +229,9 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * Stores arbitrary {@link UserData}.
 	 *
 	 * @param key
-	 *            The key to used to identify the data.
+	 * 		The key to used to identify the data.
 	 * @param data
-	 *            The user data.
+	 * 		The user data.
 	 */
 	public void setUserData(String key, UserData<Object> data) {
 		synchronized (this.userDataLock) {
@@ -275,7 +291,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	/** Helper class to count the number of dependencies of an operator. */
 	private static class EdgeCounter {
 
-		private final Map<Operator, Integer> numIncomingEdges = new LinkedHashMap<Operator, Integer>();
+		private final Map<Operator, Integer> numIncomingEdges = new LinkedHashMap<>();
 
 		private EdgeCounter(Collection<Operator> operators) {
 			for (Operator op : operators) {
@@ -306,7 +322,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 		}
 
 		private LinkedList<Operator> getIndependentOperators() {
-			LinkedList<Operator> independentOperators = new LinkedList<Operator>();
+			LinkedList<Operator> independentOperators = new LinkedList<>();
 			for (Map.Entry<Operator, Integer> entry : numIncomingEdges.entrySet()) {
 				if (entry.getValue() == null || entry.getValue() == 0) {
 					independentOperators.add(entry.getKey());
@@ -322,7 +338,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * <var>0..i-1</var>.
 	 */
 	public Vector<Operator> topologicalSort() {
-		final Map<Operator, Integer> originalIndices = new HashMap<Operator, Integer>();
+		final Map<Operator, Integer> originalIndices = new HashMap<>();
 		for (int i = 0; i < operators.size(); i++) {
 			originalIndices.put(operators.get(i), i);
 		}
@@ -335,15 +351,9 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 				}
 			}
 		}
-		Vector<Operator> sorted = new Vector<Operator>();
-		PriorityQueue<Operator> independentOperators = new PriorityQueue<Operator>(Math.max(1, operators.size()),
-				new Comparator<Operator>() {
-
-					@Override
-					public int compare(Operator o1, Operator o2) {
-						return originalIndices.get(o1) - originalIndices.get(o2);
-					}
-				});
+		Vector<Operator> sorted = new Vector<>();
+		PriorityQueue<Operator> independentOperators = new PriorityQueue<>(Math.max(1, operators.size()),
+				Comparator.comparingInt(originalIndices::get));
 		independentOperators.addAll(counter.getIndependentOperators());
 		while (!independentOperators.isEmpty()) {
 			Operator first = independentOperators.poll();
@@ -383,7 +393,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 			op.transformMetaData();
 		}
 		if (sorted.size() != operators.size()) {
-			List<Operator> remainder = new LinkedList<Operator>(operators);
+			List<Operator> remainder = new LinkedList<>(operators);
 			remainder.removeAll(sorted);
 			for (Operator nodeInCircle : remainder) {
 				for (OutputPort outputPort : nodeInCircle.getOutputPorts().getAllPorts()) {
@@ -443,11 +453,9 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	private void unwire(Operator op, boolean recursive) throws PortException {
 		op.getOutputPorts().disconnectAll();
-		if (recursive) {
-			if (op instanceof OperatorChain) {
-				for (ExecutionUnit subprocess : ((OperatorChain) op).getSubprocesses()) {
-					subprocess.unwire(recursive);
-				}
+		if (recursive && op instanceof OperatorChain) {
+			for (ExecutionUnit subprocess : ((OperatorChain) op).getSubprocesses()) {
+				subprocess.unwire(recursive);
 			}
 		}
 	}
@@ -457,7 +465,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 			throws PortException {
 		boolean success = false;
 		do {
-			Set<InputPort> complete = new HashSet<InputPort>();
+			Set<InputPort> complete = new HashSet<>();
 			for (InputPort in : inputPorts.getAllPorts()) {
 				success = false;
 				if (!in.isConnected() && !complete.contains(in)
@@ -473,20 +481,17 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 						OutputPort outCandidate = outIterator.next();
 						// TODO: Remove shouldAutoConnect() in later versions
 						Operator owner = outCandidate.getPorts().getOwner().getOperator();
-						if (owner.shouldAutoConnect(outCandidate)) {
-							if (outCandidate.getMetaData() != null) {
-								if (in.isInputCompatible(outCandidate.getMetaData(), level)) {
-									readyOutputs.remove(outCandidate);
-									outCandidate.connectTo(in);
-									// we cannot continue with the remaining input ports
-									// since connecting may have triggered the creation of new input
-									// ports
-									// which would result in undefined behavior and a
-									// ConcurrentModificationException
-									success = true;
-									break;
-								}
-							}
+						if (owner.shouldAutoConnect(outCandidate) && outCandidate.getMetaData() != null &&
+								in.isInputCompatible(outCandidate.getMetaData(), level)) {
+							readyOutputs.remove(outCandidate);
+							outCandidate.connectTo(in);
+							// we cannot continue with the remaining input ports
+							// since connecting may have triggered the creation of new input
+							// ports
+							// which would result in undefined behavior and a
+							// ConcurrentModificationException
+							success = true;
+							break;
 						}
 					}
 					// no port found.
@@ -513,24 +518,21 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * the first compatible output of an operator "left" of this operator. This corresponds to the
 	 * way, IOObjects were consumed in the pre-5.0 version. Disabled operators are skipped.
 	 *
-	 * <br/>
-	 *
 	 * @param level
-	 *            If level is {@link CompatibilityLevel#VERSION_5}, an input is considered
-	 *            compatible only if it satisfies all meta data constraints. For
-	 *            {@link CompatibilityLevel#PRE_VERSION_5} we only consider the classes.
-	 *
+	 * 		If level is {@link CompatibilityLevel#VERSION_5}, an input is considered
+	 * 		compatible only if it satisfies all meta data constraints. For
+	 * 		{@link CompatibilityLevel#PRE_VERSION_5} we only consider the classes.
 	 * @param keepConnections
-	 *            if true, don't unwire old connections before rewiring.
+	 * 		if true, don't unwire old connections before rewiring.
 	 */
 	public void autoWire(CompatibilityLevel level, boolean keepConnections, boolean recursive) throws PortException {
 		if (!keepConnections) {
 			unwire(recursive);
 		}
 		// store all outputs. Scan them to find matching inputs.
-		LinkedList<OutputPort> readyOutputs = new LinkedList<OutputPort>();
+		LinkedList<OutputPort> readyOutputs = new LinkedList<>();
 		addReadyOutputs(readyOutputs, getInnerSources());
-		List<Operator> enabled = new LinkedList<Operator>();
+		List<Operator> enabled = new LinkedList<>();
 		for (Operator op : getOperators()) {
 			if (op.isEnabled()) {
 				enabled.add(op);
@@ -541,11 +543,11 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	/**
 	 * @param wireNew
-	 *            If true, OutputPorts of operators will be added to readyOutputs once they are
-	 *            wired.
+	 * 		If true, OutputPorts of operators will be added to readyOutputs once they are
+	 * 		wired.
 	 */
 	private void autoWire(CompatibilityLevel level, List<Operator> operators, LinkedList<OutputPort> readyOutputs,
-			boolean recursive, boolean wireNew) throws PortException {
+						  boolean recursive, boolean wireNew) throws PortException {
 		transformMDNeighbourhood();
 
 		for (Operator op : operators) {
@@ -556,13 +558,11 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 			}
 			autoWire(level, op.getInputPorts(), readyOutputs);
 			transformMDNeighbourhood();
-			if (recursive) {
-				if (op instanceof OperatorChain) {
-					for (ExecutionUnit subprocess : ((OperatorChain) op).getSubprocesses()) {
-						// we have already removed all connections, so keepConnections=true in
-						// recursive call
-						subprocess.autoWire(level, true, recursive);
-					}
+			if (recursive && op instanceof OperatorChain) {
+				for (ExecutionUnit subprocess : ((OperatorChain) op).getSubprocesses()) {
+					// we have already removed all connections, so keepConnections=true in
+					// recursive call
+					subprocess.autoWire(level, true, recursive);
 				}
 			}
 			if (wireNew) {
@@ -577,16 +577,16 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * Automatically wires inputs and outputs of a single operator in this execution unit.
 	 *
 	 * @param inputs
-	 *            Wire inputs?
+	 * 		Wire inputs?
 	 * @param outputs
-	 *            Wire outputs?
+	 * 		Wire outputs?
 	 */
 	public void autoWireSingle(Operator operator, CompatibilityLevel level, boolean inputs, boolean outputs) {
 		// auto wire inputs
 		if (inputs) {
 			transformMDNeighbourhood();
 			// store all outputs. Scan them to find matching inputs.
-			LinkedList<OutputPort> readyOutputs = new LinkedList<OutputPort>();
+			LinkedList<OutputPort> readyOutputs = new LinkedList<>();
 			// add the ports, oldest first. Simulate pre-5.0-like stack by taking
 			// the last out of this list when consuming input.
 			addReadyOutputs(readyOutputs, getInnerSources());
@@ -610,9 +610,9 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 		// auto wire outputs
 		if (outputs) {
-			LinkedList<OutputPort> readyOutputs = new LinkedList<OutputPort>();
+			LinkedList<OutputPort> readyOutputs = new LinkedList<>();
 			addReadyOutputs(readyOutputs, operator.getOutputPorts());
-			List<Operator> successors = new LinkedList<Operator>();
+			List<Operator> successors = new LinkedList<>();
 			boolean foundMe = false;
 			for (Operator other : getOperators()) {
 				if (foundMe) {
@@ -641,7 +641,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * output ports of enclosed operators.
 	 */
 	public Collection<OutputPort> getAllOutputPorts() {
-		Collection<OutputPort> outputPorts = new LinkedList<OutputPort>();
+		Collection<OutputPort> outputPorts = new LinkedList<>();
 		outputPorts.addAll(getInnerSources().getAllPorts());
 		for (Operator operator : operators) {
 			outputPorts.addAll(operator.getOutputPorts().getAllPorts());
@@ -667,13 +667,13 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	 * wires them as they were originally.
 	 *
 	 * @param forParallelExecution
-	 *            Indicates whether this clone is supposed to be executed in parallel. If yes, the
-	 *            clone will not be registered with the parent process and will share its
-	 *            {@link Operator#applyCount} with the original.
+	 * 		Indicates whether this clone is supposed to be executed in parallel. If yes, the
+	 * 		clone will not be registered with the parent process and will share its
+	 * 		{@link Operator#applyCount} with the original.
 	 */
 	public void cloneExecutionUnitFrom(ExecutionUnit original, boolean forParallelExecution) {
 		// Clone operators
-		Map<String, Operator> clonedOperatorsByName = new HashMap<String, Operator>();
+		Map<String, Operator> clonedOperatorsByName = new HashMap<>();
 		for (Operator originalChild : original.operators) {
 			Operator clonedOperator = originalChild.cloneOperator(originalChild.getName(), forParallelExecution);
 			addOperator(clonedOperator, !forParallelExecution);
@@ -709,7 +709,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 	}
 
 	private void cloneConnections(OutputPorts originalPorts, ExecutionUnit originalExecutionUnit,
-			Map<String, Operator> clonedOperatorsByName) {
+								  Map<String, Operator> clonedOperatorsByName) {
 		for (OutputPort originalSource : originalPorts.getAllPorts()) {
 			if (originalSource.isConnected()) {
 
@@ -767,7 +767,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	/** Returns all nested operators. */
 	public Collection<Operator> getChildOperators() {
-		List<Operator> children = new LinkedList<Operator>();
+		List<Operator> children = new LinkedList<>();
 		for (Operator operator : operators) {
 			children.add(operator);
 		}
@@ -776,7 +776,7 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 
 	/** Recursively returns all nested operators. */
 	public List<Operator> getAllInnerOperators() {
-		List<Operator> children = new LinkedList<Operator>();
+		List<Operator> children = new LinkedList<>();
 		for (Operator operator : operators) {
 			children.add(operator);
 			if (operator instanceof OperatorChain) {
@@ -786,8 +786,8 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 		return children;
 	}
 
-	protected List<String> createProcessTreeList(int indent, String selfPrefix, String childPrefix, Operator markOperator,
-			String mark) {
+	protected List<String> createProcessTreeList(int indent, String selfPrefix, String childPrefix,
+												 Operator markOperator, String mark) {
 		List<String> treeList = new LinkedList<>();
 		treeList.add(Tools.indent(indent) + " subprocess '" + getName() + "'");
 		Iterator<Operator> i = operators.iterator();
@@ -868,8 +868,8 @@ public class ExecutionUnit extends AbstractObservable<ExecutionUnit> {
 		int failedReconnects = 0;
 
 		// remember source and sink connections so we can reconnect them later.
-		Map<String, InputPort> sourceMap = new HashMap<String, InputPort>();
-		Map<String, OutputPort> sinkMap = new HashMap<String, OutputPort>();
+		Map<String, InputPort> sourceMap = new HashMap<>();
+		Map<String, OutputPort> sinkMap = new HashMap<>();
 		for (OutputPort source : otherUnit.getInnerSources().getAllPorts()) {
 			if (source.isConnected()) {
 				sourceMap.put(source.getName(), source.getDestination());

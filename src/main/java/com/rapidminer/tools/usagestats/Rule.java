@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * @since 7.5.0
  *
  */
-@JsonPropertyOrder({ "id", "queries", "message", "interval" })
+@JsonPropertyOrder({ "id", "queries", "message", "interval", "minStudioVersion", "maxStudioVersion" })
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Rule {
 
@@ -47,6 +47,13 @@ class Rule {
 
 	@JsonProperty("interval")
 	private Integer interval;
+
+	@JsonProperty("minStudioVersion")
+	private String minStudioVersion;
+
+	@JsonProperty("maxStudioVersion")
+	private String maxStudioVersion;
+
 
 	@JsonProperty("id")
 	public String getId() {
@@ -78,6 +85,27 @@ class Rule {
 		this.message = message;
 	}
 
+	@JsonProperty("minStudioVersion")
+	public String getMinStudioVersion() {
+		return minStudioVersion;
+	}
+
+	@JsonProperty("minStudioVersion")
+	public void setMinStudioVersion(String minStudioVersion) {
+		this.minStudioVersion = minStudioVersion;
+	}
+
+	@JsonProperty("maxStudioVersion")
+	public String getMaxStudioVersion() {
+		return maxStudioVersion;
+	}
+
+	@JsonProperty("maxStudioVersion")
+	public void setMaxStudioVersion(String maxStudioVersion) {
+		this.maxStudioVersion = maxStudioVersion;
+	}
+
+
 	/**
 	 * The verification interval in seconds
 	 *
@@ -106,6 +134,8 @@ class Rule {
 		result = prime * result + (interval == null ? 0 : interval.hashCode());
 		result = prime * result + (message == null ? 0 : message.hashCode());
 		result = prime * result + (queries == null ? 0 : queries.hashCode());
+		result = prime * result + (minStudioVersion == null ? 0 : minStudioVersion.hashCode());
+		result = prime * result + (maxStudioVersion == null ? 0 : maxStudioVersion.hashCode());
 		return result;
 	}
 
@@ -140,6 +170,20 @@ class Rule {
 				return false;
 			}
 		} else if (!message.equals(other.message)) {
+			return false;
+		}
+		if (minStudioVersion == null) {
+			if (other.minStudioVersion != null) {
+				return false;
+			}
+		} else if (!minStudioVersion.equals(other.minStudioVersion)) {
+			return false;
+		}
+		if (maxStudioVersion == null) {
+			if (other.maxStudioVersion != null) {
+				return false;
+			}
+		} else if (!maxStudioVersion.equals(other.maxStudioVersion)) {
 			return false;
 		}
 		if (queries == null) {

@@ -36,6 +36,10 @@ import org.w3c.dom.NodeList;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.io.Base64;
 import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.RepositoryManagerListener;
+import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.GlobalAuthenticator;
 import com.rapidminer.tools.I18N;
@@ -85,11 +89,11 @@ public class Wallet {
 	 *
 	 * @return
 	 */
-	public static Wallet getInstance() {
+	public static synchronized Wallet getInstance() {
 		return instance;
 	}
 
-	public static void setInstance(Wallet wallet) {
+	public static synchronized void setInstance(Wallet wallet) {
 		instance = wallet;
 	}
 
@@ -225,6 +229,22 @@ public class Wallet {
 	 */
 	public Wallet() {
 		super();
+		RepositoryManager.getInstance(null).addRepositoryManagerListener(new RepositoryManagerListener() {
+			@Override
+			public void repositoryWasAdded(Repository repository) {
+				//Not needed since this only cares about deletions.
+			}
+
+			@Override
+			public void repositoryWasRemoved(Repository repository) {
+				if (repository instanceof RemoteRepository) {
+					String url = ((RemoteRepository) repository).getBaseUrl().toString();
+					String id = ((RemoteRepository) repository).getAlias();
+					Wallet.getInstance().removeEntry(id, url);
+					Wallet.getInstance().saveCache();
+				}
+			}
+		});
 	}
 
 	/**

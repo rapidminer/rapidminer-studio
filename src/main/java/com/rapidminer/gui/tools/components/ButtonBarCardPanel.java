@@ -46,6 +46,7 @@ import javax.swing.event.ListSelectionListener;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ListHoverHelper;
+import com.rapidminer.gui.tools.MenuShortcutJList;
 
 
 /**
@@ -98,7 +99,7 @@ public class ButtonBarCardPanel extends JPanel {
 		this.noCardKeys = noCardKeys;
 		this.showCards = showCards;
 
-		navigation = new JList<Card>(cardListModel) {
+		navigation = new MenuShortcutJList<Card>(cardListModel, false) {
 
 			private static final long serialVersionUID = -5414386397971825656L;
 

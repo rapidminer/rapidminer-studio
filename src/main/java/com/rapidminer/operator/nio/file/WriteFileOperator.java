@@ -138,6 +138,7 @@ public class WriteFileOperator extends Operator {
 				false);
 		parameterTypeFile.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_DESTINATION_TYPE,
 				DESTINATION_TYPES, true, DESTINATION_TYPE_FILE));
+		parameterTypeFile.setPrimary(true);
 		parameterTypes.add(parameterTypeFile);
 
 		ParameterTypeRepositoryLocation parameterTypeRepositoryLocation = new ParameterTypeRepositoryLocation(

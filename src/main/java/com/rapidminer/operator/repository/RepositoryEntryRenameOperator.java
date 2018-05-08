@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.repository;
 
+import java.util.List;
+
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
@@ -30,8 +32,6 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
-
-import java.util.List;
 
 
 /**
@@ -133,7 +133,9 @@ public class RepositoryEntryRenameOperator extends AbstractRepositoryManagerOper
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
-		types.add(new ParameterTypeRepositoryLocation(ELEMENT_TO_RENAME, "Entry that should be renamed", true, true, false));
+		ParameterType type = new ParameterTypeRepositoryLocation(ELEMENT_TO_RENAME, "Entry that should be renamed", true, true, false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeString(NEW_ELEMENT_NAME, "New entry name", false, false));
 		types.add(new ParameterTypeBoolean(OVERWRITE, "Overwrite already existing entry with same name?", false, false));
 

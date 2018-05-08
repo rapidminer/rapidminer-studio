@@ -729,12 +729,14 @@ public class AggregationOperator extends AbstractDataProcessing {
 		type.setExpert(false);
 		types.add(type);
 
-		types.add(new ParameterTypeList(PARAMETER_AGGREGATION_ATTRIBUTES, "The attributes which should be aggregated.",
+		ParameterTypeList aggregation_attribute = new ParameterTypeList(PARAMETER_AGGREGATION_ATTRIBUTES, "The attributes which should be aggregated.",
 				new ParameterTypeAttribute("aggregation_attribute", "Specifies the attribute which is aggregated.",
 						getExampleSetInputPort(), false),
 				new ParameterTypeStringCategory(PARAMETER_AGGREGATION_FUNCTIONS,
 						"The type of the used aggregation function.", functions, functions[0]),
-				false));
+				false);
+		aggregation_attribute.setPrimary(true);
+		types.add(aggregation_attribute);
 		types.add(new ParameterTypeAttributes(PARAMETER_GROUP_BY_ATTRIBUTES,
 				"Performs a grouping by the values of the attributes by the selected attributes.", getExampleSetInputPort(),
 				true, false));

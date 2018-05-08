@@ -303,7 +303,10 @@ public class MetaDataDeclarationWizardStep extends WizardStep {
 					if (nameIndex != -1 && dataPreview != null) {
 						for (int i = 0; i < dataPreview.getColumnCount(); i++) {
 							ColumnMetaData columnMetaData = state.getTranslationConfiguration().getColumnMetaData(i);
-							final String foundName = String.valueOf(dataPreview.getValueAt(nameIndex, i));
+							String foundName = String.valueOf(dataPreview.getValueAt(nameIndex, i));
+							if (state.getOperator() == null || state.getOperator().shouldTrimAttributeNames()) {
+								foundName = foundName == null ? null : foundName.trim();
+							}
 							if (foundName != null && !foundName.isEmpty()) {
 								columnMetaData.setUserDefinedAttributeName(foundName);
 							}

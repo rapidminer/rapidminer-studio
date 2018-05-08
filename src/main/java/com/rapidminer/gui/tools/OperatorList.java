@@ -26,9 +26,7 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.swing.Action;
-import javax.swing.JList;
 import javax.swing.JPopupMenu;
-import javax.swing.ListSelectionModel;
 
 import com.rapidminer.gui.dnd.OperatorTransferHandler;
 import com.rapidminer.gui.operatortree.actions.InfoOperatorAction;
@@ -45,7 +43,7 @@ import com.rapidminer.operator.OperatorDescription;
  *
  * @author Helge Homburg, Ingo Mierswa
  */
-public class OperatorList extends JList<OperatorDescription> implements MouseListener {
+public class OperatorList extends MenuShortcutJList<OperatorDescription> implements MouseListener {
 
 	private static final long serialVersionUID = -2719941529572427942L;
 
@@ -79,6 +77,7 @@ public class OperatorList extends JList<OperatorDescription> implements MouseLis
 
 	/** Creates a new instance of OperatorList */
 	public OperatorList(boolean horizontalWrap, boolean coloredCellBackgrounds) {
+		super(false);
 		operatorDialogCellRenderer = new OperatorListCellRenderer(coloredCellBackgrounds);
 		if (horizontalWrap) {
 			setLayoutOrientation(HORIZONTAL_WRAP);
@@ -86,7 +85,6 @@ public class OperatorList extends JList<OperatorDescription> implements MouseLis
 		}
 		setFixedCellHeight(PropertyPanel.VALUE_CELL_EDITOR_HEIGHT);
 		setCellRenderer(operatorDialogCellRenderer);
-		setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		addMouseListener(this);
 
 		setDragEnabled(true);

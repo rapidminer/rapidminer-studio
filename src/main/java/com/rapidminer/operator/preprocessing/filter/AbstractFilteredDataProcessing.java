@@ -42,6 +42,7 @@ import com.rapidminer.operator.preprocessing.AbstractDataProcessing;
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.ProcessTools;
 
 
 /**
@@ -227,7 +228,7 @@ public abstract class AbstractFilteredDataProcessing extends AbstractDataProcess
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.addAll(attributeSelector.getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(attributeSelector.getParameterTypes(), true));
 		return types;
 	}
 }

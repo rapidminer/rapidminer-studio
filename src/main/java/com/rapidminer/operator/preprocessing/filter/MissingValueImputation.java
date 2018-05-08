@@ -57,6 +57,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.RandomGenerator;
 
 
@@ -366,7 +367,7 @@ public class MissingValueImputation extends OperatorChain {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.addAll(attributeSelector.getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(attributeSelector.getParameterTypes(), true));
 		ParameterType type = new ParameterTypeBoolean(PARAMETER_ITERATE,
 				"Impute missing values immediately after having learned the corresponding concept and iterate.", true);
 		type.setExpert(false);

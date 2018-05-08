@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,6 +57,7 @@ import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.annotation.ResourceConsumer;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
+import com.rapidminer.operator.nio.model.AbstractDataResultSetReader;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.InputPorts;
 import com.rapidminer.operator.ports.OutputPort;
@@ -73,12 +75,14 @@ import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.operator.ports.quickfix.RelativizeRepositoryLocationQuickfix;
+import com.rapidminer.operator.preprocessing.filter.AbstractDateDataProcessing;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDate;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.parameter.ParameterTypeInnerOperator;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
@@ -900,6 +904,23 @@ public abstract class Operator extends AbstractObservable<Operator>
 
 						}
 					}
+				} else if(type instanceof ParameterTypeDateFormat) {
+					Locale locale = Locale.getDefault();
+					try {
+						int localeIndex;
+						localeIndex = getParameterAsInt(AbstractDataResultSetReader.PARAMETER_LOCALE);
+						if (localeIndex >= 0 && localeIndex < AbstractDateDataProcessing.availableLocales.size()) {
+							locale = AbstractDateDataProcessing.availableLocales.get(localeIndex);
+						}
+					} catch (UndefinedParameterError e) {
+						// ignore and use default locale
+					}
+					try {
+						ParameterTypeDateFormat.createCheckedDateFormat(this, locale, true);
+					} catch (UserError userError) {
+						// will not happen because of isSetup
+					}
+
 				} else if (!optional && type instanceof ParameterTypeDate) {
 					String value = getParameters().getParameterOrNull(type.getKey());
 					if (value != null && !ParameterTypeDate.isValidDate(value)) {
@@ -1007,10 +1028,22 @@ public abstract class Operator extends AbstractObservable<Operator>
 				// Convert unchecked exception to checked exception (unchecked exception might be
 				// thrown from places where no checked exceptions are possible, e.g. thread pools).
 				throw new ProcessStoppedException(this);
+			} catch (RuntimeException e) {
+				if (!(e instanceof OperatorRuntimeException)) {
+					throw e;
+				}
+				OperatorException operatorException = ((OperatorRuntimeException) e).toOperatorException();
+				if (!(operatorException instanceof UserError)) {
+						throw operatorException;
+					}
+				UserError userError = (UserError) operatorException;
+				if (userError.getOperator() == null) {
+					userError.setOperator(this);
+				}
+				throw userError;
 			} catch (UserError e) {
 				// TODO: ensuring that operator is removed if it abnormally terminates but is not
-				// removed if
-				// child operator terminates abnormally
+				// removed if child operator terminates abnormally
 				if (e.getOperator() == null) {
 					e.setOperator(this);
 				}
@@ -1298,10 +1331,26 @@ public abstract class Operator extends AbstractObservable<Operator>
 			// if not loaded already: do now
 			parameters = new Parameters(getParameterTypes());
 			parameters.addObserver(delegatingParameterObserver, false);
-
+			
 			makeDirtyOnUpdate(parameters);
 		}
 		return parameters;
+	}
+
+	/**
+	 * Returns the the first primary {@link ParameterType} of this operator that is not hidden
+	 * if it exists. May return {@code null}.
+	 *
+	 * @return the primary parameter or {@code null}
+	 * @since 8.2
+	 */
+	public ParameterType getPrimaryParameter() {
+		for (ParameterType param : getParameters().getParameterTypes()) {
+			if (param.isPrimary() && !param.isHidden()) {
+				return param;
+			}
+		}
+		return null;
 	}
 
 	@Override

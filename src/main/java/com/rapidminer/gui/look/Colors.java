@@ -32,7 +32,7 @@ public class Colors {
 	private static final ColorUIResource INPUT_BACKGROUND = new ColorUIResource(255, 255, 255);
 	private static final ColorUIResource INPUT_BACKGROUND_DARK = new ColorUIResource(240, 240, 240);
 	private static final ColorUIResource INPUT_BACKGROUND_DISABLED = new ColorUIResource(254, 254, 254);
-	private static final ColorUIResource SELECTION_BOX_FOREGROUND = new ColorUIResource(255, 102, 0);
+	private static final ColorUIResource SELECTION_BOX_FOREGROUND = new ColorUIResource(255, 130, 40);
 	private static final ColorUIResource SELECTION_BOX_FOREGROUND_DISABLED = new ColorUIResource(155, 155, 155);
 
 	private static final ColorUIResource INPUT_BORDER = new ColorUIResource(187, 187, 187);
@@ -89,6 +89,14 @@ public class Colors {
 	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_PRESSED_GRADIENT_END = new ColorUIResource(237, 110, 69);
 	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_START = BUTTON_BACKGROUND_DISABLED_GRADIENT_START;
 	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_END = BUTTON_BACKGROUND_DISABLED_GRADIENT_END;
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_GRADIENT_START = new ColorUIResource(152, 169, 184);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_GRADIENT_END = new ColorUIResource(120, 134, 147);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_ROLLOVER_GRADIENT_START = new ColorUIResource(137, 154, 169);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_ROLLOVER_GRADIENT_END = new ColorUIResource(122, 139, 154);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_PRESSED_GRADIENT_START = new ColorUIResource(115, 132, 147);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_PRESSED_GRADIENT_END = new ColorUIResource(142, 159, 184);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_DISABLED_GRADIENT_START = BUTTON_BACKGROUND_DISABLED_GRADIENT_START;
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_DISABLED_GRADIENT_END = BUTTON_BACKGROUND_DISABLED_GRADIENT_END;
 
 	public static final ColorUIResource COMBOBOX_BACKGROUND = INPUT_BACKGROUND;
 	public static final ColorUIResource COMBOBOX_BACKGROUND_DARK = INPUT_BACKGROUND_DARK;
@@ -146,7 +154,13 @@ public class Colors {
 	public static final ColorUIResource TAB_BACKGROUND = new ColorUIResource(213, 213, 213);
 	public static final ColorUIResource TAB_BACKGROUND_HIGHLIGHT = new ColorUIResource(233, 233, 234);
 	public static final ColorUIResource TAB_BACKGROUND_SELECTED = TAB_BACKGROUND_HIGHLIGHT;
+	public static final ColorUIResource TAB_BACKGROUND_START = new ColorUIResource(243, 243, 243);
+	public static final ColorUIResource TAB_BACKGROUND_START_SELECTED = new ColorUIResource(255, 255, 255);
 	public static final ColorUIResource TAB_CONTENT_BORDER = TAB_BORDER;
+
+	public static final ColorUIResource START_DIALOG_BACKGROUND = BUTTON_BACKGROUND_GRADIENT_END;
+	public static final ColorUIResource START_DIALOG_ORANGE_FONT = new ColorUIResource(231, 84, 36);
+
 
 	public static final ColorUIResource CARD_PANEL_BACKGROUND = PANEL_BACKGROUND;
 	public static final ColorUIResource CARD_PANEL_BACKGROUND_HIGHLIGHT = new ColorUIResource(220, 220, 220);
@@ -187,28 +201,31 @@ public class Colors {
 	public static final ColorUIResource PROGRESSBAR_INDETERMINATE_FOREGROUND_2 = new ColorUIResource(255, 181, 58);
 	public static final ColorUIResource PROGRESSBAR_BORDER = new ColorUIResource(221, 221, 221);
 
+	public static final ColorUIResource MULTI_STEP_PROGRESSBAR_NEUTRAL = new ColorUIResource(60, 60, 60);
+	public static final ColorUIResource MULTI_STEP_PROGRESSBAR_NEUTRAL_LIGHT = new ColorUIResource(200, 200, 200);
+
 	public static final ColorUIResource WARNING_COLOR = new ColorUIResource(255, 230, 152);
 
 	public static final ColorUIResource WHITE = new ColorUIResource(255, 255, 255);
 	public static final ColorUIResource BLACK = new ColorUIResource(0, 0, 0);
 
-	private ColorUIResource[] tabbedPaneColors = new ColorUIResource[] { new ColorUIResource(200, 205, 210),
+	private ColorUIResource[] tabbedPaneColors = new ColorUIResource[]{new ColorUIResource(200, 205, 210),
 			new ColorUIResource(215, 220, 225), new ColorUIResource(170, 170, 190), new ColorUIResource(200, 200, 220),
 			new ColorUIResource(190, 200, 220), new ColorUIResource(250, 250, 250), new ColorUIResource(255, 255, 255),
 			new ColorUIResource(210, 210, 230), new ColorUIResource(180, 190, 210), new ColorUIResource(200, 200, 220),
 			new ColorUIResource(210, 210, 230), new ColorUIResource(220, 220, 240), new ColorUIResource(230, 230, 250),
 			new ColorUIResource(235, 235, 255), new ColorUIResource(240, 240, 255), new ColorUIResource(245, 245, 255),
 			new ColorUIResource(250, 250, 255), new ColorUIResource(255, 255, 255), new ColorUIResource(255, 255, 255),
-			new ColorUIResource(210, 210, 230), new ColorUIResource(240, 240, 255), new ColorUIResource(245, 145, 0), };
+			new ColorUIResource(210, 210, 230), new ColorUIResource(240, 240, 255), new ColorUIResource(245, 145, 0),};
 
-	private ColorUIResource[] fileChooserColors = new ColorUIResource[] { new ColorUIResource(255, 200, 200),
-			new ColorUIResource(230, 170, 170) };
+	private ColorUIResource[] fileChooserColors = new ColorUIResource[]{new ColorUIResource(255, 200, 200),
+			new ColorUIResource(230, 170, 170)};
 
 	private ColorUIResource desktopBackgroundColor = new ColorUIResource(180, 195, 220);
 
 	public void addCustomEntriesToTable(UIDefaults table) {
-		Object[] values = new Object[] { "ToolTip.background", TOOLTIP_BACKGROUND, "ToolTip.foreground", TOOLTIP_FOREGROUND,
-				"ToolTip.borderColor", TOOLTIP_BORDER };
+		Object[] values = new Object[]{"ToolTip.background", TOOLTIP_BACKGROUND, "ToolTip.foreground", TOOLTIP_FOREGROUND,
+				"ToolTip.borderColor", TOOLTIP_BORDER};
 		table.putDefaults(values);
 	}
 

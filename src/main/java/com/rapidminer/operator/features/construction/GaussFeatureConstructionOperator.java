@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.features.construction;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -34,10 +37,8 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -113,7 +114,7 @@ public class GaussFeatureConstructionOperator extends AbstractFeatureConstructio
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.addAll(getSubsetSelector().getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(getSubsetSelector().getParameterTypes(), true));
 
 		types.add(new ParameterTypeDouble(PARAMETER_MEAN, "The mean value for the gaussian function.",
 				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.0d));

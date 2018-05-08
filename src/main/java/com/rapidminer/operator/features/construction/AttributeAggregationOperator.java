@@ -45,6 +45,7 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction;
 import com.rapidminer.tools.math.function.aggregation.AggregationFunction;
 
@@ -210,7 +211,7 @@ public class AttributeAggregationOperator extends AbstractFeatureConstruction {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeString(PARAMETER_ATTRIBUTE_NAME, "Name of the resulting attributes.", false));
-		types.addAll(new AttributeSubsetSelector(this, getExampleSetInputPort()).getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(new AttributeSubsetSelector(this, getExampleSetInputPort()).getParameterTypes(), true));
 		ParameterType type = new ParameterTypeCategory(PARAMETER_AGGREGATION_FUNCTION,
 				"Function for aggregating the attribute values.",
 				AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES, AbstractAggregationFunction.SUM);

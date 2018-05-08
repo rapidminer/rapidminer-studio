@@ -27,6 +27,8 @@ import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.metadata.InputMissingMetaDataError;
+import com.rapidminer.operator.preprocessing.filter.attributes.SubsetAttributeFilter;
+import com.rapidminer.operator.tools.AttributeSubsetSelector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
 import com.rapidminer.tools.container.Pair;
@@ -95,10 +97,10 @@ public final class ProcessTools {
 	 *
 	 * @param process
 	 *            the process in question
-	 * @return the first {@link Port} found if the process contains at least one operator with an
+	 * @return the first {@link Port} along with it's error that is found if the process contains at least one operator with an
 	 *         input port which is not connected; {@code null} otherwise
 	 */
-	public static Port getPortWithoutMandatoryConnection(final Process process) {
+	public static Pair<Port, ProcessSetupError> getPortWithoutMandatoryConnection(final Process process) {
 		if (process == null) {
 			throw new IllegalArgumentException("process must not be null!");
 		}
@@ -120,7 +122,7 @@ public final class ProcessTools {
 					InputMissingMetaDataError err = (InputMissingMetaDataError) error;
 					// as we don't know what will be sent at runtime, we only look for unconnected
 					if (!err.getPort().isConnected()) {
-						return err.getPort();
+						return new Pair<>(err.getPort(), err);
 					}
 				}
 			}
@@ -141,17 +143,17 @@ public final class ProcessTools {
 	 *
 	 * @param operator
 	 *            the operator for which to check for unconnected mandatory ports
-	 * @return the first {@link Port} found if the operator has at least one input port which is not
+	 * @return the first {@link Port} along with it's error that is found if the operator has at least one input port which is not
 	 *         connected; {@code null} otherwise
 	 */
-	public static Port getMissingPortConnection(Operator operator) {
+	public static Pair<Port, ProcessSetupError> getMissingPortConnection(Operator operator) {
 		// look for matching errors. We can only identify this via metadata errors
 		for (ProcessSetupError error : operator.getErrorList()) {
 			if (error instanceof InputMissingMetaDataError) {
 				InputMissingMetaDataError err = (InputMissingMetaDataError) error;
 				// as we don't know what will be sent at runtime, we only look for unconnected
 				if (!err.getPort().isConnected()) {
-					return err.getPort();
+					return new Pair<>(err.getPort(), err);
 				}
 			}
 		}
@@ -231,6 +233,32 @@ public final class ProcessTools {
 
 		// no operator with missing mandatory parameter found
 		return null;
+	}
+
+	/**
+	 * Makes the "subset" parameter of the attribute selector the primary parameter. If the given list does not contain that parameter type, nothing is done.
+	 *
+	 * @param parameterTypes
+	 * 		the list of parameter types which contain the {@link AttributeSubsetSelector#getParameterTypes()}. If {@code null} or empty, the input is returned
+	 * @param primary
+	 * 		if {@code true} the subset parameter will become a primary parameter type, otherwise it will become a non-primary parameter type
+	 * @return the original input
+	 * @since 8.2.0
+	 */
+	public static List<ParameterType> setSubsetSelectorPrimaryParameter(final List<ParameterType> parameterTypes, final boolean primary) {
+		if (parameterTypes == null || parameterTypes.isEmpty()) {
+			return parameterTypes;
+		}
+
+		// look for attribute "subset" parameter, and make it primary if found
+		for (ParameterType type : parameterTypes) {
+			if (SubsetAttributeFilter.PARAMETER_ATTRIBUTES.equals(type.getKey())) {
+				type.setPrimary(primary);
+				break;
+			}
+		}
+
+		return parameterTypes;
 	}
 
 	/**

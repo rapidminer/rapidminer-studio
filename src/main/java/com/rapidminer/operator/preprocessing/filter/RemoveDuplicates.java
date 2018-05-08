@@ -43,6 +43,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
+import com.rapidminer.tools.ProcessTools;
 
 
 /**
@@ -171,7 +172,7 @@ public class RemoveDuplicates extends AbstractDataProcessing {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.addAll(subsetSelector.getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(subsetSelector.getParameterTypes(), true));
 
 		ParameterType type = new ParameterTypeBoolean(PARAMETER_TREAT_MISSING_VALUES_AS_DUPLICATES,
 				"If set to true, treats missing values as duplicates", false);

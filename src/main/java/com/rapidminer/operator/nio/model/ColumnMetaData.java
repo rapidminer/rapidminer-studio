@@ -41,19 +41,40 @@ public class ColumnMetaData extends Observable {
 	private int attributeValueType;
 	private String role;
 	private boolean selected;
+	private boolean trimAttributeNames;
 
+	/** Creates an empty {@link ColumnMetaData} instance with no attribute trimming. */
 	public ColumnMetaData() {
-
+		this(false);
 	}
 
-	public ColumnMetaData(String originalAttributeName, String userDefinedAttributeName, int attributeValueType,
-			String role, boolean selected) {
-		super();
+	/**
+	 * Creates an empty {@link ColumnMetaData} instance with the given attribute trimming.
+	 * @since 8.1.1
+	 */
+	public ColumnMetaData(boolean trimAttributeNames) {
+		this.trimAttributeNames = trimAttributeNames;
+	}
+
+	/** Creates a {@link ColumnMetaData} instance with the specified parameters and no attribute trimming. */
+	public ColumnMetaData(String originalAttributeName, String userDefinedAttributeName, int attributeValueType, String role, boolean selected) {
+		this(originalAttributeName, userDefinedAttributeName, attributeValueType, role, selected, false);
+	}
+
+	/**
+	 * Creates a {@link ColumnMetaData} instance with the specified parameters and the given attribute trimming.
+	 * @since 8.1.1
+	 */
+	public ColumnMetaData(String originalAttributeName, String userDefinedAttributeName, int attributeValueType, String role, boolean selected, boolean trimAttributeNames) {
 		this.originalAttributeName = originalAttributeName;
+		if (trimAttributeNames) {
+			userDefinedAttributeName = userDefinedAttributeName == null ? null : userDefinedAttributeName.trim();
+		}
 		this.userDefinedAttributeName = userDefinedAttributeName;
 		this.attributeValueType = attributeValueType;
 		this.role = role;
 		this.selected = selected;
+		this.trimAttributeNames = trimAttributeNames;
 	}
 
 	/** Used to inform the validator about the ColumnMetaData object **/
@@ -80,6 +101,9 @@ public class ColumnMetaData extends Observable {
 	}
 
 	public void setUserDefinedAttributeName(String userDefinedAttributeName) {
+		if (trimAttributeNames) {
+			userDefinedAttributeName = userDefinedAttributeName == null ? null : userDefinedAttributeName.trim();
+		}
 		if (equals(this.userDefinedAttributeName, userDefinedAttributeName)) {
 			return;
 		}

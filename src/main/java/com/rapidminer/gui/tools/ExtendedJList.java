@@ -21,15 +21,13 @@ package com.rapidminer.gui.tools;
 import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 
-import javax.swing.JList;
-
 
 /**
  * Extended JList which provides tool tips in combination with an {@link ExtendedListModel}.
  *
  * @author Tobias Malbrecht, Ingo Mierswa
  */
-public class ExtendedJList<E> extends JList<E> {
+public class ExtendedJList<E> extends MenuShortcutJList<E> {
 
 	public static final long serialVersionUID = 9032182018402L;
 

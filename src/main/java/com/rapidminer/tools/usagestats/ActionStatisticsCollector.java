@@ -32,6 +32,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -61,7 +62,9 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.repository.search.RepositoryGlobalSearch;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.container.Pair;
 
@@ -76,6 +79,18 @@ import com.rapidminer.tools.container.Pair;
 public enum ActionStatisticsCollector {
 
 	INSTANCE;
+
+	/**
+	 * Interface to attach loggable statistics to events/objects with {@link UsageLoggable}
+	 * that might be logged later.
+	 *
+	 * @since 8.1.2
+	 */
+	public static interface UsageObject {
+
+		/** Logs this usage */
+		void logUsage();
+	}
 
 	public static final String TYPE_CONSTANT = "rapidminer";
 	private static final String TYPE_DOCKABLE = "dockable";
@@ -100,6 +115,18 @@ public enum ActionStatisticsCollector {
 
 	/** operator search field (since 7.1.1) */
 	public static final String TYPE_OPERATOR_SEARCH = "operator_search";
+
+	/** new operator dialog actions [quick fixes] (since 8.1.2) */
+	public static final String TYPE_NEW_OPERATOR_DIALOG = "new_operator_dialog";
+
+	/** new operator menu actions [right click in process] (since 8.1.2) */
+	public static final String TYPE_NEW_OPERATOR_MENU = "new_operator_menu";
+
+	/** repository tree actions (since 8.1.2) */
+	public static final String TYPE_REPOSITORY_TREE = "repository_tree";
+
+	/** wisdom of crowds actions (since 8.1.2) */
+	public static final String TYPE_WISDOM_OF_CROWDS = "wisdom_of_crowds";
 
 	/** onboarding dialog (since 7.1.1) */
 	public static final String TYPE_ONBOARDING = "onboarding";
@@ -200,6 +227,10 @@ public enum ActionStatisticsCollector {
 	public static final String VALUE_MODE = "mode";
 	public static final String VALUE_CONSTANT_START = "start";
 
+	/** introduced in 8.1.2 for the new FeedbackForm */
+	private static final String TYPE_FEEDBACK = "feedback";
+	private static final String ARG_FEEDBACK_SPACER = "|";
+
 	/** introduced in 8.1 for the new Global Search */
 	private static final String TYPE_GLOBAL_SEARCH = "global_search";
 	public static final String VALUE_TIMEOUT = "timeout";
@@ -210,6 +241,19 @@ public enum ActionStatisticsCollector {
 	/** introduced in 8.1 */
 	public static final String PREFIX_TYPE_AUTOMODEL_GENERATED = "am_gen_";
 	public static final String PREFIX_TYPE_AUTOMODEL_EXPORTED = "am_exp_";
+	
+	/** ab group | number of groups | selected group (since 8.2) */
+	public static final String TYPE_AB_GROUP = "ab_group";
+
+	/** operator / operator_key / double-click|action(open, parameter, rename)|value(primary_parameter_key) (since 8.2) */
+	public static final String ARG_DOUBLE_CLICK = "double-click";
+	public static final String ARG_DOUBLE_CLICK_SEPARATOR = "|";
+	/** operator chain entered */
+	public static final String OPERATOR_ACTION_OPEN = "open";
+	/** primary parameter editor opened */
+	public static final String OPERATOR_ACTION_PRIMARY_PARAMETER = "parameter";
+	/** operator rename started */
+	public static final String OPERATOR_ACTION_RENAME = "rename";
 
 	/** conversion constant for bytes to megabytes */
 	private static final int BYTE_TO_MB = 1024 * 1024;
@@ -220,6 +264,28 @@ public enum ActionStatisticsCollector {
 	private static final boolean DISABLED = RapidMiner.getExecutionMode().isHeadless()
 			&& RapidMiner.getExecutionMode() != RapidMiner.ExecutionMode.COMMAND_LINE;
 
+
+	/**
+	 * Log user feedback via the FeedbackForm. Format for the logged argument is {id}|{positive/negative}|freetext
+	 *
+	 * @param key
+	 * 		the key for the feedback form
+	 * @param id
+	 * 		the id to specify subgroups for the given feedback key to identify what exactly was rated
+	 * @param submitted
+	 * 		{@code true} if user clicked "Submit" button; {@code false} if user just clicked thumbs-up/down buttons
+	 * @param rating
+	 * 		{positive/negative} rating by the user
+	 * @param freeText
+	 * 		the text the user entered. Will be escaped in this method
+	 * @since 8.1.2
+	 */
+	public void logFeedback(final String key, final String id, final boolean submitted, final String rating, final String freeText) {
+		StringBuilder arg = new StringBuilder();
+		arg.append(rating).append(ARG_FEEDBACK_SPACER);
+		arg.append(Tools.escapeXML(Tools.escape(freeText)));
+		log(TYPE_FEEDBACK, key + ARG_FEEDBACK_SPACER + submitted + ARG_FEEDBACK_SPACER + id, arg.toString());
+	}
 
 	/**
 	 * Log usage of the global search.
@@ -997,6 +1063,30 @@ public enum ActionStatisticsCollector {
 		String autoModelPrefix = prefixAutoModelUsage(operator);
 
 		logVolume(autoModelPrefix + TYPE_OUTPUT_VOLUME, operator, port, rows, columns);
+	}
+
+	/**
+	 * Log double click on operator
+	 *
+	 * @param operator
+	 * 		the operator that got double clicked
+	 * @param action
+	 * 		the double click action that got triggered
+	 * @see #OPERATOR_ACTION_OPEN
+	 * @see #OPERATOR_ACTION_PRIMARY_PARAMETER
+	 * @see #OPERATOR_ACTION_RENAME
+	 * @since 8.2
+	 */
+	public void logOperatorDoubleClick(Operator operator, String action) {
+		if (operator == null || action == null) {
+			return;
+		}
+		String value = "";
+		// Log primary parameter key if user triggered the primary parameter action
+		if (OPERATOR_ACTION_PRIMARY_PARAMETER.equals(action)) {
+			value = Optional.ofNullable(operator.getPrimaryParameter()).map(ParameterType::getKey).orElse(value);
+		}
+		log(operator, String.join(ARG_DOUBLE_CLICK_SEPARATOR, ARG_DOUBLE_CLICK, action, value));
 	}
 
 	public void log(Operator op, String event) {

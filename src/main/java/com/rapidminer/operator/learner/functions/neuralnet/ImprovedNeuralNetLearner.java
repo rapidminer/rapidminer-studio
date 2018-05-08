@@ -168,6 +168,7 @@ public class ImprovedNeuralNetLearner extends AbstractLearner {
 						"The size of the hidden layers. A size of < 0 leads to a layer size of (number_of_attributes + number of classes) / 2 + 1.",
 						-1, Integer.MAX_VALUE, -1));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		type = new ParameterTypeInt(PARAMETER_TRAINING_CYCLES,

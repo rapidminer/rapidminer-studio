@@ -45,6 +45,7 @@ import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.license.License;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -68,7 +69,7 @@ public class UsageStatistics {
 	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 	// EXTREMELY expensive
 	private static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
-		return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss"); // this is a legacy wrong format to parse old dates
+		return new SimpleDateFormat(ParameterTypeDateFormat.DATE_TIME_FORMAT_YYYY_MM_DD_HH_MM_SS); // this is a legacy wrong format to parse old dates
 	});
 
 	/** URL to send the statistics values to. */

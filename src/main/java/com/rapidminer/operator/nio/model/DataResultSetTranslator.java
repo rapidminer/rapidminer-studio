@@ -104,6 +104,11 @@ public class DataResultSetTranslator {
 	 */
 	public static final OperatorVersion VERSION_6_0_3 = new OperatorVersion(6, 0, 3);
 
+	/**
+	 * From this version, attribute names will be trimmed on read/import
+	 */
+	public static final OperatorVersion BEFORE_ATTRIBUTE_TRIMMING = new OperatorVersion(8, 1, 0);
+
 	private Operator operator;
 
 	public DataResultSetTranslator(Operator operator) {
@@ -378,7 +383,11 @@ public class DataResultSetTranslator {
 
 	private String getString(DataResultSet dataResultSet, int row, int column, boolean isFaultTolerant) throws UserError {
 		try {
-			return dataResultSet.getString(column);
+			String string = dataResultSet.getString(column);
+			if (operator.getCompatibilityLevel().isAbove(BEFORE_ATTRIBUTE_TRIMMING)) {
+				string = string == null ? null : string.trim();
+			}
+			return string;
 		} catch (com.rapidminer.operator.nio.model.ParseException e) {
 			addOrThrow(isFaultTolerant, e.getError(), row);
 			return null;

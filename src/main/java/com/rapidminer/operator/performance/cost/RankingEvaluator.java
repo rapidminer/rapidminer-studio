@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.performance.cost;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -25,6 +29,8 @@ import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessSetupError;
+import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.ValueDouble;
 import com.rapidminer.operator.performance.MeasuredPerformance;
 import com.rapidminer.operator.performance.PerformanceCriterion;
@@ -32,13 +38,15 @@ import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
+import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
+import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeList;
+import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Ontology;
-
-import java.util.List;
 
 
 /**
@@ -116,17 +124,38 @@ public class RankingEvaluator extends Operator {
 	}
 
 	@Override
+	public int checkProperties() {
+		int errorCount = super.checkProperties();
+		if (isEnabled()) {
+			try {
+				List<String[]> rankings = getParameterList(PARAMETER_RANKING_COSTS);
+				if (rankings.isEmpty()) {
+					List<QuickFix> quickFixes = Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_RANKING_COSTS));
+					addError(new SimpleProcessSetupError(ProcessSetupError.Severity.ERROR, getPortOwner(), quickFixes,
+							"parameter_list_undefined", PARAMETER_RANKING_COSTS.replace('_', ' ')));
+					errorCount++;
+				}
+			} catch (UndefinedParameterError pe) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.operator.performance.cost.RankingEvaluator.parameter_undefined", PARAMETER_RANKING_COSTS);
+			}
+		}
+		return errorCount;
+	}	
+
+	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeList(
+		ParameterType type = new ParameterTypeList(
 				PARAMETER_RANKING_COSTS,
 				"This parameter defines the costs when the real call isn't the one with the highest confidence.",
 				new ParameterTypeInt(
 						PARAMETER_RANK_START,
 						"This is the first rank of the interval between this and the nearest greater defined rank. Each of these ranks get assigned this value. Rank counting starts with 0.",
 						0, Integer.MAX_VALUE), new ParameterTypeDouble(PARAMETER_RANK_COST,
-						"This is the cost of all ranks within this range.", Double.NEGATIVE_INFINITY,
-						Double.POSITIVE_INFINITY), false));
+				"This is the cost of all ranks within this range.", Double.NEGATIVE_INFINITY,
+				Double.POSITIVE_INFINITY), false);
+		type.setPrimary(true);
+		types.add(type);
 		return types;
 	}
 }

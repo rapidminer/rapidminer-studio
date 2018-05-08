@@ -20,11 +20,11 @@ repositories {
 dependencies {
 
     // OS X adapter to add platform specific UI
-    compile 'com.rapidminer.studio:rapidminer-studio-osx-adapter:1.0.1'
+    compile 'com.rapidminer.studio:rapidminer-studio-osx-adapter:1.0.2'
 
 	// RapidMiner license framework for license management
-	compile 'com.rapidminer.license:rapidminer-license-api:4.0.0'
-	compile('com.rapidminer.license:rapidminer-license-commons:4.0.0'){
+	compile 'com.rapidminer.license:rapidminer-license-api:4.0.2'
+	compile('com.rapidminer.license:rapidminer-license-commons:4.0.2'){
 		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
 		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
 	}
@@ -36,7 +36,7 @@ dependencies {
 	compile 'com.rapidminer.external:alphanumeric-sorting:1.0.1'
 
 	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
-	compile 'com.rapidminer.external:vldocking:1.2.1'
+	compile 'com.rapidminer.external:vldocking:1.2.2'
 
 	// Freehep for vector graphic export (http://java.freehep.org/)
 	compile('org.freehep:freehep-graphicsio-ps:2.3') {

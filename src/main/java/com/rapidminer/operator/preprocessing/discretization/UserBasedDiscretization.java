@@ -45,6 +45,7 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.container.Tupel;
 
 
@@ -126,6 +127,7 @@ public class UserBasedDiscretization extends AbstractDiscretizationOperator {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
+		ProcessTools.setSubsetSelectorPrimaryParameter(types, false);
 
 		ParameterType classType = new ParameterTypeString(PARAMETER_CLASS_NAME, "The name of this range.");
 		ParameterType threshold = new ParameterTypeDouble(PARAMETER_UPPER_LIMIT, "The upper limit.",
@@ -138,6 +140,7 @@ public class UserBasedDiscretization extends AbstractDiscretizationOperator {
 		ParameterType type = new ParameterTypeList(PARAMETER_RANGE_NAMES,
 				"Defines the classes and the upper limits of each class.", classType, threshold, defaultList);
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		return types;

@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.filesystem;
 
+import java.io.File;
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -27,9 +30,6 @@ import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeString;
-
-import java.io.File;
-import java.util.List;
 
 
 /**
@@ -57,7 +57,9 @@ public class RenameFileOperator extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
-		types.add(new ParameterTypeFile(PARAMETER_FILE, "The file to rename.", "*", false, false));
+		ParameterType type = new ParameterTypeFile(PARAMETER_FILE, "The file to rename.", "*", false, false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeString(PARAMETER_NEW_NAME, "The new filename.", false));
 
 		return types;

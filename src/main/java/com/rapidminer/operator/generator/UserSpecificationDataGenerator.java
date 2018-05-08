@@ -223,13 +223,15 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeList(PARAMETER_VALUES,
+		ParameterType type = new ParameterTypeList(PARAMETER_VALUES,
 				"This parameter defines the attributes and their values in the single example returned.",
 				new ParameterTypeString(PARAMETER_ATTRIBUTE_NAME, "This is the name of the generated attribute.", false),
 				new ParameterTypeExpression(PARAMETER_ATTRIBUTE_VALUE,
 						"An expression that is parsed to derive the value of this attribute.",
 						new OperatorVersionCallable(this)),
-				false));
+				false);
+		type.setPrimary(true);
+		types.add(type);
 
 		types.add(new ParameterTypeList(PARAMETER_ROLES, "This parameter defines additional attribute role combinations.",
 				new ParameterTypeString(PARAMETER_NAME, "The name of the attribute whose role should be changed.", false,

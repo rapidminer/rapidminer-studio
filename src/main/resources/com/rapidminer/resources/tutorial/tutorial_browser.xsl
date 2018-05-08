@@ -11,7 +11,6 @@
 			.tasks, .questions {margin-bottom:20px;font-family:'Open Sans';font-size:13;}
 			.stepName {margin:10px;margin-bottom:20px;margin-top:0px;color:#555555;padding-bottom:5px;border-style:solid;border-width: 0 0 1 0;border-color:#BBBBBB;font-family:'Open Sans Bold';font-size:14;text-align:center;}
 			.stepNum {margin-top:10px;color:#555555;font-family:'Open Sans';font-size:12;text-align:center;}
-			.nextTutorial {margin-bottom:20px;color:#0000EE;text-align:center;font-family:'Open Sans Bold';font-size:14;}
 		</style>
 		<body>
 		<div class="stepNum">
@@ -85,10 +84,5 @@
 		</span>
 	</xsl:template>
 
-	<xsl:template match="nextTutorial">
-		<div class="nextTutorial">
-			<a href="tutorial://next"><xsl:apply-templates/></a>&#160;&#10145;
-		</div>
-	</xsl:template>
 
 </xsl:stylesheet>

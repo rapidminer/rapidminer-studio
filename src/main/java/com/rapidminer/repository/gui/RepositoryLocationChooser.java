@@ -167,6 +167,11 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		this(owner, resolveRelativeTo, initialValue, true, false);
 	}
 
+	/** @since 8.2 */
+	public RepositoryLocationChooser(Dialog owner, RepositoryLocation resolveRelativeTo, String initialValue, Color backgroundColor) {
+		this(owner, resolveRelativeTo, initialValue, true, false, false, false, backgroundColor);
+	}
+
 	public RepositoryLocationChooser(Dialog owner, RepositoryLocation resolveRelativeTo, String initialValue,
 			final boolean allowEntries, final boolean allowFolders) {
 		this(owner, resolveRelativeTo, initialValue, allowEntries, allowFolders, false);
@@ -206,6 +211,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		tree = new RepositoryTree(owner, !allowEntries, onlyWriteableRepositories, false, backgroundColor);
 
 		if (initialValue != null) {
+			// called twice to fix bug that it only selects parent on first time
+			tree.expandIfExists(resolveRelativeTo, initialValue);
 			if (tree.expandIfExists(resolveRelativeTo, initialValue)) {
 				locationField.setText("");
 				locationFieldRepositoryEntry.setText("");
@@ -215,6 +222,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			List<Repository> repositories = RepositoryManager.getInstance(null).getRepositories();
 			for (Repository r : repositories) {
 				if (!r.isReadOnly() && LocalRepository.class.isInstance(r)) {
+					// called twice to fix bug that it only selects parent on first time
+					tree.expandIfExists(null, r.getLocation().getAbsoluteLocation());
 					if (tree.expandIfExists(null, r.getLocation().getAbsoluteLocation())) {
 						locationField.setText("");
 						locationFieldRepositoryEntry.setText("");

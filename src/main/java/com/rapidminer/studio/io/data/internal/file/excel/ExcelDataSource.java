@@ -19,7 +19,6 @@
 package com.rapidminer.studio.io.data.internal.file.excel;
 
 import java.nio.file.Path;
-import java.text.DateFormat;
 
 import com.rapidminer.core.io.data.DataSet;
 import com.rapidminer.core.io.data.DataSetException;
@@ -143,13 +142,7 @@ final class ExcelDataSource extends FileDataSource {
 				endRow = endRowByLength;
 			}
 		}
-		DateFormatProvider provider = new DateFormatProvider() {
-
-			@Override
-			public DateFormat geDateFormat() {
-				return getMetadata().getDateFormat();
-			}
-		};
+		DateFormatProvider provider = () -> getMetadata().getDateFormat();
 		return new ExcelResultSetAdapter(getResultSetConfiguration().makeDataResultSet(null, readMode, provider), startRow,
 				endRow);
 	}

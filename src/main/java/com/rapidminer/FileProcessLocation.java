@@ -18,13 +18,6 @@
 */
 package com.rapidminer;
 
-import com.rapidminer.io.process.XMLImporter;
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ProgressListener;
-import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.XMLException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,12 +28,21 @@ import java.util.logging.Level;
 
 import org.w3c.dom.Document;
 
+import com.rapidminer.io.process.XMLImporter;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.XMLException;
+
 
 /**
  * 
  * @author Simon Fischer
  */
 public class FileProcessLocation implements ProcessLocation {
+
+	private static final String FILE_PROCESS_ICON = "hard_drive.png";
 
 	private final File file;
 
@@ -128,5 +130,10 @@ public class FileProcessLocation implements ProcessLocation {
 	@Override
 	public String getShortName() {
 		return file.getName();
+	}
+
+	@Override
+	public String getIconName() {
+		return FILE_PROCESS_ICON;
 	}
 }

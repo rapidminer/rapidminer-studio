@@ -135,6 +135,7 @@ public class NameBasedWeighting extends AbstractWeighting {
 				}, new ParameterTypeDouble("weight", "The new weight for all this attributes.", Double.NEGATIVE_INFINITY,
 						Double.MAX_VALUE, false));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 		types.add(new ParameterTypeBoolean(
 				PARAMETER_DISTRIBUTE_WEIGHTS,

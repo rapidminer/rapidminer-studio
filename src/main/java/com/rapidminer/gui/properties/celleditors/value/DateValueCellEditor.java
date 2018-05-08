@@ -165,4 +165,5 @@ public class DateValueCellEditor extends AbstractCellEditor implements PropertyV
 		}
 		updatingComponents.set(false);
 	}
+
 }

@@ -242,10 +242,12 @@ public class DateAdjust extends AbstractDataProcessing {
 		types.add(new ParameterTypeAttribute(PARAMETER_ATTRIBUTE_NAME, "The attribute which should be parsed.",
 				getExampleSetInputPort(), false, Ontology.DATE_TIME));
 
-		types.add(new ParameterTypeList(PARAMETER_ADJUSTMENTS, "This list defines all date adjustments.",
+		ParameterType type = new ParameterTypeList(PARAMETER_ADJUSTMENTS, "This list defines all date adjustments.",
 				new ParameterTypeInt("adjustment", "The number of units to add to the dates.", -Integer.MAX_VALUE,
 						Integer.MAX_VALUE), new ParameterTypeCategory(PARAMETER_DATE_UNIT,
-								"The unit which should be adjusted.", CALENDAR_FIELDS, CALENDAR_FIELD_HOUR)));
+				"The unit which should be adjusted.", CALENDAR_FIELDS, CALENDAR_FIELD_HOUR));
+		type.setPrimary(true);
+		types.add(type);
 
 		types.add(new ParameterTypeBoolean(PARAMETER_KEEP_OLD_ATTRIBUTE,
 				"Indicates if the original date attribute should be kept.", false));

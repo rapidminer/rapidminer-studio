@@ -121,6 +121,9 @@ public final class ProcessRendererModel {
 	/** the size of each operator/process port */
 	public static final int PORT_SIZE = 14;
 
+	/** The default maximum number of available undo steps */
+	private static final int DEFAULT_UNDO_LIST_SIZE = 20;
+
 	/** event listener for this model */
 	private final EventListenerList eventListener;
 
@@ -210,7 +213,9 @@ public final class ProcessRendererModel {
 	 */
 	private boolean importDragged;
 
-	/** the current mouse position relative to the process the mouse is over */
+	/**
+	 * the current mouse position relative to the process the mouse is over
+	 */
 	private Point mousePositionRelativeToProcess;
 
 	// initialize the filter responsible for reading/writing operator coordinates from/to XML
@@ -224,9 +229,9 @@ public final class ProcessRendererModel {
 	public ProcessRendererModel() {
 		this.eventListener = new EventListenerList();
 
-		this.processes = Collections.unmodifiableList(Collections.<ExecutionUnit> emptyList());
-		this.selectedOperators = Collections.unmodifiableList(Collections.<Operator> emptyList());
-		this.draggedOperators = Collections.unmodifiableList(Collections.<Operator> emptyList());
+		this.processes = Collections.emptyList();
+		this.selectedOperators = Collections.emptyList();
+		this.draggedOperators = Collections.emptyList();
 		this.processSizes = new WeakHashMap<>();
 		this.portNumbers = new WeakHashMap<>();
 		this.snapToGrid = Boolean
@@ -295,10 +300,8 @@ public final class ProcessRendererModel {
 
 			@Override
 			public void processChanged(Process process) {
-				if (process != null) {
-					if (!RapidMiner.getExecutionMode().isHeadless()) {
-						process.getRootOperator().setUserData(RapidMinerGUI.IS_GUI_PROCESS, new FlagUserData());
-					}
+				if (process != null && !RapidMiner.getExecutionMode().isHeadless()) {
+					process.getRootOperator().setUserData(RapidMinerGUI.IS_GUI_PROCESS, new FlagUserData());
 				}
 			}
 		});
@@ -319,12 +322,11 @@ public final class ProcessRendererModel {
 	 * reset. Will also inform listeners that the process was loaded if so indicated.
 	 *
 	 * @param process
-	 *            the process to be set
+	 * 		the process to be set
 	 * @param isNew
-	 *            indicates if the process should be handled as a new process
+	 * 		indicates if the process should be handled as a new process
 	 * @param open
-	 *            whether the process was newly opened e.g. from a file
-	 *
+	 * 		whether the process was newly opened e.g. from a file
 	 * @since 7.5
 	 */
 	public void setProcess(Process process, boolean isNew, boolean open) {
@@ -338,9 +340,7 @@ public final class ProcessRendererModel {
 		displayedChain = process.getRootOperator();
 		fireDisplayedChainChanged();
 
-		List<Operator> newList = new ArrayList<>(1);
-		newList.add(displayedChain);
-		this.selectedOperators = Collections.unmodifiableList(newList);
+		this.selectedOperators = Collections.singletonList(displayedChain);
 		fireOperatorSelectionChanged(getSelectedOperators());
 
 		if (isNew) {
@@ -377,7 +377,6 @@ public final class ProcessRendererModel {
 	 *
 	 * @return an exception if a problem occurred
 	 * @see #setToStep(int)
-	 *
 	 * @since 7.5
 	 */
 	public Exception undo() {
@@ -461,10 +460,10 @@ public final class ProcessRendererModel {
 	 * Returns the process at the specified index.
 	 *
 	 * @param index
-	 *            the index of the process to return. If index is invalid, throws
+	 * 		the index of the process to return. If index is invalid, throws
 	 * @return the currently displayed process at the specified index
 	 * @throws IndexOutOfBoundsException
-	 *             if index < 0 or index >= length
+	 * 		if index < 0 or index >= length
 	 */
 	public ExecutionUnit getProcess(int index) throws ArrayIndexOutOfBoundsException {
 		return getProcesses().get(index);
@@ -474,9 +473,8 @@ public final class ProcessRendererModel {
 	 * Returns the index of the given process.
 	 *
 	 * @param process
-	 *            the process for which the index should be retrieved
-	 * @return the index of the process starting with {@code 0} or {@code -1} if the process is not
-	 *         part of {@link #getProcesses()}
+	 * 		the process for which the index should be retrieved
+	 * @return the index of the process starting with {@code 0} or {@code -1} if the process is not part of {@link #getProcesses()}
 	 */
 	public int getProcessIndex(ExecutionUnit process) {
 		return getProcesses().indexOf(process);
@@ -486,7 +484,7 @@ public final class ProcessRendererModel {
 	 * Sets the currently displayed processes.
 	 *
 	 * @param processes
-	 *            the new processes to display
+	 * 		the new processes to display
 	 */
 	public void setProcesses(List<ExecutionUnit> processes) {
 		if (processes == null) {
@@ -509,7 +507,7 @@ public final class ProcessRendererModel {
 	 * to trigger the event.
 	 *
 	 * @param displayedChain
-	 *            the new operator chain to display
+	 * 		the new operator chain to display
 	 */
 	public void setDisplayedChain(OperatorChain displayedChain) {
 		if (displayedChain == null) {
@@ -525,7 +523,7 @@ public final class ProcessRendererModel {
 	 * the change. Will do nothing if the operator chain is already displayed. Convenience method.
 	 *
 	 * @param displayedChain
-	 *            the new chain to display
+	 * 		the new chain to display
 	 * @since 7.5
 	 */
 	public void setDisplayedChainAndFire(OperatorChain displayedChain) {
@@ -550,14 +548,14 @@ public final class ProcessRendererModel {
 	 * Clears the operator selection.
 	 */
 	public void clearOperatorSelection() {
-		this.selectedOperators = Collections.unmodifiableList(Collections.<Operator> emptyList());
+		this.selectedOperators = Collections.emptyList();
 	}
 
 	/**
 	 * Adds the given operator to the currently selected operators.
 	 *
 	 * @param selectedOperator
-	 *            this operator is added to the list of currently selected operators
+	 * 		this operator is added to the list of currently selected operators
 	 */
 	public void addOperatorToSelection(Operator selectedOperator) {
 		List<Operator> newList = new ArrayList<>(getSelectedOperators().size() + 1);
@@ -571,7 +569,7 @@ public final class ProcessRendererModel {
 	 * not selected, does nothing.
 	 *
 	 * @param selectedOperator
-	 *            this operator is removed from the list of currently selected operators
+	 * 		this operator is removed from the list of currently selected operators
 	 */
 	public void removeOperatorFromSelection(Operator selectedOperator) {
 		List<Operator> newList = new ArrayList<>(getSelectedOperators());
@@ -583,7 +581,7 @@ public final class ProcessRendererModel {
 	 * Adds the given operators to the currently selected operators.
 	 *
 	 * @param selectedOperators
-	 *            these operators are added to the list of currently selected operators
+	 * 		these operators are added to the list of currently selected operators
 	 */
 	public void addOperatorsToSelection(List<Operator> selectedOperators) {
 		List<Operator> newList = new ArrayList<>(getSelectedOperators().size() + selectedOperators.size());
@@ -605,7 +603,7 @@ public final class ProcessRendererModel {
 	 * Sets the given operators as the currently dragged operators.
 	 *
 	 * @param draggedOperators
-	 *            these operators are set as the currently dragged operators
+	 * 		these operators are set as the currently dragged operators
 	 */
 	public void setDraggedOperators(Collection<Operator> draggedOperators) {
 		List<Operator> newList = new ArrayList<>(draggedOperators.size());
@@ -617,7 +615,7 @@ public final class ProcessRendererModel {
 	 * Clears the dragged operators.
 	 */
 	public void clearDraggedOperators() {
-		this.draggedOperators = Collections.unmodifiableList(Collections.<Operator> emptyList());
+		this.draggedOperators = Collections.emptyList();
 	}
 
 	/**
@@ -633,7 +631,7 @@ public final class ProcessRendererModel {
 	 * Sets whether operators snap to a grid or not.
 	 *
 	 * @param snapToGrid
-	 *            whether operators should snap to a grid or not
+	 * 		whether operators should snap to a grid or not
 	 */
 	public void setSnapToGrid(boolean snapToGrid) {
 		this.snapToGrid = snapToGrid;
@@ -652,7 +650,7 @@ public final class ProcessRendererModel {
 	 * Sets whether a drag operation (operator or repository entry) is in progress.
 	 *
 	 * @param dragStarted
-	 *            {@code true} if dragging is in progress; {@code false} otherwise
+	 * 		{@code true} if dragging is in progress; {@code false} otherwise
 	 */
 	public void setDragStarted(boolean dragStarted) {
 		this.dragStarted = dragStarted;
@@ -673,7 +671,7 @@ public final class ProcessRendererModel {
 	 * not supported.
 	 *
 	 * @param dropTargetSet
-	 *            {@code true} if a valid drop target was set; {@code false} otherwise
+	 * 		{@code true} if a valid drop target was set; {@code false} otherwise
 	 */
 	public void setDropTargetSet(boolean dropTargetSet) {
 		this.dropTargetSet = dropTargetSet;
@@ -692,8 +690,8 @@ public final class ProcessRendererModel {
 	 * Sets whether an an operator source (tree, WoC, ...) is hovered or not.
 	 *
 	 * @param operatorSourceHovered
-	 *            {@code true} if a an operator source (tree, WoC, ...) is hovered; {@code false}
-	 *            otherwise
+	 * 		{@code true} if a an operator source (tree, WoC, ...) is hovered; {@code false}
+	 * 		otherwise
 	 */
 	public void setOperatorSourceHovered(boolean operatorSourceHovered) {
 		this.operatorSourceHovered = operatorSourceHovered;
@@ -703,7 +701,7 @@ public final class ProcessRendererModel {
 	 * Sets the current mouse position over the process renderer. Can be {@code null}.
 	 *
 	 * @param currentMousePosition
-	 *            the position or {@code null} if it is not over the renderer
+	 * 		the position or {@code null} if it is not over the renderer
 	 */
 	public void setCurrentMousePosition(Point currentMousePosition) {
 		this.currentMousePosition = currentMousePosition;
@@ -733,7 +731,7 @@ public final class ProcessRendererModel {
 	 * import is accepted.
 	 *
 	 * @param importDragged
-	 *            {@code true} if the import would be accepted; {@code false} otherwise
+	 * 		{@code true} if the import would be accepted; {@code false} otherwise
 	 */
 	public void setImportDragged(boolean importDragged) {
 		this.importDragged = importDragged;
@@ -752,7 +750,7 @@ public final class ProcessRendererModel {
 	 * Sets the selected connection source port.
 	 *
 	 * @param selectedConnectionSource
-	 *            the connection source port or {@code null}
+	 * 		the connection source port or {@code null}
 	 */
 	public void setSelectedConnectionSource(OutputPort selectedConnectionSource) {
 		this.selectedConnectionSource = selectedConnectionSource;
@@ -771,7 +769,7 @@ public final class ProcessRendererModel {
 	 * Sets the connection source port of the connection currently being created.
 	 *
 	 * @param connectingPortSource
-	 *            the source port of the connection currently being created or {@code null}
+	 * 		the source port of the connection currently being created or {@code null}
 	 */
 	public void setConnectingPortSource(Port connectingPortSource) {
 		this.connectingPortSource = connectingPortSource;
@@ -790,7 +788,7 @@ public final class ProcessRendererModel {
 	 * Sets the index of the process over which the mosue currently hovers.
 	 *
 	 * @param hoveringProcessIndex
-	 *            the hovered process index
+	 * 		the hovered process index
 	 */
 	public void setHoveringProcessIndex(int hoveringProcessIndex) {
 		this.hoveringProcessIndex = hoveringProcessIndex;
@@ -809,7 +807,7 @@ public final class ProcessRendererModel {
 	 * Sets the operator over which the mouse hovers.
 	 *
 	 * @param hoveringOperator
-	 *            the operator under the mouse or {@code null}
+	 * 		the operator under the mouse or {@code null}
 	 */
 	public void setHoveringOperator(Operator hoveringOperator) {
 		this.hoveringOperator = hoveringOperator;
@@ -828,7 +826,7 @@ public final class ProcessRendererModel {
 	 * Sets the {@link OutputPort} of the connection over which the mouse hovers.
 	 *
 	 * @param hoveringConnectionSource
-	 *            the output port of the connection under the mouse or {@code null}
+	 * 		the output port of the connection under the mouse or {@code null}
 	 */
 	public void setHoveringConnectionSource(OutputPort hoveringConnectionSource) {
 		this.hoveringConnectionSource = hoveringConnectionSource;
@@ -847,7 +845,7 @@ public final class ProcessRendererModel {
 	 * Sets the port over which the mouse hovers.
 	 *
 	 * @param hoveringPort
-	 *            the port under the mouse or {@code null}
+	 * 		the port under the mouse or {@code null}
 	 */
 	public void setHoveringPort(Port hoveringPort) {
 		this.hoveringPort = hoveringPort;
@@ -866,7 +864,7 @@ public final class ProcessRendererModel {
 	 * Sets the rectangle which represents the current selection box of the user.
 	 *
 	 * @param selectionRectangle
-	 *            the selection rectangle or {@code null}
+	 * 		the selection rectangle or {@code null}
 	 */
 	public void setSelectionRectangle(Rectangle2D selectionRectangle) {
 		this.selectionRectangle = selectionRectangle;
@@ -876,7 +874,7 @@ public final class ProcessRendererModel {
 	 * Returns the size of the given process.
 	 *
 	 * @param process
-	 *            the size of this process is returned
+	 * 		the size of this process is returned
 	 * @return the size of the specified process or {@code null}
 	 */
 	public Dimension getProcessSize(ExecutionUnit process) {
@@ -899,7 +897,7 @@ public final class ProcessRendererModel {
 	 * {@link #getProcessSize(ExecutionUnit)}.
 	 *
 	 * @param process
-	 *            the process for which the width should be returned
+	 * 		the process for which the width should be returned
 	 * @return the width or -1 if no process size has been stored
 	 */
 	public double getProcessWidth(ExecutionUnit process) {
@@ -928,7 +926,7 @@ public final class ProcessRendererModel {
 	 * nothing.
 	 *
 	 * @param zoomFactor
-	 *            factor in {@link #ZOOM_FACTORS}
+	 * 		factor in {@link #ZOOM_FACTORS}
 	 */
 	public void setZoomFactor(double zoomFactor) {
 		if (getZoomFactor() == zoomFactor) {
@@ -946,7 +944,6 @@ public final class ProcessRendererModel {
 	}
 
 	/**
-	 *
 	 * @return {@code true} if it is still possible to zoom in
 	 */
 	public boolean canZoomIn() {
@@ -954,7 +951,6 @@ public final class ProcessRendererModel {
 	}
 
 	/**
-	 *
 	 * @return {@code true} if it is still possible to zoom out
 	 */
 	public boolean canZoomOut() {
@@ -962,9 +958,7 @@ public final class ProcessRendererModel {
 	}
 
 	/**
-	 *
-	 * @return {@code true} if it is possible to reset the zoom (aka the process is currently zoomed
-	 *         in/out)
+	 * @return {@code true} if it is possible to reset the zoom (aka the process is currently zoomed in/out)
 	 */
 	public boolean canZoomReset() {
 		return zoomIndex != ORIGINAL_ZOOM_INDEX;
@@ -1001,9 +995,9 @@ public final class ProcessRendererModel {
 	 * {@code null} for the specified process, does nothing.
 	 *
 	 * @param process
-	 *            the process for which the height should be set
+	 * 		the process for which the height should be set
 	 * @param width
-	 *            the new width
+	 * 		the new width
 	 */
 	public void setProcessWidth(ExecutionUnit process, double width) {
 		if (process == null) {
@@ -1022,7 +1016,7 @@ public final class ProcessRendererModel {
 	 * of {@link #getProcessSize(ExecutionUnit)}.
 	 *
 	 * @param process
-	 *            the process for which the height should be returned
+	 * 		the process for which the height should be returned
 	 * @return the height or -1 if no process size has been stored
 	 */
 	public double getProcessHeight(ExecutionUnit process) {
@@ -1041,9 +1035,9 @@ public final class ProcessRendererModel {
 	 * {@code null} for the specified process, does nothing.
 	 *
 	 * @param process
-	 *            the process for which the height should be set
+	 * 		the process for which the height should be set
 	 * @param height
-	 *            the new height
+	 * 		the new height
 	 */
 	public void setProcessHeight(ExecutionUnit process, double height) {
 		if (process == null) {
@@ -1061,9 +1055,9 @@ public final class ProcessRendererModel {
 	 * Sets the size of the given process.
 	 *
 	 * @param process
-	 *            the size of this process is stored
+	 * 		the size of this process is stored
 	 * @param size
-	 *            the size of the specified process
+	 * 		the size of the specified process
 	 */
 	public void setProcessSize(ExecutionUnit process, Dimension size) {
 		if (process == null) {
@@ -1079,10 +1073,10 @@ public final class ProcessRendererModel {
 	 * Returns a {@link Rectangle2D} representing the given {@link Operator}.
 	 *
 	 * @param op
-	 *            the operator in question
+	 * 		the operator in question
 	 * @return the rectangle. Can return {@code null} but only if the operator has not been added to
-	 *         the {@link com.rapidminer.gui.flow.processrendering.view.ProcessRendererView
-	 *         ProcessRendererView}.
+	 * the {@link com.rapidminer.gui.flow.processrendering.view.ProcessRendererView
+	 * ProcessRendererView}.
 	 */
 	public Rectangle2D getOperatorRect(Operator op) {
 		return ProcessLayoutXMLFilter.lookupOperatorRectangle(op);
@@ -1092,7 +1086,7 @@ public final class ProcessRendererModel {
 	 * Returns the {@link WorkflowAnnotations} container for the given {@link Operator}.
 	 *
 	 * @param op
-	 *            the operator in question
+	 * 		the operator in question
 	 * @return the container. Can be {@code null} if no annotations exist for this operator
 	 */
 	public WorkflowAnnotations getOperatorAnnotations(Operator op) {
@@ -1103,7 +1097,7 @@ public final class ProcessRendererModel {
 	 * Removes the given {@link OperatorAnnotation}.
 	 *
 	 * @param anno
-	 *            the annotation to remove
+	 * 		the annotation to remove
 	 */
 	public void removeOperatorAnnotation(OperatorAnnotation anno) {
 		AnnotationProcessXMLFilter.removeOperatorAnnotation(anno);
@@ -1113,7 +1107,7 @@ public final class ProcessRendererModel {
 	 * Adds the given {@link OperatorAnnotation}.
 	 *
 	 * @param anno
-	 *            the annotation to add
+	 * 		the annotation to add
 	 */
 	public void addOperatorAnnotation(OperatorAnnotation anno) {
 		AnnotationProcessXMLFilter.addOperatorAnnotation(anno);
@@ -1123,7 +1117,7 @@ public final class ProcessRendererModel {
 	 * Returns the {@link WorkflowAnnotations} container for the given {@link ExecutionUnit}.
 	 *
 	 * @param process
-	 *            the process in question
+	 * 		the process in question
 	 * @return the container. Can be {@code null} if no annotations exist for this process
 	 */
 	public WorkflowAnnotations getProcessAnnotations(ExecutionUnit process) {
@@ -1134,7 +1128,7 @@ public final class ProcessRendererModel {
 	 * Removes the given {@link ProcessAnnotation}.
 	 *
 	 * @param anno
-	 *            the annotation to remove
+	 * 		the annotation to remove
 	 */
 	public void removeProcessAnnotation(ProcessAnnotation anno) {
 		AnnotationProcessXMLFilter.removeProcessAnnotation(anno);
@@ -1144,7 +1138,7 @@ public final class ProcessRendererModel {
 	 * Adds the given {@link ProcessAnnotation}.
 	 *
 	 * @param anno
-	 *            the annotation to add
+	 * 		the annotation to add
 	 */
 	public void addProcessAnnotation(ProcessAnnotation anno) {
 		AnnotationProcessXMLFilter.addProcessAnnotation(anno);
@@ -1154,7 +1148,7 @@ public final class ProcessRendererModel {
 	 * Returns the {@link ProcessBackgroundImage} for the given {@link ExecutionUnit}.
 	 *
 	 * @param process
-	 *            the process in question
+	 * 		the process in question
 	 * @return the background image. Can be {@code null} if none is set for this process
 	 */
 	public ProcessBackgroundImage getBackgroundImage(ExecutionUnit process) {
@@ -1165,7 +1159,7 @@ public final class ProcessRendererModel {
 	 * Removes the given {@link ProcessBackgroundImage}.
 	 *
 	 * @param process
-	 *            the process for which to remove the background image
+	 * 		the process for which to remove the background image
 	 */
 	public void removeBackgroundImage(ExecutionUnit process) {
 		BackgroundImageProcessXMLFilter.removeBackgroundImage(process);
@@ -1175,7 +1169,7 @@ public final class ProcessRendererModel {
 	 * Sets the given {@link ProcessBackgroundImage}.
 	 *
 	 * @param image
-	 *            the image to add
+	 * 		the image to add
 	 */
 	public void setBackgroundImage(ProcessBackgroundImage image) {
 		BackgroundImageProcessXMLFilter.setBackgroundImage(image);
@@ -1185,7 +1179,7 @@ public final class ProcessRendererModel {
 	 * Returns the number of ports for the given {@link Operator}.
 	 *
 	 * @param op
-	 *            the operator in question
+	 * 		the operator in question
 	 * @return the number of ports or {@code null} if they have not yet been stored
 	 */
 	public Integer getNumberOfPorts(Operator op) {
@@ -1196,9 +1190,9 @@ public final class ProcessRendererModel {
 	 * Sets the number of ports for the given {@link Operator}.
 	 *
 	 * @param op
-	 *            the operator in question
+	 * 		the operator in question
 	 * @param number
-	 *            the number of ports or {@code null}
+	 * 		the number of ports or {@code null}
 	 */
 	public Integer setNumberOfPorts(Operator op, Integer number) {
 		return portNumbers.put(op, number);
@@ -1209,9 +1203,9 @@ public final class ProcessRendererModel {
 	 * to match the existing ports!
 	 *
 	 * @param op
-	 *            the operator for which the rectangle should be set
+	 * 		the operator for which the rectangle should be set
 	 * @param rect
-	 *            the rectangle representing position and size of operator
+	 * 		the rectangle representing position and size of operator
 	 */
 	public void setOperatorRect(Operator op, Rectangle2D rect) {
 		if (op == null) {
@@ -1234,7 +1228,7 @@ public final class ProcessRendererModel {
 	 * Returns the spacing of the specified {@link Port}.
 	 *
 	 * @param port
-	 *            the port in question
+	 * 		the port in question
 	 * @return the additional spacing before this port
 	 */
 	public int getPortSpacing(Port port) {
@@ -1245,9 +1239,9 @@ public final class ProcessRendererModel {
 	 * Sets the spacing of the specified {@link Port}.
 	 *
 	 * @param port
-	 *            the port in question
+	 * 		the port in question
 	 * @param spacing
-	 *            the additional spacing before the port
+	 * 		the additional spacing before the port
 	 */
 	public void setPortSpacing(Port port, int spacing) {
 		if (port == null) {
@@ -1260,7 +1254,7 @@ public final class ProcessRendererModel {
 	 * Resets the spacing of the specified {@link Port} to the default value.
 	 *
 	 * @param port
-	 *            the port in question
+	 * 		the port in question
 	 */
 	public void resetPortSpacing(Port port) {
 		if (port == null) {
@@ -1273,7 +1267,7 @@ public final class ProcessRendererModel {
 	 * Looks up the view position of the specified {@link OperatorChain}.
 	 *
 	 * @param chain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @return The position or null.
 	 * @since 7.5
 	 */
@@ -1285,9 +1279,9 @@ public final class ProcessRendererModel {
 	 * Sets the view position of the specified {@link OperatorChain}.
 	 *
 	 * @param chain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @param position
-	 *            The center position.
+	 * 		The center position.
 	 * @since 7.5
 	 */
 	public void setOperatorChainPosition(OperatorChain chain, Point position) {
@@ -1301,7 +1295,7 @@ public final class ProcessRendererModel {
 	 * Resets the view position of the specified {@link OperatorChain}.
 	 *
 	 * @param chain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @since 7.5
 	 */
 	public void resetOperatorChainPosition(OperatorChain chain) {
@@ -1315,7 +1309,7 @@ public final class ProcessRendererModel {
 	 * Looks up the zoom of the specified {@link OperatorChain}.
 	 *
 	 * @param chain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @return The position or null.
 	 * @since 7.5
 	 */
@@ -1327,9 +1321,9 @@ public final class ProcessRendererModel {
 	 * Sets the zoom of the specified {@link OperatorChain}.
 	 *
 	 * @param chain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @param zoom
-	 *            The zoom.
+	 * 		The zoom.
 	 * @since 7.5
 	 */
 	public void setOperatorChainZoom(OperatorChain chain, Double zoom) {
@@ -1343,7 +1337,7 @@ public final class ProcessRendererModel {
 	 * Resets the zoom of the specified {@link OperatorChain}.
 	 *
 	 * @param chain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @since 7.5
 	 */
 	public void resetOperatorChainZoom(OperatorChain chain) {
@@ -1357,7 +1351,7 @@ public final class ProcessRendererModel {
 	 * Looks up the scroll position of the specified {@link OperatorChain}.
 	 *
 	 * @param operatorChain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @return The scroll position or null
 	 * @since 7.5
 	 */
@@ -1369,9 +1363,9 @@ public final class ProcessRendererModel {
 	 * Sets the scroll position of the specified {@link OperatorChain}.
 	 *
 	 * @param operatorChain
-	 *            The operator.
+	 * 		The operator.
 	 * @param scrollPos
-	 *            The scroll position.
+	 * 		The scroll position.
 	 * @since 7.5
 	 */
 	public void setScrollPosition(OperatorChain operatorChain, Point scrollPos) {
@@ -1382,7 +1376,7 @@ public final class ProcessRendererModel {
 	 * Resets the scroll position of the specified {@link OperatorChain}.
 	 *
 	 * @param operatorChain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @since 7.5
 	 */
 	public void resetScrollPosition(OperatorChain operatorChain) {
@@ -1393,7 +1387,7 @@ public final class ProcessRendererModel {
 	 * Looks up the scroll process index of the specified {@link OperatorChain}.
 	 *
 	 * @param operatorChain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @return The index or null
 	 * @since 7.5
 	 */
@@ -1405,9 +1399,9 @@ public final class ProcessRendererModel {
 	 * Sets the scroll process index of the specified {@link OperatorChain}.
 	 *
 	 * @param operatorChain
-	 *            The operator.
+	 * 		The operator.
 	 * @param index
-	 *            The process index.
+	 * 		The process index.
 	 * @since 7.5
 	 */
 	public void setScrollIndex(OperatorChain operatorChain, Double index) {
@@ -1418,7 +1412,7 @@ public final class ProcessRendererModel {
 	 * Resets the scroll process index of the specified {@link OperatorChain}.
 	 *
 	 * @param operatorChain
-	 *            The operator chain.
+	 * 		The operator chain.
 	 * @since 7.5
 	 */
 	public void resetScrollIndex(OperatorChain operatorChain) {
@@ -1430,7 +1424,7 @@ public final class ProcessRendererModel {
 	 * restored via undo/redo and should not be scrolled to.
 	 *
 	 * @param operator
-	 *            the operator
+	 * 		the operator
 	 * @return if the flag was set
 	 * @since 7.5
 	 */
@@ -1443,7 +1437,7 @@ public final class ProcessRendererModel {
 	 * restored via undo/redo and should not be scrolled to.
 	 *
 	 * @param operator
-	 *            the operator
+	 * 		the operator
 	 * @since 7.5
 	 */
 	public void setRestore(Operator operator) {
@@ -1455,7 +1449,7 @@ public final class ProcessRendererModel {
 	 * should be scrolled to when selected.
 	 *
 	 * @param operator
-	 *            The operator
+	 * 		The operator
 	 * @since 7.5
 	 */
 	public void resetRestore(Operator operator) {
@@ -1475,7 +1469,7 @@ public final class ProcessRendererModel {
 	 * Sets the {@link Point} the mouse is at relative to the process it currently is over.
 	 *
 	 * @param mousePositionRelativeToProcess
-	 *            the point or {@code null}
+	 * 		the point or {@code null}
 	 */
 	public void setMousePositionRelativeToProcess(Point mousePositionRelativeToProcess) {
 		this.mousePositionRelativeToProcess = mousePositionRelativeToProcess;
@@ -1486,7 +1480,7 @@ public final class ProcessRendererModel {
 	 * model.
 	 *
 	 * @param listener
-	 *            the listener instance to add
+	 * 		the listener instance to add
 	 */
 	public void registerEventListener(final ProcessRendererEventListener listener) {
 		if (listener == null) {
@@ -1499,7 +1493,7 @@ public final class ProcessRendererModel {
 	 * Removes the {@link ProcessRendererEventListener} from this model.
 	 *
 	 * @param listener
-	 *            the listener instance to remove
+	 * 		the listener instance to remove
 	 */
 	public void removeEventListener(final ProcessRendererEventListener listener) {
 		if (listener == null) {
@@ -1605,9 +1599,9 @@ public final class ProcessRendererModel {
 	 * process position should be the (new) center position.
 	 *
 	 * @param center
-	 *            the (new) center point
+	 * 		the (new) center point
 	 * @param index
-	 *            the (new) process index
+	 * 		the (new) process index
 	 * @since 7.5
 	 */
 	public void prepareProcessZoomWillChange(Point center, int index) {
@@ -1633,7 +1627,7 @@ public final class ProcessRendererModel {
 	 * Fire when an operator has been moved.
 	 *
 	 * @param operator
-	 *            the moved operator
+	 * 		the moved operator
 	 */
 	public void fireOperatorMoved(Operator operator) {
 		List<Operator> list = new LinkedList<>();
@@ -1645,7 +1639,7 @@ public final class ProcessRendererModel {
 	 * Fire when operators have been moved.
 	 *
 	 * @param operators
-	 *            a collection of moved operators
+	 * 		a collection of moved operators
 	 */
 	public void fireOperatorsMoved(Collection<Operator> operators) {
 		fireOperatorsChanged(OperatorEvent.OPERATORS_MOVED, operators);
@@ -1655,7 +1649,7 @@ public final class ProcessRendererModel {
 	 * Fire when the operator selection has changed.
 	 *
 	 * @param operators
-	 *            a collection of selected operators
+	 * 		a collection of selected operators
 	 */
 	public void fireOperatorSelectionChanged(Collection<Operator> operators) {
 		fireOperatorsChanged(OperatorEvent.SELECTED_OPERATORS_CHANGED, operators);
@@ -1665,7 +1659,7 @@ public final class ProcessRendererModel {
 	 * Fire when the number of ports for operators has changed.
 	 *
 	 * @param operators
-	 *            a collection of operators which had their ports changed
+	 * 		a collection of operators which had their ports changed
 	 */
 	public void firePortsChanged(Collection<Operator> operators) {
 		fireOperatorsChanged(OperatorEvent.PORTS_CHANGED, operators);
@@ -1675,7 +1669,7 @@ public final class ProcessRendererModel {
 	 * Fire when an annotation has been moved.
 	 *
 	 * @param anno
-	 *            the moved annotation
+	 * 		the moved annotation
 	 */
 	public void fireAnnotationMoved(WorkflowAnnotation anno) {
 		List<WorkflowAnnotation> list = new LinkedList<>();
@@ -1687,7 +1681,7 @@ public final class ProcessRendererModel {
 	 * Fire when annotations have been moved.
 	 *
 	 * @param annotations
-	 *            the moved annotations
+	 * 		the moved annotations
 	 */
 	public void fireAnnotationsMoved(Collection<WorkflowAnnotation> annotations) {
 		fireAnnotationsChanged(AnnotationEvent.ANNOTATIONS_MOVED, annotations);
@@ -1697,7 +1691,7 @@ public final class ProcessRendererModel {
 	 * Fire when an annotation has been selected.
 	 *
 	 * @param anno
-	 *            the selected annotation
+	 * 		the selected annotation
 	 */
 	public void fireAnnotationSelected(WorkflowAnnotation anno) {
 		List<WorkflowAnnotation> list = new LinkedList<>();
@@ -1710,7 +1704,7 @@ public final class ProcessRendererModel {
 	 * repaint.
 	 *
 	 * @param anno
-	 *            the changed annotation, can be {@code null}
+	 * 		the changed annotation, can be {@code null}
 	 */
 	public void fireAnnotationMiscChanged(WorkflowAnnotation anno) {
 		List<WorkflowAnnotation> list = new LinkedList<>();
@@ -1730,7 +1724,7 @@ public final class ProcessRendererModel {
 			return;
 		}
 		String maxSizeProperty = ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_UNDOLIST_SIZE);
-		int maxSize = 20;
+		int maxSize = DEFAULT_UNDO_LIST_SIZE;
 		try {
 			if (maxSizeProperty != null) {
 				maxSize = Integer.parseInt(maxSizeProperty);
@@ -1785,7 +1779,8 @@ public final class ProcessRendererModel {
 				if (!stateXML.equals(currentXML)) {
 					process = undoManager.restoreProcess(index);
 					process.setProcessLocation(procLoc);
-					hasChanged = true;
+					// check whether the current xml corresponds to the saved one
+					hasChanged = procLoc == null || !process.getRootOperator().getXML(false).equals(procLoc.getRawXML());
 					fireProcessChanged();
 				}
 
@@ -1825,7 +1820,7 @@ public final class ProcessRendererModel {
 	 * Fires the given {@link ModelEvent}.
 	 *
 	 * @param type
-	 *            the event type
+	 * 		the event type
 	 */
 	private void fireModelChanged(final ModelEvent type) {
 		Object[] listeners = eventListener.getListenerList();
@@ -1842,9 +1837,9 @@ public final class ProcessRendererModel {
 	 * Fires the given {@link OperatorEvent} with the affected {@link Operator}s.
 	 *
 	 * @param type
-	 *            the event type
+	 * 		the event type
 	 * @param operators
-	 *            the affected operators
+	 * 		the affected operators
 	 */
 	private void fireOperatorsChanged(final OperatorEvent type, Collection<Operator> operators) {
 		Object[] listeners = eventListener.getListenerList();
@@ -1861,9 +1856,9 @@ public final class ProcessRendererModel {
 	 * Fires the given {@link AnnotationEvent} with the affected {@link WorkflowAnnotation}s.
 	 *
 	 * @param type
-	 *            the event type
+	 * 		the event type
 	 * @param annotations
-	 *            the affected annotations
+	 * 		the affected annotations
 	 */
 	private void fireAnnotationsChanged(final AnnotationEvent type, Collection<WorkflowAnnotation> annotations) {
 		Object[] listeners = eventListener.getListenerList();
@@ -1945,7 +1940,7 @@ public final class ProcessRendererModel {
 	 * {@link NewProcessUndoManager}. This should be called if the model is no longer used and is
 	 * expected to be garbage collected. It can not be used reliably after this call.
 	 *
-	 * @since 8.1
+	 * @since 8.2
 	 */
 	public void dispose() {
 		undoManager.reset();

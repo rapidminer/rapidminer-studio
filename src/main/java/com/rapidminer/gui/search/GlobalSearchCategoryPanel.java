@@ -43,6 +43,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.event.EventListenerList;
 
+import com.rapidminer.tools.usagestats.UsageLoggable;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.search.event.GlobalSearchInteractionEvent;
 import com.rapidminer.gui.search.event.GlobalSearchInteractionEvent.InteractionEvent;
@@ -56,6 +57,7 @@ import com.rapidminer.search.GlobalSearchUtilities;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector.UsageObject;
 
 
 /**
@@ -66,13 +68,38 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  */
 class GlobalSearchCategoryPanel extends JPanel {
 
+	/**
+	 * Simple POJO implementation of {@link UsageObject} to log stats
+	 * using {@link ActionStatisticsCollector#logGlobalSearchAction(String, String, String)}.
+	 *
+	 * @since 8.1.2
+	 * @author Jan Czogalla
+	 */
+	private static final class GlobalSearchActionUsageObject implements UsageObject{
+
+		private final String query;
+		private final String categoryID;
+		private final String rowID;
+
+		private GlobalSearchActionUsageObject(String query, String categoryID, String rowID) {
+			this.query = query;
+			this.categoryID = categoryID;
+			this.rowID = rowID;
+		}
+
+		@Override
+		public void logUsage() {
+			ActionStatisticsCollector.getInstance().logGlobalSearchAction(query, categoryID, rowID);
+		}
+	}
 
 	private static final Color BORDER_COLOR = Colors.BUTTON_BORDER_DISABLED;
 	private static final Border TOP_BORDER = BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER_COLOR);
 	private static final Border DIVIDER_BORDER = BorderFactory.createMatteBorder(0, 1, 0, 0, BORDER_COLOR);
 	private static final Border CATEGORY_LABEL_EMPTY_BORDER = BorderFactory.createEmptyBorder(10, 10, 10, 10);
 	private static final Border CATEGORY_COMPONENT_EMPTY_BORDER = BorderFactory.createEmptyBorder(4, 5, 4, 0);
-	private static final Dimension I18N_NAME_SIZE = new Dimension(100, 30);
+	public static final int I18N_NAME_WIDTH = 100;
+	private static final Dimension I18N_NAME_SIZE = new Dimension(I18N_NAME_WIDTH, 30);
 
 	/** event listener for this panel */
 	private final EventListenerList eventListener;
@@ -288,7 +315,7 @@ class GlobalSearchCategoryPanel extends JPanel {
 				provider.searchResultTriggered(row.getDoc(), providerVeto);
 				// only fire interaction if provider did not veto it
 				if (!providerVeto.isVeto()) {
-					ActionStatisticsCollector.getInstance().logGlobalSearchAction(controller.getLastQuery(), categoryId, row.getDoc().getField(GlobalSearchUtilities.FIELD_NAME).stringValue());
+					ActionStatisticsCollector.getInstance().logGlobalSearchAction(controller.getLastQuery(), categoryId, row.getDoc().getField(GlobalSearchUtilities.FIELD_UNIQUE_ID).stringValue());
 
 					fireInteraction(InteractionEvent.RESULT_ACTIVATED, row);
 
@@ -319,6 +346,9 @@ class GlobalSearchCategoryPanel extends JPanel {
 		if (provider.isDragAndDropSupported(row.getDoc())) {
 			DragGestureListener dragSupport = provider.getDragAndDropSupport(row.getDoc());
 			if (dragSupport != null) {
+				if (dragSupport instanceof UsageLoggable) {
+					((UsageLoggable) dragSupport).setUsageObject(new GlobalSearchActionUsageObject(controller.getLastQuery(), categoryId, row.getDoc().getField(GlobalSearchUtilities.FIELD_UNIQUE_ID).stringValue()));
+				}
 				DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(component, DnDConstants.ACTION_MOVE, dragSupport);
 			} else {
 				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.search.globalsearchdialog.missing_drag_support", categoryId);
@@ -344,5 +374,4 @@ class GlobalSearchCategoryPanel extends JPanel {
 			listener.interaction(e);
 		}
 	}
-
 }

@@ -153,6 +153,7 @@ public class SendMailOperator extends Operator {
 		ParameterType type = new ParameterTypeText(PARAMETER_BODY_PLAIN, "Body of the email.", TextType.PLAIN, true);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_USE_HTML, true, false));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		ParameterTypeText typeText = new ParameterTypeText(PARAMETER_BODY_HTML, "Body of the email in HTML format.",

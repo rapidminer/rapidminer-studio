@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.performance;
 
+import java.util.Objects;
+
+import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.WrapperOperatorRuntimeException;
 import com.rapidminer.tools.math.Averagable;
 
 
@@ -100,11 +104,15 @@ public abstract class PerformanceCriterion extends Averagable implements Compara
 	 */
 	@Override
 	public int compareTo(PerformanceCriterion o) {
-		if (!this.getClass().equals(o.getClass())) {
-			throw new RuntimeException("Mismatched criterion class:" + this.getClass() + ", " + o.getClass());
-		}
-		if (!o.getName().equals(this.getName())) {
-			throw new RuntimeException("Mismatched criterion type:" + this.getName() + ", " + o.getName());
+		Class<? extends PerformanceCriterion> aClass = this.getClass();
+		Class<? extends PerformanceCriterion> oClass = o.getClass();
+		boolean classesDiffer = aClass != oClass;
+		String aType = this.getName();
+		String oType = o.getName();
+		if (classesDiffer || !Objects.equals(aType, oType)) {
+			throw new WrapperOperatorRuntimeException(new UserError(null,
+					"performance_criterion_" + (classesDiffer ? "class" : "type") + "_mismatch",
+					classesDiffer ? aClass.getName() : aType, classesDiffer ? oClass.getName() : oType));
 		}
 		return Double.compare(this.getFitness(), o.getFitness());
 	}

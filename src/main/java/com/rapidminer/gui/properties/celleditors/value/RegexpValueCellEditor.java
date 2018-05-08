@@ -156,4 +156,9 @@ public class RegexpValueCellEditor extends AbstractCellEditor implements Propert
 		textField.setText(value == null ? "" : value.toString());
 		return panel;
 	}
+
+	@Override
+	public void activate() {
+		button.doClick();
+	}
 }

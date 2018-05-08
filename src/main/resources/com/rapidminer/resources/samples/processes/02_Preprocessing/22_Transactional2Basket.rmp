@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="8.2.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="8.2.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -12,27 +12,28 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
+      <operator activated="true" class="retrieve" compatibility="8.2.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Market-Data"/>
       </operator>
-      <operator activated="true" class="generate_id" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="IdTagging" width="90" x="179" y="34">
+      <operator activated="true" class="generate_id" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="IdTagging" width="90" x="179" y="34">
         <parameter key="create_nominal_ids" value="false"/>
         <parameter key="offset" value="0"/>
       </operator>
-      <operator activated="true" class="set_role" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="IdToRegular" width="90" x="313" y="34">
+      <operator activated="true" class="set_role" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="IdToRegular" width="90" x="313" y="34">
         <parameter key="attribute_name" value="id"/>
         <parameter key="target_role" value="regular"/>
         <list key="set_additional_roles"/>
       </operator>
-      <operator activated="true" breakpoints="after" class="pivot" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Example2AttributePivoting" width="90" x="447" y="34">
+      <operator activated="true" breakpoints="after" class="pivot" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="Example2AttributePivoting" width="90" x="447" y="34">
         <parameter key="group_attribute" value="TID"/>
         <parameter key="index_attribute" value="ITEM"/>
         <parameter key="consider_weights" value="true"/>
         <parameter key="weight_aggregation" value="sum"/>
         <parameter key="skip_constant_attributes" value="true"/>
         <parameter key="datamanagement" value="double_array"/>
+        <parameter key="data_management" value="auto"/>
       </operator>
-      <operator activated="true" class="numerical_to_polynominal" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Numerical2Polynominal" width="90" x="179" y="238">
+      <operator activated="true" class="numerical_to_polynominal" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="Numerical2Polynominal" width="90" x="179" y="238">
         <parameter key="attribute_filter_type" value="all"/>
         <parameter key="attribute" value=""/>
         <parameter key="attributes" value=""/>
@@ -46,7 +47,7 @@
         <parameter key="invert_selection" value="false"/>
         <parameter key="include_special_attributes" value="false"/>
       </operator>
-      <operator activated="true" class="work_on_subset" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AttributeSubsetPreprocessing" width="90" x="313" y="238">
+      <operator activated="true" class="work_on_subset" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="AttributeSubsetPreprocessing" width="90" x="313" y="238">
         <parameter key="attribute_filter_type" value="regular_expression"/>
         <parameter key="attribute" value=""/>
         <parameter key="attributes" value=""/>
@@ -66,7 +67,7 @@
         <parameter key="deliver_inner_results" value="false"/>
         <parameter key="remove_roles" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="map" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="Mapping" width="90" x="45" y="34">
+          <operator activated="true" class="map" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="Mapping" width="90" x="45" y="34">
             <parameter key="attribute_filter_type" value="regular_expression"/>
             <parameter key="attribute" value=""/>
             <parameter key="attributes" value=""/>
@@ -94,14 +95,26 @@
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="fp_growth" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FPGrowth" width="90" x="447" y="238">
+      <operator activated="true" class="concurrency:fp_growth" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="FPGrowth" width="90" x="447" y="238">
+        <parameter key="input_format" value="items in dummy coded columns"/>
+        <parameter key="column_separators" value=";"/>
+        <parameter key="use_quotes" value="false"/>
+        <parameter key="quotes_character" value="&quot;"/>
+        <parameter key="escape_character" value="\"/>
+        <parameter key="trim_item_names" value="true"/>
+        <parameter key="positive_value" value="true"/>
+        <parameter key="min_requirement" value="support"/>
+        <parameter key="min_support" value="0.95"/>
+        <parameter key="min_frequency" value="100"/>
+        <parameter key="min_number_of_items_in_an_itemset" value="1"/>
+        <parameter key="max_number_of_items_in_an_itemset" value="0"/>
+        <parameter key="max_number_of_itemsets" value="1000000"/>
         <parameter key="find_min_number_of_itemsets" value="true"/>
         <parameter key="min_number_of_itemsets" value="100"/>
         <parameter key="max_number_of_retries" value="15"/>
-        <parameter key="positive_value" value="true"/>
-        <parameter key="min_support" value="0.95"/>
-        <parameter key="max_items" value="-1"/>
-        <parameter key="keep_example_set" value="false"/>
+        <parameter key="support_decrease_factor" value="0.9"/>
+        <enumeration key="must_contain_list"/>
+        <parameter key="reproducible" value="false"/>
       </operator>
       <connect from_op="Retrieve" from_port="output" to_op="IdTagging" to_port="example set input"/>
       <connect from_op="IdTagging" from_port="example set output" to_op="IdToRegular" to_port="example set input"/>

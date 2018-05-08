@@ -18,8 +18,13 @@
 */
 package com.rapidminer.operator.io;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.InvalidRepositoryEntryError;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
@@ -28,16 +33,16 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.RepositoryEntryNotFoundException;
+import com.rapidminer.repository.RepositoryEntryWrongTypeException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
-
-import java.util.List;
-import java.util.logging.Level;
 
 
 /**
@@ -57,6 +62,18 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		IOObjectEntry entry;
 		try {
 			entry = getRepositoryEntry();
+		} catch (RepositoryEntryNotFoundException e) {
+			addError(new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(), PARAMETER_REPOSITORY_ENTRY,
+					Collections.singletonList(new ParameterSettingQuickFix(getPortOwner().getOperator(), PARAMETER_REPOSITORY_ENTRY)),
+					"repository_location_does_not_exist", getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
+					e.getMessage()));
+			return super.getGeneratedMetaData();
+		}  catch (RepositoryEntryWrongTypeException e) {
+			addError(new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(), PARAMETER_REPOSITORY_ENTRY,
+					Collections.singletonList(new ParameterSettingQuickFix(getPortOwner().getOperator(), PARAMETER_REPOSITORY_ENTRY)),
+					"repository_location_wrong_type", getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
+					e.getMessage()));
+			return super.getGeneratedMetaData();
 		} catch (RepositoryException e) {
 			addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "repository_access_error",
 					getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY), e.getMessage()));
@@ -92,11 +109,11 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		RepositoryLocation location = getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY);
 		Entry entry = location.locateEntry();
 		if (entry == null) {
-			throw new RepositoryException("Entry '" + location + "' does not exist.");
+			throw new RepositoryEntryNotFoundException("Entry '" + location + "' does not exist.");
 		} else if (entry instanceof IOObjectEntry) {
 			return (IOObjectEntry) entry;
 		} else {
-			throw new RepositoryException("Entry '" + location + "' is not a data entry, but " + entry.getType());
+			throw new RepositoryEntryWrongTypeException("Entry '" + location + "' is not a data entry, but " + entry.getType());
 		}
 	}
 
@@ -117,6 +134,7 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		ParameterTypeRepositoryLocation type = new ParameterTypeRepositoryLocation(PARAMETER_REPOSITORY_ENTRY,
 				"Repository entry.", false);
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 		return types;
 	}

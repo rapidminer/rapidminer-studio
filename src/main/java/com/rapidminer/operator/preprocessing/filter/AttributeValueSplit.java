@@ -341,6 +341,7 @@ public class AttributeValueSplit extends AbstractDataProcessing {
 		ParameterType type = new ParameterTypeRegexp(PARAMETER_SPLIT_PATTERN,
 				"The pattern which is used for dividing the nominal values into different parts.", ",");
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		type = new ParameterTypeCategory(PARAMETER_SPLIT_MODE,

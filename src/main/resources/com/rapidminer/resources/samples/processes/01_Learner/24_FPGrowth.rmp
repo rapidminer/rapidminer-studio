@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="8.2.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="7.3.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="8.2.000-SNAPSHOT" expanded="true" name="Root">
     <parameter key="logverbosity" value="warning"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -12,7 +12,7 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="7.3.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
+      <operator activated="true" class="retrieve" compatibility="8.2.000-SNAPSHOT" expanded="true" height="68" name="Retrieve" width="90" x="45" y="34">
         <parameter key="repository_entry" value="../../data/Purchases"/>
       </operator>
       <operator activated="true" class="nominal_to_binominal" compatibility="7.1.001" expanded="true" height="103" name="Nominal2Binominal" width="90" x="179" y="34">
@@ -33,7 +33,7 @@
         <parameter key="transform_binominal" value="true"/>
         <parameter key="use_underscore_in_name" value="false"/>
       </operator>
-      <operator activated="true" class="select_attributes" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AttributeFilter" width="90" x="313" y="34">
+      <operator activated="true" class="select_attributes" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="AttributeFilter" width="90" x="313" y="34">
         <parameter key="attribute_filter_type" value="regular_expression"/>
         <parameter key="attribute" value=""/>
         <parameter key="attributes" value=""/>
@@ -48,15 +48,27 @@
         <parameter key="invert_selection" value="false"/>
         <parameter key="include_special_attributes" value="false"/>
       </operator>
-      <operator activated="true" class="fp_growth" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="FPGrowth" width="90" x="447" y="34">
+      <operator activated="true" class="concurrency:fp_growth" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="FPGrowth" width="90" x="447" y="34">
+        <parameter key="input_format" value="items in dummy coded columns"/>
+        <parameter key="column_separators" value=";"/>
+        <parameter key="use_quotes" value="false"/>
+        <parameter key="quotes_character" value="&quot;"/>
+        <parameter key="escape_character" value="\"/>
+        <parameter key="trim_item_names" value="true"/>
+        <parameter key="min_requirement" value="support"/>
+        <parameter key="min_support" value="0.95"/>
+        <parameter key="min_frequency" value="100"/>
+        <parameter key="min_number_of_items_in_an_itemset" value="1"/>
+        <parameter key="max_number_of_items_in_an_itemset" value="0"/>
+        <parameter key="max_number_of_itemsets" value="1000000"/>
         <parameter key="find_min_number_of_itemsets" value="true"/>
         <parameter key="min_number_of_itemsets" value="100"/>
         <parameter key="max_number_of_retries" value="15"/>
-        <parameter key="min_support" value="0.95"/>
-        <parameter key="max_items" value="-1"/>
-        <parameter key="keep_example_set" value="false"/>
+        <parameter key="support_decrease_factor" value="0.9"/>
+        <enumeration key="must_contain_list"/>
+        <parameter key="reproducible" value="false"/>
       </operator>
-      <operator activated="true" class="create_association_rules" compatibility="7.3.000-SNAPSHOT" expanded="true" height="82" name="AssociationRuleGenerator" width="90" x="581" y="85">
+      <operator activated="true" class="create_association_rules" compatibility="8.2.000-SNAPSHOT" expanded="true" height="82" name="AssociationRuleGenerator" width="90" x="581" y="85">
         <parameter key="criterion" value="confidence"/>
         <parameter key="min_confidence" value="0.8"/>
         <parameter key="min_criterion_value" value="0.8"/>

@@ -455,6 +455,7 @@ public class AttributeValueMapper extends AbstractValueProcessing {
 				PARAMETER_OLD_VALUES, "The original values which should be replaced.", false), new ParameterTypeString(
 				PARAMETER_NEW_VALUES, "Specifies the new value", false));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		type = new ParameterTypeString(PARAMETER_REPLACE_WHAT, "All occurrences of this value will be replaced.", true);

@@ -18,10 +18,14 @@
 */
 package com.rapidminer.operator.clustering;
 
+import java.util.HashMap;
+import java.util.Vector;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -36,9 +40,8 @@ import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
-
-import java.util.HashMap;
-import java.util.Vector;
+import com.rapidminer.operator.ports.quickfix.AttributeToNominalQuickFixProvider;
+import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -75,10 +78,14 @@ public class ClusterToPrediction extends Operator {
 									"special_unknown", "label"));
 							return emd;
 						case YES:
-							AttributeMetaData predictionMD = AttributeMetaData.createPredictionMetaData(emd
-									.getLabelMetaData());
+							AttributeMetaData label = emd.getLabelMetaData();
+							AttributeMetaData predictionMD = AttributeMetaData.createPredictionMetaData(label);
 							emd.addAttribute(predictionMD);
 							AttributeMetaData.createConfidenceAttributeMetaData(emd);
+							if (!label.isNominal()) {
+								exampleSetInput.addError(
+										new SimpleMetaDataError(Severity.ERROR, exampleSetInput, AttributeToNominalQuickFixProvider.labelToNominal(exampleSetInput, label), "special_attribute_has_wrong_type", label.getName(), Attributes.LABEL_NAME, Ontology.VALUE_TYPE_NAMES[Ontology.NOMINAL]));
+							}
 							return emd;
 						default:
 							return emd;
@@ -95,6 +102,7 @@ public class ClusterToPrediction extends Operator {
 	public void doWork() throws OperatorException {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
 		ClusterModel model = clusterModelInput.getData(ClusterModel.class);
+		Tools.hasNominalLabels(exampleSet);
 
 		// generate the predicted attribute
 		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
@@ -297,6 +305,9 @@ public class ClusterToPrediction extends Operator {
 					String clusterNumber = example.getValueAsString(clusterAttribute).replaceAll("[^\\d]+", "");
 					try {
 						int number = Integer.parseInt(clusterNumber);
+						if (number < 0 || number >= model.getNumberOfClusters()) {
+							throw new UserError(this, 145, clusterAttribute.getName());
+						}
 						predictionToCluster.put(example.getValueAsString(example.getAttributes().getPredictedLabel()),
 								number);
 					} catch (NumberFormatException e) {

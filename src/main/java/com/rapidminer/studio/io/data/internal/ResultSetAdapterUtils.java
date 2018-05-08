@@ -66,28 +66,61 @@ public final class ResultSetAdapterUtils {
 	 * the logic from {@link DataResultSetTranslator} is used.
 	 *
 	 * @param resultSet
-	 *            the {@link DataResultSet} that should be used to extract the meta data
+	 * 		the {@link DataResultSet} that should be used to extract the meta data
 	 * @param numberFormat
-	 *            the number format that should be used during column type guessing
+	 * 		the number format that should be used during column type guessing
 	 * @param startingRowIndex
-	 *            the 0-based index of the first data row (not including the header row)
+	 * 		the 0-based index of the first data row (not including the header row)
 	 * @param headerRowIndex
-	 *            the 0-based index for the header row (if any,
-	 *            {@link ResultSetAdapter#NO_HEADER_ROW} otherwise)
+	 * 		the 0-based index for the header row (if any,
+	 * 		{@link ResultSetAdapter#NO_HEADER_ROW} otherwise)
 	 * @return the new {@link DataSetMetaData} instance which contains meta data retrieved from the
-	 *         column name extraction and column type guessing
+	 * column name extraction and column type guessing
 	 * @throws HeaderRowNotFoundException
-	 *             if the header row was not found
+	 * 		if the header row was not found
 	 * @throws StartRowNotFoundException
-	 *             if the data start row was not found
+	 * 		if the data start row was not found
 	 * @throws HeaderRowBehindStartRowException
-	 *             in case the headerRowIndex > startingRowIndex
+	 * 		in case the headerRowIndex > startingRowIndex
 	 * @throws DataSetException
-	 *             if the meta data fetching fails
+	 * 		if the meta data fetching fails
 	 */
-	public static DataSetMetaData createMetaData(DataResultSet resultSet, NumberFormat numberFormat, int startingRowIndex,
-			int headerRowIndex) throws HeaderRowNotFoundException, StartRowNotFoundException,
-					HeaderRowBehindStartRowException, DataSetException {
+	public static DataSetMetaData createMetaData(DataResultSet resultSet, NumberFormat numberFormat, int startingRowIndex, int headerRowIndex)
+			throws HeaderRowNotFoundException, StartRowNotFoundException, HeaderRowBehindStartRowException, DataSetException {
+		return createMetaData(resultSet, numberFormat, startingRowIndex, headerRowIndex, false);
+	}
+
+	/**
+	 * Creates a new {@link DataSetMetaData} instance for the provided {@link DataResultSet} based
+	 * on the provided data range and header row index (if any). This includes reading the column
+	 * names and guessing the column types for the selected columns. For guessing the column types
+	 * the logic from {@link DataResultSetTranslator} is used.
+	 *
+	 * @param resultSet
+	 * 		the {@link DataResultSet} that should be used to extract the meta data
+	 * @param numberFormat
+	 * 		the number format that should be used during column type guessing
+	 * @param startingRowIndex
+	 * 		the 0-based index of the first data row (not including the header row)
+	 * @param headerRowIndex
+	 * 		the 0-based index for the header row (if any,
+	 * 		{@link ResultSetAdapter#NO_HEADER_ROW} otherwise)
+	 * @param trimAttributeNames
+	 * 		whether to trim attribute names before creating meta data or not
+	 * @return the new {@link DataSetMetaData} instance which contains meta data retrieved from the
+	 * column name extraction and column type guessing
+	 * @throws HeaderRowNotFoundException
+	 * 		if the header row was not found
+	 * @throws StartRowNotFoundException
+	 * 		if the data start row was not found
+	 * @throws HeaderRowBehindStartRowException
+	 * 		in case the headerRowIndex > startingRowIndex
+	 * @throws DataSetException
+	 * 		if the meta data fetching fails
+	 * @since 8.1.1
+	 */
+	public static DataSetMetaData createMetaData(DataResultSet resultSet, NumberFormat numberFormat, int startingRowIndex, int headerRowIndex, boolean trimAttributeNames)
+			throws HeaderRowNotFoundException, StartRowNotFoundException, HeaderRowBehindStartRowException, DataSetException {
 
 		// check whether the header row index is lower or equal to the starting row
 		if (headerRowIndex > startingRowIndex) {
@@ -97,10 +130,9 @@ public final class ResultSetAdapterUtils {
 		try {
 			int numberOfColumns = resultSet.getNumberOfColumns();
 
-			String[] columnNames = getColumnNames(resultSet, headerRowIndex, startingRowIndex, numberOfColumns);
+			String[] columnNames = getColumnNames(resultSet, headerRowIndex, startingRowIndex, numberOfColumns, trimAttributeNames);
 			List<ColumnType> columnTypes = guessColumnTypes(resultSet, startingRowIndex, headerRowIndex, numberOfColumns,
 					numberFormat);
-
 			return new DefaultDataSetMetaData(Arrays.asList(columnNames), columnTypes);
 		} catch (OperatorException e) {
 			throw new DataSetException(e.getMessage(), e);
@@ -132,24 +164,26 @@ public final class ResultSetAdapterUtils {
 	 * Reads the column names from the resultSet given the configuration.
 	 *
 	 * @param resultSet
-	 *            the data set
+	 * 		the data set
 	 * @param headerRowIndex
-	 *            the index of the row that should be used to extract column names from or
-	 *            {@link ResultSetAdapter#NO_HEADER_ROW} in case the default names should be used
+	 * 		the index of the row that should be used to extract column names from or
+	 * 		{@link ResultSetAdapter#NO_HEADER_ROW} in case the default names should be used
 	 * @param startingRowIndex
-	 *            the index of the actual data start row
+	 * 		the index of the actual data start row
 	 * @param numberOfColumns
-	 *            the number of columns for the {@link DataSource}
+	 * 		the number of columns for the {@link DataSource}
+	 * @param trimAttributeNames
+	 * 		whether to trim attribute names before creating meta data or not
 	 * @return the column names as a String array
 	 * @throws HeaderRowNotFoundException
-	 *             if the header row was not found
+	 * 		if the header row was not found
 	 * @throws StartRowNotFoundException
-	 *             if the data start row was not found
+	 * 		if the data start row was not found
 	 * @throws OperatorException
-	 *             if reading the resultSet failed
+	 * 		if reading the resultSet failed
 	 */
 	private static String[] getColumnNames(DataResultSet resultSet, int headerRowIndex, int startingRowIndex,
-			int numberOfColumns) throws HeaderRowNotFoundException, OperatorException, StartRowNotFoundException {
+		    int numberOfColumns, boolean trimAttributeNames) throws HeaderRowNotFoundException, OperatorException, StartRowNotFoundException {
 		resultSet.reset(null);
 		String[] defaultNames = resultSet.getColumnNames();
 
@@ -184,6 +218,9 @@ public final class ResultSetAdapterUtils {
 							case STRING:
 							default:
 								columnNames[i] = resultSet.getString(i);
+								if (trimAttributeNames && columnNames[i] != null) {
+									columnNames[i] = columnNames[i].trim();
+								}
 								break;
 
 						}

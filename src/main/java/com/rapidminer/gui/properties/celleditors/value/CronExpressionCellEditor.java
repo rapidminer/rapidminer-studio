@@ -18,11 +18,6 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import com.rapidminer.gui.dialog.CronEditorDialog;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.parameter.ParameterTypeCronExpression;
-
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -31,12 +26,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+
+import com.rapidminer.gui.dialog.CronEditorDialog;
+import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterTypeCronExpression;
 
 
 /**
@@ -164,5 +163,10 @@ public class CronExpressionCellEditor extends AbstractCellEditor implements Prop
 			int row, int column) {
 		textField.setText((value == null) ? "" : value.toString());
 		return panel;
+	}
+
+	@Override
+	public void activate() {
+		button.doClick();
 	}
 }

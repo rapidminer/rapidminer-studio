@@ -18,6 +18,12 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Pattern;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -29,12 +35,6 @@ import com.rapidminer.operator.preprocessing.AbstractDataProcessing;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttributes;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Pattern;
 
 
 /**
@@ -176,6 +176,7 @@ public class NonDominatedSorting extends AbstractDataProcessing {
 		ParameterType type = new ParameterTypeAttributes(PARAMETER_ATTRIBUTES,
 				"Defines the attributes which should be used for the sorting.", getExampleSetInputPort(), false);
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 		return types;
 	}

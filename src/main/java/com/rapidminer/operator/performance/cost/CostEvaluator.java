@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.performance.cost;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -39,10 +43,6 @@ import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.parameter.ParameterTypeMatrix;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -149,9 +149,11 @@ public class CostEvaluator extends Operator {
 				"Indicates if the example set should be kept.", false);
 		type.setHidden(true);
 		types.add(type);
-		types.add(new ParameterTypeMatrix(PARAMETER_COST_MATRIX,
+		type = new ParameterTypeMatrix(PARAMETER_COST_MATRIX,
 				"The matrix of missclassification costs. Columns and Rows in order of internal mapping.", "Cost Matrix",
-				"Predicted Class", "True Class", true, false));
+				"Predicted Class", "True Class", true, false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeEnumeration(
 				PARAMETER_CLASS_DEFINITION,
 				"With this parameter it is possible to define the order of classes used in the cost matrix. First class in this list is First class in the matrix.",

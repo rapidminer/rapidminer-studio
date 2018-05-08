@@ -22,6 +22,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
@@ -30,9 +32,11 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
-
+import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
@@ -59,6 +63,7 @@ import com.rapidminer.gui.tools.FilterTextField;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.UpdateQueue;
+import com.rapidminer.gui.tools.components.FeedbackForm;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
@@ -82,31 +87,55 @@ import com.vlsolutions.swing.docking.Dockable;
  */
 public class OperatorDocumentationBrowser extends JPanel implements Dockable, ProcessEditor {
 
-	final JEditorPane editor = new JEditorPane("text/html", "<html>-</html>");
+	private static final long serialVersionUID = 1L;
 
-	private ExtendedJScrollPane scrollPane = new ExtendedJScrollPane();
-
-	public static final String DOCUMENTATION_ROOT = "core/";
-
-	public Operator displayedOperator = null;
-
-	public URL currentResourceURL = null;
-
-	private boolean ignoreSelections = false;
+	private static final String DOCUMENTATION_ROOT = "core/";
+	private static final Dimension MINIMUM_DOCUMENTATION_SIZE = new Dimension(100, 100);
+	private static final String FEEDBACK_KEY_DOCUMENTATION = "operator_documentation";
 
 	public static final String OPERATOR_HELP_DOCK_KEY = "operator_help";
 
+
+	private JEditorPane editor;
+
+	private Operator displayedOperator = null;
+
+	private URL currentResourceURL = null;
+
+	private boolean ignoreSelections = false;
+
 	private final DockKey DOCK_KEY = new ResourceDockKey(OPERATOR_HELP_DOCK_KEY);
 
-	private static final long serialVersionUID = 1L;
-
 	private UpdateQueue documentationUpdateQueue = new UpdateQueue("documentation_update_queue");
+
+	private GridBagConstraints contentGbc;
+	private JPanel contentPanel;
+	private FeedbackForm feedbackForm;
+
 
 	/**
 	 * Prepares the dockable and its elements.
 	 */
 	public OperatorDocumentationBrowser() {
 		setLayout(new BorderLayout());
+
+		contentGbc = new GridBagConstraints();
+
+		contentPanel = new JPanel(new GridBagLayout()) {
+
+			@Override
+			public Dimension getPreferredSize() {
+				return new Dimension(getParent().getWidth(), super.getPreferredSize().height);
+			}
+		};
+
+		editor = new JEditorPane("text/html", "<html>-</html>") {
+
+			@Override
+			public Dimension getPreferredSize() {
+				return new Dimension(getParent().getWidth(), super.getPreferredSize().height);
+			}
+		};
 
 		// Instantiate Editor and set Settings
 		editor.addHyperlinkListener(new OperatorHelpLinkListener());
@@ -118,14 +147,31 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		editor.setContentType("text/html");
 
 		// add editor to scrollPane
-		scrollPane = new ExtendedJScrollPane(editor);
+		JScrollPane scrollPane = new ExtendedJScrollPane(contentPanel);
+		scrollPane.setBorder(null);
+		scrollPane.setMinimumSize(MINIMUM_DOCUMENTATION_SIZE);
+		scrollPane.setPreferredSize(MINIMUM_DOCUMENTATION_SIZE);
 
-		scrollPane.setMinimumSize(new Dimension(100, 100));
-		scrollPane.setPreferredSize(new Dimension(100, 100));
+		contentGbc.gridx = 0;
+		contentGbc.gridy = 0;
+		contentGbc.weightx = 1.0f;
+		contentGbc.fill = GridBagConstraints.HORIZONTAL;
+		contentPanel.add(editor, contentGbc);
+
+		// add filler at bottom
+		contentGbc.gridy += 1;
+		contentGbc.weighty = 1.0f;
+		contentGbc.fill = GridBagConstraints.BOTH;
+		contentPanel.add(new JLabel(), contentGbc);
+
+		// prepare contentGbc for feedback form
+		contentGbc.gridy += 1;
+		contentGbc.weighty = 0.0f;
+		contentGbc.fill = GridBagConstraints.HORIZONTAL;
 
 		// add scrollPane to Dockable
-		scrollPane.setBorder(null);
 		this.add(scrollPane, BorderLayout.CENTER);
+
 		this.setVisible(true);
 		this.validate();
 
@@ -285,14 +331,11 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 							desktop.browse(uri);
 						} catch (URISyntaxException e1) {
 							LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.desktop.browse.malformed_url", e1);
-							return;
 						} catch (IOException e1) {
 							LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.desktop.browse.open_browser", e1);
-							return;
 						}
 					} else {
 						LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.desktop.browse.not_supported");
-						return;
 					}
 				}
 			}
@@ -302,26 +345,24 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	/**
 	 * Refreshes the documentation text.
 	 *
-	 * @param resourceURL
-	 *            url to the xml resource
+	 * @param operator
+	 *           the operator for which to load the documentation
 	 */
 	private void changeDocumentation(final Operator operator) {
-		documentationUpdateQueue.execute(new Runnable() {
+		documentationUpdateQueue.execute(() -> {
 
-			@Override
-			public void run() {
+			final String finalHtml = OperatorDocLoader.getDocumentation(operator);
+			SwingUtilities.invokeLater(() -> {
+				editor.setText("<html>" + finalHtml + "</html>");
+				editor.setCaretPosition(0);
 
-				final String finalHtml = OperatorDocLoader.getDocumentation(operator);
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						editor.setText("<html>" + finalHtml + "</html>");
-						editor.setCaretPosition(0);
-					}
-				});
-
-			}
+				if (feedbackForm != null) {
+					contentPanel.remove(feedbackForm);
+				}
+				feedbackForm = new FeedbackForm(FEEDBACK_KEY_DOCUMENTATION, operator.getOperatorDescription().getKey());
+				feedbackForm.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TAB_BORDER));
+				contentPanel.add(feedbackForm, contentGbc);
+			});
 
 		});
 	}
@@ -362,11 +403,11 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * Sets the operator for which the operator documentation is shown.
 	 *
 	 * @param operator
+	 * 		the operator for which to show the documentation
 	 */
 	public void setDisplayedOperator(Operator operator) {
-		if (operator != null && !operator.getOperatorDescription().isDeprecated()
-				&& (this.displayedOperator == null || this.displayedOperator != null && !operator.getOperatorDescription()
-						.getName().equals(this.displayedOperator.getOperatorDescription().getName()))) {
+		if (operator != null && !operator.getOperatorDescription().isDeprecated() && (this.displayedOperator == null || !operator.getOperatorDescription()
+				.getName().equals(this.displayedOperator.getOperatorDescription().getName()))) {
 			assignDocumentation(operator);
 		}
 	}
@@ -397,8 +438,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		String key = op.getOperatorDescription().getKeyWithoutPrefix();
 
 		String opDescXMLResourcePath = documentationRoot + groupPath + key + ".xml";
-		URL resourceURL = Plugin.getMajorClassLoader().getResource(opDescXMLResourcePath);
-		return resourceURL;
+		return Plugin.getMajorClassLoader().getResource(opDescXMLResourcePath);
 	}
 
 }

@@ -1,22 +1,24 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.validation.clustering;
+
+import java.util.List;
 
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -41,15 +43,13 @@ import com.rapidminer.tools.math.similarity.DistanceMeasure;
 import com.rapidminer.tools.math.similarity.divergences.SquaredEuclideanDistance;
 import com.rapidminer.tools.math.similarity.numerical.EuclideanDistance;
 
-import java.util.List;
-
 
 /**
  * An evaluator for centroid based clustering methods. The average within cluster distance is
  * calculated by averaging the distance between the centroid and all examples of a cluster.
- * 
+ *
  * @author Sebastian Land, Michael Wurst, Ingo Mierswa
- * 
+ *
  */
 public class CentroidBasedEvaluator extends Operator {
 
@@ -65,9 +65,9 @@ public class CentroidBasedEvaluator extends Operator {
 
 	private double daviesBouldin;
 
-	public static final String[] CRITERIA_LIST = { "Avg. within centroid distance", "Davies Bouldin" };
+	public static final String[] CRITERIA_LIST = {"Avg. within centroid distance", "Davies Bouldin"};
 
-	public static final String[] CRITERIA_LIST_SHORT = { "avg_within_distance", "DaviesBouldin" };
+	public static final String[] CRITERIA_LIST_SHORT = {"avg_within_distance", "DaviesBouldin"};
 
 	private InputPort exampleSetInput = getInputPorts().createPort("example set", ExampleSet.class);
 	private InputPort clusterModelInput = getInputPorts().createPort("cluster model", CentroidClusterModel.class);
@@ -175,7 +175,18 @@ public class CentroidBasedEvaluator extends Operator {
 		clusterModelOutput.deliver(clusterModel);
 	}
 
-	private double[] getAverageWithinDistance(CentroidClusterModel model, ExampleSet exampleSet) throws OperatorException {
+	/**
+	 * Calculates and delivers the average within distances for all clusters and the given data set.
+	 * The last entry of the resulting array is the average across all clusters.
+	 *
+	 * @param model
+	 * 		the cluster model
+	 * @param exampleSet
+	 * 		the clustered data
+	 * @return the average within distance for all clusters plus the total avg within distance (last entry)
+	 * @since 8.2
+	 */
+	public static double[] getAverageWithinDistance(CentroidClusterModel model, ExampleSet exampleSet) throws OperatorException {
 		DistanceMeasure measure = new SquaredEuclideanDistance();
 		measure.init(exampleSet);
 		int numberOfClusters = model.getNumberOfClusters();
@@ -205,7 +216,17 @@ public class CentroidBasedEvaluator extends Operator {
 		return result;
 	}
 
-	private double getDaviesBouldin(CentroidClusterModel model, ExampleSet exampleSet) throws OperatorException {
+	/**
+	 * Calculates and delivers the Davies Bouldin Index for all clusters and the given data set.
+	 *
+	 * @param model
+	 * 		the cluster model
+	 * @param exampleSet
+	 * 		the clustered data
+	 * @return the Davies Bouldin Index for this clustering
+	 * @since 8.2
+	 */
+	public static double getDaviesBouldin(CentroidClusterModel model, ExampleSet exampleSet) throws OperatorException {
 		DistanceMeasure measure = new EuclideanDistance();
 		measure.init(exampleSet);
 		int numberOfClusters = model.getNumberOfClusters();

@@ -262,6 +262,7 @@ public class MacroConstructionOperator extends Operator {
 						"functions_expressions", "The expressions which define the new macros.", getInputPorts()
 								.getPortByIndex(0), false));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		return types;

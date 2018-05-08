@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -158,11 +159,12 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 		public void update(Observable<String> observable, String key) {
 			PropertyValueCellEditor editor = getEditorForKey(key);
 			if (editor != null) {
+				Object editorValueObject = editor.getCellEditorValue();
 				ParameterType type = operator.getParameters().getParameterType(key);
-				String editorValue = type.toString(editor.getCellEditorValue());
+				String editorValue = type.toString(editorValueObject);
 				String opValue = operator.getParameters().getParameterOrNull(key);
-				if (opValue != null && editorValue == null || opValue == null && editorValue != null || opValue != null
-						&& editorValue != null && !opValue.equals(editorValue)) {
+				// Second check prevents an endless validation loop in case opValue and editorValueObject are both null
+				if (!Objects.equals(opValue, editorValue) && opValue != editorValueObject) {
 					editor.getTableCellEditorComponent(null, opValue, false, 0, 1);
 				}
 			} else {

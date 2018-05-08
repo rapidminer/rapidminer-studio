@@ -171,8 +171,10 @@ public class PartitionOperator extends Operator {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeEnumeration(PARAMETER_PARTITIONS, "The partitions that should be created.",
-				new ParameterTypeDouble(PARAMETER_RATIO, "The relative size of this partition.", 0, 1), false));
+		ParameterTypeEnumeration type = new ParameterTypeEnumeration(PARAMETER_PARTITIONS, "The partitions that should be created.",
+				new ParameterTypeDouble(PARAMETER_RATIO, "The relative size of this partition.", 0, 1), false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeCategory(PARAMETER_SAMPLING_TYPE, "Defines the sampling type of this operator.",
 				SplittedExampleSet.SAMPLING_NAMES, SplittedExampleSet.AUTOMATIC, false));
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));

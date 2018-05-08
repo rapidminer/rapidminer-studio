@@ -249,7 +249,11 @@ public class ProcessTreeModel implements TreeModel {
 			// update while
 			// dying.
 			for (TreeModelListener l : listenerList.getListeners(TreeModelListener.class)) {
-				l.treeNodesChanged(e);
+				try {
+					l.treeNodesChanged(e);
+				} catch (Exception ex) {
+					//ignore
+				}
 			}
 		}
 	}
@@ -257,7 +261,11 @@ public class ProcessTreeModel implements TreeModel {
 	private void fireTreeNodesInserted(Operator operator) {
 		TreeModelEvent e = makeChangeEvent(operator);
 		for (TreeModelListener l : listenerList.getListeners(TreeModelListener.class)) {
-			l.treeNodesInserted(e);
+			try {
+				l.treeNodesInserted(e);
+			} catch (Exception ex) {
+				//ignore
+			}
 		}
 	}
 
@@ -265,7 +273,11 @@ public class ProcessTreeModel implements TreeModel {
 		TreePath path = getPathTo(operator).getParentPath();
 		TreeModelEvent e = new TreeModelEvent(this, path, new int[] { oldIndex }, new Object[] { operator });
 		for (TreeModelListener l : listenerList.getListeners(TreeModelListener.class)) {
-			l.treeNodesRemoved(e);
+			try {
+				l.treeNodesRemoved(e);
+			} catch (Exception ex) {
+				//ignore
+			}
 		}
 	}
 
@@ -273,7 +285,11 @@ public class ProcessTreeModel implements TreeModel {
 		TreePath path = getPathTo(unit).getParentPath();
 		TreeModelEvent e = new TreeModelEvent(this, path);
 		for (TreeModelListener l : listenerList.getListeners(TreeModelListener.class)) {
-			l.treeStructureChanged(e);
+			try {
+				l.treeStructureChanged(e);
+			} catch (Exception ex) {
+				//ignore
+			}
 		}
 	}
 

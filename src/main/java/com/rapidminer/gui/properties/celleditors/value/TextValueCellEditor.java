@@ -112,4 +112,9 @@ public class TextValueCellEditor extends AbstractCellEditor implements PropertyV
 	public boolean rendersLabel() {
 		return false;
 	}
+
+	@Override
+	public void activate() {
+		button.doClick();
+	}
 }

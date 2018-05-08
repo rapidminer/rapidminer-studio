@@ -1,30 +1,31 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools;
 
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FocusTraversalPolicy;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-
+import java.util.Arrays;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
@@ -34,6 +35,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
+import javax.swing.MenuElement;
+import javax.swing.plaf.basic.BasicMenuItemUI;
 
 import com.rapidminer.gui.look.Colors;
 
@@ -43,49 +46,58 @@ import com.rapidminer.gui.look.Colors;
  * be set as well as a custom width of this popup menu. Furthermore, focus traversal via TAB works
  * for any {@link Component} added to this popupmenu, not only for {@link JMenuItem}s.
  *
- * @author Marco Boeck
- *
+ * @author Marco Boeck, Jan Czogalla
  */
 public class ScrollableJPopupMenu extends JPopupMenu {
 
 	private static final long serialVersionUID = 7440641917394853639L;
 
+	/**
+	 * Empty space to have enough width to show the included components properly
+	 */
 	private static final int INSETS = 5;
 
+	/**
+	 * Additional height to suppress undesired scrolling
+	 */
+	private static final int SCROLLING_MARGIN = 2;
+
+	/**
+	 * Optional heights for this {@link ScrollableJPopupMenu}
+	 */
 	public static final int SIZE_TINY = 100;
 	public static final int SIZE_SMALL = 200;
 	public static final int SIZE_NORMAL = 400;
 	public static final int SIZE_LARGE = 600;
 	public static final int SIZE_HUGE = 800;
 
-	/** the scrollpane which allows scrolling */
+	/** The {@link JScrollPane} which allows scrolling */
 	private JScrollPane scrollPane;
 
-	/** the inner panel which houses all components */
-	private JPanel innerPanel;
+	/** The inner {@link JPanel} which houses all components */
+	protected JPanel innerPanel;
 
-	/** the title text for the menu, displayed above scrollpane */
+	/** The title text for the menu, displayed above scrollpane */
 	private String title;
 
-	/** the max height in pixel for the scrollpane */
+	/** The maximum height in pixel for the scrollpane */
 	private int maxHeight;
 
-	/** the max width in pixel for the scrollpane */
+	/** The maximum width in pixel for the scrollpane */
 	private int maxWidth;
 
-	/** if not null, will be used to determine the width of the scrollpane */
+	/** If not null, will be used to determine the width of the scrollpane. See {@link ScrollableJPopupMenu#setCustomWidth(Integer)} } */
 	private Integer customWidth;
 
 	/**
-	 * Creates a new {@link ScrollJPopupMenu} instance with the default max height.
-	 *
+	 * Creates a new {@link ScrollableJPopupMenu} instance with the default max height.
 	 */
 	public ScrollableJPopupMenu() {
 		this(null, SIZE_NORMAL);
 	}
 
 	/**
-	 * Creates a new {@link ScrollJPopupMenu} instance with the specified max height.
+	 * Creates a new {@link ScrollableJPopupMenu} instance with the specified max height.
 	 *
 	 * @param maxHeight
 	 */
@@ -94,7 +106,7 @@ public class ScrollableJPopupMenu extends JPopupMenu {
 	}
 
 	/**
-	 * Creates a new {@link ScrollJPopupMenu} instance with the specified title.
+	 * Creates a new {@link ScrollableJPopupMenu} instance with the specified title.
 	 *
 	 * @param title
 	 */
@@ -103,19 +115,16 @@ public class ScrollableJPopupMenu extends JPopupMenu {
 	}
 
 	/**
-	 * Creates a new {@link ScrollJPopupMenu} instance with the specified max height and title.
+	 * Creates a new {@link ScrollableJPopupMenu} instance with the specified max height and title.
 	 *
 	 * @param title
 	 * @param maxHeight
 	 */
 	public ScrollableJPopupMenu(String title, int maxHeight) {
 		super();
-		if (maxHeight < SIZE_TINY) {
-			throw new IllegalArgumentException("size must not be smaller than " + SIZE_TINY);
-		}
+		setMaxHeight(maxHeight);
 		this.title = title;
-		this.maxHeight = maxHeight;
-		this.maxWidth = 800;
+		this.maxWidth = SIZE_HUGE;
 
 		initGUI();
 	}
@@ -223,6 +232,32 @@ public class ScrollableJPopupMenu extends JPopupMenu {
 		});
 	}
 
+	/**
+	 * Updates the preferred size of the scrollpane depending on the components of this popup menu.
+	 */
+	protected void resizeScrollPane() {
+		setPreferredSize(null);
+		Dimension preferredSize = getPreferredSize();
+		int height = preferredSize.height;
+		final int heightWithMargin = maxHeight + SCROLLING_MARGIN;
+		boolean needsScrolling = height > heightWithMargin;
+		if (needsScrolling) {
+			height = heightWithMargin;
+		}
+		int width;
+		if (customWidth != null) {
+			width = customWidth;
+		} else {
+			width = preferredSize.width;
+			if (needsScrolling) {
+				width += scrollPane.getVerticalScrollBar().getPreferredSize().width + INSETS;
+			}
+		}
+		setPopupSize(width, height);
+		revalidate();
+		repaint();
+	}
+
 	@Override
 	public Component add(final Component comp) {
 		innerPanel.add(comp);
@@ -238,13 +273,18 @@ public class ScrollableJPopupMenu extends JPopupMenu {
 	}
 
 	/**
-	 * Updates the preferred size of the scrollpane depending on the components of this popup menu.
+	 * Sets the maximum height for this popup.
+	 *
+	 * @since 8.2
 	 */
-	private void resizeScrollPane() {
-		int width = customWidth == null ? innerPanel.getPreferredSize().width
-				+ scrollPane.getVerticalScrollBar().getPreferredSize().width + INSETS : customWidth - INSETS;
-		scrollPane
-		.setPreferredSize(new Dimension(width, Math.min(maxHeight, innerPanel.getPreferredSize().height + INSETS)));
+	public void setMaxHeight(int maxHeight) {
+		if (maxHeight < SIZE_TINY) {
+			throw new IllegalArgumentException("size must not be smaller than " + SIZE_TINY);
+		}
+		this.maxHeight = maxHeight;
+		if (innerPanel != null) {
+			resizeScrollPane();
+		}
 	}
 
 	/**
@@ -258,16 +298,24 @@ public class ScrollableJPopupMenu extends JPopupMenu {
 	}
 
 	/**
-	 * Returns all {@link Component}s inside the scrollpane.
+	 * @return the {@link JScrollPane} used inside
+	 * @since 8.2
+	 */
+	public JScrollPane getScrollPane() {
+		return scrollPane;
+	}
+
+	/**
+	 * Returns all {@link Component Components} inside the scrollpane.
 	 *
-	 * @return
+	 * @return Array of all included {@link Component Components}
 	 */
 	public Component[] getComponentsInsideScrollpane() {
 		return innerPanel.getComponents();
 	}
 
 	/**
-	 * Requets the focus on the first component inside the scrollpane. Does nothing if no components
+	 * Requests the focus on the first component inside the scrollpane. Does nothing if no components
 	 * exist.
 	 *
 	 * @return {@link Component#requestFocusInWindow()}
@@ -282,5 +330,67 @@ public class ScrollableJPopupMenu extends JPopupMenu {
 	@Override
 	public boolean requestFocusInWindow() {
 		return requestFocusForFirstComponent();
+	}
+
+	/**
+	 * Adds the given {@link JMenuItem} to the inner {@link JPanel}. Makes sure that it is in the visible area when selected,
+	 * especially for keyboard navigation.
+	 *
+	 * @since 8.2
+	 */
+	@Override
+	public JMenuItem add(JMenuItem menuItem) {
+		innerPanel.add(menuItem);
+		menuItem.addChangeListener(e -> ((JComponent) menuItem.getComponent()).scrollRectToVisible(new Rectangle(0, 0, menuItem.getWidth(), menuItem.getHeight())));
+		resizeScrollPane();
+
+		return menuItem;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return the {@link MenuElement} items inside the inner {@link JPanel}.
+	 * @since 8.2
+	 */
+	@Override
+	public MenuElement[] getSubElements() {
+		return Arrays.stream(innerPanel.getComponents()).
+				filter(c -> c instanceof MenuElement).toArray(MenuElement[]::new);
+	}
+
+	/**
+	 * Removes the component specified by the index from the inner {@link JPanel}.
+	 *
+	 * @since 8.2
+	 */
+	@Override
+	public void remove(int index) {
+		innerPanel.remove(index);
+		resizeScrollPane();
+	}
+
+	/**
+	 * Clears the inner {@link JPanel}.
+	 *
+	 * @since 8.2
+	 */
+	@Override
+	public void removeAll() {
+		innerPanel.removeAll();
+		resizeScrollPane();
+		innerPanel.scrollRectToVisible(new Rectangle(0, 0, 0, 0));
+	}
+
+	/**
+	 * Returns the inner {@link JPanel} that holds the actual components.
+	 * This is used in {@link BasicMenuItemUI#getPath()} for example to determine menu hierarchy on mouse events.
+	 *
+	 * @return the inner panel
+	 * @since 8.2
+	 */
+	@Override
+	public Component getComponent() {
+		return innerPanel;
 	}
 }

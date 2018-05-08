@@ -128,4 +128,9 @@ public class AttributesValueCellEditor extends AbstractCellEditor implements Pro
 		return button;
 	}
 
+	@Override
+	public void activate() {
+		button.doClick();
+	}
+
 }

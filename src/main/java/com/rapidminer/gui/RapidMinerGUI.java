@@ -67,6 +67,7 @@ import com.rapidminer.gui.license.LicenseTools;
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.fc.BookmarkIO;
 import com.rapidminer.gui.look.ui.RapidDockingUISettings;
+import com.rapidminer.gui.osx.OSXAdapter;
 import com.rapidminer.gui.plotter.PlotterPanel;
 import com.rapidminer.gui.processeditor.search.OperatorGlobalSearch;
 import com.rapidminer.gui.processeditor.search.OperatorGlobalSearchGUIProvider;
@@ -105,6 +106,7 @@ import com.rapidminer.tools.LaunchListener;
 import com.rapidminer.tools.LaunchListener.RemoteControlHandler;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.PlatformUtilities;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 import com.rapidminer.tools.Tools;
@@ -267,7 +269,7 @@ public class RapidMinerGUI extends RapidMiner {
 		// ----------------------------------------------------------
 	}
 
-	private static final int NUMBER_OF_RECENT_FILES = 8;
+	private static final int NUMBER_OF_RECENT_FILES = 10;
 
 	private static MainFrame mainFrame;
 
@@ -320,6 +322,8 @@ public class RapidMinerGUI extends RapidMiner {
 		// Initialize Docking UI -- important must be done as early as possible!
 		DockingUISettings.setInstance(new RapidDockingUISettings());
 		DockableContainerFactory.setFactory(new RapidDockableContainerFactory());
+
+		LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.RapidMinerGUI.start_version", new Object[] {RapidMiner.getLongVersion(), PlatformUtilities.getReleasePlatform()} );
 
 		// inform listeners that splash is about to be shown
 		for (GUIStartupListener sl : startupListener) {
@@ -407,6 +411,8 @@ public class RapidMinerGUI extends RapidMiner {
 
 		RapidMiner.splashMessage("plugin_gui");
 		Plugin.initPluginGuis(mainFrame);
+		// reload the sample repository to include plugin resources
+		RepositoryManager.refreshSampleRepository();
 
 		// only load the perspective here after all plugins have registered their dockables
 		// otherwise you may end up breaking the perspective and VLDocking exists in invalid states
@@ -518,7 +524,7 @@ public class RapidMinerGUI extends RapidMiner {
 		// setup tool tip text manager
 		ToolTipManager manager = ToolTipManager.sharedInstance();
 		manager.setDismissDelay(25000); // original: 4000
-		manager.setInitialDelay(1500);   // original: 750
+		manager.setInitialDelay(1125);   // original: 750
 		manager.setReshowDelay(50);    // original: 500
 	}
 
@@ -751,7 +757,9 @@ public class RapidMinerGUI extends RapidMiner {
 					mainFrame.getPropertyPanel().setShowParameterHelp(true);
 				} else {
 					mainFrame.getPropertyPanel().setShowParameterHelp(Boolean.valueOf(showHelpProperty).booleanValue());
-
+				}
+				if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX) {
+					OSXAdapter.checkForFullScreen(mainFrame);
 				}
 			} catch (NumberFormatException e) {
 				setDefaultGUIProperties();

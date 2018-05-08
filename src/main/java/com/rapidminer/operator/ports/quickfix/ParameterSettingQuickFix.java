@@ -18,6 +18,11 @@
 */
 package com.rapidminer.operator.ports.quickfix;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.gui.properties.AttributesPropertyDialog;
 import com.rapidminer.gui.properties.ListPropertyDialog;
 import com.rapidminer.gui.tools.dialogs.SetParameterDialog;
@@ -28,11 +33,6 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeConfiguration;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.UndefinedParameterError;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -45,13 +45,13 @@ public class ParameterSettingQuickFix extends AbstractQuickFix {
 	private String value;
 
 	public ParameterSettingQuickFix(Operator operator, String parameterName) {
-		this(operator, parameterName, null, "set_parameter", new Object[] { parameterName.replace('_', ' ') });
+		this(operator, parameterName, null, "set_parameter", parameterName.replace('_', ' '));
 
 		ParameterType type = operator.getParameterType(parameterName);
 		if (type instanceof ParameterTypeConfiguration) {
 			seti18nKey("set_parameters_using_wizard");
 		} else if (type instanceof ParameterTypeList) {
-			seti18nKey("set_parameter_list", parameterName);
+			seti18nKey("set_parameter_list", parameterName.replace('_', ' '));
 		}
 	}
 
@@ -62,15 +62,15 @@ public class ParameterSettingQuickFix extends AbstractQuickFix {
 		if (type instanceof ParameterTypeConfiguration) {
 			seti18nKey("correct_parameter_settings_with_wizard");
 		} else if (type instanceof ParameterTypeList) {
-			seti18nKey("correct_parameter_settings_list", parameterName);
-		} else {
+			seti18nKey("correct_parameter_settings_list", parameterName.replace('_', ' '));
 		}
+
 		if (value != null) {
 			if (type instanceof ParameterTypeBoolean) {
 				if (value.equals("true")) {
-					seti18nKey("correct_parameter_settings_boolean_enable", parameterName);
+					seti18nKey("correct_parameter_settings_boolean_enable", parameterName.replace('_', ' '));
 				} else {
-					seti18nKey("correct_parameter_settings_boolean_disable", parameterName);
+					seti18nKey("correct_parameter_settings_boolean_disable", parameterName.replace('_', ' '));
 				}
 			}
 		}
@@ -111,7 +111,7 @@ public class ParameterSettingQuickFix extends AbstractQuickFix {
 				try {
 					list = operator.getParameterList(parameterName);
 				} catch (UndefinedParameterError e) {
-					list = new LinkedList<String[]>();
+					list = new LinkedList<>();
 				}
 				ListPropertyDialog dialog = new ListPropertyDialog((ParameterTypeList) type, list, operator);
 				dialog.setVisible(true);
@@ -120,7 +120,7 @@ public class ParameterSettingQuickFix extends AbstractQuickFix {
 				}
 			} else if (type instanceof ParameterTypeAttributes) {
 				AttributesPropertyDialog dialog = new AttributesPropertyDialog((ParameterTypeAttributes) type,
-						Collections.<String> emptyList());
+						Collections.emptyList());
 				dialog.setVisible(true);
 				if (dialog.isOk()) {
 					boolean first = true;

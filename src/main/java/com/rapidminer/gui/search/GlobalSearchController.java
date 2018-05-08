@@ -48,6 +48,7 @@ final class GlobalSearchController {
 
 	/** number of search results that are displayed by default if only a single category is searched */
 	private static final int NUMBER_OF_RESULTS_SINGLE_CAT = 10;
+	private static final int LOGGING_DELAY = 1000;
 
 	private final GlobalSearchModel model;
 	private final GlobalSearchPanel searchPanel;
@@ -57,6 +58,7 @@ final class GlobalSearchController {
 
 	/** counts the number of global searches. Always incrementing when a new search is triggered */
 	private final AtomicInteger searchCounter;
+	private Timer updateTimer;
 
 
 	/**
@@ -172,8 +174,6 @@ final class GlobalSearchController {
 		final int searchCountSnapshot = searchCounter.get();
 		SwingWorker<GlobalSearchResult, Void> worker = new SwingWorker<GlobalSearchResult, Void>() {
 
-			private Timer updateTimer;
-
 			@Override
 			protected GlobalSearchResult doInBackground() throws Exception {
 				model.setPending(categoryId, true);
@@ -195,10 +195,13 @@ final class GlobalSearchController {
 					// no error when grabbing result? Good, search worked, reset error on model and provide results to it
 					model.setError(null);
 
-					if(updateTimer != null) {
+					if (updateTimer != null) {
 						updateTimer.stop();
 					}
-					updateTimer = new Timer(1000, e -> logSearch(result));
+					updateTimer = new Timer(LOGGING_DELAY, e -> {
+						logSearch(result);
+						updateTimer = null;
+					});
 					updateTimer.setRepeats(false);
 					updateTimer.start();
 
@@ -221,7 +224,7 @@ final class GlobalSearchController {
 			 * @param result from a search in the global search framework
 			 */
 			private void logSearch(GlobalSearchResult result) {
-				if(result != null) {
+				if (result != null) {
 					String searchTerm = lastQuery;
 					long numResults = result.getPotentialNumberOfResults();
 					ActionStatisticsCollector.getInstance().logGlobalSearch(ActionStatisticsCollector.VALUE_TIMEOUT, searchTerm, categoryId, numResults);
@@ -242,7 +245,7 @@ final class GlobalSearchController {
 		Throwable cause = e.getCause();
 		if (cause instanceof ParseException) {
 			message = cause.getMessage() != null ? cause.getMessage() : cause.toString();
-		} else if (cause == null ){
+		} else if (cause == null) {
 			message = e.getMessage();
 		}
 

@@ -302,6 +302,7 @@ public class ScriptingOperator extends Operator {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = new ParameterTypeText(PARAMETER_SCRIPT, "The script to execute.", TextType.GROOVY, false);
 		type.setExpert(false);
+		type.setPrimary(true);
 		type.setDefaultValue("/* \n" + " * You can use both Java and Groovy syntax in this script.\n"
 				+ " * \n * Note that you have access to the following two predefined variables:\n"
 				+ " * 1) input (an array of all input data)\n"

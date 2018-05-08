@@ -1910,7 +1910,7 @@
         <operator>
         <name>Write as Text</name>
         <synopsis>This operator can be used at each point in an operator chain
-            and and writes current results to the console or to a file.
+            and writes current results to the console or to a file.
         </synopsis>
         <help>This operator can be used at each point in an operator chain. It
             returns all input it receives without any modification. Every input
@@ -6966,7 +6966,7 @@
     <key>weight_by_deviation</key>
   </operator>
     <operator>
-        <name>FP-Growth</name>
+        <name>FP-Growth (Deprecated)</name>
         <synopsis>This learner efficiently calculates all frequent item sets
             from the given data.</synopsis>
         <help>&lt;p&gt;This operator calculates all frequent items sets from a
@@ -7733,6 +7733,11 @@
             however, it can be used to handle exceptions in the analysis process
             (i.e. expected errors). &lt;/p&gt;</help>
     <key>handle_exception</key>
+    <tags>
+        <tag>Error</tag>
+        <tag>Try</tag>
+        <tag>Catch</tag>
+    </tags>
   </operator>
   <operator>
   		<name>Throw Exception</name>

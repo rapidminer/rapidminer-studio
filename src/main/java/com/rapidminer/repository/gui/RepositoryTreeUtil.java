@@ -18,8 +18,11 @@
 */
 package com.rapidminer.repository.gui;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
-
+import java.util.LinkedHashSet;
+import java.util.List;
 import javax.swing.JTree;
 import javax.swing.tree.TreePath;
 
@@ -45,8 +48,8 @@ public class RepositoryTreeUtil {
 	/** Saved expanded nodes */
 	private HashSet<String> expandedNodes;
 
-	/** Saved expanded repositories */
-	private HashSet<String> expandedRepositories;
+	/** Saved selected nodes */
+	private HashSet<String> selectedNodes;
 
 	/** Saves single path */
 	public void saveSelectionPath(TreePath treePath) {
@@ -82,24 +85,26 @@ public class RepositoryTreeUtil {
 	 */
 	public void saveExpansionState(JTree tree) {
 
-		saveSelectionPaths(tree.getSelectionPaths());
 
-		expandedNodes = new HashSet<>();
-		expandedRepositories = new HashSet<>();
+		expandedNodes = new LinkedHashSet<>();
+		selectedNodes = new LinkedHashSet<>();
 
 		for (int i = 0; i < tree.getRowCount(); i++) {
 			TreePath path = tree.getPathForRow(i);
-			if (tree.isExpanded(path)) {
+			boolean isExpanded = tree.isExpanded(path);
+			boolean isSelected = tree.isPathSelected(path);
+			if (isExpanded ||isSelected) {
 				Entry entry = (Entry) path.getLastPathComponent();
 				String absoluteLocation = entry.getLocation().getAbsoluteLocation();
-				if (entry instanceof Repository) {
-					expandedRepositories.add(absoluteLocation);
-				} else {
+				if (isExpanded) {
 					expandedNodes.add(absoluteLocation);
 				}
-
+				if (isSelected) {
+					selectedNodes.add(absoluteLocation);
+				}
 			}
 		}
+
 	}
 
 	/**
@@ -110,6 +115,7 @@ public class RepositoryTreeUtil {
 	 *            The related tree, containing the path(s)
 	 */
 	public void restoreExpansionState(JTree tree) {
+		List<TreePath> selectedPathList = new ArrayList<>();
 		for (int i = 0; i < tree.getRowCount(); i++) {
 			TreePath path = tree.getPathForRow(i);
 			// sanity check for concurrent refreshes
@@ -118,19 +124,23 @@ public class RepositoryTreeUtil {
 				if (entryObject instanceof Entry) {
 					Entry entry = (Entry) entryObject;
 					String absoluteLocation = entry.getLocation().getAbsoluteLocation();
-					if (expandedRepositories.contains(absoluteLocation) || expandedNodes.contains(absoluteLocation)) {
+					if (expandedNodes.contains(absoluteLocation)) {
 						tree.expandPath(path);
+					}
+					if (selectedNodes.contains(absoluteLocation)) {
+						selectedPathList.add(path);
 					}
 				}
 			}
 		}
-
-		restoreSelectionPaths(tree);
+		if (!selectedPathList.isEmpty()) {
+			tree.setSelectionPaths(selectedPathList.toArray(new TreePath[0]));
+		}
 	}
 
 	/**
 	 * Calls {@link RepositoryLocation###locateEntry()} on every node which was saved with ##
-	 * {@link #saveExpansionState(JTree)}. This calls {@link RepositoryManager###locate(Repository,
+	 * {@link #saveExpansionState(JTree)}. This calls {@link com.rapidminer.repository.RepositoryManager#locate(Repository,
 	 * String, boolean)} which refreshes parent folders of missed entries.
 	 */
 	public void locateExpandedEntries() {
@@ -145,4 +155,28 @@ public class RepositoryTreeUtil {
 		}
 	}
 
+	/**
+	 * Retain only the root selectedPaths
+	 *
+	 * @param tree
+	 *           The related tree, containing the path(s)
+	 */
+	public void retainRootSelections(JTree tree) {
+		if (selectedPaths == null) {
+			selectedPaths = tree.getSelectionPaths();
+		}
+		if (selectedPaths != null) {
+			List<TreePath> parents = Arrays.asList(selectedPaths);
+			List<TreePath> newSelection = new ArrayList<>(parents);
+			for (TreePath entry : parents) {
+				for (TreePath parent = entry.getParentPath(); parent != null; parent = parent.getParentPath()) {
+					if (parents.contains(parent)) {
+						newSelection.remove(entry);
+						break;
+					}
+				}
+			}
+			selectedPaths = newSelection.toArray(new TreePath[0]);
+		}
+	}
 }

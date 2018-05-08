@@ -67,6 +67,23 @@ public class SaveAction extends ResourceAction {
 	 * @return true on success, false on failure
 	 */
 	public static boolean save(final Process process) {
+		return save(process, false);
+	}
+
+	/**
+	 * Saves the specified process to its {@link ProcessLocation}. If it has none, will open the
+	 * SaveAs dialog. <br/>
+	 * <strong>Note:</strong> This call executes in the calling thread. In other words, this would
+	 * block the GUI if called from the EDT!
+	 *
+	 * @param process
+	 * 		the {@link Process} to save
+	 * @param refreshProcessMetaData
+	 * 		if {@code true}, the meta data of the process will be recalculated after successful save
+	 * @return true on success, false on failure
+	 * @since 8.2
+	 */
+	public static boolean save(final Process process, final boolean refreshProcessMetaData) {
 
 		if (process.hasSaveDestination()) {
 			if (confirmOverwriteWithNewVersion(process)) {
@@ -81,8 +98,12 @@ public class SaveAction extends ResourceAction {
 					if (process.hasSaveDestination()) {
 						RapidMinerGUI.useProcessFile(process);
 						RapidMinerGUI.getMainFrame().processHasBeenSaved();
-					}
 
+						// after successful save, if desired, force recalculation of meta data
+						if (refreshProcessMetaData) {
+							process.getRootOperator().transformMetaData();
+						}
+					}
 				} catch (IOException e) {
 					successful = false;
 					SwingTools
@@ -110,6 +131,22 @@ public class SaveAction extends ResourceAction {
 	 *            the {@link Process} to save
 	 */
 	public static void saveAsync(final Process process) {
+		saveAsync(process, false);
+	}
+
+	/**
+	 * Saves the specified process to its {@link ProcessLocation}. If it has none, will open the
+	 * SaveAs dialog. <br/>
+	 * <strong>Note:</strong> This call executes in a {@link ProgressThread} with the key
+	 * {@link #SAVE_PROGRESS_KEY}. In other words, this method can return immediately!
+	 *
+	 * @param process
+	 * 		the {@link Process} to save
+	 * @param refreshProcessMetaData
+	 * 		if {@code true}, the meta data of the process will be recalculated after successful save
+	 * @since 8.2
+	 */
+	public static void saveAsync(final Process process, final boolean refreshProcessMetaData) {
 		if (process.hasSaveDestination()) {
 			if (confirmOverwriteWithNewVersion(process)) {
 				// user wants to save
@@ -122,24 +159,25 @@ public class SaveAction extends ResourceAction {
 					public void run() {
 						try {
 							process.save();
-							try {
-								SwingUtilities.invokeAndWait(new Runnable() {
 
-									@Override
-									public void run() {
-										// check if process has really been saved or user has
-										// pressed
-										// cancel in saveAs dialog
-										if (process.hasSaveDestination()) {
-											RapidMinerGUI.useProcessFile(process);
-											RapidMinerGUI.getMainFrame().processHasBeenSaved();
-										}
+							try {
+								SwingUtilities.invokeAndWait(() -> {
+
+									// check if process has really been saved or user has pressed cancel in saveAs dialog
+									if (process.hasSaveDestination()) {
+										RapidMinerGUI.useProcessFile(process);
+										RapidMinerGUI.getMainFrame().processHasBeenSaved();
 									}
 								});
 							} catch (InvocationTargetException | InterruptedException e) {
 								// can be ignored here. To prevent a silent exception (due to a bug
 								// in the called methods), print the stacktrace
 								e.printStackTrace();
+							}
+
+							// after successful save, if desired, force recalculation of meta data
+							if (refreshProcessMetaData && process.hasSaveDestination()) {
+								process.getRootOperator().transformMetaData();
 							}
 						} catch (IOException ex) {
 							SwingTools.showSimpleErrorMessage("cannot_save_process", ex, process.getProcessLocation(),

@@ -52,6 +52,8 @@ public class OAuthValueCellEditor extends DefaultRMCellEditor implements Propert
 
 	private JPanel container;
 
+	private JButton authButton;
+
 	public OAuthValueCellEditor(final ParameterTypeOAuth type) {
 		super(new JPasswordField());
 		this.container = new JPanel(new GridBagLayout());
@@ -89,7 +91,7 @@ public class OAuthValueCellEditor extends DefaultRMCellEditor implements Propert
 			}
 		});
 
-		JButton authButton = new JButton(new ResourceAction(true, "generate_auth_key") {
+		authButton = new JButton(new ResourceAction(true, "generate_auth_key") {
 
 			private static final long serialVersionUID = 1L;
 
@@ -147,4 +149,9 @@ public class OAuthValueCellEditor extends DefaultRMCellEditor implements Propert
 
 	@Override
 	public void setOperator(Operator operator) {}
+
+	@Override
+	public void activate() {
+		authButton.doClick();
+	}
 }

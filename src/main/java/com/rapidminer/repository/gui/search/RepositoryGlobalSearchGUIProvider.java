@@ -60,6 +60,7 @@ import com.rapidminer.repository.search.RepositoryGlobalSearch;
 import com.rapidminer.search.GlobalSearchUtilities;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.usagestats.DefaultUsageLoggable;
 
 
 /**
@@ -73,7 +74,7 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 	/**
 	 * Drag & Drop support for repository entries.
 	 */
-	private static final class RepositoryDragGesture implements DragGestureListener {
+	private static final class RepositoryDragGesture extends DefaultUsageLoggable implements DragGestureListener {
 
 		private final RepositoryLocation location;
 
@@ -95,8 +96,15 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 			}
 
 			// set the repository entry as the Transferable
-			event.startDrag(cursor, new TransferableRepositoryEntry(location));
+			TransferableRepositoryEntry transferable = new TransferableRepositoryEntry(location);
+			if (usageLogger != null) {
+				transferable.setUsageStatsLogger(usageLogger);
+			} else if (usageObject != null) {
+				transferable.setUsageObject(usageObject);
+			}
+			event.startDrag(cursor, transferable);
 		}
+
 	}
 
 	private static final ImageIcon PROCESS_ICON = SwingTools.createIcon("16/gearwheel.png");

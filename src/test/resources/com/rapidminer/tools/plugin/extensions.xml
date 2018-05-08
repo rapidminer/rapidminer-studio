@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extensions>
+    <extension>
+        <id>rmx_test</id>
+        <name>Process Testing</name>
+        <active>true</active>
+        <license>RM_EULA</license>
+        <selected-version>7.2.0</selected-version>
+        <installed-version>7.2.0</installed-version>
+    </extension>
+    <extension>
+        <id>rmx_text</id>
+        <name>Text Processing</name>
+        <active>true</active>
+        <license>RM_EULA</license>
+        <selected-version>7.5.0</selected-version>
+        <installed-version>7.5.0</installed-version>
+        <installed-version>8.1.0</installed-version>
+    </extension>
+    <extension>
+        <id>rmx_web</id>
+        <name>Web Mining</name>
+        <active>true</active>
+        <license>RM_EULA</license>
+        <selected-version>7.3.0</selected-version>
+        <installed-version>7.3.0</installed-version>
+    </extension>
+    <extension>
+        <id>rmx_w00t</id>
+        <name>W00t Mining</name>
+        <active>false</active>
+        <license>w00t5t0ck</license>
+        <selected-version>7.3.0</selected-version>
+        <installed-version>s</installed-version>
+    </extension>
+    <extension>
+        <id>rmx_none_selected_use_last</id>
+        <name>none selected use last</name>
+        <active>false</active>
+        <license>none</license>
+        <selected-version></selected-version>
+        <installed-version>6.7.99</installed-version>
+        <installed-version>7.13.20</installed-version>
+        <installed-version>8.0.1</installed-version>
+    </extension>
+</extensions>

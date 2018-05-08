@@ -26,13 +26,11 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -40,13 +38,12 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
-
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -94,6 +91,7 @@ import com.rapidminer.gui.flow.processrendering.view.actions.DeleteSelectedConne
 import com.rapidminer.gui.flow.processrendering.view.actions.RenameAction;
 import com.rapidminer.gui.flow.processrendering.view.actions.SelectAllAction;
 import com.rapidminer.gui.flow.processrendering.view.components.ProcessRendererTooltipProvider;
+import com.rapidminer.gui.properties.celleditors.value.PropertyValueCellEditor;
 import com.rapidminer.gui.tools.PrintingTools;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceMenu;
@@ -112,12 +110,15 @@ import com.rapidminer.operator.ResultObject;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
+import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
 /**
@@ -473,7 +474,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					return;
 				}
 			}
-		};
+		}
 	};
 
 	/** the key handler for the entire process renderer */
@@ -562,8 +563,20 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					// operator phase event, no more decorator processing afterwards
 					if (!model.getSelectedOperators().isEmpty()) {
 						Operator selected = model.getSelectedOperators().get(0);
-						if (selected instanceof OperatorChain) {
+						if (selected instanceof OperatorChain && e.getModifiersEx() != InputEvent.ALT_DOWN_MASK) {
+							// dive into operator chain, unless user has pressed ALT key. ALT + ENTER = activate primary parameter
+							ActionStatisticsCollector.getInstance().logOperatorDoubleClick(selected, ActionStatisticsCollector.OPERATOR_ACTION_OPEN);
 							model.setDisplayedChainAndFire((OperatorChain) selected);
+						} else {
+							// look for a primary parameter, and activate it if found
+							ParameterType primaryParameter = selected.getPrimaryParameter();
+							ActionStatisticsCollector.getInstance().logOperatorDoubleClick(selected, ActionStatisticsCollector.OPERATOR_ACTION_PRIMARY_PARAMETER);
+							if (primaryParameter != null) {
+								PropertyValueCellEditor editor = RapidMinerGUI.getMainFrame().getPropertyPanel().getEditorForKey(primaryParameter.getKey());
+								if (editor != null) {
+									editor.activate();
+								}
+							}
 						}
 					}
 					e.consume();
@@ -707,9 +720,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		new OperatorAnimationProcessListener(model);
 
 		// prepare event decorators for each phase
-		decorators = new HashMap<>();
+		decorators = new EnumMap<>(RenderPhase.class);
 		for (RenderPhase phase : RenderPhase.eventOrder()) {
-			decorators.put(phase, new CopyOnWriteArrayList<ProcessEventDecorator>());
+			decorators.put(phase, new CopyOnWriteArrayList<>());
 		}
 
 		overviewPanel = new OverviewPanel(this);
@@ -741,13 +754,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 						controller.autoFit();
 						//$FALL-THROUGH$
 					case PROCESS_SIZE_CHANGED:
-						SwingUtilities.invokeLater(new Runnable() {
-
-							@Override
-							public void run() {
-								updateComponentSize();
-								repaint();
-							}
+						SwingUtilities.invokeLater(() -> {
+							updateComponentSize();
+							repaint();
 						});
 						break;
 					case MISC_CHANGED:
@@ -845,13 +854,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				controller.autoFit();
 			}
 		});
-		processPanel.addHierarchyListener(new HierarchyListener() {
-
-			@Override
-			public void hierarchyChanged(HierarchyEvent e) {
-				controller.autoFit();
-			}
-		});
+		processPanel.addHierarchyListener(e -> controller.autoFit());
 
 		// register transfer handler and drop target
 		setTransferHandler(new ProcessRendererTransferHandler(this, model, controller));
@@ -878,9 +881,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		});
 
 		// add some actions to the action map of this component
-		((ResourceAction) mainFrame.getActions().TOGGLE_BREAKPOINT[BreakpointListener.BREAKPOINT_AFTER]).addToActionMap(this,
-				WHEN_FOCUSED);
-		((ResourceAction) mainFrame.getActions().TOGGLE_ACTIVATION_ITEM).addToActionMap(this, WHEN_FOCUSED);
+		mainFrame.getActions().TOGGLE_BREAKPOINT[BreakpointListener.BREAKPOINT_AFTER].
+				addToActionMap(this, WHEN_FOCUSED);
+		mainFrame.getActions().TOGGLE_ACTIVATION_ITEM.addToActionMap(this, WHEN_FOCUSED);
 		selectAllAction.addToActionMap(this, WHEN_FOCUSED);
 		OperatorTransferHandler.addToActionMap(this);
 		deleteSelectedAction.addToActionMap(this, "delete", WHEN_FOCUSED);
@@ -1031,8 +1034,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	public void processUpdated() {
 		Operator hoveredOp = model.getHoveringOperator();
 		boolean hoveredOperatorFound = hoveredOp == null ? true : false;
-		List<Operator> movedOperators = new LinkedList<Operator>();
-		List<Operator> portChangedOperators = new LinkedList<Operator>();
+		List<Operator> movedOperators = new LinkedList<>();
+		List<Operator> portChangedOperators = new LinkedList<>();
 
 		// make sure location of every opterator is set and potentially reset hovered op
 		for (ExecutionUnit unit : model.getProcesses()) {
@@ -1352,24 +1355,22 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		add(renameField);
 		renameField.requestFocusInWindow();
 		// accepting changes on enter and focus lost
-		renameField.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				if (renameField != null) {
-					String name = renameField.getText().trim();
-					if (name.length() > 0) {
-						op.rename(name);
-					}
-					remove(renameField);
-					renameField = null;
-					// this makes sure that pressing F2 afterwards works
-					// otherwise nothing might be focused
-					ProcessRendererView.this.requestFocusInWindow();
-					repaint();
-				}
+		Runnable renamer = () -> {
+			if (renameField == null) {
+				return;
 			}
-		});
+			String name = renameField.getText().trim();
+			if (name.length() > 0) {
+				op.rename(name);
+			}
+			remove(renameField);
+			renameField = null;
+			// this makes sure that pressing F2 afterwards works
+			// otherwise nothing might be focused
+			ProcessRendererView.this.requestFocusInWindow();
+			repaint();
+		};
+		renameField.addActionListener(e -> renamer.run());
 		renameField.addFocusListener(new FocusAdapter() {
 
 			@Override
@@ -1378,19 +1379,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				if (e.isTemporary()) {
 					return;
 				}
-
-				if (renameField != null) {
-					String name = renameField.getText().trim();
-					if (name.length() > 0) {
-						op.rename(name);
-					}
-					remove(renameField);
-					renameField = null;
-					// this makes sure that pressing F2 afterwards works
-					// otherwise nothing might be focused
-					ProcessRendererView.this.requestFocusInWindow();
-					repaint();
-				}
+				renamer.run();
 			}
 		});
 		// ignore changes on escape
@@ -1452,6 +1441,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 		// port or not port, that is the question
 		final Port hoveringPort = model.getHoveringPort();
+		OperatorChain displayedChain = model.getDisplayedChain();
 		if (hoveringPort != null) {
 			// add port actions
 			final IOObject data = hoveringPort.getAnyDataOrNull();
@@ -1493,55 +1483,33 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 					@Override
 					public void loggedActionPerformed(final ActionEvent e) {
-						if (hoveringPort != null) {
-							if (hoveringPort.isConnected()) {
-								if (hoveringPort instanceof OutputPort) {
-									((OutputPort) hoveringPort).disconnect();
-								} else {
-									((InputPort) hoveringPort).getSource().disconnect();
-								}
+						if (hoveringPort.isConnected()) {
+							if (hoveringPort instanceof OutputPort) {
+								((OutputPort) hoveringPort).disconnect();
+							} else {
+								((InputPort) hoveringPort).getSource().disconnect();
 							}
 						}
 					}
 				});
 			}
 
-			if (model.getDisplayedChain() instanceof ProcessRootOperator) {
-				if (hoveringPort.getPorts() == model.getDisplayedChain().getSubprocess(0).getInnerSources()
-						|| hoveringPort.getPorts() == model.getDisplayedChain().getSubprocess(0).getInnerSinks()) {
-					menu.add(new ConnectPortToRepositoryAction(hoveringPort));
-				}
+			Ports<? extends Port> ports = hoveringPort.getPorts();
+			ExecutionUnit subprocess = displayedChain.getSubprocess(0);
+			if (displayedChain instanceof ProcessRootOperator &&
+					(ports == subprocess.getInnerSources() || ports == subprocess.getInnerSinks())) {
+				menu.add(new ConnectPortToRepositoryAction(hoveringPort));
 			}
 			firePortMenuWillOpen(menu, hoveringPort);
 		} else if (model.getHoveringOperator() == null && model.getHoveringConnectionSource() != null) {
 			// right-clicked a connection spline
-			final Port port = model.getHoveringConnectionSource();
 			menu.add(new ResourceAction(true, "delete_connection") {
 
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void loggedActionPerformed(final ActionEvent e) {
-					if (port != null) {
-						if (port.isConnected()) {
-							OutputPort disconnectedPort;
-							if (port instanceof OutputPort) {
-								((OutputPort) port).disconnect();
-								disconnectedPort = (OutputPort) port;
-							} else {
-								((InputPort) port).getSource().disconnect();
-								disconnectedPort = ((InputPort) port).getSource();
-							}
-							if (port.equals(disconnectedPort)) {
-								model.setHoveringConnectionSource(null);
-							}
-							if (model.getSelectedConnectionSource() != null
-									&& model.getSelectedConnectionSource().equals(disconnectedPort)) {
-								model.setSelectedConnectionSource(null);
-							}
-							model.fireMiscChanged();
-						}
-					}
+					disconnectHoveredConnection(model);
 				}
 			});
 		} else {
@@ -1622,11 +1590,11 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 				menu.addSeparator();
 				String name = "Process";
-				if (model.getDisplayedChain().getProcess().getProcessLocation() != null) {
-					name = model.getDisplayedChain().getProcess().getProcessLocation().getShortName();
+				if (displayedChain.getProcess().getProcessLocation() != null) {
+					name = displayedChain.getProcess().getProcessLocation().getShortName();
 				}
 				menu.add(PrintingTools.makeExportPrintMenu(this, name));
-				fireOperatorMenuWillOpen(menu, model.getDisplayedChain());
+				fireOperatorMenuWillOpen(menu, displayedChain);
 			} else {
 				boolean first = true;
 				for (OutputPort port : hoveredOp.getOutputPorts().getAllPorts()) {
@@ -1661,6 +1629,25 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		}
 		return true;
 
+	}
+
+	/**
+	 * Disconnects the hovered connection.
+	 *
+	 * @param model the {@link ProcessRendererModel}
+	 * @since 8.2
+	 */
+	static void disconnectHoveredConnection(ProcessRendererModel model) {
+		OutputPort port = model.getHoveringConnectionSource();
+		if (port == null || !port.isConnected()) {
+			return;
+		}
+		port.disconnect();
+		model.setHoveringConnectionSource(null);
+		if (port.equals(model.getSelectedConnectionSource())) {
+			model.setSelectedConnectionSource(null);
+		}
+		model.fireMiscChanged();
 	}
 
 	/**

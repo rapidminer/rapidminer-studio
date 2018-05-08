@@ -7,8 +7,8 @@ This project contains the open source core of [RapidMiner Studio](https://rapidm
 
 ## Getting Started
 
-* [Install](https://rapidminer.com/studio) RapidMiner Studio
-* Have a look at our [Getting Started](http://docs.rapidminer.com/studio/getting-started/) Videos
+* [Install](https://rapidminer.com/products/studio/) RapidMiner Studio
+* Have a look at our [Getting Started Central](https://rapidminer.com/getting-started-central/)
 * You miss something? There might be an [Extension](https://marketplace.rapidminer.com) for it
 * Have questions? Check out our official [community](https://community.rapidminer.com) and [documentation](https://docs.rapidminer.com)
 
@@ -95,9 +95,9 @@ class CliLauncher {
 
 ## Diving in
 
-* Create your own [Extension](http://docs.rapidminer.com/developers/creating-your-own-extension/)
-* [Integrate](http://community.rapidminer.com/t5/Become-a-RapidMiner-Developer/Frequently-Asked-Questions-Development/m-p/19782) RapidMiner Studio Core into your project
-* And much more at our [Developer Board](http://community.rapidminer.com/t5/Become-a-RapidMiner-Developer/bd-p/BARDDBoard)
+* Create your own [Extension](https://docs.rapidminer.com/latest/developers/creating-your-own-extension/)
+* [Integrate](https://community.rapidminer.com/t5/Become-a-RapidMiner-Developer/Frequently-Asked-Questions-Development/m-p/19782) RapidMiner Studio Core into your project
+* And much more at our [Developer Board](https://community.rapidminer.com/t5/Become-a-RapidMiner-Developer/bd-p/BARDDBoard)
 
 ## License
 

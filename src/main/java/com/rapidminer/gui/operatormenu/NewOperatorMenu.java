@@ -23,6 +23,7 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 import java.util.Collections;
 
@@ -46,6 +47,7 @@ public class NewOperatorMenu extends OperatorMenu {
 		try {
 			Operator operator = OperatorService.createOperator(description);
 			RapidMinerGUI.getMainFrame().getActions().insert(Collections.singletonList(operator));
+			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_NEW_OPERATOR_MENU, "inserted", operator.getOperatorDescription().getKey());
 		} catch (Exception e) {
 			SwingTools.showSimpleErrorMessage("cannot_instantiate", e, description.getName());
 		}

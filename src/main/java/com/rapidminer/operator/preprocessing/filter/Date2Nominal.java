@@ -19,20 +19,20 @@
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.ProcessSetupError.Severity;
-import com.rapidminer.operator.SimpleProcessSetupError;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.error.AttributeNotFoundError;
@@ -42,13 +42,11 @@ import com.rapidminer.operator.ports.metadata.AttributeSetPrecondition;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SetRelation;
-import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDateFormat;
-import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
@@ -185,13 +183,20 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 
 	public static final String PARAMETER_ATTRIBUTE_NAME = "attribute_name";
 
-	public static final String PARAMETER_DATE_FORMAT = "date_format";
+	/**
+	 * @deprecated since 8.2; use {@link ParameterTypeDateFormat#PARAMETER_DATE_FORMAT} instead.
+	 */
+	@Deprecated
+	public static final String PARAMETER_DATE_FORMAT = ParameterTypeDateFormat.PARAMETER_DATE_FORMAT;
 
 	public static final String PARAMETER_TIME_ZONE = "time_zone";
 
 	public static final String PARAMETER_LOCALE = "locale";
 
 	public static final String PARAMETER_KEEP_OLD_ATTRIBUTE = "keep_old_attribute";
+
+	/** The last version that removed the special role of the selected attribute */
+	public static final OperatorVersion VERSION_DOES_NOT_KEEP_ROLE = new OperatorVersion(8, 1, 2);
 
 	public Date2Nominal(OperatorDescription description) {
 		super(description);
@@ -212,20 +217,19 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 			newAttribute.getMean().setUnkown();
 			HashSet<String> valueSet = new HashSet<>();
 			if (amd.getValueRange() != null) {
-				String dateFormat = getParameterAsString(PARAMETER_DATE_FORMAT);
 				int localeIndex = getParameterAsInt(PARAMETER_LOCALE);
 				Locale selectedLocale = Locale.US;
 				if (localeIndex >= 0 && localeIndex < availableLocales.size()) {
 					selectedLocale = availableLocales.get(getParameterAsInt(PARAMETER_LOCALE));
 				}
 
-				SimpleDateFormat parser;
+				SimpleDateFormat parser = null;
 				try {
-					parser = new SimpleDateFormat(dateFormat, selectedLocale);
-				} catch (IllegalArgumentException | NullPointerException e) {
-					addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(),
-							Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_DATE_FORMAT)),
-							"parameter_invalid_time_format", PARAMETER_DATE_FORMAT));
+					parser = ParameterTypeDateFormat.createCheckedDateFormat(this, selectedLocale, true);
+				} catch (UserError userError) {
+					// will not happen because of setup error
+				}
+				if (parser == null) {
 					return metaData;
 				}
 
@@ -241,6 +245,9 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 			newAttribute.setValueSet(valueSet, SetRelation.SUPERSET);
 			if (!getParameterAsBoolean(PARAMETER_KEEP_OLD_ATTRIBUTE)) {
 				metaData.removeAttribute(amd);
+				if (getCompatibilityLevel().isAbove(VERSION_DOES_NOT_KEEP_ROLE)) {
+					newAttribute.setRole(amd.getRole());
+				}
 			} else {
 				newAttribute.setName(newAttribute.getName() + ATTRIBUTE_NAME_POSTFIX);
 			}
@@ -266,18 +273,12 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 		exampleSet.getExampleTable().addAttribute(newAttribute);
 		exampleSet.getAttributes().addRegular(newAttribute);
 
-		String dateFormat = getParameterAsString(PARAMETER_DATE_FORMAT);
 		int localeIndex = getParameterAsInt(PARAMETER_LOCALE);
 		Locale selectedLocale = Locale.US;
 		if (localeIndex >= 0 && localeIndex < availableLocales.size()) {
 			selectedLocale = availableLocales.get(getParameterAsInt(PARAMETER_LOCALE));
 		}
-		SimpleDateFormat parser;
-		try {
-			parser = new SimpleDateFormat(dateFormat, selectedLocale);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			throw new UserError(this, "invalid_date_format", dateFormat, e.getMessage());
-		}
+		SimpleDateFormat parser = ParameterTypeDateFormat.createCheckedDateFormat(this, selectedLocale, false);
 		parser.setTimeZone(Tools.getTimeZone(getParameterAsInt(PARAMETER_TIME_ZONE)));
 
 		for (Example example : exampleSet) {
@@ -291,8 +292,12 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 		}
 
 		if (!getParameterAsBoolean(PARAMETER_KEEP_OLD_ATTRIBUTE)) {
+			AttributeRole dateAttributeRole = exampleSet.getAttributes().getRole(dateAttribute);
 			exampleSet.getAttributes().remove(dateAttribute);
 			newAttribute.setName(attributeName);
+			if (dateAttributeRole.isSpecial() && getCompatibilityLevel().isAbove(VERSION_DOES_NOT_KEEP_ROLE)) {
+				exampleSet.getAttributes().getRole(newAttribute).setSpecial(dateAttributeRole.getSpecialName());
+			}
 		} else {
 			newAttribute.setName(attributeName + ATTRIBUTE_NAME_POSTFIX);
 		}
@@ -305,9 +310,8 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 		ParameterTypeAttribute attributeParamType = new ParameterTypeAttribute(PARAMETER_ATTRIBUTE_NAME,
 				"The attribute which should be parsed.", getExampleSetInputPort(), false, false, Ontology.DATE_TIME);
 		types.add(attributeParamType);
-		ParameterType type = new ParameterTypeStringCategory(PARAMETER_DATE_FORMAT,
-				"The output format of the date values, for example \"yyyy/MM/dd\".",
-				ParameterTypeDateFormat.PREDEFINED_DATE_FORMATS);
+		ParameterType type = new ParameterTypeDateFormat(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT,
+				"The output format of the date values, for example \"yyyy/MM/dd\".", false);
 		types.add(type);
 
 		type = new ParameterTypeCategory(PARAMETER_TIME_ZONE,
@@ -334,4 +338,13 @@ public class Date2Nominal extends AbstractDateDataProcessing {
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), Date2Nominal.class, null);
 	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] changes = super.getIncompatibleVersionChanges();
+		changes = Arrays.copyOf(changes, changes.length + 1);
+		changes[changes.length - 1] = VERSION_DOES_NOT_KEEP_ROLE;
+		return changes;
+	}
+
 }

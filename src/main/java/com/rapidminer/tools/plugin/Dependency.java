@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import com.rapidminer.gui.tools.VersionNumber;
-import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 
 

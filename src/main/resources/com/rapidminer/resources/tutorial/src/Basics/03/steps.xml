@@ -39,6 +39,5 @@
 			<question>The <ui>Statistics</ui> tab shows summaries of the data in the columns.  How many people did travel in First class?  And how many people did <emph>not</emph> survive the Titanic accident?</question>
 			<question>Play around with some of the <ui>Charts</ui> if you like. Can you see some interesting patterns?</question>
 		</questions>
-		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
 	</step>
 </steps>

@@ -24,6 +24,7 @@ import java.net.URLConnection;
 import java.util.Base64;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
@@ -70,6 +71,9 @@ public class JwtReader {
 			return null;
 		}
 		URLConnection connection = source.getHTTPConnection(TOKENSERVICE_RELATIVE_URL, true);
+		if (connection == null) {
+			throw new RepositoryException("Could not connect to TokenService.");
+		}
 		ObjectMapper mapper = new ObjectMapper();
 		try (InputStream inputStream = connection.getInputStream()) {
 			//First extract the outer wrapper
@@ -87,6 +91,8 @@ public class JwtReader {
 			} else {
 				throw new RepositoryException("Invalid response from TokenService.");
 			}
+		} catch (IllegalArgumentException | JsonMappingException e) {
+			throw new RepositoryException("Invalid response from TokenService.", e);
 		}
 	}
 

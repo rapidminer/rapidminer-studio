@@ -272,9 +272,9 @@ public interface Attributes extends Iterable<Attribute>, Cloneable, Serializable
 
 	/**
 	 * Finds the {@link AttributeRole} belonging to the attribute with the given name (both regular
-	 * and special). If the search is performed case sensitive depends on the boolean parameter.
-	 * Attention: Case insensitive search is not optimized and takes linear time with number of
-	 * attributes.
+	 * and special). Whether the search is performed case sensitive depends on the boolean parameter.
+	 * <p>
+	 * <strong>Attention</strong>: Case insensitive search is not optimized and takes linear time with number of attributes.
 	 */
 	public AttributeRole findRoleByName(String name, boolean caseSensitive);
 
@@ -282,9 +282,10 @@ public interface Attributes extends Iterable<Attribute>, Cloneable, Serializable
 	public AttributeRole findRoleBySpecialName(String specialName);
 
 	/**
-	 * Finds the {@link AttributeRole} with the given special name (both regular and special). If
-	 * the search is performed case sensitive depends on the boolean parameter. Attention: Case
-	 * insensitive search is not optimized and takes linear time with number of attributes.
+	 * Finds the {@link AttributeRole} with the given special name (both regular and special). Whether
+	 * the search is performed case sensitive depends on the boolean parameter.
+	 * <p>
+	 * <strong>Attention</strong>: Case insensitive search is not optimized and takes linear time with number of attributes.
 	 */
 	public AttributeRole findRoleBySpecialName(String specialName, boolean caseSensitive);
 

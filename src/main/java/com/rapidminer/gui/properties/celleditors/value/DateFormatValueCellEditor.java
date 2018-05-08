@@ -214,4 +214,9 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 	public Object getCellEditorValue() {
 		return formatCombo.getSelectedItem();
 	}
+
+	@Override
+	public void activate() {
+		selectButton.doClick();
+	}
 }

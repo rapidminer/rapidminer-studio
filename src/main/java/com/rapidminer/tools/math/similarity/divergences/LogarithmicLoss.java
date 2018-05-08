@@ -24,6 +24,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.math.similarity.BregmanDivergence;
 
 
@@ -42,14 +43,12 @@ public class LogarithmicLoss extends BregmanDivergence {
 		Tools.onlyNumericalAttributes(exampleSet, "value based similarities");
 		Attributes attributes = exampleSet.getAttributes();
 		if (attributes.size() != 1) {
-			throw new OperatorException(
-					"The bregman divergence you've choosen is not applicable for the dataset! Proceeding with the 'Squared Euclidean distance' bregman divergence.");
+			throw new UserError(null, "inapplicable_bregman_divergence.multiple", toString());
 		}
 		for (Attribute attribute : attributes) {
 			for (Example example : exampleSet) {
 				if (example.getValue(attribute) <= 0) {
-					throw new OperatorException(
-							"The bregman divergence you've choosen is not applicable for the dataset! Proceeding with the 'Squared Euclidean distance' bregman divergence.");
+					throw new UserError(null, "inapplicable_bregman_divergence", toString());
 				}
 			}
 		}

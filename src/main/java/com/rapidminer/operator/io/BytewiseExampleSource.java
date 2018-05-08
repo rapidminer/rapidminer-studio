@@ -283,6 +283,7 @@ public abstract class BytewiseExampleSource extends AbstractExampleSource {
 					}
 				});
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 		DataManagementParameterHelper.addParameterTypes(types, this);
 		return types;

@@ -332,6 +332,7 @@ public class AttributeConstruction extends AbstractFeatureConstruction {
 				new ParameterTypeExpression("function_expressions", "Function and arguments to use for generation.",
 						getInputPort()));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		types.add(new ParameterTypeBoolean(PARAMETER_KEEP_ALL,

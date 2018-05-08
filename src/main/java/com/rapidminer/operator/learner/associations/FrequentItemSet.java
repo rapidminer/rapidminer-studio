@@ -18,13 +18,13 @@
 */
 package com.rapidminer.operator.learner.associations;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -41,13 +41,21 @@ public class FrequentItemSet implements Comparable<FrequentItemSet>, Cloneable, 
 	private int frequency;
 
 	public FrequentItemSet() {
-		this.items = new ArrayList<Item>(1);
+		this.items = new ArrayList<>(1);
 	}
 
 	public FrequentItemSet(ArrayList<Item> items, int frequency) {
 		this.items = items;
 		Collections.sort(this.items);
 		this.frequency = frequency;
+	}
+
+	/**
+	 * Clone constructor.
+	 */
+	private FrequentItemSet(FrequentItemSet other) {
+		this.items = new ArrayList<>(other.items);
+		this.frequency = other.frequency;
 	}
 
 	public void addItem(Item item, int frequency) {
@@ -103,10 +111,7 @@ public class FrequentItemSet implements Comparable<FrequentItemSet>, Cloneable, 
 	 */
 	@Override
 	public boolean equals(Object o) {
-		if (o instanceof FrequentItemSet) {
-			return (this.compareTo((FrequentItemSet) o) == 0);
-		}
-		return false;
+		return o instanceof FrequentItemSet && (this.compareTo((FrequentItemSet) o) == 0);
 	}
 
 	@Override
@@ -118,7 +123,7 @@ public class FrequentItemSet implements Comparable<FrequentItemSet>, Cloneable, 
 	 * This method returns a representation of the items
 	 */
 	public String getItemsAsString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		Iterator<Item> iterator = items.iterator();
 		while (iterator.hasNext()) {
 			buffer.append(iterator.next().toString());
@@ -134,7 +139,7 @@ public class FrequentItemSet implements Comparable<FrequentItemSet>, Cloneable, 
 	 */
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		Iterator<Item> iterator = items.iterator();
 		while (iterator.hasNext()) {
 			buffer.append(iterator.next().toString());
@@ -149,6 +154,6 @@ public class FrequentItemSet implements Comparable<FrequentItemSet>, Cloneable, 
 
 	@Override
 	public Object clone() {
-		return new FrequentItemSet(new ArrayList<Item>(items), frequency);
+		return new FrequentItemSet(this);
 	}
 }

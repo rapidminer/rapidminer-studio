@@ -68,12 +68,12 @@ public class SaveAsAction extends ResourceAction {
 
 	/**
 	 * Opens a location choser for the user to select where the save the process.
-	 * 
+	 *
 	 * @param process
-	 *            the process to be saved
+	 * 		the process to be saved
 	 * @param async
-	 *            if <code>true</code>, will save the process asynchronously after the user has
-	 *            selected a location; if <code>false</code> saves it synchronously.
+	 * 		if <code>true</code>, will save the process asynchronously after the user has
+	 * 		selected a location; if <code>false</code> saves it synchronously.
 	 * @return true on success, false on failure, and null if async=true
 	 */
 	public static Boolean saveAs(Process process, boolean async) {
@@ -101,10 +101,10 @@ public class SaveAsAction extends ResourceAction {
 			}
 
 			if (async) {
-				SaveAction.saveAsync(process);
+				SaveAction.saveAsync(process, true);
 				return null;
 			} else {
-				return SaveAction.save(process);
+				return SaveAction.save(process, true);
 			}
 		}
 		return false;

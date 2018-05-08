@@ -60,6 +60,9 @@ public abstract class AbstractCountRatioAggregationFunction extends CountAggrega
 
 		// calculate total count
 		for (Aggregator aggregator : allAggregators) {
+			if(aggregator == null){
+				continue;
+			}
 			double value = ((CountIncludingMissingsAggregator) aggregator).getCount();
 			if (Double.isNaN(value)) {
 				totalCount = Double.NaN;
@@ -68,8 +71,11 @@ public abstract class AbstractCountRatioAggregationFunction extends CountAggrega
 			totalCount += value;
 		}
 
-		// devide by total count
+		// divide by total count
 		for (Aggregator aggregator : allAggregators) {
+			if(aggregator == null){
+				continue;
+			}
 			CountIncludingMissingsAggregator countAggregator = (CountIncludingMissingsAggregator) aggregator;
 			countAggregator.setCount((countAggregator.getCount() / totalCount) * getRatioFactor());
 		}

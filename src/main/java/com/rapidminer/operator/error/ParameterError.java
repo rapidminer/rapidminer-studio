@@ -55,8 +55,7 @@ public class ParameterError extends UserError {
 	}
 
 	/**
-	 * @return the key of the parameter which caused the error. Can be {@code null} in very rare
-	 *         cases
+	 * @return the key of the parameter which caused the error. Can be {@code null} in very rare cases or subclasses
 	 */
 	public String getKey() {
 		return key;

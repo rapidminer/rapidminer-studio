@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.filesystem;
 
+import java.io.File;
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -27,9 +30,6 @@ import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDirectory;
 import com.rapidminer.parameter.ParameterTypeString;
-
-import java.io.File;
-import java.util.List;
 
 
 /**
@@ -60,7 +60,9 @@ public class CreateDirectoryOperator extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
-		types.add(new ParameterTypeDirectory(PARAMETER_LOCATION, "The parent directory of the new folder.", false));
+		ParameterType type = new ParameterTypeDirectory(PARAMETER_LOCATION, "The parent directory of the new folder.", false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeString(PARAMETER_NAME, "The name of the new directory.", false, false));
 
 		return types;

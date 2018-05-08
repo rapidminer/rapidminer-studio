@@ -176,8 +176,10 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeRegexp(PARAMETER_REPLACE_WHAT, "A regular expression specifying what should be replaced.",
-				false, false));
+		ParameterType type = new ParameterTypeRegexp(PARAMETER_REPLACE_WHAT, "A regular expression specifying what should be replaced.",
+				false, false);
+		type.setPrimary(true);
+		types.add(type);
 		types.add(new ParameterTypeString(PARAMETER_REPLACE_BY,
 				"The replacement for the region matched by the regular expression. Possibly including capturing groups.",
 				true, false));

@@ -25,10 +25,9 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.io.Serializable;
-
+import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
-import javax.swing.JMenuItem;
 import javax.swing.plaf.UIResource;
 
 import com.rapidminer.gui.look.Colors;
@@ -47,7 +46,7 @@ public class CheckBoxMenuItemIcon implements Icon, UIResource, Serializable {
 
 	@Override
 	public void paintIcon(Component c, Graphics g, int x, int y) {
-		JMenuItem b = (JMenuItem) c;
+		AbstractButton b = (AbstractButton) c;
 		ButtonModel model = b.getModel();
 
 		g.translate(x, y);

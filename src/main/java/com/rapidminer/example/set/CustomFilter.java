@@ -33,6 +33,7 @@ import com.rapidminer.example.AttributeTypeException;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.nio.model.DataResultSet.ValueType;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.parameter.ParameterTypeTupel;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
@@ -377,7 +378,7 @@ public class CustomFilter implements Condition {
 		public static final String DATE_TIME_FORMAT_STRING_OLD = "MM/dd/yy h:mm:ss a";
 
 		/** the format string for date */
-		public static final String DATE_FORMAT_STRING = "MM/dd/yyyy";
+		public static final String DATE_FORMAT_STRING = ParameterTypeDateFormat.DATE_FORMAT_MM_DD_YYYY;
 
 		/** the old (bugged) format string for date */
 		public static final String DATE_FORMAT_STRING_OLD = "MM/dd/yy";

@@ -25,7 +25,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -49,12 +48,13 @@ import com.rapidminer.operator.nio.model.ColumnMetaData;
 import com.rapidminer.operator.nio.model.DataResultSet;
 import com.rapidminer.operator.nio.model.DateFormatProvider;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
+import com.rapidminer.operator.nio.model.ExcelSheetSelection;
 import com.rapidminer.operator.nio.model.ParseException;
 import com.rapidminer.operator.nio.model.ParsingError;
-import com.rapidminer.operator.nio.model.ExcelSheetSelection;
 import com.rapidminer.operator.nio.model.xlsx.XlsxUtilities.XlsxCell;
 import com.rapidminer.operator.nio.model.xlsx.XlsxWorkbookParser.XlsxWorkbook;
 import com.rapidminer.operator.nio.model.xlsx.XlsxWorkbookRelationParser.XlsxWorkbookRel;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ProgressListener;
@@ -73,7 +73,7 @@ public class XlsxResultSet implements DataResultSet {
 	/**
 	 * Defines whether the Excel file is read by the operator or by the Wizard.
 	 */
-	public static enum XlsxReadMode {
+	public enum XlsxReadMode {
 		WIZARD_WORKPANE, WIZARD_PREVIEW, OPERATOR,
 		/**
 		 * Specifies that the {@link XlsxResultSet} was created to display preview content in the
@@ -263,32 +263,21 @@ public class XlsxResultSet implements DataResultSet {
 		final String timezone = configuration.getTimezone();
 		if (provider != null) {
 			if (timezone != null) {
-				this.dateFormatProvider = new DateFormatProvider() {
-
-					@Override
-					public DateFormat geDateFormat() {
-						DateFormat format = provider.geDateFormat();
-						format.setTimeZone(TimeZone.getTimeZone(timezone));
-						return null;
-					}
-
+				this.dateFormatProvider = () -> {
+					DateFormat format = provider.geDateFormat();
+					format.setTimeZone(TimeZone.getTimeZone(timezone));
+					return format;
 				};
 			} else {
 				this.dateFormatProvider = provider;
 			}
 		} else {
 			String datePattern = configuration.getDatePattern();
-			final DateFormat dateFormat = new SimpleDateFormat(datePattern == null ? "" : datePattern);
+			final DateFormat dateFormat = ParameterTypeDateFormat.createCheckedDateFormat(callingOperator, (datePattern == null ? "" : datePattern));
 			if (timezone != null) {
 				dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
 			}
-			this.dateFormatProvider = new DateFormatProvider() {
-
-				@Override
-				public DateFormat geDateFormat() {
-					return dateFormat;
-				}
-			};
+			this.dateFormatProvider = () -> dateFormat;
 		}
 
 		if (callingOperator != null) {
@@ -354,11 +343,7 @@ public class XlsxResultSet implements DataResultSet {
 	public boolean isMissing(int columnIndex) {
 		String value = getValue(columnIndex);
 		XlsxCellType cellType = getCellType(columnIndex);
-		if (value == null || value.trim().isEmpty() || XlsxCellType.ERROR.equals(cellType)) {
-			return true;
-		} else {
-			return false;
-		}
+		return value == null || value.trim().isEmpty() || XlsxCellType.ERROR.equals(cellType);
 	}
 
 	@Override

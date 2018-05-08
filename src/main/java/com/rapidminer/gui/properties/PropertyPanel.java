@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
@@ -333,10 +334,9 @@ public abstract class PropertyPanel extends JPanel {
 				public void editingStopped(ChangeEvent e) {
 					Object valueObj = editor.getCellEditorValue();
 					String value = type.toString(valueObj);
-					String last;
-					last = getValue(type);
-					if (value != null && last == null || last == null && value != null
-							|| value != null && last != null && !value.equals(last)) {
+					String last = getValue(type);
+					// Second check prevents an endless validation loop in case valueObj and last are both null
+					if (!Objects.equals(value, last) && valueObj != last) {
 						setValue(typesOperator, type, value, false);
 					}
 				}
@@ -372,8 +372,6 @@ public abstract class PropertyPanel extends JPanel {
 	 *
 	 * @param type
 	 *            The ParameterType, for which the panel is created
-	 * @param tooltipText
-	 *            The tool tip for the current ParameterType
 	 * @param editor
 	 *            Editor for the current ParameterType
 	 * @param editorComponent
@@ -499,7 +497,15 @@ public abstract class PropertyPanel extends JPanel {
 		return currentEditors.size();
 	}
 
-	protected PropertyValueCellEditor getEditorForKey(String key) {
+	/**
+	 * Returns the editor for the given parameter key.
+	 *
+	 * @param key
+	 * 		the key
+	 * @return the editor or {@code null} if there is no editor for the given key.
+	 * @since 8.2
+	 */
+	public PropertyValueCellEditor getEditorForKey(String key) {
 		return currentEditors.get(key);
 	}
 

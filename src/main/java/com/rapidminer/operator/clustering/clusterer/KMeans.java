@@ -179,7 +179,7 @@ public class KMeans extends RMAbstractClusterer {
 				distanceSum += distance * distance;
 				i++;
 			}
-			if (distanceSum < minimalIntraClusterDistance) {
+			if (distanceSum < minimalIntraClusterDistance || bestModel == null) {
 				bestModel = model;
 				minimalIntraClusterDistance = distanceSum;
 				bestAssignments = centroidAssignments;

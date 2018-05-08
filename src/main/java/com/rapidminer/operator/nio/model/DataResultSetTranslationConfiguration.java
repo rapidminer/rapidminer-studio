@@ -20,15 +20,14 @@ package com.rapidminer.operator.nio.model;
 
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.ANNOTATION_NAME;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_ANNOTATIONS;
-import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_DATE_FORMAT;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_FIRST_ROW_AS_NAMES;
-import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_READ_AS_POLYNOMINAL;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_LOCALE;
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_META_DATA;
+import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.PARAMETER_READ_AS_POLYNOMINAL;
+import static com.rapidminer.parameter.ParameterTypeDateFormat.PARAMETER_DATE_FORMAT;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -45,10 +44,13 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorRuntimeException;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.generator.ExampleSetGenerator;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MDInteger;
 import com.rapidminer.operator.preprocessing.filter.AbstractDateDataProcessing;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeTupel;
 import com.rapidminer.parameter.UndefinedParameterError;
@@ -78,6 +80,8 @@ public class DataResultSetTranslationConfiguration {
 
 	private int dataManagementType = DataRowFactory.TYPE_DOUBLE_ARRAY;
 
+	private boolean trimAttributeNames = true;
+
 	/**
 	 * This constructor can be used to generate an empty configuration just depending on the given
 	 * resultSet
@@ -87,6 +91,9 @@ public class DataResultSetTranslationConfiguration {
 	 */
 	public DataResultSetTranslationConfiguration(AbstractDataResultSetReader readerOperator) {
 		this(readerOperator, null);
+		if (readerOperator != null) {
+			trimAttributeNames = readerOperator.shouldTrimAttributeNames();
+		}
 	}
 
 	/**
@@ -182,7 +189,7 @@ public class DataResultSetTranslationConfiguration {
 			int[] attributeValueTypes = dataResultSet.getValueTypes();
 			for (int i = 0; i < numberOfColumns; i++) {
 				columnMetaData[i] = new ColumnMetaData(originalColumnNames[i], originalColumnNames[i],
-						attributeValueTypes[i], Attributes.ATTRIBUTE_NAME, true);
+						attributeValueTypes[i], Attributes.ATTRIBUTE_NAME, true, trimAttributeNames);
 			}
 		}
 	}
@@ -310,23 +317,27 @@ public class DataResultSetTranslationConfiguration {
 		}
 	}
 
-	public DateFormat getDateFormat() {
+	public DateFormat getDateFormat() throws OperatorException {
 		if (dateFormat == null) {
-			this.dateFormat = new ThreadLocal<DateFormat>() {
-
-				@Override
-				protected DateFormat initialValue() {
-					if (datePattern == null || datePattern.trim().isEmpty()) {
-						// clone because getDateInstance uses an internal pool which can return the
-						// same instance for multiple threads
-						return (DateFormat) DateFormat.getDateTimeInstance().clone();
-					} else {
-						return new SimpleDateFormat(getDatePattern(), locale);
+			this.dateFormat = ThreadLocal.withInitial(() -> {
+				if (datePattern == null || datePattern.trim().isEmpty()) {
+					// clone because getDateInstance uses an internal pool which can return the
+					// same instance for multiple threads
+					return (DateFormat) DateFormat.getDateTimeInstance().clone();
+				} else {
+					try {
+						return ParameterTypeDateFormat.createCheckedDateFormat(getDatePattern(), locale);
+					} catch (UserError userError) {
+						throw new DateFormatRuntimeException(userError);
 					}
 				}
-			};
+			});
 		}
-		return this.dateFormat.get();
+		try {
+			return this.dateFormat.get();
+		} catch (DateFormatRuntimeException dfre) {
+			throw dfre.toOperatorException();
+		}
 	}
 
 	public String getDatePattern() {
@@ -395,10 +406,11 @@ public class DataResultSetTranslationConfiguration {
 		}
 		// initialize with values from settings
 		ColumnMetaData[] columnMetaData = new ColumnMetaData[maxUsedColumnIndex + 1];
+		boolean trimAttributeNames = readerOperator.shouldTrimAttributeNames();
 		for (String[] metaDataDefinition : metaDataSettings) {
 			int currentColumn = Integer.parseInt(metaDataDefinition[0]);
 			String[] metaDataDefintionValues = ParameterTypeTupel.transformString2Tupel(metaDataDefinition[1]);
-			columnMetaData[currentColumn] = new ColumnMetaData();
+			columnMetaData[currentColumn] = new ColumnMetaData(trimAttributeNames);
 			final ColumnMetaData cmd = columnMetaData[currentColumn];
 			cmd.setSelected(Boolean.parseBoolean(metaDataDefintionValues[1]));
 			if (cmd.isSelected()) { // otherwise details don't matter
@@ -419,9 +431,29 @@ public class DataResultSetTranslationConfiguration {
 		// is at least not null)
 		for (int i = 0; i < columnMetaData.length; i++) {
 			if (columnMetaData[i] == null) {
-				columnMetaData[i] = new ColumnMetaData();
+				columnMetaData[i] = new ColumnMetaData(trimAttributeNames);
 			}
 		}
 		return columnMetaData;
+	}
+
+	/**
+	 * Simple wrapper class for a {@link UserError}.
+	 *
+	 * @author Jan Czogalla
+	 * @since 8.2
+	 */
+	private static class DateFormatRuntimeException extends IllegalArgumentException implements OperatorRuntimeException {
+
+		private final UserError userError;
+
+		private DateFormatRuntimeException(UserError userError) {
+			this.userError = userError;
+		}
+
+		@Override
+		public OperatorException toOperatorException() {
+			return userError;
+		}
 	}
 }

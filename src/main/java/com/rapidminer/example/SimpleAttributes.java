@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 
 
 /**
@@ -121,13 +120,11 @@ public class SimpleAttributes extends AbstractAttributes {
 	private void register(AttributeRole attributeRole, boolean onlyMaps) {
 		String name = attributeRole.getAttribute().getName();
 		if (nameToAttributeRoleMap.containsKey(name)) {
-			throw new IllegalArgumentException("Duplicate attribute name: " + name);
+			throw new DuplicateAttributeException(name);
 		}
 		String specialName = attributeRole.getSpecialName();
-		if (specialName != null) {
-			if (specialNameToAttributeRoleMap.containsKey(specialName)) {
-				throw new IllegalArgumentException("Duplicate attribute role: " + specialName);
-			}
+		if (specialName != null && specialNameToAttributeRoleMap.containsKey(specialName)) {
+			throw new DuplicateAttributeException(name, true);
 		}
 		this.nameToAttributeRoleMap.put(name, attributeRole);
 		if (specialName != null) {
@@ -167,8 +164,7 @@ public class SimpleAttributes extends AbstractAttributes {
 		if (attributeRole.getSpecialName() != null) {
 			AttributeRole role = specialNameToAttributeRoleMap.get(attributeRole.getSpecialName());
 			if (role == null) {
-				throw new NoSuchElementException(
-						"Cannot rename attribute role. No such attribute role: " + attributeRole.getSpecialName());
+				throw new NoSuchAttributeException(attributeRole.getSpecialName(), true);
 			}
 			if (role != attributeRole) {
 				throw new RuntimeException("Broken attribute role map.");
@@ -184,11 +180,11 @@ public class SimpleAttributes extends AbstractAttributes {
 	@Override
 	public void rename(Attribute attribute, String newName) {
 		if (nameToAttributeRoleMap.containsKey(newName)) {
-			throw new IllegalArgumentException("Cannot rename attribute. Duplicate name: " + newName);
+			throw new DuplicateAttributeException(newName);
 		}
 		AttributeRole role = nameToAttributeRoleMap.get(attribute.getName());
 		if (role == null) {
-			throw new NoSuchElementException("Cannot rename attribute. No such attribute: " + attribute.getName());
+			throw new NoSuchAttributeException(attribute.getName());
 		}
 		if (role.getAttribute() != attribute) {
 			// this cannot happen
@@ -210,27 +206,37 @@ public class SimpleAttributes extends AbstractAttributes {
 
 	@Override
 	public AttributeRole findRoleByName(String name, boolean caseSensitive) {
-		if (caseSensitive) {
-			return nameToAttributeRoleMap.get(name);
-		} else {
-			String lowerSearchTerm = name.toLowerCase();
-			for (Entry<String, AttributeRole> entry : nameToAttributeRoleMap.entrySet()) {
-				if (lowerSearchTerm.equals(entry.getKey().toLowerCase())) {
-					return entry.getValue();
-				}
-			}
-			return null;
-		}
+		return findRole(name, caseSensitive, nameToAttributeRoleMap);
 	}
 
 	@Override
 	public AttributeRole findRoleBySpecialName(String specialName, boolean caseSensitive) {
-		if (caseSensitive) {
-			return specialNameToAttributeRoleMap.get(specialName);
+		return findRole(specialName, caseSensitive, specialNameToAttributeRoleMap);
+	}
+
+	/**
+	 * Finds the {@link AttributeRole} with the given key. The key will either be an attribute name or attribute role name
+	 * (both regular and special). The key will be searched in the specified {@code roleMap} which should either be
+	 * {@link #nameToAttributeRoleMap} or {@link #specialNameToAttributeRoleMap}. Whether the search is performed case
+	 * sensitive depends on the boolean parameter.
+	 * <p>
+	 * <strong>Attention</strong>: Case insensitive search is not optimized and takes linear time with number of attributes.
+	 *
+	 * @param key
+	 * 		the key to search for
+	 * @param caseSensitive
+	 * 		whether the search should be case sensitive
+	 * @param roleMap
+	 * 		the map to search in
+	 * @return the attribute role or {@code null} if none was found
+	 * @since 8.2
+	 */
+	private static AttributeRole findRole(String key, boolean caseSensitive, Map<String, AttributeRole> roleMap) {
+		if (caseSensitive || key == null) {
+			return roleMap.get(key);
 		} else {
-			String lowerSearchTerm = specialName.toLowerCase();
-			for (Entry<String, AttributeRole> entry : specialNameToAttributeRoleMap.entrySet()) {
-				if (lowerSearchTerm.equals(entry.getKey().toLowerCase())) {
+			for (Entry<String, AttributeRole> entry : roleMap.entrySet()) {
+				if (key.equalsIgnoreCase(entry.getKey())) {
 					return entry.getValue();
 				}
 			}

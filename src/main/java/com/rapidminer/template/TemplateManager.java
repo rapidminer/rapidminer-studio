@@ -1,27 +1,28 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.template;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,9 @@ public enum TemplateManager {
 
 	private TemplateManager() {
 		// blank process template
-		register(Template.BLANK_PROCESS_TEMPLATE);
+		register(PreparedTemplates.BLANK_PROCESS_TEMPLATE);
+		// auto model
+		register(PreparedTemplates.AUTO_MODEL_TEMPLATE);
 		// load templates from bundled resources
 		registerTemplate("telco_churn_modeling");
 		registerTemplate("direct_marketing");
@@ -72,7 +75,7 @@ public enum TemplateManager {
 					register(new Template(Paths.get(file.toURI())));
 				} catch (IOException | RepositoryException e) {
 					LogService.getRoot().log(Level.WARNING,
-							"com.rapidminer.template.TemplateManager.failed_to_load_templatefile", new Object[] { file, e });
+							"com.rapidminer.template.TemplateManager.failed_to_load_templatefile", new Object[]{file, e});
 				}
 			}
 		}
@@ -93,15 +96,13 @@ public enum TemplateManager {
 	 * }
 	 * </pre>
 	 *
-	 * @see Template Description of the .template file contents
-	 *
 	 * @param templateName
-	 *            the unique name of the template
+	 * 		the unique name of the template
+	 * @see Template Description of the .template file contents
 	 */
 	public void registerTemplate(String templateName) {
 		if (templatesByName.containsKey(templateName)) {
-			LogService.getRoot().log(Level.INFO,
-					"Template with name '" + templateName + "' was already registerd. Skipping registration.");
+			LogService.getRoot().log(Level.INFO, "com.rapidminer.template.TemplateManager.template_already_registered", templateName);
 			return;
 		}
 		try {
@@ -122,4 +123,7 @@ public enum TemplateManager {
 		return new ArrayList<>(templatesByName.values());
 	}
 
+	public List<Template> getBlankProcessTemplates() {
+		return Arrays.asList(PreparedTemplates.BLANK_PROCESS_TEMPLATE, PreparedTemplates.AUTO_MODEL_TEMPLATE);
+	}
 }

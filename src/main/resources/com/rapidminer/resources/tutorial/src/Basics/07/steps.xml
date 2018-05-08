@@ -37,6 +37,5 @@
 			<question>Change the process so that Age <emph>and</emph> Passenger Fare are discretized into <emph>5</emph> bins.</question>
 			<question>What other roles besides ID and label are available in the Set Role operator?</question>
 		</questions>
-		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
 	</step>
 </steps>

@@ -21,14 +21,14 @@ package com.rapidminer.gui.properties.celleditors.value;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-
-import javax.swing.JComponent;
+import java.awt.event.ActionEvent;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 
 import com.rapidminer.gui.properties.DefaultRMCellEditor;
 import com.rapidminer.gui.tools.ResourceAction;
+import com.rapidminer.gui.tools.components.AbstractLinkButton;
 import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.gui.tools.components.LinkRemoteButton;
 import com.rapidminer.operator.Operator;
@@ -49,6 +49,8 @@ public class LinkButtonValueCellEditor extends DefaultRMCellEditor implements Pr
 
 	private final JPanel container;
 
+	private AbstractLinkButton linkButton;
+
 	/**
 	 * Creates either a {@link LinkLocalButton} or a {@link LinkRemoteButton} that executes the
 	 * action stored in type.
@@ -63,7 +65,6 @@ public class LinkButtonValueCellEditor extends DefaultRMCellEditor implements Pr
 
 		GridBagConstraints gbc = new GridBagConstraints();
 
-		JComponent linkButton;
 		if (type.isLocalAction()) {
 			linkButton = new LinkLocalButton(type.getAction());
 		} else {
@@ -104,5 +105,10 @@ public class LinkButtonValueCellEditor extends DefaultRMCellEditor implements Pr
 	@Override
 	public void setOperator(Operator operator) {
 		// do nothing
+	}
+
+	@Override
+	public void activate() {
+		linkButton.getAction().actionPerformed(new ActionEvent(linkButton, ActionEvent.ACTION_PERFORMED, "primary_parameter_activated"));
 	}
 }

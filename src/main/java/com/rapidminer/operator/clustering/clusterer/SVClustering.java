@@ -221,8 +221,13 @@ public class SVClustering extends RMAbstractClusterer {
 			} else {
 				targetAttribute = exampleSet.getAttributes().getCluster();
 			}
-			NominalMapping mapping = targetAttribute.getMapping();
-			mapping.setMapping("noise", mapping.getIndex("cluster_" + NOISE));
+			try {
+				Tools.replaceValue(targetAttribute, "cluster_" + NOISE, "noise");
+			} catch (RuntimeException e){
+				// ignore, because there might be no noise cluster
+				// this will not interfere with attribute type checking, since RMAbstractClusterer#addClusterAttribute
+				// guarantees this attribute to be nominal.
+			}
 		}
 		return model;
 	}

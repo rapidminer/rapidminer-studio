@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.util.annotations;
 
+import java.util.List;
+
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -30,8 +32,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
-
-import java.util.List;
 
 
 /**
@@ -107,12 +107,14 @@ public class AnnotateOperator extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
-		types.add(new ParameterTypeList(
+		ParameterType type = new ParameterTypeList(
 				PARAMETER_ANNOTATIONS,
 				"Defines the pairs of annotation names and annotation values. Click the button, select or type an annotation name into the left input field and enter its value into the right field. You can specify an arbitrary amount of annotations here. Please note that it is not possible to create empty annotations.",
 				new ParameterTypeStringCategory(PARAMETER_NAME, "The name of the annotation", Annotations.ALL_KEYS_IOOBJECT,
 						Annotations.ALL_KEYS_IOOBJECT[0]), new ParameterTypeString(PARAMETER_VALUE,
-						"The value of the annotation", true), false));
+				"The value of the annotation", true), false);
+		type.setPrimary(true);
+		types.add(type);
 
 		types.add(new ParameterTypeStringCategory(PARAMETER_DUPLICATE_HANDLING,
 				"Indicates what should happen if duplicate annotation names are specified.", DUPLICATE_HANDLING_LIST,

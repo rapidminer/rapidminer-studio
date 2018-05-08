@@ -26,6 +26,7 @@ import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
@@ -85,11 +86,25 @@ public final class RapidLookTools {
 	public static final String PROPERTY_BUTTON_HIGHLIGHT = "button_highlight";
 
 	/**
+	 * If buttons should be highlighted in dark gray or not. Set to {@code true} or {@code false}. Default is {@code false}.
+	 *
+	 * @since 8.1.2
+	 */
+	public static final String PROPERTY_BUTTON_HIGHLIGHT_DARK = "button_highlight_dark";
+
+	/**
 	 * If buttons should have a darker border. Set to {@code true} or {@code false}. Default is {@code false}.
 	 *
 	 * @since 8.1
 	 */
 	public static final String PROPERTY_BUTTON_DARK_BORDER = "button_dark_border";
+
+	/**
+	 * If buttons should be circular. Set to {@code true} or {@code false}. Default is {@code false}.
+	 *
+	 * @since 8.1.2
+	 */
+	public static final String PROPERTY_BUTTON_CIRCLE = "button_circular";
 
 	/**
 	 * If input fields should have a darker border. Set to {@code true} or {@code false}. Default is {@code false}.
@@ -135,16 +150,15 @@ public final class RapidLookTools {
 		g.setColor(oldColor);
 	}
 
-	public static boolean drawMenuItemFading(Component c, Graphics g) {
+	public static void drawMenuItemFading(Component c, Graphics g) {
 		int w = c.getWidth();
 		int h = c.getHeight();
 		if (h < 0 || w < 0) {
-			return true;
+			return;
 		}
 
 		g.setColor(Colors.MENU_ITEM_BACKGROUND);
-		g.fillRect(0, 0, c.getWidth(), c.getHeight());
-		return true;
+		g.fillRect(0, 0, w, h);
 	}
 
 	public static boolean isToolbarButton(JComponent b) {
@@ -201,9 +215,14 @@ public final class RapidLookTools {
 	public static Shape createShapeForButton(AbstractButton b) {
 		int w = b.getWidth();
 		int h = b.getHeight();
+		boolean circular = Boolean.parseBoolean(String.valueOf(b.getClientProperty(RapidLookTools.PROPERTY_BUTTON_CIRCLE)));
 
-		return new RoundRectangle2D.Double(1, 1, w - 2, h - 2, RapidLookAndFeel.CORNER_DEFAULT_RADIUS,
-				RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+		if (circular) {
+			return createCircle(w, h);
+		} else {
+			return new RoundRectangle2D.Double(1, 1, w - 2, h - 2, RapidLookAndFeel.CORNER_DEFAULT_RADIUS,
+					RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+		}
 	}
 
 	/**
@@ -216,9 +235,14 @@ public final class RapidLookTools {
 	public static Shape createBorderShapeForButton(AbstractButton b) {
 		int w = b.getWidth();
 		int h = b.getHeight();
+		boolean circular = Boolean.parseBoolean(String.valueOf(b.getClientProperty(RapidLookTools.PROPERTY_BUTTON_CIRCLE)));
 
-		return new RoundRectangle2D.Double(0, 0, w - 1, h - 1, RapidLookAndFeel.CORNER_DEFAULT_RADIUS,
-				RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+		if (circular) {
+			return createCircle(w, h);
+		} else {
+			return new RoundRectangle2D.Double(0, 0, w - 1, h - 1, RapidLookAndFeel.CORNER_DEFAULT_RADIUS,
+					RapidLookAndFeel.CORNER_DEFAULT_RADIUS);
+		}
 	}
 
 	/**
@@ -274,6 +298,7 @@ public final class RapidLookTools {
 		ColorUIResource colorGradientStart;
 		ColorUIResource colorGradientEnd;
 		boolean highlighted = Boolean.parseBoolean(String.valueOf(b.getClientProperty(PROPERTY_BUTTON_HIGHLIGHT)));
+		boolean highlightedDark = Boolean.parseBoolean(String.valueOf(b.getClientProperty(PROPERTY_BUTTON_HIGHLIGHT_DARK)));
 		if (highlighted) {
 			if (b.isEnabled()) {
 				if (b.getModel().isPressed() || b.getModel().isSelected()) {
@@ -289,6 +314,22 @@ public final class RapidLookTools {
 			} else {
 				colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_START;
 				colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DISABLED_GRADIENT_END;
+			}
+		} else if (highlightedDark) {
+			if (b.isEnabled()) {
+				if (b.getModel().isPressed() || b.getModel().isSelected()) {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_PRESSED_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_PRESSED_GRADIENT_END;
+				} else if (b.getModel().isRollover()) {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_ROLLOVER_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_ROLLOVER_GRADIENT_END;
+				} else {
+					colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_GRADIENT_START;
+					colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_GRADIENT_END;
+				}
+			} else {
+				colorGradientStart = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_DISABLED_GRADIENT_START;
+				colorGradientEnd = Colors.BUTTON_BACKGROUND_HIGHLIGHTED_DARK_DISABLED_GRADIENT_END;
 			}
 		} else {
 			if (b.isEnabled()) {
@@ -314,4 +355,22 @@ public final class RapidLookTools {
 		g2.fill(shape);
 	}
 
+	/**
+	 * Creates a circle of a rectangle with the given width and height. Must have at least 16px of width and height, otherwise results will be broken.
+	 *
+	 * @param width
+	 * 		the width
+	 * @param height
+	 * 		the height
+	 * @return the ellipsis, never {@code null}
+	 */
+	private static Ellipse2D.Double createCircle(int width, int height) {
+		int centerX = (1 + width) / 2 + 1;
+		int centerY = (1 + height - 1) / 2;
+		int cornerX = centerX + width / 2 - 6;
+		int cornerY = centerY + width / 2 - 6;
+		Ellipse2D.Double circle = new Ellipse2D.Double();
+		circle.setFrameFromCenter(centerX, centerY, cornerX, cornerY);
+		return circle;
+	}
 }

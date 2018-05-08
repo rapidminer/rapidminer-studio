@@ -25,6 +25,7 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -38,7 +39,6 @@ import com.rapidminer.operator.io.AbstractExampleSource;
 import com.rapidminer.operator.nio.file.FileInputPortHandler;
 import com.rapidminer.operator.nio.file.FileObject;
 import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
@@ -53,7 +53,6 @@ import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.ParameterTypeTupel;
-import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.parameter.conditions.ParameterCondition;
 import com.rapidminer.tools.Ontology;
@@ -89,7 +88,11 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	public static final String PARAMETER_COLUMN_ROLE = "attribute_role";
 	public static final String PARAMETER_READ_AS_POLYNOMINAL = "read_all_values_as_polynominal";
 
-	public static final String PARAMETER_DATE_FORMAT = "date_format";
+	/**
+	 * @deprecated since 8.2; use {@link ParameterTypeDateFormat#PARAMETER_DATE_FORMAT} instead.
+	 */
+	@Deprecated
+	public static final String PARAMETER_DATE_FORMAT = ParameterTypeDateFormat.PARAMETER_DATE_FORMAT;
 	public static final String PARAMETER_TIME_ZONE = "time_zone";
 	public static final String PARAMETER_LOCALE = "locale";
 
@@ -122,6 +125,14 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 
 	@Override
 	public ExampleSet createExampleSet() throws OperatorException {
+		// check if date format is valid
+		int localeIndex = getParameterAsInt(PARAMETER_LOCALE);
+		Locale selectedLocale = Locale.US;
+		if (localeIndex >= 0 && localeIndex < AbstractDateDataProcessing.availableLocales.size()) {
+			selectedLocale = AbstractDateDataProcessing.availableLocales.get(localeIndex);
+		}
+		ParameterTypeDateFormat.createCheckedDateFormat(this, selectedLocale, false);
+
 		// loading data result set
 		final ExampleSet exampleSet;
 		try (DataResultSetFactory dataResultSetFactory = getDataResultSetFactory();
@@ -249,18 +260,12 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	 */
 	protected ParameterType makeFileParameterType() {
 		return FileInputPortHandler.makeFileParameterType(this, getFileParameterName(),
-				"Name of the file to read the data from.", new PortProvider() {
-
-					@Override
-					public Port getPort() {
-						return fileInputPort;
-					}
-				}, true, getFileExtensions());
+				"Name of the file to read the data from.", () -> fileInputPort, true, getFileExtensions());
 	}
 
 	@Override
 	public List<ParameterType> getParameterTypes() {
-		List<ParameterType> types = new LinkedList<ParameterType>();
+		List<ParameterType> types = new LinkedList<>();
 
 		if (isSupportingFirstRowAsNames()) {
 			types.add(new ParameterTypeBoolean(
@@ -269,7 +274,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 					true, false));
 		}
 
-		List<String> annotations = new LinkedList<String>();
+		List<String> annotations = new LinkedList<>();
 		annotations.add(ANNOTATION_NAME);
 		annotations.addAll(Arrays.asList(Annotations.ALL_KEYS_ATTRIBUTE));
 		ParameterType type = new ParameterTypeList(PARAMETER_ANNOTATIONS, "Maps row numbers to annotation names.", //
@@ -281,8 +286,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 		}
 		types.add(type);
 
-		type = new ParameterTypeDateFormat(PARAMETER_DATE_FORMAT,
-				"The parse format of the date values, for example \"yyyy/MM/dd\".", false);
+		type = new ParameterTypeDateFormat();
 		type.setExpert(false);
 		types.add(type);
 
@@ -325,11 +329,20 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 		return types;
 	}
 
+	/**
+	 * @return whether attribute names should be trimmed when parsing or not.
+	 * @since 8.1.1
+	 */
+	public boolean shouldTrimAttributeNames() {
+		return getCompatibilityLevel().isAbove(DataResultSetTranslator.BEFORE_ATTRIBUTE_TRIMMING);
+	}
+
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		OperatorVersion[] changes = super.getIncompatibleVersionChanges();
-		changes = Arrays.copyOf(changes, changes.length + 1);
-		changes[changes.length - 1] = DataResultSetTranslator.VERSION_6_0_3;
+		changes = Arrays.copyOf(changes, changes.length + 2);
+		changes[changes.length - 2] = DataResultSetTranslator.VERSION_6_0_3;
+		changes[changes.length - 1] = DataResultSetTranslator.BEFORE_ATTRIBUTE_TRIMMING;
 		return changes;
 	}
 

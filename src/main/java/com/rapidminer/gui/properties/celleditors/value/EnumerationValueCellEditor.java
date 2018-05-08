@@ -18,21 +18,21 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
+import java.awt.Component;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import javax.swing.AbstractCellEditor;
+import javax.swing.JButton;
+import javax.swing.JTable;
+
 import com.rapidminer.gui.properties.EnumerationPropertyDialog;
 import com.rapidminer.gui.properties.ListPropertyDialog;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterTypeEnumeration;
-
-import java.awt.Component;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.swing.AbstractCellEditor;
-import javax.swing.JButton;
-import javax.swing.JTable;
 
 
 /**
@@ -75,7 +75,6 @@ public class EnumerationValueCellEditor extends AbstractCellEditor implements Pr
 			}
 		});
 		button.setMargin(new Insets(0, 0, 0, 0));
-		// button.setToolTipText(type.getDescription());
 		setButtonText();
 	}
 
@@ -87,13 +86,11 @@ public class EnumerationValueCellEditor extends AbstractCellEditor implements Pr
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int col) {
 		if (value != null) {
-			LinkedList<String> values = new LinkedList<String>();
-			for (String string : ParameterTypeEnumeration.transformString2Enumeration((String) value)) {
-				values.add(string);
-			}
+			LinkedList<String> values = new LinkedList<>();
+			values.addAll(Arrays.asList(ParameterTypeEnumeration.transformString2Enumeration((String) value)));
 			this.valuesList = values;
 		} else {
-			this.valuesList = new LinkedList<String>();
+			this.valuesList = new LinkedList<>();
 		}
 		setButtonText();
 		return button;
@@ -118,6 +115,13 @@ public class EnumerationValueCellEditor extends AbstractCellEditor implements Pr
 	@Override
 	public boolean rendersLabel() {
 		return false;
+	}
+
+	@Override
+	public void activate() {
+		if (button != null) {
+			button.doClick();
+		}
 	}
 
 }

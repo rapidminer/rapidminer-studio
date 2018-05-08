@@ -18,6 +18,15 @@
 */
 package com.rapidminer.operator.io;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.rapidminer.Process;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
@@ -26,25 +35,17 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.operator.ports.metadata.MDTransformationRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataError;
+import com.rapidminer.operator.ports.metadata.ProcessNotInRepositoryMetaDataError;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
+import com.rapidminer.operator.ports.quickfix.SaveProcessQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.io.Encoding;
-
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -65,34 +66,47 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	public AbstractReader(OperatorDescription description, Class<? extends IOObject> generatedClass) {
 		super(description);
 		this.generatedClass = generatedClass;
-		getTransformer().addRule(new MDTransformationRule() {
+		getTransformer().addRule(() -> {
+			if (cacheDirty || !isMetaDataCacheable()) {
+				try {
+					// TODO add extra thread for meta data generation?
+					cachedMetaData = AbstractReader.this.getGeneratedMetaData();
+					cachedError = null;
+				} catch (UserError e) {
+					cachedMetaData = new MetaData(AbstractReader.this.generatedClass);
+					String msg = e.getMessage();
+					if ((msg == null) || (msg.length() == 0)) {
+						msg = e.toString();
+					}
 
-			@Override
-			public void transformMD() {
-				if (cacheDirty || !isMetaDataCacheable()) {
-					try {
-						// TODO add extra thread for meta data generation?
-						cachedMetaData = AbstractReader.this.getGeneratedMetaData();
-						cachedError = null;
-					} catch (OperatorException e) {
-						cachedMetaData = new MetaData(AbstractReader.this.generatedClass);
-						String msg = e.getMessage();
-						if ((msg == null) || (msg.length() == 0)) {
-							msg = e.toString();
-						}
-						// will be added below
+					// will be added below
+					if (e.getCode() == 317 && getProcess() != null) {
+						cachedError = new ProcessNotInRepositoryMetaDataError(Severity.WARNING, outputPort,
+								Collections.singletonList(new SaveProcessQuickFix(getProcess())),
+								"save_process", msg);
+					} else {
 						cachedError = new SimpleMetaDataError(Severity.WARNING, outputPort,
-								"cannot_create_exampleset_metadata", new Object[] { msg });
+								"cannot_create_exampleset_metadata", msg);
 					}
-					if (cachedMetaData != null) {
-						cachedMetaData.addToHistory(outputPort);
+				} catch (OperatorException e) {
+					cachedMetaData = new MetaData(AbstractReader.this.generatedClass);
+					String msg = e.getMessage();
+					if ((msg == null) || (msg.length() == 0)) {
+						msg = e.toString();
 					}
-					cacheDirty = false;
+
+					// will be added below
+					cachedError = new SimpleMetaDataError(Severity.WARNING, outputPort,
+							"cannot_create_exampleset_metadata", msg);
 				}
-				outputPort.deliverMD(cachedMetaData);
-				if (cachedError != null) {
-					outputPort.addError(cachedError);
+				if (cachedMetaData != null) {
+					cachedMetaData.addToHistory(outputPort);
 				}
+				cacheDirty = false;
+			}
+			outputPort.deliverMD(cachedMetaData);
+			if (cachedError != null) {
+				outputPort.addError(cachedError);
 			}
 		});
 		observeParameters();
@@ -101,13 +115,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	private void observeParameters() {
 		// we add this as the first observer. otherwise, this change is not seen
 		// by the resulting meta data transformation
-		getParameters().addObserverAsFirst(new Observer<String>() {
-
-			@Override
-			public void update(Observable<String> observable, String arg) {
-				cacheDirty = true;
-			}
-		}, false);
+		getParameters().addObserverAsFirst((observable, arg) -> cacheDirty = true, false);
 	}
 
 	public MetaData getGeneratedMetaData() throws OperatorException {
@@ -162,7 +170,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 		}
 	}
 
-	private static final Map<String, ReaderDescription> READER_DESCRIPTIONS = new HashMap<String, ReaderDescription>();
+	private static final Map<String, ReaderDescription> READER_DESCRIPTIONS = new HashMap<>();
 
 	/** Registers an operator that can read files with a given extension. */
 	protected static void registerReaderDescription(ReaderDescription rd) {

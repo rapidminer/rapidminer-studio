@@ -36,7 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.rapidminer.search.event.GlobalSearchManagerListener;
-import com.rapidminer.search.util.GlobalSearchableTextTest;
+import com.rapidminer.search.util.GlobalSearchableTextFakeImpl;
 
 
 /**
@@ -73,7 +73,7 @@ public class ParallelUsageTest {
 
 		for (int i = 0; i < texts.size(); i++) {
 			int finalI = i;
-			GlobalSearchableTextTest.DocumentProvider provider = new GlobalSearchableTextTest.DocumentProvider() {
+			GlobalSearchableTextFakeImpl.DocumentProvider provider = new GlobalSearchableTextFakeImpl.DocumentProvider() {
 				private int first = 0;
 				private int next = 0;
 
@@ -188,10 +188,10 @@ public class ParallelUsageTest {
 
 	private static class Instance implements Runnable {
 		private final int id;
-		private GlobalSearchableTextTest searchable;
+		private GlobalSearchableTextFakeImpl searchable;
 
-		public Instance(String categoryId, int i, GlobalSearchableTextTest.DocumentProvider provider) {
-			searchable = new GlobalSearchableTextTest(categoryId, provider);
+		public Instance(String categoryId, int i, GlobalSearchableTextFakeImpl.DocumentProvider provider) {
+			searchable = new GlobalSearchableTextFakeImpl(categoryId, provider);
 			id = i;
 		}
 
@@ -203,7 +203,7 @@ public class ParallelUsageTest {
 		public void run() {
 			while (true) {
 				try {
-					GlobalSearchableTextTest.TextGlobalSearchManagerTest searchManager = (GlobalSearchableTextTest.TextGlobalSearchManagerTest) searchable.getSearchManager();
+					GlobalSearchableTextFakeImpl.TextGlobalSearchManagerTest searchManager = (GlobalSearchableTextFakeImpl.TextGlobalSearchManagerTest) searchable.getSearchManager();
 
 					Document nextDoc = searchManager.getTestDocumentProvider().getNext();
 					searchManager.addDocumentToIndex(nextDoc);

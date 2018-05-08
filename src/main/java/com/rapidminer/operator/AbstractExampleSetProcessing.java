@@ -42,9 +42,30 @@ import com.rapidminer.parameter.UndefinedParameterError;
  */
 public abstract class AbstractExampleSetProcessing extends Operator {
 
-	private final InputPort exampleSetInput = getInputPorts().createPort("example set input");
-	private final OutputPort exampleSetOutput = getOutputPorts().createPort("example set output");
-	private final OutputPort originalOutput = getOutputPorts().createPort("original");
+	/**
+	 * name of the example set input port
+	 *
+	 * @since 8.2.0
+	 */
+	public static final String EXAMPLE_SET_INPUT_PORT_NAME = "example set input";
+
+	/**
+	 * name of the example set output port
+	 *
+	 * @since 8.2.0
+	 */
+	public static final String EXAMPLE_SET_OUTPUT_PORT_NAME = "example set output";
+
+	/**
+	 * name of the original output port
+	 *
+	 * @since 8.2.0
+	 */
+	public static final String ORIGINAL_OUTPUT_PORT_NAME = "original";
+
+	private final InputPort exampleSetInput = getInputPorts().createPort(EXAMPLE_SET_INPUT_PORT_NAME);
+	private final OutputPort exampleSetOutput = getOutputPorts().createPort(EXAMPLE_SET_OUTPUT_PORT_NAME);
+	private final OutputPort originalOutput = getOutputPorts().createPort(ORIGINAL_OUTPUT_PORT_NAME);
 
 	public AbstractExampleSetProcessing(OperatorDescription description) {
 		super(description);

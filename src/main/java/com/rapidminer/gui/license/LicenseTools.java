@@ -36,6 +36,7 @@ import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.license.ConstraintNotRestrictedException;
 import com.rapidminer.license.License;
 import com.rapidminer.license.LicenseConstants;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -81,7 +82,7 @@ public class LicenseTools {
 	/**
 	 * Date formatter to generate ISO8601 compliant string representations in UTC time.
 	 */
-	public static final DateTimeFormatter ISO_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+	public static final DateTimeFormatter ISO_DATE_FORMATTER = DateTimeFormatter.ofPattern(ParameterTypeDateFormat.DATE_FORMAT_YYYY_MM_DD)
 			.withLocale(Locale.UK).withZone(ZoneOffset.UTC);
 
 	/**

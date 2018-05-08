@@ -285,7 +285,7 @@ public class NominalToNumericModel extends PreprocessingModel {
 				for (Attribute targetAttribute : targetAttributesFromSources.get(nominalAttribute)) {
 					example.setValue(targetAttribute, getValue(targetAttribute, sourceValue));
 				}
-				if (++progressCompletedCounter % 10_000 == 0) {
+				if (progress != null && ++progressCompletedCounter % 10_000 == 0) {
 					progress.setCompleted((int) (1000.0d * progressCompletedCounter / progressTotal));
 				}
 			}

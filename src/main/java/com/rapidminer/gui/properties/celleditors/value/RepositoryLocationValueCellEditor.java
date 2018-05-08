@@ -56,6 +56,8 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 
 	private Operator operator;
 
+	private final JButton button;
+
 	public RepositoryLocationValueCellEditor(final ParameterTypeRepositoryLocation type) {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		panel.setLayout(gridBagLayout);
@@ -76,7 +78,7 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		panel.add(textField, c);
 
-		final JButton button = new JButton(new ResourceAction(true, "repository_select_location") {
+		button = new JButton(new ResourceAction(true, "repository_select_location") {
 
 			private static final long serialVersionUID = 1L;
 			{
@@ -98,17 +100,6 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 						String locationName = RepositoryLocationChooser.selectLocation(processLocation, textField.getText(), panel,
 								type.isAllowEntries(), type.isAllowFolders(), false, type.isEnforceValidRepositoryEntryName(),
 								type.isOnlyWriteableLocations());
-						// if (locationName != null) {
-						// if ((operator != null) && (operator.getProcess() != null)) {
-						// try {
-						// RepositoryLocation loc = new RepositoryLocation(processLocation, locationName);
-						// locationName = operator.getProcess().makeRelativeRepositoryLocation(loc);
-						// } catch (Exception ex) {
-						// LogService.getRoot().log(Level.WARNING,
-						// "Cannot make relative process location for '"+locationName+"': "+ex, ex);
-						// }
-						// }
-						// }
 						if (locationName != null) {
 							textField.setText(locationName);
 						}
@@ -198,6 +189,11 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 	@Override
 	public void setOperator(Operator operator) {
 		this.operator = operator;
+	}
+
+	@Override
+	public void activate() {
+		button.doClick();
 	}
 
 	/**

@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.List;
+import java.util.Set;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -32,9 +35,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
-
-import java.util.List;
-import java.util.Set;
+import com.rapidminer.tools.ProcessTools;
 
 
 /**
@@ -88,7 +89,7 @@ public class ChangeAttributeNames2Generic extends AbstractDataProcessing {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.addAll(attributeSelector.getParameterTypes());
+		types.addAll(ProcessTools.setSubsetSelectorPrimaryParameter(attributeSelector.getParameterTypes(), true));
 		ParameterType type = new ParameterTypeString(
 				PARAMETER_NAME_STEM,
 				"Specifies the name stem which is used to build generic names. Using 'att' as stem would lead to 'att1', 'att2', etc. as attribute names.",

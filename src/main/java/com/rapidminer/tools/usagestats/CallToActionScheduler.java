@@ -26,17 +26,23 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExecutionMode;
+import com.rapidminer.RapidMinerVersion;
+import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.tools.BrowserPopup;
 import com.rapidminer.gui.tools.bubble.WindowChoreographer;
+import com.rapidminer.license.License;
+import com.rapidminer.license.LicenseEvent;
+import com.rapidminer.license.LicenseManagerListener;
+import com.rapidminer.license.LicenseManagerRegistry;
 import com.rapidminer.studio.internal.RuleProviderRegistry;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.PlatformUtilities;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector.Key;
 
 
@@ -63,11 +69,31 @@ public enum CallToActionScheduler {
 	/** Clean every hour */
 	private static final int CLEAN_INTERVAL = 1;
 
+	private static final String STUDIO_VERSION_FULL = "studio_version_full";
+	private static final String STUDIO_VERSION_MAJOR = "studio_version_major";
+	private static final String STUDIO_VERSION_MINOR = "studio_version_minor";
+	private static final String STUDIO_VERSION_PATCH = "studio_version_patch";
+	private static final String STUDIO_PLATFORM = "studio_platform";
+	private static final String LICENSE_EDITION = "license_edition";
+	private static final String LICENSE_PRECEDENCE = "license_precedence";
+	private static final String LICENSE_EMAIL = "license_email";
+	private static final String LICENSE_START = "license_start";
+	private static final String LICENSE_EXPIRATION = "license_expiration";
+	private static final String LICENSE_ANNOTATION = "license_annotation";
+	private static final String LICENSE_UPCOMING_EDITION = "license_upcoming_edition";
+	private static final String LICENSE_UPCOMING_PRECEDENCE = "license_upcoming_precedence";
+	private static final String LICENSE_UPCOMING_EMAIL = "license_upcoming_email";
+	private static final String LICENSE_UPCOMING_START = "license_upcoming_start";
+	private static final String LICENSE_UPCOMING_EXPIRATION = "license_upcoming_expiration";
+	private static final String LICENSE_UPCOMING_ANNOTATION = "license_upcoming_annotation";
+
 	private static WindowChoreographer choreographer = new WindowChoreographer();
+
 
 	private ScheduledExecutorService exec;
 	private ScheduledFuture<?> persistFuture;
 	private ScheduledFuture<?> cleanupFuture;
+
 
 	/**
 	 * Trigger class initialization. If not in {@link ExecutionMode#UI}, does nothing.
@@ -116,6 +142,17 @@ public enum CallToActionScheduler {
 						"com.rapidminer.tools.usagestats.CallToActionScheduler.db.clean.failed", e);
 			}
 		}, CLEAN_DELAY, CLEAN_INTERVAL, TimeUnit.HOURS);
+
+		// fill in studio constants on first start
+		fillStudioConstants();
+
+		// on license change, we need to update the studio constants table
+		LicenseManagerRegistry.INSTANCE.get().registerLicenseManagerListener(new LicenseManagerListener() {
+			@Override
+			public <S, C> void handleLicenseEvent(LicenseEvent<S, C> event) {
+				fillStudioConstants();
+			}
+		});
 	}
 
 	/**
@@ -141,6 +178,39 @@ public enum CallToActionScheduler {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.tools.usagestats.CallToActionScheduler.shutdown.finish_failure");
 			}
+		}
+	}
+
+	/**
+	 * Updates the studio_constants table with the latest values.
+	 *
+	 * 	@since 8.1.1
+	 */
+	private void fillStudioConstants() {
+		try {
+			CtaDao.INSTANCE.mergeConstant(STUDIO_VERSION_FULL, new RapidMinerVersion().getLongVersion());
+			CtaDao.INSTANCE.mergeConstant(STUDIO_VERSION_MAJOR, String.valueOf(new RapidMinerVersion().getMajorNumber()));
+			CtaDao.INSTANCE.mergeConstant(STUDIO_VERSION_MINOR, String.valueOf(new RapidMinerVersion().getMinorNumber()));
+			CtaDao.INSTANCE.mergeConstant(STUDIO_VERSION_PATCH, String.valueOf(new RapidMinerVersion().getPatchLevel()));
+			CtaDao.INSTANCE.mergeConstant(STUDIO_PLATFORM, PlatformUtilities.getReleasePlatform() == null ? null : PlatformUtilities.getReleasePlatform().name());
+
+			License activeLicense = ProductConstraintManager.INSTANCE.getActiveLicense();
+			CtaDao.INSTANCE.mergeConstant(LICENSE_EDITION, activeLicense.getProductEdition());
+			CtaDao.INSTANCE.mergeConstant(LICENSE_PRECEDENCE, String.valueOf(activeLicense.getPrecedence()));
+			CtaDao.INSTANCE.mergeConstant(LICENSE_EMAIL, activeLicense.getLicenseUser().getEmail());
+			CtaDao.INSTANCE.mergeConstant(LICENSE_START, activeLicense.getStartDate() == null ? null : activeLicense.getStartDate().toString()); // yyyy-MM-dd
+			CtaDao.INSTANCE.mergeConstant(LICENSE_EXPIRATION,  activeLicense.getExpirationDate() == null ? null : activeLicense.getExpirationDate().toString()); // yyyy-MM-dd
+			CtaDao.INSTANCE.mergeConstant(LICENSE_ANNOTATION, activeLicense.getAnnotations());
+
+			License upcomingLicense = ProductConstraintManager.INSTANCE.getUpcomingLicense();
+			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_EDITION, upcomingLicense.getProductEdition());
+			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_PRECEDENCE, String.valueOf(upcomingLicense.getPrecedence()));
+			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_EMAIL, upcomingLicense.getLicenseUser().getEmail());
+			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_START, upcomingLicense.getStartDate() == null ? null : upcomingLicense.getStartDate().toString()); // yyyy-MM-dd
+			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_EXPIRATION, upcomingLicense.getExpirationDate() == null ? null : upcomingLicense.getExpirationDate().toString()); // yyyy-MM-dd
+			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_ANNOTATION, upcomingLicense.getAnnotations());
+		} catch (SQLException e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.usagestats.CallToActionScheduler.constant.failure", e);
 		}
 	}
 

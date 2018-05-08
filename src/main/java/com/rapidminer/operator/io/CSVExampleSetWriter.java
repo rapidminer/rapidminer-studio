@@ -320,8 +320,9 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = new LinkedList<ParameterType>();
-		types.add(makeFileParameterType());
-		// types.add(new ParameterTypeFile(PARAMETER_CSV_FILE,
+		ParameterType type = makeFileParameterType();
+		type.setPrimary(true);
+		types.add(type);
 		// "The CSV file which should be written.", "csv", false));
 		types.add(new ParameterTypeString(PARAMETER_COLUMN_SEPARATOR, "The column separator.", ";", false));
 		types.add(new ParameterTypeBoolean(PARAMETER_WRITE_ATTRIBUTE_NAMES,
@@ -331,7 +332,7 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		types.add(new ParameterTypeBoolean(PARAMETER_FORMAT_DATE,
 				"Indicates if date attributes are written as a formated string or as milliseconds past since January 1, 1970, 00:00:00 GMT",
 				true, true));
-		ParameterType type = new ParameterTypeBoolean(PARAMETER_APPEND_FILE,
+		type = new ParameterTypeBoolean(PARAMETER_APPEND_FILE,
 				"Indicates if new content should be appended to the file or if the pre-existing file content should be overwritten.",
 				false, false);
 		type.registerDependencyCondition(new PortConnectedCondition(this, new PortProvider() {

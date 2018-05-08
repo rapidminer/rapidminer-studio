@@ -21,10 +21,13 @@ package com.rapidminer.gui.search;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
@@ -32,7 +35,6 @@ import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -44,7 +46,6 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
 import com.rapidminer.gui.ApplicationFrame;
-import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.look.RapidLookTools;
 import com.rapidminer.gui.properties.PropertyPanel;
 import com.rapidminer.gui.search.event.GlobalSearchCategoryEvent;
@@ -58,7 +59,6 @@ import com.rapidminer.gui.tools.SelectionNavigationListener;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.TextFieldWithAction;
 import com.rapidminer.gui.tools.components.DropDownPopupButton;
-import com.rapidminer.gui.tools.components.composite.CompositeButton;
 import com.rapidminer.search.GlobalSearchCategory;
 import com.rapidminer.search.GlobalSearchRegistry;
 import com.rapidminer.search.GlobalSearchResult;
@@ -88,17 +88,15 @@ public final class GlobalSearchPanel extends JPanel {
 	private static final int MAX_RESULT_DIALOG_HEIGHT = 820;
 	private static final int SEARCH_FIELD_WIDTH = 205;
 	private static final int FILTER_BUTTON_WIDTH = 90;
-	private static final int SEARCH_BUTTON_WIDTH = 90;
 	private static final int MAX_CATEGORY_I18N_LENGTH = 11;
 
-	public static final int PREFERRED_WIDTH = SEARCH_FIELD_WIDTH + FILTER_BUTTON_WIDTH + SEARCH_BUTTON_WIDTH;
+	public static final int PREFERRED_WIDTH = SEARCH_FIELD_WIDTH + FILTER_BUTTON_WIDTH;
 
 
 	private FilterTextField searchField;
 	private TextFieldWithAction searchActionField;
 
 	private DropDownPopupButton filterButton;
-	private JButton searchButton;
 	private JPopupMenu filterMenu;
 	private JRadioButtonMenuItem allCategoriesButton;
 
@@ -177,6 +175,7 @@ public final class GlobalSearchPanel extends JPanel {
 			return searchField.requestFocusInWindow();
 		} else {
 			searchField.selectAll();
+			reopenResults();
 			return true;
 		}
 	}
@@ -201,8 +200,8 @@ public final class GlobalSearchPanel extends JPanel {
 
 					@Override
 					public Dimension getPreferredSize() {
-						// make sure width is same as this panel
-						int width = searchActionField.getWidth() + filterButton.getWidth() + searchButton.getWidth();
+						// make sure width is same as this panel + width of the i18n label
+						int width = PREFERRED_WIDTH + GlobalSearchCategoryPanel.I18N_NAME_WIDTH + 1;
 						Dimension prefSize = super.getPreferredSize();
 						prefSize.width = width;
 
@@ -279,7 +278,9 @@ public final class GlobalSearchPanel extends JPanel {
 	private void showResults() {
 		// show result dialog immediately to visualize search is ongoing
 		if (resultDialog != null) {
-			resultDialog.setLocation(searchActionField.getLocationOnScreen().x, searchActionField.getLocationOnScreen().y + searchActionField.getHeight() - 1);
+			// align dialog to the right
+			resultDialog.setLocation(searchActionField.getLocationOnScreen().x - GlobalSearchCategoryPanel.I18N_NAME_WIDTH - 1,
+					searchActionField.getLocationOnScreen().y + searchActionField.getHeight() - 1);
 			resultDialog.setVisible(true);
 		}
 	}
@@ -408,10 +409,11 @@ public final class GlobalSearchPanel extends JPanel {
 		});
 		// clicking away from the search field should close the search popup
 		// this is the next best thing because we cannot detect focus loss on dialog as dialog cannot be focused anymore
+		// also open dialog again if the search field gains focus again
 		searchField.addFocusListener(new FocusListener() {
 			@Override
 			public void focusGained(FocusEvent e) {
-				// not needed
+				reopenResults();
 			}
 
 			@Override
@@ -422,6 +424,16 @@ public final class GlobalSearchPanel extends JPanel {
 
 					logGlobalSearchFocusLost();
 				}
+			}
+		});
+		// open dialog after it was closed with escape
+		searchField.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (!SwingUtilities.isLeftMouseButton(e)) {
+					return;
+				}
+				reopenResults();
 			}
 		});
 
@@ -446,7 +458,7 @@ public final class GlobalSearchPanel extends JPanel {
 		gbc.weightx = 0.0d;
 		gbc.fill = GridBagConstraints.NONE;
 		DropDownPopupButton.DropDownPopupButtonBuilder builder = new DropDownPopupButton.DropDownPopupButtonBuilder();
-		filterButton = builder.with(new ResourceActionAdapter("global_search.toolbar")).setComposite(SwingUtilities.CENTER).build();
+		filterButton = builder.with(new ResourceActionAdapter("global_search.toolbar")).setComposite(SwingUtilities.RIGHT).build();
 		filterButton.addPopupMenuListener(new PopupMenuListener() {
 			@Override
 			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
@@ -454,7 +466,12 @@ public final class GlobalSearchPanel extends JPanel {
 				populateFilterPopup((JPopupMenu) source);
 
 				filterMenu = (JPopupMenu) source;
-				filterMenu.setPreferredSize(new Dimension(filterButton.getWidth() + searchButton.getWidth(), filterMenu.getPreferredSize().height));
+				// align popup to the right and make it at most as wide as the whole search panel
+				Dimension preferredSize = filterMenu.getPreferredSize();
+				int width = Math.min(PREFERRED_WIDTH, preferredSize.width);
+				filterMenu.setPreferredSize(new Dimension(width, preferredSize.height));
+				Point buttonLocation = filterButton.getLocationOnScreen();
+				filterMenu.setLocation(buttonLocation.x + filterButton.getWidth() - width, buttonLocation.y + filterButton.getHeight() - 1);
 			}
 
 			@Override
@@ -473,21 +490,6 @@ public final class GlobalSearchPanel extends JPanel {
 		filterButton.setPreferredSize(new Dimension(FILTER_BUTTON_WIDTH, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
 		add(filterButton, gbc);
 
-		gbc.gridx += 1;
-		searchButton = new CompositeButton(I18N.getGUILabel("global_search.run_search.label"), SwingConstants.RIGHT);
-		searchButton.setToolTipText(I18N.getGUILabel("global_search.run_search.tip"));
-		searchButton.addActionListener(e -> {
-
-			controller.handleSearch(searchField.getText(), categoryFilter);
-			// give focus back to search field
-			requestFocusInWindow();
-		});
-		searchButton.setPreferredSize(new Dimension(SEARCH_BUTTON_WIDTH, PropertyPanel.VALUE_CELL_EDITOR_HEIGHT));
-		searchButton.putClientProperty(RapidLookTools.PROPERTY_BUTTON_HIGHLIGHT, Boolean.TRUE);
-		searchButton.putClientProperty(RapidLookTools.PROPERTY_BUTTON_DARK_BORDER, Boolean.TRUE);
-		searchButton.setForeground(Colors.WHITE);
-		add(searchButton, gbc);
-
 		InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 		ActionMap actionMap = getActionMap();
 
@@ -500,6 +502,23 @@ public final class GlobalSearchPanel extends JPanel {
 				logGlobalSearchFocusLost();
 			}
 		});
+	}
+
+	/**
+	 * Opens the result dialog if it is not visible right now and the search field is not empty. This method is used to
+	 * support one-click functionality, i.e. showing the results after either the search field gains focus again or
+	 * was clicked after the result dialog was closed with the ESC key.
+	 *
+	 * @since 8.2
+	 */
+	private void reopenResults() {
+		if (searchField.getText().trim().isEmpty()) {
+			return;
+		}
+		if (resultDialog != null && resultDialog.isVisible()) {
+			return;
+		}
+		showResults();
 	}
 
 	/**

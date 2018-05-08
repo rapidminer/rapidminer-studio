@@ -25,6 +25,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.logging.Level;
 
+import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.studio.internal.RuleProvider;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -40,7 +41,7 @@ import com.rapidminer.tools.WebServiceTools;
 class RemoteRuleProvider implements RuleProvider {
 
 	/** the url of the cta service */
-	private static final String RULE_URL = I18N.getGUIMessageOrNull("gui.label.cta.json.remote");
+	private static final String RULE_URL = I18N.getGUIMessageOrNull("gui.label.cta.json.remote", new RapidMinerVersion().getLongVersion());
 
 	/** HTTP-header location field see rfc7231 7.1.2 */
 	private static final String LOCATION = "Location";

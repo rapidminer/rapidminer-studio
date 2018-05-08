@@ -210,6 +210,7 @@ public class CostBasedThresholdLearner extends AbstractMetaLearner {
 				new ParameterTypeString("class_name", "The name of the class."), new ParameterTypeDouble("weight",
 						"The weight for this class.", 0.0d, Double.POSITIVE_INFINITY, 1.0d));
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		types.add(new ParameterTypeBoolean(

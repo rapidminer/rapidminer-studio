@@ -71,6 +71,8 @@ public class ParameterTypeConfiguration extends ParameterType {
 		this.parameters = parameters;
 		this.wizardListener = wizardListener;
 		this.wizardConstructionArguments = constructorArguments;
+
+		setPrimary(true);
 	}
 
 	/**

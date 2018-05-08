@@ -19,8 +19,10 @@
 package com.rapidminer.operator.preprocessing.transformation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -40,6 +42,7 @@ import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
+import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
@@ -108,7 +111,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 
 		String[] seriesNames = new String[numberOfSeries];
 		Pattern[] seriesPatterns = new Pattern[numberOfSeries];
-		ArrayList<Vector<AttributeMetaData>> seriesAttributes = new ArrayList<Vector<AttributeMetaData>>(numberOfSeries);
+		ArrayList<Vector<AttributeMetaData>> seriesAttributes = new ArrayList<>(numberOfSeries);
 		int[] attributeTypes = new int[numberOfSeries];
 		Iterator<String[]> iterator = seriesList.iterator();
 		int j = 0;
@@ -116,7 +119,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 			String[] pair = iterator.next();
 			seriesNames[j] = pair[0];
 			seriesPatterns[j] = Pattern.compile(pair[1]);
-			seriesAttributes.add(j, new Vector<AttributeMetaData>());
+			seriesAttributes.add(j, new Vector<>());
 			j++;
 		}
 		String indexParamName = getParameterAsString(PARAMETER_INDEX_ATTRIBUTE);
@@ -181,7 +184,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 
 		String[] seriesNames = new String[numberOfSeries];
 		Pattern[] seriesPatterns = new Pattern[numberOfSeries];
-		ArrayList<Vector<Attribute>> seriesAttributes = new ArrayList<Vector<Attribute>>(numberOfSeries);
+		ArrayList<Vector<Attribute>> seriesAttributes = new ArrayList<>(numberOfSeries);
 		int[] attributeTypes = new int[numberOfSeries];
 		Iterator<String[]> iterator = seriesList.iterator();
 		int j = 0;
@@ -189,13 +192,13 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 			String[] pair = iterator.next();
 			seriesNames[j] = pair[0];
 			seriesPatterns[j] = Pattern.compile(pair[1]);
-			seriesAttributes.add(j, new Vector<Attribute>());
+			seriesAttributes.add(j, new Vector<>());
 			attributeTypes[j] = Ontology.ATTRIBUTE_VALUE;
 			j++;
 		}
 
-		Vector<Attribute> newAttributes = new Vector<Attribute>();
-		Vector<Attribute> constantAttributes = new Vector<Attribute>();
+		Vector<Attribute> newAttributes = new Vector<>();
+		Vector<Attribute> constantAttributes = new Vector<>();
 
 		// identify series attributes and check attribute types
 		Iterator<Attribute> attributes;
@@ -221,12 +224,11 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 					seriesAttributes.get(i).add(attribute);
 					if (attributeTypes[i] != Ontology.ATTRIBUTE_VALUE) {
 						if (attribute.getValueType() != attributeTypes[i]) {
-							throw new OperatorException("attributes have different value types: no conversion is performed");
+							throw new UserError(this, "de_pivot.type_mismatch", attribute.getName(), Ontology.VALUE_TYPE_NAMES[attribute.getValueType()], Ontology.VALUE_TYPE_NAMES[attributeTypes[i]], seriesNames[i]);
 						}
 					} else {
 						attributeTypes[i] = attribute.getValueType();
 					}
-					break;
 				}
 			}
 			if (!matched) {
@@ -246,7 +248,7 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 			for (int i = 0; i < numberOfSeries - 1; i++) {
 				seriesLength = seriesAttributes.get(i).size();
 				if (seriesLength != seriesAttributes.get(i + 1).size()) {
-					throw new OperatorException("series must have the same length: no conversion is performed");
+					throw new UserError(this, "de_pivot.length_mismatch", seriesNames[i], seriesAttributes.get(i).size(), seriesNames[i + 1], seriesAttributes.get(i + 1).size());
 				}
 			}
 		}
@@ -350,7 +352,27 @@ public class Attribute2ExamplePivoting extends ExampleSetTransformationOperator 
 		ParameterType type = new ParameterTypeList(PARAMETER_SERIES,
 				"Maps a number of source attributes onto result attributes.",
 				new ParameterTypeString("attribute_name", "Specifies the name of the resulting attribute"),
-				new ParameterTypeRegexp(PARAMETER_ATTRIBUTE_NAME_REGEX, "Attributes that forms series.", false));
+				new ParameterTypeRegexp(PARAMETER_ATTRIBUTE_NAME_REGEX, "Attributes that forms series.", false) {
+
+					private static final long serialVersionUID = 8133149560984042645L;
+
+					@Override
+					public Collection<String> getPreviewList() {
+						InputPort inPort = getInputPort();
+						Collection<String> regExpPreviewList = new LinkedList<>();
+						if (inPort == null) {
+							return super.getPreviewList();
+						}
+						MetaData metaData = inPort.getMetaData();
+						if (metaData instanceof ExampleSetMetaData) {
+							ExampleSetMetaData emd = (ExampleSetMetaData) metaData;
+							for (AttributeMetaData amd : emd.getAllAttributes()) {
+									regExpPreviewList.add(amd.getName());
+							}
+						}
+						return regExpPreviewList;
+					}
+				});
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeString(PARAMETER_INDEX_ATTRIBUTE, "Name of newly created index attribute.", false, false);

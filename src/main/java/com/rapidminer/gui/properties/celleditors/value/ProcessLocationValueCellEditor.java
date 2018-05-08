@@ -127,6 +127,15 @@ public class ProcessLocationValueCellEditor extends RepositoryLocationValueCellE
 		return surroundingPanel;
 	}
 
+	@Override
+	public void activate() {
+		if (openProcessButton.isEnabled()) {
+			openProcessButton.doClick();
+		} else {
+			super.activate();
+		}
+	}
+
 	/**
 	 * Checks whether the provided repository location is valid and is a process.
 	 */

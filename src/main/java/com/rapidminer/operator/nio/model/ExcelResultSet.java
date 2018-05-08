@@ -21,7 +21,6 @@ package com.rapidminer.operator.nio.model;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -33,6 +32,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
 
@@ -184,32 +184,21 @@ public class ExcelResultSet implements DataResultSet {
 		final String timezone = configuration.getTimezone();
 		if (dateFormatProvider != null) {
 			if (timezone != null) {
-				this.dateFormatProvider = new DateFormatProvider() {
-
-					@Override
-					public DateFormat geDateFormat() {
-						DateFormat format = dateFormatProvider.geDateFormat();
-						format.setTimeZone(TimeZone.getTimeZone(timezone));
-						return format;
-					}
-
+				this.dateFormatProvider = () -> {
+					DateFormat format = dateFormatProvider.geDateFormat();
+					format.setTimeZone(TimeZone.getTimeZone(timezone));
+					return format;
 				};
 			} else {
 				this.dateFormatProvider = dateFormatProvider;
 			}
 		} else {
 			String datePattern = configuration.getDatePattern();
-			final DateFormat dateFormat = datePattern == null ? new SimpleDateFormat() : new SimpleDateFormat(datePattern);
+			final DateFormat dateFormat = ParameterTypeDateFormat.createCheckedDateFormat(callingOperator, (datePattern == null ? "" : datePattern));
 			if (timezone != null) {
 				dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
 			}
-			this.dateFormatProvider = new DateFormatProvider() {
-
-				@Override
-				public DateFormat geDateFormat() {
-					return dateFormat;
-				}
-			};
+			this.dateFormatProvider = () -> dateFormat;
 		}
 
 		if (callingOperator != null) {
@@ -335,8 +324,13 @@ public class ExcelResultSet implements DataResultSet {
 			return date;
 		} else {
 			String valueString = cell.getContents();
+			DateFormat dateFormat = dateFormatProvider.geDateFormat();
+			if (dateFormat == null) {
+				throw new ParseException(
+						new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_DATE, "illegal date format pattern"));
+			}
 			try {
-				return dateFormatProvider.geDateFormat().parse(valueString);
+				return dateFormat.parse(valueString);
 			} catch (java.text.ParseException e) {
 				throw new ParseException(
 						new ParsingError(currentRow, columnIndex, ParsingError.ErrorCode.UNPARSEABLE_DATE, valueString));

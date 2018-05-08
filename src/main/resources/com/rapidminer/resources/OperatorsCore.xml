@@ -138,6 +138,13 @@
 				<class>com.rapidminer.operator.clustering.clusterer.KMeans</class>
 				<replaces>KMeans</replaces>
 			</operator>
+			<operator>
+				<deprecatedSince>8.2</deprecatedSince>
+				<key>fp_growth</key>
+				<class>com.rapidminer.operator.learner.associations.fpgrowth.FPGrowth
+				</class>
+				<replaces>FPGrowth</replaces>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -1325,12 +1332,6 @@
 			</group>
 			<group key="associations">
 				<icon>shopping_cart.png</icon>
-				<operator>
-					<key>fp_growth</key>
-					<class>com.rapidminer.operator.learner.associations.fpgrowth.FPGrowth
-					</class>
-					<replaces>FPGrowth</replaces>
-				</operator>
 				<operator>
 					<key>create_association_rules</key>
 					<class>com.rapidminer.operator.learner.associations.AssociationRuleGenerator

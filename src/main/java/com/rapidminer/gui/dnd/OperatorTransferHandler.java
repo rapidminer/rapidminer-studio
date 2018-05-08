@@ -101,16 +101,15 @@ public abstract class OperatorTransferHandler extends AbstractPatchedTransferHan
 				return null;
 			}
 			return new TransferableOperator(operators.toArray(new Operator[operators.size()]));
-		} else {
-			// no operators, try workflow annotations
-			WorkflowAnnotation anno = getDraggedAnnotation();
-			// neither operators nor annotations, give up
-			if (anno == null) {
-				return null;
-			}
-
-			return new TransferableAnnotation(anno);
 		}
+		// no operators, try workflow annotations
+		WorkflowAnnotation anno = getDraggedAnnotation();
+		// neither operators nor annotations, give up
+		if (anno == null) {
+			return null;
+		}
+
+		return new TransferableAnnotation(anno);
 	}
 
 	@Override

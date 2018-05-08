@@ -37,6 +37,8 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
+import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -137,13 +139,28 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 		}
 	}
 
+	/**
+	 * Validates the process represented by the current xml. Will update the actual process if the xml representation
+	 * differs. This diff will ignore white space changes, but will update the displayed xml with the parser
+	 * conform version.
+	 */
 	public synchronized void validateProcess() throws IOException, XMLException {
-		Process newExp = new Process(editor.getText().trim());
-		if (!newExp.getRootOperator().getXML(true)
-				.equals(RapidMinerGUI.getMainFrame().getProcess().getRootOperator().getXML(true))) {
-			Process old = RapidMinerGUI.getMainFrame().getProcess();
-			newExp.setProcessLocation(old.getProcessLocation());
-			mainFrame.setProcess(newExp, false);
+		String editorContent = getXMLFromEditor();
+		Process oldProcess = RapidMinerGUI.getMainFrame().getProcess();
+		String oldXML = oldProcess.getRootOperator().getXML(true);
+		if (oldXML.trim().equals(editorContent)) {
+			return;
+		}
+		Process newProcess = new Process(editorContent);
+		ProcessRendererView processRenderer = mainFrame.getProcessPanel().getProcessRenderer();
+		ProcessDrawUtils.ensureOperatorsHaveLocation(newProcess, processRenderer.getModel());
+		String newXML = newProcess.getRootOperator().getXML(true);
+		if (!newXML.equals(oldXML)) {
+			newProcess.setProcessLocation(oldProcess.getProcessLocation());
+			mainFrame.setProcess(newProcess, false);
+			processRenderer.getModel().setProcess(newProcess, false, false);
+		} else {
+			setText(oldXML);
 		}
 	}
 

@@ -43,6 +43,7 @@ import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
+import com.rapidminer.operator.ports.quickfix.AttributeToNominalQuickFixProvider;
 import com.rapidminer.operator.preprocessing.PreprocessingModel;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -52,6 +53,7 @@ import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.math.MathFunctions;
 
 
@@ -102,10 +104,10 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 	protected void checkSelectedSubsetMetaData(ExampleSetMetaData subsetMetaData) {
 		switch (subsetMetaData.containsSpecialAttribute(Attributes.LABEL_NAME)) {
 			case YES:
-				AttributeMetaData labelMD = subsetMetaData.getAttributeByRole(Attributes.LABEL_NAME);
+				AttributeMetaData labelMD = subsetMetaData.getLabelMetaData();
 				if (!labelMD.isNominal()) {
 					getExampleSetInputPort().addError(
-							new SimpleMetaDataError(Severity.ERROR, getExampleSetInputPort(), "attribute_has_wrong_type",
+							new SimpleMetaDataError(Severity.ERROR, getExampleSetInputPort(), AttributeToNominalQuickFixProvider.labelToNominal(getExampleSetInputPort(), labelMD), "attribute_has_wrong_type",
 									labelMD.getName(), Ontology.VALUE_TYPE_NAMES[Ontology.NOMINAL]));
 				}
 				break;
@@ -312,6 +314,14 @@ public class MinimalEntropyDiscretization extends AbstractDiscretizationOperator
 		Attributes attributes = exampleSet.getAttributes();
 		double[][] ranges = new double[attributes.size()][];
 		Attribute label = attributes.getLabel();
+		if (!label.isNominal()) {
+			OperatorDescription[] descriptions = OperatorService.getOperatorDescriptions(getClass());
+			String name = getClass().getSimpleName();
+			if (descriptions != null && descriptions.length > 0 && descriptions[0] != null) {
+				name = descriptions[0].getName();
+			}
+			throw new UserError(this, 101, name, label.getName());
+		}
 
 		int a = 0;
 		for (Attribute attribute : attributes) {

@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -175,7 +176,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	private final List<BreakpointListener> breakpointListeners = Collections.synchronizedList(new LinkedList<>());
 
 	/** The list of filters called between each operator */
-	private final List<ProcessFlowFilter> processFlowFilters = Collections.synchronizedList(new LinkedList<>());
+	private final CopyOnWriteArrayList<ProcessFlowFilter> processFlowFilters = new CopyOnWriteArrayList<>();
 
 	/** The listeners for logging (data tables). */
 	private final List<LoggingListener> loggingListeners = Collections.synchronizedList(new LinkedList<>());
@@ -307,9 +308,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	/** Reads an process configuration from the given URL. */
 	public Process(final URL url) throws IOException, XMLException {
 		initContext();
-		Reader in = new InputStreamReader(WebServiceTools.openStreamFromURL(url), getEncoding(null));
-		readProcess(in);
-		in.close();
+		try (Reader in = new InputStreamReader(WebServiceTools.openStreamFromURL(url), getEncoding(null))) {
+			readProcess(in);
+		}
+
 	}
 
 	protected Logger makeLogger() {
@@ -730,9 +732,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		if (filter == null) {
 			throw new IllegalArgumentException("filter must not be null!");
 		}
-		if (!processFlowFilters.contains(filter)) {
-			processFlowFilters.add(filter);
-		}
+		processFlowFilters.addIfAbsent(filter);
 	}
 
 	/**
@@ -768,9 +768,13 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		if (input == null) {
 			input = Collections.emptyList();
 		}
-		synchronized (processFlowFilters) {
-			for (ProcessFlowFilter filter : processFlowFilters) {
+		for (ProcessFlowFilter filter : processFlowFilters) {
+			try {
 				filter.preOperator(previousOperator, nextOperator, input);
+			} catch (OperatorException oe) {
+				throw oe;
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "com.rapidminer.Process.process_flow_filter_failed", e);
 			}
 		}
 	}
@@ -796,9 +800,13 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		if (output == null) {
 			output = Collections.emptyList();
 		}
-		synchronized (processFlowFilters) {
-			for (ProcessFlowFilter filter : processFlowFilters) {
+		for (ProcessFlowFilter filter : processFlowFilters) {
+			try {
 				filter.postOperator(previousOperator, nextOperator, output);
+			} catch (OperatorException oe) {
+				throw oe;
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "com.rapidminer.Process.process_flow_filter_failed", e);
 			}
 		}
 	}
@@ -815,11 +823,8 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		if (otherProcess == null) {
 			throw new IllegalArgumentException("otherProcess must not be null!");
 		}
-
-		synchronized (processFlowFilters) {
-			for (ProcessFlowFilter filter : processFlowFilters) {
-				otherProcess.addProcessFlowFilter(filter);
-			}
+		for (ProcessFlowFilter filter : processFlowFilters) {
+			otherProcess.addProcessFlowFilter(filter);
 		}
 	}
 

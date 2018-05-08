@@ -50,7 +50,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
-import com.rapidminer.tools.DateParser;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.io.Encoding;
@@ -92,11 +91,15 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	public static final int FILE_FORMAT_XLSX_INDEX = 1;
 
 	public static final String PARAMETER_FILE_FORMAT = "file_format";
-	public static final String PARAMETER_DATE_FORMAT = "date_format";
+	/**
+	 * @deprecated since 8.2; use {@link ParameterTypeDateFormat#PARAMETER_DATE_FORMAT} instead.
+	 */
+	@Deprecated
+	public static final String PARAMETER_DATE_FORMAT = ParameterTypeDateFormat.PARAMETER_DATE_FORMAT;
 	public static final String PARAMETER_NUMBER_FORMAT = "number_format";
 	public static final String PARAMETER_SHEET_NAME = "sheet_name";
 
-	public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	public static final String DEFAULT_DATE_FORMAT = ParameterTypeDateFormat.DATE_TIME_FORMAT_YYYY_MM_DD_HH_MM_SS;
 	public static final String DEFAULT_NUMBER_FORMAT = "#.0";
 
 	/**
@@ -206,7 +209,7 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 		WritableFont wf2 = new WritableFont(WritableFont.ARIAL, 10, WritableFont.NO_BOLD);
 		WritableCellFormat cf2 = new WritableCellFormat(wf2);
 
-		DateFormat df = new DateFormat(DateParser.DEFAULT_DATE_TIME_FORMAT);
+		DateFormat df = new DateFormat(ParameterTypeDateFormat.DATE_TIME_FORMAT_YYYY_MM_DD_HH_MM_SS);
 
 		WritableCellFormat dfCell = new WritableCellFormat(df);
 		int rowCounter = 1;
@@ -250,15 +253,17 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(makeFileParameterType());
+		ParameterType type = makeFileParameterType();
+		type.setPrimary(true);
+		types.add(type);
 
 		types.add(new ParameterTypeCategory(PARAMETER_FILE_FORMAT,
 				"Defines the file format the excel file should be saved as.", FILE_FORMAT_CATEGORIES, FILE_FORMAT_XLSX_INDEX,
 				false));
 
 		List<ParameterType> encodingTypes = Encoding.getParameterTypes(this);
-		for (ParameterType type : encodingTypes) {
-			type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_FILE_FORMAT, FILE_FORMAT_CATEGORIES,
+		for (ParameterType encodingType : encodingTypes) {
+			encodingType.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_FILE_FORMAT, FILE_FORMAT_CATEGORIES,
 					false, new int[] { FILE_FORMAT_XLS_INDEX }));
 		}
 		types.addAll(encodingTypes);
@@ -269,13 +274,14 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 				RAPID_MINER_DATA);
 		sheetName.setExpert(false);
 		xlsxTypes.add(sheetName);
-		xlsxTypes.add(new ParameterTypeDateFormat(PARAMETER_DATE_FORMAT,
-				"The parse format of the date values. Default: for example \"yyyy-MM-dd HH:mm:ss\".", DEFAULT_DATE_FORMAT,
-				true));
+		ParameterType dateType = new ParameterTypeDateFormat();
+		dateType.setDefaultValue(DEFAULT_DATE_FORMAT);
+		dateType.setExpert(true);
+		xlsxTypes.add(dateType);
 		xlsxTypes.add(new ParameterTypeString(PARAMETER_NUMBER_FORMAT,
 				"Specifies the number format for date entries. Default: \"#.0\"", DEFAULT_NUMBER_FORMAT, true));
-		for (ParameterType type : xlsxTypes) {
-			type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_FILE_FORMAT, FILE_FORMAT_CATEGORIES,
+		for (ParameterType xlsxType : xlsxTypes) {
+			xlsxType.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_FILE_FORMAT, FILE_FORMAT_CATEGORIES,
 					false, new int[] { FILE_FORMAT_XLSX_INDEX }));
 		}
 		types.addAll(xlsxTypes);
@@ -299,7 +305,10 @@ public class ExcelExampleSetWriter extends AbstractStreamWriter {
 
 		if (getParameterAsString(PARAMETER_FILE_FORMAT).equals(FILE_FORMAT_XLSX)) {
 
-			String dateFormat = isParameterSet(PARAMETER_DATE_FORMAT) ? getParameterAsString(PARAMETER_DATE_FORMAT) : null;
+			// check if date format is valid
+			ParameterTypeDateFormat.createCheckedDateFormat(this, null);
+
+			String dateFormat = isParameterSet(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT) ? getParameterAsString(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT) : null;
 			String numberFormat = isParameterSet(PARAMETER_NUMBER_FORMAT) ? getParameterAsString(PARAMETER_NUMBER_FORMAT)
 					: null;
 			String sheetName = getParameterAsString(PARAMETER_SHEET_NAME);

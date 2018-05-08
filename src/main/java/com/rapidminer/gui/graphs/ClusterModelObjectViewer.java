@@ -21,12 +21,12 @@ package com.rapidminer.gui.graphs;
 import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
 import javax.swing.JList;
-import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.rapidminer.ObjectVisualizer;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.MenuShortcutJList;
 import com.rapidminer.operator.clustering.HierarchicalClusterNode;
 import com.rapidminer.tools.ObjectVisualizerService;
 
@@ -40,7 +40,7 @@ public class ClusterModelObjectViewer implements GraphObjectViewer, ListSelectio
 
 	private DefaultListModel<Object> model = new DefaultListModel<>();
 
-	private JList<Object> listComponent = new JList<>(this.model);
+	private JList<Object> listComponent = new MenuShortcutJList<>(this.model, false);
 
 	private Object clusterModel;
 
@@ -50,7 +50,6 @@ public class ClusterModelObjectViewer implements GraphObjectViewer, ListSelectio
 
 	@Override
 	public JComponent getViewerComponent() {
-		listComponent.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		listComponent.addListSelectionListener(this);
 		listComponent.setVisibleRowCount(-1);
 		return new ExtendedJScrollPane(listComponent);

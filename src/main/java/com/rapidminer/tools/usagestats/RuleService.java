@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -31,6 +32,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExecutionMode;
+import com.rapidminer.RapidMinerVersion;
+import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.studio.internal.RuleProvider;
 import com.rapidminer.studio.internal.RuleProviderRegistry;
 import com.rapidminer.tools.I18N;
@@ -50,7 +53,7 @@ enum RuleService {
 
 	private final Set<String> PROHIBITED_KEYWORDS = new HashSet<>();
 
-	private Set<VerifiableRule> rules = new HashSet<>();
+	private final Set<VerifiableRule> rules = new HashSet<>();
 
 	private RuleService() {
 		PROHIBITED_KEYWORDS.add("JOIN");
@@ -97,14 +100,14 @@ enum RuleService {
 		}
 
 		ObjectMapper mapper = new ObjectMapper();
-		List<VerifiableRule> newRules = null;
+		List<VerifiableRule> loadedRules = null;
 		Iterator<RuleProvider> ruleProvider = RuleProviderRegistry.INSTANCE.getRuleProvider().iterator();
 
-		while (ruleProvider.hasNext() && newRules == null) {
+		while (ruleProvider.hasNext() && loadedRules == null) {
 			RuleProvider provider = ruleProvider.next();
 			try (InputStream ruleJson = provider.getRuleJson()) {
 				if (ruleJson != null) {
-					newRules = checkAndConvertRules(mapper.readValue(ruleJson, new TypeReference<List<Rule>>() {
+					loadedRules = checkAndConvertRules(mapper.readValue(ruleJson, new TypeReference<List<Rule>>() {
 					}));
 				} else {
 					LogService.getRoot().log(Level.FINE, I18N.getMessage(LogService.getRoot().getResourceBundle(),
@@ -117,7 +120,43 @@ enum RuleService {
 			}
 		}
 
-		if (newRules != null) {
+		if (loadedRules != null) {
+			RapidMinerVersion coreVersion = new RapidMinerVersion();
+			List<VerifiableRule> newRules = new LinkedList<>();
+			for (VerifiableRule rule : loadedRules) {
+				// rules that have neither min nor max Studio version are automatically added
+				if (rule.getRule().getMinStudioVersion() == null && rule.getRule().getMaxStudioVersion() == null) {
+					newRules.add(rule);
+					continue;
+				}
+
+				// skip rules that require a minimum Studio version which is above our current version
+				if (rule.getRule().getMinStudioVersion() != null) {
+					try {
+						if (coreVersion.isAtLeast(new VersionNumber(rule.getRule().getMinStudioVersion()))) {
+							newRules.add(rule);
+						}
+					} catch (VersionNumber.VersionNumberException e) {
+						// malformed version number in JSON, skip rule
+						LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+								"com.rapidminer.tools.usagestats.RuleService.load.invalid_min_version", rule.getRule().getMinStudioVersion()));
+						continue;
+					}
+				}
+				// skip rules that require a maximum Studio version which is below our current version
+				if (rule.getRule().getMaxStudioVersion() != null) {
+					try {
+						if (coreVersion.isAtMost(new VersionNumber(rule.getRule().getMaxStudioVersion()))) {
+							newRules.add(rule);
+						}
+					} catch (VersionNumber.VersionNumberException e) {
+						// malformed version number in JSON, skip rule
+						LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+								"com.rapidminer.tools.usagestats.RuleService.load.invalid_max_version", rule.getRule().getMinStudioVersion()));
+					}
+				}
+			}
+
 			rules.retainAll(newRules);
 			rules.addAll(newRules);
 		}

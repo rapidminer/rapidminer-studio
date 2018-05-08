@@ -32,9 +32,9 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeChar;
 import com.rapidminer.parameter.ParameterTypeConfiguration;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
-import com.rapidminer.tools.DateParser;
 import com.rapidminer.tools.LineParser;
 import com.rapidminer.tools.StrictDecimalFormat;
 
@@ -129,7 +129,9 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 
 		// Numberformats
 		types.addAll(StrictDecimalFormat.getParameterTypes(this, true));
-		types.addAll(DateParser.getParameterTypes(this));
+		type = new ParameterTypeDateFormat();
+		type.setDefaultValue(ParameterTypeDateFormat.DATE_FORMAT_YYYY_MM_DD);
+		types.add(type);
 
 		types.addAll(super.getParameterTypes());
 		return types;

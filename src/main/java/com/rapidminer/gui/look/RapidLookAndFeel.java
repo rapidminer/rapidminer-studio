@@ -58,6 +58,17 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 	/** the radius of RoundedRect corners */
 	public static final int CORNER_DEFAULT_RADIUS = 5;
 
+	/** the radius for tabs on the welcome dialog (since 8.2) */
+	public static final int CORNER_START_TAB_RADIUS = 8;
+	/** the space between tabs for the welcome dialog (since 8.2) */
+	public static final int START_TAB_GAP = 10;
+	/** the indentation fro the first tab of the welcome dialog (since 8.2) */
+	public static final int START_TAB_INDENT = 25;
+	/** top gap for the welcome dialog (since 8.2) */
+	public static final int START_DIALOG_TOP_GAP = 17;
+	/** set this client property to true for the tabbed pane in the welcome dialog (since 8.2) */
+	public static final String START_DIALOG_INDICATOR_PROPERTY = "com.rapidminer.StartDialog";
+
 	/** the radius of RoundedRect corners for tabs */
 	public static final int CORNER_TAB_RADIUS = 5;
 

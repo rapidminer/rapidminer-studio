@@ -40,6 +40,7 @@ import com.rapidminer.core.io.data.DataSet;
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.DataSetRow;
 import com.rapidminer.core.io.data.ParseException;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.studio.io.data.HeaderRowBehindStartRowException;
 import com.rapidminer.studio.io.data.HeaderRowNotFoundException;
 import com.rapidminer.studio.io.data.StartRowNotFoundException;
@@ -1039,7 +1040,7 @@ public class CSVDataSourceDataTest {
 			dataSource.createMetaData();
 
 			int dateColumnIndex = 6;
-			SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yy h:mm a");
+			SimpleDateFormat dateFormat = new SimpleDateFormat(ParameterTypeDateFormat.DATE_TIME_FORMAT_M_D_YY_H_MM_A);
 
 			// check meta data and set to date
 			assertEquals(7, dataSource.getMetadata().getColumnMetaData().size());

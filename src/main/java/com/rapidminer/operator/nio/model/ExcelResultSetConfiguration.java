@@ -44,6 +44,7 @@ import com.rapidminer.operator.nio.model.xlsx.XlsxSheetTableModel;
 import com.rapidminer.operator.nio.model.xlsx.XlsxWorkbookParser;
 import com.rapidminer.operator.nio.model.xlsx.XlsxWorkbookParser.XlsxWorkbook;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
@@ -119,8 +120,8 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 			}
 		}
 
-		if (excelExampleSource.isParameterSet(AbstractDataResultSetReader.PARAMETER_DATE_FORMAT)) {
-			datePattern = excelExampleSource.getParameterAsString(AbstractDataResultSetReader.PARAMETER_DATE_FORMAT);
+		if (excelExampleSource.isParameterSet(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT)) {
+			datePattern = excelExampleSource.getParameterAsString(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT);
 		}
 
 		if (excelExampleSource.isParameterSet(AbstractDataResultSetReader.PARAMETER_TIME_ZONE)) {

@@ -25,17 +25,13 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.GeneralPath;
-import java.util.Iterator;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
@@ -50,6 +46,7 @@ import javax.swing.border.Border;
 
 import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
 import com.rapidminer.gui.tools.ListHoverHelper;
+import com.rapidminer.gui.tools.MenuShortcutJList;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.LogService;
 
@@ -151,29 +148,19 @@ public class PlotterChooser extends JButton {
 		}
 
 		private Icon getIcon(String plotterName, boolean selected) {
-
 			// check to decide which icon size should be loaded
-			if (!isSmallIconsUsed()) {
-				if (selected) {
-					return SwingTools
-							.createImage("icons/chartPreview/" + ICON_SIZE + "/" + plotterName.replace(' ', '_') + ".png");
-				} else {
-					return SwingTools.createImage(
-							"icons/chartPreview/" + ICON_SIZE + "/" + plotterName.replace(' ', '_') + "-grey.png");
-				}
-			} else {
-				if (selected) {
-					return SwingTools.createImage(
-							"icons/chartPreview/" + SMALL_ICON_SIZE + "/" + plotterName.replace(' ', '_') + ".png");
-				} else {
-					return SwingTools.createImage(
-							"icons/chartPreview/" + SMALL_ICON_SIZE + "/" + plotterName.replace(' ', '_') + "-grey.png");
-				}
+			StringBuilder builder = new StringBuilder("icons/chartPreview/");
+			builder.append(isSmallIconsUsed() ? SMALL_ICON_SIZE : ICON_SIZE).append('/');
+			builder.append(plotterName.replace(' ', '_'));
+			if (!selected) {
+				builder.append("-grey");
 			}
+			builder.append(".png");
+			return SwingTools.createImage(builder.toString());
 		}
 	}
 
-	private JList<String> plotterList = new JList<>(new DefaultListModel<>());
+	private JList<String> plotterList = new MenuShortcutJList<>(new DefaultListModel<>(), false);
 
 	public PlotterChooser() {
 		super();
@@ -190,15 +177,11 @@ public class PlotterChooser extends JButton {
 		final PopupAction popupAction = new PopupAction("choose_plotter", plotterList);
 		setAction(popupAction);
 
-		this.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (smallIcons != isResolutionTooSmall()) {
-					smallIcons = !smallIcons; // toggle the type of icons
-					// if the resolution has changed, create a new panel to support this resolution
-					plotterList.setCellRenderer(new PlotterListCellRenderer<>());
-				}
+		this.addActionListener(e -> {
+			if (smallIcons != isResolutionTooSmall()) {
+				smallIcons = !smallIcons; // toggle the type of icons
+				// if the resolution has changed, create a new panel to support this resolution
+				plotterList.setCellRenderer(new PlotterListCellRenderer<>());
 			}
 		});
 
@@ -233,22 +216,16 @@ public class PlotterChooser extends JButton {
 
 	private void populateList(PlotterConfigurationModel plotterSettings) {
 		((DefaultListModel<?>) plotterList.getModel()).clear();
-		Iterator<String> n = plotterSettings.getAvailablePlotters().keySet().iterator();
-		while (n.hasNext()) {
-			String plotterName = n.next();
+		plotterSettings.getAvailablePlotters().forEach((plotterName, plotterClass) -> {
 			try {
-				Class<? extends Plotter> plotterClass = plotterSettings.getAvailablePlotters().get(plotterName);
 				if (plotterClass != null) {
 					((DefaultListModel<String>) plotterList.getModel()).addElement(plotterName);
 				}
-			} catch (IllegalArgumentException e) {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.gui.plotter.PlotterControlPanel.instatiating_plotter_error", plotterName);
-			} catch (SecurityException e) {
+			} catch (IllegalArgumentException | SecurityException e) {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.gui.plotter.PlotterControlPanel.instatiating_plotter_error", plotterName);
 			}
-		}
+		});
 
 	}
 

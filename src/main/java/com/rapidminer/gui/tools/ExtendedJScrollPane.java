@@ -19,7 +19,7 @@
 package com.rapidminer.gui.tools;
 
 import java.awt.Component;
-
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 
 
@@ -48,6 +48,31 @@ public class ExtendedJScrollPane extends JScrollPane {
 			ExtendedJTable table = (ExtendedJTable) component;
 			table.setExtendedScrollPane(this);
 		}
+
+		// scrollpane in scrollpane support
+		addMouseWheelListener(e -> {
+
+			// horizontal scrolling is done with shift held down
+			// this works for both Windows as well as OS X touchpad
+			boolean scrollVertical = !e.isShiftDown() || !getHorizontalScrollBar().isShowing();
+			JScrollBar scrollBar = scrollVertical ? getVerticalScrollBar() : getHorizontalScrollBar();
+			// if no scrollbar is shown, just dispatch scroll event to parent so parent scrollpane can actually scroll
+			if (!scrollBar.isShowing()) {
+				getParent().dispatchEvent(e);
+			}
+			// if vertical scrollbar is at top position, allow parent scrollpane to scroll up as well
+			// OR
+			// if horizontal scrollbar is at leftmost position, allow parent scrollpane to scroll left as well
+			if (e.getWheelRotation() < 0 && scrollBar.getValue() == scrollBar.getMinimum()) {
+				getParent().dispatchEvent(e);
+			}
+			// if vertical scrollbar is at bottom position, allow parent scrollpane to scroll down as well
+			// OR
+			// if horizontal scrollbar is at rightmost position, allow parent scrollpane to scroll right as well
+			if (e.getWheelRotation() > 0 && scrollBar.getValue() + scrollBar.getVisibleAmount() == scrollBar.getMaximum()) {
+				getParent().dispatchEvent(e);
+			}
+		});
 	}
 
 	@Override

@@ -50,6 +50,9 @@ enum CtaDao {
 	/** Insert a new rule trigger event with the current timestamp */
 	private static final String INSERT_RULE_QUERY = "INSERT INTO rule(id, action) VALUES (?,?)";
 
+	/** Insert a new key/value into the constants table */
+	private static final String MERGE_CONSTANT_QUERY = "MERGE INTO studio_constants(con, val) VALUES (?,?)";
+
 	/** This query returns an empty result set, if the offset is larger than the event count */
 	private static final String SELECT_OVER_250K = "SELECT timestamp FROM event ORDER BY timestamp DESC LIMIT 1 OFFSET 250000";
 
@@ -66,6 +69,7 @@ enum CtaDao {
 
 	private PreparedStatement insertEvent = null;
 	private PreparedStatement insertRule = null;
+	private PreparedStatement mergeConstant = null;
 	private PreparedStatement selectOver250k = null;
 	private PreparedStatement deleteOlderThan = null;
 	private PreparedStatement deleteOlderOneMonth = null;
@@ -75,6 +79,7 @@ enum CtaDao {
 			Connection connection = CtaDataSource.INSTANCE.getConnection();
 			insertEvent = connection.prepareStatement(INSERT_EVENT_QUERY);
 			insertRule = connection.prepareStatement(INSERT_RULE_QUERY);
+			mergeConstant = connection.prepareStatement(MERGE_CONSTANT_QUERY);
 			selectOver250k = connection.prepareStatement(SELECT_OVER_250K);
 			deleteOlderThan = connection.prepareStatement(DELETE_OLDER_THAN);
 			deleteOlderOneMonth = connection.prepareStatement(DELETE_OLDER_ONE_MONTH);
@@ -116,6 +121,23 @@ enum CtaDao {
 		}
 		// This is also working for 0 batches
 		insertEvent.executeBatch();
+	}
+
+	/**
+	 * Store a Studio constant in the studio_constants table. If a row for the given key already exists, will update the row with the new value instead.
+	 *
+	 * @param key
+	 * 		the key of the constant
+	 * @param value
+	 * 		the value of the constant
+	 * @throws SQLException
+	 * 		if something went wrong
+	 * 	@since 8.1.1
+	 */
+	public void mergeConstant(String key, String value) throws SQLException {
+		mergeConstant.setString(1, key);
+		mergeConstant.setString(2, value);
+		mergeConstant.execute();
 	}
 
 	/**

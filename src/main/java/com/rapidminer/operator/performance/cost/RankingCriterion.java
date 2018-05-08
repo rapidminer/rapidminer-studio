@@ -88,7 +88,7 @@ public class RankingCriterion extends MeasuredPerformance {
 		while (intervallIndex < rankIntervallStarts.length - 1 && rankIntervallStarts[intervallIndex + 1] <= rank) {
 			intervallIndex++;
 		}
-		if (rank >= rankIntervallStarts[0]) {
+		if (rankIntervallStarts.length > 0 && rank >= rankIntervallStarts[0]) {
 			// otherwise not defined costs: Assume 0
 			costs += rankIntervallCost[intervallIndex];
 		}

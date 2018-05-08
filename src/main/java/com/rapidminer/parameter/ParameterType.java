@@ -92,6 +92,11 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 	private boolean expert = true;
 
 	/**
+	 * Indicates if a parameter is a primary parameter of an operator, i.e. one that gets activated with a double-click.
+	 */
+	private boolean primary = false;
+
+	/**
 	 * Indicates if this parameter is hidden and is not shown in the GUI. May be used in conjunction
 	 * with a configuration wizard which lets the user configure the parameter.
 	 */
@@ -326,6 +331,28 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 	 */
 	public boolean isSensitive() {
 		return true;
+	}
+
+	/**
+	 * Sets if this parameter type is a primary parameter of an operator, i.e. one that can be opened with a double-click. If not set, defaults to {@code false}, except for {@link ParameterTypeConfiguration}.
+	 * If more than one parameter type of an operator is set to primary, the first one returned in the parameters collection will be considered the primary one.
+	 *
+	 * @param primary
+	 * 		{@code true} if it is a primary parameter; {@code false} otherwise
+	 * @since 8.2
+	 */
+	public void setPrimary(final boolean primary) {
+		this.primary = primary;
+	}
+
+	/**
+	 * Returns if this is a primary parameter of an operator, i.e. one that can be opened with a double-click. Defaults to {@code false}.
+	 *
+	 * @return {@code true} if it is a primary parameter; {@code false} otherwise
+	 * @since 8.2
+	 */
+	public boolean isPrimary() {
+		return primary;
 	}
 
 	/**

@@ -1,6 +1,6 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
  * 
  * http://rapidminer.com
@@ -19,8 +19,11 @@
 package com.rapidminer.operator.preprocessing;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
@@ -33,6 +36,8 @@ import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.AbstractExampleSetProcessing;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
@@ -72,6 +77,8 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
  */
 public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 
+	private static final OperatorVersion BEFORE_FORMAT_NUMERICAL_ID = new OperatorVersion(8, 1, 10);
+
 	public ExampleSetTranspose(OperatorDescription description) {
 		super(description);
 	}
@@ -105,25 +112,35 @@ public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 		}
 
 		// create new attributes
-		List<Attribute> newAttributes = new ArrayList<Attribute>(exampleSet.size());
+		List<Attribute> newAttributes = new ArrayList<>(exampleSet.size() + 1);
 		Attribute newIdAttribute = AttributeFactory.createAttribute(Attributes.ID_NAME, Ontology.NOMINAL);
 		newAttributes.add(newIdAttribute);
 		Attribute oldIdAttribute = exampleSet.getAttributes().getId();
 		if (oldIdAttribute != null) {
+			// check for duplicate names here to reduce computing time
+			Set<String> newAttributeNames = new LinkedHashSet<>(exampleSet.size());
+			boolean oldIdAttributeIsNominal = oldIdAttribute.isNominal();
+			boolean dontFormatNumericalIDs = !shouldFormatNumericalIDs() && oldIdAttribute.getValueType() == Ontology.INTEGER;
 			for (Example e : exampleSet) {
 				double idValue = e.getValue(oldIdAttribute);
-				String attributeName = "att_" + idValue;
-				if (oldIdAttribute.isNominal()) {
-					if (Double.isNaN(idValue)) {
-						newAttributes.add(AttributeFactory.createAttribute(valueType));
-					} else {
-						attributeName = oldIdAttribute.getMapping().mapIndex((int) idValue);
-						newAttributes.add(AttributeFactory.createAttribute(attributeName, valueType));
-					}
+				String attributeName = "att_";
+				if (Double.isNaN(idValue) || dontFormatNumericalIDs) {
+					attributeName += idValue;
 				} else {
-					newAttributes.add(AttributeFactory.createAttribute(attributeName, valueType));
+					int idIntValue = (int) idValue;
+					if (oldIdAttributeIsNominal) {
+						attributeName = oldIdAttribute.getMapping().mapIndex(idIntValue);
+					} else {
+						attributeName += idIntValue;
+					}
+				}
+				if (!newAttributeNames.add(attributeName)) {
+					// duplicate attribute name, i.e. duplicate IDs
+					throw new UserError(this, "transpose_duplicate_id", attributeName);
 				}
 			}
+			int finalValueType = valueType;
+			newAttributeNames.forEach(n -> newAttributes.add(AttributeFactory.createAttribute(n, finalValueType)));
 		} else {
 			for (int i = 0; i < exampleSet.size(); i++) {
 				newAttributes.add(AttributeFactory.createAttribute("att_" + (i + 1), valueType));
@@ -176,5 +193,21 @@ public class ExampleSetTranspose extends AbstractExampleSetProcessing {
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), ExampleSetTranspose.class,
 				null);
+	}
+
+	/**
+	 * @return whether integer IDs should be formatted as integer dependent on the {@link #getCompatibilityLevel() compatibility level}.
+	 * @since 8.2
+	 */
+	private boolean shouldFormatNumericalIDs() {
+		return getCompatibilityLevel().isAbove(BEFORE_FORMAT_NUMERICAL_ID);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] incompatibleVersionChanges = super.getIncompatibleVersionChanges();
+		incompatibleVersionChanges = Arrays.copyOf(incompatibleVersionChanges, incompatibleVersionChanges.length + 1);
+		incompatibleVersionChanges[incompatibleVersionChanges.length - 1] = BEFORE_FORMAT_NUMERICAL_ID;
+		return incompatibleVersionChanges;
 	}
 }

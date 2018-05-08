@@ -42,6 +42,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.Process;
@@ -120,6 +122,7 @@ import com.rapidminer.gui.tools.logging.LogViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.UnknownParameterInformation;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.ParameterType;
@@ -772,6 +775,22 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		viewMenu.add(new PerspectiveMenu(perspectiveController));
 		viewMenu.add(NEW_PERSPECTIVE_ACTION);
 		viewMenu.add(dockableMenu = new DockableMenu(dockingContext));
+		viewMenu.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				dockableMenu.fill();
+			}
+
+			@Override
+			public void menuDeselected(MenuEvent e) {
+				// ignore
+			}
+
+			@Override
+			public void menuCanceled(MenuEvent e) {
+				// ignore
+			}
+		});
 		viewMenu.add(RESTORE_PERSPECTIVE_ACTION);
 
 
@@ -1351,21 +1370,16 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	public void updateRecentFileList() {
 		recentFilesMenu.removeAll();
 		List<ProcessLocation> recentFiles = RapidMinerGUI.getRecentFiles();
-		int j = 1;
 		for (final ProcessLocation recentLocation : recentFiles) {
-			JMenuItem menuItem = new JMenuItem(j + " " + recentLocation.toMenuString());
-			menuItem.setMnemonic('0' + j);
-			menuItem.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(final ActionEvent e) {
-					if (RapidMinerGUI.getMainFrame().close()) {
-						com.rapidminer.gui.actions.OpenAction.open(recentLocation, true);
-					}
+			// whitespaces to create a gap between icon and text as #setIconTextGap(int) sets a gap to both sides of the icon...
+			JMenuItem menuItem = new JMenuItem("   " + recentLocation.toMenuString());
+			menuItem.setIcon(SwingTools.createIcon("16/" + recentLocation.getIconName()));
+			menuItem.addActionListener(e -> {
+				if (RapidMinerGUI.getMainFrame().close()) {
+					com.rapidminer.gui.actions.OpenAction.open(recentLocation, true);
 				}
 			});
 			recentFilesMenu.add(menuItem);
-			j++;
 		}
 	}
 
@@ -1720,7 +1734,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		// if any port needs data but is not connected. As it cannot predict execution behavior
 		// (e.g. Branch operators), this may turn up problems which would not occur during
 		// process execution
-		Port missingInputPort = ProcessTools.getPortWithoutMandatoryConnection(process);
+		Pair<Port, ProcessSetupError> missingInputPort = ProcessTools.getPortWithoutMandatoryConnection(process);
 		if (missingInputPort != null) {
 			// if there is already one of these, kill
 			if (missingInputBubble != null) {

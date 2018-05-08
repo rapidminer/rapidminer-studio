@@ -130,4 +130,8 @@ public class AttributeOrderingCellEditor extends AbstractCellEditor implements P
 		return button;
 	}
 
+	@Override
+	public void activate() {
+		button.doClick();
+	}
 }

@@ -30,7 +30,7 @@ import com.rapidminer.operator.UserError;
  * @since 6.5.0
  *
  */
-public class AttributeNotFoundError extends UserError {
+public class AttributeNotFoundError extends ParameterError {
 
 	/** if the attribute could neither be found in regular nor in special attributes */
 	public static final int ATTRIBUTE_NOT_FOUND = 160;
@@ -40,8 +40,7 @@ public class AttributeNotFoundError extends UserError {
 
 	private static final long serialVersionUID = 4107157631726397970L;
 
-	private String key;
-	private String attributeName;
+	private final String attributeName;
 
 	/**
 	 * Throw if the parameter of an operator specifies an attribute which cannot be found in the
@@ -72,20 +71,12 @@ public class AttributeNotFoundError extends UserError {
 	 *            the name of the attribute
 	 */
 	public AttributeNotFoundError(Operator operator, int code, String key, String attributeName) {
-		super(operator, code, attributeName);
+		super(operator, code, key, new Object[]{attributeName});
 		if (attributeName == null) {
 			this.attributeName = "";
 		} else {
 			this.attributeName = attributeName;
 		}
-		this.key = key;
-	}
-
-	/**
-	 * @return the key of the parameter which caused the error. Can be {@code null}
-	 */
-	public String getKey() {
-		return key;
 	}
 
 	/**

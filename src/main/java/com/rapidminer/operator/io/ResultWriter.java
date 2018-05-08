@@ -116,6 +116,7 @@ public class ResultWriter extends Operator {
 				"Appends the descriptions of the input objects to this file. If empty, use the general file defined in the process root operator.",
 				"res", true);
 		type.setExpert(false);
+		type.setPrimary(true);
 		types.add(type);
 
 		types.addAll(Encoding.getParameterTypes(this));

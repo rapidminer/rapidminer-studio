@@ -481,6 +481,7 @@ public class AttributeOrderingOperator extends AbstractFeatureSelection {
 		type = new ParameterTypeAttributeOrderingRules(PARAMETER_ORDER_RULES, "Rules to order attributes.",
 				getInputPorts().getPortByIndex(0), true);
 		type.setExpert(false);
+		type.setPrimary(true);
 		type.registerDependencyCondition(
 				new EqualTypeCondition(this, PARAMETER_ORDER_MODE, SORT_MODES, true, USER_SPECIFIED_RULES_MODE_INDEX));
 		parameterTypes.add(type);

@@ -18,7 +18,15 @@
 */
 package com.rapidminer.gui.operatormenu;
 
+import java.awt.geom.Rectangle2D;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
+import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
@@ -28,17 +36,13 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.tools.OperatorService;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * An operator menu which can be used to replace the currently selected operator by one of the same
  * type. Simple operators can be by other simple operators or operator chains, operator chains can
  * only be replaced by other chains. This operator menu is available in the context menu of an
  * operator in tree view.
- * 
+ *
  * @author Ingo Mierswa, Simon Fischer, Tobias Malbrecht
  */
 public class ReplaceOperatorMenu extends OperatorMenu {
@@ -61,7 +65,8 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 
 	/** The currently selected operator will be replaced by the given operator. */
 	private void replace(Operator operator) {
-		List<Operator> selection = RapidMinerGUI.getMainFrame().getSelectedOperators();
+		MainFrame mainFrame = RapidMinerGUI.getMainFrame();
+		List<Operator> selection = mainFrame.getSelectedOperators();
 		if (selection.isEmpty()) {
 			return;
 		}
@@ -72,8 +77,8 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 		}
 
 		// remember source and sink connections so we can reconnect them later.
-		Map<String, InputPort> inputPortMap = new HashMap<String, InputPort>();
-		Map<String, OutputPort> outputPortMap = new HashMap<String, OutputPort>();
+		Map<String, InputPort> inputPortMap = new HashMap<>();
+		Map<String, OutputPort> outputPortMap = new HashMap<>();
 		for (OutputPort source : selectedOperator.getOutputPorts().getAllPorts()) {
 			if (source.isConnected()) {
 				inputPortMap.put(source.getName(), source.getDestination());
@@ -94,7 +99,7 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 		int failedReconnects = 0;
 
 		// copy children if possible
-		if ((selectedOperator instanceof OperatorChain) && (operator instanceof OperatorChain)) {
+		if (selectedOperator instanceof OperatorChain && operator instanceof OperatorChain) {
 			OperatorChain oldChain = (OperatorChain) selectedOperator;
 			OperatorChain newChain = (OperatorChain) operator;
 			int numCommonSubprocesses = Math.min(oldChain.getNumberOfSubprocesses(), newChain.getNumberOfSubprocesses());
@@ -131,11 +136,17 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 			}
 		}
 
-		RapidMinerGUI.getMainFrame().selectOperator(operator.getParent());
+		// copy operator rectangle from old operator to the new one to make the swap in place
+		ProcessRendererModel processModel = mainFrame.getProcessPanel().getProcessRenderer().getModel();
+		Rectangle2D rect = processModel.getOperatorRect(selectedOperator);
+		rect = new Rectangle2D.Double(rect.getX(), rect.getY(), rect.getWidth(),
+				ProcessDrawUtils.calcHeighForOperator(operator));
+		processModel.setOperatorRect(operator, rect);
+		mainFrame.selectAndShowOperator(operator, true);
 
 		if (failedReconnects > 0) {
 			SwingTools.showVerySimpleErrorMessage("op_replaced_failed_connections_restored", failedReconnects);
 		}
-		
+
 	}
 }

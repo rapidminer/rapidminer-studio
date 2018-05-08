@@ -36,11 +36,38 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
+import com.rapidminer.tools.container.StackingMap;
 
 
 /**
  * The global random number generator. This should be used for all random purposes of RapidMiner to
  * ensure that two runs of the same process setup provide the same results.
+ * <p>
+ * A global random generator is created for each {@link Process} on process start (see {@link Process#prepareRun(int)})
+ * and is available through {@link #getGlobalRandomGenerator()}.
+ * Operators can use their own random generator by adding corresponding parameters via {@link #getRandomGeneratorParameters(Operator)},
+ * and the {@link RandomGenerator} can then be accessed by {@link #getRandomGenerator(Operator)}.
+ * To keep repeatability and consistency between runs and parallel or sequential (sub)process execution,
+ * the {@link RandomGenerator} of a {@link Process} can be {@link #stash(Process) stashed} and {@link #restore(Process) restored}.
+ * The usage can be seen in {@link com.rapidminer.extension.concurrency.operator.process_control.loops.AbstractLoopOperator AbstractLoopOperator}
+ * and {@link com.rapidminer.extension.concurrency.operator.validation.CrossValidationOperator CrossValidationOperator},
+ * but the general idea is as follows.
+ * <table border=1>
+ *   <tr>
+ *     <th>Sequential</th>
+ *     <th>Parallel</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       <ol>
+ *         <li>Get {@link RandomGenerator} by calling stash for the current {@link Process}</li>
+ *         <li>In each iteration, init the {@link RandomGenerator} with the current {@link Process} and a newly created seed</li>
+ *         <li>After all iterations are done, restore the {@link RandomGenerator} for the current {@link Process}</li>
+ *       </ol>
+ *     </td>
+ *     <td>Use {@link com.rapidminer.studio.concurrency.internal.util.ConcurrencyExecutionService#prepareOperatorTask BackgroundExecutionService.prepareOperatorTask} to take care of the RG assigning.</td>
+ *   </tr>
+ * </table>
  *
  * @author Ralf Klinkenberg, Ingo Mierswa, Jan Czogalla
  */
@@ -94,11 +121,31 @@ public class RandomGenerator extends Random {
 			return super.put(key, value);
 		}
 	};
+
 	static {
 		// default RNG in cases where the GUI needs one outside of running a process (e.g. process
 		// validation)
 		GLOBAL_RANDOM_GENERATOR_MAP.put(null, new RandomGenerator(DEFAULT_SEED));
 	}
+
+	private static final StackingMap<Process, RandomGenerator> GLOBAL_STASH_MAP = new StackingMap<Process, RandomGenerator>(WeakHashMap.class) {
+
+		@Override
+		public synchronized RandomGenerator push(Process key, RandomGenerator item) {
+			return super.push(key, item);
+		}
+
+		@Override
+		public synchronized RandomGenerator pop(Object key) {
+			return super.pop(key);
+		}
+
+		@Override
+		public synchronized RandomGenerator remove(Object key) {
+			return super.remove(key);
+		}
+
+	};
 
 	/** Initializes the random number generator without a seed. */
 	private RandomGenerator() {
@@ -169,16 +216,41 @@ public class RandomGenerator extends Random {
 	 * Instantiates the global random number generator for the given process and initializes it with
 	 * the random number generator seed specified in the <code>global</code> section of the
 	 * configuration file. Should be invoked before the process starts.
+	 * If the process is {@code null}, this method does nothing.
 	 */
 	public static void init(Process process) {
+		if (process == null) {
+			return;
+		}
+		GLOBAL_STASH_MAP.remove(process);
+		init(process, null);
+	}
+
+	/**
+	 * Instantiates the global random number generator for the given process and initializes it with
+	 * either the given {@code initSeed} if not {@code null} or the seed specified in the process.
+	 * This allows for better control during parallel execution without touching the actual
+	 * parameters of the process. If the process is {@code null}, this method does nothing.
+	 *
+	 * @param process
+	 * 		the process to create a new {@link RandomGenerator} for. Should not be {@code null}.
+	 * @param initSeed
+	 * 		the initial seed for the {@link RandomGenerator}. Can be {@code null}.
+	 * @since 8.2
+	 */
+	public static void init(Process process, Long initSeed) {
+		if (process == null) {
+			return;
+		}
 		long seed = DEFAULT_SEED;
-		if (process != null) {
+		if (initSeed != null) {
+			seed = initSeed;
+		} else {
 			try {
 				seed = process.getRootOperator().getParameterAsInt(ProcessRootOperator.PARAMETER_RANDOM_SEED);
 			} catch (UndefinedParameterError e) {
 				// tries to read the general random seed
 				// if no seed was specified (cannot happen) use default seed
-				seed = DEFAULT_SEED;
 			}
 		}
 		RandomGenerator rg;
@@ -187,12 +259,68 @@ public class RandomGenerator extends Random {
 		} else {
 			rg = new RandomGenerator(seed);
 		}
+		setRandomGenerator(process, rg);
+	}
+
+	/**
+	 * Stash the current {@link RandomGenerator} of the given {@link Process} to {@link #restore(Process) restore}
+	 * it later. Also returns the current generator for the given process using
+	 * {@link #getRandomGenerator(Process, int) getRandomGenerator(process, -1}.
+	 * Will stash nothing and return {@code null} if process is {@code null}.
+	 *
+	 * @param process
+	 * 		the process to stash the {@link RandomGenerator} for
+	 * @return {@code null} if process is {@code null}, non-{@code null} {@link RandomGenerator} otherwise.
+	 * @since 8.2
+	 */
+	public static RandomGenerator stash(Process process) {
+		if (process == null) {
+			return null;
+		}
+		RandomGenerator rg = getRandomGenerator(process, -1);
+		GLOBAL_STASH_MAP.push(process, rg);
+		return rg;
+	}
+
+	/**
+	 * Restores a {@link RandomGenerator} for the given {@link Process}, if it was {@link #stash(Process) stashed}
+	 * before. Will do nothing if no generator was stashed or process is {@code null}.
+	 *
+	 * @param process
+	 * 		the process to restore the {@link RandomGenerator} for
+	 * @since 8.2
+	 */
+	public static void restore(Process process) {
+		RandomGenerator rg = GLOBAL_STASH_MAP.pop(process);
+		if (rg == null) {
+			return;
+		}
+		setRandomGenerator(process, rg);
+	}
+
+	/**
+	 * Associates the specified {@link RandomGenerator} with the given {@link Process}. Also associates the process
+	 * with the current thread if it is executed in the background. The parameter rg must not be null.
+	 * Will do nothing if process is {@code null}.
+	 *
+	 * @param process
+	 * 		the {@link Process} to associate the {@link RandomGenerator} with
+	 * @param rg
+	 * 		the {@link RandomGenerator} to associate to the {@link Process}
+	 * @since 8.2
+	 */
+	private static void setRandomGenerator(Process process, RandomGenerator rg) {
+		if (process == null) {
+			return;
+		}
 		GLOBAL_RANDOM_GENERATOR_MAP.put(process, rg);
 
 		// don't have access to the class here, so reference by qualified name
-		if (process != null && process.getClass().getName().equals(BACKGROUND_EXECUTION_PROCESS_CLASS_NAME)) {
+		if (process.getClass().getName().equals(BACKGROUND_EXECUTION_PROCESS_CLASS_NAME)) {
+			// store process for this thread for BEPs
 			THREAD_TO_PROCESS.set(new WeakReference<>(process));
 		} else {
+			// only the process currently running in foreground on this thread can influence the global random generator
 			GLOBAL_RANDOM_GENERATOR.set(rg);
 		}
 	}

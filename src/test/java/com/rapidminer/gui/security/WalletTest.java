@@ -48,7 +48,7 @@ import com.rapidminer.tools.cipher.KeyGeneratorTool;
 
 /**
  * @author Andreas Timm
- * @since 6.6.6
+ * @since 8.1
  */
 public class WalletTest {
 

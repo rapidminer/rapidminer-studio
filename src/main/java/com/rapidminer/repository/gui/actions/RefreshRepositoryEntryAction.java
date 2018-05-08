@@ -18,6 +18,11 @@
 */
 package com.rapidminer.repository.gui.actions;
 
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.repository.Entry;
@@ -36,6 +41,19 @@ public class RefreshRepositoryEntryAction extends AbstractRepositoryAction<Entry
 
 	public RefreshRepositoryEntryAction(RepositoryTree tree) {
 		super(tree, Entry.class, false, "repository_refresh_folder");
+	}
+
+	@Override
+	public void loggedActionPerformed(ActionEvent e) {
+		List<Entry> folders = new ArrayList<>();
+		//Don't trigger a folder refresh for every selected data entry
+		for (Entry entry : tree.getSelectedEntries()){
+			folders.add(entry instanceof Folder ? entry : entry.getContainingFolder());
+		}
+		// use hashset to eliminate duplicates
+		for (Entry entry : new HashSet<>(removeIntersectedEntries(folders))) {
+			actionPerformed(entry);
+		}
 	}
 
 	@Override

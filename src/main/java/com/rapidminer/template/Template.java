@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.template;
 
 import java.io.IOException;
@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -67,48 +66,57 @@ import com.rapidminer.tools.XMLException;
  * the files from the .Rapidminer folder are loaded automatically.
  *
  * @author Simon Fischer, Gisa Schaefer
- *
  */
 public class Template implements ZipStreamResource {
 
-	/** the repository location for templates */
+	/**
+	 * the repository location for templates
+	 */
 	private static final String TEMPLATES_PATH = "//Samples/Templates/";
 
-	/** the resources location for templates */
+	/**
+	 * the resources location for templates
+	 */
 	private static final String RESOURCES_LOCATION = "template/";
 
 	private static final String NO_DESCRIPTION = I18N.getGUILabel("template.no_description");
 	private static final String NO_TITLE = I18N.getGUILabel("template.no_title");
 
-	/** special template which is not loaded from a resource but simply creates a new, empty process */
-	public static final Template BLANK_PROCESS_TEMPLATE = new Template() {
+	protected String title = NO_TITLE;
+	protected String shortDescription = NO_DESCRIPTION;
+	protected String processName;
+	protected List<String> demoData;
+	protected Icon icon;
+
+	protected Path path;
+	protected String name;
+
+	/**
+	 * Private constructor for special template only.
+	 */
+	private Template() {
+	}
+
+	/**
+	 * Private special template class for special process templates only.
+	 */
+	static final class SpecialTemplate extends Template {
+		private static final String GETTING_STARTED_LITERAL = "getting_started.";
+
+		SpecialTemplate(String key) {
+			this.title = I18N.getGUILabel(GETTING_STARTED_LITERAL + key + ".title");
+			this.shortDescription = I18N.getGUILabel(GETTING_STARTED_LITERAL + key + ".description");
+			this.icon = SwingTools.createIcon("64/" + I18N.getGUILabel(GETTING_STARTED_LITERAL + key + ".icon"));
+			this.demoData = new LinkedList<>();
+			this.name = this.title;
+			this.processName = null;
+			this.path = null;
+		}
 
 		@Override
 		public Process makeProcess() throws IOException, XMLException, MalformedRepositoryLocationException {
 			return new Process();
 		}
-	};
-
-	private String title = NO_TITLE;
-	private String shortDescription = NO_DESCRIPTION;
-	private String processName;
-	private List<String> demoData;
-	private Icon icon;
-
-	private final Path path;
-	private final String name;
-
-	/**
-	 * Private constructor for special blank process template only.
-	 */
-	private Template() {
-		this.title = I18N.getGUILabel("getting_started.new.empty.title");
-		this.shortDescription = I18N.getGUILabel("getting_started.new.empty.description");
-		this.icon = SwingTools.createIcon("64/" + I18N.getGUILabel("getting_started.new.empty.icon"));
-		this.demoData = new LinkedList<>();
-		this.name = this.title;
-		this.processName = null;
-		this.path = null;
 	}
 
 	Template(String name) throws IOException, RepositoryException {

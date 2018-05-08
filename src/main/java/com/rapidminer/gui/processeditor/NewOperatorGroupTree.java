@@ -22,6 +22,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -36,6 +37,7 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -54,6 +56,7 @@ import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
 import com.rapidminer.gui.dnd.OperatorTransferHandler;
+import com.rapidminer.gui.dnd.TransferableOperator;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.operatortree.actions.InfoOperatorAction;
@@ -78,6 +81,7 @@ import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector.UsageObject;
 
 
 /**
@@ -86,6 +90,31 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  * @author Ingo Mierswa, Tobias Malbrecht, Sebastian Land
  */
 public class NewOperatorGroupTree extends JPanel implements FilterListener, SelectionNavigationListener {
+
+	/**
+	 * Simple POJO implementation of {@link UsageObject} to log stats
+	 * using {@link #logSearchTerm(String, String, Operator)}.
+	 *
+	 * @since 8.1.2
+	 * @author Jan Czogalla
+	 */
+	private static final class OperatorTreeUsageObject implements UsageObject {
+
+		private final String event;
+		private final String searchText;
+		private final Operator operator;
+
+		private OperatorTreeUsageObject(String event, String searchText, Operator operator) {
+			this.event = event;
+			this.searchText = searchText;
+			this.operator = operator;
+		}
+
+		@Override
+		public void logUsage() {
+			logSearchTerm(event, searchText, operator);
+		}
+	}
 
 	private static final long serialVersionUID = 133086849304885475L;
 
@@ -226,15 +255,22 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected List<Operator> getDraggedOperators() {
+			public Transferable createTransferable(JComponent c) {
 				Operator selectedOperator = NewOperatorGroupTree.this.getSelectedOperator();
 				if (selectedOperator == null) {
-					return Collections.emptyList();
-				} else {
-					logSearchTerm("inserted", filterField.getText());
-					return Collections.singletonList(selectedOperator);
+					return null;
 				}
+				TransferableOperator transferable = new TransferableOperator(new Operator[]{selectedOperator});
+				transferable.setUsageObject(new OperatorTreeUsageObject("inserted", filterField.getText(), selectedOperator));
+				return transferable;
 			}
+
+			@Override
+			protected List<Operator> getDraggedOperators() {
+				// noop, overriding createTransferable
+				return null;
+			}
+
 		});
 		operatorGroupTree.addMouseListener(new MouseAdapter() {
 
@@ -485,7 +521,7 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		}
 		MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 		mainFrame.getActions().insert(Collections.singletonList(operator));
-		logSearchTerm("inserted", filterField.getText());
+		logSearchTerm("inserted", filterField.getText(), operator);
 	}
 
 	@Override
@@ -532,14 +568,40 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 	}
 
 	/**
-	 * Logs the searchText under the given event. Shortens the searchText if is longer than 50
-	 * characters.
+	 * Logs the searchText under the given event. Shortens the searchText if is longer than 50 characters.
+	 * Does not specify an operator key.
 	 */
-	private void logSearchTerm(String event, String searchText) {
+	private static void logSearchTerm(String event, String searchText) {
+		logSearchTerm(event, searchText, (String) null);
+	}
+
+	/**
+	 * Logs the searchText under the given event. Shortens the searchText if is longer than 50 characters.
+	 * Extracts the operator key from the given operator.
+	 *
+	 * @since 8.1.2
+	 */
+	private static void logSearchTerm(String event, String searchText, Operator operator) {
+		logSearchTerm(event, searchText, operator == null ? null : operator.getOperatorDescription().getKey());
+	}
+
+	/**
+	 * Logs the searchText under the given event. Shortens the searchText if is longer than 50 characters.
+	 * Uses the specified operator key iff not {@code null}, otherwise uses the empty string.
+	 *
+	 * @since 8.1.2
+	 */
+	private static void logSearchTerm(String event, String searchText, String operatorID) {
 		if (searchText.length() > 50) {
 			searchText = searchText.substring(0, 50) + "[...]";
 		}
-		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_OPERATOR_SEARCH, event, searchText);
+		if (operatorID == null) {
+			operatorID = "";
+		}
+		StringBuilder arg = new StringBuilder(searchText);
+		arg.append(ActionStatisticsCollector.ARG_GLOBAL_SEARCH_SPACER);
+		arg.append(operatorID);
+		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_OPERATOR_SEARCH, event, arg.toString());
 	}
 
 	public FilterTextField getFilterField() {

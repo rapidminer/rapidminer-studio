@@ -160,7 +160,7 @@ public class ZippedFileIterator extends AbstractFileIterator {
 				return fileInputPort;
 			}
 		}, true, false));
-
+		type.setPrimary(true);
 		types.add(type);
 
 		type = new ParameterTypeString(PARAMETER_INTERNAL_DIRECTORY,

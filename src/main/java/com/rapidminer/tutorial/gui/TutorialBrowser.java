@@ -23,6 +23,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -38,6 +39,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -47,7 +49,6 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import javax.swing.text.Document;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.xml.parsers.DocumentBuilder;
@@ -69,12 +70,14 @@ import com.rapidminer.gui.DockableMenu;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.look.RapidLookTools;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.Ionicon;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.components.FeedbackForm;
 import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
@@ -83,7 +86,6 @@ import com.rapidminer.studio.internal.StartupDialogProvider.ToolbarButton;
 import com.rapidminer.studio.internal.StartupDialogRegistry;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.RMUrlHandler;
 import com.rapidminer.tools.Tools;
@@ -104,12 +106,80 @@ import com.vlsolutions.swing.docking.RelativeDockablePosition;
  */
 public class TutorialBrowser extends JPanel implements Dockable {
 
+	private enum NextStepType {
+		STEP,
+		TUTORIAL,
+		CHAPTER
+	}
+
+	/**
+	 * Button that can change its action. It is updated by {@link #updateStepButtons()} and can show the next
+	 * tutorial step if present, the next tutorial in this chapter if present or bring up the tutorial overview
+	 * if the end of a chapter is reached.
+	 *
+	 * @author Jan Czogalla
+	 * @since 8.2
+	 */
+	private class NextStepButton extends JButton {
+
+		private final Action nextStepAction = new ResourceAction("tutorial_browser.next_step") {
+
+			@Override
+			public void loggedActionPerformed(ActionEvent e) {
+				activateNextStep();
+			}
+		};
+
+		private final Action nextTutorialAction = new ResourceAction("tutorial_browser.next_tutorial") {
+
+			@Override
+			protected void loggedActionPerformed(ActionEvent e) {
+				activateNextTutorial();
+				NextStepButton.this.setEnabled(false);
+			}
+		};
+
+		private final Action nextChapterAction = new ResourceAction("tutorial_browser.next_chapter") {
+
+			@Override
+			protected void loggedActionPerformed(ActionEvent e) {
+				activateTutorialStartup();
+			}
+		};
+
+		private NextStepButton() {
+			setNextAction(NextStepType.STEP);
+		}
+
+		/** Sets the action and look of this button depending on the selected action. */
+		private void setNextAction(NextStepType type) {
+			Color foreGround = Color.WHITE;
+			boolean highlight = true;
+			switch (type) {
+				case STEP:
+					setAction(nextStepAction);
+					foreGround = Color.BLACK;
+					highlight = false;
+					break;
+				case TUTORIAL:
+					setAction(nextTutorialAction);
+					break;
+				case CHAPTER:
+					setAction(nextChapterAction);
+					break;
+			}
+			putClientProperty(RapidLookTools.PROPERTY_BUTTON_HIGHLIGHT, highlight);
+			setForeground(foreGround);
+		}
+	}
+
 	private static final long serialVersionUID = 1L;
 
 	public static final String TUTORIAL_BROWSER_DOCK_KEY = "tutorial_browser";
 	private static final DockKey DOCK_KEY = new ResourceDockKey(TUTORIAL_BROWSER_DOCK_KEY);
+	private static final String FEEDBACK_KEY_TUTORIAL = "tutorial";
 
-	{
+	static {
 		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
 		DockableMenu.registerHideInDockableMenuPrefix(TUTORIAL_BROWSER_DOCK_KEY);
 	}
@@ -125,14 +195,14 @@ public class TutorialBrowser extends JPanel implements Dockable {
 	private static final String ACTIVITY_BACKGROUND_NAME = "tutorial/activity_background.png";
 	private static final String ACTIVITY_HEADER_NAME = "tutorial/activity_header.png";
 
-	private static final URL EXPLANATION_BACKGROUND_RESOURCE = Tools.getResource("tutorial/explanation_background.png");
-	private static final URL EXPLANATION_HEADER_RESOURCE = Tools.getResource("tutorial/explanation_header.png");
+	private static final URL EXPLANATION_BACKGROUND_RESOURCE = Tools.getResource(EXPLANATION_BACKGROUND_NAME);
+	private static final URL EXPLANATION_HEADER_RESOURCE = Tools.getResource(EXPLANATION_HEADER_NAME);
 
-	private static final URL CHALLENGE_BACKGROUND_RESOURCE = Tools.getResource("tutorial/challenge_background.png");
-	private static final URL CHALLENGE_HEADER_RESOURCE = Tools.getResource("tutorial/challenge_header.png");
+	private static final URL CHALLENGE_BACKGROUND_RESOURCE = Tools.getResource(CHALLENGE_BACKGROUND_NAME);
+	private static final URL CHALLENGE_HEADER_RESOURCE = Tools.getResource(CHALLENGE_HEADER_NAME);
 
-	private static final URL ACTIVITY_BACKGROUND_RESOURCE = Tools.getResource("tutorial/activity_background.png");
-	private static final URL ACTIVITY_HEADER_RESOURCE = Tools.getResource("tutorial/activity_header.png");
+	private static final URL ACTIVITY_BACKGROUND_RESOURCE = Tools.getResource(ACTIVITY_BACKGROUND_NAME);
+	private static final URL ACTIVITY_HEADER_RESOURCE = Tools.getResource(ACTIVITY_HEADER_NAME);
 
 	private static final String XSL_FILE_PATH = "tutorial/tutorial_browser.xsl";
 
@@ -155,8 +225,6 @@ public class TutorialBrowser extends JPanel implements Dockable {
 	private static final String LINK_COLOR_HEX = SwingTools.getColorHexValue(Colors.LINKBUTTON_LOCAL);
 	private static final String LINK_STYLE = "a {color:" + LINK_COLOR_HEX + ";font-family:'Open Sans';font-size:13;}";
 
-	private static final String NEXT_TUTORIAL_URL = "tutorial://next";
-
 	private static final String NO_TUTORIAL_SELECTED = I18N.getGUILabel("tutorial_browser.no_tutorial_selected");
 	private static final String NO_STEPS_AVAILABLE = I18N.getGUILabel("tutorial_browser.no_steps_available");
 	private static final String DISPLAY_TUTORIAL_STEPS = I18N.getGUILabel("tutorial_browser.displaying_steps");
@@ -164,7 +232,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 
 	private JLabel tutorialNameLabel;
 	private JButton previousStepButton;
-	private JButton nextStepButton;
+	private NextStepButton nextStepButton;
 	private JEditorPane jEditorPane;
 	private JScrollPane scrollPane;
 	private Tutorial selectedTutorial;
@@ -172,8 +240,11 @@ public class TutorialBrowser extends JPanel implements Dockable {
 	private List<String> steps = new ArrayList<>();
 	private int stepIndex = -1;
 
+	private JPanel contentPanel;
+	private GridBagConstraints contentGbc;
+	private FeedbackForm feedbackForm;
+
 	private TutorialSelector tutorialSelector;
-	private Observer<Tutorial> tutorialObserver;
 
 	/**
 	 * Creates a new browser which is linked to the given {@link TutorialSelector}.
@@ -184,24 +255,21 @@ public class TutorialBrowser extends JPanel implements Dockable {
 	public TutorialBrowser(TutorialSelector tutorialSelector) {
 		this.tutorialSelector = tutorialSelector;
 		initGUI();
-		tutorialObserver = new Observer<Tutorial>() {
+		Observer<Tutorial> tutorialObserver = (observable, tutorial) -> {
 
-			@Override
-			public void update(Observable<Tutorial> observable, Tutorial tutorial) {
-				selectedTutorial = tutorial;
-				nextTutorial = null;
+			selectedTutorial = tutorial;
+			nextTutorial = null;
 
-				// find next tutorial
-				if (selectedTutorial != null) {
-					List<Tutorial> tutorials = selectedTutorial.getGroup().getTutorials();
-					int currIndex = tutorials.indexOf(selectedTutorial);
-					if (currIndex != -1 && currIndex + 1 < tutorials.size()) {
-						nextTutorial = tutorials.get(currIndex + 1);
-					}
+			// find next tutorial
+			if (selectedTutorial != null) {
+				List<Tutorial> tutorials = selectedTutorial.getGroup().getTutorials();
+				int currIndex = tutorials.indexOf(selectedTutorial);
+				if (currIndex != -1 && currIndex + 1 < tutorials.size()) {
+					nextTutorial = tutorials.get(currIndex + 1);
 				}
-
-				updateTutorial(tutorial);
 			}
+
+			updateTutorial(tutorial);
 		};
 		tutorialSelector.addObserver(tutorialObserver, true);
 	}
@@ -261,11 +329,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 
 				@Override
 				public void loggedActionPerformed(ActionEvent e) {
-					try {
-						StartupDialogRegistry.INSTANCE.showStartupDialog(ToolbarButton.TUTORIAL);
-					} catch (NoStartupDialogRegistreredException e1) {
-						SwingTools.showVerySimpleErrorMessage("tutorials_not_available");
-					}
+					activateTutorialStartup();
 				}
 			});
 			HTMLEditorKit htmlKit = (HTMLEditorKit) backToTutorialsButton.getEditorKit();
@@ -296,18 +360,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 		previousStepButton.setEnabled(false);
 		buttonPanel.add(previousStepButton);
 
-		nextStepButton = new JButton();
-		nextStepButton.setAction(new ResourceAction("tutorial_browser.next_step") {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void loggedActionPerformed(ActionEvent e) {
-				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
-						"tutorial:" + selectedTutorial.getIdentifier(), "step_" + (stepIndex + 1) + "_next");
-				displayStep(++stepIndex);
-			}
-		});
+		nextStepButton = new NextStepButton();
 		nextStepButton.setEnabled(false);
 		nextStepButton.setHorizontalTextPosition(SwingConstants.LEFT);
 		buttonPanel.add(nextStepButton);
@@ -319,14 +372,73 @@ public class TutorialBrowser extends JPanel implements Dockable {
 		return footer;
 	}
 
+	/** @since 8.2 */
+	private void activateNextStep() {
+		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
+				"tutorial:" + selectedTutorial.getIdentifier(), "step_" + (stepIndex + 1) + "_next");
+		displayStep(++stepIndex);
+	}
+
+	/** @since 8.2 */
+	private void activateNextTutorial() {
+		try {
+			MainFrame mainFrame = RapidMinerGUI.getMainFrame();
+			Process tutorialProcess = nextTutorial.makeProcess();
+			mainFrame.setOpenedProcess(tutorialProcess);
+			TutorialManager.INSTANCE.completedTutorial(nextTutorial.getIdentifier());
+			tutorialSelector.setSelectedTutorial(nextTutorial);
+		} catch (RuntimeException | MalformedRepositoryLocationException | IOException | XMLException e1) {
+			SwingTools.showSimpleErrorMessage("cannot_open_tutorial", e1, nextTutorial.getTitle(), e1.getMessage());
+		}
+	}
+
+	/** @since 8.2 */
+	private void activateTutorialStartup() {
+		try {
+			StartupDialogRegistry.INSTANCE.showStartupDialog(ToolbarButton.TUTORIAL);
+		} catch (NoStartupDialogRegistreredException e1) {
+			SwingTools.showVerySimpleErrorMessage("tutorials_not_available");
+		}
+	}
+
 	private Component createContentPanel() {
-		JPanel contentPanel = new JPanel();
-		contentPanel.setOpaque(false);
+		contentGbc = new GridBagConstraints();
 
-		jEditorPane = new JEditorPane();
+		contentPanel = new JPanel(new GridBagLayout()) {
+
+			@Override
+			public Dimension getPreferredSize() {
+				return new Dimension(getParent().getWidth(), super.getPreferredSize().height);
+			}
+		};
+		contentPanel.setBackground(Colors.WHITE);
+
+		jEditorPane = new JEditorPane() {
+
+			@Override
+			public Dimension getPreferredSize() {
+				return new Dimension(getParent().getWidth(), super.getPreferredSize().height);
+			}
+		};
 		jEditorPane.setEditable(false);
+		contentGbc.gridx = 0;
+		contentGbc.gridy = 0;
+		contentGbc.weightx = 1.0f;
+		contentGbc.fill = GridBagConstraints.HORIZONTAL;
+		contentPanel.add(jEditorPane, contentGbc);
 
-		scrollPane = new ExtendedJScrollPane(jEditorPane);
+		// add filler at bottom
+		contentGbc.gridy += 1;
+		contentGbc.weighty = 1.0f;
+		contentGbc.fill = GridBagConstraints.BOTH;
+		contentPanel.add(new JLabel(), contentGbc);
+
+		// prepare contentGbc for feedback form
+		contentGbc.gridy += 1;
+		contentGbc.weighty = 0.0f;
+		contentGbc.fill = GridBagConstraints.HORIZONTAL;
+
+		scrollPane = new ExtendedJScrollPane(contentPanel);
 		scrollPane.setBorder(null);
 
 		HTMLEditorKit kit = new HTMLEditorKit();
@@ -336,45 +448,22 @@ public class TutorialBrowser extends JPanel implements Dockable {
 		Document doc = kit.createDefaultDocument();
 		jEditorPane.setDocument(doc);
 		jEditorPane.setText(String.format(INFO_TEMPLATE, NO_TUTORIAL_SELECTED));
-		jEditorPane.addHyperlinkListener(new HyperlinkListener() {
+		jEditorPane.addHyperlinkListener(e -> {
 
-			@Override
-			public void hyperlinkUpdate(HyperlinkEvent e) {
-				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-					if (NEXT_TUTORIAL_URL.equals(e.getDescription())) {
-						ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
-								"tutorial_browser", "next_tutorial");
-						if (nextTutorial == null) {
-							try {
-								StartupDialogRegistry.INSTANCE.showStartupDialog(ToolbarButton.TUTORIAL);
-							} catch (NoStartupDialogRegistreredException e1) {
-								SwingTools.showVerySimpleErrorMessage("tutorials_not_available");
-							}
-						} else {
-							try {
-								MainFrame mainFrame = RapidMinerGUI.getMainFrame();
-								Process tutorialProcess = nextTutorial.makeProcess();
-								mainFrame.setOpenedProcess(tutorialProcess);
-								TutorialManager.INSTANCE.completedTutorial(nextTutorial.getIdentifier());
-								tutorialSelector.setSelectedTutorial(nextTutorial);
-							} catch (RuntimeException | MalformedRepositoryLocationException | IOException
-									| XMLException e1) {
-								SwingTools.showSimpleErrorMessage("cannot_open_tutorial", e1, nextTutorial.getTitle(),
-										e1.getMessage());
-							}
-						}
-					} else {
-						ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
-								"tutorial_browser", "open_remote_url");
-						RMUrlHandler.openInBrowser(e.getURL());
-					}
-				}
+			if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
+						TUTORIAL_BROWSER_DOCK_KEY, "open_remote_url");
+				RMUrlHandler.openInBrowser(e.getURL());
 			}
 		});
 		return scrollPane;
 	}
 
 	private void updateTutorial(final Tutorial tutorial) {
+		if (feedbackForm != null) {
+			contentPanel.remove(feedbackForm);
+			feedbackForm = null;
+		}
 		if (tutorial == null) {
 			steps = new ArrayList<>();
 			tutorialNameLabel.setText(null);
@@ -389,13 +478,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 				public void run() {
 					try (InputStream stepFileStream = tutorial.getSteps()) {
 						if (stepFileStream == null) {
-							SwingTools.invokeLater(new Runnable() {
-
-								@Override
-								public void run() {
-									displaySteps(null);
-								}
-							});
+							SwingTools.invokeLater(() -> displaySteps(null));
 							return;
 						}
 
@@ -433,25 +516,12 @@ public class TutorialBrowser extends JPanel implements Dockable {
 
 							steps.add(output.toString(UTF_8.name()));
 						}
-						SwingTools.invokeLater(new Runnable() {
-
-							@Override
-							public void run() {
-								displaySteps(steps);
-							}
-						});
+						SwingTools.invokeLater(() -> displaySteps(steps));
 					} catch (Exception e) {
 						LogService.getRoot().log(Level.WARNING,
 								"com.rapidminer.tutorial.gui.TutorialBrowser.failed_to_load_stepfile",
 								new Object[] { tutorial.getTitle(), e });
-						SwingTools.invokeLater(new Runnable() {
-
-							@Override
-							public void run() {
-								jEditorPane.setText(String.format(INFO_TEMPLATE, TRANSFORMATION_FAILURE));
-							}
-
-						});
+						SwingTools.invokeLater(() -> jEditorPane.setText(String.format(INFO_TEMPLATE, TRANSFORMATION_FAILURE)));
 					}
 				}
 			};
@@ -499,7 +569,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 	private void displaySteps(List<String> steps) {
 		this.steps = steps;
 		this.stepIndex = -1;
-		if (steps != null && steps.size() > 0) {
+		if (steps != null && !steps.isEmpty()) {
 			displayStep(0);
 		} else {
 			jEditorPane.setText(String.format(INFO_TEMPLATE, NO_STEPS_AVAILABLE));
@@ -508,45 +578,50 @@ public class TutorialBrowser extends JPanel implements Dockable {
 	}
 
 	private void displayStep(final int index) {
-		final Runnable changeStep = new Runnable() {
+		final Runnable changeStep = () -> {
 
-			@Override
-			public void run() {
-				jEditorPane.setText(steps.get(index));
-				stepIndex = index;
-				updateStepButtons();
-			}
+			jEditorPane.setText(steps.get(index));
+			stepIndex = index;
+			updateStepButtons();
 		};
-		new Thread(new Runnable() {
+		new Thread(() -> {
 
-			@Override
-			public void run() {
-
-				try {
-					SwingUtilities.invokeAndWait(changeStep);
-				} catch (InvocationTargetException | InterruptedException e) {
-					SwingUtilities.invokeLater(changeStep);
-				}
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						scrollPane.getViewport().setViewPosition(new Point(0, 0));
-					}
-				});
+			try {
+				SwingUtilities.invokeAndWait(changeStep);
+			} catch (InvocationTargetException | InterruptedException e) {
+				SwingUtilities.invokeLater(changeStep);
 			}
-
+			SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));
 		}).start();
 
 	}
 
 	private void updateStepButtons() {
 		if (steps == null) {
-			nextStepButton.setEnabled(false);
+			nextStepButton.setNextAction(NextStepType.CHAPTER);
+			nextStepButton.setEnabled(true);
 			previousStepButton.setEnabled(false);
-		} else {
-			nextStepButton.setEnabled(stepIndex < steps.size() - 1);
-			previousStepButton.setEnabled(stepIndex > 0);
+			return;
+		}
+		previousStepButton.setEnabled(stepIndex > 0);
+		if (stepIndex < steps.size() - 1) {
+			nextStepButton.setNextAction(NextStepType.STEP);
+			nextStepButton.setEnabled(true);
+			if (feedbackForm != null) {
+				contentPanel.remove(feedbackForm);
+			}
+			return;
+		}
+		nextStepButton.setNextAction(nextTutorial != null ? NextStepType.TUTORIAL : NextStepType.CHAPTER);
+		nextStepButton.setEnabled(true);
+
+		// last step, add feedback form if we have a tutorial selected
+		if (selectedTutorial != null) {
+			if (feedbackForm == null) {
+				feedbackForm = new FeedbackForm(FEEDBACK_KEY_TUTORIAL, selectedTutorial.getIdentifier());
+				feedbackForm.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TAB_BORDER));
+			}
+			contentPanel.add(feedbackForm, contentGbc);
 		}
 	}
 }

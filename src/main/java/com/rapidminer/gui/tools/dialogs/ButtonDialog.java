@@ -387,6 +387,8 @@ public class ButtonDialog extends JDialog {
 
 	public static final int GAP = 6;
 
+	public static final String WINDOW_CLOSING_EVENT_STRING = "WINDOW_CLOSING";
+
 	protected static final Insets INSETS = new Insets(GAP, GAP, GAP, GAP);
 
 	protected FixedWidthEditorPane infoTextLabel;

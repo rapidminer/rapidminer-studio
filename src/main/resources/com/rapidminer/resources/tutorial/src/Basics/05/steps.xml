@@ -46,6 +46,5 @@
 			<question>Can you find out in the <ui>Statistics</ui> tab what the average number of transactions was? Can you also see the visual distribution of values in this tab?</question>
 			<question>The <value>count</value> function counts the number of transactions for each product, but each product can also be purchased multiple times in each transaction.  Can you change the parameters of <op>Aggregate</op> so that the total sum for each product is calculated?  Which products have been sold more than 65 times?</question>
 		</questions>
-		<nextTutorial>START NEXT TUTORIAL</nextTutorial>
 	</step>
 </steps>

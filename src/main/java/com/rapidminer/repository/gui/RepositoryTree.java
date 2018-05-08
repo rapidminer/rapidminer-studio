@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JComponent;
@@ -63,6 +64,7 @@ import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
 import com.rapidminer.gui.dnd.DragListener;
 import com.rapidminer.gui.dnd.RepositoryLocationList;
 import com.rapidminer.gui.dnd.TransferableOperator;
+import com.rapidminer.gui.dnd.TransferableRepositoryEntry;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadDialog;
 import com.rapidminer.gui.tools.RepositoryGuiTools;
@@ -110,6 +112,7 @@ import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PasswordInputCanceledException;
 import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
 /**
@@ -202,9 +205,17 @@ public class RepositoryTree extends JTree {
 				} else if (flavors.contains(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR)) {
 					// Multiple repository entries
 
-					RepositoryLocationList locationList = (RepositoryLocationList) ts.getTransferable()
+					Object transferData = ts.getTransferable()
 							.getTransferData(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR);
-					List<RepositoryLocation> locations = locationList.getAll();
+					List<RepositoryLocation> locations;
+					if (transferData instanceof RepositoryLocationList) {
+						locations = ((RepositoryLocationList) transferData).getAll();
+					} else if (transferData instanceof RepositoryLocation[]) {
+						locations = Arrays.asList((RepositoryLocation[]) transferData);
+					} else {
+						// should not happen
+						return false;
+					}
 					return copyOrMoveRepositoryEntries(droppedOnEntry, locations, ts);
 
 				} else if (flavors.contains(DataFlavor.javaFileListFlavor)) {
@@ -602,82 +613,25 @@ public class RepositoryTree extends JTree {
 
 		@Override
 		protected Transferable createTransferable(JComponent c) {
-
 			final TreePath[] treePaths = getSelectionPaths();
-
 			if (treePaths.length == 0) {
 				// Nothing selected
-
 				return null;
-
-			} else if (treePaths.length == 1) {
+			}
+			RepositoryLocation[] repositoryLocations;
+			if (treePaths.length == 1) {
 				// Exactly one item selected
-
-				Entry e = (Entry) treePaths[0].getLastPathComponent();
-				final RepositoryLocation location = e.getLocation();
-				return new Transferable() {
-
-					@Override
-					public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
-						if (flavor.equals(DataFlavor.stringFlavor)) {
-							return location.getAbsoluteLocation();
-						} else if (TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR.equals(flavor)) {
-							return location;
-						} else {
-							throw new UnsupportedFlavorException(flavor);
-						}
-					}
-
-					@Override
-					public DataFlavor[] getTransferDataFlavors() {
-						return new DataFlavor[] { TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR,
-								DataFlavor.stringFlavor };
-					}
-
-					@Override
-					public boolean isDataFlavorSupported(DataFlavor flavor) {
-						return TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR.equals(flavor)
-								|| DataFlavor.stringFlavor.equals(flavor);
-					}
-				};
-
+				repositoryLocations = new RepositoryLocation[]{((Entry) treePaths[0].getLastPathComponent()).getLocation()};
 			} else {
 				// Multiple entries selected
-
-				final RepositoryLocationList locationList = new RepositoryLocationList();
-				for (TreePath treePath : treePaths) {
-					locationList.add(((Entry) treePath.getLastPathComponent()).getLocation());
-				}
-				locationList.removeIntersectedLocations();
-
-				return new Transferable() {
-
-					final RepositoryLocationList locations = locationList;
-
-					@Override
-					public boolean isDataFlavorSupported(DataFlavor flavor) {
-						return TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR.equals(flavor)
-								|| DataFlavor.stringFlavor.equals(flavor);
-					}
-
-					@Override
-					public DataFlavor[] getTransferDataFlavors() {
-						return new DataFlavor[] { TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR,
-								DataFlavor.stringFlavor };
-					}
-
-					@Override
-					public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
-						if (TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR.equals(flavor)) {
-							return locations;
-						} else if (DataFlavor.stringFlavor.equals(flavor)) {
-							return locations.toString();
-						} else {
-							throw new UnsupportedFlavorException(flavor);
-						}
-					}
-				};
+				List<RepositoryLocation> locationList = Arrays.stream(treePaths).
+						map(p -> ((Entry) p.getLastPathComponent()).getLocation()).collect(Collectors.toList());
+				repositoryLocations = RepositoryLocation.removeIntersectedLocations(locationList).toArray(new RepositoryLocation[0]);
 			}
+			TransferableRepositoryEntry transferable = new TransferableRepositoryEntry(repositoryLocations);
+			transferable.setUsageStatsLogger(
+					() -> ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_REPOSITORY_TREE, "inserted", null));
+			return transferable;
 		}
 
 		@Override
@@ -689,11 +643,10 @@ public class RepositoryTree extends JTree {
 		 * Checks, if the current operation is a MOVE operation. If not, it is a COPY operation.
 		 *
 		 * @param ts
-		 *            Provides info about the current operation
+		 * 		Provides info about the current operation
 		 * @param isRepositoryInLocations
-		 *            This is true, if the sources to copy contain a repository. Repositories can
-		 *            not be moved. This results in a copy operation.
-		 * @return true, if the operation is a move operation
+		 * 		This is true, if the sources to copy contain a repository. Repositories can
+		 * 		not be moved. This results in a copy operation.
 		 * @return false, if the operation is not a move operation (e.g. copy)
 		 */
 		private boolean isMoveOperation(TransferSupport ts, boolean isRepositoryInLocations) {
@@ -850,7 +803,6 @@ public class RepositoryTree extends JTree {
 		DELETE_ACTION.addToActionMap(this, "delete", WHEN_FOCUSED);
 		REFRESH_ACTION.addToActionMap(this, WHEN_FOCUSED);
 
-		setLargeModel(true);
 		setRowHeight(Math.max(TREE_ROW_HEIGHT, getRowHeight()));
 		setRootVisible(false);
 		setShowsRootHandles(true);
@@ -899,10 +851,9 @@ public class RepositoryTree extends JTree {
 				if (getSelectionCount() == 1) {
 					if (e.getClickCount() == 2) {
 						TreePath path = getSelectionPath();
-						if (path == null) {
-							return;
+						if (path != null && path.getLastPathComponent() instanceof Entry) {
+							fireLocationSelected((Entry) path.getLastPathComponent());
 						}
-						fireLocationSelected((Entry) path.getLastPathComponent());
 					}
 				}
 			}

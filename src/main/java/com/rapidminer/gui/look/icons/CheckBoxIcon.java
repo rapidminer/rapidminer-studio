@@ -25,10 +25,9 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.io.Serializable;
-
+import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
-import javax.swing.JCheckBox;
 import javax.swing.plaf.UIResource;
 
 import com.rapidminer.gui.look.Colors;
@@ -47,8 +46,15 @@ public class CheckBoxIcon implements Icon, UIResource, Serializable {
 
 	@Override
 	public void paintIcon(Component c, Graphics g, int x, int y) {
-		JCheckBox checkbox = (JCheckBox) c;
-		ButtonModel bm = checkbox.getModel();
+		AbstractButton abstractButton = (AbstractButton) c;
+		paintInternally(c, g, x, y, abstractButton.getModel());
+	}
+
+	void paintInternally(Component c, Graphics g, int x, int y, ButtonModel bm) {
+		boolean isSelected = bm.isSelected();
+		boolean isEnabled = bm.isEnabled();
+		boolean isPressed = bm.isPressed();
+
 		int w = c.getWidth();
 		int h = c.getHeight();
 		if (h < 0 || w < 0) {
@@ -56,10 +62,6 @@ public class CheckBoxIcon implements Icon, UIResource, Serializable {
 		}
 
 		g.translate(x, y);
-
-		boolean isSelected = bm.isSelected();
-		boolean isEnabled = bm.isEnabled();
-		boolean isPressed = bm.isPressed();
 
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

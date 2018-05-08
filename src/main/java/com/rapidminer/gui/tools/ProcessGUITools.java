@@ -22,13 +22,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.lang.ref.WeakReference;
-
+import java.util.Collections;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
@@ -59,12 +60,16 @@ import com.rapidminer.operator.error.ProcessExecutionUserErrorError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.quickfix.ConnectLastOperatorToOutputPortsQuickFix;
+import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
+import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.parameter.CombinedParameterType;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttributes;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -81,7 +86,7 @@ public class ProcessGUITools {
 		private WeakReference<BubbleWindow> bubble;
 
 		private void setBubbleWindow(BubbleWindow bubble) {
-			this.bubble = new WeakReference<BubbleWindow>(bubble);
+			this.bubble = new WeakReference<>(bubble);
 		}
 
 		/**
@@ -114,64 +119,38 @@ public class ProcessGUITools {
 
 		if (error instanceof PortUserError) {
 			PortUserError userError = (PortUserError) error;
-			if (userError.getCode() == 149) {
+			Port port = userError.getPort();
+			int errorCode = error.getCode();
+			if (errorCode == 149) {
 				// for "no data" errors we display an error bubble instead of a dialog
-				return displayInputPortNoDataInformation(userError.getPort());
-			} else if (userError.getCode() == 156) {
-				return displayInputPortWrongTypeInformation(userError.getPort(), userError.getExpectedType(),
-						userError.getActualType());
-			} else {
-				return displayGenericPortError(userError);
+				return displayInputPortNoDataInformation(port);
 			}
-		} else if (error.getClass().equals(UndefinedParameterError.class)) {
-			UndefinedParameterError userError = (UndefinedParameterError) error;
-			if (userError.getCode() == 205 || userError.getCode() == 217) {
-				// for "missing mandatory parameter" errors we display an error bubble
-				// instead of a dialog
-				Operator op = userError.getOperator();
-				ParameterType param = op != null ? op.getParameterType(userError.getKey()) : null;
-				if (op != null && param != null) {
-					return displayMissingMandatoryParameterInformation(op, param);
-				} else {
-					return displayGenericUserError(error);
-				}
-			} else {
-				Operator op = userError.getOperator();
-				ParameterType param = op != null ? op.getParameterType(userError.getKey()) : null;
-				if (op != null && param != null) {
-					return displayMissingMandatoryParameterInformation(op, param);
-				} else {
-					return displayGenericUserError(error);
-				}
+			if (errorCode == 156) {
+				return displayInputPortWrongTypeInformation(port, userError.getExpectedType(), userError.getActualType());
 			}
-		} else if (error instanceof ParameterError) {
+			return displayGenericPortError(userError);
+		}
+		if (error instanceof ParameterError) {
 			ParameterError userError = (ParameterError) error;
 			Operator op = userError.getOperator();
-			ParameterType param = op != null ? op.getParameterType(userError.getKey()) : null;
+			String errorKey = userError.getKey();
+			ParameterType param = op != null ? op.getParameterType(errorKey) : null;
 			if (op != null && param != null) {
+				if (userError.getClass() == UndefinedParameterError.class) {
+					return displayMissingMandatoryParameterInformation(op, param);
+				}
+				if (userError instanceof AttributeNotFoundError) {
+					return displayAttributeNotFoundParameterInformation((AttributeNotFoundError) userError);
+				}
 				return displayGenericParameterError(userError);
-			} else {
-				return displayGenericUserError(error);
-			}
-		} else if (error instanceof AttributeNotFoundError) {
-			AttributeNotFoundError userError = (AttributeNotFoundError) error;
-			Operator op = userError.getOperator();
-			ParameterType param = op != null ? op.getParameterType(userError.getKey()) : null;
-			if (op != null && param != null) {
-				return displayAttributeNotFoundParameterInformation(userError);
-			} else {
-				return displayGenericUserError(error);
 			}
 		} else if (error instanceof ProcessExecutionUserErrorError) {
 			ProcessExecutionUserErrorError userError = (ProcessExecutionUserErrorError) error;
 			if (userError.getUserError() != null && userError.getUserError().getOperator() != null) {
 				return displayUserErrorInExecutedProcess(userError);
-			} else {
-				return displayGenericUserError(error);
 			}
-		} else {
-			return displayGenericUserError(error);
 		}
+		return displayGenericUserError(error);
 	}
 
 	/**
@@ -191,15 +170,29 @@ public class ProcessGUITools {
 			throw new IllegalArgumentException("port must not be null!");
 		}
 
-		Port firstResultPort = process.getRootOperator().getSubprocess(0).getInnerSinks().getPortByIndex(0);
-		JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble.process_unconnected_result_port.button.label"));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble.process_unconnected_result_port.button.tip"));
-
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
+		Port firstResultPort = process.getRootOperator().getSubprocess(0).getInnerSinks().getPortByIndex(0);
+
+		int enabledOperatorsSize = process.getRootOperator().getSubprocess(0).getEnabledOperators().size();
+		Operator lastOperator = process.getRootOperator().getSubprocess(0).getEnabledOperators().get(enabledOperatorsSize - 1);
+
 		final JCheckBox dismissForeverCheckBox = new JCheckBox(
 				I18N.getGUIMessage("gui.bubble.process_unconnected_result_port.button_dismiss.label"));
 		dismissForeverCheckBox
 				.setToolTipText(I18N.getGUIMessage("gui.bubble.process_unconnected_result_port.button_dismiss.tip"));
+
+		JButton button = createFixOrAckButton("process_unconnected_result_port", Collections.singletonList(
+				new ConnectLastOperatorToOutputPortsQuickFix(lastOperator)), bubbleDelegator);
+		button.addActionListener(e -> {
+
+			if (dismissForeverCheckBox.isSelected()) {
+				// store setting
+				ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_SHOW_NO_RESULT_WARNING,
+						String.valueOf(Boolean.FALSE));
+				ParameterService.saveParameters();
+			}
+		});
+
 		ResourceAction runAnywayAction = new ResourceAction("process_unconnected_result_port.button_run_anyway", "F11") {
 
 			private static final long serialVersionUID = 1L;
@@ -248,7 +241,7 @@ public class ProcessGUITools {
 		gbc.gridy += 1;
 		gbc.gridwidth = 1;
 		gbc.insets = new Insets(0, 0, 0, 10);
-		actionPanel.add(ackButton, gbc);
+		actionPanel.add(button, gbc);
 
 		gbc.gridx += 1;
 		actionPanel.add(runAnywayButton, gbc);
@@ -256,24 +249,57 @@ public class ProcessGUITools {
 		final PortInfoBubble noResultConnectionBubble = builder.setHideOnConnection(true).setAlignment(AlignedSide.LEFT)
 				.setStyle(BubbleStyle.WARNING).setHideOnProcessRun(false).setEnsureVisible(true).hideCloseButton()
 				.setAdditionalComponents(new JComponent[] { actionPanel }).build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				noResultConnectionBubble.killBubble(true);
-
-				if (dismissForeverCheckBox.isSelected()) {
-					// store setting
-					ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_SHOW_NO_RESULT_WARNING,
-							String.valueOf(Boolean.FALSE));
-					ParameterService.saveParameters();
-				}
-			}
-		});
 		bubbleDelegator.setBubbleWindow(noResultConnectionBubble);
 
 		noResultConnectionBubble.setVisible(true);
 		return noResultConnectionBubble;
+	}
+
+	/**
+	 * Displays a warning bubble that alerts the user that a mandatory parameter of an operator
+	 * needs a different value because the provided value does not work. The bubble is located at the operator and the
+	 * process view will change to said operator. This is a bubble which occurs during the check for
+	 * errors before process execution so it contains a link button to run the process anyway.
+	 *
+	 * @param op
+	 * 		the operator for which to display the warning
+	 * @param parameterKey
+	 * 		the parameter key for which to display the warning
+	 * @return the {@link OperatorInfoBubble} instance, never {@code null}
+	 * @since 8.2
+	 */
+	public static OperatorInfoBubble displayPrecheckBrokenMandatoryParameterWarning(final Operator op, final String parameterKey) {
+		return displayPrecheckBrokenMandatoryParameterWarning(op, parameterKey, true);
+	}
+
+	/**
+	 * DDisplays a warning bubble that alerts the user that a mandatory parameter of an operator
+	 * needs a different value because the provided value does not work. The bubble is located at the operator and the
+	 * process view will change to said operator. This is a bubble which occurs during the check for
+	 * errors before process execution so it contains a link button to run the process anyway.
+	 *
+	 * @param op
+	 * 		the operator for which to display the warning
+	 * @param parameterKey
+	 * 		the parameter key for which to display the warning
+	 * @param showRunAnyway
+	 * 		whether the run anyway button should be shown
+	 * @return the {@link OperatorInfoBubble} instance, never {@code null}
+	 * @since 8.2
+	 */
+	public static OperatorInfoBubble displayPrecheckBrokenMandatoryParameterWarning(final Operator op,
+																					 final String parameterKey, boolean showRunAnyway) {
+		if (op == null) {
+			throw new IllegalArgumentException("op must not be null!");
+		}
+		if (parameterKey == null) {
+			throw new IllegalArgumentException("parameterKey must not be null!");
+		}
+
+		// not the user entered name because that could be god knows how long
+		String opName = op.getOperatorDescription().getName();
+		return displayPrecheckMissingOrBrokenParameterWarning(op, op.getParameterType(parameterKey), false, showRunAnyway,
+				"process_precheck_mandatory_parameter_broken", opName, parameterKey);
 	}
 
 	/**
@@ -318,7 +344,7 @@ public class ProcessGUITools {
 
 		// not the user entered name because that could be god knows how long
 		String opName = op.getOperatorDescription().getName();
-		return displayPrecheckMissingParameterWarning(op, param, false, showRunAnyway,
+		return displayPrecheckMissingOrBrokenParameterWarning(op, param, false, showRunAnyway,
 				"process_precheck_mandatory_parameter_unset", opName, param.getKey());
 	}
 
@@ -328,12 +354,12 @@ public class ProcessGUITools {
 	 * change to said port. This is a bubble which occurs during the check for errors before process
 	 * execution so it contains a link button to run the process anyway.
 	 *
-	 * @param port
-	 *            the port for which to display the error
+	 * @param portAndError
+	 *            the port and the meta data error for which to display the error
 	 * @return the {@link PortInfoBubble} instance, never {@code null}
 	 */
-	public static PortInfoBubble displayPrecheckInputPortDisconnectedWarning(final Port port) {
-		return displayPrecheckInputPortDisconnectedWarning(port, true);
+	public static PortInfoBubble displayPrecheckInputPortDisconnectedWarning(final Pair<Port, ProcessSetupError> portAndError) {
+		return displayPrecheckInputPortDisconnectedWarning(portAndError, true);
 	}
 
 	/**
@@ -343,27 +369,27 @@ public class ProcessGUITools {
 	 * execution so it contains a link button to run the process anyway if showRunAnyway is
 	 * {@code true}.
 	 *
-	 * @param port
-	 *            the port for which to display the error
+	 * @param portAndError
+	 *            the port and the meta data error for which to display the error
 	 * @param showRunAnyway
 	 *            whether the run anyway button should be shown
 	 * @return the {@link PortInfoBubble} instance, never {@code null}
 	 */
-	public static PortInfoBubble displayPrecheckInputPortDisconnectedWarning(final Port port, boolean showRunAnyway) {
-		if (port == null) {
-			throw new IllegalArgumentException("port must not be null!");
+	public static PortInfoBubble displayPrecheckInputPortDisconnectedWarning(final Pair<Port, ProcessSetupError> portAndError, boolean showRunAnyway) {
+		if (portAndError == null) {
+			throw new IllegalArgumentException("portAndError must not be null!");
 		}
 
 		// PortOwner is an interface only implemented from anonymous inner classes
 		// so check enclosing class and differentiate operator input ports and subprocess
 		// (result) input ports
 		String key;
-		if (ExecutionUnit.class.isAssignableFrom(port.getPorts().getOwner().getClass().getEnclosingClass())) {
+		if (ExecutionUnit.class.isAssignableFrom(portAndError.getFirst().getPorts().getOwner().getClass().getEnclosingClass())) {
 			key = "process_precheck_mandatory_input_port_unconnected_inner";
 		} else {
 			key = "process_precheck_mandatory_input_port_unconnected";
 		}
-		return displayPrecheckMissingInputPortWarning(port, true, false, showRunAnyway, key);
+		return displayPrecheckMissingInputPortWarning(portAndError, true, false, showRunAnyway, key);
 	}
 
 	/**
@@ -588,49 +614,26 @@ public class ProcessGUITools {
 	 *            optional i18n arguments
 	 * @return the {@link OperatorInfoBubble} instance, never {@code null}
 	 */
-	private static OperatorInfoBubble displayPrecheckMissingParameterWarning(final Operator op, final ParameterType param,
+	private static OperatorInfoBubble displayPrecheckMissingOrBrokenParameterWarning(final Operator op, final ParameterType param,
 			final boolean isError, final boolean showRunAnyway, final String i18nKey, final Object... arguments) {
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
-		final JPanel linkPanel = new JPanel();
-		if (showRunAnyway) {
-			ResourceAction runAnywayAction = new ResourceAction(i18nKey + ".button_run_anyway", "F11") {
 
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void loggedActionPerformed(final ActionEvent e) {
-					BubbleWindow bubble = bubbleDelegator.getBubble();
-					if (bubble != null) {
-						bubble.killBubble(true);
-					}
-
-					// run process without checking for problems
-					RapidMinerGUI.getMainFrame().runProcess(false);
-				}
-			};
-			LinkLocalButton runAnywayButton = new LinkLocalButton(runAnywayAction);
-			runAnywayButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button_run_anyway.tip"));
-			runAnywayButton.registerKeyboardAction(runAnywayAction, KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0),
-					JComponent.WHEN_IN_FOCUSED_WINDOW);
-			linkPanel.add(runAnywayButton);
+		List<ProcessSetupError> errorList = op.getErrorList();
+		List<? extends QuickFix> quickFixes = null;
+		if (!errorList.isEmpty()) {
+			quickFixes = errorList.get(0).getQuickFixes();
 		}
-
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label", arguments));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
-
+		JComponent[] additionalComponents = new JComponent[2];
+		additionalComponents[0] = createFixOrAckButton(i18nKey, showRunAnyway ? quickFixes : null, bubbleDelegator);
+		additionalComponents[1] = showRunAnyway ? createRunAnyWayButton(i18nKey, bubbleDelegator) : createQuickFixButton(quickFixes, bubbleDelegator);
 		ParameterErrorBubbleBuilder builder = new ParameterErrorBubbleBuilder(RapidMinerGUI.getMainFrame(), op, param,
 				"mandatory_parameter_decoration", i18nKey, arguments);
 
 		final OperatorInfoBubble missingParameterBubble = builder.setHideOnDisable(true).setAlignment(AlignedSide.BOTTOM)
 				.setStyle(isError ? BubbleStyle.ERROR : BubbleStyle.WARNING).setEnsureVisible(true).hideCloseButton()
-				.setHideOnProcessRun(true).setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				missingParameterBubble.killBubble(true);
-			}
-		});
+				.setHideOnProcessRun(true)
+				.setAdditionalComponents(additionalComponents)
+				.build();
 		bubbleDelegator.setBubbleWindow(missingParameterBubble);
 
 		missingParameterBubble.setVisible(true);
@@ -642,8 +645,8 @@ public class ProcessGUITools {
 	 * input but that there was a problem. The bubble is located at the port and the process view
 	 * will change to said port. execution.
 	 *
-	 * @param port
-	 *            the port for which to display the warning
+	 * @param portAndError
+	 *            the port and the meta data error for which to display the warning
 	 * @param i18nKey
 	 *            the i18n key which defines the title, text and button label for the bubble. Format
 	 *            is "gui.bubble.{i18nKey}.title", "gui.bubble.{i18nKey}.body" and
@@ -659,47 +662,19 @@ public class ProcessGUITools {
 	 *            optional i18n arguments
 	 * @return the {@link PortInfoBubble} instance, never {@code null}
 	 */
-	private static PortInfoBubble displayPrecheckMissingInputPortWarning(final Port port, final boolean hideOnConnection,
+	private static PortInfoBubble displayPrecheckMissingInputPortWarning(final Pair<Port, ProcessSetupError> portAndError, final boolean hideOnConnection,
 			final boolean isError, final boolean showRunAnyway, final String i18nKey, final Object... arguments) {
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
-		final JPanel linkPanel = new JPanel();
-		if (showRunAnyway) {
-			ResourceAction runAnywayAction = new ResourceAction(i18nKey + ".button_run_anyway", "F11") {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void loggedActionPerformed(final ActionEvent e) {
-					BubbleWindow bubble = bubbleDelegator.getBubble();
-					if (bubble != null) {
-						bubble.killBubble(true);
-					}
-
-					// run process without checking for problems
-					RapidMinerGUI.getMainFrame().runProcess(false);
-				}
-			};
-			LinkLocalButton runAnywayButton = new LinkLocalButton(runAnywayAction);
-			runAnywayButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button_run_anyway.tip"));
-			runAnywayButton.registerKeyboardAction(runAnywayAction, KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0),
-					JComponent.WHEN_IN_FOCUSED_WINDOW);
-		}
-
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label", arguments));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
-
-		PortBubbleBuilder builder = new PortBubbleBuilder(RapidMinerGUI.getMainFrame(), port, i18nKey, arguments);
+		JComponent[] additionalComponents = new JComponent[2];
+		List<? extends QuickFix> quickFixes = portAndError.getSecond().getQuickFixes();
+		additionalComponents[0] = createFixOrAckButton(i18nKey, showRunAnyway ? quickFixes : null, bubbleDelegator);
+		additionalComponents[1] = showRunAnyway ? createRunAnyWayButton(i18nKey, bubbleDelegator) : createQuickFixButton(quickFixes, bubbleDelegator);
+		PortBubbleBuilder builder = new PortBubbleBuilder(RapidMinerGUI.getMainFrame(), portAndError.getFirst(), i18nKey, arguments);
 		final PortInfoBubble missingInputBubble = builder.setHideOnConnection(hideOnConnection).setHideOnDisable(true)
 				.setAlignment(AlignedSide.LEFT).setStyle(isError ? BubbleStyle.ERROR : BubbleStyle.WARNING)
 				.setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
-				.setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				missingInputBubble.killBubble(true);
-			}
-		});
+				.setAdditionalComponents(additionalComponents)
+				.build();
 		bubbleDelegator.setBubbleWindow(missingInputBubble);
 
 		missingInputBubble.setVisible(true);
@@ -730,27 +705,17 @@ public class ProcessGUITools {
 			final boolean isError, final String i18nKey, final Object... arguments) {
 		final Operator op = error.getOperator();
 		final ParameterType param = op.getParameterType(error.getKey());
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label", arguments));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
+		BubbleDelegator bubbleDelegator = new BubbleDelegator();
 
 		String decoratorKey = param instanceof CombinedParameterType || param instanceof ParameterTypeAttributes
 				? "attributes_not_found_decoration" : "attribute_not_found_decoration";
-
 		ParameterErrorBubbleBuilder builder = new ParameterErrorBubbleBuilder(RapidMinerGUI.getMainFrame(), op, param,
 				decoratorKey, i18nKey, arguments);
 		final ParameterErrorInfoBubble attributeNotFoundParameterBubble = builder.setHideOnDisable(true)
 				.setAlignment(AlignedSide.BOTTOM).setStyle(isError ? BubbleStyle.ERROR : BubbleStyle.WARNING)
 				.setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
-				.setAdditionalComponents(new JComponent[] { ackButton }).build();
-
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				attributeNotFoundParameterBubble.killBubble(true);
-			}
-		});
-
+				.setAdditionalComponents(new JComponent[] {createAckButton(i18nKey, bubbleDelegator, arguments)}).build();
+		bubbleDelegator.setBubbleWindow(attributeNotFoundParameterBubble);
 		attributeNotFoundParameterBubble.setVisible(true);
 		return attributeNotFoundParameterBubble;
 	}
@@ -778,22 +743,18 @@ public class ProcessGUITools {
 	 */
 	private static OperatorInfoBubble displayMissingMandatoryParameterInformation(final Operator op,
 			final ParameterType param, final boolean isError, final String i18nKey, final Object... arguments) {
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label", arguments));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
+
+		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
 
 		ParameterErrorBubbleBuilder builder = new ParameterErrorBubbleBuilder(RapidMinerGUI.getMainFrame(), op, param,
 				"mandatory_parameter_decoration", i18nKey, arguments);
 		final OperatorInfoBubble missingParameterBubble = builder.setHideOnDisable(true).setAlignment(AlignedSide.BOTTOM)
 				.setStyle(isError ? BubbleStyle.ERROR : BubbleStyle.WARNING).setEnsureVisible(true).hideCloseButton()
-				.setHideOnProcessRun(true).setAdditionalComponents(new JComponent[] { ackButton }).build();
-
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				missingParameterBubble.killBubble(true);
-			}
-		});
+				.setHideOnProcessRun(true).setAdditionalComponents(new JComponent[] {
+						createAckButton(i18nKey, bubbleDelegator),
+						createQuickFixButton(Collections.singletonList(new ParameterSettingQuickFix(op, param.getKey())), bubbleDelegator)})
+				.build();
+		bubbleDelegator.setBubbleWindow(missingParameterBubble);
 
 		missingParameterBubble.setVisible(true);
 		return missingParameterBubble;
@@ -822,21 +783,14 @@ public class ProcessGUITools {
 	 */
 	private static PortInfoBubble displayMissingInputPortInformation(final Port port, final boolean hideOnConnection,
 			final boolean isError, final String i18nKey, final Object... arguments) {
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label", arguments));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
-
+		BubbleDelegator bubbleDelegator = new BubbleDelegator();
 		PortBubbleBuilder builder = new PortBubbleBuilder(RapidMinerGUI.getMainFrame(), port, i18nKey, arguments);
 		final PortInfoBubble missingInputBubble = builder.setHideOnConnection(hideOnConnection).setHideOnDisable(true)
 				.setAlignment(AlignedSide.LEFT).setStyle(isError ? BubbleStyle.ERROR : BubbleStyle.WARNING)
 				.setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
-				.setAdditionalComponents(new JComponent[] { ackButton }).build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				missingInputBubble.killBubble(true);
-			}
-		});
+				.setAdditionalComponents(new JComponent[] {createAckButton(i18nKey, bubbleDelegator, arguments)})
+				.build();
+		bubbleDelegator.setBubbleWindow(missingInputBubble);
 		missingInputBubble.setVisible(true);
 		return missingInputBubble;
 	}
@@ -860,31 +814,8 @@ public class ProcessGUITools {
 	 */
 	private static OperatorInfoBubble displayGenericParameterError(final ParameterError error, final Operator op,
 			final ParameterType param, final String i18nKey) {
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label"));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
-
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
 		final String message = removeTerminationCharacters(error.getMessage());
-		final JPanel linkPanel = new JPanel();
-		LinkLocalButton showDetailsButton = new LinkLocalButton(new ResourceAction(i18nKey + ".button_show_details") {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void loggedActionPerformed(final ActionEvent e) {
-				BubbleWindow bubble = bubbleDelegator.getBubble();
-				if (bubble != null) {
-					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
-							error.getDetails());
-					bubble.setMainText(text);
-
-					linkPanel.removeAll();
-					bubble.pack();
-				}
-			}
-		});
-		showDetailsButton.setToolTipText(I18N.getGUIMessage("gui.action." + i18nKey + ".button_show_details.tip"));
-		linkPanel.add(showDetailsButton);
 
 		ParameterErrorBubbleBuilder builder = new ParameterErrorBubbleBuilder(RapidMinerGUI.getMainFrame(),
 				error.getOperator(), param, "generic_parameter_decoration", i18nKey, message, "");
@@ -893,14 +824,10 @@ public class ProcessGUITools {
 				? AlignedSide.MIDDLE : AlignedSide.BOTTOM;
 		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setAlignment(prefSide)
 				.setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
-				.setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				userErrorBubble.killBubble(true);
-			}
-		});
+				.setAdditionalComponents(new JComponent[] {
+						createAckButton(i18nKey, bubbleDelegator),
+						createShowDetailsButton(error, i18nKey, bubbleDelegator, message)})
+				.build();
 		bubbleDelegator.setBubbleWindow(userErrorBubble);
 
 		if (error.getErrorName() != null && !error.getErrorName().trim().isEmpty()) {
@@ -942,31 +869,8 @@ public class ProcessGUITools {
 	 * @return the {@link OperatorInfoBubble} instance, never {@code null}
 	 */
 	private static OperatorInfoBubble displayGenericUserError(final UserError error, final String i18nKey) {
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label"));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
-
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
 		final String message = removeTerminationCharacters(error.getMessage());
-		final JPanel linkPanel = new JPanel();
-		LinkLocalButton showDetailsButton = new LinkLocalButton(new ResourceAction(i18nKey + ".button_show_details") {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void loggedActionPerformed(final ActionEvent e) {
-				BubbleWindow bubble = bubbleDelegator.getBubble();
-				if (bubble != null) {
-					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
-							error.getDetails());
-					bubble.setMainText(text);
-
-					linkPanel.removeAll();
-					bubble.pack();
-				}
-			}
-		});
-		showDetailsButton.setToolTipText(I18N.getGUIMessage("gui.action." + i18nKey + ".button_show_details.tip"));
-		linkPanel.add(showDetailsButton);
 
 		OperatorBubbleBuilder builder = new OperatorBubbleBuilder(RapidMinerGUI.getMainFrame(), error.getOperator(), i18nKey,
 				message, "");
@@ -976,14 +880,10 @@ public class ProcessGUITools {
 				: AlignedSide.BOTTOM;
 		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setAlignment(prefSide)
 				.setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
-				.setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				userErrorBubble.killBubble(true);
-			}
-		});
+				.setAdditionalComponents(new JComponent[] {
+						createAckButton(i18nKey, bubbleDelegator),
+						createShowDetailsButton(error, i18nKey, bubbleDelegator, message)})
+				.build();
 		bubbleDelegator.setBubbleWindow(userErrorBubble);
 
 		if (error.getErrorName() != null && !error.getErrorName().trim().isEmpty()) {
@@ -1006,46 +906,19 @@ public class ProcessGUITools {
 	 * @return the {@link PortInfoBubble} instance, never {@code null}
 	 */
 	private static PortInfoBubble displayGenericPortError(final PortUserError error, final String i18nKey) {
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label"));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
-
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
 		final String message = removeTerminationCharacters(error.getMessage());
-		final JPanel linkPanel = new JPanel();
-		LinkLocalButton showDetailsButton = new LinkLocalButton(new ResourceAction(i18nKey + ".button_show_details") {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void loggedActionPerformed(final ActionEvent e) {
-				BubbleWindow bubble = bubbleDelegator.getBubble();
-				if (bubble != null) {
-					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
-							error.getDetails());
-					bubble.setMainText(text);
-
-					linkPanel.removeAll();
-					bubble.pack();
-				}
-			}
-		});
-		showDetailsButton.setToolTipText(I18N.getGUIMessage("gui.action." + i18nKey + ".button_show_details.tip"));
-		linkPanel.add(showDetailsButton);
 
 		// input ports (located left) show the "hook" of the bubble on the left and vice versa
 		AlignedSide prefSide = error.getPort() instanceof InputPort ? AlignedSide.LEFT : AlignedSide.RIGHT;
-		PortBubbleBuilder builder = new PortBubbleBuilder(RapidMinerGUI.getMainFrame(), error.getPort(), i18nKey, message,
-				"");
+		PortBubbleBuilder builder = new PortBubbleBuilder(
+				RapidMinerGUI.getMainFrame(), error.getPort(), i18nKey, message, "");
 		final PortInfoBubble portErrorBubble = builder.setHideOnDisable(true).setAlignment(prefSide)
 				.setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
-				.setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				portErrorBubble.killBubble(true);
-			}
-		});
+				.setAdditionalComponents(new JComponent[] {
+						createAckButton(i18nKey, bubbleDelegator),
+						createShowDetailsButton(error, i18nKey, bubbleDelegator, message)})
+				.build();
 		bubbleDelegator.setBubbleWindow(portErrorBubble);
 
 		if (error.getErrorName() != null && !error.getErrorName().trim().isEmpty()) {
@@ -1071,9 +944,6 @@ public class ProcessGUITools {
 	 */
 	private static OperatorInfoBubble displayUserErrorInExecutedProcess(final ProcessExecutionUserErrorError error,
 			final String i18nKey, final Object... arguments) {
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label", arguments));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
-
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
 		LinkLocalButton showDetailsButton = new LinkLocalButton(new ResourceAction(i18nKey + ".button_show_details") {
 
@@ -1098,21 +968,14 @@ public class ProcessGUITools {
 				}
 			}
 		});
-		showDetailsButton.setToolTipText(I18N.getGUIMessage("gui.action." + i18nKey + ".button_show_details.tip"));
 
 		OperatorBubbleBuilder builder = new OperatorBubbleBuilder(RapidMinerGUI.getMainFrame(), error.getOperator(), i18nKey,
 				arguments);
 		final OperatorInfoBubble userErrorBubble = builder.setHideOnDisable(true).setHideOnProcessRun(true)
 				.setAlignment(AlignedSide.BOTTOM).setStyle(BubbleStyle.ERROR).setEnsureVisible(true).hideCloseButton()
-				.setHideOnProcessRun(true).setAdditionalComponents(new JComponent[] { ackButton, showDetailsButton })
+				.setHideOnProcessRun(true).setAdditionalComponents(
+						new JComponent[] {createAckButton(i18nKey, bubbleDelegator, arguments), showDetailsButton })
 				.build();
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				userErrorBubble.killBubble(true);
-			}
-		});
 		bubbleDelegator.setBubbleWindow(userErrorBubble);
 
 		userErrorBubble.setVisible(true);
@@ -1129,19 +992,9 @@ public class ProcessGUITools {
 	 */
 	public static OperatorInfoBubble displayProcessSetupError(final ProcessSetupError processSetupError) {
 		final String i18nKey = "process_setup_error";
-		final JButton ackButton = new JButton(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.label"));
-		ackButton.setToolTipText(I18N.getGUIMessage("gui.bubble." + i18nKey + ".button.tip"));
 
 		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
 		final String message = removeTerminationCharacters(processSetupError.getMessage());
-
-		final JPanel linkPanel = new JPanel();
-		LinkLocalButton showQuickFixesButton = null;
-		if (!processSetupError.getQuickFixes().isEmpty()) {
-			showQuickFixesButton = new LinkLocalButton(new ResourceActionAdapter(i18nKey + ".button_show_quickfixes"));
-			showQuickFixesButton.setToolTipText(I18N.getGUIMessage("gui.action." + i18nKey + ".button_show_quickfixes.tip"));
-			linkPanel.add(showQuickFixesButton);
-		}
 
 		OperatorBubbleBuilder builder = new OperatorBubbleBuilder(RapidMinerGUI.getMainFrame(),
 				processSetupError.getOwner().getOperator(), i18nKey, message, "");
@@ -1150,32 +1003,220 @@ public class ProcessGUITools {
 				: BubbleStyle.WARNING;
 		final OperatorInfoBubble processSetupBubble = builder.setHideOnDisable(true).setAlignment(AlignedSide.BOTTOM)
 				.setStyle(style).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
-				.setAdditionalComponents(new JComponent[] { ackButton, linkPanel }).build();
+				.setAdditionalComponents(new JComponent[]{
+						createAckButton(i18nKey, bubbleDelegator),
+						createQuickFixButton(processSetupError.getQuickFixes(), bubbleDelegator)})
+				.build();
 
-		if (!processSetupError.getQuickFixes().isEmpty()) {
-			showQuickFixesButton.setAction(new ResourceAction(i18nKey + ".button_show_quickfixes") {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void loggedActionPerformed(final ActionEvent e) {
-					// kill bubble when quick fix dialog is shown
-					processSetupBubble.killBubble(true);
-					new QuickFixDialog(processSetupError.getQuickFixes()).setVisible(true);
-				}
-			});
-		}
-		ackButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				processSetupBubble.killBubble(true);
-			}
-		});
 		bubbleDelegator.setBubbleWindow(processSetupBubble);
 
 		processSetupBubble.setVisible(true);
 		return processSetupBubble;
+	}
+
+	/**
+	 * Displays an information bubble pointing to an operator to indicate that the process needs to be saved for that operator settings.
+	 *
+	 * @param op
+	 * 		the {@link Operator} that caused the error
+	 * @param processSetupError
+	 * 		the error that caused this bubble
+	 * @return the {@link OperatorInfoBubble} instance, never {@code null}
+	 * @since 8.2
+	 */
+	public static OperatorInfoBubble displayPrecheckProcessNotSavedWarning(final Operator op, final ProcessSetupError processSetupError) {
+		final String i18nKey = "process_not_saved";
+
+		final BubbleDelegator bubbleDelegator = new BubbleDelegator();
+		final String message = removeTerminationCharacters(processSetupError.getMessage());
+
+		List<ProcessSetupError> errorList = op.getErrorList();
+		List<? extends QuickFix> quickFixes = processSetupError.getQuickFixes();
+		// try to use quickfixes from given process setup error, otherwise use quickfixes from operator
+		if ((quickFixes == null || quickFixes.isEmpty()) && !errorList.isEmpty()) {
+			quickFixes = errorList.get(0).getQuickFixes();
+		}
+		OperatorBubbleBuilder builder = new OperatorBubbleBuilder(RapidMinerGUI.getMainFrame(),
+				processSetupError.getOwner().getOperator(), i18nKey, message, "");
+
+		BubbleStyle style = processSetupError.getSeverity() == Severity.INFORMATION ? BubbleStyle.INFORMATION
+				: BubbleStyle.WARNING;
+		final OperatorInfoBubble processNotSavedBubble = builder.setHideOnDisable(true).setAlignment(AlignedSide.BOTTOM)
+				.setStyle(style).setEnsureVisible(true).hideCloseButton().setHideOnProcessRun(true)
+				.setAdditionalComponents(new JComponent[] {
+						createAckButton(i18nKey, bubbleDelegator),
+						createQuickFixButton(quickFixes, bubbleDelegator)})
+				.build();
+
+		bubbleDelegator.setBubbleWindow(processNotSavedBubble);
+
+		processNotSavedBubble.setVisible(true);
+		return processNotSavedBubble;
+	}
+
+	/**
+	 * Creates a {@link JButton} with the given i18n key and arguments to construct the label text and tool tip.
+	 * Sets the action to kill the bubble provided by the {@link BubbleDelegator}.
+	 *
+	 * @param i18nKey
+	 * 		the i18n key
+	 * @param bubbleDelegator
+	 * 		the bubble delegator
+	 * @param arguments
+	 * 		the i18n arguments
+	 * @since 8.2
+	 */
+	private static JButton createAckButton(String i18nKey, BubbleDelegator bubbleDelegator, Object... arguments) {
+		String completeKey = "gui.bubble." + i18nKey + ".button.";
+		final JButton ackButton = new JButton(I18N.getGUIMessage(completeKey + "label", arguments));
+		ackButton.setToolTipText(I18N.getGUIMessage(completeKey + "tip"));
+		ackButton.addActionListener(e -> {
+			BubbleWindow bubble = bubbleDelegator.getBubble();
+			if (bubble != null) {
+				bubble.killBubble(true);
+			}
+		});
+		return ackButton;
+	}
+
+	/**
+	 * Creates either the "Got it" or "Fix now" button, depending on if the {@link QuickFix} list
+	 * is empty (or {@code null}) or not.
+	 *
+	 * @param i18nKey
+	 * 		the i18n key
+	 * @param quickFixes
+	 * 		the quickfixes for fixing the problem, can be empty or {@code null}
+	 * @param bubbleDelegator
+	 * 		the bubble delegator
+	 * @return the button
+	 * @since 8.2
+	 */
+	private static JButton createFixOrAckButton(String i18nKey, List<? extends QuickFix> quickFixes, BubbleDelegator bubbleDelegator) {
+		if (quickFixes == null || quickFixes.isEmpty()) {
+			return createAckButton(i18nKey, bubbleDelegator);
+		}
+		String completeKey = "gui.bubble." + i18nKey + ".fix.button.";
+		final JButton fixButton = new JButton(I18N.getGUIMessage(completeKey + "label"));
+		fixButton.setToolTipText(I18N.getGUIMessage(completeKey + "tip"));
+		fixButton.addActionListener(e -> showOrApplyQuickFixes(bubbleDelegator, quickFixes));
+		return fixButton;
+	}
+
+	/**
+	 * Creates a {@link LinkLocalButton} for the list of {@link QuickFix QuickFixes} or an empty {@link JLabel} if the given list is empty.
+	 *
+	 * @param quickFixes
+	 * 		the list of quickfixes; can be {@code null} or empty
+	 * @param bubbleDelegator
+	 * 		the delegator to the {@link BubbleWindow}
+	 * @return a button to show the quickfixes or an empty label
+	 * @since 8.2
+	 */
+	private static JComponent createQuickFixButton(List<? extends QuickFix> quickFixes, BubbleDelegator bubbleDelegator) {
+		if (quickFixes == null || quickFixes.isEmpty()) {
+			return new JLabel();
+		}
+		return new LinkLocalButton(new ResourceAction("process_setup_error.button_show_quickfixes") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void loggedActionPerformed(final ActionEvent e) {
+				// kill bubble when quick fix dialog is shown
+				showOrApplyQuickFixes(bubbleDelegator, quickFixes);
+			}
+		});
+	}
+
+	/**
+	 * Shows a dialog with the list of {@link QuickFix QuickFixes} or just applies a single {@link QuickFix}.
+	 * Will also kill the bubble provided by the {@link BubbleDelegator}.
+	 *
+	 * @param bubbleDelegator
+	 * 		the bubble delegator
+	 * @param quickFixes
+	 * 		the list of quick fixes; must not be non-empty
+	 * @since 8.2
+	 */
+	private static void showOrApplyQuickFixes(BubbleDelegator bubbleDelegator, List<? extends QuickFix> quickFixes) {
+		BubbleWindow bubble = bubbleDelegator.getBubble();
+		if (bubble != null) {
+			bubble.killBubble(true);
+		}
+		if (quickFixes.size() == 1) {
+			quickFixes.get(0).apply();
+			return;
+		}
+		new QuickFixDialog(quickFixes).setVisible(true);
+	}
+
+	/**
+	 * Creates a {@link LinkLocalButton} for the "run anyway" action.
+	 *
+	 * @param i18nKey
+	 * 		the i18n key
+	 * @param bubbleDelegator
+	 * 		the delegator to the {@link BubbleWindow}
+	 * @return a button to show the "run anyway" action or an empty label
+	 * @since 8.2
+	 */
+	private static LinkLocalButton createRunAnyWayButton(String i18nKey, BubbleDelegator bubbleDelegator) {
+		ResourceAction runAnywayAction = new ResourceAction(i18nKey + ".button_run_anyway", "F11") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void loggedActionPerformed(final ActionEvent e) {
+				BubbleWindow bubble = bubbleDelegator.getBubble();
+				if (bubble != null) {
+					bubble.killBubble(true);
+				}
+				// run process without checking for problems
+				RapidMinerGUI.getMainFrame().runProcess(false);
+			}
+		};
+		LinkLocalButton button = new LinkLocalButton(runAnywayAction);
+		button.registerKeyboardAction(runAnywayAction, KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0),
+				JComponent.WHEN_IN_FOCUSED_WINDOW);
+		return button;
+	}
+
+	/**
+	 * Creates the "show details" link button in a {@link JPanel} for more error message details.
+	 *
+	 * @param error
+	 * 		the error
+	 * @param i18nKey
+	 * 		the i18n key
+	 * @param bubbleDelegator
+	 * 		the bubble for which the button is
+	 * @param message
+	 * 		the error message
+	 * @return the link button panel
+	 * @since 8.2
+	 */
+	private static JPanel createShowDetailsButton(UserError error, String i18nKey, BubbleDelegator bubbleDelegator, String message) {
+		JPanel linkPanel = new JPanel();
+		LinkLocalButton button = new LinkLocalButton(new ResourceAction(i18nKey + ".button_show_details") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void loggedActionPerformed(final ActionEvent e) {
+				BubbleWindow bubble = bubbleDelegator.getBubble();
+				if (bubble != null) {
+					String text = I18N.getMessage(I18N.getGUIBundle(), "gui.bubble." + i18nKey + ".body", message,
+							error.getDetails());
+					bubble.setMainText(text);
+
+					linkPanel.removeAll();
+					bubble.pack();
+				}
+			}
+		});
+		linkPanel.add(button);
+		return linkPanel;
 	}
 
 }

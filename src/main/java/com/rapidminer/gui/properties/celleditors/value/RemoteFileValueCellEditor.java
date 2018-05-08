@@ -57,6 +57,8 @@ public class RemoteFileValueCellEditor extends DefaultRMCellEditor implements Pr
 
 	private JPanel container;
 
+	private JButton fileOpenButton;
+
 	public RemoteFileValueCellEditor(final ParameterTypeRemoteFile type) {
 		super(new JTextField());
 		this.container = new JPanel(new GridBagLayout());
@@ -92,7 +94,7 @@ public class RemoteFileValueCellEditor extends DefaultRMCellEditor implements Pr
 			}
 		});
 
-		final JButton fileOpenButton = new JButton();
+		fileOpenButton = new JButton();
 		fileOpenButton.setAction(new ResourceAction(true, "choose_remote_file") {
 
 			private static final long serialVersionUID = 1L;
@@ -192,5 +194,10 @@ public class RemoteFileValueCellEditor extends DefaultRMCellEditor implements Pr
 
 	@Override
 	public void setOperator(Operator operator) {}
+
+	@Override
+	public void activate() {
+		fileOpenButton.doClick();
+	}
 
 }

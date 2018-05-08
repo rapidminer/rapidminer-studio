@@ -20,13 +20,20 @@ package com.rapidminer.gui.dnd;
 
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.SwingUtilities;
 
 import org.w3c.dom.Document;
@@ -45,7 +52,6 @@ import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
-import com.rapidminer.operator.UnknownParameterInformation;
 import com.rapidminer.operator.internal.ProcessEmbeddingOperator;
 import com.rapidminer.operator.io.RepositorySource;
 import com.rapidminer.operator.nio.file.LoadFileOperator;
@@ -59,6 +65,7 @@ import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.usagestats.UsageLoggable;
 
 
 /**
@@ -133,8 +140,9 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 		}
 
 		Object transferData;
+		Transferable transferable = ts.getTransferable();
 		try {
-			transferData = ts.getTransferable().getTransferData(acceptedFlavor);
+			transferData = transferable.getTransferData(acceptedFlavor);
 		} catch (Exception e1) {
 			LogService.getRoot()
 					.log(Level.WARNING,
@@ -154,21 +162,17 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				try {
 					Operator processEmbedder = OperatorService.createOperator(ProcessEmbeddingOperator.OPERATOR_KEY);
 					processEmbedder.setParameter(ProcessEmbeddingOperator.PARAMETER_PROCESS_FILE, file.getAbsolutePath());
-					newOperators = Collections.<Operator> singletonList(processEmbedder);
+					newOperators = Collections.singletonList(processEmbedder);
 				} catch (Exception e) {
 					SwingTools.showSimpleErrorMessage("cannot_create_process_embedder", e);
 					dropEnds();
 					return false;
 				}
 			} else {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						DataImportWizardBuilder importWizardBuilder = new DataImportWizardBuilder();
-						importWizardBuilder.forFile(file.toPath()).build(RapidMinerGUI.getMainFrame()).getDialog()
-								.setVisible(true);
-					}
+				SwingUtilities.invokeLater(() -> {
+					DataImportWizardBuilder importWizardBuilder = new DataImportWizardBuilder();
+					importWizardBuilder.forFile(file.toPath()).build(RapidMinerGUI.getMainFrame()).getDialog()
+							.setVisible(true);
 				});
 				dropEnds();
 				return true;
@@ -184,86 +188,83 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				return false;
 			}
 		} else if (acceptedFlavor.equals(DataFlavor.stringFlavor)) {
-			if (transferData instanceof String) {
-				try {
-					Process process = new Process(((String) transferData).trim());
-					newOperators = process.getRootOperator().getSubprocess(0).getOperators();
-				} catch (Exception e) {
-					try {
-						Document document = XMLTools.createDocumentBuilder()
-								.parse(new InputSource(new StringReader((String) transferData)));
-						NodeList opElements = document.getDocumentElement().getChildNodes();
-						Operator newOp = null;
-						for (int i = 0; i < opElements.getLength(); i++) {
-							Node child = opElements.item(i);
-							if (child instanceof Element) {
-								Element elem = (Element) child;
-								if ("operator".equals(elem.getTagName())) {
-									newOp = new XMLImporter(null).parseOperator(elem, RapidMiner.getVersion(), getProcess(),
-											new LinkedList<UnknownParameterInformation>());
-									break;
-								}
-							}
-						}
-						if (newOp == null) {
-							LogService.getRoot().log(Level.WARNING,
-									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.parsing_operator_from_clipboard_error",
-									transferData);
-							dropEnds();
-							return false;
-						}
-						newOperators = Collections.singletonList(newOp);
-					} catch (SAXParseException e1) {
-						LogService.getRoot().log(Level.WARNING,
-								"com.rapidminer.gui.processeditor.XMLEditor.failed_to_parse_process");
-						dropEnds();
-						return false;
-					} catch (Exception e1) {
-						LogService.getRoot().log(Level.WARNING,
-								I18N.getMessage(LogService.getRoot().getResourceBundle(),
-										"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.parsing_operator_from_clipboard_error_exception",
-										e1, transferData),
-								e1);
-						dropEnds();
-						return false;
-					}
-				}
-			} else {
+			if (!(transferData instanceof String)) {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.expected_string", acceptedFlavor);
 				dropEnds();
 				return false;
 			}
-		} else if (acceptedFlavor.equals(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR)) {
-			if (transferData instanceof RepositoryLocation) {
-				RepositoryLocation repositoryLocation = (RepositoryLocation) transferData;
-				newOperators = Collections.singletonList(createOperator(repositoryLocation));
-				if (newOperators == null) {
+			try {
+				Process process = new Process(((String) transferData).trim());
+				newOperators = process.getRootOperator().getSubprocess(0).getOperators();
+			} catch (Exception e) {
+				try {
+					Document document = XMLTools.createDocumentBuilder().parse(new InputSource(new StringReader((String) transferData)));
+					NodeList opElements = document.getDocumentElement().getChildNodes();
+					Operator newOp = null;
+					for (int i = 0; i < opElements.getLength(); i++) {
+						Node child = opElements.item(i);
+						if (child instanceof Element) {
+							Element elem = (Element) child;
+							if ("operator".equals(elem.getTagName())) {
+								newOp = new XMLImporter(null).parseOperator(elem, RapidMiner.getVersion(), getProcess(),
+										new LinkedList<>());
+								break;
+							}
+						}
+					}
+					if (newOp == null) {
+						LogService.getRoot().log(Level.WARNING,
+								"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.parsing_operator_from_clipboard_error",
+								transferData);
+						dropEnds();
+						return false;
+					}
+					newOperators = Collections.singletonList(newOp);
+				} catch (SAXParseException e1) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.gui.processeditor.XMLEditor.failed_to_parse_process");
+					dropEnds();
+					return false;
+				} catch (Exception e1) {
+					LogService.getRoot().log(Level.WARNING,
+							I18N.getMessage(LogService.getRoot().getResourceBundle(),
+									"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.parsing_operator_from_clipboard_error_exception",
+									e1, transferData), e1);
+					dropEnds();
 					return false;
 				}
-			} else {
+			}
+		} else if (acceptedFlavor.equals(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR)) {
+			if (!(transferData instanceof RepositoryLocation)) {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.expected_repositorylocation",
 						acceptedFlavor);
 				dropEnds();
 				return false;
 			}
+			RepositoryLocation repositoryLocation = (RepositoryLocation) transferData;
+			Operator newOp = createOperator(repositoryLocation);
+			if (newOp == null) {
+				dropEnds();
+				return false;
+			}
+			newOperators = Collections.singletonList(newOp);
 		} else if (acceptedFlavor.equals(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR)) {
+			Stream<RepositoryLocation> repoLocations;
 			if (transferData instanceof RepositoryLocationList) {
-				RepositoryLocationList repositoryLocationList = (RepositoryLocationList) transferData;
-				newOperators = new LinkedList<>();
-				for (RepositoryLocation loc : repositoryLocationList.getAll()) {
-					List<Operator> list = Collections.singletonList(createOperator(loc));
-					if (list == null) {
-						return false;
-					} else {
-						newOperators.addAll(list);
-					}
-				}
+				repoLocations = ((RepositoryLocationList) transferData).getAll().stream();
+			} else if (transferData instanceof RepositoryLocation[]) {
+				repoLocations = Arrays.stream((RepositoryLocation[]) transferData);
 			} else {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.expected_repositorylocationlist",
 						acceptedFlavor);
+				dropEnds();
+				return false;
+			}
+			newOperators = repoLocations.map(this::createOperator).filter(Objects::nonNull).collect(Collectors.toList());
+			if (newOperators.isEmpty()) {
 				dropEnds();
 				return false;
 			}
@@ -283,73 +284,62 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 			if (!dropLocationOk) {
 				dropEnds();
 				return false;
-			} else {
-				if (ts.getDropAction() == MOVE) {
-					for (Operator operator : newOperators) {
-						operator.removeAndKeepConnections(newOperators);
-					}
-				}
-				newOperators = Tools.cloneOperators(newOperators);
-
-				boolean result;
-				try {
-					result = dropNow(newOperators, ts.isDrop() ? loc : null);
-				} catch (RuntimeException e) {
-					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_drop", e), e);
-					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
-					dropEnds();
-					return false;
-				}
-				dropEnds();
-				return result;
 			}
+			if (ts.getDropAction() == MOVE) {
+				for (Operator operator : newOperators) {
+					operator.removeAndKeepConnections(newOperators);
+				}
+			}
+			newOperators = Tools.cloneOperators(newOperators);
+
+			boolean result = false;
+			try {
+				result = dropNow(newOperators, ts.isDrop() ? loc : null);
+			} catch (RuntimeException e) {
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_drop", e), e);
+				SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
+			}
+			dropEnds();
+			if (result) {
+				try {
+					// log usage stats if applicable; ignore exceptions on unsupported flavor exception
+					transferable.getTransferData(UsageLoggable.USAGE_FLAVOR);
+				} catch (UnsupportedFlavorException | IOException ignored) {
+					// ignore, no logging implemented
+				}
+			}
+			return result;
 		} else {
 			// paste
+			BooleanSupplier dropNow;
 			if (acceptedFlavor.equals(DataFlavor.stringFlavor)) {
-				// handle XML String pasting differently
-				boolean result;
-				try {
-					result = dropNow(String.valueOf(transferData));
-				} catch (RuntimeException e) {
-					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
-					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
-					dropEnds();
-					return false;
-				}
-				dropEnds();
-				return result;
+				dropNow = () -> dropNow(String.valueOf(transferData));
 			} else if (acceptedFlavor.equals(TransferableAnnotation.LOCAL_PROCESS_ANNOTATION_FLAVOR)
 					|| acceptedFlavor.equals(TransferableAnnotation.LOCAL_OPERATOR_ANNOTATION_FLAVOR)) {
-				boolean result;
-				try {
-					result = dropNow((WorkflowAnnotation) transferData, null);
-				} catch (RuntimeException e) {
-					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
-					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
-					dropEnds();
-					return false;
-				}
-				dropEnds();
-				return result;
+				dropNow = () -> dropNow((WorkflowAnnotation) transferData, null);
 			} else {
-				// paste an existing Operator
-				newOperators = Tools.cloneOperators(newOperators);
-				boolean result;
-				try {
-					result = dropNow(newOperators, null);
-				} catch (RuntimeException e) {
-					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
-					SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
-					dropEnds();
-					return false;
-				}
-				dropEnds();
-				return result;
+				List<Operator> droppedOperators = Tools.cloneOperators(newOperators);
+				dropNow = () -> dropNow(droppedOperators, null);
 			}
+			boolean result = false;
+			try {
+				result = dropNow.getAsBoolean();
+			} catch (RuntimeException e) {
+				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.error_in_paste", e), e);
+				SwingTools.showVerySimpleErrorMessage("error_in_paste", e.getMessage(), e.getMessage());
+			}
+			dropEnds();
+			if (result) {
+				try {
+					// log usage stats if applicable; ignore exceptions on unsupported flavor exception
+					transferable.getTransferData(UsageLoggable.USAGE_FLAVOR);
+				} catch (UnsupportedFlavorException | IOException ignored) {
+					// ignore, no logging implemented
+				}
+			}
+			return result;
 		}
 	}
 

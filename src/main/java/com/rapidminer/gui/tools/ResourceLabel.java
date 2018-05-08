@@ -55,7 +55,7 @@ public class ResourceLabel extends JLabel {
 			ImageIcon iicon = SwingTools.createIcon(icon);
 			setIcon(iicon);
 		}
-		if (mne != null) {
+		if (mne != null && !mne.isEmpty()) {
 			setDisplayedMnemonic(mne.charAt(0));
 		}
 	}

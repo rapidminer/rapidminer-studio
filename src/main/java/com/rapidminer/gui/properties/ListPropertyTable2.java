@@ -20,12 +20,15 @@ package com.rapidminer.gui.properties;
 
 import java.awt.Component;
 import java.awt.Point;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.EventObject;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
+import javax.swing.event.ChangeEvent;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
@@ -96,6 +99,14 @@ public class ListPropertyTable2 extends JTable {
 		requestFocusForLastEditableCell();
 	}
 
+	@Override
+	protected boolean processKeyBinding(KeyStroke ks, KeyEvent e, int condition, boolean pressed) {
+		if (e.getKeyCode() == KeyEvent.VK_TAB) {
+			stopEditing();
+		}
+		return super.processKeyBinding(ks, e, condition, pressed);
+	}
+
 	private static List<String[]> to2DimList(List<String> parameterList) {
 		List<String[]> result = new LinkedList<>();
 		for (String v : parameterList) {
@@ -105,6 +116,7 @@ public class ListPropertyTable2 extends JTable {
 	}
 
 	public void addRow() {
+		stopEditing();
 		((ListTableModel) getModel()).addRow();
 		fillEditors();
 
@@ -114,6 +126,12 @@ public class ListPropertyTable2 extends JTable {
 
 	public boolean isEmpty() {
 		return renderers.isEmpty();
+	}
+
+	@Override
+	public boolean editCellAt(int row, int column, EventObject e){
+		stopEditing();
+		return super.editCellAt(row,column,e);
 	}
 
 	protected void fillEditors() {
@@ -187,7 +205,11 @@ public class ListPropertyTable2 extends JTable {
 	public void stopEditing() {
 		TableCellEditor editor = getCellEditor();
 		if (editor != null) {
-			editor.stopCellEditing();
+			boolean stoppedCellEditing = editor.stopCellEditing();
+			//remove the editor if stopping was successful
+			if (stoppedCellEditing) {
+				removeEditor();
+			}
 		}
 	}
 
@@ -226,6 +248,21 @@ public class ListPropertyTable2 extends JTable {
 		}
 		String toolTipText = SwingTools.transformToolTipText(toolTip.toString());
 		return toolTipText;
+	}
+
+	/**
+	 * This is needed in order to allow auto completion: Otherwise the editor will be immediately
+	 * removed after setting the first selected value and loosing its focus. This way it is ensured
+	 * that the editor won't be removed.
+	 */
+	@Override
+	public void editingStopped(ChangeEvent e) {
+
+		TableCellEditor editor = getCellEditor();
+		if (editor != null) {
+			Object value = editor.getCellEditorValue();
+			setValueAt(value, editingRow, editingColumn);
+		}
 	}
 
 	/*

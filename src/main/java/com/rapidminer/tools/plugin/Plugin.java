@@ -71,6 +71,7 @@ import org.xml.sax.SAXException;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExecutionMode;
+import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
@@ -296,8 +297,8 @@ public class Plugin {
 		PLUGIN_BLACKLIST.put("rmx_r_scripting", upToRm711);
 		PLUGIN_BLACKLIST.put("rmx_python_scripting", upToRm711);
 
-		// Radoop depends on Parallel Decision Tree in Concurrency Extension
-		PLUGIN_BLACKLIST.put("rmx_radoop", new Pair<>(null, new VersionNumber(7, 3, 0)));
+		// Radoop must be at least version 8.1.0 due to certain features being broken in older Radoop versions due to Server 8.x architectural changes
+		PLUGIN_BLACKLIST.put("rmx_radoop", new Pair<>(null, new VersionNumber(8, 0, 99)));
 
 		// RapidLabs / 3rd party extensions causing problems since Studio 7.2
 		PLUGIN_BLACKLIST.put("rmx_rapidprom", new Pair<>(null, new VersionNumber(3, 0, 7)));
@@ -817,18 +818,16 @@ public class Plugin {
 		VersionNumber newVersion = new VersionNumber(newExtension.getVersion());
 		VersionNumber conflictVersion = new VersionNumber(conflictingExtension.getVersion());
 		VersionNumber higherNumber = conflictVersion;
-		if (newVersion.compareTo(conflictVersion) > 0) {
+		if (newVersion.compareTo(conflictVersion) > 0 && isExtensionVersionAllowed(newExtension, newVersion)) {
 			plugins.remove(conflictingExtension);
 			plugins.add(newExtension);
 			higherNumber = newVersion;
 		}
 
-		if (LogService.getRoot().isLoggable(Level.WARNING)) {
-			LogService.getRoot().log(Level.WARNING,
-					"com.rapidminer.tools.plugin.Plugin.duplicate_plugin_definition_higher_version",
-					new Object[] { newExtension.getExtensionId(), newExtension.file, conflictingExtension.file,
-							higherNumber.toString() });
-		}
+		LogService.getRoot().log(Level.WARNING,
+				"com.rapidminer.tools.plugin.Plugin.duplicate_plugin_definition_higher_version",
+				new Object[] { newExtension.getName(), newExtension.file, conflictingExtension.file,
+						higherNumber.getShortLongVersion() });
 	}
 
 	@Override
@@ -908,6 +907,28 @@ public class Plugin {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Checks whether the given combination of extension and its version is allowed.
+	 * For now, this only checks that packaged extensions do not have a higher Studio core version dependency than the current Studio core.
+	 *
+	 * @param extension
+	 * 		the extension in question
+	 * @param extensionVersion
+	 * 		the extension version to check
+	 * @return {@code true} if the extension version would work with the current Studio core; {@code false} otherwise
+	 */
+	private static boolean isExtensionVersionAllowed(final Plugin extension, final VersionNumber extensionVersion) {
+		// packaged extension required Studio core version can only be as high as current Studio core version
+		RapidMinerVersion coreVersion = new RapidMinerVersion();
+		boolean allowed = extension.getNecessaryRapidMinerVersion().isAtMost(coreVersion);
+		if (!allowed) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.plugin.Plugin.plugin_studio_core_version_too_high",
+					new Object[] { extension.getName(), extensionVersion.getShortLongVersion(), extension.getNecessaryRapidMinerVersion().getShortLongVersion() });
+		}
+
+		return allowed;
 	}
 
 	/**

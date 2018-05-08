@@ -21,7 +21,6 @@ package com.rapidminer.operator.preprocessing.filter;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -97,8 +96,7 @@ public class ChangeAttributeName extends AbstractDataProcessing {
 		return metaData;
 	}
 
-	private void renameAttributeMetaData(ExampleSetMetaData metaData, String oldName, String newName)
-			throws UndefinedParameterError {
+	private void renameAttributeMetaData(ExampleSetMetaData metaData, String oldName, String newName) {
 		AttributeMetaData amd = metaData.getAttributeByName(oldName);
 		if (amd != null && newName != null) {
 			if (metaData.containsAttributeName(newName) == MetaDataInfo.YES) {
@@ -138,10 +136,6 @@ public class ChangeAttributeName extends AbstractDataProcessing {
 
 		if (attribute == null) {
 			throw new AttributeNotFoundError(this, PARAMETER_OLD_NAME, oldName);
-		}
-		AttributeRole existingAttributeRole = exampleSet.getAttributes().findRoleByName(newName);
-		if (existingAttributeRole != null) {
-			throw new UserError(this, 152, newName);
 		}
 
 		attribute.setName(newName);
