@@ -79,6 +79,7 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector.UsageObject;
@@ -147,7 +148,7 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		}
 	};
 
-	private NewOperatorGroupTreeRenderer renderer;
+	private final NewOperatorGroupTreeRenderer renderer = new NewOperatorGroupTreeRenderer();
 
 	/**
 	 *
@@ -158,7 +159,6 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 		setLayout(new BorderLayout());
 
 		operatorGroupTree.setShowsRootHandles(true);
-		renderer = new NewOperatorGroupTreeRenderer();
 		operatorGroupTree.setCellRenderer(renderer);
 		operatorGroupTree.expandRow(0); // because we let the renderer determine the height
 		operatorGroupTree.setRowHeight(0);
@@ -393,7 +393,13 @@ public class NewOperatorGroupTree extends JPanel implements FilterListener, Sele
 				StringBuilder b = new StringBuilder();
 				b.append("<h3>").append(opDesc.getName()).append("</h3><p>");
 				// b.append(opDesc.getLongDescriptionHTML()).append("</p>");
-				b.append(opDesc.getShortDescription()).append("</p>");
+				if (OperatorService.isOperatorBlacklisted(opDesc.getKey())) {
+					b.append(I18N.getGUILabel("operator.blacklisted.tip"));
+				} else {
+					b.append(opDesc.getShortDescription());
+				}
+				b.append("</p>");
+
 				return b.toString();
 			}
 

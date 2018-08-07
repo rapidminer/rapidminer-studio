@@ -18,9 +18,8 @@
 */
 package com.rapidminer.studio.io.gui.internal.steps.configuration;
 
+import java.util.logging.Level;
 import javax.swing.JComponent;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.source.DataSource;
@@ -28,42 +27,55 @@ import com.rapidminer.core.io.gui.ImportWizard;
 import com.rapidminer.core.io.gui.InvalidConfigurationException;
 import com.rapidminer.core.io.gui.WizardDirection;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.nio.model.AbstractDataResultSetReader;
 import com.rapidminer.studio.io.gui.internal.steps.AbstractWizardStep;
+import com.rapidminer.tools.LogService;
 
 
 /**
  * A step that allows to define the column meta data for loaded data provided by the
  * {@link DataSource}.
  *
- * @author Nils Woehler
+ * @author Nils Woehler, Marcel Seifert
  * @since 7.0.0
  */
 public final class ConfigureDataStep extends AbstractWizardStep {
 
 	private final ConfigureDataView view;
 
-	/**
-	 * A change listener that listens for changes to the {@link ConfigureDataView} and notifies
-	 * change listeners for this step.
-	 */
-	private final ChangeListener changeListener = new ChangeListener() {
-
-		@Override
-		public void stateChanged(ChangeEvent e) {
-			fireStateChanged();
-		}
-	};
-
 	private final ImportWizard wizard;
+	private boolean storeData = true;
+
+	private AbstractDataResultSetReader reader;
+
 
 	/**
-	 * Constructor for the {@link ConfigureDataStep}. It creates the {@link ConfigureDataView}
-	 * instance and adds a change listener.
+	 * Constructor for the {@link ConfigureDataStep} for data import purposes. It creates the
+	 * {@link ConfigureDataView} instance and adds a change listener.
 	 */
 	public ConfigureDataStep(ImportWizard wizard) {
 		this.wizard = wizard;
 		this.view = new ConfigureDataView(wizard.getDialog());
-		this.view.addChangeListener(changeListener);
+		// A change listener that listens for changes to the {@link ConfigureDataView} and notifies change listeners for this step.
+		this.view.addChangeListener(e -> fireStateChanged());
+	}
+
+	/**
+	 * Constructor for the {@link ConfigureDataStep} as the last wizard step for operator configuration purposes. It
+	 * creates the {@link ConfigureDataView} instance and adds a change listener.
+	 *
+	 * @param reader
+	 * 		the reader for the data
+	 * @param wizard
+	 * 		the wizard for importing
+	 * @param storeData
+	 * 		whether data storing is allowed at the end of the wizard or not
+	 * @since 9.0.0
+	 */
+	public ConfigureDataStep(ImportWizard wizard, AbstractDataResultSetReader reader, boolean storeData) {
+		this(wizard);
+		this.reader = reader;
+		this.storeData = storeData;
 	}
 
 	@Override
@@ -78,12 +90,13 @@ public final class ConfigureDataStep extends AbstractWizardStep {
 
 	@Override
 	public void viewWillBecomeVisible(WizardDirection direction) throws InvalidConfigurationException {
-		wizard.setProgress(70);
+		wizard.setProgress(storeData ? 70 : 100);
 		view.updatePreviewContent(wizard.getDataSource(DataSource.class));
 	}
 
 	@Override
 	public void viewWillBecomeInvisible(WizardDirection direction) throws InvalidConfigurationException {
+		view.cancelLoading();
 
 		// update data source meta data with configured view meta data
 		final DataSource dataSource = wizard.getDataSource(DataSource.class);
@@ -94,6 +107,25 @@ public final class ConfigureDataStep extends AbstractWizardStep {
 					"io.dataimport.step.data_column_configuration.error_configuring_metadata", e.getMessage());
 			throw new InvalidConfigurationException();
 		}
+
+
+		// we are in the last step of configuring an operator
+		if (direction.equals(WizardDirection.NEXT) && reader != null) {
+			try {
+				reader.configure(dataSource);
+			} catch (DataSetException | NumberFormatException e) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.io.gui.internal.steps.configuration.ConfigureDataStep.operator_configuration_error",
+						reader.getName());
+			}
+		}
+
+	}
+
+	@Override
+	public ButtonState getPreviousButtonState() {
+		// Prevent a partial initialized state
+		return view.isInitialized() ? ButtonState.ENABLED : ButtonState.DISABLED;
 	}
 
 	@Override
@@ -103,7 +135,7 @@ public final class ConfigureDataStep extends AbstractWizardStep {
 
 	@Override
 	public String getNextStepID() {
-		return ImportWizard.STORE_DATA_STEP_ID;
+		return storeData ? ImportWizard.STORE_DATA_STEP_ID : null;
 	}
 
 }

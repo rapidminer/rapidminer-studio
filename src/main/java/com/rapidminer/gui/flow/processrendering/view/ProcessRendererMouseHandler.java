@@ -24,6 +24,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -559,16 +560,23 @@ public class ProcessRendererMouseHandler {
 			if (e.getClickCount() != 2) {
 				return;
 			}
-			if (model.getHoveringOperator() != null) {
-				if (model.getHoveringOperator() instanceof OperatorChain && e.getModifiersEx() != InputEvent.ALT_DOWN_MASK) {
+			Operator hoveringOperator = model.getHoveringOperator();
+			if (hoveringOperator != null) {
+				if (model.isHoveringOperatorName()) {
+					ActionStatisticsCollector.getInstance().logOperatorDoubleClick(hoveringOperator, ActionStatisticsCollector.OPERATOR_ACTION_RENAME);
+					controller.rename(hoveringOperator);
+					e.consume();
+					return;
+				}
+				if (hoveringOperator instanceof OperatorChain && e.getModifiersEx() != InputEvent.ALT_DOWN_MASK) {
 					// dive into operator chain, unless user has pressed ALT key. ALT + double-click = activate primary parameter
-					ActionStatisticsCollector.getInstance().logOperatorDoubleClick(model.getHoveringOperator(), ActionStatisticsCollector.OPERATOR_ACTION_OPEN);
-					model.setDisplayedChainAndFire((OperatorChain) model.getHoveringOperator());
+					ActionStatisticsCollector.getInstance().logOperatorDoubleClick(hoveringOperator, ActionStatisticsCollector.OPERATOR_ACTION_OPEN);
+					model.setDisplayedChainAndFire((OperatorChain) hoveringOperator);
 					e.consume();
 					return;
 				}
 				// look for a primary parameter, and activate it if found
-				ParameterType primaryParameter = model.getHoveringOperator().getPrimaryParameter();
+				ParameterType primaryParameter = hoveringOperator.getPrimaryParameter();
 				ActionStatisticsCollector.getInstance().logOperatorDoubleClick(model.getHoveringOperator(), ActionStatisticsCollector.OPERATOR_ACTION_PRIMARY_PARAMETER);
 				if (primaryParameter != null) {
 					PropertyValueCellEditor editor = RapidMinerGUI.getMainFrame().getPropertyPanel().getEditorForKey(primaryParameter.getKey());
@@ -637,12 +645,13 @@ public class ProcessRendererMouseHandler {
 	 */
 	private void updateHoveringState(final MouseEvent e) {
 		int hoveringProcessIndex = model.getHoveringProcessIndex();
-		if (model.getHoveringProcessIndex() != -1) {
-			int relativeX = (int) model.getMousePositionRelativeToProcess().getX();
-			int relativeY = (int) model.getMousePositionRelativeToProcess().getY();
+		if (hoveringProcessIndex != -1) {
+			ExecutionUnit hoveringProcess = model.getProcess(hoveringProcessIndex);
+			Point relativeMousePosition = model.getMousePositionRelativeToProcess();
+			int relativeX = (int) relativeMousePosition.getX();
+			int relativeY = (int) relativeMousePosition.getY();
 
-			OutputPort connectionSourceUnderMouse = controller.getPortForConnectorNear(
-					model.getMousePositionRelativeToProcess(), model.getProcess(hoveringProcessIndex));
+			OutputPort connectionSourceUnderMouse = controller.getPortForConnectorNear(relativeMousePosition, hoveringProcess);
 			if (connectionSourceUnderMouse != model.getHoveringConnectionSource()) {
 				model.setHoveringConnectionSource(connectionSourceUnderMouse);
 				model.fireMiscChanged();
@@ -650,15 +659,34 @@ public class ProcessRendererMouseHandler {
 			}
 
 			// find inner sinks/sources under mouse
-			if (controller.checkPortUnder(model.getProcess(hoveringProcessIndex).getInnerSinks(), relativeX, relativeY)
-					|| controller.checkPortUnder(model.getProcess(hoveringProcessIndex).getInnerSources(), relativeX,
-							relativeY)) {
+			if (controller.checkPortUnder(hoveringProcess.getInnerSinks(), relativeX, relativeY)
+					|| controller.checkPortUnder(hoveringProcess.getInnerSources(), relativeX, relativeY)) {
 				e.consume();
 				return;
 			}
 
 			// find operator under mouse
-			List<Operator> operators = model.getProcess(hoveringProcessIndex).getOperators();
+			List<Operator> operators = hoveringProcess.getOperators();
+			List<Operator> selectedOperators = model.getSelectedOperators();
+			// if there are selected operators, they take precedence
+			if (!operators.isEmpty() && !selectedOperators.isEmpty()) {
+				operators = new ArrayList<>(operators);
+				operators.sort((o1, o2) -> {
+					int index1 = selectedOperators.indexOf(o1);
+					int index2 = selectedOperators.indexOf(o2);
+					if (index1 == index2) {
+						return 0;
+					}
+					if (index1 == -1) {
+						return -1;
+					}
+					if (index2 == -1) {
+						return 1;
+					}
+					return index2 - index1;
+				});
+			}
+
 			ListIterator<Operator> iterator = operators.listIterator(operators.size());
 			while (iterator.hasPrevious()) {
 				Operator op = iterator.previous();
@@ -673,7 +701,7 @@ public class ProcessRendererMouseHandler {
 				if (rect == null) {
 					continue;
 				}
-				if (rect.contains(new Point2D.Double(relativeX, relativeY))) {
+				if (rect.contains(relativeMousePosition)) {
 					if (model.getHoveringOperator() != op) {
 						model.setHoveringPort(null);
 						view.setHoveringOperator(op);
@@ -687,6 +715,7 @@ public class ProcessRendererMouseHandler {
 							controller.showStatus(I18N.getGUILabel("processRenderer.connection.hover_cancel"));
 						}
 					}
+					view.updateCursor();
 					e.consume();
 					return;
 				}

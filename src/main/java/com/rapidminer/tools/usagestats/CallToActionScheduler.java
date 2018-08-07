@@ -21,6 +21,7 @@ package com.rapidminer.tools.usagestats;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -32,17 +33,20 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExecutionMode;
 import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.core.license.ProductConstraintManager;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.BrowserPopup;
 import com.rapidminer.gui.tools.bubble.WindowChoreographer;
 import com.rapidminer.license.License;
 import com.rapidminer.license.LicenseEvent;
 import com.rapidminer.license.LicenseManagerListener;
 import com.rapidminer.license.LicenseManagerRegistry;
+import com.rapidminer.settings.Telemetry;
 import com.rapidminer.studio.internal.RuleProviderRegistry;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.PlatformUtilities;
+import com.rapidminer.tools.abtesting.AbGroupProvider;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector.Key;
 
 
@@ -69,11 +73,20 @@ public enum CallToActionScheduler {
 	/** Clean every hour */
 	private static final int CLEAN_INTERVAL = 1;
 
+	private static final String USER_COUNTRY = "user_country";
+	private static final String USER_LANGUAGE = "user_language";
+	private static final String USER_TIMEZONE = "user_timezone";
+
+	private static final String SETTINGS_LANGUAGE = "settings_language";
+
 	private static final String STUDIO_VERSION_FULL = "studio_version_full";
 	private static final String STUDIO_VERSION_MAJOR = "studio_version_major";
 	private static final String STUDIO_VERSION_MINOR = "studio_version_minor";
 	private static final String STUDIO_VERSION_PATCH = "studio_version_patch";
 	private static final String STUDIO_PLATFORM = "studio_platform";
+	private static final String STUDIO_EXPERT_MODE = "studio_expert_mode";
+	private static final String STUDIO_AB_TEST_GROUP = "studio_ab_test_group";
+
 	private static final String LICENSE_EDITION = "license_edition";
 	private static final String LICENSE_PRECEDENCE = "license_precedence";
 	private static final String LICENSE_EMAIL = "license_email";
@@ -99,8 +112,8 @@ public enum CallToActionScheduler {
 	 * Trigger class initialization. If not in {@link ExecutionMode#UI}, does nothing.
 	 */
 	public void init() {
-		// Only initialize in UI mode
-		if (!RapidMiner.getExecutionMode().equals(ExecutionMode.UI)) {
+		// Only initialize in UI mode with telemetry available
+		if (!RapidMiner.getExecutionMode().equals(ExecutionMode.UI) || Telemetry.CTA.isDenied()) {
 			return;
 		}
 		// Register rule provider
@@ -163,11 +176,19 @@ public enum CallToActionScheduler {
 		boolean terminatedGracefully = false;
 		try {
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.usagestats.CallToActionScheduler.shutdown.start");
-			persistFuture.cancel(false);
-			cleanupFuture.cancel(false);
-			exec.submit(this::persistEvents);
-			exec.shutdown();
-			terminatedGracefully = exec.awaitTermination(DELAY, TimeUnit.SECONDS);
+			if (persistFuture != null) {
+				persistFuture.cancel(false);
+			}
+			if (cleanupFuture != null) {
+				cleanupFuture.cancel(false);
+			}
+			if (exec != null) {
+				exec.submit(this::persistEvents);
+				exec.shutdown();
+				terminatedGracefully = exec.awaitTermination(DELAY, TimeUnit.SECONDS);
+			} else {
+				terminatedGracefully = true;
+			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		} finally {
@@ -184,7 +205,7 @@ public enum CallToActionScheduler {
 	/**
 	 * Updates the studio_constants table with the latest values.
 	 *
-	 * 	@since 8.1.1
+	 * @since 8.1.1
 	 */
 	private void fillStudioConstants() {
 		try {
@@ -193,13 +214,15 @@ public enum CallToActionScheduler {
 			CtaDao.INSTANCE.mergeConstant(STUDIO_VERSION_MINOR, String.valueOf(new RapidMinerVersion().getMinorNumber()));
 			CtaDao.INSTANCE.mergeConstant(STUDIO_VERSION_PATCH, String.valueOf(new RapidMinerVersion().getPatchLevel()));
 			CtaDao.INSTANCE.mergeConstant(STUDIO_PLATFORM, PlatformUtilities.getReleasePlatform() == null ? null : PlatformUtilities.getReleasePlatform().name());
+			CtaDao.INSTANCE.mergeConstant(STUDIO_EXPERT_MODE, String.valueOf(RapidMinerGUI.getMainFrame().getPropertyPanel().isExpertMode()));
+			CtaDao.INSTANCE.mergeConstant(STUDIO_AB_TEST_GROUP, String.valueOf(AbGroupProvider.get().getGroup(10)));
 
 			License activeLicense = ProductConstraintManager.INSTANCE.getActiveLicense();
 			CtaDao.INSTANCE.mergeConstant(LICENSE_EDITION, activeLicense.getProductEdition());
 			CtaDao.INSTANCE.mergeConstant(LICENSE_PRECEDENCE, String.valueOf(activeLicense.getPrecedence()));
 			CtaDao.INSTANCE.mergeConstant(LICENSE_EMAIL, activeLicense.getLicenseUser().getEmail());
 			CtaDao.INSTANCE.mergeConstant(LICENSE_START, activeLicense.getStartDate() == null ? null : activeLicense.getStartDate().toString()); // yyyy-MM-dd
-			CtaDao.INSTANCE.mergeConstant(LICENSE_EXPIRATION,  activeLicense.getExpirationDate() == null ? null : activeLicense.getExpirationDate().toString()); // yyyy-MM-dd
+			CtaDao.INSTANCE.mergeConstant(LICENSE_EXPIRATION, activeLicense.getExpirationDate() == null ? null : activeLicense.getExpirationDate().toString()); // yyyy-MM-dd
 			CtaDao.INSTANCE.mergeConstant(LICENSE_ANNOTATION, activeLicense.getAnnotations());
 
 			License upcomingLicense = ProductConstraintManager.INSTANCE.getUpcomingLicense();
@@ -209,7 +232,13 @@ public enum CallToActionScheduler {
 			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_START, upcomingLicense.getStartDate() == null ? null : upcomingLicense.getStartDate().toString()); // yyyy-MM-dd
 			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_EXPIRATION, upcomingLicense.getExpirationDate() == null ? null : upcomingLicense.getExpirationDate().toString()); // yyyy-MM-dd
 			CtaDao.INSTANCE.mergeConstant(LICENSE_UPCOMING_ANNOTATION, upcomingLicense.getAnnotations());
-		} catch (SQLException e) {
+
+			CtaDao.INSTANCE.mergeConstant(USER_COUNTRY, I18N.getOriginalLocale().getCountry());
+			CtaDao.INSTANCE.mergeConstant(USER_LANGUAGE, I18N.getOriginalLocale().getLanguage());
+			CtaDao.INSTANCE.mergeConstant(USER_TIMEZONE, TimeZone.getDefault().getID());
+
+			CtaDao.INSTANCE.mergeConstant(SETTINGS_LANGUAGE, ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE));
+		} catch (SQLException | RuntimeException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.usagestats.CallToActionScheduler.constant.failure", e);
 		}
 	}
@@ -272,7 +301,7 @@ public enum CallToActionScheduler {
 			if (isDebug) {
 				LogService.getRoot().log(Level.FINEST,
 						"com.rapidminer.tools.usagestats.CallToActionScheduler.rule.verification.verify",
-						new Object[] { rule.getRule().getId(), System.currentTimeMillis() - before });
+						new Object[]{rule.getRule().getId(), System.currentTimeMillis() - before});
 			}
 
 		}

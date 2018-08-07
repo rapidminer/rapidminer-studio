@@ -19,13 +19,14 @@
 package com.rapidminer.gui;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.logging.Level;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.Timer;
 
 import com.rapidminer.gui.actions.WorkspaceAction;
 import com.rapidminer.gui.processeditor.ProcessLogTab;
+import com.rapidminer.gui.processeditor.results.DockableResultDisplay;
 import com.rapidminer.gui.processeditor.results.ResultTab;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.FileSystemService;
@@ -34,7 +35,6 @@ import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 import com.vlsolutions.swing.docking.Dockable;
-import com.vlsolutions.swing.docking.DockableResolver;
 import com.vlsolutions.swing.docking.DockableState;
 import com.vlsolutions.swing.docking.DockingContext;
 import com.vlsolutions.swing.docking.DockingDesktop;
@@ -56,6 +56,13 @@ public class PerspectiveController {
 
 	private final PerspectiveModel model;
 
+	/** @since 8.2.1 */
+	private final Object switchLock = new Object();
+	/** @since 8.2.1 */
+	private volatile Perspective switchTo;
+	/** @since 8.2.1 */
+	private final Timer switchTimer;
+
 	/**
 	 * Creates a new {@link PerspectiveController} with the given docking context.
 	 *
@@ -65,24 +72,29 @@ public class PerspectiveController {
 	public PerspectiveController(final DockingContext context) {
 		this.context = context;
 		this.model = new PerspectiveModel();
-		context.setDockableResolver(new DockableResolver() {
-
-			@Override
-			public Dockable resolveDockable(final String key) {
-				if (key.startsWith(ResultTab.DOCKKEY_PREFIX)) {
-					ResultTab tab = new ResultTab(key);
-					tab.showResult(null);
-					return tab;
-				} else if (key.startsWith(ProcessLogTab.DOCKKEY_PREFIX)) {
-					ProcessLogTab tab = new ProcessLogTab(key);
-					tab.setDataTableViewer(null);
-					return tab;
-				} else {
-					return null;
-				}
+		context.setDockableResolver(key -> {
+			if (key.startsWith(ResultTab.DOCKKEY_PREFIX)) {
+				ResultTab tab = new ResultTab(key);
+				tab.showResult(null);
+				return tab;
+			} else if (key.startsWith(ProcessLogTab.DOCKKEY_PREFIX)) {
+				ProcessLogTab tab = new ProcessLogTab(key);
+				tab.setDataTableViewer(null);
+				return tab;
+			} else {
+				return null;
 			}
 		});
 		this.model.makePredefined();
+		switchTimer = new Timer(1, e -> changePerspective()){
+
+			@Override
+			public boolean isRepeats() {
+				synchronized (switchLock) {
+					return switchTo != null;
+				}
+			}
+		};
 	}
 
 	/**
@@ -91,8 +103,19 @@ public class PerspectiveController {
 	 * @param perspectiveName
 	 *            the perspective which should be shown.
 	 */
-	public void showPerspective(final String perspectiveName) {
-		showPerspective(model.getPerspective(perspectiveName));
+	public synchronized void showPerspective(final String perspectiveName) {
+		queuePerspective(perspectiveName);
+	}
+
+	/**
+	 * Queues the perspective with the given name to be shown.
+	 *
+	 * @param perspectiveName
+	 * 		the name of the perspective to be shown
+	 * @since 8.2.1
+	 */
+	private synchronized void queuePerspective(String perspectiveName) {
+		queuePerspective(model.getPerspective(perspectiveName));
 	}
 
 	/**
@@ -101,23 +124,61 @@ public class PerspectiveController {
 	 * @param perspective
 	 *            the perspective which should be shown.
 	 */
-	public void showPerspective(final Perspective perspective) {
-		if (perspective != null) {
-			Perspective oldPerspective = model.getSelectedPerspective();
-			if (oldPerspective == perspective) {
+	public synchronized void showPerspective(final Perspective perspective) {
+		queuePerspective(perspective);
+	}
+
+	/**
+	 * Queues the given perspective to be shown.
+	 *
+	 * @param perspective
+	 * 		the perspective to bw shown
+	 * @since 8.2.1
+	 */
+	private synchronized void queuePerspective(Perspective perspective) {
+		// add this perspective to the queue and restart timer if necessary
+		synchronized (switchLock) {
+			boolean startTimer = switchTo == null;
+			switchTo = perspective;
+			if (startTimer) {
+				switchTimer.start();
+			}
+		}
+	}
+
+	/**
+	 * Actually changes the perspective. This should only be called by the {@link #switchTimer} to prevent breaking views.
+	 * The timer switches the views that are queued and stops if there are no more switches left in the queue. The timer
+	 * will be restarted when a new switch is queued.
+	 *
+	 * @since 8.2.1
+	 */
+	private synchronized void changePerspective() {
+		synchronized (switchLock) {
+			if (switchTo == null) {
 				return;
 			}
-			model.setSelectedPerspective(perspective);
+			Perspective oldPerspective = model.getSelectedPerspective();
+			if (oldPerspective == switchTo) {
+				switchTo = null;
+				return;
+			}
+			if (!model.getAllPerspectives().contains(switchTo)) {
+				switchTo = null;
+				return;
+			}
+			model.setSelectedPerspective(switchTo);
 			if (oldPerspective != null) {
 				oldPerspective.store(context);
 				ActionStatisticsCollector.getInstance().stopTimer(oldPerspective);
 			}
-			perspective.apply(context);
-			RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION.setEnabled(!perspective.isUserDefined());
-			ActionStatisticsCollector.getInstance().startTimer(perspective, ActionStatisticsCollector.TYPE_PERSPECTIVE,
-					perspective.getName(), null);
-			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PERSPECTIVE, perspective.getName(),
+			switchTo.apply(context);
+			RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION.setEnabled(!switchTo.isUserDefined());
+			ActionStatisticsCollector.getInstance().startTimer(switchTo, ActionStatisticsCollector.TYPE_PERSPECTIVE,
+					switchTo.getName(), null);
+			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PERSPECTIVE, switchTo.getName(),
 					"show");
+			switchTo = null;
 		}
 	}
 
@@ -142,7 +203,7 @@ public class PerspectiveController {
 	 * @param perspective
 	 *            the perspective which should be deleted
 	 */
-	public void removePerspective(Perspective perspective) {
+	public synchronized void removePerspective(Perspective perspective) {
 		if (!perspective.isUserDefined()) {
 			return;
 		}
@@ -204,6 +265,11 @@ public class PerspectiveController {
 			boolean containsChild = persp.getWorkspace().getDesktop(0).containsNode(key);
 			if (containsParent && !containsChild) {
 				persp.getWorkspace().getDesktop(0).createTab(parentKey, key, 1);
+
+				// for result tabs, make sure to switch actively viewed tab to new result
+				if (dockable instanceof ResultTab && parent.getDockKey().getKey().equals(DockableResultDisplay.RESULT_DOCK_KEY)) {
+					persp.getProperties().setNewFocusedResultTab(dockable);
+				}
 			}
 		}
 
@@ -237,13 +303,8 @@ public class PerspectiveController {
 		for (Perspective perspective : model.getAllPerspectives()) {
 			perspective.load();
 		}
-		File[] userPerspectiveFiles = FileSystemService.getUserRapidMinerDir().listFiles(new FilenameFilter() {
-
-			@Override
-			public boolean accept(final File dir, final String name) {
-				return name.startsWith("vlperspective-user-");
-			}
-		});
+		File[] userPerspectiveFiles = FileSystemService.getUserRapidMinerDir()
+				.listFiles((dir, name) -> name.startsWith("vlperspective-user-"));
 		for (File file : userPerspectiveFiles) {
 			String name = file.getName();
 			name = name.substring("vlperspective-user-".length());

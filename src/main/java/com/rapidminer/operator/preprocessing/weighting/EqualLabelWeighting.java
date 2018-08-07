@@ -29,13 +29,21 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
+import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
+import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SetRelation;
+import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
+import com.rapidminer.operator.ports.quickfix.AttributeToNominalQuickFixProvider;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.UndefinedParameterError;
@@ -61,6 +69,8 @@ public class EqualLabelWeighting extends AbstractExampleWeighting {
 
 	public EqualLabelWeighting(OperatorDescription description) {
 		super(description);
+		// add set role quick fix
+	 	getExampleSetInputPort().addPrecondition(new ExampleSetPrecondition(getExampleSetInputPort(), Ontology.ATTRIBUTE_VALUE, Attributes.LABEL_NAME));
 	}
 
 	@Override
@@ -80,6 +90,7 @@ public class EqualLabelWeighting extends AbstractExampleWeighting {
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		if (exampleSet.getAttributes().getWeight() == null) {
+			Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 			Attribute weight = AttributeFactory.createAttribute(Attributes.WEIGHT_NAME, Ontology.NUMERICAL);
 			exampleSet.getExampleTable().addAttribute(weight);
 			exampleSet.getAttributes().addRegular(weight);
@@ -127,6 +138,17 @@ public class EqualLabelWeighting extends AbstractExampleWeighting {
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), EqualLabelWeighting.class,
 				null);
+	}
+
+	@Override
+	protected MetaData modifyMetaData(ExampleSetMetaData metaData) {
+		// Add label to nominal quick fix
+		AttributeMetaData label = metaData.getLabelMetaData();
+		if (label != null && !label.isNominal()) {
+			getExampleSetInputPort().addError(
+					new SimpleMetaDataError(ProcessSetupError.Severity.WARNING, getExampleSetInputPort(), AttributeToNominalQuickFixProvider.labelToNominal(getExampleSetInputPort(), label), "special_attribute_has_wrong_type", label.getName(), Attributes.LABEL_NAME, Ontology.VALUE_TYPE_NAMES[Ontology.NOMINAL]));
+		}
+		return super.modifyMetaData(metaData);
 	}
 
 	@Override

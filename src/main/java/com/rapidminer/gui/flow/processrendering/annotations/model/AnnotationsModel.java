@@ -19,9 +19,14 @@
 package com.rapidminer.gui.flow.processrendering.annotations.model;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
-
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.gui.flow.processrendering.annotations.AnnotationDrawUtils;
@@ -32,6 +37,7 @@ import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationColo
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -60,6 +66,13 @@ public class AnnotationsModel {
 
 	/** the process renderer model */
 	private ProcessRendererModel model;
+
+	/** a map between annotations (identified via ID) and their displayed hyperlink urls and bounds */
+	private Map<UUID, List<Pair<String, Rectangle>>> hyperlinkBounds = new HashMap<>();
+
+	/** the currently hovered hyperlink with url and bounds */
+	private Pair<String, Rectangle> hoveredHyperLink;
+
 
 	/**
 	 * Creates a new model backing the workflow annotations.
@@ -94,11 +107,13 @@ public class AnnotationsModel {
 			if (this.hovered != null) {
 				this.hovered = null;
 				setHoveredResizeDirection(null);
+				setHoveredHyperLink(null);
 				model.fireAnnotationMiscChanged(null);
 			}
 		} else {
 			if (!hovered.equals(this.hovered)) {
 				this.hovered = hovered;
+				setHoveredHyperLink(null);
 				if (hovered.equals(selected)) {
 					setHoveredResizeDirection(hoveredResizeDirection);
 				} else {
@@ -111,6 +126,76 @@ public class AnnotationsModel {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Sets the list of hyperlink bounds for the given annotation.
+	 *
+	 * @param id
+	 * 		the id of the annotation (see {@link WorkflowAnnotation#getId()} for which the bounds should be stored.
+	 * @param bounds
+	 * 		the bounds with the URL as a string. Can be empty for no bounds. Note that they are stored as if a zoom level of 100% was set,
+	 * 		regardless of actual zoom level. Only bounds are stored that are actually visible (i.e. are not cut off by the
+	 * 		"..." dots)
+	 * @since 9.0.0
+	 */
+	public void setHyperlinkBoundsForAnnotation(UUID id, List<Pair<String, Rectangle>> bounds) {
+		if (id == null) {
+			throw new IllegalArgumentException("id must not be null!");
+		}
+		if (bounds == null) {
+			throw new IllegalArgumentException("bounds must not be null!");
+		}
+		hyperlinkBounds.put(id, bounds);
+	}
+
+	/**
+	 * Gets the list of hyperlink bounds for the given annotation.
+	 *
+	 * @param id
+	 * 		the id of the annotation (see {@link WorkflowAnnotation#getId()} for which the bounds should be retrieved.
+	 * @return the bounds with the URL as a string, never {@code null}. Can be empty for no bounds. Note that they are stored as if a zoom level of 100% was
+	 * set, regardless of actual zoom level. Only bounds are stored that are actually visible (i.e. are not cut off by
+	 * the "..." dots)
+	 * @since 9.0.0
+	 */
+	public List<Pair<String, Rectangle>> getHyperlinkBoundsForAnnotation(UUID id) {
+		if (id == null) {
+			throw new IllegalArgumentException("id must not be null!");
+		}
+		return hyperlinkBounds.computeIfAbsent(id, notUsed -> Collections.emptyList());
+	}
+
+	/**
+	 * Gets the hovered hyperlink.
+	 *
+	 * @return the hovered hyperlink url and its bounds, or {@code null} if no hyperlink is hovered
+	 * @since 9.0.0
+	 */
+	public Pair<String, Rectangle> getHoveredHyperLink() {
+		return hoveredHyperLink;
+	}
+
+	/**
+	 * Sets the hovered hyperlink.
+	 *
+	 * @param hoveredHyperLink
+	 * 		the hovered hyperlink url and its bounds, or {@code null} if no hyperlink is hovered
+	 * @since 9.0.0
+	 */
+	public void setHoveredHyperLink(Pair<String, Rectangle> hoveredHyperLink) {
+		if (hoveredHyperLink != null && hoveredHyperLink.getFirst() == null) {
+			throw new IllegalArgumentException("url in hoveredHyperLink must not be null!");
+		}
+		if (hoveredHyperLink != null && hoveredHyperLink.getSecond() == null) {
+			throw new IllegalArgumentException("bounds in hoveredHyperLink must not be null!");
+		}
+		if (this.hoveredHyperLink == hoveredHyperLink) {
+			return;
+		}
+
+		this.hoveredHyperLink = hoveredHyperLink;
+		model.fireAnnotationMiscChanged(null);
 	}
 
 	/**
@@ -349,7 +434,7 @@ public class AnnotationsModel {
 		if (resized != null) {
 			WorkflowAnnotation anno = resized.getResized();
 			int prefHeight = AnnotationDrawUtils.getContentHeight(AnnotationDrawUtils.createStyledCommentString(
-					anno.getComment(), anno.getStyle()), (int) anno.getLocation().getWidth());
+					anno.getComment(), anno.getStyle()), (int) anno.getLocation().getWidth(), AnnotationDrawUtils.ANNOTATION_FONT);
 			boolean overflowing = false;
 			if (prefHeight > anno.getLocation().getHeight()) {
 				overflowing = true;

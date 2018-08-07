@@ -36,8 +36,8 @@ public abstract class AbstractCriterionTestCase {
 		message += " " + expected.getName();
 		assertEquals(message + " value", expected.getMikroAverage(), actual.getMikroAverage(), 0.000000001);
 		assertEqualsNaN(message + " variance", expected.getMikroVariance(), actual.getMikroVariance());
-		assertEqualsNaN(message + " makro value", expected.getMakroAverage(), actual.getMakroAverage());
-		assertEqualsNaN(message + " makro variance", expected.getMakroVariance(), actual.getMakroVariance());
+		assertEqualsNaN(message + " macro value", expected.getMakroAverage(), actual.getMakroAverage());
+		assertEqualsNaN(message + " macro variance", expected.getMakroVariance(), actual.getMakroVariance());
 		assertEquals(message + " name", expected.getName(), actual.getName());
 		assertEquals(message + " class", expected.getClass(), actual.getClass());
 	}

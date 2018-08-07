@@ -19,10 +19,8 @@
 package com.rapidminer.studio.io.gui.internal.steps;
 
 import java.awt.BorderLayout;
-
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.rapidminer.core.io.data.source.DataSource;
@@ -33,6 +31,7 @@ import com.rapidminer.core.io.gui.InvalidConfigurationException;
 import com.rapidminer.core.io.gui.WizardDirection;
 import com.rapidminer.core.io.gui.WizardStep;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.studio.io.data.internal.file.LocalFileDataSourceFactory;
 
 
 /**
@@ -50,21 +49,38 @@ public final class LocationSelectionStep extends AbstractWizardStep {
 
 	private JPanel viewWrapper = new JPanel(new BorderLayout());
 
-	private final ChangeListener changeListener = new ChangeListener() {
+	private final ChangeListener changeListener = e -> fireStateChanged();
 
-		@Override
-		public void stateChanged(ChangeEvent e) {
-			fireStateChanged();
-		}
-	};
-
+	private String factoryI18NKey;
 	private WizardStep locationStep;
 
 	private final ImportWizard wizard;
 
+
+	/**
+	 * Creates a new location selection step.
+	 *
+	 * @param wizard
+	 * 		the import wizard instance
+	 */
 	public LocationSelectionStep(ImportWizard wizard) {
-		this.wizard = wizard;
+		this(wizard, null);
 	}
+
+	/**
+	 * Creates a new location selection step.
+	 *
+	 * @param wizard
+	 * 		the import wizard instance
+	 * @param factoryI18NKey
+	 * 		if used by a specific import factory; can be {@code null}
+	 * @since 9.0.0
+	 */
+	public LocationSelectionStep(ImportWizard wizard, String factoryI18NKey) {
+		this.wizard = wizard;
+		this.factoryI18NKey = factoryI18NKey;
+	}
+
 
 	@Override
 	public String getI18NKey() {
@@ -84,20 +100,20 @@ public final class LocationSelectionStep extends AbstractWizardStep {
 		viewWrapper.removeAll();
 		if (dataSource != null) {
 
-			SwingTools.invokeAndWait(new Runnable() {
+			SwingTools.invokeAndWait(() -> {
+				@SuppressWarnings("rawtypes")
+				DataSourceFactory factory = DataSourceFactoryRegistry.INSTANCE.lookUp(dataSource.getClass());
 
-				@Override
-				public void run() {
-					@SuppressWarnings("rawtypes")
-					DataSourceFactory factory = DataSourceFactoryRegistry.INSTANCE.lookUp(dataSource.getClass());
-
+				if (factoryI18NKey != null && !factoryI18NKey.trim().isEmpty() && factory instanceof LocalFileDataSourceFactory) {
+					LocalFileDataSourceFactory localFileDataSourceFactory = (LocalFileDataSourceFactory) factory;
+					locationStep = localFileDataSourceFactory.createLocationStepForFactory(wizard, factoryI18NKey);
+				} else {
 					locationStep = factory.createLocationStep(wizard);
-
-					// create and add view component
-					JComponent viewComponent = locationStep.getView();
-					viewWrapper.add(viewComponent, BorderLayout.CENTER);
 				}
 
+				// create and add view component
+				JComponent viewComponent = locationStep.getView();
+				viewWrapper.add(viewComponent, BorderLayout.CENTER);
 			});
 
 			// register for location change events

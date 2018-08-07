@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui;
 
 import java.awt.Color;
@@ -172,17 +172,11 @@ public class MainToolBar extends JPanel {
 			PerspectiveModel perspectiveModel = perspectiveController.getModel();
 			perspectiveModel.addObserver((observable, perspectives) -> {
 				updatePerspectivePanel(perspectiveController, perspectives);
-				Action perspectiveAction = perspectiveActionMap.get(perspectiveName);
-				if (perspectiveAction != null) {
-					perspectivesGroup.setSelected(perspectiveAction);
-				}
+				updateSelection();
 			}, true);
 			perspectiveModel.addPerspectiveChangeListener(perspective -> {
 				perspectiveName = perspective.getName();
-				Action perspectiveAction = perspectiveActionMap.get(perspectiveName);
-				if (perspectiveAction != null) {
-					perspectivesGroup.setSelected(perspectiveAction);
-				}
+				updateSelection();
 
 			});
 			updatePerspectivePanel(perspectiveController, perspectiveController.getModel().getAllPerspectives());
@@ -208,6 +202,18 @@ public class MainToolBar extends JPanel {
 		gbc.weightx = 0;
 		gbc.fill = GridBagConstraints.NONE;
 
+	}
+
+	/**
+	 * Updates the {@link #perspectivesGroup} to show which view is selected.
+	 *
+	 * @since 8.2.1
+	 */
+	private void updateSelection() {
+		Action perspectiveAction = perspectiveActionMap.get(perspectiveName);
+		if (perspectiveAction != null) {
+			perspectivesGroup.setSelected(perspectiveAction);
+		}
 	}
 
 
@@ -265,10 +271,15 @@ public class MainToolBar extends JPanel {
 				case PerspectiveModel.HADOOP_DATA:
 					knownActionList.add(action);
 					break;
+				case PerspectiveModel.TURBO_PREP:
+					// ensure model turbo prep is in front of model wizard view
+					// design and result are the first to be added (see PerspectiveModel#makePredefined)
+					knownActionList.add(Math.min(knownActionList.size(), 2), action);
+					break;
 				case PerspectiveModel.MODEL_WIZARD:
 					// ensure model wizard view is in front of hadoop data view
-					// design and result are the first to be added (see PerspectiveModel#makePredefined), so this will not fail
-					knownActionList.add(2, action);
+					// design and result are the first to be added (see PerspectiveModel#makePredefined)
+					knownActionList.add(Math.min(knownActionList.size(), 3), action);
 					break;
 				default:
 					if (!p.isUserDefined()) {
@@ -313,6 +324,7 @@ public class MainToolBar extends JPanel {
 			perspectivesPanel.validate();
 			perspectivesPanel.repaint();
 		}
+		updateSelection();
 	}
 
 	/**
@@ -385,7 +397,7 @@ public class MainToolBar extends JPanel {
 	private Action[][] createActionArrays(List<Action> actionList, int primaryVisible) {
 		Action[][] actions = new Action[2][];
 		Iterator<Action> actionIterator = actionList.iterator();
-		if (primaryVisible > actionList.size()){
+		if (primaryVisible > actionList.size()) {
 			primaryVisible = actionList.size();
 		}
 		actions[0] = new Action[primaryVisible];

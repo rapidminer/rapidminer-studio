@@ -31,6 +31,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,16 +79,16 @@ public class CSVResultSet implements DataResultSet {
 	private long multiplier;
 	private long lineCounter = 0;
 
-	public static enum ColumnSplitter {
+	public enum ColumnSplitter {
 
 		SEMI_COLON(";", Pattern.compile(";")), COMMA(",", Pattern.compile(",")), TAB("\t", Pattern.compile("\t")), TILDE("~",
 				Pattern.compile("~")), PIPE("|", Pattern.compile("\\|"));
 
 		private final Pattern pattern;
-		private final String seperator;
+		private final String separator;
 
-		ColumnSplitter(String seperator, Pattern pattern) {
-			this.seperator = seperator;
+		ColumnSplitter(String separator, Pattern pattern) {
+			this.separator = separator;
 			this.pattern = pattern;
 		}
 
@@ -95,16 +97,61 @@ public class CSVResultSet implements DataResultSet {
 		}
 
 		public String getString() {
-			return seperator;
+			return separator;
 		}
 
 	}
 
-	private static int getSeperatorCount(Pattern seperatorPattern, String content) {
+	public enum TextQualifier {
+		DOUBLE_QUOTES("\"", Pattern.compile("\"")),
+		SINGLE_QUOTES("'", Pattern.compile("'"));
+
+		private final Pattern pattern;
+		private final String qualifier;
+
+
+		TextQualifier(String qualifier, Pattern pattern){
+			this.pattern = pattern;
+			this.qualifier = qualifier;
+		}
+
+		public Pattern getPattern() {
+			return pattern;
+		}
+
+		public String getString() {
+			return qualifier;
+		}
+	}
+
+	public enum DecimalCharacter {
+
+		COMMA(",", Pattern.compile(",")),
+		PERIOD(".", Pattern.compile("\\."));
+
+		private final Pattern pattern;
+		private final String character;
+
+		public Pattern getPattern() {
+			return pattern;
+		}
+
+		public String getString() {
+			return character;
+		}
+
+		DecimalCharacter(String character, Pattern pattern){
+			this.character = character;
+			this.pattern = pattern;
+		}
+
+	}
+
+	private static int getTokenCount(Pattern tokenPattern, String content) {
 		if (content == null) {
 			return 0;
 		}
-		Matcher matcher = seperatorPattern.matcher(content);
+		Matcher matcher = tokenPattern.matcher(content);
 		int count = 0;
 		while (matcher.find()) {
 			count++;
@@ -157,7 +204,12 @@ public class CSVResultSet implements DataResultSet {
 		}
 
 		try {
-			readNext();
+			int startingRow = configuration.getStartingRow();
+			do {
+				// if we read via operator, skip until we reach the starting row
+				// if starting row equals 1 (aka start from the first row), this just prepares the column meta data
+				readNext();
+			} while (operator != null && --startingRow > 0);
 		} catch (IOException e) {
 			try {
 				in.close();
@@ -231,7 +283,7 @@ public class CSVResultSet implements DataResultSet {
 		try (LineReader tempReader = new LineReader(csvFile, StandardCharsets.UTF_8)) {
 
 			/* could be default, apply heuristics to find the column splitter */
-			HashMap<ColumnSplitter, Integer> splitterValues = new HashMap<>();
+			Map<ColumnSplitter, Integer> splitterValues = new HashMap<>();
 			for (ColumnSplitter splitter : ColumnSplitter.values()) {
 				splitterValues.put(splitter, 0);
 			}
@@ -240,21 +292,11 @@ public class CSVResultSet implements DataResultSet {
 
 			while (lineCount < LINES_FOR_GUESSING) {
 				String line = tempReader.readLine();
-				// SEMI_COLON,
-				splitterValues.put(ColumnSplitter.SEMI_COLON, splitterValues.get(ColumnSplitter.SEMI_COLON)
-						+ getSeperatorCount(ColumnSplitter.SEMI_COLON.getPattern(), line));
-				// COMMA,
-				splitterValues.put(ColumnSplitter.COMMA, splitterValues.get(ColumnSplitter.COMMA)
-						+ getSeperatorCount(ColumnSplitter.COMMA.getPattern(), line));
-				// TAB,
-				splitterValues.put(ColumnSplitter.TAB,
-						splitterValues.get(ColumnSplitter.TAB) + getSeperatorCount(ColumnSplitter.TAB.getPattern(), line));
-				// TILDE,
-				splitterValues.put(ColumnSplitter.TILDE, splitterValues.get(ColumnSplitter.TILDE)
-						+ getSeperatorCount(ColumnSplitter.TILDE.getPattern(), line));
-				// PIPE
-				splitterValues.put(ColumnSplitter.PIPE,
-						splitterValues.get(ColumnSplitter.PIPE) + getSeperatorCount(ColumnSplitter.PIPE.getPattern(), line));
+
+				for(ColumnSplitter splitter : ColumnSplitter.values()){
+					splitterValues.put(splitter, splitterValues.get(splitter)
+							+ getTokenCount(splitter.getPattern(), line));
+				}
 
 				lineCount++;
 			}
@@ -272,7 +314,111 @@ public class CSVResultSet implements DataResultSet {
 			return guessedSplitter;
 
 		} catch (IOException e) {
+			LogService.getRoot().log(Level.WARNING, "Problem reading the file.", e);
 			return ColumnSplitter.SEMI_COLON;
+		}
+	}
+
+
+	/**
+	 * Guesses the Text Qualifier (quotes) being used by counting which one has the most pairs
+	 *
+	 * @since 9.0.0
+	 * @param csvFile
+	 *            the path to the file to analyze
+	 * @return the most frequent {@link ColumnSplitter}
+	 */
+	public static TextQualifier guessTextQualifier(String csvFile) {
+		return guessTextQualifier(new File(csvFile));
+	}
+
+	/**
+	 * Guesses the {@link TextQualifier} (quotes) being used by counting which one has the most pairs
+	 *
+	 * @since 9.0.0
+	 * @param csvFile
+	 * @return the most frequent {@link TextQualifier}
+	 */
+	public static TextQualifier guessTextQualifier(File csvFile){
+
+		try (LineReader tempReader = new LineReader(csvFile, StandardCharsets.UTF_8)) {
+			//Set Default
+			TextQualifier guessedQualifier = TextQualifier.DOUBLE_QUOTES;
+
+			Map<TextQualifier, Integer> qualifierValues = new HashMap<>();
+			for (TextQualifier splitter : TextQualifier.values()) {
+				qualifierValues.put(splitter, 0);
+			}
+
+			int lineCount = 0;
+
+			while (lineCount < LINES_FOR_GUESSING) {
+				String line = tempReader.readLine();
+
+				for (TextQualifier tq : TextQualifier.values()) {
+					qualifierValues.put(tq, qualifierValues.get(tq) + getTokenCount(tq.getPattern(), line));
+				}
+
+				lineCount++;
+			}
+
+
+			int maxValue = 0;
+			for (TextQualifier qualifier : TextQualifier.values()) {
+				int numberOfOccurrences = qualifierValues.get(qualifier);
+				if (numberOfOccurrences > maxValue && numberOfOccurrences%2==0) {
+					maxValue = numberOfOccurrences;
+					guessedQualifier = qualifier;
+				}
+			}
+
+
+			return guessedQualifier;
+		} catch (IOException e) {
+			LogService.getRoot().log(Level.WARNING, "Problem reading the file.", e);
+			return TextQualifier.DOUBLE_QUOTES;
+		}
+	}
+
+	public static DecimalCharacter guessDecimalSeparator(String csvFile){
+		return guessDecimalSeparator(new File(csvFile));
+	}
+
+	public static DecimalCharacter guessDecimalSeparator(File csvFile){
+		try (LineReader tempReader = new LineReader(csvFile, StandardCharsets.UTF_8)) {
+			//Set Default
+			DecimalCharacter guessedCharacter = DecimalCharacter.PERIOD;
+
+			Map<DecimalCharacter, Integer> decimalCharacterValues = new HashMap<>();
+			for (DecimalCharacter splitter : DecimalCharacter.values()) {
+				decimalCharacterValues.put(splitter, 0);
+			}
+
+			int lineCount = 0;
+
+			while (lineCount < LINES_FOR_GUESSING) {
+				String line = tempReader.readLine();
+
+				for (DecimalCharacter sep : DecimalCharacter.values()) {
+					decimalCharacterValues.put(sep, decimalCharacterValues.get(sep) + getTokenCount(sep.getPattern(), line));
+				}
+
+				lineCount++;
+			}
+
+			int maxValue = 0;
+			for (DecimalCharacter character : DecimalCharacter.values()) {
+				int numberOfOccurrences = decimalCharacterValues.get(character);
+				if (numberOfOccurrences > maxValue) {
+					maxValue = numberOfOccurrences;
+					guessedCharacter = character;
+				}
+			}
+
+			return guessedCharacter;
+		} catch (IOException e) {
+			LogService.getRoot().log(Level.WARNING, "Problem reading the file.", e);
+			return DecimalCharacter.PERIOD;
 		}
 	}
 
@@ -301,7 +447,7 @@ public class CSVResultSet implements DataResultSet {
 
 	private void readNext() throws IOException {
 		do {
-			String line = reader.readLine();
+			String line = reader == null ? null : reader.readLine();
 			if (line == null) {
 				next = null;
 				return;
@@ -309,7 +455,7 @@ public class CSVResultSet implements DataResultSet {
 			try {
 				next = parser.parse(line);
 				if (operator != null && ++lineCounter % 1000 == 0) {
-					long position = reader.getPosition();
+					long position = reader == null ? -1L : reader.getPosition();
 					if (position > 0) {
 						int currentProgress = (int) (position / multiplier);
 						if (currentProgress != operator.getProgress().getCompleted()) {

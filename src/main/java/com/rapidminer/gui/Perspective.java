@@ -81,38 +81,13 @@ public class Perspective {
 
 	}
 
-	protected void apply(DockingContext dockingContext) {
-		try {
-			workspace.apply(dockingContext);
-			model.notifyChangeListener();
-		} catch (WorkspaceException e) {
-			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-					"com.rapidminer.gui.Perspective.applying_workspace_error", e), e);
-		}
-		properties.apply();
-	}
-
-	File getFile() {
-		return FileSystemService
-				.getUserConfigFile("vlperspective-" + (isUserDefined() ? "user-" : "predefined-") + name + ".xml");
-	}
-
 	public void save() {
 		File file = getFile();
-		OutputStream out = null;
-		try {
-			out = new FileOutputStream(file);
+		try (OutputStream out = new FileOutputStream(file)) {
 			workspace.writeXML(out);
 		} catch (Exception e) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.gui.Perspective.saving_perspective_error", file, e), e);
-		} finally {
-			try {
-				if (out != null) {
-					out.close();
-				}
-			} catch (IOException e) {
-			}
 		}
 	}
 
@@ -122,9 +97,7 @@ public class Perspective {
 		if (!file.exists()) {
 			return;
 		}
-		InputStream in = null;
-		try {
-			in = new FileInputStream(file);
+		try (InputStream in = new FileInputStream(file)) {
 			workspace.readXML(in);
 		} catch (Exception e) {
 
@@ -143,13 +116,6 @@ public class Perspective {
 						"com.rapidminer.gui.Perspective.reading_perspective_error_clearing", file, e), e);
 				workspace.clear();
 			}
-		} finally {
-			try {
-				if (in != null) {
-					in.close();
-				}
-			} catch (IOException e) {
-			}
 		}
 	}
 
@@ -166,6 +132,34 @@ public class Perspective {
 		if (file.exists()) {
 			file.delete();
 		}
+	}
+
+	protected void apply(DockingContext dockingContext) {
+		try {
+			workspace.apply(dockingContext);
+			if (model != null) {
+				model.notifyChangeListener();
+			}
+		} catch (WorkspaceException e) {
+			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
+					"com.rapidminer.gui.Perspective.applying_workspace_error", e), e);
+		}
+		properties.apply();
+	}
+
+	/**
+	 * Returns the perspective properties.
+	 *
+	 * @return the perspective properties, never {@code null}
+	 * @since 8.2.2
+	 */
+	PerspectiveProperties getProperties() {
+		return properties;
+	}
+
+	File getFile() {
+		return FileSystemService
+				.getUserConfigFile("vlperspective-" + (isUserDefined() ? "user-" : "predefined-") + name + ".xml");
 	}
 
 }

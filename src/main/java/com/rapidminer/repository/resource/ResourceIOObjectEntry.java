@@ -18,30 +18,33 @@
 */
 package com.rapidminer.repository.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.util.logging.Level;
+
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.MetaDataFactory;
 import com.rapidminer.operator.tools.IOObjectSerializer;
 import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ProgressListener;
-import com.rapidminer.tools.Tools;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 
 
 /**
  * 
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  * 
  */
 public class ResourceIOObjectEntry extends ResourceDataEntry implements IOObjectEntry {
 
-	private MetaData metaData;
+	protected MetaData metaData;
 
 	protected ResourceIOObjectEntry(ResourceFolder parent, String name, String resource, ResourceRepository repository) {
 		super(parent, name, resource, repository);
@@ -53,48 +56,23 @@ public class ResourceIOObjectEntry extends ResourceDataEntry implements IOObject
 	}
 
 	@Override
-	public String getType() {
-		return IOObjectEntry.TYPE_NAME;
-	}
-
-	@Override
 	public IOObject retrieveData(ProgressListener l) throws RepositoryException {
 		if (l != null) {
 			l.setTotal(100);
 			l.setCompleted(10);
 		}
-
-		InputStream in;
-		try {
-			in = Tools.getResourceInputStream(getResource() + ".ioo");
-		} catch (IOException e1) {
-			throw new RepositoryException("Resource '" + getResource() + ".ioo does not exist'.", e1);
-		}
-		try {
+		try (InputStream in = getResourceStream(".ioo")) {
 			return (IOObject) IOObjectSerializer.getInstance().deserialize(in);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw new RepositoryException("Cannot load data from '" + getResource() + ".ioo': " + e, e);
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
-			}
 		}
 	}
 
 	@Override
 	public MetaData retrieveMetaData() throws RepositoryException {
 		if (metaData == null) {
-			String mdResource = getResource() + ".md";
-			InputStream in;
-			try {
-				in = Tools.getResourceInputStream(mdResource);
-			} catch (IOException e1) {
-				throw new RepositoryException("Meta data resource '" + mdResource + " does not exist'.");
-			}
-			ObjectInputStream objectIn = null;
-			try {
-				objectIn = new ObjectInputStream(in);
+			try (InputStream in = getResourceStream(".md");
+				 ObjectInputStream objectIn = new ObjectInputStream(in)) {
 				this.metaData = (MetaData) objectIn.readObject();
 				if (this.metaData instanceof ExampleSetMetaData) {
 					for (AttributeMetaData amd : ((ExampleSetMetaData) metaData).getAllAttributes()) {
@@ -103,20 +81,12 @@ public class ResourceIOObjectEntry extends ResourceDataEntry implements IOObject
 						}
 					}
 				}
-				objectIn.close();
-			} catch (Exception e) {
-				throw new RepositoryException("Cannot load meta data from '" + mdResource + "': " + e, e);
-			} finally {
-				if (objectIn != null) {
-					try {
-						objectIn.close();
-					} catch (IOException e) {
-					}
-				}
-				try {
-					in.close();
-				} catch (IOException e) {
-				}
+			} catch (RepositoryException e) {
+				// in case meta data cannot be loaded (e.g. missing .md files), we try to create the meta data now
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.resource.ResourceIOObjectEntry.missing_metadata", getName());
+				metaData = MetaDataFactory.getInstance().createMetaDataforIOObject(retrieveData(null), false);
+			} catch (IOException | ClassNotFoundException e) {
+				throw new RepositoryException("Cannot load meta data from '" + getResource() + ".md': " + e, e);
 			}
 		}
 		return metaData;

@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.io.gui.internal.steps;
 
 import javax.swing.JPanel;
@@ -30,20 +30,17 @@ import com.rapidminer.core.io.gui.ImportWizard;
 import com.rapidminer.core.io.gui.InvalidConfigurationException;
 import com.rapidminer.core.io.gui.WizardStep;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
 import com.rapidminer.studio.io.data.DataSetReader;
+import com.rapidminer.studio.io.gui.internal.DataImportWizardCallback;
 
 
 /**
@@ -52,11 +49,11 @@ import com.rapidminer.studio.io.data.DataSetReader;
  *
  * @author Gisa Schaefer
  * @since 7.0.0
- *
  */
 public final class StoreToRepositoryStep extends AbstractToRepositoryStep<RepositoryLocationChooser> {
 
 	private boolean error;
+	private DataImportWizardCallback callback;
 
 	public StoreToRepositoryStep(ImportWizard wizard) {
 		super(wizard);
@@ -86,13 +83,9 @@ public final class StoreToRepositoryStep extends AbstractToRepositoryStep<Reposi
 	 * Creates a {@link ProgressThread} that stores the dataSet at the given entryLocation.
 	 *
 	 * @param entryLocation
-	 *            where to store the data
-	 * @param metaData
-	 *            the meta data to use
-	 * @param dataSet
-	 *            the data set, can be {@code null}
-	 * @param exception
-	 *            explaining why dataSet is {@code null}
+	 * 		where to store the data
+	 * @param dataSource
+	 * 		the data source to use
 	 * @return the process thread to store the data
 	 */
 	private ProgressThread createImportThread(final RepositoryLocation entryLocation, final DataSource dataSource) {
@@ -139,26 +132,9 @@ public final class StoreToRepositoryStep extends AbstractToRepositoryStep<Reposi
 				try {
 					RepositoryManager.getInstance(null).store(exampleSet, entryLocation, null);
 					// show result
-					SwingUtilities.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-							// Select repository entry
-							if (RapidMinerGUI.getMainFrame() != null) {
-								RapidMinerGUI.getMainFrame().getRepositoryBrowser()
-										.expandToRepositoryLocation(entryLocation);
-								// Switch to result
-								try {
-									Entry entry = entryLocation.locateEntry();
-									if (entry != null && entry instanceof IOObjectEntry) {
-										OpenAction.showAsResult((IOObjectEntry) entry);
-									}
-								} catch (RepositoryException e) {
-									SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_open_imported_data", e);
-								}
-							}
-						}
-					});
+					if (callback != null) {
+						SwingUtilities.invokeLater(() -> callback.execute(wizard, entryLocation));
+					}
 				} catch (RepositoryException ex) {
 					error = true;
 					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_store_obj_at_location", ex,
@@ -183,4 +159,14 @@ public final class StoreToRepositoryStep extends AbstractToRepositoryStep<Reposi
 		return !error;
 	}
 
+	/**
+	 * Set an optional callback to be executed after storing the result
+	 *
+	 * @param callback
+	 * 		gets executed after successful storage of the entry
+	 * @since 9.0.0
+	 */
+	public void setCallback(DataImportWizardCallback callback) {
+		this.callback = callback;
+	}
 }

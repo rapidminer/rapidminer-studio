@@ -42,6 +42,8 @@ public class IconFactory {
 
 	private static final Icon EMPTY_ICON_16x16 = new EmptyIcon(16, 16);
 
+	private static final Icon EMPTY_ICON_48x48 = new EmptyIcon(48, 48);
+
 	public static Icon getRadioButtonIcon() {
 		return RADIO_BUTTON_ICON;
 	}
@@ -60,5 +62,9 @@ public class IconFactory {
 
 	public static Icon getEmptyIcon16x16() {
 		return EMPTY_ICON_16x16;
+	}
+
+	public static Icon getEmptyIcon48x48() {
+		return EMPTY_ICON_48x48;
 	}
 }

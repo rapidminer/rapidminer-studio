@@ -21,6 +21,8 @@ package com.rapidminer.tools;
 import java.util.List;
 
 import com.rapidminer.Process;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter.ProcessOriginState;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.ProcessRootOperator;
@@ -31,6 +33,11 @@ import com.rapidminer.operator.preprocessing.filter.attributes.SubsetAttributeFi
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.resource.ResourceRepository;
 import com.rapidminer.tools.container.Pair;
 
 
@@ -262,6 +269,41 @@ public final class ProcessTools {
 	}
 
 	/**
+	 * Tags the given process with an {@link ProcessOriginState origin} if possible. If the {@link Process} is not stored
+	 * in a {@link Repository}, this does nothing. If it is stored in a {@link ResourceRepository}, it will be tagged
+	 * with {@link ProcessOriginState#GENERATED_SAMPLE}. Otherwise a lookup of
+	 * {@link RepositoryManager#getSpecialRepositoryOrigin(Repository)} is performed.
+	 *
+	 * @param process
+	 * 		the process to be tagged with an origin
+	 * @since 9.0.0
+	 */
+	public static void setProcessOrigin(Process process) {
+		RepositoryLocation repositoryLocation = process.getRepositoryLocation();
+		if (repositoryLocation == null) {
+			return;
+		}
+		Repository repository = null;
+		try {
+			repository = repositoryLocation.getRepository();
+		} catch (RepositoryException e) {
+			// nothing to do here
+			return;
+		}
+		if (repository == null) {
+			return;
+		}
+		ProcessOriginState origin;
+		// resource based repos cannot be created in user interface; tag as sample
+		if (repository instanceof ResourceRepository) {
+			origin = ProcessOriginState.GENERATED_SAMPLE;
+		} else {
+			origin = RepositoryManager.getInstance(null).getSpecialRepositoryOrigin(repository);
+		}
+		ProcessOriginProcessXMLFilter.setProcessOriginState(process, origin);
+	}
+
+	/**
 	 * Checks whether the given operator has a mandatory parameter which has no value and no default
 	 * value and returns the parameter. If no such parameter can be found, returns {@code null}.
 	 *
@@ -273,13 +315,9 @@ public final class ProcessTools {
 	private static ParameterType getMissingMandatoryParameter(Operator operator) {
 		for (String key : operator.getParameters().getKeys()) {
 			ParameterType param = operator.getParameterType(key);
-			if (!param.isOptional()) {
-				if (operator.getParameters().getParameterOrNull(key) == null) {
-					return param;
-				} else if (param instanceof ParameterTypeAttribute
-						&& "".equals(operator.getParameters().getParameterOrNull(key))) {
-					return param;
-				}
+			if (!param.isOptional() && (operator.getParameters().getParameterOrNull(key) == null
+					|| param instanceof ParameterTypeAttribute && "".equals(operator.getParameters().getParameterOrNull(key)))) {
+				return param;
 			}
 		}
 		return null;

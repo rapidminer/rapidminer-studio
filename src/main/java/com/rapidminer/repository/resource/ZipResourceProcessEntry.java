@@ -19,6 +19,7 @@
 package com.rapidminer.repository.resource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -29,7 +30,7 @@ import com.rapidminer.tools.Tools;
 /**
  * Class for a process that is associated with a {@link ZipStreamResource}.
  *
- * @author Gisa Schaefer, Marcel Michel
+ * @author Gisa Schaefer, Marcel Michel, Jan Czogalla
  * @since 7.0.0
  */
 public class ZipResourceProcessEntry extends ResourceProcessEntry {
@@ -43,31 +44,8 @@ public class ZipResourceProcessEntry extends ResourceProcessEntry {
 	}
 
 	@Override
-	public String retrieveXML() throws RepositoryException {
-		try (ZipInputStream zip = zipStream.getStream()) {
-			ZipEntry entry;
-			while ((entry = zip.getNextEntry()) != null) {
-				if (entry.isDirectory() || entry.getName().replaceFirst("/", "").contains("/")) {
-					continue;
-				}
-				if (zipStream.getStreamPath() != null && !entry.getName().startsWith(zipStream.getStreamPath())) {
-					continue;
-				}
-				String entryName;
-				if (zipStream.getStreamPath() != null) {
-					entryName = entry.getName().replaceFirst(zipStream.getStreamPath(), "");
-				} else {
-					entryName = entry.getName();
-				}
-				if ((getName() + ".rmp").equals(entryName)) {
-					return Tools.readTextFile(zip);
-				}
-			}
-			throw new RepositoryException("Missing resource: " + getResource() + ".rmp");
-		} catch (IOException e) {
-			throw new RepositoryException("IO error reading " + getResource() + ": " + e.getMessage());
-		}
-
+	protected InputStream getResourceStream(String suffix) throws RepositoryException {
+		return zipStream.getStream(getName(), getResource(), suffix);
 	}
 
 	@Override

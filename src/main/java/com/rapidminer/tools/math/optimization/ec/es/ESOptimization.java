@@ -128,6 +128,13 @@ public abstract class ESOptimization implements Optimization {
 	/** Indicates that the start population should be initialized with zero. */
 	public static final int INIT_TYPE_ZERO = 4;
 
+	/**
+	 * For extending this class and providing a default start population. Override {@link #createDefaultStartPopulation()}.
+	 *
+	 * @since 9.0.0
+	 */
+	public static final int INIT_TYPE_DEFAULT = 42;
+
 	/** This parameter indicates the minimum value for all genes. */
 	private double[] min;
 
@@ -429,6 +436,9 @@ public abstract class ESOptimization implements Optimization {
 			case INIT_TYPE_ZERO:
 				this.population = createFixedStartPopulation(0.0d);
 				break;
+			case INIT_TYPE_DEFAULT:
+				this.population = createDefaultStartPopulation();
+				break;
 			default:
 				break; // this cannot happen
 		}
@@ -494,6 +504,17 @@ public abstract class ESOptimization implements Optimization {
 		}
 
 		logging.log("ES Evaluations: " + currentEvalCounter + " / " + totalEvalCounter);
+	}
+
+	/**
+	 * Create the start population when init type is set to {@link #INIT_TYPE_DEFAULT}. If not overriden, creates a random
+	 * start population via {@link #createRandomStartPopulation()}.
+	 *
+	 * @return the population, must not return {@code null}
+	 * @since 9.0.0
+	 */
+	protected Population createDefaultStartPopulation() {
+		return createRandomStartPopulation();
 	}
 
 	/** Evaluates the individuals of the given population. */

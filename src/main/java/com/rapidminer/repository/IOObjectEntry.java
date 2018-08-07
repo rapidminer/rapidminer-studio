@@ -29,19 +29,24 @@ import com.rapidminer.tools.ProgressListener;
  */
 public interface IOObjectEntry extends DataEntry {
 
-	public static final String TYPE_NAME = "data";
+	String TYPE_NAME = "data";
 
-	public IOObject retrieveData(ProgressListener l) throws RepositoryException;
+	@Override
+	default String getType() {
+		return TYPE_NAME;
+	}
 
-	public MetaData retrieveMetaData() throws RepositoryException;
+	IOObject retrieveData(ProgressListener l) throws RepositoryException;
+
+	MetaData retrieveMetaData() throws RepositoryException;
 
 	/**
 	 * This method returns the class of the stored object or null, if it is not an object known to
 	 * this RapidMiner Client.
 	 */
-	public Class<? extends IOObject> getObjectClass();
+	Class<? extends IOObject> getObjectClass();
 
 	/** Stores data in this entry. */
-	public void storeData(IOObject data, Operator callingOperator, ProgressListener l) throws RepositoryException;
+	void storeData(IOObject data, Operator callingOperator, ProgressListener l) throws RepositoryException;
 
 }

@@ -36,7 +36,7 @@ public class SimpleProcessEntry extends SimpleDataEntry implements ProcessEntry 
 
 	private static final String RMP_SUFFIX = ".rmp";
 
-	SimpleProcessEntry(String name, SimpleFolder containingFolder, LocalRepository repository) {
+	public SimpleProcessEntry(String name, SimpleFolder containingFolder, LocalRepository repository) {
 		super(name, containingFolder, repository);
 	}
 
@@ -85,11 +85,6 @@ public class SimpleProcessEntry extends SimpleDataEntry implements ProcessEntry 
 	@Override
 	public String getDescription() {
 		return "Local process";
-	}
-
-	@Override
-	public String getType() {
-		return ProcessEntry.TYPE_NAME;
 	}
 
 	@Override

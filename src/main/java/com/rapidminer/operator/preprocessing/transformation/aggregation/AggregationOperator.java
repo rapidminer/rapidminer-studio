@@ -36,6 +36,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -239,6 +240,12 @@ public class AggregationOperator extends AbstractDataProcessing {
 	 * From version 7.5.0 on the operator will use a new MedianAggregator
 	 */
 	static final OperatorVersion VERSION_7_4_0 = new OperatorVersion(7, 4, 0);
+
+	/**
+	 * After version 8.2.0, special grouping attributes keep their role and
+	 * {@link AggregationFunction#FUNCTION_NAME_CONCATENATION} will support {@link #PARAMETER_ONLY_DISTINCT}
+	 */
+	static final OperatorVersion VERSION_8_2_0 = new OperatorVersion(8, 2, 0);
 
 	private final AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getExampleSetInputPort());
 
@@ -460,13 +467,24 @@ public class AggregationOperator extends AbstractDataProcessing {
 
 		// creating example set
 		ExampleSetBuilder builder = ExampleSets.from(newAttributes);
+		// preserve roles of grouping attributes
+		if (getCompatibilityLevel().isAbove(VERSION_8_2_0)) {
+			int attributeArrayIndex = 0;
+			for (Attribute groupAttribute : groupAttributes) {
+				AttributeRole role = exampleSet.getAttributes().getRole(groupAttribute);
+				if (role != null && role.getSpecialName() != null) {
+					builder.withRole(newAttributes[attributeArrayIndex], role.getSpecialName());
+				}
+				attributeArrayIndex++;
+			}
+		}
 		DataRowFactory factory = new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY, '.');
 		double[] dataOfUpperLevels = new double[groupAttributes.length];
 
 		// prepare empty lists
 		ArrayList<List<Aggregator>> allAggregators = new ArrayList<>();
 		for (int aggregatorIdx = 0; aggregatorIdx < aggregationFunctions.size(); ++aggregatorIdx) {
-			allAggregators.add(new ArrayList<Aggregator>());
+			allAggregators.add(new ArrayList<>());
 		}
 
 		ArrayList<double[]> allGroupCombinations = new ArrayList<>();
@@ -698,7 +716,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 				Attribute attribute = iterator.next();
 				if (!explicitlyAggregatedAttributes.contains(attribute)) {
 					AggregationFunction function = AggregationFunction.createAggregationFunction(
-							defaultAggregationFunctionName, attribute, ignoreMissings, countOnlyDistinct);
+							defaultAggregationFunctionName, attribute, ignoreMissings, countOnlyDistinct, getCompatibilityLevel());
 					if (function.isCompatible()) {
 						aggregationFunctions.add(function);
 					}
@@ -757,7 +775,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
-				new OperatorVersion[] { VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6, VERSION_7_4_0 });
+				new OperatorVersion[] { VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6, VERSION_7_4_0, VERSION_8_2_0 });
 	}
 
 	@Override

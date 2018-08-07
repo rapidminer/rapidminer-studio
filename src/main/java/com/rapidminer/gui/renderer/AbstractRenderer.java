@@ -18,8 +18,11 @@
 */
 package com.rapidminer.gui.renderer;
 
+import com.rapidminer.gui.look.Colors;
+import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.visualization.dependencies.NumericalMatrix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeColor;
@@ -27,10 +30,13 @@ import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeTupel;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.math.StringToMatrixConverter;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,6 +45,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 
 /**
@@ -249,5 +259,38 @@ public abstract class AbstractRenderer implements Renderer {
 	@Override
 	public void updateParameters(InputPort inputPort) {
 		this.parameters = new Parameters(getParameterTypes(inputPort));
+	}
+
+	/**
+	 * Adds a warning label for a specified {@link com.rapidminer.operator.IOObject},
+	 * e.g. {@link NumericalMatrix NumericalMatrices} that were not computed since
+	 * there were not enough valid attributes available.
+	 *
+	 * @param baseComponent
+	 * 		the base visualization component
+	 * @param showWarning
+	 * 		whether to add a warning
+	 * @param i18n
+	 * 		the i18n key of the warning to show
+	 * @param arguments
+	 * 		the i18n arguments
+	 * @return the base component or a new {@link JPanel} with the base component and a warning label
+	 * @see #getVisualizationComponent(Object, IOContainer)
+	 * @since 8.2
+	 */
+	protected static Component addWarningPanel(Component baseComponent, boolean showWarning, String i18n, Object... arguments) {
+		if (!showWarning) {
+			return baseComponent;
+		}
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(baseComponent, BorderLayout.CENTER);
+		JLabel warningLabel = new JLabel(I18N.getGUILabel(i18n, arguments));
+		warningLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		warningLabel.setFont(warningLabel.getFont().deriveFont(14f));
+		warningLabel.setOpaque(true);
+		warningLabel.setBackground(Colors.WARNING_COLOR);
+		warningLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		panel.add(warningLabel, BorderLayout.NORTH);
+		return panel;
 	}
 }

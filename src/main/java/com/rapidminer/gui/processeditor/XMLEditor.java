@@ -79,7 +79,13 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 		this.mainFrame = mainFrame;
 
 		// create text area
-		this.editor = new RSyntaxTextArea(new RSyntaxDocument(SyntaxConstants.SYNTAX_STYLE_XML));
+		this.editor = new RSyntaxTextArea(new RSyntaxDocument(SyntaxConstants.SYNTAX_STYLE_XML)) {
+
+			@Override
+			public synchronized void setText(String t) {
+				super.setText(t);
+			}
+		};
 		this.editor.setAnimateBracketMatching(true);
 		this.editor.setAutoIndentEnabled(true);
 		this.editor.setSelectionColor(Colors.TEXT_HIGHLIGHT_BACKGROUND);
@@ -129,12 +135,14 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 		if (!selection.isEmpty()) {
 			Operator currentOperator = selection.get(0);
 			String name = currentOperator.getName();
-			String text = this.editor.getText();
-			int start = text.indexOf("\"" + name + "\"");
-			int end = start + name.length() + 1;
-			if (start >= 0 && editor.getDocument().getLength() > end) {
-				this.editor.select(start + 1, end);
-				this.editor.setCaretPosition(end);
+			synchronized (this.editor) {
+				String text = this.editor.getText();
+				int start = text.indexOf("\"" + name + "\"");
+				int end = start + name.length() + 1;
+				if (start >= 0 && editor.getDocument().getLength() > end) {
+					this.editor.select(start + 1, end);
+					this.editor.setCaretPosition(end);
+				}
 			}
 		}
 	}

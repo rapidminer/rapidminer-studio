@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.6.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.6.000-SNAPSHOT" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Load Data" width="90" x="45" y="238">
+        <parameter key="repository_entry" value="//Samples/Templates/Price Risk Clustering/Data"/>
+      </operator>
+      <operator activated="true" class="set_role" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Set ID role" width="90" x="179" y="238">
+        <parameter key="attribute_name" value="Date"/>
+        <parameter key="target_role" value="id"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" class="normalize" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Normalize" width="90" x="380" y="238">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="method" value="Z-transformation"/>
+        <parameter key="min" value="0.0"/>
+        <parameter key="max" value="1.0"/>
+      </operator>
+      <operator activated="true" class="transpose" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Transpose" width="90" x="581" y="238"/>
+      <operator activated="true" class="x_means" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="X-Means" width="90" x="715" y="238">
+        <parameter key="add_cluster_attribute" value="true"/>
+        <parameter key="add_as_label" value="false"/>
+        <parameter key="remove_unlabeled" value="false"/>
+        <parameter key="k_min" value="2"/>
+        <parameter key="k_max" value="60"/>
+        <parameter key="determine_good_start_values" value="false"/>
+        <parameter key="measure_types" value="NumericalMeasures"/>
+        <parameter key="mixed_measure" value="MixedEuclideanDistance"/>
+        <parameter key="nominal_measure" value="NominalDistance"/>
+        <parameter key="numerical_measure" value="EuclideanDistance"/>
+        <parameter key="divergence" value="GeneralizedIDivergence"/>
+        <parameter key="kernel_type" value="radial"/>
+        <parameter key="kernel_gamma" value="1.0"/>
+        <parameter key="kernel_sigma1" value="1.0"/>
+        <parameter key="kernel_sigma2" value="0.0"/>
+        <parameter key="kernel_sigma3" value="2.0"/>
+        <parameter key="kernel_degree" value="3.0"/>
+        <parameter key="kernel_shift" value="1.0"/>
+        <parameter key="kernel_a" value="1.0"/>
+        <parameter key="kernel_b" value="0.0"/>
+        <parameter key="clustering_algorithm" value="KMeans"/>
+        <parameter key="max_runs" value="10"/>
+        <parameter key="max_optimization_steps" value="100"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+      </operator>
+      <connect from_op="Load Data" from_port="output" to_op="Set ID role" to_port="example set input"/>
+      <connect from_op="Set ID role" from_port="example set output" to_op="Normalize" to_port="example set input"/>
+      <connect from_op="Normalize" from_port="example set output" to_op="Transpose" to_port="example set input"/>
+      <connect from_op="Transpose" from_port="example set output" to_op="X-Means" to_port="example set"/>
+      <connect from_op="X-Means" from_port="cluster model" to_port="result 1"/>
+      <connect from_op="X-Means" from_port="clustered set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="210"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="yellow" colored="false" height="70" resized="false" width="850" x="20" y="25">PRICE RISK CLUSTERING&lt;br&gt;Cluster time series data - like prices of the DAX 30 stocks - by standardizing each series and finally clustering the series using X-Means to account for price risk relationships.</description>
+      <description align="left" color="blue" colored="true" height="290" resized="true" width="270" x="20" y="105">Step 1:&lt;br/&gt;Load price data for the German DAX 30 stocks. Set the date column to role ID.</description>
+      <description align="left" color="green" colored="true" height="290" resized="true" width="315" x="555" y="105">Step 3:&lt;br/&gt;Transpose data set (so that each time series is a row now) and cluster the data so that each series falls into one cluster.</description>
+      <description align="left" color="purple" colored="true" height="290" resized="true" width="225" x="310" y="105">Step 2:&lt;br/&gt;Standardize each price time series, i.e. perform a Z-transformation of the values so that they have a mean of 0 and a standard deviation of 1 afterwards.</description>
+	  <description align="left" color="yellow" colored="false" height="89" resized="true" width="850" x="20" y="407">Outputs:&lt;br&gt;- The cluster model that we applied to the data set.&lt;br&gt;- The data set with the clusters it falls into. Take a look at the parallel plot of this clustered example set! (After running the process switch to 'Charts' in the Results view and change the 'Chart style' to 'Parallel'.)&lt;br&gt;</description>
+    </process>
+  </operator>
+</process>

@@ -35,16 +35,19 @@ import java.util.Map.Entry;
 public class ModeAggregator implements Aggregator {
 
 	private Attribute sourceAttribute;
+	private final boolean ignoreMissing;
 	private double[] frequencies;
 	private HashMap<Double, Double> frequenciesMap;
+	private double missingFrequency;
 
 	public ModeAggregator(AggregationFunction function) {
 		this.sourceAttribute = function.getSourceAttribute();
 		if (sourceAttribute.isNominal()) {
 			frequencies = new double[sourceAttribute.getMapping().size()];
 		} else {
-			frequenciesMap = new HashMap<Double, Double>();
+			frequenciesMap = new HashMap<>();
 		}
+		this.ignoreMissing = function.isIgnoringMissings();
 	}
 
 	@Override
@@ -56,11 +59,12 @@ public class ModeAggregator implements Aggregator {
 			} else {
 				Double frequency = frequenciesMap.get(value);
 				if (frequency == null) {
-					frequenciesMap.put(value, 1d);
-				} else {
-					frequenciesMap.put(value, frequency + 1d);
+					frequency = 0d;
 				}
+				frequenciesMap.put(value, frequency + 1);
 			}
+		} else if (!ignoreMissing) {
+			missingFrequency++;
 		}
 	}
 
@@ -73,11 +77,12 @@ public class ModeAggregator implements Aggregator {
 			} else {
 				Double frequency = frequenciesMap.get(value);
 				if (frequency == null) {
-					frequenciesMap.put(value, weight);
-				} else {
-					frequenciesMap.put(value, frequency + weight);
+					frequency = 0d;
 				}
+				frequenciesMap.put(value, frequency + weight);
 			}
+		} else if (!ignoreMissing) {
+			missingFrequency += weight;
 		}
 	}
 
@@ -96,15 +101,15 @@ public class ModeAggregator implements Aggregator {
 		} else {
 			for (Entry<Double, Double> entry : frequenciesMap.entrySet()) {
 				double frequency = entry.getValue();
-				if (frequency > minFrequency) {
+				// higher frequency versus lower value
+				if (frequency > minFrequency || frequency == minFrequency && entry.getKey() < minValue) {
 					minValue = entry.getKey();
 					minFrequency = frequency;
 				}
-
 			}
 		}
-		// if any counter was greater 0, set result to maximum
-		if (minValue > -1) {
+		// if any frequency was greater than zero and greater or equal than the missing frequency, take that value
+		if (minFrequency > 0 && minFrequency >= missingFrequency) {
 			row.set(attribute, minValue);
 		} else {
 			row.set(attribute, Double.NaN);

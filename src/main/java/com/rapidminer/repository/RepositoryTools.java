@@ -59,21 +59,12 @@ public final class RepositoryTools {
 	 *         as a {@link String} is less, equal or higher than the second {@link Entry}s or
 	 *         {@link Folder}s name.
 	 */
-	public static final Comparator<Entry> SIMPLE_NAME_COMPARATOR = new Comparator<Entry>() {
-
-		@Override
-		public int compare(Entry entry1, Entry entry2) {
-			if ((entry1 == null || entry1.getName() == null) && (entry2 == null || entry2.getName() == null)) {
-				return 0;
-			} else if (entry1 == null || entry1.getName() == null) {
-				return -1;
-			} else if (entry2 == null || entry2.getName() == null) {
-				return 1;
-			} else {
-				return entry1.getName().compareTo(entry2.getName());
-			}
+	public static final Comparator<Entry> SIMPLE_NAME_COMPARATOR = (entry1, entry2) -> {
+		Integer nullComparison = compareForNull(entry1, entry2);
+		if (nullComparison != null) {
+			return nullComparison;
 		}
-
+		return entry1.getName().compareTo(entry2.getName());
 	};
 
 	/**
@@ -87,21 +78,12 @@ public final class RepositoryTools {
 	 * @return one of -1, 0, or 1 according to whether {@link Entry}1s name as a {@link String} is
 	 *         less, equal or higher than {@link Entry}2s name.
 	 */
-	public static final Comparator<Entry> ENTRY_COMPARATOR = new Comparator<Entry>() {
-
-		@Override
-		public int compare(Entry entry1, Entry entry2) {
-			if ((entry1 == null || entry1.getName() == null) && (entry2 == null || entry2.getName() == null)) {
-				return 0;
-			} else if (entry1 == null || entry1.getName() == null) {
-				return -1;
-			} else if (entry2 == null || entry2.getName() == null) {
-				return 1;
-			} else {
-				return ALPHANUMERIC_COMPARATOR.compare(entry1.getName(), entry2.getName());
-			}
+	public static final Comparator<Entry> ENTRY_COMPARATOR = (entry1, entry2) -> {
+		Integer nullComparison = compareForNull(entry1, entry2);
+		if (nullComparison != null) {
+			return nullComparison;
 		}
-
+		return ALPHANUMERIC_COMPARATOR.compare(entry1.getName(), entry2.getName());
 	};
 
 	/**
@@ -116,27 +98,24 @@ public final class RepositoryTools {
 	 *         less, equal or higher than {@link Entry}2s date.
 	 * @since 7.4
 	 */
-	public static final Comparator<Entry> ENTRY_COMPARATOR_LAST_MODIFIED = new Comparator<Entry>() {
-
-		@Override
-		public int compare(Entry entry1, Entry entry2) {
-			if (!(entry1 instanceof DateEntry) && !(entry2 instanceof DateEntry)) {
-				return ALPHANUMERIC_COMPARATOR.compare(entry1.getName(), entry2.getName());
-			} else if (!(entry1 instanceof DateEntry)) {
-				return -1;
-			} else if (!(entry2 instanceof DateEntry)) {
-				return 1;
-			}
+	public static final Comparator<Entry> ENTRY_COMPARATOR_LAST_MODIFIED = (entry1, entry2) -> {
+		boolean entry1HasDate = entry1 instanceof DateEntry;
+		boolean entry2HasDate = entry2 instanceof DateEntry;
+		// sort entries without modification date to front (i.e. usually folder)
+		if (entry1HasDate != entry2HasDate) {
+			return entry1HasDate ? 1 : -1;
+		}
+		// same type; sort by date if possible
+		if (entry1HasDate) {
 			DateEntry dataEntry1 = (DateEntry) entry1;
 			DateEntry dataEntry2 = (DateEntry) entry2;
 			int compareValue = Long.compare(dataEntry2.getDate(), dataEntry1.getDate());
-			if (compareValue == 0) { // same date
-				return ALPHANUMERIC_COMPARATOR.compare(dataEntry1.getName(), dataEntry2.getName());
-			} else {
+			if (compareValue != 0) {
 				return compareValue;
 			}
 		}
-
+		// same date or no date at all => sort by name or null
+		return ENTRY_COMPARATOR.compare(entry1, entry2);
 	};
 
 	/**
@@ -155,25 +134,54 @@ public final class RepositoryTools {
 	 *         whether {@link Repository}1 name as a {@link String} is less, equal or higher than
 	 *         {@link Repository}2 name.
 	 */
-	public static final Comparator<Repository> REPOSITORY_COMPARATOR = new Comparator<Repository>() {
-
-		@Override
-		public int compare(Repository repository1, Repository repository2) {
-			if ((repository1 == null || repository1.getName() == null)
-					&& (repository2 == null || repository2.getName() == null)) {
-				return 0;
-			} else if (repository1 == null || repository1.getName() == null) {
-				return -1;
-			} else if (repository2 == null || repository2.getName() == null) {
-				return 1;
+	public static final Comparator<Repository> REPOSITORY_COMPARATOR = (repository1, repository2) -> {
+		Integer nullComparison = compareForNull(repository1, repository2);
+		if (nullComparison != null) {
+			return nullComparison;
+		}
+		RepositoryType repositoryType = RepositoryType.getRepositoryType(repository1);
+		int compareValue = repositoryType.compareTo(RepositoryType.getRepositoryType(repository2));
+		if (compareValue == 0) { // same repository type
+			if (repositoryType == RepositoryType.RESOURCES) { // special resource repositories
+				compareValue = compareResourceRepositoryNames(repository1.getName(), repository2.getName());
+				if (compareValue != 0) {
+					return compareValue;
+				}
 			}
-			int compareValue = RepositoryType.getRepositoryType(repository1)
-					.compareTo(RepositoryType.getRepositoryType(repository2));
-			if (compareValue == 0) { // same repository type
-				return ALPHANUMERIC_COMPARATOR.compare(repository1.getName(), repository2.getName());
-			} else {
-				return compareValue;
-			}
+			return ALPHANUMERIC_COMPARATOR.compare(repository1.getName(), repository2.getName());
+		} else {
+			return compareValue;
 		}
 	};
+
+	/** @since 9.0 */
+	private static Integer compareForNull(Entry entry1, Entry entry2) {
+		boolean entry1IsNull = entry1 == null || entry1.getName() == null;
+		boolean entry2IsNull = entry2 == null || entry2.getName() == null;
+		if (entry1IsNull) {
+			return entry2IsNull ? 0 : -1;
+		}
+		if (entry2IsNull) {
+			return 1;
+		}
+		return null;
+	}
+
+	/**
+	 * Compares names of resource repositories. Uses {@link RepositoryManager#SPECIAL_RESOURCE_REPOSITORY_NAMES} as
+	 * ordering, orders everything else after that.
+	 *
+	 * @since 9.0
+	 */
+	private static int compareResourceRepositoryNames(String name1, String name2) {
+		if (name1.equals(name2)) {
+			return 0;
+		}
+		int index1 = RepositoryManager.SPECIAL_RESOURCE_REPOSITORY_NAMES.indexOf(name1);
+		int index2 = RepositoryManager.SPECIAL_RESOURCE_REPOSITORY_NAMES.indexOf(name2);
+		if (index1 == -1) {
+			return index2 == -1 ? 0 : 1;
+		}
+		return index2 == -1 ? -1 : index1 - index2;
+	}
 }

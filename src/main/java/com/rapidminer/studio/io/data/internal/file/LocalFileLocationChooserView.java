@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.io.data.internal.file;
 
 import java.awt.BorderLayout;
@@ -29,7 +29,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.Action;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
@@ -69,6 +68,12 @@ import com.rapidminer.studio.io.gui.internal.DataWizardEventType;
 final class LocalFileLocationChooserView extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+	private static final int SELECTED_TYPE_PANEL_WIDTH = 700;
+	private static final int SELECTED_TYPE_PANEL_HEIGHT = 41;
+	private static final int SELECTED_TYPE_PANEL_INSETS_TOP = 10;
+	private static final int SELECTED_TYPE_PANEL_INSETS_LEFT = 3;
+	private static final int SELECTED_TYPE_PANEL_INSETS_BOTTOM = 10;
+	private static final int SELECTED_TYPE_PANEL_INSETS_RIGHT = 0;
 
 	private final ExtendedJFileChooser fileChooser;
 	private final JPanel selectedTypePanel;
@@ -84,7 +89,9 @@ final class LocalFileLocationChooserView extends JPanel {
 
 		@Override
 		public void loggedActionPerformed(ActionEvent e) {
-			showFileDataSourceComboBox();
+			// toggle marker variable
+			showFileDataSourceComboBox = true;
+			updateFileTypePanel();
 		}
 
 	};
@@ -100,19 +107,13 @@ final class LocalFileLocationChooserView extends JPanel {
 
 	};
 
-	private final ChangeListener fileChangeListener = new ChangeListener() {
-
-		@Override
-		public void stateChanged(ChangeEvent e) {
-
-			// Update detected file type each time the users changes the selected file
-			final Path selectedLocation = getSelectedLocation();
-			if (selectedLocation != null) {
-				fileDataSourceFactory = LocalFileDataSourceFactory.lookupFactory(selectedLocation);
-			}
-			updateFileTypePanel();
+	private final transient ChangeListener fileChangeListener = e -> {
+		// Update detected file type each time the users changes the selected file
+		final Path selectedLocation = getSelectedLocation();
+		if (selectedLocation != null) {
+			fileDataSourceFactory = LocalFileDataSourceFactory.lookupFactory(selectedLocation);
 		}
-
+		updateFileTypePanel();
 	};
 
 	/**
@@ -120,11 +121,15 @@ final class LocalFileLocationChooserView extends JPanel {
 	 *
 	 * @param fileFilters
 	 *            the file filters for this file chooser
+	 * @param factoryI18NKey
+	 *            the i18n key of the factory, that should be the only usable one (optional)
 	 */
-	LocalFileLocationChooserView(List<FileFilter> fileFilters) {
+	LocalFileLocationChooserView(List<FileFilter> fileFilters, String factoryI18NKey) {
 		this.fileChooser = new ExtendedJFileChooser("", FileSystemView.getFileSystemView().getDefaultDirectory());
 		this.fileChooser.setControlButtonsAreShown(false);
-		this.fileChooser.setAcceptAllFileFilterUsed(true);
+		if (factoryI18NKey == null || factoryI18NKey.trim().isEmpty()) {
+			this.fileChooser.setAcceptAllFileFilterUsed(true);
+		}
 
 		if (fileFilters != null) {
 			for (FileFilter filter : fileFilters) {
@@ -134,8 +139,23 @@ final class LocalFileLocationChooserView extends JPanel {
 
 		// create combo box for all available factories
 		this.factoryDropDownComboBox = new JComboBox<>();
-		FileDataSourceFactory<?>[] comboBoxItems = DataSourceFactoryRegistry.INSTANCE.getFileFactories()
-				.toArray(new FileDataSourceFactory[0]);
+		FileDataSourceFactory<?>[] comboBoxItems;
+
+		if (factoryI18NKey != null && !factoryI18NKey.trim().isEmpty()) {
+			this.fileChooser.setAcceptAllFileFilterUsed(true);
+
+			List<FileDataSourceFactory<?>> fileFactories = DataSourceFactoryRegistry.INSTANCE.getFileFactories();
+			comboBoxItems = new FileDataSourceFactory<?>[1];
+			for (FileDataSourceFactory<?> factory : fileFactories) {
+				if (factory.getI18NKey().equals(factoryI18NKey)) {
+					comboBoxItems[0] = factory;
+					break;
+				}
+			}
+		} else {
+			comboBoxItems = DataSourceFactoryRegistry.INSTANCE.getFileFactories().toArray(new FileDataSourceFactory[0]);
+		}
+
 		ComboBoxModel<FileDataSourceFactory<?>> comboBoxModel = new DefaultComboBoxModel<>(comboBoxItems);
 		factoryDropDownComboBox.setModel(comboBoxModel);
 		factoryDropDownComboBox.setRenderer(new DefaultListCellRenderer() {
@@ -160,8 +180,10 @@ final class LocalFileLocationChooserView extends JPanel {
 		this.selectedTypePanel = new JPanel(new GridBagLayout());
 		add(selectedTypePanel, BorderLayout.SOUTH);
 
-		registerChangeListener(fileChangeListener);
-		fileChangeListener.stateChanged(null);
+		if (factoryI18NKey == null || factoryI18NKey.trim().isEmpty()) {
+			registerChangeListener(fileChangeListener);
+			fileChangeListener.stateChanged(null);
+		}
 	}
 
 	/**
@@ -182,13 +204,6 @@ final class LocalFileLocationChooserView extends JPanel {
 		DataImportWizardUtils.logStats(DataWizardEventType.FILE_TYPE_CHANGED, oldFileType + "->" + newFileType);
 
 		fireChangeEvent();
-		updateFileTypePanel();
-	}
-
-	private void showFileDataSourceComboBox() {
-
-		// toggle marker variable
-		this.showFileDataSourceComboBox = true;
 		updateFileTypePanel();
 	}
 
@@ -249,7 +264,7 @@ final class LocalFileLocationChooserView extends JPanel {
 	}
 
 	/**
-	 * @param fileDataSource
+	 * @param fileDataSourceFactory
 	 *            updates the file data source factory for this view
 	 */
 	public void setFileDataSourceFactory(FileDataSourceFactory<?> fileDataSourceFactory) {
@@ -257,75 +272,71 @@ final class LocalFileLocationChooserView extends JPanel {
 	}
 
 	private void updateFileTypePanel() {
-		SwingTools.invokeLater(new Runnable() {
+		SwingTools.invokeLater(() -> {
+			selectedTypePanel.removeAll();
 
-			@Override
-			public void run() {
-				selectedTypePanel.removeAll();
+			GridBagConstraints constraint = new GridBagConstraints();
+			constraint.fill = GridBagConstraints.NONE;
+			constraint.anchor = GridBagConstraints.WEST;
+			constraint.insets = new Insets(SELECTED_TYPE_PANEL_INSETS_TOP, SELECTED_TYPE_PANEL_INSETS_LEFT, SELECTED_TYPE_PANEL_INSETS_BOTTOM, SELECTED_TYPE_PANEL_INSETS_RIGHT);
 
-				GridBagConstraints constraint = new GridBagConstraints();
-				constraint.fill = GridBagConstraints.NONE;
-				constraint.anchor = GridBagConstraints.WEST;
-				constraint.insets = new Insets(10, 3, 10, 0);
+			constraint.fill = GridBagConstraints.BOTH;
+			constraint.weightx = 1.0;
+			JPanel fillerPanel = new JPanel();
+			selectedTypePanel.add(fillerPanel, constraint);
 
-				constraint.fill = GridBagConstraints.BOTH;
-				constraint.weightx = 1.0;
-				JPanel fillerPanel = new JPanel();
-				selectedTypePanel.add(fillerPanel, constraint);
+			// set constraints for other component
+			constraint.fill = GridBagConstraints.NONE;
+			constraint.weightx = 0.0;
 
-				// set constraints for other component
-				constraint.fill = GridBagConstraints.NONE;
-				constraint.weightx = 0.0;
+			if (getSelectedLocation() != null) {
 
-				if (getSelectedLocation() != null) {
+				boolean showComboBox = showFileDataSourceComboBox;
 
-					boolean showComboBox = showFileDataSourceComboBox;
-
-					// add first label
-					if (fileDataSourceFactory != null) {
-						if (showComboBox) {
-							JLabel typeLabel = new ResourceLabel("io.dataimport.step.file_selection.select_type");
-							selectedTypePanel.add(typeLabel, constraint);
-						} else {
-							JLabel typeLabel = new ResourceLabel("io.dataimport.step.file_selection.type_detected");
-							selectedTypePanel.add(typeLabel, constraint);
-
-							String selectedTypeName = DataImportWizardUtils.getFactoryLabel(fileDataSourceFactory);
-							JLabel selectedTypeLabel = new JLabel(selectedTypeName);
-							selectedTypeLabel.setFont(selectedTypeLabel.getFont().deriveFont(Font.BOLD));
-							selectedTypePanel.add(selectedTypeLabel, constraint);
-						}
-					} else {
-						JLabel unknownTypeLabel = new ResourceLabel("io.dataimport.step.file_selection.unknown_type");
-						selectedTypePanel.add(unknownTypeLabel, constraint);
-						showComboBox = true;
-					}
-
+				// add first label
+				if (fileDataSourceFactory != null) {
 					if (showComboBox) {
-						selectedTypePanel.add(factoryDropDownComboBox, constraint);
-
-						LinkLocalButton changeTypeButton = new LinkLocalButton(selectTypeAction);
-						changeTypeButton.setAlignmentX(SwingConstants.CENTER);
-						selectedTypePanel.add(changeTypeButton, constraint);
+						JLabel typeLabel = new ResourceLabel("io.dataimport.step.file_selection.select_type");
+						selectedTypePanel.add(typeLabel, constraint);
 					} else {
-						LinkLocalButton changeTypeButton = new LinkLocalButton(changeTypeAction);
-						changeTypeButton.setAlignmentX(SwingConstants.CENTER);
-						selectedTypePanel.add(changeTypeButton, constraint);
-					}
+						JLabel typeLabel = new ResourceLabel("io.dataimport.step.file_selection.type_detected");
+						selectedTypePanel.add(typeLabel, constraint);
 
+						String selectedTypeName = DataImportWizardUtils.getFactoryLabel(fileDataSourceFactory);
+						JLabel selectedTypeLabel = new JLabel(selectedTypeName);
+						selectedTypeLabel.setFont(selectedTypeLabel.getFont().deriveFont(Font.BOLD));
+						selectedTypePanel.add(selectedTypeLabel, constraint);
+					}
 				} else {
-					// add a no file selected label
-					selectedTypePanel.add(new ResourceLabel("io.dataimport.step.file_selection.no_file_selected"),
-							constraint);
+					JLabel unknownTypeLabel = new ResourceLabel("io.dataimport.step.file_selection.unknown_type");
+					selectedTypePanel.add(unknownTypeLabel, constraint);
+					showComboBox = true;
 				}
 
-				// ensure same height for every panel content to avoid flickering
-				selectedTypePanel.setPreferredSize(new Dimension(700, 41));
-				selectedTypePanel.setMinimumSize(new Dimension(700, 41));
+				if (showComboBox) {
+					selectedTypePanel.add(factoryDropDownComboBox, constraint);
 
-				selectedTypePanel.revalidate();
-				selectedTypePanel.repaint();
+					LinkLocalButton changeTypeButton = new LinkLocalButton(selectTypeAction);
+					changeTypeButton.setAlignmentX(SwingConstants.CENTER);
+					selectedTypePanel.add(changeTypeButton, constraint);
+				} else {
+					LinkLocalButton changeTypeButton = new LinkLocalButton(changeTypeAction);
+					changeTypeButton.setAlignmentX(SwingConstants.CENTER);
+					selectedTypePanel.add(changeTypeButton, constraint);
+				}
+
+			} else {
+				// add a no file selected label
+				selectedTypePanel.add(new ResourceLabel("io.dataimport.step.file_selection.no_file_selected"),
+						constraint);
 			}
+
+			// ensure same height for every panel content to avoid flickering
+			selectedTypePanel.setPreferredSize(new Dimension(SELECTED_TYPE_PANEL_WIDTH, SELECTED_TYPE_PANEL_HEIGHT));
+			selectedTypePanel.setMinimumSize(new Dimension(SELECTED_TYPE_PANEL_WIDTH, SELECTED_TYPE_PANEL_HEIGHT));
+
+			selectedTypePanel.revalidate();
+			selectedTypePanel.repaint();
 		});
 	}
 

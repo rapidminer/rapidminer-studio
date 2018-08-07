@@ -21,10 +21,12 @@ package com.rapidminer.gui.flow.processrendering.connections;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
+
+import javax.swing.ImageIcon;
 
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
@@ -46,10 +48,10 @@ public final class ConnectionDrawUtils {
 	private static final BasicStroke CIRCLE_STROKE = new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
 
 	/** the black trash icon */
-	private static final Image DELETE_IMAGE = SwingTools.createIcon("16/delete_red.png").getImage();
+	private static final ImageIcon DELETE_ICON = SwingTools.createIcon("32/delete.png");
 
 	/** the gray trash icon */
-	private static final Image DELETE_IMAGE_DISABLED = SwingTools.createIcon("16/delete_light_red.png").getImage();
+	private static final ImageIcon DELETE_ICON_DISABLED = ProcessDrawUtils.getDisabledIcon(DELETE_ICON);
 
 	/** the size of the image */
 	private static final int IMAGE_SIZE = 16;
@@ -58,7 +60,7 @@ public final class ConnectionDrawUtils {
 	private static final int HALF_IMAGE_SIZE = IMAGE_SIZE / 2;
 
 	/** the diameter of the circle */
-	private static final int CIRCLE_DIAMETER = 22;
+	private static final int CIRCLE_DIAMETER = 24;
 
 	/** the width of the circle - one smaller than the diameter */
 	private static final int CIRCLE_WIDTH = CIRCLE_DIAMETER - 1;
@@ -124,14 +126,15 @@ public final class ConnectionDrawUtils {
 		g2.fill(circle);
 
 		// draw the circle and the trash symbol
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		if (enableTrashSymbol) {
 			g2.setColor(ENABLED_COLOR);
 			g2.draw(circle);
-			g2.drawImage(DELETE_IMAGE, cx - HALF_IMAGE_SIZE, cy - HALF_IMAGE_SIZE, null);
+			g2.drawImage(DELETE_ICON.getImage(), cx - HALF_IMAGE_SIZE, cy - HALF_IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE, null);
 		} else {
-			g2.setColor(DISABLED_COLOR);
+			g2.setColor(Color.LIGHT_GRAY);
 			g2.draw(circle);
-			g2.drawImage(DELETE_IMAGE_DISABLED, cx - HALF_IMAGE_SIZE, cy - HALF_IMAGE_SIZE, null);
+			g2.drawImage(DELETE_ICON_DISABLED.getImage(), cx - HALF_IMAGE_SIZE, cy - HALF_IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE, null);
 		}
 		return circle;
 

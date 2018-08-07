@@ -174,6 +174,10 @@ public class URLExampleSource extends AbstractExampleSource {
 			}
 		}
 
+		if (builder == null) {
+			builder = ExampleSets.from(new ArrayList<>());
+		}
+
 		ExampleSet exampleSet = builder.build();
 
 		try {

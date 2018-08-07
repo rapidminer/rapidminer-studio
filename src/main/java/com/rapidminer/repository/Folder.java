@@ -33,24 +33,29 @@ import java.util.List;
  */
 public interface Folder extends Entry {
 
-	public static final String TYPE_NAME = "folder";
+	String TYPE_NAME = "folder";
 
-	public List<DataEntry> getDataEntries() throws RepositoryException;
+	@Override
+	default String getType() {
+		return TYPE_NAME;
+	}
 
-	public List<Folder> getSubfolders() throws RepositoryException;
+	List<DataEntry> getDataEntries() throws RepositoryException;
 
-	public void refresh() throws RepositoryException;
+	List<Folder> getSubfolders() throws RepositoryException;
 
-	public boolean containsEntry(String name) throws RepositoryException;
+	void refresh() throws RepositoryException;
 
-	public Folder createFolder(String name) throws RepositoryException;
+	boolean containsEntry(String name) throws RepositoryException;
 
-	public IOObjectEntry createIOObjectEntry(String name, IOObject ioobject, Operator callingOperator,
-			ProgressListener progressListener) throws RepositoryException;
+	Folder createFolder(String name) throws RepositoryException;
 
-	public ProcessEntry createProcessEntry(String name, String processXML) throws RepositoryException;
+	IOObjectEntry createIOObjectEntry(String name, IOObject ioobject, Operator callingOperator,
+									  ProgressListener progressListener) throws RepositoryException;
 
-	public BlobEntry createBlobEntry(String name) throws RepositoryException;
+	ProcessEntry createProcessEntry(String name, String processXML) throws RepositoryException;
+
+	BlobEntry createBlobEntry(String name) throws RepositoryException;
 
 	/**
 	 * Returns true iff a child with the given name exists and a {@link #refresh()} would find this
@@ -58,5 +63,5 @@ public interface Folder extends Entry {
 	 * 
 	 * @throws RepositoryException
 	 */
-	public boolean canRefreshChild(String childName) throws RepositoryException;
+	boolean canRefreshChild(String childName) throws RepositoryException;
 }

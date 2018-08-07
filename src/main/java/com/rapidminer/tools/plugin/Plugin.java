@@ -22,7 +22,6 @@ import java.awt.Frame;
 import java.awt.Image;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,15 +32,21 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
+import java.security.AllPermission;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Permission;
+import java.security.Policy;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.security.ProtectionDomain;
+import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,6 +64,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.xml.bind.DatatypeConverter;
@@ -87,6 +93,7 @@ import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.security.PluginSandboxPolicy;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.I18N.SettingsType;
@@ -98,6 +105,7 @@ import com.rapidminer.tools.ResourceSource;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.parameter.ParameterChangeListener;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -130,17 +138,35 @@ public class Plugin {
 	 */
 	public static final String RAPIDMINER_TYPE_PLUGIN = "RapidMiner_Extension";
 
+	/** @since 9.0.0 */
+	public static final String PROPERTY_PLUGINS_WHITELIST = "rapidminer.extensions.whitelist";
+	/** @since 9.0.0 */
+	public static final String WHITELIST_NONE = "none";
+	/** @since 9.0.0 */
+	public static final String WHITELIST_SHIPPED = "shipped";
+	/** @since 9.0.0 */
+	private static final String PACKAGED_IDS = "advanced_file_connectors,concurrency,jdbc_connectors,legacy,productivity,professional,remote_repository";
+	/** @since 9.0.0 */
+	private static final Set<String> PACKAGED_EXTENSIONS;
+	/** @since 9.0.0 */
+	private static final String SHIPPED_IDS = "model_simulator,process_scheduling,social_media,cloud_connectivity,h2o,dataeditor,cloud_execution,operator_recommender,time_series";
+	/** @since 9.0.0 */
+	private static final Set<String> SHIPPED_EXTENSIONS;
+	private static final String PACKAGEID_RAPIDMINER = "rapidminer-studio-6";
+	static {
+		String rmxPrefix = "rmx_";
+		Set<String> packagedExtensions = Arrays.stream(PACKAGED_IDS.split(",")).map(rmxPrefix::concat).collect(Collectors.toSet());
+		Set<String> shippedExtensions = Arrays.stream(SHIPPED_IDS.split(",")).map(rmxPrefix::concat).collect(Collectors.toCollection(HashSet::new));
+		shippedExtensions.addAll(packagedExtensions);
+		PACKAGED_EXTENSIONS = Collections.unmodifiableSet(packagedExtensions);
+		SHIPPED_EXTENSIONS = Collections.unmodifiableSet(shippedExtensions);
+	}
+
 	private static final ClassLoader MAJOR_CLASS_LOADER;
 
 	static {
 		try {
-			MAJOR_CLASS_LOADER = AccessController.doPrivileged(new PrivilegedExceptionAction<ClassLoader>() {
-
-				@Override
-				public ClassLoader run() throws Exception {
-					return new AllPluginsClassLoader();
-				}
-			});
+			MAJOR_CLASS_LOADER = AccessController.doPrivileged((PrivilegedExceptionAction<ClassLoader>) AllPluginsClassLoader::new);
 		} catch (PrivilegedActionException e) {
 			throw new RuntimeException("Cannot create major class loader: " + e.getMessage(), e);
 		}
@@ -157,6 +183,9 @@ public class Plugin {
 
 	/** The file for this plugin. */
 	private final File file;
+
+	/** The resource source for this plugin */
+	private ResourceSource resourceSource;
 
 	/** The class loader based on the plugin file. */
 	private PluginClassLoader classLoader;
@@ -305,7 +334,24 @@ public class Plugin {
 		// yes the rmx_rmx_ prefix is correct...
 		PLUGIN_BLACKLIST.put("rmx_rmx_toolkit", new Pair<>(null, new VersionNumber(1, 0, 0)));
 		PLUGIN_BLACKLIST.put("rmx_ida", new Pair<>(null, new VersionNumber(5, 1, 0)));
+
+		// Block beta version usage of the TurboPrep/AutoModel extension
+		PLUGIN_BLACKLIST.put("rmx_model_simulator", new Pair<>(null, new VersionNumber(9, 0, 0, "BETA4")));
 	}
+
+	/**
+	 * The set of white listed plugins if specified by the {@value PROPERTY_PLUGINS_WHITELIST} admin property.
+	 *
+	 * @since 9.0.0
+	 */
+	private static Set<String> pluginWhitelist = null;
+
+	/**
+	 * Boolean to indicate that shipped extension jars are allowed. Specified by the special admin keyword {@value #WHITELIST_SHIPPED}.
+	 *
+	 * @since 9.0.0
+	 */
+	private static boolean allowShippedExtensions = true;
 
 	/** map of all plugin loading times */
 	private static final Map<String, Long> LOADING_TIMES = new ConcurrentHashMap<>();
@@ -321,8 +367,10 @@ public class Plugin {
 		this.file = file;
 		this.archive = new JarFile(this.file);
 		this.classLoader = makeInitialClassloader();
-		Tools.addResourceSource(new ResourceSource(this.classLoader));
 		fetchMetaData();
+		this.resourceSource = new ResourceSource(this.classLoader);
+		Tools.setResourceSourceForPlugin(getExtensionId(), resourceSource);
+		fetchPluginData();
 		this.classLoader.setPluginKey(getExtensionId());
 
 		if (!RapidMiner.getExecutionMode().isHeadless()) {
@@ -341,8 +389,7 @@ public class Plugin {
 		} catch (MalformedURLException e) {
 			throw new RuntimeException("Cannot make classloader for plugin: " + e, e);
 		}
-		final PluginClassLoader cl = new PluginClassLoader(new URL[] { url });
-		return cl;
+		return new PluginClassLoader(new URL[] { url });
 	}
 
 	/**
@@ -444,7 +491,6 @@ public class Plugin {
 	 */
 	public ClassLoader getOriginalClassLoader() {
 		try {
-			// this.archive = new JarFile(this.file);
 			final URL url = new URL("file", null, this.file.getAbsolutePath());
 			return AccessController.doPrivileged(new PrivilegedExceptionAction<ClassLoader>() {
 
@@ -454,9 +500,7 @@ public class Plugin {
 				}
 			});
 
-		} catch (IOException e) {
-			return null;
-		} catch (PrivilegedActionException e) {
+		} catch (IOException | PrivilegedActionException e) {
 			return null;
 		}
 	}
@@ -485,11 +529,11 @@ public class Plugin {
 	}
 
 	/** Collects all meta data of the plugin from the manifest file. */
-	private void fetchMetaData() {
+	private void fetchMetaData() throws IOException {
 		try {
 			java.util.jar.Attributes atts = archive.getManifest().getMainAttributes();
-			name = getValue(atts, "Implementation-Title");
 
+			name = getValue(atts, "Implementation-Title");
 			if (name == null) {
 				name = archive.getName();
 			}
@@ -500,10 +544,30 @@ public class Plugin {
 
 			url = getValue(atts, "Implementation-URL");
 			vendor = getValue(atts, "Implementation-Vendor");
-
 			prefix = getValue(atts, "Namespace");
 			extensionId = getValue(atts, "Extension-ID");
 			pluginInitClassName = getValue(atts, "Initialization-Class");
+			requiredRapidMinerVersion = getValue(atts, "RapidMiner-Version");
+			String dependencies = getValue(atts, "Plugin-Dependencies");
+			if (dependencies == null) {
+				dependencies = "";
+			}
+			addDependencies(dependencies);
+
+			RapidMiner.splashMessage("loading_plugin", name);
+		} catch (Exception e) {
+			if (e instanceof IOException) {
+				throw e;
+			} else {
+				throw new IOException(e.getMessage(), e);
+			}
+		}
+	}
+
+	private void fetchPluginData() throws IOException {
+		try {
+			java.util.jar.Attributes atts = archive.getManifest().getMainAttributes();
+
 			pluginResourceObjects = getDescriptorResource("IOObject-Descriptor", false, false, atts);
 			pluginResourceOperators = getDescriptorResource("Operator-Descriptor", false, true, atts);
 			pluginParseRules = getDescriptorResource("ParseRule-Descriptor", false, false, atts);
@@ -514,17 +578,12 @@ public class Plugin {
 			pluginGUIDescriptions = getDescriptorResource("GUI-Descriptor", false, true, atts);
 			pluginSettingsDescriptions = getDescriptorResource("Settings-Descriptor", false, true, atts);
 			pluginSettingsStructure = getDescriptorResource("SettingsStructure-Descriptor", false, false, atts);
-
-			requiredRapidMinerVersion = getValue(atts, "RapidMiner-Version");
-			String dependencies = getValue(atts, "Plugin-Dependencies");
-			if (dependencies == null) {
-				dependencies = "";
-			}
-			addDependencies(dependencies);
-
-			RapidMiner.splashMessage("loading_plugin", name);
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (e instanceof IOException) {
+				throw e;
+			} else {
+				throw new IOException(e.getMessage(), e);
+			}
 		}
 	}
 
@@ -621,9 +680,8 @@ public class Plugin {
 			try {
 				// important: here the combined class loader has to be used
 				Class<?> pluginInitator = Class.forName(pluginInitClassName, false, getClassLoader());
-				Method registerOperatorMethod = pluginInitator.getMethod("getOperatorStream",
-						new Class[] { ClassLoader.class });
-				in = (InputStream) registerOperatorMethod.invoke(null, new Object[] { getClassLoader() });
+				Method registerOperatorMethod = pluginInitator.getMethod("getOperatorStream", ClassLoader.class);
+				in = (InputStream) registerOperatorMethod.invoke(null, getClassLoader());
 			} catch (ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException
 					| IllegalAccessException | InvocationTargetException e) {
 				// ignore
@@ -740,13 +798,7 @@ public class Plugin {
 			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.plugin.Plugin.plugin_dir_not_existing", pluginDir);
 		} else {
 			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.plugin.Plugin.scanning_for_plugins", pluginDir);
-			files.addAll(Arrays.asList(pluginDir.listFiles(new FilenameFilter() {
-
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.endsWith(".jar");
-				}
-			})));
+			files.addAll(Arrays.asList(pluginDir.listFiles((dir, name) -> name.endsWith(".jar"))));
 		}
 		registerPlugins(files, showWarningForNonPluginJars, overwritePluginsWithHigherVersions);
 	}
@@ -770,12 +822,10 @@ public class Plugin {
 					} else {
 						resolveVersionConflict(plugin, conflict, newPlugins);
 					}
-				} else {
-					if (showWarningForNonPluginJars) {
-						LogService.getRoot().log(Level.WARNING,
-								"com.rapidminer.tools.plugin.Plugin.jar_file_does_not_contain_entry",
-								new Object[] { jarFile.getName(), RAPIDMINER_TYPE });
-					}
+				} else if (showWarningForNonPluginJars) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.tools.plugin.Plugin.jar_file_does_not_contain_entry",
+							new Object[]{jarFile.getName(), RAPIDMINER_TYPE});
 				}
 			} catch (Throwable e) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
@@ -818,10 +868,15 @@ public class Plugin {
 		VersionNumber newVersion = new VersionNumber(newExtension.getVersion());
 		VersionNumber conflictVersion = new VersionNumber(conflictingExtension.getVersion());
 		VersionNumber higherNumber = conflictVersion;
-		if (newVersion.compareTo(conflictVersion) > 0 && isExtensionVersionAllowed(newExtension, newVersion)) {
-			plugins.remove(conflictingExtension);
-			plugins.add(newExtension);
-			higherNumber = newVersion;
+		if (newVersion.compareTo(conflictVersion) > 0) {
+			if (isExtensionVersionAllowed(newExtension, newVersion)) {
+				plugins.remove(conflictingExtension);
+				Tools.setResourceSourceForPlugin(newExtension.getExtensionId(), newExtension.getResourceSource());
+				plugins.add(newExtension);
+				higherNumber = newVersion;
+			} else {
+				Tools.setResourceSourceForPlugin(conflictingExtension.getExtensionId(), conflictingExtension.getResourceSource());
+			}
 		}
 
 		LogService.getRoot().log(Level.WARNING,
@@ -836,24 +891,78 @@ public class Plugin {
 	}
 
 	/**
-	 * Checks if the version of the extension with id extensionId is blacklisted.
+	 * Checks if the version of the extension with id extensionId is blacklisted or if the extension is not whitelisted.
 	 *
 	 * @param extensionId
 	 *            the id of the extension to check
 	 * @param version
 	 *            the version to check
-	 * @return {@code true} if the extension version is blacklisted
+	 * @return {@code true} if the extension version is blacklisted or not whitelisted
 	 */
 	public static boolean isExtensionVersionBlacklisted(String extensionId, VersionNumber version) {
-		if (PLUGIN_BLACKLIST.containsKey(extensionId)) {
-			Pair<VersionNumber, VersionNumber> versionRange = PLUGIN_BLACKLIST.get(extensionId);
-			if (versionRange != null && (versionRange.getSecond() != null && version.isAbove(versionRange.getSecond())
-					|| versionRange.getFirst() != null && !version.isAtLeast(versionRange.getFirst()))) {
-				return false;
-			}
+		if (!isExtensionWhitelisted(extensionId)) {
 			return true;
 		}
+		if (PLUGIN_BLACKLIST.containsKey(extensionId)) {
+			Pair<VersionNumber, VersionNumber> versionRange = PLUGIN_BLACKLIST.get(extensionId);
+			return versionRange == null || (versionRange.getSecond() == null || version.isAtMost(versionRange.getSecond()))
+					&& (versionRange.getFirst() == null || version.isAtLeast(versionRange.getFirst()));
+		}
 		return false;
+	}
+
+	/**
+	 * Checks if the extension with id extensionID is whitelisted.
+	 *
+	 * @param extensionId
+	 * 		the id of the extension to check
+	 * @return {@code true} if the extension is allowed.
+	 * @see #isExtensionVersionAllowed(Plugin, VersionNumber)
+	 * @since 9.0.0
+	 */
+	public static boolean isExtensionWhitelisted(String extensionId) {
+		return isExtensionWhitelisted(null, extensionId);
+	}
+
+	/**
+	 * Checks if the extension is whitelisted.
+	 *
+	 * @param extension
+	 * 		the extension to check
+	 * @return {@code true} if the extension is allowed.
+	 * @see #isExtensionVersionAllowed(Plugin, VersionNumber)
+	 * @since 9.0.0
+	 */
+	public static boolean isExtensionWhitelisted(Plugin extension) {
+		return isExtensionWhitelisted(extension, extension.getExtensionId());
+	}
+
+	/**
+	 * Checks if the extension or an extension with the given extension ID is whitelisted. If the specified {@link Plugin}
+	 * is not {@code null}, the plugin will also be checked for being signed, depending on whether it's a shipped extension.
+	 *
+	 * @param extension
+	 * 		the extension to check, can be {@code null}
+	 * @param extensionId
+	 * 		the extension ID to check, must match the extension if present
+	 * @return {@code true} if the extension is allowed.
+	 * @since 9.0.0
+	 * @see #initializePluginWhiteList()
+	 */
+	private static boolean isExtensionWhitelisted(Plugin extension, String extensionId) {
+		// exclude non matching entries
+		if (extension != null && !extension.getExtensionId().equals(extensionId)) {
+			return false;
+		}
+		// no white list => no constraints
+		if (pluginWhitelist == null) {
+			return true;
+		}
+		// always allow packaged extensions; allow shipped extensions if either allowed in general or listed
+		// otherwise allow listed extensions; check all shipped extensions if they are given as a Plugin object
+		return PACKAGED_EXTENSIONS.contains(extensionId)
+				|| SHIPPED_EXTENSIONS.contains(extensionId) && (allowShippedExtensions || pluginWhitelist.contains(extensionId))
+				? extension == null || extension.isSigned() : pluginWhitelist.contains(extensionId);
 	}
 
 	/**
@@ -890,7 +999,7 @@ public class Plugin {
 			}
 		}
 
-		if (ALL_PLUGINS.size() > 0) {
+		if (!ALL_PLUGINS.isEmpty()) {
 			i = ALL_PLUGINS.iterator();
 			while (i.hasNext()) {
 				Plugin plugin = i.next();
@@ -932,7 +1041,68 @@ public class Plugin {
 	}
 
 	/**
-	 * Removes the blacklisted plugins from the list of all plugins and adds them to the
+	 * Reads the {@value PROPERTY_PLUGINS_WHITELIST} admin properties and updates the white list.
+	 * Packaged extensions (with IDs found in {@link #PACKAGED_EXTENSIONS} are always allowed.
+	 * Shipped extensions (with IDs found in {@link #SHIPPED_EXTENSIONS} are most often allowed and include packaged extensions.
+	 * <p><strong>Note:</strong> Shipped extensions (if provided as {@link Plugin}, not as id) will be checked for signage.
+	 * <p>An absent or empty parameter means that all extensions are allowed. Empty means the empty string, only white spaces
+	 * or only whitespaces separated by commas.
+	 * <p>The keyword {@value #WHITELIST_NONE} can be used to indicate that only packaged extensions are allowed.
+	 * This overrides any other value in the property
+	 * <p>The keyword {@value #WHITELIST_SHIPPED} can be used to indicate that shipped (and also packaged extensions are allowed.
+	 * Other extensions are allowed, if they are specified in the property
+	 * <p>If only extension IDs are specified, the packaged extensions and those specified are allowed, excluding shipped extensions
+	 * that are not packaged.
+	 *
+	 * @since 9.0.0
+	 * @see #isExtensionWhitelisted(Plugin, String)
+	 */
+	private static synchronized void initializePluginWhiteList() {
+		String whitelistProperty = ParameterService.getParameterValue(PROPERTY_PLUGINS_WHITELIST);
+		if (whitelistProperty == null || whitelistProperty.trim().isEmpty()) {
+			pluginWhitelist = null;
+			allowShippedExtensions = true;
+			return;
+		}
+
+		Set<String> newWhitelist = new HashSet<>();
+		boolean newShippedState = false;
+		String[] whitelistEntries = whitelistProperty.split(",");
+		for (String whitelistEntry : whitelistEntries) {
+			whitelistEntry = whitelistEntry.trim();
+			if (whitelistEntry.isEmpty()) {
+				continue;
+			}
+			if (WHITELIST_NONE.equals(whitelistEntry)) {
+				pluginWhitelist = Collections.emptySet();
+				allowShippedExtensions = false;
+				return;
+			}
+			if (WHITELIST_SHIPPED.equals(whitelistEntry)) {
+				newShippedState = true;
+			} else {
+				newWhitelist.add(whitelistEntry);
+			}
+		}
+		allowShippedExtensions = newWhitelist.isEmpty() || newShippedState;
+		if (newWhitelist.isEmpty()) {
+			pluginWhitelist = newShippedState ? Collections.emptySet() : null;
+		} else {
+			pluginWhitelist = Collections.unmodifiableSet(newWhitelist);
+		}
+	}
+
+	/** Checks if Studio update should be prohibited */
+	private static void updateStudioUpdatePolicy() {
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_RAPIDMINER_DISALLOW_STUDIO_UPDATE))) {
+			PLUGIN_BLACKLIST.put(PACKAGEID_RAPIDMINER, null);
+		} else {
+			PLUGIN_BLACKLIST.remove(PACKAGEID_RAPIDMINER);
+		}
+	}
+
+	/**
+	 * Removes the blacklisted and non-whitelisted plugins from the list of all plugins and adds them to the
 	 * incompatible plugins.
 	 */
 	private static void filterBlacklistedPlugins() {
@@ -948,11 +1118,14 @@ public class Plugin {
 	}
 
 	/**
-	 * Checks if the plugin is marked as incompatible by the {@link #PLUGIN_BLACKLIST}.
+	 * Checks if the plugin is marked as incompatible by the {@link #PLUGIN_BLACKLIST} or is not allowed by the {@link #pluginWhitelist}.
 	 *
 	 * @return whether the plugin is incompatible
 	 */
 	private final boolean isIncompatible() {
+		if (!isExtensionWhitelisted(this)) {
+			return true;
+		}
 		if (PLUGIN_BLACKLIST.containsKey(getExtensionId())) {
 			Pair<VersionNumber, VersionNumber> forbiddenRange = PLUGIN_BLACKLIST.get(getExtensionId());
 			if (forbiddenRange == null) {
@@ -985,6 +1158,41 @@ public class Plugin {
 				return true;
 			}
 
+		}
+		return false;
+	}
+
+	/**
+	 * Returns whether this extension is signed or not.
+	 * This will return {@code false} if there is no init class defined or can not be loaded, there is no certificate present
+	 * or the certificate is not sufficient.
+	 *
+	 * @return {@code true} if the extension is properly signed, {@code false} otherwise
+	 * @since 9.0.0
+	 */
+	public boolean isSigned() {
+		if (pluginInitClassName == null) {
+			return false;
+		}
+		try {
+			Policy policy = Policy.getPolicy();
+			if (!(policy instanceof PluginSandboxPolicy)) {
+				return false;
+			}
+			Class<?> initClass = Class.forName(pluginInitClassName, false, classLoader);
+			ProtectionDomain protectionDomain = initClass.getProtectionDomain();
+			Certificate[] certificates = protectionDomain.getCodeSource().getCertificates();
+			if (certificates == null || certificates.length == 0) {
+				return false;
+			}
+			Enumeration<Permission> elements = policy.getPermissions(protectionDomain).elements();
+			while (elements.hasMoreElements()) {
+				if (elements.nextElement() instanceof AllPermission) {
+					return true;
+				}
+			}
+		} catch (ClassNotFoundException | SecurityException e) {
+			return false;
 		}
 		return false;
 	}
@@ -1082,9 +1290,7 @@ public class Plugin {
 
 	/** Returns the plugin with the given extension id. */
 	private static Plugin getPluginByExtensionId(String name, Collection<Plugin> plugins) {
-		Iterator<Plugin> i = plugins.iterator();
-		while (i.hasNext()) {
-			Plugin plugin = i.next();
+		for (Plugin plugin : plugins) {
 			if (name.equals(plugin.getExtensionId())) {
 				return plugin;
 			}
@@ -1130,14 +1336,14 @@ public class Plugin {
 				continue;
 			}
 			if (!plugin.checkDependencies(plugin, ALL_PLUGINS)) {
-				getAllPlugins().remove(plugin);
+				ALL_PLUGINS.remove(plugin);
 				INCOMPATIBLE_PLUGINS.add(plugin);
 				continue;
 			}
 
 			long start = System.currentTimeMillis();
 			if (!plugin.callInitMethod(methodName, arguments, argumentValues, useOriginalJarClassLoader)) {
-				getAllPlugins().remove(plugin);
+				ALL_PLUGINS.remove(plugin);
 				INCOMPATIBLE_PLUGINS.add(plugin);
 			}
 			recordLoadingTime(plugin.getExtensionId(), start);
@@ -1196,8 +1402,8 @@ public class Plugin {
 		}
 		try {
 			Class<?> pluginInitator = Class.forName(pluginInitClassName, false, getClassLoader());
-			Method initGuiMethod = pluginInitator.getMethod("showAboutBox", new Class[] {});
-			Boolean showAboutBox = (Boolean) initGuiMethod.invoke(null, new Object[] {});
+			Method initGuiMethod = pluginInitator.getMethod("showAboutBox");
+			Boolean showAboutBox = (Boolean) initGuiMethod.invoke(null);
 			return showAboutBox.booleanValue();
 		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException e) {
@@ -1222,8 +1428,8 @@ public class Plugin {
 			this.classLoader.setIgnoreDependencyClassloaders(false);
 			try {
 				Class<?> pluginInitator = Class.forName(pluginInitClassName, false, getClassLoader());
-				Method initGuiMethod = pluginInitator.getMethod("useExtensionTreeRoot", new Class[] {});
-				useExtensionTreeRoot = (Boolean) initGuiMethod.invoke(null, new Object[] {});
+				Method initGuiMethod = pluginInitator.getMethod("useExtensionTreeRoot");
+				useExtensionTreeRoot = (Boolean) initGuiMethod.invoke(null);
 			} catch (Throwable e) {
 				useExtensionTreeRoot = Boolean.TRUE;
 			}
@@ -1280,11 +1486,9 @@ public class Plugin {
 				// update preferences if preferences property is empty
 				// and point it to ~/.RapidMiner/extensions
 				pluginDir = FileSystemService.getUserConfigFile("extensions");
-				if (!pluginDir.isDirectory()) {
-					if (!pluginDir.mkdirs()) {
-						LogService.getRoot().log(Level.WARNING,
-								"com.rapidminer.tools.plugin.Plugin.could_not_create_user_home_extension_directory");
-					}
+				if (!pluginDir.isDirectory() && !pluginDir.mkdirs()) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.tools.plugin.Plugin.could_not_create_user_home_extension_directory");
 				}
 				ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_INIT_PLUGINS_LOCATION,
 						pluginDir.getAbsolutePath());
@@ -1323,6 +1527,23 @@ public class Plugin {
 				}
 			}
 
+			initializePluginWhiteList();
+			updateStudioUpdatePolicy();
+			ParameterService.registerParameterChangeListener(new ParameterChangeListener() {
+				@Override
+				public void informParameterChanged(String key, String value) {
+					if (key.equals(PROPERTY_PLUGINS_WHITELIST)) {
+						initializePluginWhiteList();
+					} else if (key.equals(RapidMinerGUI.PROPERTY_RAPIDMINER_DISALLOW_STUDIO_UPDATE)) {
+						updateStudioUpdatePolicy();
+					}
+				}
+
+				@Override
+				public void informParameterSaved() {
+					// ignore
+				}
+			});
 			filterBlacklistedPlugins();
 			finalizePluginLoading();
 			registerAllPluginDescriptions();
@@ -1336,13 +1557,7 @@ public class Plugin {
 		// log extension loading times
 		List<Entry<String, Long>> sortedLoadingTimes = new LinkedList<>(LOADING_TIMES.entrySet());
 		// sort from fastest to slowest
-		Collections.sort(sortedLoadingTimes, new Comparator<Entry<String, Long>>() {
-
-			@Override
-			public int compare(Entry<String, Long> o1, Entry<String, Long> o2) {
-				return o1.getValue().compareTo(o2.getValue());
-			}
-		});
+		sortedLoadingTimes.sort(Comparator.comparing(Entry::getValue));
 		for (Entry<String, Long> entry : sortedLoadingTimes) {
 			Plugin plugin = getPluginByExtensionId(entry.getKey());
 			String value = String.valueOf(entry.getValue()) + "ms";
@@ -1691,5 +1906,15 @@ public class Plugin {
 			// files could not be closed
 		}
 		ALL_PLUGINS.remove(this);
+	}
+
+	/**
+	 * Returns the resource source of this plugin.
+	 *
+	 * @return the source, never {@code null}
+	 * @since 9.0.0
+	 */
+	public ResourceSource getResourceSource() {
+		return resourceSource;
 	}
 }

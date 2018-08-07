@@ -375,8 +375,11 @@ public abstract class Abstract2DChartPlotter extends RangeablePlotterAdapter {
 			synchronized (dataTable) {
 				if (colorColumn >= 0) {
 					for (int v = 0; v < dataTable.getNumberOfValues(colorColumn); v++) {
-						dataCollection.put(dataTable.mapIndex(colorColumn, v), new LinkedList<double[]>());
-						idCollection.put(dataTable.mapIndex(colorColumn, v), new LinkedList<String>());
+						String key = dataTable.mapIndex(colorColumn, v);
+						if(key !=null) {
+							dataCollection.put(key, new LinkedList<>());
+							idCollection.put(key, new LinkedList<>());
+						}
 					}
 				}
 

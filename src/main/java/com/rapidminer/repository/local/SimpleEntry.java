@@ -56,7 +56,7 @@ public abstract class SimpleEntry implements Entry {
 	private LocalRepository repository;
 	private SimpleFolder containingFolder;
 
-	SimpleEntry(String name, SimpleFolder containingFolder, LocalRepository repository) {
+	public SimpleEntry(String name, SimpleFolder containingFolder, LocalRepository repository) {
 		this.name = name;
 		this.repository = repository;
 		this.containingFolder = containingFolder;

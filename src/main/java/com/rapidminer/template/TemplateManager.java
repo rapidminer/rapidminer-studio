@@ -38,13 +38,14 @@ import com.rapidminer.tools.io.GlobFilenameFilter;
  * Singleton entry point for registering and retrieving {@link Template}s.
  *
  * @author Simon Fischer, Gisa Schaefer
- *
  */
 public enum TemplateManager {
 
 	INSTANCE;
 
-	/** the folder inside .RapidMiner containing the templates */
+	/**
+	 * the folder inside .RapidMiner containing the templates
+	 */
 	private static final String FOLDER_TEMPLATES = "templates";
 
 	private Map<String, Template> templatesByName = new LinkedHashMap<>();
@@ -52,6 +53,8 @@ public enum TemplateManager {
 	private TemplateManager() {
 		// blank process template
 		register(PreparedTemplates.BLANK_PROCESS_TEMPLATE);
+		// turbo prep
+		register(PreparedTemplates.TURBO_PREP_TEMPLATE);
 		// auto model
 		register(PreparedTemplates.AUTO_MODEL_TEMPLATE);
 		// load templates from bundled resources
@@ -124,6 +127,6 @@ public enum TemplateManager {
 	}
 
 	public List<Template> getBlankProcessTemplates() {
-		return Arrays.asList(PreparedTemplates.BLANK_PROCESS_TEMPLATE, PreparedTemplates.AUTO_MODEL_TEMPLATE);
+		return Arrays.asList(PreparedTemplates.BLANK_PROCESS_TEMPLATE, PreparedTemplates.TURBO_PREP_TEMPLATE, PreparedTemplates.AUTO_MODEL_TEMPLATE);
 	}
 }

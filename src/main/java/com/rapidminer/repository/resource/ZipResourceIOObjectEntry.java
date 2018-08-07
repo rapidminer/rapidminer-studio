@@ -19,6 +19,7 @@
 package com.rapidminer.repository.resource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -35,12 +36,10 @@ import com.rapidminer.tools.ProgressListener;
 /**
  * Class for a IOObject that is associated with a {@link ZipStreamResource}.
  *
- * @author Gisa Schaefer, Marcel Michel
+ * @author Gisa Schaefer, Marcel Michel, Jan Czogalla
  * @since 7.0.0
  */
 public class ZipResourceIOObjectEntry extends ResourceIOObjectEntry {
-
-	private MetaData metaData;
 
 	private final ZipStreamResource zipStream;
 
@@ -51,79 +50,8 @@ public class ZipResourceIOObjectEntry extends ResourceIOObjectEntry {
 	}
 
 	@Override
-	public IOObject retrieveData(ProgressListener l) throws RepositoryException {
-		if (l != null) {
-			l.setTotal(100);
-			l.setCompleted(10);
-		}
-
-		try (ZipInputStream zip = zipStream.getStream()) {
-			ZipEntry entry;
-			while ((entry = zip.getNextEntry()) != null) {
-				if (entry.isDirectory() || entry.getName().replaceFirst("/", "").contains("/")) {
-					continue;
-				}
-				if (zipStream.getStreamPath() != null && !entry.getName().startsWith(zipStream.getStreamPath())) {
-					continue;
-				}
-				String entryName;
-				if (zipStream.getStreamPath() != null) {
-					entryName = entry.getName().replaceFirst(zipStream.getStreamPath(), "");
-				} else {
-					entryName = entry.getName();
-				}
-				if ((getName() + ".ioo").equals(entryName)) {
-					return (IOObject) IOObjectSerializer.getInstance().deserialize(zip);
-				}
-			}
-			throw new RepositoryException("Missing resource: " + getResource() + ".ioo");
-		} catch (IOException e) {
-			throw new RepositoryException("Cannot load data from '" + getResource() + ".ioo': " + e, e);
-		}
-	}
-
-	@Override
-	public MetaData retrieveMetaData() throws RepositoryException {
-		if (metaData == null) {
-			try (ZipInputStream zip = zipStream.getStream()) {
-				ZipEntry entry;
-				while ((entry = zip.getNextEntry()) != null) {
-					if (entry.isDirectory() || entry.getName().replaceFirst("/", "").contains("/")) {
-						continue;
-					}
-					if (zipStream.getStreamPath() != null && !entry.getName().startsWith(zipStream.getStreamPath())) {
-						continue;
-					}
-					String entryName;
-					if (zipStream.getStreamPath() != null) {
-						entryName = entry.getName().replaceFirst(zipStream.getStreamPath(), "");
-					} else {
-						entryName = entry.getName();
-					}
-					if ((getName() + ".md").equals(entryName)) {
-						try (ObjectInputStream objectIn = new ObjectInputStream(zip)) {
-							this.metaData = (MetaData) objectIn.readObject();
-							if (this.metaData instanceof ExampleSetMetaData) {
-								for (AttributeMetaData amd : ((ExampleSetMetaData) metaData).getAllAttributes()) {
-									if (amd.isNominal()) {
-										amd.shrinkValueSet();
-									}
-								}
-							}
-							return metaData;
-						} catch (ClassNotFoundException e) {
-							throw new RepositoryException("Cannot load meta data from '" + getResource() + ".md" + "': " + e,
-									e);
-						}
-					}
-				}
-				throw new RepositoryException("Missing resource: " + getResource() + ".md");
-			} catch (IOException e1) {
-				throw new RepositoryException("Cannot load meta data from '" + getResource() + ".md" + "': " + e1, e1);
-			}
-
-		}
-		return metaData;
+	protected InputStream getResourceStream(String suffix) throws RepositoryException {
+		return zipStream.getStream(getName(), getResource(), suffix);
 	}
 
 	@Override

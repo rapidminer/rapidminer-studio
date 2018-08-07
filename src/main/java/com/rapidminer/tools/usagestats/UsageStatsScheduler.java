@@ -27,6 +27,7 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.dialog.EULADialog;
 import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.settings.Telemetry;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
@@ -61,6 +62,9 @@ public final class UsageStatsScheduler  {
 
 	/** Starts the first timer. */
 	public static void init() {
+		if (Telemetry.USAGESTATS.isDenied()) {
+			return;
+		}
 		ParameterService.registerParameterChangeListener(new ParameterChangeListener() {
 			@Override
 			public void informParameterChanged(String key, String value) {
@@ -127,6 +131,9 @@ public final class UsageStatsScheduler  {
 	}
 
 	private static synchronized void transmit(UsageStatistics.Reason reason, boolean wait) {
+		if (Telemetry.USAGESTATS.isDenied()) {
+			return;
+		}
 		ActionStatisticsCollector.ActionStatisticsSnapshot snapshot = ActionStatisticsCollector.getInstance().getActionStatisticsSnapshot(true);
 		if (UsageStatsTransmissionDialog.askForTransmission(snapshot)) {
 			stopTimer();
@@ -216,6 +223,10 @@ public final class UsageStatsScheduler  {
 	 * the EDT.
 	 */
 	public static void transmitOnShutdown() {
+		if (Telemetry.USAGESTATS.isDenied()) {
+			return;
+		}
+
 		stopTimer();
 
 		if (shouldTransmitOnShutdown()) {

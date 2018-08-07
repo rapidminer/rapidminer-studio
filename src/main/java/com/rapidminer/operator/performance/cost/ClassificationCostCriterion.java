@@ -180,7 +180,7 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	}
 
 	/**
-	 * Delivers the total amount of costs considered for the MikroAverange.
+	 * Delivers the total amount of costs considered for the MicroAverange.
 	 *
 	 * @return total costs
 	 */

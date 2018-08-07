@@ -21,22 +21,32 @@ package com.rapidminer.gui.flow.processrendering.annotations;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.RenderingHints;
+import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.swing.JEditorPane;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Position;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLDocument;
 
+import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.annotations.model.AnnotationDragHelper;
 import com.rapidminer.gui.flow.processrendering.annotations.model.AnnotationResizeHelper;
 import com.rapidminer.gui.flow.processrendering.annotations.model.AnnotationResizeHelper.ResizeDirection;
@@ -49,6 +59,7 @@ import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationColo
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawer;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -105,6 +116,7 @@ public final class AnnotationDrawer {
 		pane = new JEditorPane("text/html", "");
 		pane.setBorder(null);
 		pane.setOpaque(false);
+		pane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
 	}
 
 	/**
@@ -118,9 +130,6 @@ public final class AnnotationDrawer {
 	 *            if {@code true} we are printing instead of drawing to the screen
 	 */
 	public void drawAnnotation(final WorkflowAnnotation anno, final Graphics2D g2, final boolean printing) {
-		// do basic interpolation when zooming or on high dpi screens
-		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
 		Rectangle2D loc = anno.getLocation();
 		AnnotationColor col = anno.getStyle().getAnnotationColor();
 
@@ -131,7 +140,7 @@ public final class AnnotationDrawer {
 
 		// draw drag indicators if needed
 		if (model.getDragged() != null && model.getDragged().getDraggedAnnotation().equals(anno)) {
-			drawAnnoDragIndicators(g2, anno, loc, printing);
+			drawAnnoDragIndicators(g2, printing);
 			shadowOperatorsWhileDragging(g2, anno, printing);
 		}
 
@@ -168,7 +177,7 @@ public final class AnnotationDrawer {
 			printAnnotationFromEditor(anno, g2);
 		} else {
 			// not printing, use fast image cache
-			g2.drawImage(cachedImage, (int) loc.getX(), (int) loc.getY(), null);
+			g2.drawImage(cachedImage, (int) loc.getX(), (int) loc.getY(), (int) loc.getWidth(), (int) loc.getHeight(), null);
 		}
 		cachedImage = null;
 
@@ -202,7 +211,7 @@ public final class AnnotationDrawer {
 
 		// overflow indicator if needed
 		if (anno.isOverflowing() && model.getResized() == null) {
-			drawOverflowIndicator(anno, g2, loc, printing);
+			drawOverflowIndicator(g2, loc, printing);
 		}
 
 		// shadow this annotation if another one is dragged and this one is attached to an operator
@@ -210,6 +219,17 @@ public final class AnnotationDrawer {
 				&& !model.getDragged().getDraggedAnnotation().equals(anno) && model.getDragged().isDragInProgress()
 				&& model.getDragged().isUnsnapped()) {
 			overshadowRect(loc, g2);
+		}
+
+		// mouse cursor update
+		if (rendererModel.getHoveringOperator() == null && rendererModel.getHoveringPort() == null) {
+			if (RapidMiner.getExecutionMode() == RapidMiner.ExecutionMode.UI) {
+				if (model.getHovered() != null && model.getHoveredResizeDirection() == null && model.getHoveredHyperLink() != null) {
+					RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				} else {
+					RapidMinerGUI.getMainFrame().getProcessPanel().getProcessRenderer().setCursor(Cursor.getDefaultCursor());
+				}
+			}
 		}
 	}
 
@@ -349,15 +369,10 @@ public final class AnnotationDrawer {
 	 *
 	 * @param g
 	 *            the graphics context to draw upon
-	 * @param anno
-	 *            the current annotation to draw
-	 * @param loc
-	 *            the location of the annotation
 	 * @param printing
 	 *            if we are currently printing
 	 */
-	private void drawAnnoDragIndicators(final Graphics2D g, final WorkflowAnnotation anno, final Rectangle2D loc,
-			final boolean printing) {
+	private void drawAnnoDragIndicators(final Graphics2D g, final boolean printing) {
 		if (printing) {
 			// never draw them for printing
 			return;
@@ -441,8 +456,6 @@ public final class AnnotationDrawer {
 	/**
 	 * Draws indicator in case the annotation text overflows on the y axis.
 	 *
-	 * @param anno
-	 *            the annotation
 	 * @param g
 	 *            the graphics context to draw upon
 	 * @param loc
@@ -450,8 +463,7 @@ public final class AnnotationDrawer {
 	 * @param printing
 	 *            if we are currently printing
 	 */
-	private void drawOverflowIndicator(final WorkflowAnnotation anno, final Graphics2D g, final Rectangle2D loc,
-			final boolean printing) {
+	private void drawOverflowIndicator(final Graphics2D g, final Rectangle2D loc, final boolean printing) {
 		if (printing) {
 			// never draw them for printing
 			return;
@@ -491,20 +503,57 @@ public final class AnnotationDrawer {
 	private Image cacheAnnotationImage(final WorkflowAnnotation anno, final int cacheId) {
 		Rectangle2D loc = anno.getLocation();
 		// paint each annotation with the same JEditorPane
-		Dimension size = new Dimension((int) loc.getWidth(), (int) loc.getHeight());
+		Dimension size = new Dimension((int) Math.round(loc.getWidth() * rendererModel.getZoomFactor()), (int) Math.round(loc.getHeight() * rendererModel.getZoomFactor()));
 		pane.setSize(size);
+		float originalSize = AnnotationDrawUtils.ANNOTATION_FONT.getSize();
+		// without this, scaling is off even more when zooming out..
+		if (rendererModel.getZoomFactor() < 1.0d) {
+			originalSize -= 1f;
+		}
+		float fontSize = (float) (originalSize * rendererModel.getZoomFactor());
+		Font annotationFont = AnnotationDrawUtils.ANNOTATION_FONT.deriveFont(fontSize);
+		pane.setFont(annotationFont);
 		pane.setText(AnnotationDrawUtils.createStyledCommentString(anno));
 		pane.setCaretPosition(0);
+
+		// while caching, update the hyperlink bounds visible in this annotation
+		HTMLDocument htmlDocument = (HTMLDocument) pane.getDocument();
+		HTMLDocument.Iterator linkIterator = htmlDocument.getIterator(HTML.Tag.A);
+		List<Pair<String, Rectangle>> hyperlinkBounds = new LinkedList<>();
+		while (linkIterator.isValid()) {
+			AttributeSet attributes = linkIterator.getAttributes();
+			String url = (String) attributes.getAttribute(HTML.Attribute.HREF);
+			int startOffset = linkIterator.getStartOffset();
+			int endOffset = linkIterator.getEndOffset();
+			try {
+				// rectangle for leftmost character
+				Rectangle rectangleLeft = pane.getUI().modelToView(pane, startOffset, Position.Bias.Forward);
+				// rectangle for rightmost character
+				Rectangle rectangleRight = pane.getUI().modelToView(pane, endOffset, Position.Bias.Backward);
+				// merge both rectangles to get full bounds of hyperlink
+				// also remove the zoom factor to not get distorted bounds when zoomed in/out
+				int x = (int) (rectangleLeft.getX() / rendererModel.getZoomFactor());
+				int y = (int) (rectangleLeft.getY() / rendererModel.getZoomFactor());
+				int w = (int) ((rectangleRight.getX() - rectangleLeft.getX() + rectangleRight.getWidth()) / rendererModel.getZoomFactor());
+				int h = (int) ((rectangleRight.getY() - rectangleLeft.getY() + rectangleRight.getHeight()) / rendererModel.getZoomFactor());
+				hyperlinkBounds.add(new Pair<>(url, new Rectangle(x, y, w, h)));
+			} catch (BadLocationException e) {
+				// silently ignored because at worst you cannot click a hyperlink, nothing to spam the log with
+			}
+			linkIterator.next();
+		}
+		model.setHyperlinkBoundsForAnnotation(anno.getId(), hyperlinkBounds);
+
 		// draw annotation area to image and then to graphics
 		// otherwise heavyweight JEdiorPane draws over everything and outside of panel
-		BufferedImage img = new BufferedImage((int) loc.getWidth(), (int) loc.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		BufferedImage img = new BufferedImage((int) (loc.getWidth() * rendererModel.getZoomFactor()), (int) (loc.getHeight() * rendererModel.getZoomFactor()), BufferedImage.TYPE_INT_ARGB);
 		Graphics2D gImg = img.createGraphics();
 		gImg.setRenderingHints(ProcessDrawer.HI_QUALITY_HINTS);
 		// without this, the text is pixelated on half opaque backgrounds
 		gImg.setComposite(AlphaComposite.SrcOver);
 		// paint JEditorPane to image
 		pane.paint(gImg);
-		displayCache.put(anno.getId(), new WeakReference<Image>(img));
+		displayCache.put(anno.getId(), new WeakReference<>(img));
 		cachedID.put(anno.getId(), cacheId);
 
 		return img;
@@ -524,11 +573,12 @@ public final class AnnotationDrawer {
 		Graphics2D gPr = (Graphics2D) g2.create();
 
 		Rectangle2D loc = anno.getLocation();
-		gPr.translate(loc.getX(), loc.getY());
-		gPr.setClip(0, 0, (int) loc.getWidth(), (int) loc.getHeight());
-		// paint each annotation with the same JEditorPane
 		Dimension size = new Dimension((int) loc.getWidth(), (int) loc.getHeight());
+		gPr.translate(loc.getX(), loc.getY());
+		gPr.setClip(0, 0, (int) size.getWidth(), (int) size.getHeight());
+		// paint each annotation with the same JEditorPane
 		pane.setSize(size);
+		pane.setFont(AnnotationDrawUtils.ANNOTATION_FONT);
 		pane.setText(AnnotationDrawUtils.createStyledCommentString(anno));
 		pane.setCaretPosition(0);
 		// draw annotation area to image and then to graphics

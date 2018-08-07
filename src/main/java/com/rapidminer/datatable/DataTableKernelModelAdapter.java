@@ -107,7 +107,7 @@ public class DataTableKernelModelAdapter extends AbstractDataTable {
 		this.kernelModel = dataTableKernelModelAdapter.kernelModel; // shallow clone
 		this.index2LabelMap = dataTableKernelModelAdapter.index2LabelMap; // shallow clone
 		this.label2IndexMap = dataTableKernelModelAdapter.label2IndexMap; // shallow clone
-
+		this.attributeNames = dataTableKernelModelAdapter.attributeNames; // shallow clone
 		this.sampleMapping = null;
 	}
 
@@ -213,7 +213,7 @@ public class DataTableKernelModelAdapter extends AbstractDataTable {
 		}
 		for (int i = 0; i < attributeNames.length; i++) {
 			if (attributeNames[i].equals(name)) {
-				return i;
+				return i + KernelModelRow2DataTableRowWrapper.NUMBER_OF_SPECIAL_COLUMNS;
 			}
 		}
 		if (name.startsWith(DEFAULT_REGULAR_ATTRIBUTE_PREFIX)) {

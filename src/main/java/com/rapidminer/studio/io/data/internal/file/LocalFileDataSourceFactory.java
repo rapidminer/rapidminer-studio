@@ -102,13 +102,35 @@ public final class LocalFileDataSourceFactory implements DataSourceFactory<Local
 
 	@Override
 	public WizardStep createLocationStep(ImportWizard wizard) {
-		List<FileDataSourceFactory<?>> factories = DataSourceFactoryRegistry.INSTANCE.getFileFactories();
-		List<Pair<String, Set<String>>> allFileEndings = new LinkedList<>();
-		for (FileDataSourceFactory<?> factory : factories) {
-			allFileEndings.add(new Pair<>(factory.getI18NKey(), factory.getFileExtensions()));
-		}
-		return new LocalFileLocationWizardStep(allFileEndings, wizard);
+		return createLocationStepForFactory(wizard, null);
 	}
+
+	/**
+	 * Same as {@link #createLocationStep(ImportWizard)}, but for a specific factory instead of the generic import
+	 * wizard with all factories
+	 *
+	 * @param wizard
+	 * 		the wizard instance
+	 * @param factoryI18NKey
+	 * 		the factory i18n key. If {@code null}, behaves the same as {@link #createLocationStep(ImportWizard)}
+	 * @return the new location wizard step
+	 * @since 9.0.0
+	 */
+	public WizardStep createLocationStepForFactory(ImportWizard wizard, String factoryI18NKey) {
+		List<FileDataSourceFactory<?>> factories = DataSourceFactoryRegistry.INSTANCE.getFileFactories();
+		List<Pair<String, Set<String>>> selectedFileEndings = new LinkedList<>();
+		for (FileDataSourceFactory<?> factory : factories) {
+			if (factoryI18NKey == null || factory.getI18NKey().equals(factoryI18NKey)) {
+				selectedFileEndings.add(new Pair<>(factory.getI18NKey(), factory.getFileExtensions()));
+				if (factoryI18NKey != null) {
+					// for specific factory, stop after hit
+					break;
+				}
+			}
+		}
+		return new LocalFileLocationWizardStep(selectedFileEndings, wizard, factoryI18NKey);
+	}
+
 
 	/**
 	 * As described in the {@link FileDataSourceFactory#getMimeTypes()} and

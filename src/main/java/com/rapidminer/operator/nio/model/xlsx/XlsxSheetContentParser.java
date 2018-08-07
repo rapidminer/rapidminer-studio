@@ -427,7 +427,7 @@ class XlsxSheetContentParser implements AutoCloseable {
 	 * Returns the {@code 0-based} index of the current row, which was extracted from the worksheet.
 	 *
 	 * @return the {@code 0} based index of the current parsed row. Returns {@code -1} in case no
-	 *         row has been parsed yet. It is increased each time calling {@link #next()} and is
+	 *         row has been parsed yet. It is increased each time calling {@link #next} and is
 	 *         reset to {@code -1} in case {@link #reset(XMLInputFactory)} is called.
 	 */
 	int getCurrentRowIndex() {
@@ -469,7 +469,7 @@ class XlsxSheetContentParser implements AutoCloseable {
 	 * reading process at the first row. It is assumed the the XLSX content and operator
 	 * configuration remain the same.
 	 *
-	 * @param factory
+	 * @param xmlFactory
 	 *            the {@link XMLInputFactory} that should be used to open the
 	 *            {@link XMLStreamReader}.
 	 *
@@ -507,14 +507,14 @@ class XlsxSheetContentParser implements AutoCloseable {
 
 	/**
 	 * @return an array which stores if an column was empty during parsing. You should only call
-	 *         this method iff {@link #hasNext()} returns <code>false</code>.
+	 *         this method if {@link #hasNext()} returns <code>false</code>.
 	 */
 	boolean[] getEmptyColumns() {
 		return emptyColumn;
 	}
 
 	/**
-	 * @param parameterAsBoolean
+	 * @param isFirstRowAsNames
 	 *            defines whether the first row should be used as names. If set to <code>true</code>
 	 *            the worksheet parser will skip all beginning empty rows until the first row with
 	 *            content was found.

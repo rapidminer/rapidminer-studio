@@ -22,7 +22,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.ImageIcon;
 
 import org.w3c.dom.Element;
@@ -33,9 +32,6 @@ import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.license.License;
-import com.rapidminer.license.LicenseEvent;
-import com.rapidminer.license.LicenseEvent.LicenseEventType;
-import com.rapidminer.license.LicenseManagerListener;
 import com.rapidminer.tools.GenericOperatorFactory;
 import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.I18N;
@@ -54,8 +50,6 @@ import com.rapidminer.tools.plugin.Plugin;
  * @author Ingo Mierswa
  */
 public class OperatorDescription implements Comparable<OperatorDescription> {
-
-	private static final ImageIcon[] EMPTY_ICONS = new ImageIcon[3];
 
 	/** the small icon for the constraint violation operators */
 	private static final ImageIcon UNSUPPORTED_ICON_SMALL = SwingTools
@@ -80,7 +74,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 
 	private final OperatorDocumentation documentation;
 
-	private ImageIcon[] icons;
+	private final ImageIcon[] icons = new ImageIcon[3];
 
 	private String fullyQualifiedGroupKey;
 
@@ -152,20 +146,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 			}
 		}
 
-		// we need to know when the license changes because operators may become
-		// supported/unsupported, which results in a changed icon */
-		ProductConstraintManager.INSTANCE.registerLicenseManagerListener(new LicenseManagerListener() {
-
-			@Override
-			public <S, C> void handleLicenseEvent(final LicenseEvent<S, C> event) {
-				if (event.getType() == LicenseEventType.ACTIVE_LICENSE_CHANGED) {
-					isSupportedByLicense = null;
-					updateIcons();
-				}
-			}
-		});
 		setIconName(XMLTools.getTagContents(element, "icon"));
-		updateIcons();
 	}
 
 	/**
@@ -199,20 +180,7 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 			}
 		}
 
-		// we need to know when the license changes because operators may become
-		// supported/unsupported, which results in a changed icon */
-		ProductConstraintManager.INSTANCE.registerLicenseManagerListener(new LicenseManagerListener() {
-
-			@Override
-			public <S, C> void handleLicenseEvent(final LicenseEvent<S, C> event) {
-				if (event.getType() == LicenseEventType.ACTIVE_LICENSE_CHANGED) {
-					refresh();
-				}
-			}
-		});
-
 		setIconName(iconName);
-		updateIcons();
 	}
 
 	/**
@@ -253,7 +221,6 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 		this.provider = provider;
 
 		setIconName(iconName);
-		updateIcons();
 	}
 
 	/**
@@ -330,10 +297,6 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 		}
 	}
 
-	public ImageIcon getIcon() {
-		return getIcons()[1];
-	}
-
 	/**
 	 * The priority of the operator, defined in the operatorsXYZ.xml via the {@code <priority>} tag.
 	 * A higher value means the operator is sorted higher in the operator tree.<br/>
@@ -345,21 +308,38 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 		return priority;
 	}
 
+	/**
+	 * Returns a small icon
+	 *
+	 * @return a 16x16 if available, a 24x24 px or {@code null} otherwise
+	 */
 	public ImageIcon getSmallIcon() {
-		ImageIcon[] icons2 = this.getIcons();
-		if (icons2[0] != null) {
-			return icons2[0];
+		if (icons[0] != null) {
+			return icons[0];
 		} else {
-			return icons2[1];
+			return icons[1];
 		}
 	}
 
+	/**
+	 * Returns a regular sized icon
+	 *
+	 * @return a 24x24 px icon, or {@code null}
+	 */
+	public ImageIcon getIcon() {
+		return icons[1];
+	}
+
+	/**
+	 * Returns a large icon
+	 *
+	 * @return a 48x48 px icon if available, 24x24 px or {@code null} otherwise
+	 */
 	public ImageIcon getLargeIcon() {
-		ImageIcon[] icons2 = this.getIcons();
-		if (icons2[2] != null) {
-			return icons2[2];
+		if (icons[2] != null) {
+			return icons[2];
 		} else {
-			return icons2[1];
+			return icons[1];
 		}
 	}
 
@@ -511,13 +491,20 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 		}
 	}
 
+	/**
+	 * Returns the filename of the current icon
+	 *
+	 * @return the icon name, or {@code null} if no icon is set
+	 */
 	public String getIconName() {
-		if (iconName != null) {
-			return iconName;
-		}
-		return null;
+		return iconName;
 	}
 
+	/**
+	 * Updates the icon
+	 *
+	 * @param iconName the new icon filename, or {@code null} to remove the icon
+	 */
 	public void setIconName(final String iconName) {
 		this.iconName = iconName;
 		updateIcons();
@@ -528,17 +515,20 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	 */
 	private void updateIcons() {
 		if (iconName != null) {
-			icons = new ImageIcon[3];
 			icons[0] = SwingTools.createIcon("16/" + iconName);
 			icons[1] = SwingTools.createIcon("24/" + iconName);
 			icons[2] = SwingTools.createIcon("48/" + iconName);
-			if (!isSupportedByLicense()) {
+			if (!isSupportedByLicense() || OperatorService.isOperatorBlacklisted(this.key)) {
 				icons[0] = SwingTools.createOverlayIcon(icons[0], UNSUPPORTED_ICON_SMALL);
 				icons[1] = SwingTools.createOverlayIcon(icons[1], UNSUPPORTED_ICON);
 				icons[2] = SwingTools.createOverlayIcon(icons[2], UNSUPPORTED_ICON_LARGE);
 			}
 		} else {
-			icons = EMPTY_ICONS;
+			if (!isSupportedByLicense() || OperatorService.isOperatorBlacklisted(this.key)) {
+				icons[0] = UNSUPPORTED_ICON_SMALL;
+				icons[1] = UNSUPPORTED_ICON;
+				icons[2] = UNSUPPORTED_ICON_LARGE;
+			}
 		}
 	}
 
@@ -551,13 +541,6 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	 */
 	public boolean isIconDefined() {
 		return iconName != null;
-	}
-
-	private ImageIcon[] getIcons() {
-		if (icons != null) {
-			return icons;
-		}
-		return null;
 	}
 
 	public Plugin getProvider() {

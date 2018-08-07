@@ -239,11 +239,6 @@ public final class AnnotationResizeHelper {
 		double newY = startFrame.getY() + yIncrease;
 		double newWidth = startFrame.getWidth() + widthIncrease;
 		double newHeight = startFrame.getHeight() + heightIncrease;
-		if (resizedAnno instanceof OperatorAnnotation) {
-			newHeight = Math.min(AnnotationDrawUtils.getContentHeight(
-					AnnotationDrawUtils.createStyledCommentString(resizedAnno.getComment(), resizedAnno.getStyle()),
-					(int) newWidth), OperatorAnnotation.MAX_HEIGHT);
-		}
 
 		// cannot relocate annotation to less than min x/y values
 		if (newX < WorkflowAnnotation.MIN_X) {

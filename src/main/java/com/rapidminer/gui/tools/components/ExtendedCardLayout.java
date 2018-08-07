@@ -24,6 +24,8 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Insets;
 
+import com.rapidminer.gui.tools.SwingTools;
+
 
 /**
  * Same as {@link CardLayout}, with the only difference that it does compute its preferred size for the visible components only and ignores the preferred size of components on not displayed cards.
@@ -35,7 +37,7 @@ public class ExtendedCardLayout extends CardLayout {
 
 	@Override
 	public Dimension preferredLayoutSize(Container parent) {
-		Component comp = findDisplayedComponent(parent);
+		Component comp = SwingTools.findDisplayedComponent(parent);
 
 		if (comp != null) {
 			Dimension preferredSize = comp.getPreferredSize();
@@ -46,20 +48,4 @@ public class ExtendedCardLayout extends CardLayout {
 		}
 	}
 
-	/**
-	 * Returns the visible component, aka the component that is currently displayed.
-	 *
-	 * @param parent
-	 * 		the container all cards are in
-	 * @return the component or {@code null} if no component is part of this card layout
-	 */
-	private Component findDisplayedComponent(Container parent) {
-		for (Component comp : parent.getComponents()) {
-			if (comp.isVisible()) {
-				return comp;
-			}
-		}
-
-		return null;
-	}
 }

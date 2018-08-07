@@ -188,6 +188,7 @@ public class Tools {
 	private static int numberOfFractionDigits;
 
 	private static final List<ResourceSource> ALL_RESOURCE_SOURCES = Collections.synchronizedList(new LinkedList<>());
+	private static final Map<String, ResourceSource> PLUGIN_RESOURCE_SOURCES = Collections.synchronizedMap(new HashMap<>());
 
 	public static final String RESOURCE_PREFIX = "com/rapidminer/resources/";
 
@@ -1042,6 +1043,42 @@ public class Tools {
 		MailUtilities.sendEmail(address, subject, content);
 	}
 
+	/**
+	 * Removes the given resource source. If the resource source was not registered before, does nothing.
+	 *
+	 * @param source
+	 * 		the resource source to remove
+	 * @since 9.0.0
+	 */
+	public static void removeResourceSource(ResourceSource source) {
+		ALL_RESOURCE_SOURCES.remove(source);
+	}
+
+	/**
+	 * Sets a resource source for a plugin. Note that for the same plugin, only the last set resource source will be used!
+	 *
+	 * @param pluginKey
+	 * 		the plugin key
+	 * @param source
+	 * 		the source
+	 * @since 9.0.0
+	 */
+	public static void setResourceSourceForPlugin(String pluginKey, ResourceSource source) {
+		PLUGIN_RESOURCE_SOURCES.put(pluginKey, source);
+	}
+
+	/**
+	 * Removes the resource source of the given plugin. If the plugin resource source was not registered before, does
+	 * nothing.
+	 *
+	 * @param pluginKey
+	 * 		* 		the plugin key for which the resource source should be removed
+	 * @since 9.0.0
+	 */
+	public static void removeResourceSourceForPlugin(String pluginKey) {
+		PLUGIN_RESOURCE_SOURCES.remove(pluginKey);
+	}
+
 	/** Adds a new resource source. Might be used by plugins etc. */
 	public static void addResourceSource(ResourceSource source) {
 		ALL_RESOURCE_SOURCES.add(source);
@@ -1070,6 +1107,14 @@ public class Tools {
 		synchronized (ALL_RESOURCE_SOURCES) {
 			for (ResourceSource source : ALL_RESOURCE_SOURCES) {
 				URL url = source.getResource(name);
+				if (url != null) {
+					return url;
+				}
+			}
+		}
+		synchronized (PLUGIN_RESOURCE_SOURCES) {
+			for (ResourceSource pluginSource : PLUGIN_RESOURCE_SOURCES.values()) {
+				URL url = pluginSource.getResource(name);
 				if (url != null) {
 					return url;
 				}

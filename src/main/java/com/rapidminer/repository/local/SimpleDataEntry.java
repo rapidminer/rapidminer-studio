@@ -26,7 +26,7 @@ import com.rapidminer.repository.DataEntry;
  */
 public abstract class SimpleDataEntry extends SimpleEntry implements DataEntry {
 
-	SimpleDataEntry(String name, SimpleFolder containingFolder, LocalRepository localRepository) {
+	public SimpleDataEntry(String name, SimpleFolder containingFolder, LocalRepository localRepository) {
 		super(name, containingFolder, localRepository);
 	}
 

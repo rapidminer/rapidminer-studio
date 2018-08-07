@@ -55,7 +55,7 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 	private final Lock readLock = lock.readLock();
 	private final Lock writeLock = lock.writeLock();
 
-	SimpleFolder(String name, SimpleFolder parent, LocalRepository repository) {
+	public SimpleFolder(String name, SimpleFolder parent, LocalRepository repository) {
 		super(name, parent, repository);
 	}
 
@@ -230,11 +230,6 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 	@Override
 	public boolean isReadOnly() {
 		return false;
-	}
-
-	@Override
-	public String getType() {
-		return Folder.TYPE_NAME;
 	}
 
 	@Override

@@ -29,7 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-
 import javax.swing.event.EventListenerList;
 
 import com.rapidminer.Process;
@@ -55,7 +54,7 @@ import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEve
 import com.rapidminer.gui.processeditor.ExtendedProcessEditor;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.io.process.AnnotationProcessXMLFilter;
-import com.rapidminer.io.process.AutoModelProcessXMLFilter;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.io.process.BackgroundImageProcessXMLFilter;
 import com.rapidminer.io.process.GUIProcessXMLFilter;
 import com.rapidminer.io.process.ProcessLayoutXMLFilter;
@@ -64,12 +63,15 @@ import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.FlagUserData;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.operator.ProcessRootOperator;
+import com.rapidminer.operator.UserData;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
+import com.rapidminer.tutorial.Tutorial;
 
 
 /**
@@ -222,7 +224,7 @@ public final class ProcessRendererModel {
 	static {
 		if (!RapidMiner.getExecutionMode().isHeadless()) {
 			ProcessXMLFilterRegistry.registerFilter(new GUIProcessXMLFilter());
-			ProcessXMLFilterRegistry.registerFilter(new AutoModelProcessXMLFilter());
+			ProcessXMLFilterRegistry.registerFilter(new ProcessOriginProcessXMLFilter());
 		}
 	}
 
@@ -820,6 +822,30 @@ public final class ProcessRendererModel {
 	 */
 	public Operator getHoveringOperator() {
 		return hoveringOperator;
+	}
+
+	/**
+	 * Checks if the mouse cursor is hovering over the header (i.e. name) portion of the hovered operator.
+	 * Will also return {@code false} if no operator is currently hovered.
+	 *
+	 * @return whether the cursor is hovering over the operator name
+	 * @since 9.0.0
+	 */
+	public boolean isHoveringOperatorName() {
+		if (hoveringOperator == null) {
+			return false;
+		}
+		Rectangle2D operatorRect = getOperatorRect(hoveringOperator);
+		if (operatorRect == null) {
+			// should not happen
+			return false;
+		}
+		Point mousePosition = getMousePositionRelativeToProcess();
+		if (mousePosition == null) {
+			// should not happen because then the operator would not be hovered
+			return false;
+		}
+		return mousePosition.y - operatorRect.getY() < HEADER_HEIGHT - 1;
 	}
 
 	/**
@@ -1774,13 +1800,20 @@ public final class ProcessRendererModel {
 		synchronized (process) {
 			undoManager.clearSnapshot();
 			try {
-				String currentXML = process.getRootOperator().getXML(true);
+				ProcessRootOperator rootOperator = process.getRootOperator();
+				UserData<Object> isTutorialProcess = rootOperator.getUserData(Tutorial.KEY_USER_DATA_FLAG);
+				String currentXML = rootOperator.getXML(true);
 				ProcessLocation procLoc = process.getProcessLocation();
 				if (!stateXML.equals(currentXML)) {
 					process = undoManager.restoreProcess(index);
+					rootOperator = process.getRootOperator();
+					// keep tutorial flag between undo steps
+					if (isTutorialProcess != null) {
+						rootOperator.setUserData(Tutorial.KEY_USER_DATA_FLAG, isTutorialProcess);
+					}
 					process.setProcessLocation(procLoc);
 					// check whether the current xml corresponds to the saved one
-					hasChanged = procLoc == null || !process.getRootOperator().getXML(false).equals(procLoc.getRawXML());
+					hasChanged = procLoc == null || !rootOperator.getXML(false).equals(procLoc.getRawXML());
 					fireProcessChanged();
 				}
 

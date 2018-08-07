@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.look.ui;
 
 import java.awt.Font;
@@ -92,7 +92,12 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 
 	private TabbedPaneMouseListener mouseListener = new TabbedPaneMouseListener();
 	// the content border is not repainted for the SettingsDialog unless this is done
-	private ChangeListener tabSelListener = e -> SwingUtilities.invokeLater(() -> TabbedPaneUI.this.tabPane.repaint());
+	private ChangeListener tabSelListener = e -> SwingUtilities.invokeLater(() -> {
+		if (tabPane != null) {
+			tabPane.repaint();
+		}
+	});
+
 	// update the state of this UI in case of client property change
 	private PropertyChangeListener startDialogListener = e -> isStartDialogTab = isStartDialogTab();
 
@@ -216,7 +221,8 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 					super.calculateTabRects(tabPlacement, tabCount);
 
 					for (int i = 0; i < rects.length; i++) {
-						rects[i].x += i * RapidLookAndFeel.START_TAB_GAP + RapidLookAndFeel.START_TAB_INDENT;
+						rects[i].x += i * ( RapidLookAndFeel.START_TAB_GAP + RapidLookAndFeel.START_TAB_INDENT) + RapidLookAndFeel.START_TAB_INDENT;
+						rects[i].width += RapidLookAndFeel.START_TAB_GAP;
 					}
 				}
 			};
@@ -262,7 +268,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 
 	@Override
 	protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex, int xp, int yp, int mw, int mh,
-			boolean isSelected) {
+								  boolean isSelected) {
 
 		if (isSelected) {
 			paintTabBorderSelected(g, tabPlacement, tabIndex, xp, yp, mw, mh);
@@ -439,8 +445,8 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		g2.setPaint(new GradientPaint(1, y + 6, RapidLookTools.getColors().getTabbedPaneColors()[6], 1, y + h,
 				RapidLookTools.getColors().getTabbedPaneColors()[7]));
 
-		int[] xArr = new int[] { x + 4, w + x - 5, w + x - 5, x + 4 };
-		int[] yArr = new int[] { y + 6, y + 6, y + h, y + h };
+		int[] xArr = new int[]{x + 4, w + x - 5, w + x - 5, x + 4};
+		int[] yArr = new int[]{y + 6, y + 6, y + h, y + h};
 		Polygon p1 = new Polygon(xArr, yArr, 4);
 
 		g2.fillPolygon(p1);
@@ -509,8 +515,8 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		g2.setPaint(new GradientPaint(1, y, RapidLookTools.getColors().getTabbedPaneColors()[7], 1, y + h - 6,
 				RapidLookTools.getColors().getTabbedPaneColors()[6]));
 
-		int[] xArr = new int[] { x + 4, w + x - 5, x + w - 1, x };
-		int[] yArr = new int[] { y + h - 6, y + h - 6, y, y };
+		int[] xArr = new int[]{x + 4, w + x - 5, x + w - 1, x};
+		int[] yArr = new int[]{y + h - 6, y + h - 6, y, y};
 		Polygon p1 = new Polygon(xArr, yArr, 4);
 		g2.fillPolygon(p1);
 
@@ -812,7 +818,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 
 	@Override
 	protected void paintText(Graphics g, int tabPlacement, Font font, FontMetrics metrics, int tabIndex, String title,
-			Rectangle textRect, boolean isSelected) {
+							 Rectangle textRect, boolean isSelected) {
 		// otherwise the tabs text would not have AA for some reason even though the rest of the
 		// components has AA without this
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);

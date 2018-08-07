@@ -35,29 +35,29 @@ import com.rapidminer.operator.io.RepositorySource;
 public interface Entry {
 
 	/** Returns the name, the last part of the location. */
-	public String getName();
+	String getName();
 
 	/** Returns a string describing the type: "folder", "data", "blob", or "process". */
-	public String getType();
+	String getType();
 
 	/**
 	 * Returns the user name of the owner. Returns <code>null</code> in case no owner has been
 	 * specified.
 	 */
-	public String getOwner();
+	String getOwner();
 
 	/** Returns a human readable description. */
-	public String getDescription();
+	String getDescription();
 
 	/** Returns true if this entry cannot be written to. */
-	public boolean isReadOnly();
+	boolean isReadOnly();
 
 	/**
 	 * Changes the name of the entry. The entry stays in the same folder.
 	 *
 	 * @throws RepositoryException
 	 */
-	public boolean rename(String newName) throws RepositoryException;
+	boolean rename(String newName) throws RepositoryException;
 
 	/**
 	 * Needs to be implemented only for folders in the same repository. Moving between different
@@ -67,7 +67,7 @@ public interface Entry {
 	 *
 	 * @throws RepositoryException
 	 */
-	public boolean move(Folder newParent) throws RepositoryException;
+	boolean move(Folder newParent) throws RepositoryException;
 
 	/**
 	 * Needs to be implemented only for folders in the same repository. Moving between different
@@ -79,30 +79,30 @@ public interface Entry {
 	 *            New name for moved entry. If moved entry shouldn't be renamed: newName=null.
 	 * @throws RepositoryException
 	 */
-	public boolean move(Folder newParent, String newName) throws RepositoryException;
+	boolean move(Folder newParent, String newName) throws RepositoryException;
 
 	/** Returns the folder containing this entry. */
-	public Folder getContainingFolder();
+	Folder getContainingFolder();
 
 	/**
 	 * Subclasses can use this method to signal whether getting information from this entry will
 	 * block the current thread, e.g. because information must be fetched over the network.
 	 */
-	public boolean willBlock();
+	boolean willBlock();
 
 	/**
 	 * A location, that can be used, e.g. as a parameter in the {@link RepositorySource} or which
 	 * can be used to locate the entry using {@link RepositoryManager#resolve(String)}.
 	 */
-	public RepositoryLocation getLocation();
+	RepositoryLocation getLocation();
 
 	/**
 	 * Deletes the entry and its contents from the repository.
 	 *
 	 * @throws RepositoryException
 	 */
-	public void delete() throws RepositoryException;
+	void delete() throws RepositoryException;
 
 	/** Returns custom actions to be displayed in this entry's popup menu. */
-	public Collection<Action> getCustomActions();
+	Collection<Action> getCustomActions();
 }

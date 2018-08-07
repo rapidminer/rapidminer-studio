@@ -25,11 +25,10 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.LinkedList;
@@ -37,7 +36,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -59,6 +57,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.TableModel;
 
 import com.rapidminer.core.io.gui.InvalidConfigurationException;
@@ -79,6 +79,7 @@ import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.operator.nio.ErrorTableModel;
 import com.rapidminer.operator.nio.ImportWizardUtils;
 import com.rapidminer.operator.nio.LoadingContentPane;
+import com.rapidminer.operator.nio.model.CSVResultSet;
 import com.rapidminer.operator.nio.model.CSVResultSet.ColumnSplitter;
 import com.rapidminer.operator.nio.model.CSVResultSetConfiguration;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
@@ -134,7 +135,7 @@ public class CSVFormatSpecificationPanel extends JPanel {
 		private String text;
 		private String separator;
 
-		private ColumnSeparator(String i18nForText, String separator) {
+		ColumnSeparator(String i18nForText, String separator) {
 			text = I18N.getGUILabel(i18nForText);
 			this.separator = separator;
 		}
@@ -153,11 +154,11 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	private List<ChangeListener> changeListeners = new LinkedList<>();
 
 	private final JCheckBox trimLinesBox = new JCheckBox(I18N.getGUILabel("csv_format_specification.trim_lines"), true);
-	private final JComboBox<String> encodingComboBox = new JComboBox<String>(Encoding.CHARSETS);
-	private final JCheckBox skipCommentsBox = new JCheckBox(I18N.getGUILabel("csv_format_specification.scip_comments"),
+	private final JComboBox<String> encodingComboBox = new JComboBox<>(Encoding.CHARSETS);
+	private final JCheckBox skipCommentsBox = new JCheckBox(I18N.getGUILabel("csv_format_specification.skip_comments"),
 			true);
 	private final JCheckBox headerRow = new JCheckBox(I18N.getGUILabel("csv_format_specification.header_row"), true);
-	private final JComboBox<ColumnSeparator> separationComboBox = new JComboBox<ColumnSeparator>(ColumnSeparator.values());
+	private final JComboBox<ColumnSeparator> separationComboBox = new JComboBox<>(ColumnSeparator.values());
 	private final JCheckBox useQuotesBox = new JCheckBox(I18N.getGUILabel("csv_format_specification.use_quotes"), true);
 	private final JTextField commentCharacterTextField = new JTextField(LineParser.DEFAULT_COMMENT_CHARACTER_STRING);
 	private final CharTextField quoteCharacterTextField = new CharTextField(LineParser.DEFAULT_QUOTE_CHARACTER);
@@ -201,15 +202,21 @@ public class CSVFormatSpecificationPanel extends JPanel {
 		decimalCharacterTextField.setText(String.valueOf(configuration.getDecimalCharacter()));
 
 		String sep = configuration.getColumnSeparators();
-		separationComboBox.setSelectedItem(ColumnSeparator.REGULAR_EXPRESSION);
-		if (sep.equals(LineParser.SPLIT_BY_COMMA_EXPRESSION)) {
-			separationComboBox.setSelectedItem(ColumnSeparator.COMMA);
-		} else if (sep.equals(LineParser.SPLIT_BY_SEMICOLON_EXPRESSION)) {
-			separationComboBox.setSelectedItem(ColumnSeparator.SEMICOLON);
-		} else if (sep.equals(LineParser.SPLIT_BY_TAB_EXPRESSION)) {
-			separationComboBox.setSelectedItem(ColumnSeparator.TAB);
-		} else if (sep.equals(LineParser.SPLIT_BY_SPACE_EXPRESSION)) {
-			separationComboBox.setSelectedItem(ColumnSeparator.SPACE);
+		switch (sep) {
+			case LineParser.SPLIT_BY_COMMA_EXPRESSION:
+				separationComboBox.setSelectedItem(ColumnSeparator.COMMA);
+				break;
+			case LineParser.SPLIT_BY_SEMICOLON_EXPRESSION:
+				separationComboBox.setSelectedItem(ColumnSeparator.SEMICOLON);
+				break;
+			case LineParser.SPLIT_BY_TAB_EXPRESSION:
+				separationComboBox.setSelectedItem(ColumnSeparator.TAB);
+				break;
+			case LineParser.SPLIT_BY_SPACE_EXPRESSION:
+				separationComboBox.setSelectedItem(ColumnSeparator.SPACE);
+				break;
+			default:
+				separationComboBox.setSelectedItem(ColumnSeparator.REGULAR_EXPRESSION);
 		}
 		// do not fire action event when using keyboard to move up and down
 		separationComboBox.putClientProperty("JComboBox.isTableCellEditor", Boolean.TRUE);
@@ -234,146 +241,143 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	}
 
 	private void registerListeners() {
-		headerRow.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				DataImportWizardUtils.logStats(DataWizardEventType.CSV_HEADER_ROW_STATE,
-						Boolean.toString(headerRow.isSelected()));
-				configuration.setHasHeaderRow(headerRow.isSelected());
-				headerRowSpinner.setEnabled(headerRow.isSelected());
-				previewTable.repaint();
-				fireStateChanged();
-			}
+		headerRow.addActionListener(e -> {
+			DataImportWizardUtils.logStats(DataWizardEventType.CSV_HEADER_ROW_STATE,
+					Boolean.toString(headerRow.isSelected()));
+			configuration.setHasHeaderRow(headerRow.isSelected());
+			headerRowSpinner.setEnabled(headerRow.isSelected());
+			previewTable.repaint();
+			fireStateChanged();
 		});
 
-		encodingComboBox.addItemListener(new ItemListener() {
-
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					configuration.setEncoding(Encoding.getEncoding(encodingComboBox.getSelectedItem().toString()));
-					settingsChanged();
-				}
-			}
-		});
-
-		separationComboBox.addItemListener(new ItemListener() {
-
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					DataImportWizardUtils.logStats(DataWizardEventType.CSV_SEPARATOR_CHANGED,
-							configuration.getColumnSeparators() + "->" + getSplitExpression());
-					enableFields();
-					configuration.setColumnSeparators(getSplitExpression());
-					settingsChanged();
-				}
-
-			}
-		});
-
-		trimLinesBox.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				configuration.setTrimLines(trimLinesBox.isSelected());
+		encodingComboBox.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED && encodingComboBox.getSelectedItem() != null) {
+				configuration.setEncoding(Encoding.getEncoding(encodingComboBox.getSelectedItem().toString()));
 				settingsChanged();
 			}
 		});
-		skipCommentsBox.addActionListener(new ActionListener() {
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				commentCharacterTextField.setEnabled(skipCommentsBox.isSelected());
-				configuration.setSkipComments(skipCommentsBox.isSelected());
+		separationComboBox.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				DataImportWizardUtils.logStats(DataWizardEventType.CSV_SEPARATOR_CHANGED,
+						configuration.getColumnSeparators() + "->" + getSplitExpression());
+				enableFields();
+				configuration.setColumnSeparators(getSplitExpression());
 				settingsChanged();
 			}
+
 		});
-		useQuotesBox.addActionListener(new ActionListener() {
+
+		trimLinesBox.addActionListener(e -> {
+			configuration.setTrimLines(trimLinesBox.isSelected());
+			settingsChanged();
+		});
+		skipCommentsBox.addActionListener(e -> {
+			commentCharacterTextField.setEnabled(skipCommentsBox.isSelected());
+			configuration.setSkipComments(skipCommentsBox.isSelected());
+			settingsChanged();
+		});
+		useQuotesBox.addActionListener(e -> {
+			quoteCharacterTextField.setEnabled(useQuotesBox.isSelected());
+			escapeCharacterTextField.setEnabled(useQuotesBox.isSelected());
+			configuration.setUseQuotes(useQuotesBox.isSelected());
+			settingsChanged();
+		});
+		quoteCharacterTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				quoteCharacterTextField.setEnabled(useQuotesBox.isSelected());
-				escapeCharacterTextField.setEnabled(useQuotesBox.isSelected());
-				configuration.setUseQuotes(useQuotesBox.isSelected());
-				settingsChanged();
+			public void insertUpdate(DocumentEvent e) {
+				update();
 			}
-		});
-		quoteCharacterTextField.addKeyListener(new KeyAdapter() {
 
 			@Override
-			public void keyReleased(KeyEvent e) {
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			private void update() {
 				if (!quoteCharacterTextField.getText().isEmpty()) {
 					configuration.setQuoteCharacter(quoteCharacterTextField.getText().charAt(0));
 					settingsChanged();
 				}
 			}
 		});
-		quoteCharacterTextField.addFocusListener(new FocusListener() {
+		quoteCharacterTextField.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (quoteCharacterTextField.getText().isEmpty()) {
 					quoteCharacterTextField.setCharacter(LineParser.DEFAULT_QUOTE_CHARACTER);
-					configuration.setQuoteCharacter(LineParser.DEFAULT_QUOTE_CHARACTER);
-					settingsChanged();
 				}
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-				// not needed
-			}
 		});
-		escapeCharacterTextField.addKeyListener(new KeyAdapter() {
+		escapeCharacterTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 			@Override
-			public void keyReleased(KeyEvent e) {
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			private void update() {
 				if (!escapeCharacterTextField.getText().isEmpty()) {
 					configuration.setEscapeCharacter(escapeCharacterTextField.getText().charAt(0));
 					settingsChanged();
 				}
 			}
 		});
-		escapeCharacterTextField.addFocusListener(new FocusListener() {
+		escapeCharacterTextField.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (escapeCharacterTextField.getText().isEmpty()) {
 					escapeCharacterTextField.setCharacter(LineParser.DEFAULT_QUOTE_ESCAPE_CHARACTER);
-					configuration.setEscapeCharacter(LineParser.DEFAULT_QUOTE_ESCAPE_CHARACTER);
-					settingsChanged();
 				}
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-				// not needed
-			}
 		});
-		commentCharacterTextField.addKeyListener(new KeyAdapter() {
+		commentCharacterTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 			@Override
-			public void keyTyped(KeyEvent e) {
+			public void insertUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			private void update() {
 				configuration.setCommentCharacters(commentCharacterTextField.getText());
 				settingsChanged();
 			}
 		});
-		commentCharacterTextField.addFocusListener(new FocusListener() {
+		commentCharacterTextField.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (commentCharacterTextField.getText().isEmpty()) {
 					commentCharacterTextField.setText(LineParser.DEFAULT_COMMENT_CHARACTER_STRING);
-					configuration.setCommentCharacters(LineParser.DEFAULT_COMMENT_CHARACTER_STRING);
-					settingsChanged();
 				}
-			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-				// not needed
 			}
 		});
 		decimalCharacterTextField.addKeyListener(new KeyAdapter() {
@@ -385,37 +389,46 @@ public class CSVFormatSpecificationPanel extends JPanel {
 				}
 			}
 		});
-		decimalCharacterTextField.addFocusListener(new FocusListener() {
+		decimalCharacterTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 			@Override
-			public void focusGained(FocusEvent e) {
-				// not needed
+			public void insertUpdate(DocumentEvent e) {
+				update();
 			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				update();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update();
+			}
+
+			private void update() {
+				if (!decimalCharacterTextField.getText().isEmpty()) {
+					configuration.setDecimalCharacter(decimalCharacterTextField.getText().charAt(0));
+				}
+			}
+		});
+		decimalCharacterTextField.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (decimalCharacterTextField.getText().isEmpty()) {
 					decimalCharacterTextField.setCharacter(DEFAULT_DECIMAL_CHARACTER);
-					configuration.setDecimalCharacter(DEFAULT_DECIMAL_CHARACTER);
 				}
 			}
 
 		});
-		startRowSpinner.addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				updateStartingRow();
-				fireStateChanged();
-			}
+		startRowSpinner.addChangeListener(e -> {
+			updateStartingRow();
+			fireStateChanged();
 		});
-		headerRowSpinner.addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				updateHeaderRow();
-				fireStateChanged();
-			}
+		headerRowSpinner.addChangeListener(e -> {
+			updateHeaderRow();
+			fireStateChanged();
 		});
 	}
 
@@ -577,6 +590,11 @@ public class CSVFormatSpecificationPanel extends JPanel {
 		regexEvalButton.setAction(evalRegexAction);
 		regexEvalButton.setVisible(false);
 		regexTextField.setVisible(false);
+		regexTextField.addActionListener(e -> {
+			// on Enter, apply changes
+			configuration.setColumnSeparators(getSplitExpression());
+			settingsChanged();
+		});
 		regexTextField.addFocusListener(new FocusListener() {
 
 			@Override
@@ -600,12 +618,12 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	 * @return the split expression determined by the separationComboBox
 	 */
 	private String getSplitExpression() {
-		String splitExpression = null;
+		String splitExpression;
 		if (separationComboBox.getSelectedItem() != ColumnSeparator.REGULAR_EXPRESSION) {
 			splitExpression = ((ColumnSeparator) separationComboBox.getSelectedItem()).getSeparator();
 		} else {
 			splitExpression = regexTextField.getText();
-			if ("".equals(splitExpression)) {
+			if (splitExpression.isEmpty()) {
 				splitExpression = null;
 			} else {
 				try {
@@ -628,21 +646,16 @@ public class CSVFormatSpecificationPanel extends JPanel {
 			public void run() {
 				try {
 					final TableModel model = configuration.makePreviewTableModel(getProgressListener());
-					SwingUtilities.invokeAndWait(new Runnable() {
-
-						@Override
-						public void run() {
-							previewTable.setModel(model);
-							tablePane.setRowHeaderView(new RowNumberTable(previewTable));
-							if (model.getRowCount() > 0) {
-								showPreviewLettering();
-							} else {
-								showEmptyMessage();
-							}
-							updateErrorTable();
-							fireStateChanged();
+					SwingUtilities.invokeAndWait(() -> {
+						previewTable.setModel(model);
+						tablePane.setRowHeaderView(new RowNumberTable(previewTable));
+						if (model.getRowCount() > 0) {
+							showPreviewLettering();
+						} else {
+							showEmptyMessage();
 						}
-
+						updateErrorTable();
+						fireStateChanged();
 					});
 				} catch (Exception e) {
 					updateErrorTable();
@@ -669,13 +682,7 @@ public class CSVFormatSpecificationPanel extends JPanel {
 		collapsibleErrorTable.getTable().getColumnModel().getColumn(3).setMaxWidth(800);
 		collapsibleErrorTable.getTable().getColumnModel().getColumn(3).setPreferredWidth(400);
 
-		SwingTools.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				collapsibleErrorTable.update();
-			}
-		});
+		SwingTools.invokeLater(collapsibleErrorTable::update);
 	}
 
 	/**
@@ -749,18 +756,12 @@ public class CSVFormatSpecificationPanel extends JPanel {
 		final ComponentBubbleWindow errorWindow = new ComponentBubbleWindow(component, BubbleStyle.ERROR,
 				SwingUtilities.getWindowAncestor(this), AlignedSide.BOTTOM, i18n, null, null, false, true,
 				new JButton[] { okayButton }, arguments);
-		okayButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				errorWindow.killBubble(false);
-			}
-		});
+		okayButton.addActionListener(e -> errorWindow.killBubble(false));
 
 		// show and remember error window
 		errorWindow.setVisible(true);
 		currentErrorWindow = errorWindow;
-	};
+	}
 
 	/**
 	 * Shows a "header row not found"-bubble
@@ -814,6 +815,29 @@ public class CSVFormatSpecificationPanel extends JPanel {
 				separationComboBox.setSelectedItem(ColumnSeparator.SEMICOLON);
 				break;
 		}
+	}
+
+
+	/**
+	 * Sets the text qualifier
+	 *
+	 * @param qualifier
+	 *            a {@link com.rapidminer.operator.nio.model.CSVResultSet.TextQualifier}
+	 */
+	void setTextQualifier(CSVResultSet.TextQualifier qualifier){
+		quoteCharacterTextField.setText(qualifier.getString());
+		configuration.setQuoteCharacter(quoteCharacterTextField.getText().charAt(0));
+	}
+
+	/**
+	 * Sets the Decimal Separator
+	 *
+	 * @param character
+	 *			a {@link com.rapidminer.operator.nio.model.CSVResultSet.DecimalCharacter}
+	 */
+	void setDecimalCharacter(CSVResultSet.DecimalCharacter character){
+		decimalCharacterTextField.setText(character.getString());
+		configuration.setDecimalCharacter(decimalCharacterTextField.getText().charAt(0));
 	}
 
 	/**

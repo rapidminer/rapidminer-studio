@@ -52,6 +52,7 @@ import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.RepositoryManagerListener;
 import com.rapidminer.repository.internal.db.DBRepository;
+import com.rapidminer.repository.internal.remote.RESTRepository;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.repository.resource.ResourceRepository;
 import com.rapidminer.search.AbstractGlobalSearchManager;
@@ -203,6 +204,10 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 		// delete all entries under the folder
 		deleteEntriesUnderLocationFromIndex(folder.getLocation().getAbsoluteLocation());
 
+		if (folder instanceof ConnectionRepository && !((ConnectionRepository) folder).isConnected()) {
+			// do not trigger authentication if offline
+			return;
+		}
 		// add all entries under the new folder to the index again
 		addEntriesUnderFolderToIndex(folder);
 	}
@@ -229,7 +234,29 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 	 */
 	private void addEntriesUnderFolderToIndex(final Folder folder) {
 		// add stuff to index fast so user can search basic stuff asap
-		ProgressThread pgFast = new ProgressThread("global_search.repo.search_index_fast", false, folder.getName()) {
+		ProgressThread pgFast = createIndexingThread(folder, false);
+		pgFast.start();
+
+		// if enabled, add full metadata to index afterwards, so user can search advanced things
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RepositoryGlobalSearch.PROPERTY_FULL_REPOSITORY_INDEXING))) {
+			ProgressThread pgFull = createIndexingThread(folder, true);
+			pgFull.addDependency(pgFast.getID());
+			pgFull.start();
+		}
+	}
+
+	/**
+	 * Creates an indexing {@link ProgressThread} for the given {@link Folder}. Can either be a fast or full index.
+	 *
+	 * @param folder
+	 * 		the folder to index
+	 * @param fullIndex
+	 * 		whether the indexing should be fast or detailed
+	 * @return the indexing thread
+	 * @since 9.0.0
+	 */
+	private ProgressThread createIndexingThread(Folder folder, boolean fullIndex) {
+		ProgressThread pgIndexing = new ProgressThread("global_search.repo.search_index_" + (fullIndex ? "full" : "fast"), false, folder.getName()) {
 
 			@Override
 			public void run() {
@@ -238,9 +265,11 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 					Repository repo = folder.getLocation().getRepository();
 					// special indexing for Remote Repo to avoid potentially thousands of queries
 					if (repo instanceof RemoteRepository) {
-						indexRemoteFolder(indexedEntries, folder, (RemoteRepository) repo, false);
+						indexRemoteFolder(indexedEntries, folder, (RemoteRepository) repo, fullIndex);
+					} else if (repo instanceof RESTRepository) {
+						indexRESTFolder(indexedEntries, folder, (RESTRepository) repo, fullIndex, this);
 					} else {
-						indexFolder(indexedEntries, folder, false, this);
+						indexFolder(indexedEntries, folder, fullIndex, this);
 					}
 					addDocumentsToIndex(indexedEntries);
 				} catch (Exception e) {
@@ -248,34 +277,8 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 				}
 			}
 		};
-		pgFast.setIndeterminate(true);
-		pgFast.start();
-
-		// if enabled, add full metadata to index afterwards, so user can search advanced things
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RepositoryGlobalSearch.PROPERTY_FULL_REPOSITORY_INDEXING))) {
-			ProgressThread pgFull = new ProgressThread("global_search.repo.search_index_full", false, folder.getName()) {
-
-				@Override
-				public void run() {
-					List<Document> indexedDetailedEntries = new ArrayList<>();
-					try {
-						Repository repo = folder.getLocation().getRepository();
-						// special indexing for Remote Repo to avoid potentially thousands of queries
-						if (repo instanceof RemoteRepository) {
-							indexRemoteFolder(indexedDetailedEntries, folder, (RemoteRepository) repo, true);
-						} else {
-							indexFolder(indexedDetailedEntries, folder, true, this);
-						}
-						addDocumentsToIndex(indexedDetailedEntries);
-					} catch (Exception e) {
-						LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_full_error_folder", folder.getName());
-					}
-				}
-			};
-			pgFull.addDependency(pgFast.getID());
-			pgFull.setIndeterminate(true);
-			pgFull.start();
-		}
+		pgIndexing.setIndeterminate(true);
+		return pgIndexing;
 	}
 
 	/**
@@ -354,6 +357,74 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 			}
 		} catch (IOException | RepositoryException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_remote_folder", new Object[] {repository.getName() + path, e.getMessage()});
+		}
+	}
+
+	/**
+	 * Read all contents of the given REST repository/subfolder and store them as {@link Document}s. If that fails, logs it.
+	 * If the repository can not use the global search REST service,
+	 * normal indexing ({@link #indexFolder(List, Folder, boolean, ProgressThread) indexFolder}) will be used!
+	 *
+	 * @param list
+	 * 		the list to add the search documents to
+	 * @param folder
+	 * 		the subfolder which should be queried
+	 * @param repository
+	 * 		the repository to read all contents from
+	 * @param fullIndex
+	 * 		if {@code true}, RM Server will be asked to create a full index result including metadata (slow); otherwise metadata is omitted
+	 * @param pg
+	 * 		the progress thread this is called from; needed if fall back to normal indexing
+	 */
+	private void indexRESTFolder(List<Document> list, Folder folder, RESTRepository repository, boolean fullIndex, ProgressThread pg) {
+		// relative path
+		String path = folder.getLocation().getPath();
+		if (path == null || Character.toString(RepositoryLocation.SEPARATOR).equals(path)) {
+			path = "";
+		}
+
+		try {
+			String apiPath = fullIndex ? API_REST_REMOTE_REPO_DETAILS : API_REST_REMOTE_REPO_SUMMARY;
+			String repoPrefix = repository.getPrefix();
+			if (repoPrefix != null && !repoPrefix.isEmpty()) {
+				repoPrefix = RepositoryLocation.SEPARATOR + repoPrefix;
+			}
+			HttpURLConnection conn = repository.getGlobalSearchConnection(apiPath, URLEncoder.encode(path, StandardCharsets.UTF_8.name()));
+			conn.setRequestMethod("GET");
+			conn.setUseCaches(false);
+			conn.setAllowUserInteraction(false);
+			conn.setRequestProperty("Content-Type", "application/json");
+			int responseCode = conn.getResponseCode();
+			if (responseCode == HttpURLConnection.HTTP_OK) {
+				// query worked, parse JSON to items and add to search index
+				String json = Tools.readTextFile(conn.getInputStream());
+				RepositoryGlobalSearchItem[] repositorySearchItems = WebServiceTools.parseJsonString(json, RepositoryGlobalSearchItem[].class, false);
+				for (RepositoryGlobalSearchItem item : repositorySearchItems) {
+					// If an item has no parent, it's in the root folder.
+					// Because the name is locally defined, it is not known on RM Server. Set it here.
+					if (item.getParent().isEmpty()) {
+						item.setParent(repository.getName());
+					}
+					String itemLocation = item.getLocation();
+					if (repoPrefix != null) {
+						if (!itemLocation.startsWith(repoPrefix)) {
+							// skip items that do not come from the correct prefix
+							continue;
+						}
+						// if there is a repo prefix, cut it from the actual location
+						itemLocation = itemLocation.substring(repoPrefix.length());
+					}
+					// for the same reason as above, always set the REST repository name as repository before the absolute location
+					item.setLocation(RepositoryLocation.REPOSITORY_PREFIX + repository.getName() + itemLocation);
+					list.add(createDocument(item));
+				}
+			} else {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_rest_folder", new Object[] {repository.getName() + path, responseCode});
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_fallback_rest_folder");
+				indexFolder(list, folder, fullIndex, pg);
+			}
+		} catch (IOException | RepositoryException e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_rest_folder", new Object[] {repository.getName() + path, e.getMessage()});
 		}
 	}
 

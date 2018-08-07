@@ -77,7 +77,7 @@ public class AttributeWeight extends Averagable implements Comparable<AttributeW
 	}
 
 	/**
-	 * Returns the MakroVariance since no other micro variance can be calculated.
+	 * Returns the MacroVariance since no other micro variance can be calculated.
 	 */
 	@Override
 	public double getMikroVariance() {

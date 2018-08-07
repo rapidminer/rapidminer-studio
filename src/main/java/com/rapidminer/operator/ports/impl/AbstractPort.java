@@ -22,8 +22,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.IOObject;
@@ -34,6 +36,8 @@ import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataError;
+import com.rapidminer.operator.ports.metadata.MetaDataErrorQuickFixFilter;
+import com.rapidminer.operator.ports.quickfix.BlacklistedOperatorQuickFixFilter;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.ReferenceCache;
@@ -51,12 +55,16 @@ import com.rapidminer.tools.ReferenceCache;
  */
 public abstract class AbstractPort extends AbstractObservable<Port> implements Port {
 
+	private static final ReferenceCache<IOObject> IOO_REFERENCE_CACHE = new ReferenceCache<>(20);
+
+	/** Filter used to sort out blacklisted operator insertion quick fixes */
+	private static final Predicate<? super QuickFix> BLACKLISTED_OPERATOR_FILTER = new BlacklistedOperatorQuickFixFilter();
+
 	private final List<MetaDataError> errorList = new LinkedList<>();
 	private final Ports<? extends Port> ports;
 
 	private String name;
 
-	private static final ReferenceCache<IOObject> IOO_REFERENCE_CACHE = new ReferenceCache<>(20);
 	private ReferenceCache<IOObject>.Reference weakDataReference;
 
 	private IOObject hardDataReference;
@@ -74,7 +82,7 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 		// if there is a (G)UI and it is not in background => cache
 		if (!RapidMiner.getExecutionMode().isHeadless() && ports.getOwner() != null && ports.getOwner().getOperator() != null
 				&& ports.getOwner().getOperator().getProcess() != null && ports.getOwner().getOperator().getProcess()
-						.getRootOperator().getUserData(RapidMinerGUI.IS_GUI_PROCESS) != null) {
+				.getRootOperator().getUserData(RapidMinerGUI.IS_GUI_PROCESS) != null) {
 			this.weakDataReference = IOO_REFERENCE_CACHE.newReference(object);
 		}
 		this.hardDataReference = object;
@@ -109,6 +117,8 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 			throw new PortUserError(this, 149, getSpec() + (isConnected() ? " (connected)" : " (disconnected)"));
 		} else if (desiredClass.isAssignableFrom(data.getClass())) {
 			return desiredClass.cast(data);
+		} else if (AtPortConverter.isConvertible(data.getClass(), desiredClass)) {
+			return desiredClass.cast(AtPortConverter.convert(data, this));
 		} else {
 			PortUserError error = new PortUserError(this, 156, RendererService.getName(data.getClass()), this.getName(),
 					RendererService.getName(desiredClass));
@@ -125,6 +135,8 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 			return null;
 		} else if (desiredClass.isAssignableFrom(data.getClass())) {
 			return desiredClass.cast(data);
+		} else if (AtPortConverter.isConvertible(data.getClass(), desiredClass)) {
+			return desiredClass.cast(AtPortConverter.convert(data, this));
 		} else {
 			PortUserError error = new PortUserError(this, 156, RendererService.getName(data.getClass()), this.getName(),
 					RendererService.getName(desiredClass));
@@ -133,6 +145,8 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 			throw error;
 		}
 	}
+
+
 
 	@SuppressWarnings("unchecked")
 	@Deprecated
@@ -173,7 +187,7 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 
 	@Override
 	public void addError(MetaDataError metaDataError) {
-		errorList.add(metaDataError);
+		errorList.add(new MetaDataErrorQuickFixFilter(metaDataError, BLACKLISTED_OPERATOR_FILTER));
 	}
 
 	@Override

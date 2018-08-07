@@ -18,16 +18,21 @@
 */
 package com.rapidminer.gui.processeditor;
 
+import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.border.Border;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.GroupTree;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.OperatorService;
 
 
 /**
@@ -39,8 +44,19 @@ public class NewOperatorGroupTreeRenderer extends DefaultTreeCellRenderer {
 
 	private static final long serialVersionUID = 1L;
 
+	/** Greyscale version of the blacklisted icon */
+	private static final Icon BLACKLISTED_ICON = SwingTools.createIcon("16/" + I18N.getGUILabel("operator.blacklisted.icon"), true);
+
 	/** border so the operators have a little bit more breathing space */
 	private static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder(4, 0, 4, 0);
+
+	/**
+	 * Blacklisted operator name color
+	 * <p>
+	 * The {@link NewOperatorEditor Operators Panel} has a grey background,
+	 * instead of a white one like the {@link com.rapidminer.gui.flow.ProcessPanel Process Panel}, therefore darker.
+	 */
+	private static final Color BLACKLISTED_OPERATOR_NAME_COLOR = new Color(150, 150, 150).darker();
 
 	public NewOperatorGroupTreeRenderer() {
 		setLeafIcon(getDefaultClosedIcon());
@@ -67,6 +83,11 @@ public class NewOperatorGroupTreeRenderer extends DefaultTreeCellRenderer {
 			label.setBorder(EMPTY_BORDER);
 
 			label.setIcon(op.getSmallIcon());
+
+			if (OperatorService.isOperatorBlacklisted(op.getKey())) {
+				label.setIcon(BLACKLISTED_ICON);
+				label.setForeground(BLACKLISTED_OPERATOR_NAME_COLOR);
+			}
 
 			return label;
 		}

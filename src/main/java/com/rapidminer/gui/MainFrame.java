@@ -520,30 +520,27 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	// --------------------------------------------------------------------------------
 	// LISTENERS And OBSERVERS
 
-	private final PerspectiveChangeListener perspectiveChangeListener = new PerspectiveChangeListener() {
+	private final PerspectiveChangeListener perspectiveChangeListener = perspective -> {
+		// check all ConditionalActions on perspective switch
+		getActions().enableActions();
 
-		@Override
-		public void perspectiveChangedTo(Perspective perspective) {
-			// check all ConditionalActions on perspective switch
-			getActions().enableActions();
+		// toggle result display and process panels properties depending on shwon perspective
+		boolean isDesign = PerspectiveModel.DESIGN.equals(perspective.getName());
+		boolean isResult = PerspectiveModel.RESULT.equals(perspective.getName());
+		processPanel.getDockKey().setCloseEnabled(!isDesign);
+		processPanel.getDockKey().setAutoHideEnabled(!isDesign);
+		resultDisplay.getDockKey().setCloseEnabled(!isResult);
+		resultDisplay.getDockKey().setAutoHideEnabled(!isResult);
 
-			// try to request focus for the process renderer so actions are enabled after
-			// perspective switch and
-			// ProcessRenderer is visible
-			if (getProcessPanel().getProcessRenderer().isShowing()) {
-				getProcessPanel().getProcessRenderer().requestFocusInWindow();
-			}
+		// try to request focus for the process renderer so actions are enabled after
+		// perspective switch and ProcessRenderer is visible
+		if (getProcessPanel().getProcessRenderer().isShowing()) {
+			getProcessPanel().getProcessRenderer().requestFocusInWindow();
 		}
 	};
 
 	private long lastUpdate = 0;
-	private final Timer updateTimer = new Timer(500, new ActionListener() {
-
-		@Override
-		public void actionPerformed(final ActionEvent e) {
-			updateProcessNow();
-		}
-	}) {
+	private final Timer updateTimer = new Timer(500, e -> updateProcessNow()) {
 
 		private static final long serialVersionUID = 1L;
 
@@ -640,13 +637,12 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 					@Override
 					public void quit() {
-						RapidMiner.quit(ExitMode.NORMAL);
+					    MainFrame.this.exit(false);
 					}
 				};
 				OSXAdapter.adaptUI(this, SETTINGS_ACTION, new AboutAction(), quitListener);
 			} catch (Throwable t) {
-				// catch everything - in case the OSX adapter is called without being on a OS X
-				// system
+				// catch everything - in case the OSX adapter is called without being on a OS X system
 				// or the Java classes have been removed from OS X JRE it will just log an error
 				// instead of breaking the program start-up
 				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.MainFrame.could_not_adapt_OSX_look_and_feel", t);
@@ -689,8 +685,6 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		toolBarContainer.add(dockingDesktop, BorderLayout.CENTER);
 
 		systemMonitor.startMonitorThread();
-		resultDisplay.getDockKey().setCloseEnabled(false);
-		resultDisplay.getDockKey().setAutoHideEnabled(false);
 		resultDisplay.init(this);
 
 		// menu bar
@@ -744,6 +738,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 			editMenu.add(item.createMenuItem());
 		}
 		editMenu.add(actions.TOGGLE_ALL_BREAKPOINTS.createMenuItem());
+		editMenu.add(actions.REMOVE_ALL_BREAKPOINTS);
 		// editMenu.add(actions.MAKE_DIRTY_ACTION);
 		menuBar.add(editMenu);
 
@@ -1137,6 +1132,10 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	 */
 	private void setOrOpenProcess(final Process process, final boolean newProcess, final boolean open) {
 		boolean firstProcess = getProcess() == null;
+		if (newProcess) {
+			// set origin if possible
+			ProcessTools.setProcessOrigin(process);
+		}
 		processModel.setProcess(process, newProcess, open);
 		if (newProcess) {
 			enableUndoAction();
@@ -1362,6 +1361,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 			}
 		}
 		stopProcess();
+		RapidMinerGUI.saveGUIProperties();
 		dispose();
 		RapidMiner.quit(relaunch ? RapidMiner.ExitMode.RELAUNCH : RapidMiner.ExitMode.NORMAL);
 	}

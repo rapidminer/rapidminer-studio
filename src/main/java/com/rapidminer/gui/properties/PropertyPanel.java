@@ -272,17 +272,7 @@ public abstract class PropertyPanel extends JPanel {
 	}
 
 	public void setupComponents() {
-		if (SwingUtilities.isEventDispatchThread()) {
-			setupComponentsNow();
-		} else {
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					setupComponentsNow();
-				}
-			});
-		}
+		SwingTools.invokeLater(this::setupComponentsNow);
 	}
 
 	public void fireEditingStoppedEvent() {
@@ -324,6 +314,7 @@ public abstract class PropertyPanel extends JPanel {
 			if (!isEnabled()) {
 				SwingTools.setEnabledRecursive(editorComponent, false);
 			}
+
 			final Operator typesOperator = getOperator();
 			editor.addCellEditorListener(new CellEditorListener() {
 

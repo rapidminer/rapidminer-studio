@@ -24,8 +24,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExecutionMode;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector.Key;
 
 
@@ -109,24 +111,30 @@ enum CtaEventAggregator {
 
 	}
 
-	private static final BlackListItem[] BLACKLIST = new BlackListItem[] {
-			// the argument of logged exceptions are too long and irrelevant
-			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
-					null), true, true, false),
-			new BlackListItem(new Key(ActionStatisticsCollector.PREFIX_TYPE_AUTOMODEL_GENERATED + ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
-					null), true, true, false),
-			new BlackListItem(new Key(ActionStatisticsCollector.PREFIX_TYPE_AUTOMODEL_EXPORTED + ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
-					null), true, true, false),
-			// progress-thread typed logs are irrelevant
-			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, null,
-					null), true, false, false),
-			// resource-action typed logs are irrelevant, use "action" type in CTA rules instead
-			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_RESOURCE_ACTION, null, 
-					null), true, false, false),
-			// simple-action typed logs are irrelevant, use "action" type in CTA rules instead
-			new BlackListItem(new Key(ActionStatisticsCollector.TYPE_SIMPLE_ACTION, null, 
-					null), true, false, false)
-	};
+	private static final BlackListItem[] BLACKLIST = new BlackListItem[4 + ProcessOriginProcessXMLFilter.ProcessOriginState.values().length];
+
+	static {
+		// the argument of logged exceptions are too long and irrelevant
+		int i = 0;
+		BLACKLIST[i++] = new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
+		null), true, true, false);
+		for (ProcessOriginProcessXMLFilter.ProcessOriginState state : ProcessOriginProcessXMLFilter.ProcessOriginState.values()) {
+			BLACKLIST[i++] = new BlackListItem(new Key(state.getPrefix() + ActionStatisticsCollector.TYPE_PROCESS, ActionStatisticsCollector.VALUE_EXCEPTION,
+					null), true, true, false);
+		}
+
+		// progress-thread typed logs are irrelevant
+		BLACKLIST[i++] = new BlackListItem(new Key(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, null,
+		null), true, false, false);
+
+		// resource-action typed logs are irrelevant, use "action" type in CTA rules instead
+				BLACKLIST[i++] = new BlackListItem(new Key(ActionStatisticsCollector.TYPE_RESOURCE_ACTION, null,
+		null), true, false, false);
+
+		// simple-action typed logs are irrelevant, use "action" type in CTA rules instead
+				BLACKLIST[i++] = new BlackListItem(new Key(ActionStatisticsCollector.TYPE_SIMPLE_ACTION, null,
+		null), true, false, false);
+	}
 
 	/**
 	 * Log the event

@@ -240,6 +240,9 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 			public void operatorsChanged(ProcessRendererOperatorEvent e, Collection<Operator> operators) {
 				switch (e.getEventType()) {
 					case SELECTED_OPERATORS_CHANGED:
+						if (operators.isEmpty()) {
+							return;
+						}
 						Operator operator = operators.iterator().next();
 						Rectangle2D opRect = model.getOperatorRect(operator);
 						OperatorChain parent = operator.getParent();

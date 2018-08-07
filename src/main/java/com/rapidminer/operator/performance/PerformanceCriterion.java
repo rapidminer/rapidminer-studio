@@ -73,8 +73,8 @@ public abstract class PerformanceCriterion extends Averagable implements Compara
 	 * 
 	 * <p>
 	 * Subclasses should use {@link #getAverage()} instead of {@link #getMikroAverage()} in this
-	 * method since usually the makro average (if available) should be optmized instead of the mikro
-	 * average. The mikro average should only be used in the (rare) cases where no makro average is
+	 * method since usually the macro average (if available) should be optmized instead of the micro
+	 * average. The micro average should only be used in the (rare) cases where no macro average is
 	 * available but this is automatically done returned by {@link #getAverage()} in these cases.
 	 * </p>
 	 */

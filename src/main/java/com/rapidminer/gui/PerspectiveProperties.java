@@ -26,11 +26,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import com.rapidminer.gui.processeditor.results.ResultTab;
 import com.vlsolutions.swing.docking.Dockable;
 import com.vlsolutions.swing.docking.DockableState;
 import com.vlsolutions.swing.docking.DockingUtilities;
@@ -94,6 +94,34 @@ public class PerspectiveProperties {
 	public void apply() {
 		applyFocusedDockables();
 		applyScrollBarPositions();
+	}
+
+	/**
+	 * Sets in the focused {@link ResultTab} to the given dockable. If no previously focused result tab existed, does
+	 * nothing.
+	 *
+	 * @param newResultTabDockable
+	 * 		the {@link ResultTab} dockable
+	 * @since 8.2.2
+	 */
+	void setNewFocusedResultTab(Dockable newResultTabDockable) {
+		if (!(newResultTabDockable instanceof ResultTab)) {
+			throw new IllegalArgumentException("newResultTabDockable must be a ResultTab!");
+		}
+
+		// find previous result tab that was focused
+		Dockable previouslySelectedResultDockable = null;
+		for (Dockable existingDockable : focusedDockables) {
+			if (existingDockable instanceof ResultTab) {
+				previouslySelectedResultDockable = existingDockable;
+				break;
+			}
+		}
+
+		if (previouslySelectedResultDockable != null) {
+			focusedDockables.remove(previouslySelectedResultDockable);
+		}
+		focusedDockables.add(newResultTabDockable);
 	}
 
 	/**

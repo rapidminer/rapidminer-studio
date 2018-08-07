@@ -18,8 +18,6 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +25,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.BeltConverter;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -147,12 +150,12 @@ public class IOContainer implements Serializable {
 	 * Returns true if this IOContainer containts an IOObject of the desired class.
 	 */
 	public boolean contains(Class<? extends IOObject> cls) {
-		try {
-			getInput(cls, 0, false);
-			return true;
-		} catch (MissingIOObjectException e) {
-			return false;
+		for (IOObject object : ioObjects) {
+			if (((cls.isInstance(object)) || isToExampleSetConvertible(cls, object))) {
+				return true;
+			}
 		}
+		return false;
 	}
 
 	/**
@@ -164,18 +167,29 @@ public class IOContainer implements Serializable {
 		Iterator<IOObject> i = ioObjects.iterator();
 		while (i.hasNext()) {
 			IOObject object = i.next();
-			if ((object != null) && (cls.isInstance(object))) {
+			if (((cls.isInstance(object)) || isToExampleSetConvertible(cls, object))) {
 				if (n == nr) {
 					if (remove) {
 						i.remove();
 					}
-					return cls.cast(object);
+					if (cls.isInstance(object)) {
+						return cls.cast(object);
+					} else {
+						return cls.cast(BeltConverter.convertSequentially((IOTable) object));
+					}
 				} else {
 					n++;
 				}
 			}
 		}
 		throw new MissingIOObjectException(cls);
+	}
+
+	/**
+	 * Check if the desired class is ExampleSet and the object an {@link IOTable} so that conversion is possible.
+	 */
+	private <T extends IOObject> boolean isToExampleSetConvertible(Class<T> cls, IOObject object) {
+		return object instanceof IOTable && cls.equals(ExampleSet.class);
 	}
 
 	/**

@@ -43,6 +43,7 @@ public class ToggleBreakpointItem extends ToggleAction {
 	{
 		setCondition(OPERATOR_SELECTED, MANDATORY);
 		setCondition(ROOT_SELECTED, DISALLOWED);
+		setCondition(PROCESS_RENDERER_IS_VISIBLE, MANDATORY);
 	}
 
 	public ToggleBreakpointItem(final Actions actions, final int position) {

@@ -66,7 +66,7 @@ public class AnnotationProcessXMLFilter implements ProcessXMLFilter {
 	@Override
 	public void operatorExported(final Operator op, final Element opElement) {
 		// add workflow annotations
-		Rectangle2D bounds = ProcessLayoutXMLFilter.lookupOperatorRectangle(op);
+		Rectangle2D bounds;
 		WorkflowAnnotations annotations = lookupOperatorAnnotations(op);
 		if (annotations != null) {
 			for (WorkflowAnnotation annotation : annotations.getAnnotationsDrawOrder()) {
@@ -145,12 +145,12 @@ public class AnnotationProcessXMLFilter implements ProcessXMLFilter {
 						double yCoord = 25;
 						int newWidth = 400;
 						int newHeight = AnnotationDrawUtils
-								.getContentHeight(AnnotationDrawUtils.createStyledCommentString(comment, style), newWidth);
+								.getContentHeight(AnnotationDrawUtils.createStyledCommentString(comment, style), newWidth, AnnotationDrawUtils.ANNOTATION_FONT);
 						boolean overflowing = false;
 						if (newHeight > 500) {
 							newWidth = 1000;
 							newHeight = AnnotationDrawUtils.getContentHeight(
-									AnnotationDrawUtils.createStyledCommentString(comment, style), newWidth);
+									AnnotationDrawUtils.createStyledCommentString(comment, style), newWidth, AnnotationDrawUtils.ANNOTATION_FONT);
 							if (newHeight > ProcessAnnotation.MAX_HEIGHT) {
 								newHeight = ProcessAnnotation.MAX_HEIGHT;
 								overflowing = true;
@@ -167,7 +167,7 @@ public class AnnotationProcessXMLFilter implements ProcessXMLFilter {
 								width = OperatorAnnotation.DEFAULT_WIDTH;
 							}
 							int height = AnnotationDrawUtils.getContentHeight(
-									AnnotationDrawUtils.createStyledCommentString(comment, style), (int) width);
+									AnnotationDrawUtils.createStyledCommentString(comment, style), (int) width,AnnotationDrawUtils.ANNOTATION_FONT);
 							boolean overflowing = false;
 							if (height > OperatorAnnotation.MAX_HEIGHT) {
 								height = OperatorAnnotation.MAX_HEIGHT;
@@ -185,7 +185,7 @@ public class AnnotationProcessXMLFilter implements ProcessXMLFilter {
 							// operator annotations prior to 6.4.0
 							int width = OperatorAnnotation.DEFAULT_WIDTH;
 							int height = AnnotationDrawUtils
-									.getContentHeight(AnnotationDrawUtils.createStyledCommentString(comment, style), width);
+									.getContentHeight(AnnotationDrawUtils.createStyledCommentString(comment, style), width, AnnotationDrawUtils.ANNOTATION_FONT);
 							boolean overflowing = false;
 							if (height > OperatorAnnotation.MAX_HEIGHT) {
 								height = OperatorAnnotation.MAX_HEIGHT;
@@ -212,7 +212,6 @@ public class AnnotationProcessXMLFilter implements ProcessXMLFilter {
 
 		// workflow annotations
 		NodeList children = element.getChildNodes();
-		children = element.getChildNodes();
 		for (int i = 0; i < children.getLength(); i++) {
 			Node child = children.item(i);
 			if (child instanceof Element) {
@@ -240,7 +239,7 @@ public class AnnotationProcessXMLFilter implements ProcessXMLFilter {
 						double hLoc = Double.parseDouble(hStr);
 						boolean overflowing = false;
 						int requiredHeight = AnnotationDrawUtils
-								.getContentHeight(AnnotationDrawUtils.createStyledCommentString(comment, style), (int) wLoc);
+								.getContentHeight(AnnotationDrawUtils.createStyledCommentString(comment, style), (int) wLoc, AnnotationDrawUtils.ANNOTATION_FONT);
 						if (requiredHeight > hLoc) {
 							overflowing = true;
 						}

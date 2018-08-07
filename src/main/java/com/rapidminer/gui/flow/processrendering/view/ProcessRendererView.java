@@ -21,6 +21,7 @@ package com.rapidminer.gui.flow.processrendering.view;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -145,6 +146,8 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 	private static final long serialVersionUID = 1L;
+
+	private static final int RENAME_FIELD_HEIGHT = 21;
 
 	/** the text field used for renaming an operator */
 	private JTextField renameField;
@@ -752,6 +755,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 						break;
 					case PROCESS_ZOOM_CHANGED:
 						controller.autoFit();
+						cancelRenaming();
 						//$FALL-THROUGH$
 					case PROCESS_SIZE_CHANGED:
 						SwingUtilities.invokeLater(() -> {
@@ -1335,11 +1339,13 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		}
 		renameField = new JTextField(10);
 		Rectangle2D rect = model.getOperatorRect(op);
-		int width = 0;
-		width = (int) ProcessDrawer.OPERATOR_FONT
-				.getStringBounds(op.getName(), ((Graphics2D) getGraphics()).getFontRenderContext()).getWidth();
-		width = Math.max(width, ProcessDrawer.OPERATOR_WIDTH);
-		double offset = (ProcessDrawer.OPERATOR_WIDTH - width) / 2;
+		float fontSize = (float) (ProcessDrawer.OPERATOR_FONT.getSize() * model.getZoomFactor());
+		Font nameFont = ProcessDrawer.OPERATOR_FONT.deriveFont(fontSize);
+		int width;
+		width = (int) nameFont.getStringBounds(op.getName(), ((Graphics2D) getGraphics()).getFontRenderContext()).getWidth();
+		width = (int) Math.max(width, ProcessDrawer.OPERATOR_WIDTH * model.getZoomFactor());
+		double xOffset = (ProcessDrawer.OPERATOR_WIDTH * model.getZoomFactor() - width) / 2;
+		double yOffset = (ProcessDrawer.HEADER_HEIGHT * model.getZoomFactor() - RENAME_FIELD_HEIGHT) / 2;
 		renameField.setHorizontalAlignment(SwingConstants.CENTER);
 		renameField.setText(op.getName());
 		renameField.selectAll();
@@ -1349,8 +1355,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		Point p = ProcessDrawUtils.convertToAbsoluteProcessPoint(new Point(x, y), processIndex, model);
 
 		int padding = 7;
-		renameField.setBounds((int) (p.getX() + offset - padding), (int) (p.getY() - 3), width + padding * 2, 21);
-		renameField.setFont(ProcessDrawer.OPERATOR_FONT);
+		renameField.setBounds((int) (p.getX() + xOffset - padding), (int) (p.getY() + yOffset - 1), width + padding * 2, RENAME_FIELD_HEIGHT);
+		renameField.setFont(nameFont);
 		renameField.setBorder(null);
 		add(renameField);
 		renameField.requestFocusInWindow();
@@ -1363,12 +1369,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			if (name.length() > 0) {
 				op.rename(name);
 			}
-			remove(renameField);
-			renameField = null;
-			// this makes sure that pressing F2 afterwards works
-			// otherwise nothing might be focused
-			ProcessRendererView.this.requestFocusInWindow();
-			repaint();
+			cancelRenaming();
 		};
 		renameField.addActionListener(e -> renamer.run());
 		renameField.addFocusListener(new FocusAdapter() {
@@ -1388,12 +1389,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			@Override
 			public void keyReleased(final KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-					remove(renameField);
-					renameField = null;
-					// this makes sure that pressing F2 afterwards works
-					// otherwise nothing is focused until the next click
-					ProcessRendererView.this.requestFocusInWindow();
-					repaint();
+					cancelRenaming();
 				}
 			}
 		});
@@ -1654,7 +1650,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	 * Updates the currently displayed cursor depending on hover state.
 	 */
 	void updateCursor() {
-		if (model.getHoveringOperator() != null || model.getHoveringPort() != null) {
+		if (model.isHoveringOperatorName()) {
+			setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+		} else if (model.getHoveringOperator() != null || model.getHoveringPort() != null) {
 			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		} else {
 			setCursor(Cursor.getDefaultCursor());
@@ -1671,6 +1669,20 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		model.setHoveringOperator(hoveringOperator);
 		updateCursor();
 		model.fireMiscChanged();
+	}
+
+	/**
+	 * Removes the rename textfield and resets the focus to the view.
+	 */
+	private void cancelRenaming() {
+		if (renameField != null) {
+			remove(renameField);
+			renameField = null;
+			// this makes sure that pressing F2 afterwards works
+			// otherwise nothing is focused until the next click
+			ProcessRendererView.this.requestFocusInWindow();
+			repaint();
+		}
 	}
 
 	/**

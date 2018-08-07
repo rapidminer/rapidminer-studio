@@ -34,7 +34,6 @@ public class WorkspaceAction extends ResourceAction {
 
 	private final String name;
 
-
 	public WorkspaceAction(String name) {
 		super(true, "workspace_" + name);
 		this.name = name;

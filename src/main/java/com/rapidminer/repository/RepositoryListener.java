@@ -20,6 +20,8 @@ package com.rapidminer.repository;
 
 import java.util.EventListener;
 
+import com.rapidminer.repository.internal.remote.RemoteRepository;
+
 
 /**
  * A listener listening to changes of a repository.
@@ -96,5 +98,14 @@ public interface RepositoryListener extends EventListener {
 	 * 		the folder that has been refreshed.
 	 */
 	void folderRefreshed(Folder folder);
+
+	/**
+	 * Fired when a {@link RemoteRepository} has been disconnected. Does nothing by default.
+	 *
+	 * @param repository
+	 * 		the repository that ahs been disconnected
+	 * @since 8.2.1
+	 */
+	default void repositoryDisconnected(RemoteRepository repository){}
 
 }

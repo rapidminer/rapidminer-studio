@@ -25,11 +25,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
+import com.rapidminer.core.io.data.source.DataSourceFactoryRegistry;
 import com.rapidminer.core.io.data.source.FileDataSource;
 import com.rapidminer.core.io.data.source.FileDataSourceFactory;
 import com.rapidminer.core.io.gui.ImportWizard;
@@ -57,17 +56,12 @@ final class LocalFileLocationWizardStep extends AbstractWizardStep {
 	/**
 	 * Listens for changes in the view to update the current selected path.
 	 */
-	private final ChangeListener changeListener = new ChangeListener() {
-
-		@Override
-		public void stateChanged(ChangeEvent e) {
-			fireStateChanged();
-		}
-	};
+	private final ChangeListener changeListener = e -> fireStateChanged();
 
 	private transient LocalFileLocationChooserView view;
-	private final List<FileFilter> fileFilters;
 	private final ImportWizard wizard;
+	private String factoryI18NKey;
+
 
 	/**
 	 * Creates a new {@link LocalFileLocationWizardStep} instance.
@@ -76,8 +70,24 @@ final class LocalFileLocationWizardStep extends AbstractWizardStep {
 	 *            all list of all registered file endings with descriptions
 	 */
 	public LocalFileLocationWizardStep(List<Pair<String, Set<String>>> allFileEndingsAndDescriptions, ImportWizard wizard) {
+		this(allFileEndingsAndDescriptions, wizard, null);
+	}
+
+	/**
+	 * Creates a new {@link LocalFileLocationWizardStep} instance, which should use only one
+	 * specified factory.
+	 *
+	 * @param allFileEndingsAndDescriptions
+	 *            all list of all registered file endings with descriptions
+	 * @param factoryI18NKey
+	 *            the i18n key of the factory, that should be the only usable one (optional)
+	 * @since 9.0.0
+	 */
+	public LocalFileLocationWizardStep(List<Pair<String, Set<String>>> allFileEndingsAndDescriptions, ImportWizard wizard,
+									   String factoryI18NKey) {
 		this.wizard = wizard;
-		this.fileFilters = new LinkedList<>();
+		List<FileFilter> fileFilters = new LinkedList<>();
+		this.factoryI18NKey = factoryI18NKey;
 		for (final Pair<String, Set<String>> item : allFileEndingsAndDescriptions) {
 			if (item.getSecond().isEmpty()) {
 				// If there are no file endings associated with this item, skip it (it is covered by
@@ -117,7 +127,7 @@ final class LocalFileLocationWizardStep extends AbstractWizardStep {
 			});
 		}
 
-		this.view = new LocalFileLocationChooserView(fileFilters);
+		this.view = new LocalFileLocationChooserView(fileFilters, this.factoryI18NKey);
 		this.view.registerChangeListener(changeListener);
 
 	}
@@ -147,6 +157,14 @@ final class LocalFileLocationWizardStep extends AbstractWizardStep {
 		if (factory != null) {
 			// ...use the provided data source file factory
 			getView().setFileDataSourceFactory(factory);
+		} else if (factoryI18NKey != null && !factoryI18NKey.trim().isEmpty()) {
+			List<FileDataSourceFactory<?>> fileFactories = DataSourceFactoryRegistry.INSTANCE.getFileFactories();
+			for (FileDataSourceFactory<?> fileFactory : fileFactories) {
+				if (fileFactory.getI18NKey().equals(factoryI18NKey)) {
+					getView().setFileDataSourceFactory(fileFactory);
+					break;
+				}
+			}
 		} else {
 			// otherwise trigger a new file type lookup
 			changeListener.stateChanged(null);

@@ -34,6 +34,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.List;
 import java.util.logging.Level;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -43,10 +44,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.event.EventListenerList;
 
-import com.rapidminer.tools.usagestats.UsageLoggable;
+import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.search.event.GlobalSearchInteractionEvent;
-import com.rapidminer.gui.search.event.GlobalSearchInteractionEvent.InteractionEvent;
 import com.rapidminer.gui.search.event.GlobalSearchInteractionListener;
 import com.rapidminer.gui.search.model.GlobalSearchRow;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -58,6 +58,7 @@ import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector.UsageObject;
+import com.rapidminer.tools.usagestats.UsageLoggable;
 
 
 /**
@@ -72,10 +73,10 @@ class GlobalSearchCategoryPanel extends JPanel {
 	 * Simple POJO implementation of {@link UsageObject} to log stats
 	 * using {@link ActionStatisticsCollector#logGlobalSearchAction(String, String, String)}.
 	 *
-	 * @since 8.1.2
 	 * @author Jan Czogalla
+	 * @since 8.1.2
 	 */
-	private static final class GlobalSearchActionUsageObject implements UsageObject{
+	private static final class GlobalSearchActionUsageObject implements UsageObject {
 
 		private final String query;
 		private final String categoryID;
@@ -101,7 +102,9 @@ class GlobalSearchCategoryPanel extends JPanel {
 	public static final int I18N_NAME_WIDTH = 100;
 	private static final Dimension I18N_NAME_SIZE = new Dimension(I18N_NAME_WIDTH, 30);
 
-	/** event listener for this panel */
+	/**
+	 * event listener for this panel
+	 */
 	private final EventListenerList eventListener;
 
 	private String categoryId;
@@ -109,6 +112,11 @@ class GlobalSearchCategoryPanel extends JPanel {
 
 	private final transient GlobalSearchController controller;
 
+	/**
+	 * keep track of the selected entry index and the available number of result entries that can be selected, includes link to more
+	 */
+	private int selectedSearchResultPanelIndex = -1;
+	private int availableResultRows = -1;
 
 	/**
 	 * Create the panel displaying results for a global search category.
@@ -148,7 +156,7 @@ class GlobalSearchCategoryPanel extends JPanel {
 	 * Adds a {@link GlobalSearchInteractionListener} which will be informed of all user interactions with {@link GlobalSearchRow}s.
 	 *
 	 * @param listener
-	 *            the listener instance to add
+	 * 		the listener instance to add
 	 */
 	protected void registerEventListener(final GlobalSearchInteractionListener listener) {
 		if (listener == null) {
@@ -161,7 +169,7 @@ class GlobalSearchCategoryPanel extends JPanel {
 	 * Removes the {@link GlobalSearchInteractionListener} from this model.
 	 *
 	 * @param listener
-	 *            the listener instance to remove
+	 * 		the listener instance to remove
 	 */
 	protected void removeEventListener(final GlobalSearchInteractionListener listener) {
 		if (listener == null) {
@@ -177,8 +185,13 @@ class GlobalSearchCategoryPanel extends JPanel {
 	 * 		the rows to display
 	 * @param result
 	 * 		the search result instance
+	 * @param justAnUpdate
+	 * 		informs this method if the results were updated from a show more activation or if a new search was triggered
 	 */
-	protected void setSearchRows(final List<GlobalSearchRow> rows, final GlobalSearchResult result) {
+	protected void setSearchRows(final List<GlobalSearchRow> rows, final GlobalSearchResult result, boolean justAnUpdate) {
+		int previouslySelectedEntry = selectedSearchResultPanelIndex;
+		availableResultRows = rows.size();
+
 		contentPanel.removeAll();
 
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -188,9 +201,11 @@ class GlobalSearchCategoryPanel extends JPanel {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.anchor = GridBagConstraints.WEST;
 
+		int index = 0;
 		for (GlobalSearchRow row : rows) {
 			gbc.gridy += 1;
-			contentPanel.add(createUI(row), gbc);
+			contentPanel.add(createUI(row, index), gbc);
+			index++;
 		}
 
 		long deltaDisplayedResultsVsMaxResults = result.getPotentialNumberOfResults() - rows.size();
@@ -198,14 +213,30 @@ class GlobalSearchCategoryPanel extends JPanel {
 			gbc.gridy += 1;
 
 			String remainingNumber = Tools.formatIntegerIfPossible(deltaDisplayedResultsVsMaxResults, 0, true);
-			LinkLocalButton loadMoreButton = new LinkLocalButton(new ResourceAction("global_search.load_more", remainingNumber) {
+			GlobalSearchResultPanel wrapperPanel = new GlobalSearchResultPanel(null);
+			final ResourceAction action = new ResourceAction("global_search.load_more", remainingNumber) {
 
 				@Override
 				public void loggedActionPerformed(ActionEvent e) {
 					controller.loadMoreRows(result, categoryId);
 				}
-			});
-			contentPanel.add(loadMoreButton, gbc);
+			};
+			LinkLocalButton loadMoreButton = new LinkLocalButton(action);
+
+			final int loadMoreIndex = availableResultRows;
+			// add mouse listener for hovering and activation
+			MouseListener activationMouseListener = new MouseAdapter() {
+				@Override
+				public void mouseEntered(MouseEvent e) {
+					GlobalSearchPanel.getInstance().select(categoryId, loadMoreIndex);
+				}
+			};
+			loadMoreButton.addMouseListener(activationMouseListener);
+			wrapperPanel.setActivationAction(action);
+			wrapperPanel.add(loadMoreButton);
+			contentPanel.add(wrapperPanel, gbc);
+
+			availableResultRows += 1;
 		}
 
 		// fill at bottom so components are at top
@@ -214,6 +245,13 @@ class GlobalSearchCategoryPanel extends JPanel {
 			gbc.weighty = 1.0d;
 			gbc.fill = GridBagConstraints.VERTICAL;
 			contentPanel.add(new JLabel(), gbc);
+		}
+
+		// fireResultBrowsedInteraction previously selected entry if this was executed as an update or do something meaningful with the index
+		if (justAnUpdate) {
+			SwingUtilities.invokeLater(() -> setSelectedEntry(previouslySelectedEntry));
+		} else {
+			resetSelectedEntry();
 		}
 	}
 
@@ -275,20 +313,20 @@ class GlobalSearchCategoryPanel extends JPanel {
 	 *
 	 * @param row
 	 * 		the search row instance for which to create the UI
+	 * @param index
+	 * 		position of this entry for selecting the entry correctly
 	 * @return the component, never {@code null}
 	 */
-	private JComponent createUI(final GlobalSearchRow row) {
-		final JPanel wrapperPanel = new JPanel();
-		wrapperPanel.setOpaque(false);
-		wrapperPanel.setBackground(Colors.TEXT_HIGHLIGHT_BACKGROUND);
-		wrapperPanel.setLayout(new BorderLayout());
+	private GlobalSearchResultPanel createUI(final GlobalSearchRow row, int index) {
+		final GlobalSearchResultPanel wrapperPanel = new GlobalSearchResultPanel(row);
 
 		final GlobalSearchableGUIProvider provider = GlobalSearchGUIRegistry.INSTANCE.getGUIProviderForSearchCategoryById(categoryId);
 		JComponent component = provider != null ? provider.getGUIListComponentForDocument(row.getDoc(), row.getBestFragments()) : null;
 		if (provider == null || component == null) {
 			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.gui.search.globalsearchdialog.no_gui_component", categoryId);
 			// to avoid an empty category, provide a very basic UI that only shows the name of a row
-			return new JLabel(row.getDoc().get(GlobalSearchUtilities.FIELD_NAME));
+			wrapperPanel.add(new JLabel(row.getDoc().get(GlobalSearchUtilities.FIELD_NAME)));
+			return wrapperPanel;
 		}
 		if (component.getPreferredSize().getHeight() > GlobalSearchGUIUtilities.MAX_HEIGHT) {
 			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.gui.search.globalsearchdialog.gui_component_too_high", categoryId);
@@ -303,6 +341,21 @@ class GlobalSearchCategoryPanel extends JPanel {
 		component.setBorder(CATEGORY_COMPONENT_EMPTY_BORDER);
 		wrapperPanel.add(component, BorderLayout.CENTER);
 
+		final Action activationAction = new LoggedAbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				super.actionPerformed(e);
+				GlobalSearchableGUIProvider.Veto providerVeto = new GlobalSearchableGUIProvider.Veto();
+				provider.searchResultTriggered(row.getDoc(), providerVeto);
+				// only fire interaction if provider did not veto it
+				if (!providerVeto.isVeto()) {
+					fireInteraction(GlobalSearchInteractionEvent.InteractionEvent.RESULT_ACTIVATED, row);
+					ActionStatisticsCollector.getInstance().logGlobalSearchAction(controller.getLastQuery(), categoryId, row.getDoc().getField(GlobalSearchUtilities.FIELD_UNIQUE_ID).stringValue());
+				}
+			}
+		};
+		wrapperPanel.setActivationAction(activationAction);
+
 		// add mouse listener for hovering and activation
 		MouseListener activationMouseListener = new MouseAdapter() {
 			@Override
@@ -310,36 +363,16 @@ class GlobalSearchCategoryPanel extends JPanel {
 				if (!SwingUtilities.isLeftMouseButton(e) || e.getClickCount() != 2) {
 					return;
 				}
-
-				GlobalSearchableGUIProvider.Veto providerVeto = new GlobalSearchableGUIProvider.Veto();
-				provider.searchResultTriggered(row.getDoc(), providerVeto);
-				// only fire interaction if provider did not veto it
-				if (!providerVeto.isVeto()) {
-					ActionStatisticsCollector.getInstance().logGlobalSearchAction(controller.getLastQuery(), categoryId, row.getDoc().getField(GlobalSearchUtilities.FIELD_UNIQUE_ID).stringValue());
-
-					fireInteraction(InteractionEvent.RESULT_ACTIVATED, row);
-
-					wrapperPanel.setOpaque(false);
-					wrapperPanel.repaint();
-				}
+				wrapperPanel.doActivate();
 			}
 
 			@Override
 			public void mouseEntered(MouseEvent e) {
-				wrapperPanel.setOpaque(true);
-				wrapperPanel.repaint();
-
-				provider.searchResultBrowsed(row.getDoc());
-				fireInteraction(InteractionEvent.RESULT_BROWSED, row);
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-				wrapperPanel.setOpaque(false);
-				wrapperPanel.repaint();
+				GlobalSearchPanel.getInstance().select(categoryId, index);
 			}
 		};
 		component.addMouseListener(activationMouseListener);
+
 		component.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
 		// add drag&drop support if applicable
@@ -355,23 +388,160 @@ class GlobalSearchCategoryPanel extends JPanel {
 			}
 		}
 
-
+		if (index == selectedSearchResultPanelIndex) {
+			wrapperPanel.highlightPanel(true);
+			fireResultBrowsedInteraction(wrapperPanel.getRow());
+		}
 		return wrapperPanel;
 	}
 
 	/**
-	 * Fires the given {@link InteractionEvent}.
+	 * On browsing the results interaction event listeners are being notified
+	 *
+	 * @param row
+	 * 		the browsed row
+	 */
+	private void fireResultBrowsedInteraction(GlobalSearchRow row) {
+		if (row != null) {
+			fireInteraction(GlobalSearchInteractionEvent.InteractionEvent.RESULT_BROWSED, row);
+		}
+	}
+
+	/**
+	 * Fires the given {@link GlobalSearchInteractionEvent.InteractionEvent}.
 	 *
 	 * @param type
 	 * 		the type of the event
 	 * @param row
 	 * 		the row with which the interaction happened
 	 */
-	private void fireInteraction(final InteractionEvent type, final GlobalSearchRow row) {
+	private void fireInteraction(final GlobalSearchInteractionEvent.InteractionEvent type, final GlobalSearchRow row) {
 		// Notify the listeners
 		for (GlobalSearchInteractionListener listener : eventListener.getListeners(GlobalSearchInteractionListener.class)) {
 			GlobalSearchInteractionEvent e = new GlobalSearchInteractionEvent(type, row);
 			listener.interaction(e);
 		}
 	}
+
+	/**
+	 * Get access to the contents of the contentpanel
+	 *
+	 * @return the current contentpanel with all the {@link GlobalSearchResultPanel}
+	 * @since 9.0.0
+	 */
+	JPanel getContentPanel() {
+		return contentPanel;
+	}
+
+	/**
+	 * Access to the currently selected index in the contentpanel from {@link GlobalSearchCategoryPanel#getContentPanel()}
+	 *
+	 * @return index of the selected entry or -1 if none is selected
+	 * @since 9.0.0
+	 */
+	int getSelectedEntryIndex() {
+		return selectedSearchResultPanelIndex;
+	}
+
+	/**
+	 * Remove selection from this category panel
+	 *
+	 * @since 9.0.0
+	 */
+	void resetSelectedEntry() {
+		setSelectedEntry(-1);
+	}
+
+	/**
+	 * Select one entry, for instance when hovering with the mouse, to be able to change the selection with the keyboard afterwards
+	 *
+	 * @param selectedEntry
+	 * 		index of the entry to select
+	 * @return true if the selection succeeded
+	 * @since 9.0.0
+	 */
+	boolean setSelectedEntry(int selectedEntry) {
+		if (selectedSearchResultPanelIndex >= 0 && selectedSearchResultPanelIndex < availableResultRows && contentPanel.getComponent(selectedSearchResultPanelIndex) instanceof GlobalSearchResultPanel) {
+			((GlobalSearchResultPanel) contentPanel.getComponent(selectedSearchResultPanelIndex)).highlightPanel(false);
+		}
+		if (selectedEntry < 0) {
+			selectedSearchResultPanelIndex = -1;
+			return true;
+		} else if (selectedEntry < availableResultRows && contentPanel.getComponent(selectedEntry) instanceof GlobalSearchResultPanel) {
+			selectedSearchResultPanelIndex = selectedEntry;
+			final GlobalSearchResultPanel gsrPanel = (GlobalSearchResultPanel) contentPanel.getComponent(selectedSearchResultPanelIndex);
+			gsrPanel.highlightPanel(true);
+			final GlobalSearchableGUIProvider provider = GlobalSearchGUIRegistry.INSTANCE.getGUIProviderForSearchCategoryById(categoryId);
+			if (provider != null && gsrPanel.getRow() != null) {
+				provider.searchResultBrowsed(gsrPanel.getRow().getDoc());
+			}
+			fireResultBrowsedInteraction(gsrPanel.getRow());
+			return true;
+		}
+		resetSelectedEntry();
+		return false;
+	}
+
+	/**
+	 * Select the next entry to be the actively selected entry
+	 *
+	 * @return true if there was another entry that is now selected, false if there are no further entries in this category
+	 * @since 9.0.0
+	 */
+	boolean selectNext() {
+		return selectedSearchResultPanelIndex + 1 < availableResultRows && setSelectedEntry(selectedSearchResultPanelIndex + 1);
+	}
+
+	/**
+	 * Select the previous entry to be the actively selected entry
+	 *
+	 * @return true if there was a previous entry that is now selected, false if there was no previous entry available
+	 * @since 9.0.0
+	 */
+	boolean selectPrevious() {
+		return selectedSearchResultPanelIndex - 1 >= 0 && setSelectedEntry(selectedSearchResultPanelIndex - 1);
+	}
+
+	/**
+	 * Shortcut to select index 0
+	 *
+	 * @return true if this was possible
+	 * @since 9.0.0
+	 */
+	boolean selectFirst() {
+		return setSelectedEntry(0);
+	}
+
+	/**
+	 * Select the last available entry in this category
+	 *
+	 * @return true if it was possible
+	 * @since 9.0.0
+	 */
+	boolean selectLast() {
+		return setSelectedEntry(availableResultRows - 1);
+	}
+
+	/**
+	 * Run the Action registered for the currently selected {@link GlobalSearchResultPanel}
+	 *
+	 * @since 9.0.0
+	 */
+	void activateSelectedEntry() {
+		if (selectedSearchResultPanelIndex >= 0) {
+			((GlobalSearchResultPanel) contentPanel.getComponent(selectedSearchResultPanelIndex)).doActivate();
+		}
+	}
+
+	/**
+	 * Name of the category this panel was created for
+	 *
+	 * @return the categoryId
+	 * @since 9.0.0
+	 */
+	String getCategoryId() {
+		return categoryId;
+	}
+
 }
+

@@ -25,7 +25,9 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,14 +37,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.processeditor.search.OperatorGlobalSearch;
 import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.license.LicenseEvent;
+import com.rapidminer.license.LicenseManagerListener;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -57,6 +63,7 @@ import com.rapidminer.search.GlobalSearchable;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
 import com.rapidminer.tools.documentation.OperatorDocumentation;
 import com.rapidminer.tools.documentation.XMLOperatorDocBundle;
+import com.rapidminer.tools.parameter.ParameterChangeListener;
 import com.rapidminer.tools.plugin.Plugin;
 
 
@@ -104,6 +111,10 @@ public class OperatorService {
 
 	private static final String OPERATORS_XML = "OperatorsCore.xml";
 
+	public static final String OPERATOR_BLACKLIST_KEY = "rapidminer.operator.blacklist";
+
+	private static Set<String> operatorBlacklist = Collections.emptySet();
+
 	private static final LinkedList<WeakReference<OperatorServiceListener>> listeners = new LinkedList<>();
 	private static final List<OperatorCreationHook> operatorCreationHooks = new LinkedList<>();
 	/**
@@ -123,6 +134,34 @@ public class OperatorService {
 	private static final GroupTreeRoot groupTreeRoot = new GroupTreeRoot();
 
 	private static GlobalSearchable operatorSearchable;
+
+	/** Updates the operator blacklist when it changes */
+	private static final ParameterChangeListener UPDATE_BLACKLIST_LISTENER = new ParameterChangeListener() {
+
+		@Override
+		public void informParameterSaved() {
+			// not necessary
+		}
+
+		@Override
+		public void informParameterChanged(String key, String value) {
+			if (OPERATOR_BLACKLIST_KEY.equals(key)) {
+				updateBlacklist();
+			}
+		}
+	};
+
+	/** Updates the operator descriptions when the license changes */
+	private static final LicenseManagerListener ACTIVE_LICENSE_CHANGED = new LicenseManagerListener() {
+
+		@Override
+		public <S, C> void handleLicenseEvent(final LicenseEvent<S, C> event) {
+			if (event.getType() == LicenseEvent.LicenseEventType.ACTIVE_LICENSE_CHANGED) {
+				refreshOperatorDescriptions();
+			}
+		}
+	};
+
 
 	public static void init() {
 		// this serves 2 purposes:
@@ -185,6 +224,36 @@ public class OperatorService {
 		LogService.getRoot().log(Level.FINE,
 				"com.rapidminer.tools.OperatorService.number_of_registered_operator_classes_and_descriptions",
 				new Object[] { REGISTERED_OPERATOR_CLASSES.size(), KEYS_TO_DESCRIPTIONS.size(), DEPRECATION_MAP.size() });
+
+		updateBlacklist();
+		ParameterService.removeParameterChangeListener(UPDATE_BLACKLIST_LISTENER);
+		ParameterService.registerParameterChangeListener(UPDATE_BLACKLIST_LISTENER);
+		ProductConstraintManager.INSTANCE.removeLicenseManagerListener(ACTIVE_LICENSE_CHANGED);
+		ProductConstraintManager.INSTANCE.registerLicenseManagerListener(ACTIVE_LICENSE_CHANGED);
+	}
+
+	private static void updateBlacklist() {
+		String blacklistString = ParameterService.getParameterValue(OPERATOR_BLACKLIST_KEY);
+		if (blacklistString != null) {
+			Set<String> newOperatorBlacklist = new HashSet<>(Arrays.asList(blacklistString.trim().split("\\s*,\\s*")));
+
+			//Calculate the Symmetric Difference between the sets
+			Set<String> symmetricDifference = new HashSet<>(operatorBlacklist);
+			symmetricDifference.addAll(newOperatorBlacklist);
+			Set<String> tmp = new HashSet<>(operatorBlacklist);
+			tmp.retainAll(newOperatorBlacklist);
+			symmetricDifference.removeAll(tmp);
+
+			operatorBlacklist = newOperatorBlacklist;
+
+			//Update the operators whose status changed
+			for (String blacklistedKey: symmetricDifference) {
+				OperatorDescription blacklistedOperator = OperatorService.getOperatorDescription(blacklistedKey);
+				if (blacklistedOperator != null) {
+					blacklistedOperator.setIconName(blacklistedOperator.getIconName());
+				}
+			}
+		}
 	}
 
 	/**
@@ -796,6 +865,26 @@ public class OperatorService {
 	 */
 	public static void addOperatorServiceListener(OperatorServiceListener listener) {
 		listeners.add(new WeakReference<>(listener));
+	}
+
+	/**
+	 * Checks if any blacklisted operators exist
+	 *
+	 * @return {@code true} if the blacklisted operators exist
+	 * @since 9.0.0
+	 */
+	public static boolean hasBlacklistedOperators(){
+		return !operatorBlacklist.isEmpty();
+	}
+
+	/**
+	 * Checks if the operator with the given key is blacklisted.
+	 * @param opKey
+	 * @return {@code true} if the operator is blacklisted, or {@code false} if it is not blacklisted.
+	 * @since 9.0.0
+	 */
+	public static boolean isOperatorBlacklisted(String opKey){
+		return operatorBlacklist.contains(opKey);
 	}
 
 	/**

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="7.3.000">
+  <context>
+    <input/>
+    <output/>
+    <macros>
+      <macro>
+        <key>label</key>
+        <value>Response</value>
+      </macro>
+      <macro>
+        <key>label_positive_class</key>
+        <value>yes</value>
+      </macro>
+    </macros>
+  </context>
+  <operator activated="true" class="process" compatibility="7.3.000" expanded="true" name="Process">
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="7.3.000" expanded="true" height="68" name="Load Past Data" width="90" x="45" y="187">
+        <parameter key="repository_entry" value="//Samples/Templates/Direct Marketing/Past Campaign Data"/>
+      </operator>
+      <operator activated="true" class="select_attributes" compatibility="7.3.000" expanded="true" height="82" name="Remove ID-like Column" width="90" x="179" y="187">
+        <parameter key="attribute_filter_type" value="single"/>
+        <parameter key="attribute" value="Name"/>
+        <parameter key="invert_selection" value="true"/>
+      </operator>
+      <operator activated="true" class="multiply" compatibility="7.3.000" expanded="true" height="103" name="Multiply Data" width="90" x="313" y="187"/>
+      <operator activated="true" class="retrieve" compatibility="7.3.000" expanded="true" height="68" name="Load New Data" width="90" x="246" y="442">
+        <parameter key="repository_entry" value="//Samples/Templates/Direct Marketing/New Campaign Data"/>
+      </operator>
+      <operator activated="true" class="weight_by_information_gain" compatibility="7.3.000" expanded="true" height="82" name="Calculate Weights" width="90" x="581" y="187">
+        <parameter key="normalize_weights" value="true"/>
+        <parameter key="sort_direction" value="descending"/>
+      </operator>
+      <operator activated="true" class="weights_to_data" compatibility="7.3.000" expanded="true" height="68" name="Weights to Data" width="90" x="715" y="187"/>
+      <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000" expanded="true" height="145" name="Cross Validation" width="90" x="45" y="391">
+		<parameter key="sampling_type" value="stratified sampling"/>
+        <process expanded="true">
+          <operator activated="true" class="naive_bayes" compatibility="7.3.000" expanded="true" height="82" name="Naive Bayes" width="90" x="45" y="34"/>
+          <connect from_port="training set" to_op="Naive Bayes" to_port="training set"/>
+          <connect from_op="Naive Bayes" from_port="model" to_port="model"/>
+          <portSpacing port="source_training set" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="7.3.000" expanded="true" height="82" name="Apply Model (2)" width="90" x="45" y="34">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance_binominal_classification" compatibility="7.3.000" expanded="true" height="82" name="Performance (2)" width="90" x="179" y="34">
+            <parameter key="accuracy" value="false"/>
+            <parameter key="precision" value="true"/>
+          </operator>
+          <connect from_port="model" to_op="Apply Model (2)" to_port="model"/>
+          <connect from_port="test set" to_op="Apply Model (2)" to_port="unlabelled data"/>
+          <connect from_op="Apply Model (2)" from_port="labelled data" to_op="Performance (2)" to_port="labelled data"/>
+          <connect from_op="Performance (2)" from_port="performance" to_port="performance 1"/>
+          <connect from_op="Performance (2)" from_port="example set" to_port="test set results"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_test set results" spacing="0"/>
+          <portSpacing port="sink_performance 1" spacing="0"/>
+          <portSpacing port="sink_performance 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="subprocess" compatibility="7.3.000" expanded="true" height="82" name="Calculate Threshold" width="90" x="581" y="442">
+        <process expanded="true">
+          <operator activated="true" class="find_threshold" compatibility="7.3.000" expanded="true" height="82" name="Find Threshold" width="90" x="179" y="34">
+            <parameter key="misclassification_costs_second" value="3.0"/>
+            <description align="center" color="yellow" colored="true" width="126">Specify the costs of missing a potential respondent vs. the costs of including somebody into the campaign.</description>
+          </operator>
+          <connect from_port="in 1" to_op="Find Threshold" to_port="example set"/>
+          <connect from_op="Find Threshold" from_port="threshold" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="7.3.000" expanded="true" height="82" name="Apply Model" width="90" x="380" y="391">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="apply_threshold" compatibility="7.3.000" expanded="true" height="82" name="Apply Threshold" width="90" x="715" y="391"/>
+      <connect from_op="Load Past Data" from_port="output" to_op="Remove ID-like Column" to_port="example set input"/>
+      <connect from_op="Remove ID-like Column" from_port="example set output" to_op="Multiply Data" to_port="input"/>
+      <connect from_op="Multiply Data" from_port="output 1" to_op="Calculate Weights" to_port="example set"/>
+      <connect from_op="Multiply Data" from_port="output 2" to_op="Cross Validation" to_port="example set"/>
+      <connect from_op="Load New Data" from_port="output" to_op="Apply Model" to_port="unlabelled data"/>
+      <connect from_op="Calculate Weights" from_port="weights" to_op="Weights to Data" to_port="attribute weights"/>
+      <connect from_op="Weights to Data" from_port="example set" to_port="result 1"/>
+      <connect from_op="Cross Validation" from_port="model" to_op="Apply Model" to_port="model"/>
+      <connect from_op="Cross Validation" from_port="test result set" to_op="Calculate Threshold" to_port="in 1"/>
+      <connect from_op="Calculate Threshold" from_port="out 1" to_op="Apply Threshold" to_port="threshold"/>
+      <connect from_op="Apply Model" from_port="labelled data" to_op="Apply Threshold" to_port="example set"/>
+      <connect from_op="Apply Threshold" from_port="example set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="147"/>
+      <portSpacing port="sink_result 2" spacing="189"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="blue" colored="true" height="225" resized="true" width="475" x="20" y="105">Step 1:&lt;br&gt;Load and prepare data from past marketing campaigns, including recipient attributes (e.g. age, gender, area) and behavioral attributes (usage of products and services, web site, etc.).&lt;br&gt;</description>
+      <description align="left" color="green" colored="true" height="225" resized="true" width="365" x="505" y="105">Step 2:&lt;br/&gt;Determine which factors influence the response to marketing campaigns to improve prediction.</description>
+      <description align="left" color="orange" colored="true" height="320" resized="true" width="170" x="20" y="340">&lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br/&gt;&lt;br&gt;Step 3:&lt;br&gt;Train and validate customer response model.</description>
+      <description align="left" color="green" colored="true" height="320" resized="true" width="325" x="200" y="340">&lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; Step 4:&lt;br&gt;Load data containing potential recipients for new campaigns. Apply customer response model to identify and target those recipients that are the most likely to respond to the marketing campaign in the desired way.</description>
+      <description align="left" color="yellow" colored="false" height="70" resized="true" width="850" x="20" y="25">DIRECT MARKETING&lt;br&gt;Create a customer response model based on past responses to targeted marketing campaigns, in order to predict those customers that are likely to respond to and increase the conversion rate of new campaigns.</description>
+      <description align="left" color="gray" colored="true" height="320" resized="true" width="335" x="535" y="340">&lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; Step 5:&lt;br&gt;Typically, omitting recipients that would have responded, incurs a higher cost than sending a campaign to somebody who does not respond. Accounting for those costs, calculate and apply the optimum confidence threshold.</description>
+      <description align="left" color="yellow" colored="false" height="35" resized="false" width="850" x="20" y="670">Outputs: influence factors, scored customers with likelihood of responding </description>
+    </process>
+  </operator>
+</process>

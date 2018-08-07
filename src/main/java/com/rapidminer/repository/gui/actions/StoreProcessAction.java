@@ -43,7 +43,7 @@ public class StoreProcessAction extends AbstractRepositoryAction<Entry> {
 	private static final long serialVersionUID = 1L;
 
 	public StoreProcessAction(RepositoryTree tree) {
-		super(tree, Entry.class, false, "repository_store_process");
+		super(tree, Entry.class, true, "repository_store_process");
 	}
 
 	@Override
@@ -84,10 +84,7 @@ public class StoreProcessAction extends AbstractRepositoryAction<Entry> {
 						return;
 					}
 				}
-			} catch (RepositoryException e1) {
-				SwingTools.showSimpleErrorMessage("cannot_store_process_in_repository", e1, name);
-				return;
-			} catch (MalformedRepositoryLocationException e1) {
+			} catch (RepositoryException | MalformedRepositoryLocationException e1) {
 				SwingTools.showSimpleErrorMessage("cannot_store_process_in_repository", e1, name);
 				return;
 			}

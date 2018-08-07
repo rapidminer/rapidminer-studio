@@ -61,6 +61,7 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
+import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
@@ -171,6 +172,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 			} else {
 				SwingUtilities.invokeLater(() -> {
 					DataImportWizardBuilder importWizardBuilder = new DataImportWizardBuilder();
+					importWizardBuilder.setCallback(DataImportWizardUtils.showInResultsCallback());
 					importWizardBuilder.forFile(file.toPath()).build(RapidMinerGUI.getMainFrame()).getDialog()
 							.setVisible(true);
 				});

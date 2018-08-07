@@ -53,7 +53,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.components.AbstractLinkButton;
-import com.rapidminer.io.process.AutoModelProcessXMLFilter;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -64,6 +64,7 @@ import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.repository.search.RepositoryGlobalSearch;
+import com.rapidminer.settings.Telemetry;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.container.Pair;
@@ -238,10 +239,7 @@ public enum ActionStatisticsCollector {
 	public static final String VALUE_ACTION = "action";
 	public static final String ARG_GLOBAL_SEARCH_SPACER = "|";
 	public static final String ARG_GLOBAL_SEARCH_CATEGORY_ALL = "all";
-	/** introduced in 8.1 */
-	public static final String PREFIX_TYPE_AUTOMODEL_GENERATED = "am_gen_";
-	public static final String PREFIX_TYPE_AUTOMODEL_EXPORTED = "am_exp_";
-	
+
 	/** ab group | number of groups | selected group (since 8.2) */
 	public static final String TYPE_AB_GROUP = "ab_group";
 
@@ -254,6 +252,16 @@ public enum ActionStatisticsCollector {
 	public static final String OPERATOR_ACTION_PRIMARY_PARAMETER = "parameter";
 	/** operator rename started */
 	public static final String OPERATOR_ACTION_RENAME = "rename";
+
+	/** remote_repository | status | uuid (since 8.2.1) */
+	public static final String TYPE_REMOTE_REPOSITORY = "remote_repository";
+
+	public static final String VALUE_CREATED = "created";
+	public static final String VALUE_CONNECTED = "connected";
+	public static final String VALUE_CONNECTION_ERROR = "connection_error";
+	public static final String VALUE_DISCONNECTED = "disconnected";
+	public static final String VALUE_REMOVED = "removed";
+	public static final String ARG_REMOTE_REPOSITORY_SEPARATOR  = "|";
 
 	/** conversion constant for bytes to megabytes */
 	private static final int BYTE_TO_MB = 1024 * 1024;
@@ -876,23 +884,13 @@ public enum ActionStatisticsCollector {
 		}
 	}
 
-	private static String prefixAutoModelUsage(Operator operator) {
+	private static String prefixProcessOriginUsage(Operator operator) {
 		if (operator == null) {
 			return "";
 		}
 
-		AutoModelProcessXMLFilter.AutoModelState autoModelState = AutoModelProcessXMLFilter.getAutoModelState(operator);
-		if (autoModelState == null) {
-			return "";
-		}
-		switch (autoModelState) {
-			case GENERATED:
-				return PREFIX_TYPE_AUTOMODEL_GENERATED;
-			case EXPORTED:
-				return PREFIX_TYPE_AUTOMODEL_EXPORTED;
-			default:
-				return "";
-		}
+		ProcessOriginProcessXMLFilter.ProcessOriginState processOriginState = ProcessOriginProcessXMLFilter.getProcessOriginState(operator);
+		return processOriginState != null ? processOriginState.getPrefix() : "";
 	}
 
 	/**
@@ -907,7 +905,7 @@ public enum ActionStatisticsCollector {
 			return;
 		}
 
-		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+		String processOriginPrefix = prefixProcessOriginUsage(process.getRootOperator());
 
 		// add listener for operator port volume logging
 		process.getRootOperator().addProcessListener(operatorVolumeListener);
@@ -919,26 +917,26 @@ public enum ActionStatisticsCollector {
 				++size;
 			}
 		}
-		log(autoModelPrefix + TYPE_PROCESS, VALUE_OPERATOR_COUNT, Integer.toString(size));
-		startTimer(process, autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_RUNTIME);
+		log(processOriginPrefix + TYPE_PROCESS, VALUE_OPERATOR_COUNT, Integer.toString(size));
+		startTimer(process, processOriginPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_RUNTIME);
 	}
 
 	/**
 	 * Logs process execution success
 	 */
 	public void logExecutionSuccess(Process process) {
-		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+		String processOriginPrefix = prefixProcessOriginUsage(process.getRootOperator());
 
-		log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_SUCCESS);
+		log(processOriginPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_SUCCESS);
 	}
 
 	/**
 	 * Logs process execution start
 	 */
 	public void logExecutionStarted(Process process) {
-		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+		String processOriginPrefix = prefixProcessOriginUsage(process.getRootOperator());
 
-		log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_STARTED);
+		log(processOriginPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_STARTED);
 	}
 
 	/**
@@ -952,12 +950,12 @@ public enum ActionStatisticsCollector {
 	 *             The exception to be logged.
 	 */
 	public void logExecutionException(Process process, Exception e) {
-		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+		String processOriginPrefix = prefixProcessOriginUsage(process.getRootOperator());
 
 		if (e instanceof ProcessStoppedException) {
-			log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_STOPPED);
+			log(processOriginPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_STOPPED);
 		} else {
-			log(autoModelPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_FAILED);
+			log(processOriginPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_FAILED);
 			StringBuilder exception = new StringBuilder();
 			if (process.getCurrentOperator() != null) {
 				exception.append(process.getCurrentOperator().getOperatorDescription().getKey());
@@ -975,7 +973,7 @@ public enum ActionStatisticsCollector {
 				exception.append("||");
 			}
 			exception.append(getExceptionStackTraceAsString(e));
-			log(autoModelPrefix + TYPE_PROCESS, VALUE_EXCEPTION, exception.toString());
+			log(processOriginPrefix + TYPE_PROCESS, VALUE_EXCEPTION, exception.toString());
 		}
 	}
 
@@ -1041,9 +1039,9 @@ public enum ActionStatisticsCollector {
 	 *            the columns of the example set at the port
 	 */
 	private void logInputVolume(Operator operator, InputPort port, int rows, int columns) {
-		String autoModelPrefix = prefixAutoModelUsage(operator);
+		String processOriginPrefix = prefixProcessOriginUsage(operator);
 
-		logVolume(autoModelPrefix + TYPE_INPUT_VOLUME, operator, port, rows, columns);
+		logVolume(processOriginPrefix + TYPE_INPUT_VOLUME, operator, port, rows, columns);
 	}
 
 	/**
@@ -1060,9 +1058,9 @@ public enum ActionStatisticsCollector {
 	 *            the columns of the example set at the port
 	 */
 	private void logOutputVolume(Operator operator, OutputPort port, int rows, int columns) {
-		String autoModelPrefix = prefixAutoModelUsage(operator);
+		String processOriginPrefix = prefixProcessOriginUsage(operator);
 
-		logVolume(autoModelPrefix + TYPE_OUTPUT_VOLUME, operator, port, rows, columns);
+		logVolume(processOriginPrefix + TYPE_OUTPUT_VOLUME, operator, port, rows, columns);
 	}
 
 	/**
@@ -1093,9 +1091,9 @@ public enum ActionStatisticsCollector {
 		if (op == null) {
 			return;
 		}
-		String autoModelPrefix = prefixAutoModelUsage(op);
+		String processOriginPrefix = prefixProcessOriginUsage(op);
 
-		log(autoModelPrefix + TYPE_OPERATOR, op.getOperatorDescription().getKey(), event);
+		log(processOriginPrefix + TYPE_OPERATOR, op.getOperatorDescription().getKey(), event);
 	}
 
 	/** Adds 1 to the aggregated value */
@@ -1113,19 +1111,19 @@ public enum ActionStatisticsCollector {
 	 *            the execution time (in milliseconds) to log
 	 */
 	private void logOperatorExecutionTime(Operator operator, long executionTime) {
-		String autoModelPrefix = prefixAutoModelUsage(operator);
+		String processOriginPrefix = prefixProcessOriginUsage(operator);
 
-		logCountSumMinMax(autoModelPrefix + TYPE_OPERATOR, operator.getOperatorDescription().getKey(), OPERATOR_RUNTIME, executionTime);
+		logCountSumMinMax(processOriginPrefix + TYPE_OPERATOR, operator.getOperatorDescription().getKey(), OPERATOR_RUNTIME, executionTime);
 	}
 
 	/**
 	 * Logs sum, max and count of the total memory currently used.
 	 */
 	private void logMemory(Process process) {
-		String autoModelPrefix = prefixAutoModelUsage(process.getRootOperator());
+		String processOriginPrefix = prefixProcessOriginUsage(process.getRootOperator());
 
 		long totalSize = Runtime.getRuntime().totalMemory() / BYTE_TO_MB;
-		Key key = new Key(autoModelPrefix + TYPE_MEMORY, MEMORY_USED, MEMORY_ARG);
+		Key key = new Key(processOriginPrefix + TYPE_MEMORY, MEMORY_USED, MEMORY_ARG);
 		log(key, totalSize);
 		logMax(key, totalSize);
 		logCount(key, totalSize);
@@ -1164,7 +1162,7 @@ public enum ActionStatisticsCollector {
 	}
 
 	private void log(Key key, long data) {
-		if (DISABLED) {
+		if (isDisabled()) {
 			return;
 		}
 
@@ -1174,6 +1172,16 @@ public enum ActionStatisticsCollector {
 		if (key.isAggregatedWith(Key.AggregationIndicator.SUM) || key.isAggregatedWith(Key.AggregationIndicator.COUNT)) {
 			CtaEventAggregator.INSTANCE.log(key, data);
 		}
+	}
+
+	/**
+	 * Check if the ActionStatisticsCollector was disabled for some reason.
+	 *
+	 * @return true if actions should not be collected
+	 * @since 9.0.0
+	 */
+	private boolean isDisabled() {
+		return DISABLED || Telemetry.USAGESTATS.isDenied();
 	}
 
 	/**
@@ -1218,7 +1226,7 @@ public enum ActionStatisticsCollector {
 	 * @param arg
 	 */
 	public void startTimer(String type, String value, String arg) {
-		if (DISABLED) {
+		if (isDisabled()) {
 			return;
 		}
 
@@ -1243,7 +1251,7 @@ public enum ActionStatisticsCollector {
 	 * @param arg
 	 */
 	public void startTimer(Object id, String type, String value, String arg) {
-		if (DISABLED) {
+		if (isDisabled()) {
 			return;
 		}
 
@@ -1262,7 +1270,7 @@ public enum ActionStatisticsCollector {
 	 * @param arg
 	 */
 	public void stopTimer(String type, String value, String arg) {
-		if (DISABLED) {
+		if (isDisabled()) {
 			return;
 		}
 
@@ -1288,7 +1296,7 @@ public enum ActionStatisticsCollector {
 	 * @param id
 	 */
 	public void stopTimer(Object id) {
-		if (DISABLED) {
+		if (isDisabled()) {
 			return;
 		}
 

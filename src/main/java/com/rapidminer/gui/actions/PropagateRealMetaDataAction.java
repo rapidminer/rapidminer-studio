@@ -54,9 +54,6 @@ public class PropagateRealMetaDataAction extends ToggleAction {
 		} else {
 			RapidMinerGUI.getMainFrame().getProcess().setDebugMode(DebugMode.DEBUG_OFF);
 		}
-
-		// state changed, update Global Search to keep in sync
-		addToGlobalSearch();
 	}
 
 	@Override

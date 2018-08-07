@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.table.DataRow;
@@ -29,27 +33,20 @@ import com.rapidminer.example.table.DataRow;
  */
 public class ConcatAggregator implements Aggregator {
 
-	private ConcatAggregationFunction function;
-	boolean first = true;
-	private StringBuilder concatenation = new StringBuilder();
+	private final ConcatAggregationFunction function;
+	private final Collection<String> values;
 
 	public ConcatAggregator(ConcatAggregationFunction concatAggregationFunction) {
 		this.function = concatAggregationFunction;
+		this.values = function.isCountingOnlyDistinct() ? new LinkedHashSet<>() : new ArrayList<>();
 	}
 
 	@Override
 	public void count(Example example) {
-
 		Attribute sourceAttribute = function.getSourceAttribute();
 		double value = example.getValue(sourceAttribute);
 		if (!Double.isNaN(value)) {
-			if (first) {
-				first = false;
-			} else {
-				concatenation.append(function.getSeparator());
-			}
-			String nominalValue = sourceAttribute.getMapping().mapIndex((int) value);
-			concatenation.append(nominalValue);
+			values.add(sourceAttribute.getMapping().mapIndex((int) value));
 		}
 	}
 
@@ -60,7 +57,12 @@ public class ConcatAggregator implements Aggregator {
 
 	@Override
 	public void set(Attribute attribute, DataRow row) {
-		int idx = attribute.getMapping().mapString(concatenation.toString());
+		final double idx;
+		if (values.isEmpty() && !function.isIgnoringMissings()) {
+			idx = Double.NaN;
+		} else {
+			idx = attribute.getMapping().mapString(String.join(function.getSeparator(), values));
+		}
 		attribute.setValue(row, idx);
 	}
 

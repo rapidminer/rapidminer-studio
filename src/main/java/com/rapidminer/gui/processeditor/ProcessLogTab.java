@@ -96,7 +96,7 @@ public class ProcessLogTab extends JPanel implements Dockable {
 	}
 
 	public DataTable getDataTable() {
-		if (this.viewer != null && viewer instanceof DataTableViewer) {
+		if (viewer instanceof DataTableViewer) {
 			return ((DataTableViewer) this.viewer).getDataTable();
 		} else {
 			return null;

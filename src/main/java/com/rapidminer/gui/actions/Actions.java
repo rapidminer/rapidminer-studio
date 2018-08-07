@@ -42,6 +42,7 @@ import com.rapidminer.gui.operatormenu.OperatorMenu;
 import com.rapidminer.gui.operatortree.actions.ActionUtil;
 import com.rapidminer.gui.operatortree.actions.DeleteOperatorAction;
 import com.rapidminer.gui.operatortree.actions.InfoOperatorAction;
+import com.rapidminer.gui.operatortree.actions.RemoveAllBreakpointsAction;
 import com.rapidminer.gui.operatortree.actions.ToggleActivationItem;
 import com.rapidminer.gui.operatortree.actions.ToggleAllBreakpointsItem;
 import com.rapidminer.gui.operatortree.actions.ToggleBreakpointItem;
@@ -97,6 +98,8 @@ public class Actions implements ProcessEditor {
 			new ToggleBreakpointItem(this, BreakpointListener.BREAKPOINT_AFTER)};
 
 	public final ToggleAllBreakpointsItem TOGGLE_ALL_BREAKPOINTS = new ToggleAllBreakpointsItem();
+
+	public final RemoveAllBreakpointsAction REMOVE_ALL_BREAKPOINTS = new RemoveAllBreakpointsAction();
 
 	public final Action MAKE_DIRTY_ACTION = new ResourceAction(true, "make_dirty") {
 
@@ -256,13 +259,15 @@ public class Actions implements ProcessEditor {
 			}
 		}
 
+		menu.addSeparator();
 		if (op != null && !(op instanceof ProcessRootOperator) && singleSelection) {
-			menu.addSeparator();
 			for (int i = 0; i < TOGGLE_BREAKPOINT.length; i++) {
 				JMenuItem item = TOGGLE_BREAKPOINT[i].createMenuItem();
 				menu.add(item);
 			}
 		}
+
+		menu.add(REMOVE_ALL_BREAKPOINTS);
 
 	}
 
@@ -317,6 +322,8 @@ public class Actions implements ProcessEditor {
 				.isShowing();
 		currentStates[ConditionalAction.PROCESS_RENDERER_HAS_UNDO_STEPS] = mainFrame.hasUndoSteps();
 		currentStates[ConditionalAction.PROCESS_RENDERER_HAS_REDO_STEPS] = mainFrame.hasRedoSteps();
+		currentStates[ConditionalAction.PROCESS_HAS_BREAKPOINTS] = process.hasBreakpoints();
+
 		ConditionalAction.updateAll(currentStates);
 		updateCheckboxStates();
 

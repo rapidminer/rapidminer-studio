@@ -21,19 +21,23 @@ package com.rapidminer.gui.search;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowFocusListener;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -41,6 +45,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 
 import com.rapidminer.gui.look.Colors;
@@ -155,19 +160,6 @@ public class GlobalSearchDialog extends JDialog {
 			}
 		});
 
-		// hide dialog if user clicked on other UI element outside this dialog
-		addWindowFocusListener(new WindowFocusListener() {
-			@Override
-			public void windowGainedFocus(WindowEvent e) {
-				// ignore
-			}
-
-			@Override
-			public void windowLostFocus(WindowEvent e) {
-				GlobalSearchDialog.this.setVisible(false);
-			}
-		});
-
 		// hide this dialog if user activated search result
 		interactionListener = e -> {
 			switch (e.getEventType()) {
@@ -181,7 +173,6 @@ public class GlobalSearchDialog extends JDialog {
 					// do nothing
 			}
 		};
-
 
 		initGUI();
 	}
@@ -300,8 +291,10 @@ public class GlobalSearchDialog extends JDialog {
 				}
 				break;
 			case CATEGORY_ROWS_CHANGED:
+				gsPanel.setSearchRows(model.getRowsForCategory(categoryId), result, false);
+				break;
 			case CATEGORY_ROWS_APPENDED:
-				gsPanel.setSearchRows(model.getRowsForCategory(categoryId), result);
+				gsPanel.setSearchRows(model.getRowsForCategory(categoryId), result, true);
 				break;
 			default:
 				// do nothing
@@ -323,6 +316,7 @@ public class GlobalSearchDialog extends JDialog {
 	 */
 	private void setupResultsGUI() {
 		mainPanel = new JPanel();
+		mainPanel.setName(CARD_RESULTS);
 		mainPanel.setLayout(new GridBagLayout());
 		mainPanel.setBorder(MAIN_EMPTY_BORDER);
 
@@ -359,10 +353,12 @@ public class GlobalSearchDialog extends JDialog {
 	 */
 	private void setupNoResultCategoryGUI() {
 		JPanel noResultPanel = new JPanel();
+		noResultPanel.setName(CARD_NO_RESULTS_IN_CATEGORY);
 		noResultPanel.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 
 		noResultPanel.setOpaque(false);
+		noResultPanel.setBackground(Colors.TEXT_HIGHLIGHT_BACKGROUND);
 		noResultPanel.setBorder(TOP_BORDER);
 
 		// no results label
@@ -388,20 +384,25 @@ public class GlobalSearchDialog extends JDialog {
 		noResultPanel.add(new JLabel(), gbc);
 
 		// "Try searching everywhere" button
-		LinkLocalButton searchAllButton = new LinkLocalButton(new ResourceAction("global_search.search_all_instead") {
+		final ResourceAction action = new ResourceAction("global_search.search_all_instead") {
 
 			@Override
 			public void loggedActionPerformed(ActionEvent e) {
 				controller.searchAllCategories();
 			}
-		});
+		};
+		LinkLocalButton searchAllButton = new LinkLocalButton(action);
+		GlobalSearchResultPanel wrapperPanel = new GlobalSearchResultPanel(null);
+		wrapperPanel.add(searchAllButton);
+		wrapperPanel.setActivationAction(action);
+
 		gbc.gridx += 1;
 		gbc.gridy = 0;
 		gbc.weightx = 1.0d;
 		gbc.fill = GridBagConstraints.VERTICAL;
 		gbc.insets = new Insets(3, 0, 3, 5);
 		gbc.anchor = GridBagConstraints.EAST;
-		noResultPanel.add(searchAllButton, gbc);
+		noResultPanel.add(wrapperPanel, gbc);
 
 		rootPanel.add(noResultPanel, CARD_NO_RESULTS_IN_CATEGORY);
 	}
@@ -411,6 +412,7 @@ public class GlobalSearchDialog extends JDialog {
 	 */
 	private void setupNoResultGloballyGUI() {
 		JPanel noResultPanel = new JPanel();
+		noResultPanel.setName(CARD_NO_RESULTS_GLOBALLY);
 		noResultPanel.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 
@@ -436,6 +438,7 @@ public class GlobalSearchDialog extends JDialog {
 	 */
 	private void setupErrorGUI() {
 		JPanel errorPanel = new JPanel();
+		errorPanel.setName(CARD_ERROR);
 		errorPanel.setLayout(new GridBagLayout());
 		errorPanel.setOpaque(false);
 		errorPanel.setBorder(TOP_BORDER);
@@ -512,4 +515,260 @@ public class GlobalSearchDialog extends JDialog {
 		}
 	}
 
+	/**
+	 * remember the selected category
+	 */
+	private String selectedSearchCategory;
+
+	/**
+	 * Change the selection to this entry
+	 *
+	 * @param category
+	 * 		name of the category that should be selected
+	 * @param resultIndex
+	 * 		index of the entry that should be selected
+	 * @since 9.0.0
+	 */
+	public void select(String category, int resultIndex) {
+		resetSelection();
+		if(!isVisible()) {
+			return;
+		}
+		if (category == null) {
+			return;
+		}
+		final GlobalSearchCategoryPanel globalSearchCategoryPanel = categoryComponentMap.get(category);
+		if (globalSearchCategoryPanel != null) {
+			selectedSearchCategory = category;
+			globalSearchCategoryPanel.setSelectedEntry(resultIndex);
+		}
+	}
+
+	/**
+	 * Reset the selection to select no entry anymore.
+	 *
+	 * @since 9.0.0
+	 */
+	void resetSelection() {
+		final Component displayedComponent = SwingTools.findDisplayedComponent(rootPanel);
+		if (displayedComponent != null && CARD_NO_RESULTS_IN_CATEGORY.equals(displayedComponent.getName())) {
+			highlight(displayedComponent, false);
+		}
+		if (selectedSearchCategory == null) {
+			return;
+		}
+		final GlobalSearchCategoryPanel globalSearchCategoryPanel = categoryComponentMap.get(selectedSearchCategory);
+		if (globalSearchCategoryPanel != null) {
+			globalSearchCategoryPanel.resetSelectedEntry();
+		}
+		selectedSearchCategory = null;
+	}
+
+	/**
+	 * Select the next entry in the results list regardless of the category, go to the next category if there are no further entries in this category
+	 *
+	 * @since 9.0.0
+	 */
+	public void selectNext() {
+		selectNextOrPrevious(true);
+	}
+
+	/**
+	 * Select the previous entry in the results list regardless of the category. Go to the previous category if there is no previous entry in this category.
+	 *
+	 * @since 9.0.0
+	 */
+	public void selectPrevious() {
+		selectNextOrPrevious(false);
+	}
+
+	/**
+	 * Change the selected entry step by step, true = forward, false = backwards
+	 *
+	 * @param next
+	 * 		should the selection move down the list
+	 * @since 9.0.0
+	 */
+	private void selectNextOrPrevious(boolean next) {
+		if(!isVisible()) {
+			return;
+		}
+		final Component displayedComponent = SwingTools.findDisplayedComponent(rootPanel);
+		if (displayedComponent != null && CARD_NO_RESULTS_IN_CATEGORY.equals(displayedComponent.getName())) {
+			highlight(displayedComponent, false);
+		}
+		if (mainPanel == null) {
+			return;
+		}
+
+		GlobalSearchCategoryPanel globalSearchCategoryPanel = categoryComponentMap.get(selectedSearchCategory);
+		if (globalSearchCategoryPanel != null && !globalSearchCategoryPanel.isVisible()) {
+			resetSelection();
+			globalSearchCategoryPanel = null;
+		}
+		if (globalSearchCategoryPanel == null) {
+			selectFirstOrLastEntry(next);
+		} else {
+			boolean movedSelectionSuccessfully = next ? globalSearchCategoryPanel.selectNext() : globalSearchCategoryPanel.selectPrevious();
+			if (!movedSelectionSuccessfully) {
+				// move to the next category
+				resetSelection();
+				int categoryIndex = globalSearchCategoryPanel.getAccessibleContext().getAccessibleIndexInParent();
+				int nextCategoryIndex = next ? categoryIndex + 1 : categoryIndex - 1;
+
+				final Container parent = globalSearchCategoryPanel.getParent();
+				final int componentCount = parent.getComponentCount();
+				while (nextCategoryIndex >= 0 && componentCount > nextCategoryIndex
+						&& parent.getComponent(nextCategoryIndex) instanceof GlobalSearchCategoryPanel
+						&& (((GlobalSearchCategoryPanel) parent.getComponent(nextCategoryIndex)).getComponentCount() == 0
+						|| !parent.getComponent(nextCategoryIndex).isVisible())) {
+					nextCategoryIndex = next ? nextCategoryIndex + 1 : nextCategoryIndex - 1;
+				}
+				if (nextCategoryIndex >= 0 && componentCount > nextCategoryIndex
+						&& parent.getComponent(nextCategoryIndex) instanceof GlobalSearchCategoryPanel) {
+					final GlobalSearchCategoryPanel nextGlobalSearchCategoryPanel = (GlobalSearchCategoryPanel) parent.getComponent(nextCategoryIndex);
+					selectedSearchCategory = nextGlobalSearchCategoryPanel.getCategoryId();
+					nextGlobalSearchCategoryPanel.resetSelectedEntry();
+					if (next) {
+						nextGlobalSearchCategoryPanel.selectFirst();
+					} else {
+						nextGlobalSearchCategoryPanel.selectLast();
+					}
+				} else {
+					selectFirstOrLastEntry(next);
+				}
+			}
+		}
+		if (selectedSearchCategory == null) {
+			GlobalSearchPanel.getInstance().putCursorIntoSearchfield();
+		} else {
+			scrollToSelectedEntry();
+		}
+	}
+
+	/**
+	 * If there are too many entries in the results and the selection is changed the scrollpane moves to the selected entry with this method.
+	 *
+	 * @since 9.0.0
+	 */
+	private void scrollToSelectedEntry() {
+		final GlobalSearchCategoryPanel globalSearchCategoryPanel = categoryComponentMap.get(selectedSearchCategory);
+		if (globalSearchCategoryPanel != null) {
+			final Rectangle categoryBounds = globalSearchCategoryPanel.getBounds();
+			final int selectedEntryIndex = globalSearchCategoryPanel.getSelectedEntryIndex();
+			if (selectedEntryIndex >= 0) {
+				final Rectangle entryBounds = globalSearchCategoryPanel.getContentPanel().getComponent(selectedEntryIndex).getBounds();
+				final Rectangle aRect = new Rectangle(categoryBounds.x, categoryBounds.y + entryBounds.y, categoryBounds.width, entryBounds.height);
+				SwingUtilities.invokeLater(() -> rootPanel.scrollRectToVisible(aRect));
+			}
+		}
+	}
+
+	/**
+	 * Select the first or last entry of the result list.
+	 *
+	 * @param first
+	 * 		true = select first entry, false = select last entry
+	 * @since 9.0.0
+	 */
+	void selectFirstOrLastEntry(boolean first) {
+		if(!isVisible()) {
+			return;
+		}
+		final Component displayedComponent = SwingTools.findDisplayedComponent(rootPanel);
+		if (displayedComponent != null && CARD_NO_RESULTS_IN_CATEGORY.equals(displayedComponent.getName())) {
+			highlight(displayedComponent, true);
+			return;
+		}
+
+		resetSelection();
+		if (mainPanel != null && mainPanel.getComponentCount() > 0) {
+			Component[] components = mainPanel.getComponents();
+			if (!first) {
+				final List<Component> list = Arrays.asList(components);
+				Collections.reverse(list);
+				components = list.toArray(new Component[components.length]);
+			}
+
+			for (Component component : components) {
+				if (component instanceof GlobalSearchCategoryPanel && component.isVisible()
+						&& ((GlobalSearchCategoryPanel) component).getContentPanel().getComponentCount() > 0) {
+					final GlobalSearchCategoryPanel searchCategoryPanel = (GlobalSearchCategoryPanel) component;
+					selectedSearchCategory = searchCategoryPanel.getCategoryId();
+					if (first) {
+						searchCategoryPanel.resetSelectedEntry();
+						searchCategoryPanel.selectNext();
+					} else {
+						searchCategoryPanel.selectLast();
+					}
+					break;
+				}
+			}
+		}
+		if (selectedSearchCategory == null) {
+			GlobalSearchPanel.getInstance().putCursorIntoSearchfield();
+		} else {
+			scrollToSelectedEntry();
+		}
+	}
+
+	/**
+	 * Highlight a {@link GlobalSearchResultPanel}
+	 *
+	 * @param displayedComponent
+	 * 		parent of the {@link GlobalSearchResultPanel}
+	 * @param b
+	 * 		if true, do highlight. If false reset highlight.
+	 * @since 9.0.0
+	 */
+	private void highlight(Component displayedComponent, boolean b) {
+		if (displayedComponent != null) {
+			displayedComponent.setBackground(Colors.TEXT_HIGHLIGHT_BACKGROUND);
+			if (displayedComponent instanceof Container) {
+				for (Component component : ((Container) displayedComponent).getComponents()) {
+					if (component instanceof GlobalSearchResultPanel) {
+						((JComponent) component).setOpaque(b);
+					}
+				}
+				displayedComponent.repaint();
+			}
+		}
+	}
+
+	/**
+	 * Activate the action associated with the selected entry of the results.
+	 *
+	 * @since 9.0.0
+	 */
+	public void activateSelected() {
+		final Component displayedComponent = SwingTools.findDisplayedComponent(rootPanel);
+		if (displayedComponent == null) {
+			return;
+		}
+		if (CARD_RESULTS.equals(displayedComponent.getName())) {
+			final GlobalSearchCategoryPanel globalSearchCategoryPanel = categoryComponentMap.get(selectedSearchCategory);
+			if (globalSearchCategoryPanel != null) {
+				globalSearchCategoryPanel.activateSelectedEntry();
+			}
+		} else if (CARD_NO_RESULTS_IN_CATEGORY.equals(displayedComponent.getName())) {
+			Container displayedContainer = (Container) displayedComponent;
+			if (displayedContainer.getComponentCount() > 1 && displayedContainer.getComponent(2) instanceof GlobalSearchResultPanel) {
+				((GlobalSearchResultPanel) displayedContainer.getComponent(2)).doActivate();
+			}
+		}
+	}
+
+	/**
+	 * Reset the selection for a new list of results being shown.
+	 *
+	 * @since 9.0.0
+	 */
+	@Override
+	public void setVisible(boolean b) {
+		boolean resetSelectionLater = !isVisible();
+		super.setVisible(b);
+		if (resetSelectionLater) {
+			resetSelection();
+		}
+	}
 }

@@ -1218,6 +1218,11 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 						throw new LicenseViolationException(op, licenseViolations);
 					}
 
+					// Check if the given operator is blacklisted
+					if (OperatorService.isOperatorBlacklisted(op.getOperatorDescription().getKey())) {
+						throw new UserError(op, "operator_blacklisted");
+					}
+
 					// as a side effect mark all enabled operators as dirty
 					// so it is clear which ones have already been executed
 					op.makeDirty();
@@ -1712,9 +1717,26 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 	// process location (file/repository)
 
-	/** Returns true iff either a file or a repository location is defined. */
+	/**
+	 * Returns if the process has a valid save location.
+	 *
+	 * @return {@code true} iff either a file location is defined or a repository location is defined AND the repository
+	 * is not read-only; {@code false} otherwise
+	 */
 	public boolean hasSaveDestination() {
-		return processLocation != null;
+		if (processLocation == null) {
+			return false;
+		}
+		if (processLocation instanceof RepositoryProcessLocation) {
+			RepositoryProcessLocation repoProcLoc = (RepositoryProcessLocation) processLocation;
+			try {
+				return !repoProcLoc.getRepositoryLocation().getRepository().isReadOnly();
+			} catch (RepositoryException e) {
+				return false;
+			}
+		} else {
+			return true;
+		}
 	}
 
 	/**
@@ -1847,6 +1869,36 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 				throw new Exception(
 						"The process contains dummy operators. Remove all dummy operators or install all missing extensions in order to save the process.");
 			}
+		}
+	}
+
+	/**
+	 * Checks if breakpoints are present in this process.
+	 *
+	 * @return {@code true}  if a breakpoint is present. {@code false}  otherwise
+	 * @author Joao Pedro Pinheiro
+	 * @since 8.2.0
+	 */
+	public boolean hasBreakpoints() {
+		for (Operator op: getAllOperators()) {
+			if (op.hasBreakpoint()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Removes all breakpoints from the current process
+	 *
+	 * @author Joao Pedro Pinheiro
+	 * @since 8.2.0
+	 */
+	public void removeAllBreakpoints() {
+		for (Operator op: getAllOperators()) {
+			op.setBreakpoint(BreakpointListener.BREAKPOINT_BEFORE, false);
+			op.setBreakpoint(BreakpointListener.BREAKPOINT_AFTER, false);
 		}
 	}
 

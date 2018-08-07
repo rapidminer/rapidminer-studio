@@ -112,8 +112,11 @@ public class NominalAttributeStatisticsModel extends AbstractAttributeStatistics
 			nominalValues.clear();
 			while (i.hasNext()) {
 				String value = i.next();
-				nominalValues.add(new ValueAndCount(value, (int) exampleSet.getStatistics(getAttribute(), Statistics.COUNT,
-						value)));
+				if(value!=null) {
+					nominalValues.add(new ValueAndCount(value,
+							(int) exampleSet.getStatistics(getAttribute(), Statistics.COUNT,
+									value)));
+				}
 			}
 			Collections.sort(nominalValues);
 		}

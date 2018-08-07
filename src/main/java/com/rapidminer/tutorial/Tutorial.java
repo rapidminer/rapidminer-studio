@@ -33,6 +33,8 @@ import java.util.zip.ZipInputStream;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RepositoryProcessLocation;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter.ProcessOriginState;
 import com.rapidminer.operator.FlagUserData;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
@@ -244,6 +246,7 @@ public class Tutorial implements ZipStreamResource {
 		RepositoryProcessLocation repoLocation = new RepositoryProcessLocation(new RepositoryLocation(processLocation));
 		Process newProcess = new Process(repoLocation.getRawXML());
 		newProcess.getRootOperator().setUserData(KEY_USER_DATA_FLAG, new FlagUserData());
+		ProcessOriginProcessXMLFilter.setProcessOriginState(newProcess, ProcessOriginState.GENERATED_TUTORIAL);
 		return newProcess;
 	}
 

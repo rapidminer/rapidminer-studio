@@ -1,31 +1,35 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.io.gui.internal;
 
 import java.awt.Color;
 import java.util.Locale;
-
 import javax.swing.Icon;
 
 import com.rapidminer.core.io.data.ColumnMetaData.ColumnType;
 import com.rapidminer.core.io.data.source.DataSourceFactory;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
@@ -33,7 +37,7 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 /**
  * Utility class for the {@link DataImportWizard}. It contains for example methods to translate
- * {@link BaseDataSourceFactory} to UI messages.
+ * {@link DataSourceFactory} to UI messages.
  *
  * @author Nils Woehler
  * @since 7.0.0
@@ -136,4 +140,29 @@ public final class DataImportWizardUtils {
 		}
 	}
 
+
+	/**
+	 * If the data import wizard should go to the results view after finishing the import, this callback supports it.
+	 *
+	 * @return a callback for the {@link DataImportWizard} to end up in the results highlighting the entryLocation
+	 * @since 9.0.0
+	 */
+	public static DataImportWizardCallback showInResultsCallback() {
+		return ((wizard, entryLocation) -> {
+			// Select repository entry
+			if (RapidMinerGUI.getMainFrame() != null) {
+				RapidMinerGUI.getMainFrame().getRepositoryBrowser()
+						.expandToRepositoryLocation(entryLocation);
+				// Switch to result
+				try {
+					Entry entry = entryLocation.locateEntry();
+					if (entry != null && entry instanceof IOObjectEntry) {
+						OpenAction.showAsResult((IOObjectEntry) entry);
+					}
+				} catch (RepositoryException e) {
+					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "cannot_open_imported_data", e);
+				}
+			}
+		});
+	}
 }

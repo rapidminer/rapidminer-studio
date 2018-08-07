@@ -23,7 +23,6 @@ import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Map;
 
-import com.rapidminer.core.io.data.ColumnMetaData.ColumnType;
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.DataSetMetaData;
 import com.rapidminer.core.io.data.source.DataSource;
@@ -46,8 +45,8 @@ import com.rapidminer.tools.StrictDecimalFormat;
  */
 public class CSVDataSource extends FileDataSource {
 
-	private DataSetMetaData metaData = new DefaultDataSetMetaData(Collections.<String> emptyList(),
-			Collections.<ColumnType> emptyList());
+	private DataSetMetaData metaData = new DefaultDataSetMetaData(Collections.emptyList(),
+			Collections.emptyList());
 	private CSVResultSetConfiguration configuration = new CSVResultSetConfiguration();
 	private CSVResultSetAdapter dataSet;
 	private DataSourceConfiguration dataSetConstructionConfiguration = null;

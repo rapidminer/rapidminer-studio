@@ -24,7 +24,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -91,13 +91,13 @@ public class DataResultSetTranslator {
 		}
 	}
 
-	private boolean shouldStop = false;
-	private boolean isReading = false;
+	private volatile boolean shouldStop = false;
+	private volatile boolean isReading = false;
 
 	private boolean cancelGuessingRequested = false;
 	private boolean cancelLoadingRequested = false;
 
-	private final Map<Pair<Integer, Integer>, ParsingError> errors = new HashMap<>();
+	private final Map<Pair<Integer, Integer>, ParsingError> errors = new LinkedHashMap<>();
 
 	/**
 	 * From this version, the binominal data type never will be chosen, because it fails too often.
@@ -119,13 +119,24 @@ public class DataResultSetTranslator {
 	 * This method will start the translation of the actual ResultDataSet to an ExampleSet.
 	 */
 	public ExampleSet read(DataResultSet dataResultSet, DataResultSetTranslationConfiguration configuration,
-			boolean previewOnly, ProgressListener listener) throws OperatorException {
-		int maxRows = previewOnly ? ImportWizardUtils.getPreviewLength() : -1;
-
+						   boolean previewOnly, ProgressListener listener) throws OperatorException {
+		shouldStop = false;
 		cancelLoadingRequested = false;
-		boolean isFaultTolerant = configuration.isFaultTolerant();
+		try {
+			isReading = true;
+			return readInternal(dataResultSet, configuration, previewOnly, listener);
+		} finally {
+			isReading = false;
+			if (listener != null) {
+				listener.complete();
+			}
+		}
+	}
 
-		isReading = true;
+	private ExampleSet readInternal(DataResultSet dataResultSet, DataResultSetTranslationConfiguration configuration,
+									boolean previewOnly, ProgressListener listener) throws OperatorException {
+		int maxRows = previewOnly ? ImportWizardUtils.getPreviewLength() : -1;
+		boolean isFaultTolerant = configuration.isFaultTolerant();
 		int[] attributeColumns = configuration.getSelectedIndices();
 		int numberOfAttributes = attributeColumns.length;
 
@@ -142,7 +153,7 @@ public class DataResultSetTranslator {
 		// check whether all columns are accessible
 		int numberOfAvailableColumns = dataResultSet.getNumberOfColumns();
 		for (int attributeColumn : attributeColumns) {
-			if (attributeColumn >= numberOfAvailableColumns) {
+			if (!configuration.isFaultTolerant() && attributeColumn >= numberOfAvailableColumns) {
 				throw new UserError(null, "data_import.specified_more_columns_than_exist",
 						configuration.getColumnMetaData(attributeColumn).getUserDefinedAttributeName(), attributeColumn);
 			}
@@ -152,8 +163,8 @@ public class DataResultSetTranslator {
 		ExampleSetBuilder builder = ExampleSets.from(attributes);
 
 		// now iterate over complete dataResultSet and copy data
-		int currentRow = 0; 		// The row in the underlying DataResultSet
-		int exampleIndex = 0;		// The row in the example set
+		int currentRow = 0;        // The row in the underlying DataResultSet
+		int exampleIndex = 0;        // The row in the example set
 		dataResultSet.reset(listener);
 
 		int datamanagement = configuration.getDataManagementType();
@@ -319,10 +330,6 @@ public class DataResultSetTranslator {
 			attributeNames.add(attribute.getName());
 		}
 
-		isReading = false;
-		if (listener != null) {
-			listener.complete();
-		}
 		return exampleSet;
 	}
 
@@ -729,5 +736,9 @@ public class DataResultSetTranslator {
 
 	public boolean isGuessingCancelled() {
 		return cancelGuessingRequested;
+	}
+
+	public boolean isLoadingCancelled() {
+		return cancelLoadingRequested;
 	}
 }

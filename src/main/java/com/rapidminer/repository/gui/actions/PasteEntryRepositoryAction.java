@@ -36,7 +36,7 @@ public class PasteEntryRepositoryAction extends AbstractRepositoryAction<Entry> 
 	private static final long serialVersionUID = 1L;
 
 	public PasteEntryRepositoryAction(RepositoryTree tree) {
-		super(tree, Entry.class, false, "repository_paste");
+		super(tree, Entry.class, true, "repository_paste");
 		putValue(ACTION_COMMAND_KEY, "paste");
 	}
 

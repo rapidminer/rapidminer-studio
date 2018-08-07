@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.nio.model;
 
 import java.io.File;
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.zip.ZipFile;
-
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import javax.xml.parsers.ParserConfigurationException;
@@ -61,6 +60,16 @@ import jxl.read.biff.BiffException;
  * @author Sebastian Land, Marco Boeck, Nils Woehler
  */
 public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelSheetSelection {
+
+	public static final String EXCEL_FILE_LOCATION = "excel.fileLocation";
+	public static final String EXCEL_SHEET_SELECTION_MODE = "excel.sheetSelectionMode";
+	public static final String EXCEL_SHEET_NAME = "excel.sheetName";
+	public static final String EXCEL_SHEET = "excel.sheet";
+	public static final String EXCEL_ROW_OFFSET = "excel.rowOffset";
+	public static final String EXCEL_ROW_LAST = "excel.rowLast";
+	public static final String EXCEL_COLUMN_OFFSET = "excel.columnOffset";
+	public static final String EXCEL_COLUMN_LAST = "excel.columnLast";
+	public static final String EXCEL_HEADER_ROW_INDEX = "excel.headerRowIndex";
 
 	private static final String XLS_FILE_ENDING = ".xls";
 	private static final String XLSX_FILE_ENDING = ".xlsx";
@@ -670,14 +679,14 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 	 */
 	public void storeConfiguration(Map<String, String> parameters) {
 		File file = getFile();
-		parameters.put("excel.fileLocation", file != null ? file.toString() : "");
-		parameters.put("excel.sheetSelectionMode", String.valueOf(sheetSelectionMode));
-		parameters.put("excel.sheet", String.valueOf(getSheet()));
-		parameters.put("excel.sheetName", String.valueOf(getSheetByName()));
-		parameters.put("excel.rowOffset", String.valueOf(getRowOffset()));
-		parameters.put("excel.rowLast", String.valueOf(getRowLast()));
-		parameters.put("excel.columnOffset", String.valueOf(getColumnOffset()));
-		parameters.put("excel.columnLast", String.valueOf(getColumnLast()));
+		parameters.put(EXCEL_FILE_LOCATION, file != null ? file.toString() : "");
+		parameters.put(EXCEL_SHEET_SELECTION_MODE, String.valueOf(sheetSelectionMode));
+		parameters.put(EXCEL_SHEET, String.valueOf(getSheet()));
+		parameters.put(EXCEL_SHEET_NAME, String.valueOf(getSheetByName()));
+		parameters.put(EXCEL_ROW_OFFSET, String.valueOf(getRowOffset()));
+		parameters.put(EXCEL_ROW_LAST, String.valueOf(getRowLast()));
+		parameters.put(EXCEL_COLUMN_OFFSET, String.valueOf(getColumnOffset()));
+		parameters.put(EXCEL_COLUMN_LAST, String.valueOf(getColumnLast()));
 	}
 
 	@Override

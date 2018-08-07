@@ -28,6 +28,7 @@ import javax.swing.table.TableModel;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.gui.tools.ProgressThreadStoppedException;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.nio.model.ParseException;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet.XlsxReadMode;
@@ -59,6 +60,8 @@ class ExcelSheetSelectionPanelModel {
 	private CellRangeSelection cellRangeSelection = null;
 	private int headerRowIndex = 0;
 	private int sheetIndex = 0;
+
+	private ProgressThread currentThread;
 
 	/**
 	 * Constructs a new {@link ExcelSheetSelectionPanelModel} instance.
@@ -112,7 +115,7 @@ class ExcelSheetSelectionPanelModel {
 	}
 
 	/**
-	 * @param headerRowSpinner
+	 * @param headerRowIndex
 	 *            the new header row index
 	 */
 	void setHeaderRowIndex(int headerRowIndex) {
@@ -233,6 +236,8 @@ class ExcelSheetSelectionPanelModel {
 				} catch (BiffException | IOException | OperatorException | InvalidFormatException | ParseException e) {
 					listener.reportErrorLoadingTableModel(e);
 					return false;
+				} catch (ProgressThreadStoppedException pge) {
+					return false;
 				} finally {
 					getProgressListener().complete();
 				}
@@ -245,6 +250,7 @@ class ExcelSheetSelectionPanelModel {
 		};
 		loadWorkbook.addDependency(LOAD_WORKBOOK_PG_ID);
 		loadWorkbook.start();
+		currentThread = loadWorkbook;
 
 	}
 
@@ -260,6 +266,15 @@ class ExcelSheetSelectionPanelModel {
 	 */
 	void clearTableModelCache() {
 		tableModelCache.clear();
+	}
+
+	/**
+	 * Cancels the loading progress
+	 */
+	void cancelLoading() {
+		if (currentThread != null) {
+			currentThread.cancel();
+		}
 	}
 
 }

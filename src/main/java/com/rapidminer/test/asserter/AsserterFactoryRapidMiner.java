@@ -150,18 +150,18 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 				Averagable actual = (Averagable) actualObj;
 
 				assertDouble(message + " (average is not equal)", expected.getAverage(), actual.getAverage());
-				assertDouble(message + " (makro average is not equal)", expected.getMakroAverage(), actual.getMakroAverage());
-				assertDouble(message + " (mikro average is not equal)", expected.getMikroAverage(), actual.getMikroAverage());
+				assertDouble(message + " (macro average is not equal)", expected.getMakroAverage(), actual.getMakroAverage());
+				assertDouble(message + " (micro average is not equal)", expected.getMikroAverage(), actual.getMikroAverage());
 				assertDouble(message + " (average count is not equal)", expected.getAverageCount(), actual.getAverageCount());
-				assertDouble(message + " (makro standard deviation is not equal)", expected.getMakroStandardDeviation(),
+				assertDouble(message + " (macro standard deviation is not equal)", expected.getMakroStandardDeviation(),
 						actual.getMakroStandardDeviation());
-				assertDouble(message + " (mikro standard deviation is not equal)", expected.getMikroStandardDeviation(),
+				assertDouble(message + " (micro standard deviation is not equal)", expected.getMikroStandardDeviation(),
 						actual.getMikroStandardDeviation());
 				assertDouble(message + " (standard deviation is not equal)", expected.getStandardDeviation(),
 						actual.getStandardDeviation());
-				assertDouble(message + " (makro variance is not equal)", expected.getMakroVariance(),
+				assertDouble(message + " (macro variance is not equal)", expected.getMakroVariance(),
 						actual.getMakroVariance());
-				assertDouble(message + " (mikro variance is not equal)", expected.getMikroVariance(),
+				assertDouble(message + " (micro variance is not equal)", expected.getMikroVariance(),
 						actual.getMikroVariance());
 				assertDouble(message + " (variance is not equal)", expected.getVariance(), actual.getVariance());
 
@@ -230,8 +230,14 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 				message = message + " - ExampleSets are not equal";
 
 				boolean compareAttributeDefaultValues = true;
-				if (expected.getExampleTable().size() > 0) {
-					compareAttributeDefaultValues = expected.getExampleTable().getDataRow(0) instanceof SparseDataRow;
+				try {
+					if (expected.getExampleTable().size() > 0) {
+						compareAttributeDefaultValues =
+								expected.getExampleTable().getDataRow(0) instanceof SparseDataRow;
+					}
+				} catch (RuntimeException e) {
+					//Do not compare default values if table is not accessible
+					compareAttributeDefaultValues = false;
 				}
 
 				// compare attributes

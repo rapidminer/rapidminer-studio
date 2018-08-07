@@ -47,7 +47,7 @@ import com.rapidminer.tools.Tools;
 
 /**
  * A model for the column configuration data table. It loads the model data from preview
- * {@link DataSet} provided by {@link DataSource#getPreview()}. It does not load more data than
+ * {@link DataSet} provided by {@link DataSource#getPreview}. It does not load more data than
  * defined by {@link ImportWizardUtils#getPreviewLength()}. Stores {@link ParsingError}s encountered
  * during loading and the erroneous cells.
  *
@@ -117,7 +117,7 @@ final class ConfigureDataTableModel extends AbstractTableModel {
 		if (listener != null) {
 			listener.setTotal(previewSize);
 		}
-		List<String[]> dataList = new LinkedList<String[]>();
+		List<String[]> dataList = new LinkedList<>();
 		parsingErrorList.clear();
 		errorCells.clear();
 
@@ -125,7 +125,7 @@ final class ConfigureDataTableModel extends AbstractTableModel {
 		int columnIndex = 0;
 		for (ColumnMetaData column : metaData.getColumnMetaData()) {
 			if (column.getType() == ColumnType.BINARY) {
-				binaryMapping.put(columnIndex, new HashSet<String>(2));
+				binaryMapping.put(columnIndex, new HashSet<>(2));
 			}
 			columnIndex++;
 		}
@@ -255,11 +255,11 @@ final class ConfigureDataTableModel extends AbstractTableModel {
 
 			final ColumnType columnType = metaData.getColumnMetaData(columnIndex).getType();
 			if (columnType == ColumnType.BINARY && !binaryMapping.containsKey(columnIndex)) {
-				binaryMapping.put(columnIndex, new HashSet<String>(2));
+				binaryMapping.put(columnIndex, new HashSet<>(2));
 			}
 
 			// copy errors cells such that errorCells change all at once
-			Map<Integer, Set<Integer>> errorCellsCopy = new HashMap<Integer, Set<Integer>>(errorCells);
+			Map<Integer, Set<Integer>> errorCellsCopy = new HashMap<>(errorCells);
 			errorCellsCopy.remove(columnIndex);
 
 			removeFromErrors(columnIndex);

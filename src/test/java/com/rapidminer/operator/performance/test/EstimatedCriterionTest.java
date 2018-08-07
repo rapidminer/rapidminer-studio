@@ -49,7 +49,7 @@ public  class EstimatedCriterionTest extends AbstractCriterionTestCase {
 	}
 
 	/**
-	 * Tests micro and makro average. Since makro average is implemented in
+	 * Tests micro and macro average. Since macro average is implemented in
 	 * {@link PerformanceCriterion}, this does not have to be tested for
 	 * measured performance criteria.
 	 */
@@ -57,7 +57,7 @@ public  class EstimatedCriterionTest extends AbstractCriterionTestCase {
 	public void testAverage() {
 		performance10x08.buildAverage(performance20x04);
 		assertEquals("Wrong weighted average", (10 * 0.8 + 20 * 0.4) / (10 + 20), performance10x08.getMikroAverage(), 0.0000001);
-		assertEquals("Wrong makro average", (0.8 + 0.4) / 2, performance10x08.getMakroAverage(), 0.0000001);
+		assertEquals("Wrong macro average", (0.8 + 0.4) / 2, performance10x08.getMakroAverage(), 0.0000001);
 	}
 
 	@Test

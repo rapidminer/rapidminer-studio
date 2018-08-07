@@ -44,8 +44,9 @@ import javax.swing.SwingUtilities;
  * 
  * @author Tobias Malbrecht
  * @author Sebastian Loh (22.04.2010)
- * 
+ * @deprecated use {@link com.rapidminer.studio.io.gui.internal.steps.configuration.ConfigureDataStep} instead
  */
+@Deprecated
 public abstract class MetaDataDeclerationWizardStep extends WizardStep {
 
 	protected MetaDataDeclarationEditor editor = null;

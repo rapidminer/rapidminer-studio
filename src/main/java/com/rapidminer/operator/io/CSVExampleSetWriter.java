@@ -22,24 +22,27 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.sql.Date;
 import java.text.DateFormat;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorProgress;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessStoppedException;
-import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeString;
-import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.parameter.conditions.PortConnectedCondition;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.io.Encoding;
 
 
@@ -77,6 +80,9 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	// TODO introduce parameter which allows to determine the written format see
 	// Nominal2Date operator
 	public static final String PARAMETER_FORMAT_DATE = "format_date_attributes";
+
+	/** The last version which treated integer as real. */
+	public static final OperatorVersion INTEGER_AS_REAL = new OperatorVersion(8, 2, 0);
 
 	public CSVExampleSetWriter(OperatorDescription description) {
 		super(description);
@@ -131,7 +137,7 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	 * @param formatDate
 	 *            if {@code true} dates are formatted to "M/d/yy h:mm a", otherwise milliseconds
 	 *            since the epoch are used
-	 * @param opProg
+	 * @param operatorProgress
 	 *            the {@link OperatorProgress} is used to provide a more detailed progress. Within
 	 *            this method the progress will be increased by number of examples times the number
 	 *            of attributes. If you do not want the operator progress, just provide <code> null
@@ -204,30 +210,67 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	 *            <code>.
 	 */
 	public static void writeCSV(ExampleSet exampleSet, PrintWriter out, String colSeparator, boolean quoteNomValues,
-			boolean writeAttribNames, boolean formatDate, String infinitySymbol, OperatorProgress opProg)
+								boolean writeAttribNames, boolean formatDate, String infinitySymbol, OperatorProgress opProg)
 			throws ProcessStoppedException {
-		String negativeInfinitySymbol = null;
-		if (infinitySymbol != null) {
-			negativeInfinitySymbol = "-" + infinitySymbol;
+		try {
+			CSVExampleSetWriter writer = OperatorService.createOperator(CSVExampleSetWriter.class);
+			writer.writeCSV(exampleSet, out, colSeparator, quoteNomValues, writeAttribNames, formatDate ? DateFormat.getInstance() : null, infinitySymbol, opProg);
+		} catch (OperatorCreationException e) {
+			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.operator.io.CSVExampleSetWriter.creation_failed", e);
+			return;
 		}
-		String columnSeparator = colSeparator;
-		boolean quoteNominalValues = quoteNomValues;
+	}
+
+	/**
+	 * Writes the exampleSet with the {@link PrintWriter} out, using colSeparator as column
+	 * separator and infinitySybol to denote infinite values.
+	 *
+	 * @param exampleSet
+	 *            the example set to write
+	 * @param out
+	 *            the {@link PrintWriter}
+	 * @param colSeparator
+	 *            the column separator
+	 * @param quoteNomValues
+	 *            if {@code true} nominal values are quoted
+	 * @param writeAttribNames
+	 *            if {@code true} the attribute names are written into the first row
+	 * @param dateFormatter
+	 *            the {@link DateFormat} used, if null milliseconds
+	 *            since the epoch are used
+	 * @param infinitySymbol
+	 *            the symbol to use for infinite values; if {@code null} the default symbol
+	 *            "Infinity" is used
+	 * @param opProg
+	 *            the {@link OperatorProgress} is used to provide a more detailed progress. Within
+	 *            this method the progress will be increased by number of examples times the number
+	 *            of attributes. If you do not want the operator progress, just provide <code> null
+	 *            <code>.
+	 * @since 8.2.1
+	 */
+	protected void writeCSV(final ExampleSet exampleSet,final PrintWriter out, final String colSeparator,final boolean quoteNomValues,
+						 final boolean writeAttribNames, DateFormat dateFormatter, String infinitySymbol, OperatorProgress opProg)
+			throws ProcessStoppedException {
+		infinitySymbol = infinitySymbol == null ? String.valueOf(Double.POSITIVE_INFINITY) : infinitySymbol;
+		final String negativeInfinitySymbol = "-" + infinitySymbol;
+		final boolean writeInt = getCompatibilityLevel().isAbove(INTEGER_AS_REAL);
+		final boolean formatDate = dateFormatter != null;
 
 		// write column names
 		if (writeAttribNames) {
-			Iterator<Attribute> a = exampleSet.getAttributes().allAttributes();
 			boolean first = true;
-			while (a.hasNext()) {
+			for (Attribute attribute : (Iterable<Attribute>) () -> exampleSet.getAttributes().allAttributes()) {
 				if (!first) {
-					out.print(columnSeparator);
+					out.print(colSeparator);
 				}
-				Attribute attribute = a.next();
 				String name = attribute.getName();
-				if (quoteNominalValues) {
-					name = name.replaceAll("\"", "'");
-					name = "\"" + name + "\"";
+				if (quoteNomValues) {
+					out.print('"');
+					out.print(name.replace('"', '\''));
+					out.print('"');
+				} else {
+					out.print(name);
 				}
-				out.print(name);
 				first = false;
 			}
 			out.println();
@@ -235,45 +278,43 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 
 		// write data
 		int progressCounter = 0;
+		final int progressStep = Math.max(exampleSet.size() / 100, 1);
 		for (Example example : exampleSet) {
-			Iterator<Attribute> a = exampleSet.getAttributes().allAttributes();
 			boolean first = true;
-			while (a.hasNext()) {
-
-				Attribute attribute = a.next();
+			for (Attribute attribute : (Iterable<Attribute>) () -> exampleSet.getAttributes().allAttributes()) {
 				if (!first) {
-					out.print(columnSeparator);
+					out.print(colSeparator);
 				}
 				if (!Double.isNaN(example.getValue(attribute))) {
 					if (attribute.isNominal()) {
 						String stringValue = example.getValueAsString(attribute);
-						if (quoteNominalValues) {
-							stringValue = stringValue.replaceAll("\"", "'");
-							stringValue = "\"" + stringValue + "\"";
+						if (quoteNomValues) {
+							out.print('"');
+							out.print(stringValue.replace('"', '\''));
+							out.print('"');
+						} else {
+							out.print(stringValue);
 						}
-						out.print(stringValue);
 					} else {
 						Double value = example.getValue(attribute);
 						if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
 							if (formatDate) {
 								Date date = new Date(value.longValue());
-								String s = DateFormat.getInstance().format(date);
-								out.print(s);
+								out.print(dateFormatter.format(date));
+							} else if (writeInt) {
+								out.print(value.longValue());
 							} else {
 								out.print(value);
 							}
+						} else if (value == Double.POSITIVE_INFINITY) {
+							out.print(infinitySymbol);
+						} else if (value == Double.NEGATIVE_INFINITY) {
+							out.print(negativeInfinitySymbol);
+						} else if (writeInt && attribute.getValueType() == Ontology.INTEGER) {
+							out.print(value.longValue());
 						} else {
-							if (value.isInfinite() && infinitySymbol != null) {
-								if (Double.POSITIVE_INFINITY == value) {
-									out.print(infinitySymbol);
-								} else {
-									out.print(negativeInfinitySymbol);
-								}
-							} else {
-								out.print(value);
-							}
+							out.print(value);
 						}
-
 					}
 				}
 				first = false;
@@ -281,12 +322,11 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 
 			out.println();
 
-			// trigger operator progress every 100 examples
+			// trigger operator progress at every percent of the total data
 			if (opProg != null) {
-				++progressCounter;
-				if (progressCounter % 100 == 0) {
-					opProg.step(100);
-					progressCounter = 0;
+				progressCounter = (progressCounter + 1) % progressStep;
+				if (progressCounter == 0) {
+					opProg.step(progressStep);
 				}
 			}
 		}
@@ -302,7 +342,7 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		try (PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream, Encoding.getEncoding(this)))) {
 			// init operator progress
 			getProgress().setTotal(exampleSet.size());
-			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, formatDate, getProgress());
+			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, formatDate ? DateFormat.getInstance() : null, String.valueOf(Double.POSITIVE_INFINITY), getProgress());
 			getProgress().complete();
 		}
 	}
@@ -319,7 +359,7 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 
 	@Override
 	public List<ParameterType> getParameterTypes() {
-		List<ParameterType> types = new LinkedList<ParameterType>();
+		List<ParameterType> types = new LinkedList<>();
 		ParameterType type = makeFileParameterType();
 		type.setPrimary(true);
 		types.add(type);
@@ -335,13 +375,7 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		type = new ParameterTypeBoolean(PARAMETER_APPEND_FILE,
 				"Indicates if new content should be appended to the file or if the pre-existing file content should be overwritten.",
 				false, false);
-		type.registerDependencyCondition(new PortConnectedCondition(this, new PortProvider() {
-
-			@Override
-			public Port getPort() {
-				return fileOutputPort;
-			}
-		}, true, false));
+		type.registerDependencyCondition(new PortConnectedCondition(this, () -> fileOutputPort, true, false));
 		types.add(type);
 		types.addAll(super.getParameterTypes());
 		return types;
@@ -355,5 +389,14 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	@Override
 	protected String[] getFileExtensions() {
 		return new String[] { "csv" };
+	}
+	
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] incompatibleVersions = super.getIncompatibleVersionChanges();
+		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
+				incompatibleVersions.length + 1);
+		extendedIncompatibleVersions[incompatibleVersions.length] = INTEGER_AS_REAL;
+		return extendedIncompatibleVersions;
 	}
 }

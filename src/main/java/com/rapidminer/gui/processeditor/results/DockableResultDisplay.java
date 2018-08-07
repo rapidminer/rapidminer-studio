@@ -28,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -41,6 +40,7 @@ import com.rapidminer.Process;
 import com.rapidminer.ProcessListener;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.PerspectiveController;
 import com.rapidminer.gui.PerspectiveModel;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.CloseAllResultsAction;
@@ -48,9 +48,7 @@ import com.rapidminer.gui.processeditor.ProcessLogTab;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.UpdateQueue;
-import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.gui.tools.dialogs.DecisionRememberingConfirmDialog;
 import com.rapidminer.gui.viewer.DataTableViewer;
 import com.rapidminer.operator.IOContainer;
@@ -64,12 +62,6 @@ import com.vlsolutions.swing.docking.Dockable;
 import com.vlsolutions.swing.docking.DockableActionCustomizer;
 import com.vlsolutions.swing.docking.DockableState;
 import com.vlsolutions.swing.docking.DockingDesktop;
-import com.vlsolutions.swing.docking.event.DockableStateChangeEvent;
-import com.vlsolutions.swing.docking.event.DockableStateChangeListener;
-import com.vlsolutions.swing.docking.event.DockingActionCloseEvent;
-import com.vlsolutions.swing.docking.event.DockingActionDockableEvent;
-import com.vlsolutions.swing.docking.event.DockingActionEvent;
-import com.vlsolutions.swing.docking.event.DockingActionListener;
 
 
 /**
@@ -121,44 +113,55 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 	@Override
 	public void init(MainFrame mf) {
 		DockingDesktop desktop = mf.getDockingDesktop();
-		desktop.addDockingActionListener(new DockingActionListener() {
 
-			@Override
-			public void dockingActionPerformed(DockingActionEvent arg0) {}
-
-			@Override
-			public boolean acceptDockingAction(DockingActionEvent e) {
-				if (e instanceof DockingActionCloseEvent
-						&& ((DockingActionDockableEvent) e).getDockable() == DockableResultDisplay.this) {
-					return SwingTools.showConfirmDialog("result.really_close",
-							ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.YES_OPTION;
-				} else {
-					return true;
+		desktop.addDockableStateChangeListener(e -> {
+			DockableState newState = e.getNewState();
+			Dockable newDockable = newState.getDockable();
+			if (newDockable == DockableResultDisplay.this) {
+				// this is relevant for all perspectives except for the result perspective
+				DockableState previousState = e.getPreviousState();
+				boolean isClosing = newState.isClosed();
+				if (!isClosing && !(previousState == null || previousState.isClosed())) {
+					// neither opening nor closing
+					return;
 				}
-			}
-		});
-
-		desktop.addDockableStateChangeListener(new DockableStateChangeListener() {
-
-			@Override
-			public void dockableStateChanged(DockableStateChangeEvent e) {
-				if (e.getNewState().isClosed()) {
-					if (e.getNewState().getDockable() instanceof ResultTab) {
-						ResultTab rt = (ResultTab) e.getNewState().getDockable();
-						rt.freeResources();
-						RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(rt);
-						getDockKey().resetPropertyChangeListener();
-					} else if (e.getNewState().getDockable() instanceof ProcessLogTab) {
-						ProcessLogTab pt = (ProcessLogTab) e.getNewState().getDockable();
-						if (pt != null) {
-							if (pt.getDataTable() != null) {
-								dataTables.remove(pt.getDataTable().getName());
-							}
-							pt.freeResources();
-							RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(pt);
-						}
+				for (DockableState dockableState : desktop.getDockables()) {
+					Dockable dockable = dockableState.getDockable();
+					boolean isResult = dockable instanceof ResultTab && ((ResultTab) dockable).getResultViewComponent() != null;
+					boolean isLog = dockable instanceof ProcessLogTab && ((ProcessLogTab) dockable).getDataTable() != null;
+					// only take care of results and logs that were not cleaned up
+					if (!isResult && !isLog) {
+						continue;
+					}
+					if (isClosing) {
+						// close all results for this perspective and this perspective only
+						desktop.close(dockable);
+					} else {
+						// open all results if not already visible
+						showTab(dockable);
 					}
 				}
+				return;
+			}
+			if (!newState.isClosed()) {
+				return;
+			}
+			if (desktop.getDockableState(DockableResultDisplay.this) == null || desktop.getDockableState(DockableResultDisplay.this).isClosed()) {
+				// ignore closed result and process log tabs if the result view was already closed
+				return;
+			}
+			if (newDockable instanceof ResultTab) {
+				ResultTab rt = (ResultTab) newDockable;
+				rt.freeResources();
+				RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(rt);
+				getDockKey().resetPropertyChangeListener();
+			} else if (newDockable instanceof ProcessLogTab) {
+				ProcessLogTab pt = (ProcessLogTab) newDockable;
+				if (pt.getDataTable() != null) {
+					dataTables.remove(pt.getDataTable().getName());
+				}
+				pt.freeResources();
+				RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(pt);
 			}
 		});
 	}
@@ -166,48 +169,36 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 	private boolean isAskingForPerspectiveSwitch = false;
 
 	private void askForPerspectiveSwitch() {
-		if (isAskingForPerspectiveSwitch || RapidMinerGUI.getMainFrame().getPerspectiveController().getModel()
-				.getSelectedPerspective().getName().equals("result")) {
+		MainFrame mainFrame = RapidMinerGUI.getMainFrame();
+		PerspectiveController perspectiveController = mainFrame.getPerspectiveController();
+		DockableState dockableState = mainFrame.getDockingDesktop().getDockableState(this);
+		// do not switch perspective if the result history is currently visible
+		if (isAskingForPerspectiveSwitch || dockableState != null && !dockableState.isClosed()
+				|| perspectiveController.getModel().getSelectedPerspective().getName().equals(PerspectiveModel.RESULT)) {
 			return;
-		} else {
-			try {
-				isAskingForPerspectiveSwitch = true;
-				if (DecisionRememberingConfirmDialog.confirmAction("show_results_on_creation",
-						MainFrame.PROPERTY_RAPIDMINER_GUI_AUTO_SWITCH_TO_RESULTVIEW)) {
-					if (SwingUtilities.isEventDispatchThread()) {
-						RapidMinerGUI.getMainFrame().getPerspectiveController().showPerspective(PerspectiveModel.RESULT);
-					} else {
-						try {
-							SwingUtilities.invokeAndWait(new Runnable() {
-
-								@Override
-								public void run() {
-									RapidMinerGUI.getMainFrame().getPerspectiveController()
-											.showPerspective(PerspectiveModel.RESULT);
-								}
-							});
-						} catch (InterruptedException e) {
-							// LogService.getRoot().log(Level.WARNING,
-							// "Error switching perspectives: "+e, e);
-							LogService.getRoot().log(Level.WARNING,
-									I18N.getMessage(LogService.getRoot().getResourceBundle(),
-											"com.rapidminer.gui.processeditor.results.DockableResultDisplay.error_switching_perspectives",
-											e),
-									e);
-						} catch (InvocationTargetException e) {
-							// LogService.getRoot().log(Level.WARNING,
-							// "Error switching perspectives: "+e, e);
-							LogService.getRoot().log(Level.WARNING,
-									I18N.getMessage(LogService.getRoot().getResourceBundle(),
-											"com.rapidminer.gui.processeditor.results.DockableResultDisplay.error_switching_perspectives",
-											e),
-									e);
-						}
+		}
+		try {
+			isAskingForPerspectiveSwitch = true;
+			if (DecisionRememberingConfirmDialog.confirmAction("show_results_on_creation",
+					MainFrame.PROPERTY_RAPIDMINER_GUI_AUTO_SWITCH_TO_RESULTVIEW)) {
+				if (SwingUtilities.isEventDispatchThread()) {
+					perspectiveController.showPerspective(PerspectiveModel.RESULT);
+				} else {
+					try {
+						SwingUtilities.invokeAndWait(() -> perspectiveController.showPerspective(PerspectiveModel.RESULT));
+					} catch (InterruptedException | InvocationTargetException e) {
+						// LogService.getRoot().log(Level.WARNING,
+						// "Error switching perspectives: "+e, e);
+						LogService.getRoot().log(Level.WARNING,
+								I18N.getMessage(LogService.getRoot().getResourceBundle(),
+										"com.rapidminer.gui.processeditor.results.DockableResultDisplay.error_switching_perspectives",
+										e),
+								e);
 					}
 				}
-			} finally {
-				isAskingForPerspectiveSwitch = false;
 			}
+		} finally {
+			isAskingForPerspectiveSwitch = false;
 		}
 	}
 
@@ -302,32 +293,22 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 
 	/** Adds the collection of components on the EDT (after removing the old tables. */
 	private void installDataTableViewers(final Collection<DataTableViewer> viewers) {
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				for (DataTableViewer viewer : viewers) {
-					ProcessLogTab tab = (ProcessLogTab) RapidMinerGUI.getMainFrame().getDockingDesktop().getContext()
-							.getDockableByKey(ProcessLogTab.DOCKKEY_PREFIX + viewer.getDataTable().getName());
-					if (tab == null) {
-						tab = new ProcessLogTab(ProcessLogTab.DOCKKEY_PREFIX + viewer.getDataTable().getName());
-					}
-					showTab(tab);
-					tab.setDataTableViewer(viewer);
+		SwingUtilities.invokeLater(() -> {
+			for (DataTableViewer viewer : viewers) {
+				ProcessLogTab tab = (ProcessLogTab) RapidMinerGUI.getMainFrame().getDockingDesktop().getContext()
+						.getDockableByKey(ProcessLogTab.DOCKKEY_PREFIX + viewer.getDataTable().getName());
+				if (tab == null) {
+					tab = new ProcessLogTab(ProcessLogTab.DOCKKEY_PREFIX + viewer.getDataTable().getName());
 				}
+				showTab(tab);
+				tab.setDataTableViewer(viewer);
 			}
 		});
 	}
 
 	private void showTab(final Dockable dockable) {
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				RapidMinerGUI.getMainFrame().getPerspectiveController().showTabInAllPerspectives(dockable,
-						DockableResultDisplay.this);
-			}
-		});
+		SwingUtilities.invokeLater(() -> RapidMinerGUI.getMainFrame().getPerspectiveController().
+				showTabInAllPerspectives(dockable,DockableResultDisplay.this));
 	}
 
 	@Override
@@ -336,22 +317,12 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 		updateDataTables();
 	}
 
-	private void clear() {
-		clear(true);
-	}
-
 	private void clear(boolean alsoClearLogs) {
 		if (SwingUtilities.isEventDispatchThread()) {
 			clearNow(alsoClearLogs);
 		} else {
 			try {
-				SwingUtilities.invokeAndWait(new Runnable() {
-
-					@Override
-					public void run() {
-						clearNow();
-					}
-				});
+				SwingUtilities.invokeAndWait(this::clearNow);
 			} catch (InterruptedException e) {
 				// LogService.getRoot().log(Level.WARNING, "Interupted while closing result tabs.",
 				// e);
@@ -359,7 +330,7 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 						I18N.getMessage(LogService.getRoot().getResourceBundle(),
 								"com.rapidminer.gui.processeditor.results.DockableResultDisplay.interrupted_while_closing_result_tabs"),
 						e);
-
+				Thread.currentThread().interrupt();
 			} catch (InvocationTargetException e) {
 				// LogService.getRoot().log(Level.WARNING,
 				// "Exception while closing result tabs: "+e, e);
@@ -384,22 +355,20 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 				toClose.add(state.getDockable());
 			}
 		}
-		if (!toClose.isEmpty() || !dataTables.isEmpty()) {
-			// fix for "delete old results" dialog after breakpoint resume
-			if (closeResultsPerRun) {
-				DockableResultDisplay.this.dataTables.clear();
-				// updateDataTables();
-				for (Dockable dockable : toClose) {
-					if (dockable instanceof ResultTab) {
-						((ResultTab) dockable).freeResources();
-					} else if (dockable instanceof ProcessLogTab) {
-						((ProcessLogTab) dockable).freeResources();
-					}
-					// RapidMinerGUI.getMainFrame().getDockingDesktop().close(dockable);
-					RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(dockable);
+		// fix for "delete old results" dialog after breakpoint resume
+		if ((!toClose.isEmpty() || !dataTables.isEmpty()) && closeResultsPerRun) {
+			DockableResultDisplay.this.dataTables.clear();
+			// updateDataTables();
+			for (Dockable dockable : toClose) {
+				if (dockable instanceof ResultTab) {
+					((ResultTab) dockable).freeResources();
+				} else if (dockable instanceof ProcessLogTab) {
+					((ProcessLogTab) dockable).freeResources();
 				}
-				getDockKey().resetPropertyChangeListener();
+				// RapidMinerGUI.getMainFrame().getDockingDesktop().close(dockable);
+				RapidMinerGUI.getMainFrame().getPerspectiveController().removeFromAllPerspectives(dockable);
 			}
+			getDockKey().resetPropertyChangeListener();
 		}
 	}
 
@@ -450,7 +419,7 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 				closeResultsPerRun = DecisionRememberingConfirmDialog.confirmAction("result.close_before_run",
 						RapidMinerGUI.PROPERTY_CLOSE_RESULTS_BEFORE_RUN);
 			}
-			clear();
+			clear(true);
 		}
 	};
 

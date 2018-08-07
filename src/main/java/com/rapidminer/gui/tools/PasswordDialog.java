@@ -40,6 +40,7 @@ import com.rapidminer.gui.security.Wallet;
 import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.PasswordInputCanceledException;
 
 
@@ -84,9 +85,10 @@ public class PasswordDialog extends ButtonDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	private JTextField usernameField = new JTextField(20);
-	private JPasswordField passwordField = new JPasswordField(20);
-	private JCheckBox rememberBox = new JCheckBox(new ResourceActionAdapter("authentication.remember"));
+	private final JTextField usernameField = new JTextField(20);
+	private final JPasswordField passwordField = new JPasswordField(20);
+	private final JCheckBox rememberBox = new JCheckBox(new ResourceActionAdapter("authentication.remember"));
+	private final JLabel enforcedIcon = new ResourceLabel("preferences.setting_enforced");
 
 	private PasswordDialog(Window owner, String i18nKey, UserCredential preset, Object... args) {
 		super(owner, i18nKey, ModalityType.APPLICATION_MODAL, args);
@@ -120,7 +122,15 @@ public class PasswordDialog extends ButtonDialog {
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		main.add(passwordField, c);
 
-		main.add(rememberBox, c);
+		JPanel rememberPanel = new JPanel();
+		rememberPanel.add(rememberBox);
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_RAPIDMINER_DISALLOW_REMEMBER_PASSWORD))) {
+			rememberPanel.add(enforcedIcon);
+			rememberBox.setSelected(false);
+			rememberBox.setEnabled(false);
+		}
+
+		main.add(rememberPanel, c);
 
 		layoutDefault(main, makeOkButton(), makeCancelButton());
 

@@ -84,7 +84,9 @@ public abstract class ConditionalAction extends LoggedAbstractAction {
 
 	public static final int PROCESS_RENDERER_HAS_REDO_STEPS = 14;
 
-	public static final int NUMBER_OF_CONDITIONS = 15;
+	public static final int PROCESS_HAS_BREAKPOINTS = 15;
+
+	public static final int NUMBER_OF_CONDITIONS = 16;
 
 	private final int[] conditions = new int[NUMBER_OF_CONDITIONS];
 

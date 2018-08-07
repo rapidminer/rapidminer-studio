@@ -36,6 +36,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.repository.DisconnectedWhileLoadingRepositoryException;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.Repository;
@@ -44,10 +45,9 @@ import com.rapidminer.repository.RepositoryListener;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.RepositorySortingMethod;
+import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
 
 
 /**
@@ -154,6 +154,13 @@ public class RepositoryTreeModel implements TreeModel {
 			sortedRepositoryEntriesHashMap.clear();
 		}
 
+		@Override
+		public void repositoryDisconnected(RemoteRepository repository) {
+			// clean up
+			brokenFolders.remove(repository);
+			pendingFolders.remove(repository);
+		}
+
 		/**
 		 * Update tree if it was refreshed or an entry was changed.
 		 *
@@ -202,22 +209,18 @@ public class RepositoryTreeModel implements TreeModel {
 		for (Repository repository : root.getRepositories()) {
 			repository.addRepositoryListener(repositoryListener);
 		}
-		root.addObserver(new Observer<Repository>() {
-
-			@Override
-			public void update(Observable<Repository> observable, Repository arg) {
-				for (Repository repository : root.getRepositories()) {
-					repository.removeRepositoryListener(repositoryListener);
-					repository.addRepositoryListener(repositoryListener);
-				}
-				final TreeModelEvent e = new TreeModelEvent(this, new TreePath(root));
-
-				SwingTools.invokeAndWait(() -> {
-					for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-						l.treeStructureChanged(e);
-					}
-				});
+		root.addObserver((o, a) -> {
+			for (Repository repository : root.getRepositories()) {
+				repository.removeRepositoryListener(repositoryListener);
+				repository.addRepositoryListener(repositoryListener);
 			}
+			final TreeModelEvent e = new TreeModelEvent(this, new TreePath(root));
+
+			SwingTools.invokeAndWait(() -> {
+				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+					l.treeStructureChanged(e);
+				}
+			});
 		}, true);
 	}
 
@@ -346,47 +349,54 @@ public class RepositoryTreeModel implements TreeModel {
 
 				final List<Entry> children = new ArrayList<>();
 				final AtomicBoolean folderBroken = new AtomicBoolean(false);
+				boolean disconnected = false;
 				try {
 					children.addAll(folder.getSubfolders()); // this may take some time
 					children.addAll(folder.getDataEntries()); // this may take some time
+				} catch (DisconnectedWhileLoadingRepositoryException e) {
+					// ignore actual exception and mark loading as interrupted to prevent new authentication
+					LogService.getRoot().info(I18N.getMessage(LogService.getRoot().getResourceBundle(),"com.rapidminer.repository.gui.RepositoryTreeModel.disconnect_while_loading_info", folder.getName()));
+					disconnected = true;
 				} catch (Exception e) {
 					// this occurs for example if the remote repository is unreachable
 					folderBroken.set(true);
 					brokenFolders.add(folder);
 					SwingTools.showSimpleErrorMessage("error_fetching_folder_contents_from_repository", e);
 				} finally {
-					SwingUtilities.invokeLater(() -> {
-							try {
-								TreeModelEvent removeEvent = new TreeModelEvent(RepositoryTreeModel.this, getPathTo(folder),
-										new int[] { 0 }, new Object[] { PENDING_FOLDER_NAME });
-
-								for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-									l.treeNodesRemoved(removeEvent);
-								}
-
-								int[] index = new int[children.size()];
-								for (int i = 0; i < index.length; i++) {
-									index[i] = i;
-								}
-								Object[] childArray = children.toArray();
-								if (childArray.length > 0) {
-									TreeModelEvent insertEvent = new TreeModelEvent(RepositoryTreeModel.this,
-											getPathTo(folder), index, childArray);
+					if (!disconnected) {
+						SwingUtilities.invokeLater(() -> {
+								try {
+									TreeModelEvent removeEvent = new TreeModelEvent(RepositoryTreeModel.this, getPathTo(folder),
+											new int[]{0}, new Object[]{PENDING_FOLDER_NAME});
 
 									for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-										l.treeNodesInserted(insertEvent);
+										l.treeNodesRemoved(removeEvent);
+									}
+
+									int[] index = new int[children.size()];
+									for (int i = 0; i < index.length; i++) {
+										index[i] = i;
+									}
+									Object[] childArray = children.toArray();
+									if (childArray.length > 0) {
+										TreeModelEvent insertEvent = new TreeModelEvent(RepositoryTreeModel.this,
+												getPathTo(folder), index, childArray);
+
+										for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+											l.treeNodesInserted(insertEvent);
+										}
+									}
+									for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
+										l.treeStructureChanged(new TreeModelEvent(RepositoryTreeModel.this, getPathTo(folder)));
+									}
+								} finally {
+									if (!folderBroken.get()) {
+										pendingFolders.remove(folder);
+										brokenFolders.remove(folder);
 									}
 								}
-								for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
-									l.treeStructureChanged(new TreeModelEvent(RepositoryTreeModel.this, getPathTo(folder)));
-								}
-							} finally {
-								if (!folderBroken.get()) {
-									pendingFolders.remove(folder);
-									brokenFolders.remove(folder);
-								}
-							}
-						});
+							});
+					}
 				}
 			}
 		}.start();

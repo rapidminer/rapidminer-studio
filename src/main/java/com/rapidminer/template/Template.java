@@ -29,10 +29,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.SwingUtilities;
 
 import com.rapidminer.Process;
 import com.rapidminer.RepositoryProcessLocation;
+import com.rapidminer.gui.tools.ScaledImageIcon;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter.ProcessOriginState;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
@@ -87,6 +91,7 @@ public class Template implements ZipStreamResource {
 	protected String processName;
 	protected List<String> demoData;
 	protected Icon icon;
+	protected Icon highDPIIcon;
 
 	protected Path path;
 	protected String name;
@@ -170,7 +175,9 @@ public class Template implements ZipStreamResource {
 	public Process makeProcess() throws IOException, XMLException, MalformedRepositoryLocationException {
 		String processLocation = TEMPLATES_PATH + title + "/" + processName;
 		RepositoryProcessLocation repoLocation = new RepositoryProcessLocation(new RepositoryLocation(processLocation));
-		return new Process(repoLocation.getRawXML());
+		Process process = new Process(repoLocation.getRawXML());
+		ProcessOriginProcessXMLFilter.setProcessOriginState(process, ProcessOriginState.GENERATED_TEMPLATE);
+		return process;
 	}
 
 	/**
@@ -184,7 +191,12 @@ public class Template implements ZipStreamResource {
 	 * @return the icon to display
 	 */
 	public Icon getIcon() {
-		return icon;
+		// only care if we are running on a high DPI
+		if (SwingTools.getGUIScaling() == SwingTools.Scaling.RETINA) {
+			return highDPIIcon != null ? highDPIIcon : icon;
+		} else {
+			return icon;
+		}
 	}
 
 	/**
@@ -219,6 +231,8 @@ public class Template implements ZipStreamResource {
 						demoData.add(entryName.split("\\.")[0]);
 					} else if ("icon.png".equals(entryName)) {
 						icon = new ImageIcon(Tools.readInputStream(zip));
+					} else if ("icon@2x.png".equals(entryName)) {
+						highDPIIcon = new ScaledImageIcon(Tools.readInputStream(zip), 32, 32);
 					}
 				}
 			} finally {

@@ -162,7 +162,7 @@ public class XlsxResultSet implements DataResultSet {
 	 *            the current read mode
 	 * @param provider
 	 *            a {@link DateFormatProvider}, can be {@code null} in which case the date format is
-	 *            fixed by the current value of {@link configuration#getDatePattern()}
+	 *            fixed by the current value of {@link ExcelResultSetConfiguration#getDatePattern() configuration.getDatePattern()}
 	 * @throws UserError
 	 *             in case something is configured in a wrong way so that the XLSX file cannot be
 	 *             parsed
@@ -187,7 +187,7 @@ public class XlsxResultSet implements DataResultSet {
 	 *            current read mode
 	 * @param provider
 	 *            a {@link DateFormatProvider}, can be {@code null} in which case the date format is
-	 *            fixed by the current value of {@link configuration#getDatePattern()}
+	 *            fixed by the current value of {@link ExcelResultSetConfiguration#getDatePattern() configuration.getDatePattern()}
 	 * @throws UserError
 	 *             in case something is configured in a wrong way so that the XLSX file cannot be
 	 *             parsed
@@ -584,7 +584,7 @@ public class XlsxResultSet implements DataResultSet {
 	}
 
 	/**
-	 * @param parameterAsBoolean
+	 * @param isFirstRowAsNames
 	 *            defines whether the first row should be used as names. If set to <code>true</code>
 	 *            the worksheet parser will skip all beginning empty rows until the first row with
 	 *            content was found.

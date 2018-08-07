@@ -19,6 +19,7 @@
 package com.rapidminer.operator.concurrency.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.rapidminer.RapidMiner;
@@ -29,6 +30,7 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
@@ -44,6 +46,9 @@ import com.rapidminer.tools.ParameterService;
  *
  */
 public abstract class ParallelOperatorChain extends OperatorChain {
+
+	/** Last version which synchronized remembered data only in special iterations (in most cases the last iteration). */
+	public static final OperatorVersion DOES_NOT_ALWAYS_SYNCHRONIZE_REMEMBERED_DATA = new OperatorVersion(8, 2, 0);
 
 	private static String PARAMETER_ENABLE_PARALLEL_EXECUTION = "enable_parallel_execution";
 
@@ -133,4 +138,14 @@ public abstract class ParallelOperatorChain extends OperatorChain {
 
 		return types;
 	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] incompatibleVersions = super.getIncompatibleVersionChanges();
+		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
+				incompatibleVersions.length + 1);
+		extendedIncompatibleVersions[incompatibleVersions.length] = DOES_NOT_ALWAYS_SYNCHRONIZE_REMEMBERED_DATA;
+		return extendedIncompatibleVersions;
+	}
+
 }

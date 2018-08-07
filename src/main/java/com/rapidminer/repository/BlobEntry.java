@@ -29,22 +29,27 @@ import java.io.OutputStream;
  * */
 public interface BlobEntry extends DataEntry {
 
-	public static final String TYPE_NAME = "blob";
+	String TYPE_NAME = "blob";
+
+	@Override
+	default String getType() {
+		return TYPE_NAME;
+	}
 
 	/**
 	 * Opens a stream to read from this entry.
-	 * 
+	 *
 	 * @throws RepositoryException
 	 */
-	public InputStream openInputStream() throws RepositoryException;
+	InputStream openInputStream() throws RepositoryException;
 
 	/**
 	 * Opens a stream to this blob, setting its mime type to the given value.
-	 * 
+	 *
 	 * @return TODO
 	 */
-	public OutputStream openOutputStream(String mimeType) throws RepositoryException;
+	OutputStream openOutputStream(String mimeType) throws RepositoryException;
 
-	public String getMimeType();
+	String getMimeType();
 
 }

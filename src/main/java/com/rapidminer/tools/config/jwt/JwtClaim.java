@@ -17,6 +17,7 @@
  * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.config.jwt;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -34,6 +35,9 @@ public class JwtClaim {
 
 	private String sub;
 
+	/* @since 8.2.1 */
+	private List<String> grp;
+
 	public boolean isAdmin() {
 		return admin;
 	}
@@ -48,5 +52,15 @@ public class JwtClaim {
 
 	public void setSub(String sub) {
 		this.sub = sub;
+	}
+
+	/** @since 8.2.1 */
+	public List<String> getGrp() {
+		return grp;
+	}
+
+	/** @since 8.2.1 */
+	public void setGrp(List<String> grp) {
+		this.grp = grp;
 	}
 }

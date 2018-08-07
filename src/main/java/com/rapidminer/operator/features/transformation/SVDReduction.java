@@ -91,7 +91,7 @@ public class SVDReduction extends Operator {
 		super(description);
 		exampleSetInput.addPrecondition(new ExampleSetPrecondition(exampleSetInput, Ontology.NUMERICAL));
 
-		getTransformer().addRule(new GenerateModelTransformationRule(exampleSetInput, modelOutput, PCAModel.class));
+		getTransformer().addRule(new GenerateModelTransformationRule(exampleSetInput, modelOutput, SVDModel.class));
 		getTransformer().addRule(new ExampleSetPassThroughRule(exampleSetInput, exampleSetOutput, SetRelation.EQUAL) {
 
 			@Override

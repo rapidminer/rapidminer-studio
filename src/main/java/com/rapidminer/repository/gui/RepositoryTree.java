@@ -108,6 +108,7 @@ import com.rapidminer.repository.gui.actions.SortByNameAction;
 import com.rapidminer.repository.gui.actions.StoreProcessAction;
 import com.rapidminer.repository.local.LocalRepository;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
+import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PasswordInputCanceledException;
@@ -225,6 +226,7 @@ public class RepositoryTree extends JTree {
 					List<File> files = (List<File>) ts.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
 					File file = files.get(0);
 					DataImportWizardBuilder builder = new DataImportWizardBuilder();
+					builder.setCallback(DataImportWizardUtils.showInResultsCallback());
 					builder.forFile(file.toPath()).build(owner).getDialog().setVisible(true);
 					return true;
 				} else {

@@ -160,64 +160,53 @@ public class ResultTab extends JPanel implements Dockable {
 		if (resultObject != null) {
 			this.resultObject = resultObject;
 		}
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				if (label != null) {
-					remove(label);
-					label = null;
+		SwingUtilities.invokeLater(() -> {
+			if (label != null) {
+				remove(label);
+				label = null;
+			}
+			if (resultObject != null) {
+				String name = resultObject.getName();
+				if (resultObject.getSource() != null) {
+					name += " (" + resultObject.getSource() + ")";
 				}
-				if (resultObject != null) {
-					String name = resultObject.getName();
-					if (resultObject.getSource() != null) {
-						name += " (" + resultObject.getSource() + ")";
-					}
 
-					// without this, the name could be too long and cut off the close button (and
-					// even exit the screen)
-					name = SwingTools.getShortenedDisplayName(name, MAX_DOCKNAME_LENGTH);
+				// without this, the name could be too long and cut off the close button (and
+				// even exit the screen)
+				name = SwingTools.getShortenedDisplayName(name, MAX_DOCKNAME_LENGTH);
 
-					dockKey.setName(name);
-					dockKey.setTooltip(Tools.toString(resultObject.getProcessingHistory(), " \u2192 "));
-					label = makeStandbyLabel();
-					add(label, BorderLayout.CENTER);
+				dockKey.setName(name);
+				dockKey.setTooltip(Tools.toString(resultObject.getProcessingHistory(), " \u2192 "));
+				label = makeStandbyLabel();
+				add(label, BorderLayout.CENTER);
+			} else {
+				if (id.startsWith(DOCKKEY_PREFIX + "process_")) {
+					String number = id.substring((DOCKKEY_PREFIX + "process_").length());
+					label = new ResourceLabel("resulttab.cannot_be_restored_process_result", number);
+					dockKey.setName("Result #" + number);
 				} else {
-					if (id.startsWith(DOCKKEY_PREFIX + "process_")) {
-						String number = id.substring((DOCKKEY_PREFIX + "process_").length());
-						label = new ResourceLabel("resulttab.cannot_be_restored_process_result", number);
-						dockKey.setName("Result #" + number);
-					} else {
-						label = new ResourceLabel("resulttab.cannot_be_restored");
-						dockKey.setName("Result " + id);
-					}
-					((JComponent) label).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-					add(label, BorderLayout.CENTER);
+					label = new ResourceLabel("resulttab.cannot_be_restored");
+					dockKey.setName("Result " + id);
 				}
-				// remove old component
-				if (component != null) {
-					remove(component);
-				}
+				((JComponent) label).setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+				add(label, BorderLayout.CENTER);
+			}
+			// remove old component
+			if (component != null) {
+				remove(component);
 			}
 		});
 
 		if (resultObject != null) {
 			final JPanel newComponent = createComponent(resultObject, null);
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					if (label != null) {
-						remove(label);
-						label = null;
-					}
-					component = newComponent;
-					add(component, BorderLayout.CENTER);
-					if (component instanceof JComponent) {
-						dockKey.setIcon((Icon) ((JComponent) component)
-								.getClientProperty(ResultDisplayTools.CLIENT_PROPERTY_RAPIDMINER_RESULT_ICON));
-					}
+			SwingUtilities.invokeLater(() -> {
+				if (label != null) {
+					remove(label);
+					label = null;
 				}
+				component = newComponent;
+				add(component, BorderLayout.CENTER);
+				dockKey.setIcon((Icon) component.getClientProperty(ResultDisplayTools.CLIENT_PROPERTY_RAPIDMINER_RESULT_ICON));
 			});
 		}
 	}

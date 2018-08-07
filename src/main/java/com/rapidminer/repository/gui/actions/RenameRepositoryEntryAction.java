@@ -35,7 +35,7 @@ public class RenameRepositoryEntryAction extends AbstractRepositoryAction<Entry>
 	private static final long serialVersionUID = 1L;
 
 	public RenameRepositoryEntryAction(RepositoryTree tree) {
-		super(tree, Entry.class, false, "repository_rename_entry");
+		super(tree, Entry.class, true, "repository_rename_entry");
 	}
 
 	@Override

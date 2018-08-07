@@ -28,10 +28,16 @@
 		<property key="rapidminer.init.plugins.location" />
 	</group>
 	<group key="system">
+	<group key="rapidminer.preferences.subgroup.system.data">
 		<property key="maxMemory" />
 		<property key="rapidminer.system.legacy_data_mgmt" />
-		<property key="connection.timeout" />
-		<property key="account_server_url" />
+	</group>
+		<group key="rapidminer.preferences.subgroup.system.network">
+			<property key="connection.timeout" />
+			<property key="account_server_url" />
+			<property key="rapidminer.system.network.follow_https_to_http" />
+			<property key="rapidminer.system.network.follow_http_to_https" />
+		</group>
 	</group>
 	<group key="tools">
 		<group key="rapidminer.preferences.subgroup.tools.mail">
@@ -61,7 +67,7 @@
 			<property key="rapidminer.update.url" />
 		</group>
 		<group key="rapidminer.preferences.subgroup.update.beta_program">
-			<property key="rapidminer.update.beta_features" />
+			<property key="rapidminer.update.beta_features.v2" />
 		</group>
 	</group>
 	<group key="gui">

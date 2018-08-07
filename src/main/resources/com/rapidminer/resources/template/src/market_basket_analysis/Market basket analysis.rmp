@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.6.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.6.000-SNAPSHOT" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Load Transactions" width="90" x="112" y="187">
+        <parameter key="repository_entry" value="//Samples/Templates/Market Basket Analysis/Transactions"/>
+      </operator>
+      <operator activated="true" class="aggregate" compatibility="6.0.006" expanded="true" height="82" name="Aggregate" width="90" x="112" y="336">
+        <parameter key="use_default_aggregation" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="default_aggregation_function" value="average"/>
+        <list key="aggregation_attributes">
+          <parameter key="Orders" value="sum"/>
+        </list>
+        <parameter key="group_by_attributes" value="Invoice|product 1"/>
+        <parameter key="count_all_combinations" value="false"/>
+        <parameter key="only_distinct" value="false"/>
+        <parameter key="ignore_missings" value="true"/>
+      </operator>
+      <operator activated="true" class="pivot" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Pivot" width="90" x="246" y="336">
+        <parameter key="group_attribute" value="Invoice"/>
+        <parameter key="index_attribute" value="product 1"/>
+        <parameter key="consider_weights" value="true"/>
+        <parameter key="weight_aggregation" value="sum"/>
+        <parameter key="skip_constant_attributes" value="true"/>
+        <parameter key="datamanagement" value="double_array"/>
+      </operator>
+      <operator activated="true" class="rename_by_replacing" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Rename by Replacing" width="90" x="380" y="336">
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value="Invoice"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="replace_what" value="sum\(Orders\)_"/>
+      </operator>
+      <operator activated="true" class="replace_missing_values" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Replace Missing Values" width="90" x="112" y="442">
+        <parameter key="return_preprocessing_model" value="false"/>
+        <parameter key="create_view" value="false"/>
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="default" value="zero"/>
+        <list key="columns"/>
+      </operator>
+      <operator activated="true" class="numerical_to_binominal" compatibility="6.0.003" expanded="true" height="82" name="Numerical to Binominal" width="90" x="246" y="442">
+        <parameter key="attribute_filter_type" value="all"/>
+        <parameter key="attribute" value=""/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="numeric"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="real"/>
+        <parameter key="block_type" value="value_series"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_series_end"/>
+        <parameter key="invert_selection" value="false"/>
+        <parameter key="include_special_attributes" value="false"/>
+        <parameter key="min" value="0.0"/>
+        <parameter key="max" value="0.0"/>
+      </operator>
+      <operator activated="true" class="set_role" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Set Role" width="90" x="380" y="442">
+        <parameter key="attribute_name" value="Invoice"/>
+        <parameter key="target_role" value="id"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" class="concurrency:fp_growth" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="FP-Growth" width="90" x="648" y="289">
+        <parameter key="find_min_number_of_itemsets" value="false"/>
+        <parameter key="min_number_of_itemsets" value="100"/>
+        <parameter key="max_number_of_retries" value="15"/>
+        <parameter key="positive_value" value="true"/>
+        <parameter key="min_support" value="0.005"/>
+        <parameter key="max_items" value="-1"/>
+        <parameter key="keep_example_set" value="false"/>
+      </operator>
+      <operator activated="true" class="create_association_rules" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Create Association Rules" width="90" x="648" y="442">
+        <parameter key="criterion" value="confidence"/>
+        <parameter key="min_confidence" value="0.1"/>
+        <parameter key="min_criterion_value" value="0.8"/>
+        <parameter key="gain_theta" value="2.0"/>
+        <parameter key="laplace_k" value="1.0"/>
+      </operator>
+      <connect from_op="Load Transactions" from_port="output" to_op="Aggregate" to_port="example set input"/>
+      <connect from_op="Aggregate" from_port="example set output" to_op="Pivot" to_port="example set input"/>
+      <connect from_op="Pivot" from_port="example set output" to_op="Rename by Replacing" to_port="example set input"/>
+      <connect from_op="Rename by Replacing" from_port="example set output" to_op="Replace Missing Values" to_port="example set input"/>
+      <connect from_op="Replace Missing Values" from_port="example set output" to_op="Numerical to Binominal" to_port="example set input"/>
+      <connect from_op="Numerical to Binominal" from_port="example set output" to_op="Set Role" to_port="example set input"/>
+      <connect from_op="Set Role" from_port="example set output" to_op="FP-Growth" to_port="example set"/>
+      <connect from_op="FP-Growth" from_port="frequent sets" to_op="Create Association Rules" to_port="item sets"/>
+      <connect from_op="Create Association Rules" from_port="rules" to_port="result 1"/>
+      <connect from_op="Create Association Rules" from_port="item sets" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="147"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="42"/>
+      <description align="left" color="yellow" colored="false" height="70" resized="false" width="850" x="20" y="25">MARKET BASKET ANALYSIS&lt;br&gt;Model associations between products by determining sets of items frequently purchased together and building association rules to derive recommendations.</description>
+      <description align="left" color="blue" colored="true" height="185" resized="true" width="550" x="20" y="105">Step 1:&lt;br/&gt;Load transaction data containing a transaction id, a product id and a quantifier. The data denotes how many times a certain product has been purchased as part of a transactions.</description>
+      <description align="left" color="purple" colored="true" height="341" resized="true" width="549" x="20" y="300">&lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; Step 2:&lt;br&gt;Edit, transform &amp;amp; load (ETL) - Aggregate transaction data to account for multiple occurrences of the same product in a transaction. Pivot the data so that each transaction is represented by a row. Transform purchase amounts to binary &amp;quot;product purchased yes/no &amp;quot; indicators.&lt;br&gt;</description>
+      <description align="left" color="green" colored="true" height="310" resized="true" width="290" x="580" y="105">Step 3:&lt;br/&gt;Using FP-Growth, determine frequent item sets. A frequent item sets denotes that the items (products) in the set have been purchased together frequently, i.e. in a certain ratio of transactions. This ratio is given by the support of the item set.</description>
+      <description align="left" color="green" colored="true" height="215" resized="true" width="286" x="579" y="425">&lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; Step 4:&lt;br/&gt;Create association rules which can be used for product recommendations depending on the confidences of the rules.&lt;br&gt;</description>
+      <description align="left" color="yellow" colored="false" height="35" resized="true" width="849" x="20" y="655">Outputs: association rules, frequent item set&lt;br&gt;</description>
+    </process>
+  </operator>
+</process>

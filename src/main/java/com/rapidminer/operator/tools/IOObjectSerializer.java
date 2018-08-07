@@ -18,6 +18,7 @@
 */
 package com.rapidminer.operator.tools;
 
+import com.rapidminer.adaption.belt.TableViewingTools;
 import com.rapidminer.example.ExampleSet;
 
 import java.io.ByteArrayInputStream;
@@ -47,6 +48,7 @@ public class IOObjectSerializer {
 
 	/** Serializes the object with a default type appropriate for the given object. */
 	public void serialize(OutputStream out, Object object) throws IOException {
+		object = TableViewingTools.replaceTableObject(object);
 		SerializationType type;
 		if (object instanceof ExampleSet) {
 			type = SerializationType.STREAMED_EXAMPLE_SET_DENSE_CURRENT_VERSION;

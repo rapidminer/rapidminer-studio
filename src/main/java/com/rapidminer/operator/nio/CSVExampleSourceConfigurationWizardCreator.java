@@ -18,18 +18,22 @@
 */
 package com.rapidminer.operator.nio;
 
-import com.rapidminer.gui.tools.SwingTools;
+import javax.swing.JDialog;
+
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.wizards.AbstractConfigurationWizardCreator;
 import com.rapidminer.gui.wizards.ConfigurationListener;
-import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.studio.io.data.internal.file.csv.CSVDataSourceFactory;
+import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
+import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 
 
 /**
- * Creates an {@link ExcelImportWizard}.
- * 
- * @author Sebastian Loh (06.05.2010)
- * 
+ * Creates a wizard for configuring the Read CSV operator. The wizard is the same as when using the "Import Data" button.
+ *
+ * @author Marcel Seifert
+ *
  */
 public class CSVExampleSourceConfigurationWizardCreator extends AbstractConfigurationWizardCreator {
 
@@ -38,11 +42,9 @@ public class CSVExampleSourceConfigurationWizardCreator extends AbstractConfigur
 	@Override
 	public void createConfigurationWizard(ParameterType type, ConfigurationListener listener) {
 		CSVExampleSource sourceOperator = (CSVExampleSource) listener;
-		try {
-			new CSVImportWizard(sourceOperator, listener, null).setVisible(true);
-		} catch (OperatorException e) {
-			SwingTools.showSimpleErrorMessage("importwizard.error_creating_wizard", e);
-		}
+		DataImportWizardBuilder builder = new DataImportWizardBuilder();
+		JDialog wizard = builder.forOperator(sourceOperator, CSVDataSourceFactory.CSV_DATA_SOURCE_FACTORY_I18N_KEY).build(RapidMinerGUI.getMainFrame()).getDialog();
+		wizard.setVisible(true);
 	}
 
 	@Override

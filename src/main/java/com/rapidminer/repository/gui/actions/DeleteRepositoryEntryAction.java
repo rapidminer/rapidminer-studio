@@ -43,11 +43,9 @@ public class DeleteRepositoryEntryAction extends AbstractRepositoryAction<Entry>
 
 	public static final String I18N_KEY = "repository_delete_entry";
 
-	private RepositoryTree tree;
 
 	public DeleteRepositoryEntryAction(RepositoryTree tree) {
-		super(tree, Entry.class, false, I18N_KEY);
-		this.tree = tree;
+		super(tree, Entry.class, true, I18N_KEY);
 	}
 
 	@Override
@@ -67,20 +65,16 @@ public class DeleteRepositoryEntryAction extends AbstractRepositoryAction<Entry>
 			entry.delete();
 		} catch (RepositoryException e) {
 
-			if (e.getCause() != null && e.getCause() instanceof PasswordInputCanceledException) {
-				// no extra dialog if login dialog was canceled
-			} else {
+			// no extra dialog if login dialog was canceled
+			if (!(e.getCause() instanceof PasswordInputCanceledException)) {
 
 				// Retry-dialog on error
-
 				ConfirmDialog dialog = null;
-				if (e.getMessage() != null && !e.getMessage().isEmpty()) {
-					dialog = new ConfirmDialog(ProgressThreadDialog.getInstance(), "error_in_delete_entry_with_cause",
-							ConfirmDialog.YES_NO_OPTION, false, locationName, e.getMessage());
-				} else {
-					dialog = new ConfirmDialog(ProgressThreadDialog.getInstance(), "error_in_delete_entry",
-							ConfirmDialog.YES_NO_OPTION, false, locationName);
-				}
+				String errorMessage = e.getMessage();
+				errorMessage = errorMessage != null ? errorMessage.trim() : "";
+				dialog = new ConfirmDialog(ProgressThreadDialog.getInstance(),
+						"error_in_delete_entry" + (!errorMessage.isEmpty() ? "_with_cause" : ""),
+						ConfirmDialog.YES_NO_OPTION, false, locationName, errorMessage);
 				dialog.setVisible(true);
 				if (dialog.getReturnOption() == ConfirmDialog.YES_OPTION) {
 					actionPerformed(entry);
@@ -104,13 +98,7 @@ public class DeleteRepositoryEntryAction extends AbstractRepositoryAction<Entry>
 		if (parentLocation == null) {
 			return;
 		}
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				tree.expandAndSelectIfExists(parentLocation);
-			}
-		});
+		SwingUtilities.invokeLater(() -> tree.expandAndSelectIfExists(parentLocation));
 	}
 
 }

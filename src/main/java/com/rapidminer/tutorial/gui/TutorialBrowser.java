@@ -453,7 +453,7 @@ public class TutorialBrowser extends JPanel implements Dockable {
 			if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_GETTING_STARTED,
 						TUTORIAL_BROWSER_DOCK_KEY, "open_remote_url");
-				RMUrlHandler.openInBrowser(e.getURL());
+				RMUrlHandler.handleUrl(e.getURL().toString());
 			}
 		});
 		return scrollPane;

@@ -65,6 +65,8 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.UpdateQueue;
 import com.rapidminer.gui.tools.components.FeedbackForm;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter.ProcessOriginState;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -234,12 +236,10 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 				if (e.getDescription().startsWith("tutorial:")) {
 					// ask for confirmation before stopping the currently running process and
 					// opening another one!
-					if (RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_RUNNING
-							|| RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED) {
-						if (SwingTools.showConfirmDialog("close_running_process",
-								ConfirmDialog.YES_NO_OPTION) != ConfirmDialog.YES_OPTION) {
-							return;
-						}
+					if ((RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_RUNNING
+							|| RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED)
+							&& SwingTools.showConfirmDialog("close_running_process", ConfirmDialog.YES_NO_OPTION) != ConfirmDialog.YES_OPTION) {
+						return;
 					}
 
 					// ask user if he wants to save his current process because the example process
@@ -287,6 +287,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 						Transformer t = TransformerFactory.newInstance().newTransformer();
 						t.transform(processSource, new StreamResult(buffer));
 						Process exampleProcess = new Process(buffer.toString());
+						ProcessOriginProcessXMLFilter.setProcessOriginState(exampleProcess, ProcessOriginState.GENERATED_TUTORIAL);
 						Operator formerOperator = displayedOperator;
 						ignoreSelections = true;
 						RapidMinerGUI.getMainFrame().setProcess(exampleProcess, true);

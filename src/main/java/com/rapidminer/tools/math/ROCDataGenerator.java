@@ -1,22 +1,27 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools.math;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Iterator;
+import javax.swing.JDialog;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
@@ -30,24 +35,20 @@ import com.rapidminer.gui.plotter.ScatterPlotter;
 import com.rapidminer.gui.plotter.SimplePlotterDialog;
 import com.rapidminer.gui.viewer.ROCChartPlotter;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Iterator;
-
-import javax.swing.JDialog;
-
 
 /**
  * Helper class containing some methods for ROC plots, threshold finding and area under curve
  * calculation.
- * 
+ *
  * @author Ingo Mierswa, Martin Scholz, Simon Fischer
  */
 public class ROCDataGenerator implements Serializable {
 
 	private static final long serialVersionUID = -4473681331604071436L;
 
-	/** Defines the maximum amount of points which is plotted in the ROC curve. */
+	/**
+	 * Defines the maximum amount of points which is plotted in the ROC curve.
+	 */
 	public static final int MAX_ROC_POINTS = 200;
 
 	private double misclassificationCostsPositive = 1.0d;
@@ -58,7 +59,9 @@ public class ROCDataGenerator implements Serializable {
 
 	private double bestThreshold = Double.NaN;
 
-	/** Creates a new ROC data generator. */
+	/**
+	 * Creates a new ROC data generator.
+	 */
 	public ROCDataGenerator(double misclassificationCostsPositive, double misclassificationCostsNegative) {
 		this.misclassificationCostsPositive = misclassificationCostsPositive;
 		this.misclassificationCostsNegative = misclassificationCostsNegative;
@@ -120,7 +123,7 @@ public class ROCDataGenerator implements Serializable {
 		// The formula for the slope is (#pos / #neg) / (costs_neg / costs_pos).
 		double ratio = exampleSet.getStatistics(label, Statistics.COUNT, positiveClassName)
 				/ exampleSet.getStatistics(label, Statistics.COUNT,
-						label.getMapping().mapIndex(label.getMapping().getNegativeIndex()));
+				label.getMapping().mapIndex(label.getMapping().getNegativeIndex()));
 		slope = misclassificationCostsNegative / misclassificationCostsPositive;
 		slope = ratio / slope;
 
@@ -203,39 +206,51 @@ public class ROCDataGenerator implements Serializable {
 		// scaling for plotting
 		rocData.setTotalPositives(truePositiveWeight);
 		rocData.setTotalNegatives(totalWeight - truePositiveWeight);
-		rocData.setBestIsometricsTPValue(bestIsometricsTpValue / truePositiveWeight);
+		if (truePositiveWeight != 0) {
+			rocData.setBestIsometricsTPValue(bestIsometricsTpValue / truePositiveWeight);
+		} else {
+			rocData.setBestIsometricsTPValue(0);
+		}
 		return rocData;
 	}
 
 	private DataTable createDataTable(ROCData data, boolean showSlope, boolean showThresholds) {
-		DataTable dataTable = new SimpleDataTable("ROC Plot", new String[] { "FP/N", "TP/P", "Slope", "Threshold" });
+		DataTable dataTable = new SimpleDataTable("ROC Plot", new String[]{"FP/N", "TP/P", "Slope", "Threshold"});
 		Iterator<ROCPoint> i = data.iterator();
 		int pointCounter = 0;
 		int eachPoint = Math.max(1, (int) Math.round((double) data.getNumberOfPoints() / (double) MAX_ROC_POINTS));
 		while (i.hasNext()) {
 			ROCPoint point = i.next();
-			if ((pointCounter == 0) || ((pointCounter % eachPoint) == 0) || (!i.hasNext())) { // draw
-																								// only
-																								// MAX_ROC_POINTS
-																								// points
-				double fpRate = point.getFalsePositives() / data.getTotalNegatives();
-				double tpRate = point.getTruePositives() / data.getTotalPositives();
+			if ((pointCounter == 0) || ((pointCounter % eachPoint) == 0) || (!i.hasNext())) {
+				// draw only MAX_ROC_POINTS points
+				double fpRate = 0;
+				if (point.getFalsePositives() != 0 && data.getTotalNegatives() != 0) {
+					fpRate = point.getFalsePositives() / data.getTotalNegatives();
+				}
+				double tpRate = 0;
+				if (point.getTruePositives() != 0 && data.getTotalPositives() != 0) {
+					tpRate = point.getTruePositives() / data.getTotalPositives();
+				}
 				double threshold = point.getConfidence();
-				dataTable.add(new SimpleDataTableRow(new double[] {
+				double tnovertp = 0;
+				if (data.getTotalNegatives() != 0 && data.getTotalPositives() != 0) {
+					tnovertp = data.getTotalNegatives() / data.getTotalPositives();
+				}
+				dataTable.add(new SimpleDataTableRow(new double[]{
 						fpRate, // x
 						tpRate, // y1
-						data.getBestIsometricsTPValue()
-								+ (fpRate * slope * (data.getTotalNegatives() / data.getTotalPositives())), // y2:
-																											// slope
+						data.getBestIsometricsTPValue() + (fpRate * slope * tnovertp), // y2: slope
 						threshold // y3: threshold or confidence
-						}));
+				}));
 			}
 			pointCounter++;
 		}
 		return dataTable;
 	}
 
-	/** Creates a dialog containing a plotter for a given list of ROC data points. */
+	/**
+	 * Creates a dialog containing a plotter for a given list of ROC data points.
+	 */
 	public void createROCPlotDialog(ROCData data, boolean showSlope, boolean showThresholds) {
 		SimplePlotterDialog plotter = new SimplePlotterDialog(createDataTable(data, showSlope, showThresholds));
 		plotter.setXAxis(0);
@@ -253,7 +268,9 @@ public class ROCDataGenerator implements Serializable {
 		plotter.setVisible(true);
 	}
 
-	/** Creates a dialog containing a plotter for a given list of ROC data points. */
+	/**
+	 * Creates a dialog containing a plotter for a given list of ROC data points.
+	 */
 	public void createROCPlotDialog(ROCData data) {
 		ROCChartPlotter plotter = new ROCChartPlotter();
 		plotter.addROCData("ROC", data);
@@ -265,7 +282,9 @@ public class ROCDataGenerator implements Serializable {
 		dialog.setVisible(true);
 	}
 
-	/** Calculates the area under the curve for a given list of ROC data points. */
+	/**
+	 * Calculates the area under the curve for a given list of ROC data points.
+	 */
 	public double calculateAUC(ROCData rocData) {
 		if (rocData.getNumberOfPoints() == 2) {
 			return 0.5;
@@ -277,17 +296,17 @@ public class ROCDataGenerator implements Serializable {
 		Iterator<ROCPoint> i = rocData.iterator();
 		while (i.hasNext()) {
 			ROCPoint point = i.next();
-			double fpDivN = point.getFalsePositives() / rocData.getTotalNegatives(); // false
-																						// positives
-																						// divided
-																						// by sum of
-																						// all
-																						// negatives
-			double tpDivP = point.getTruePositives() / rocData.getTotalPositives(); // true
-																					// positives
-																					// divided by
-																					// sum of all
-																					// positives
+			double fpDivN = 0;
+			if (point.getFalsePositives() != 0 && rocData.getTotalNegatives() != 0) {
+				// false positives divided by sum of all negatives
+				fpDivN = point.getFalsePositives() / rocData.getTotalNegatives();
+			}
+
+			double tpDivP = 0;
+			if (point.getTruePositives() != 0 && rocData.getTotalPositives() != 0) {
+				// true positives divided by sum of all positives
+				tpDivP = point.getTruePositives() / rocData.getTotalPositives();
+			}
 
 			/*
 			 * if (last != null) { aucSum += ((tpDivP - last[1]) * (fpDivN - last[0]) / 2.0d) +
@@ -301,7 +320,7 @@ public class ROCDataGenerator implements Serializable {
 				aucSum += leftHeight * width + (rightHeight - leftHeight) * width / 2;
 				// aucSum += leftHeight * width;
 			}
-			last = new double[] { fpDivN, tpDivP };
+			last = new double[]{fpDivN, tpDivP};
 		}
 
 		return aucSum;

@@ -61,7 +61,9 @@ import com.rapidminer.tools.math.container.Range;
  * of the input example set.
  *
  * @author Ingo Mierswa
+ * @deprecated since 9.0; see time series extension for new version
  */
+@Deprecated
 public class FourierTransform extends AbstractFeatureTransformation {
 
 	public FourierTransform(OperatorDescription description) {

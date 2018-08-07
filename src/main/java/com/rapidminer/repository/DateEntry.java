@@ -29,6 +29,6 @@ package com.rapidminer.repository;
 public interface DateEntry extends Entry {
 
 	/** Returns the last modification date of this entry. */
-	public long getDate();
+	long getDate();
 
 }

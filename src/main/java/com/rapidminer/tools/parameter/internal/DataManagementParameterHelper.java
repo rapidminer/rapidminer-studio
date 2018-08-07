@@ -48,7 +48,7 @@ public final class DataManagementParameterHelper {
 	}
 
 	/**
-	 * the options for {@link #PARAMETER_NEW_DATA_MANAGEMENT} coming from {@link DataManagment}
+	 * the options for {@link #PARAMETER_NEW_DATA_MANAGEMENT} coming from {@link DataManagement}
 	 */
 	public static final String[] NEW_DATA_MANAGMENT_OPTIONS = new String[] { "auto", "memory-optimized", "speed-optimized" };
 

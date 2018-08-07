@@ -266,8 +266,6 @@ public class PortInfoBubble extends BubbleWindow {
 				RapidMinerGUI.getMainFrame().getPerspectiveController().showPerspective(PerspectiveModel.DESIGN);
 				this.myPerspective = PerspectiveModel.DESIGN;
 			}
-			// make sure dockable is visible
-			DockingTools.openDockable(ProcessPanel.PROCESS_PANEL_DOCK_KEY, null, RelativeDockablePosition.TOP_CENTER);
 		}
 
 		// keyboard accessibility

@@ -33,8 +33,9 @@ import com.rapidminer.repository.RepositoryLocation;
  * Selecting Sheet and possibly selection of sheet - Defining Annotations Step - Defining Meta Data
  *
  * @author Tobias Malbrecht, Sebastian Loh, Sebastian Land, Simon Fischer
+ * @deprecated Replaced by the {@link com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder} since 9.0.0
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class ExcelImportWizard extends AbstractDataImportWizard {
 
 	private static final long serialVersionUID = 1L;

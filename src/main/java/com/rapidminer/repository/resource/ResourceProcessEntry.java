@@ -29,7 +29,7 @@ import java.io.InputStreamReader;
 
 /**
  * 
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  * 
  */
 public class ResourceProcessEntry extends ResourceDataEntry implements ProcessEntry {
@@ -40,21 +40,11 @@ public class ResourceProcessEntry extends ResourceDataEntry implements ProcessEn
 
 	@Override
 	public String retrieveXML() throws RepositoryException {
-		InputStream in = null;
-		try {
-			in = Tools.getResourceInputStream(getResource() + ".rmp");
-		} catch (IOException e1) {
-			throw new RepositoryException("Missing resource: " + getResource() + ".rmp", e1);
-		}
-		try {
-			return Tools.readTextFile(new InputStreamReader(in));
+		try (InputStream in = getResourceStream(".rmp");
+			 InputStreamReader isr = new InputStreamReader(in)) {
+			return Tools.readTextFile(isr);
 		} catch (IOException e) {
 			throw new RepositoryException("IO error reading " + getResource() + ": " + e.getMessage());
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
-			}
 		}
 
 	}
@@ -67,10 +57,5 @@ public class ResourceProcessEntry extends ResourceDataEntry implements ProcessEn
 	@Override
 	public String getDescription() {
 		return null;
-	}
-
-	@Override
-	public String getType() {
-		return ProcessEntry.TYPE_NAME;
 	}
 }

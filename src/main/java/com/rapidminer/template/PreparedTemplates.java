@@ -38,6 +38,11 @@ public final class PreparedTemplates {
 	/**
 	 * special template which fires up the Auto Modeler which is included as a bundled extension
 	 */
+	public static final Template TURBO_PREP_TEMPLATE = new Template.SpecialTemplate("turbo_prep");
+
+	/**
+	 * special template which fires up the Auto Modeler which is included as a bundled extension
+	 */
 	public static final Template AUTO_MODEL_TEMPLATE = new Template.SpecialTemplate("automodel");
 
 	/**

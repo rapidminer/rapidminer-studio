@@ -82,9 +82,9 @@
 
 	<step name="Inside the loop.">
 		<info>
-			Did you notice the small icon <icon>16/elements_tree.png</icon> in the bottom right corner of the operator
-			<op>Loop Values</op>? This
-			icon means that this operator can have other operators nested inside of it. 
+			Did you notice the shape  <icon>16/subprocess_icon.png</icon> of the 
+			<op>Loop Values</op> operator? This
+			shape means that this operator can have other operators nested inside of it. 
 			Double-click the <op>Loop Values</op> operator to look inside of it.
 		</info>
 

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui.renderer.math;
 
+import java.awt.Component;
+
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.renderer.AbstractDataTablePlotterRenderer;
 import com.rapidminer.operator.IOContainer;
@@ -29,6 +31,11 @@ import com.rapidminer.operator.visualization.dependencies.NumericalMatrix;
  * @author Sebastian Land
  */
 public class NumericalMatrixPlotRenderer extends AbstractDataTablePlotterRenderer {
+
+	@Override
+	public Component getVisualizationComponent(Object renderable, IOContainer ioContainer) {
+		return addWarningPanel(super.getVisualizationComponent(renderable, ioContainer), ((NumericalMatrix) renderable).isUseless(), "numerical_matrix.not_enough_attributes.label");
+	}
 
 	@Override
 	public DataTable getDataTable(Object renderable, IOContainer ioContainer) {

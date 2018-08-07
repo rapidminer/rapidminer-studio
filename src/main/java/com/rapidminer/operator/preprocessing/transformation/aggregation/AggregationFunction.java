@@ -19,8 +19,8 @@
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
 import java.lang.reflect.Constructor;
+import java.util.AbstractMap;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -49,11 +49,11 @@ import com.rapidminer.tools.Ontology;
  *
  * The list of the names of all available functions can be queried from the static method
  * {@link #getAvailableAggregationFunctionNames()}. With a name one can call the static method
- * {@link #createAggregationFunction(String, Attribute)} to create a certain aggregator for the
+ * {@link #createAggregationFunction} to create a certain aggregator for the
  * actual counting.
  *
  * Additional functions can be registered by calling
- * {@link #registerNewAggregationFunction(String, Class)} from extensions, preferable during their
+ * {@link #registerNewAggregationFunction} from extensions, preferable during their
  * initialization. Please notice that there will be no warning prior process execution if the
  * extension is missing but the usage of it's function is still configured.
  *
@@ -115,24 +115,15 @@ public abstract class AggregationFunction {
 	}
 
 	/**
-	 * This map contains legacy aggregation function names and the class, which contains the legacy
-	 * functionality. Each of the map elements has to be represented in the
-	 * LEGACY_AGGREATION_FUNCTIONS_VERSIONS map, too.
+	 * This map contains legacy aggregation function names, version and class, which contains the legacy
+	 * functionality.
 	 */
-	private static final Map<String, Class<? extends AggregationFunction>> LEGACY_AGGREATION_FUNCTIONS = new TreeMap<>();
+	private static final Map<String, Map.Entry<OperatorVersion, Class<? extends AggregationFunction>>> LEGACY_AGGREGATION_FUNCTIONS = new HashMap<>();
 	static {
 		// median has been replaced after version 7.4.1
-		LEGACY_AGGREATION_FUNCTIONS.put(FUNCTION_NAME_MEDIAN, MedianAggregationFunctionLegacy.class);
-	}
-
-	/**
-	 * This map contains legacy aggregation function names and the {@link OperatorVersion} until the
-	 * legacy function should be used. Each of the map elements has to be represented in the
-	 * LEGACY_AGGREATION_FUNCTIONS map, too.
-	 */
-	private static final Map<String, OperatorVersion> LEGACY_AGGREATION_FUNCTIONS_VERSIONS = new TreeMap<>();
-	static {
-		LEGACY_AGGREATION_FUNCTIONS_VERSIONS.put(FUNCTION_NAME_MEDIAN, AggregationOperator.VERSION_7_4_0);
+		LEGACY_AGGREGATION_FUNCTIONS.put(FUNCTION_NAME_MEDIAN, new AbstractMap.SimpleEntry<>(AggregationOperator.VERSION_7_4_0, MedianAggregationFunctionLegacy.class));
+		// concatenation has been changed after version 8.2.0
+		LEGACY_AGGREGATION_FUNCTIONS.put(FUNCTION_NAME_CONCATENATION, new AbstractMap.SimpleEntry<>(AggregationOperator.VERSION_8_2_0, ConcatAggregationFunctionLegacy.class));
 	}
 
 	public static final Map<String, AggregationFunctionMetaDataProvider> AGGREGATION_FUNCTIONS_META_DATA_PROVIDER = new HashMap<>();
@@ -291,19 +282,7 @@ public abstract class AggregationFunction {
 	 */
 	public static final AggregationFunction createAggregationFunction(String name, Attribute sourceAttribute,
 			boolean ignoreMissings, boolean countOnlyDistinct) throws OperatorException {
-		Class<? extends AggregationFunction> aggregationFunctionClass = AGGREATION_FUNCTIONS.get(name);
-		if (aggregationFunctionClass == null) {
-			throw new UserError(null, "aggregation.illegal_function_name", name);
-		}
-		try {
-			Constructor<? extends AggregationFunction> constructor = aggregationFunctionClass.getConstructor(Attribute.class,
-					boolean.class, boolean.class);
-			return constructor.newInstance(sourceAttribute, ignoreMissings, countOnlyDistinct);
-		} catch (Exception e) {
-			throw new RuntimeException(
-					"All implementations of AggregationFunction need to have a constructor accepting an Attribute and boolean. Other reasons for this error may be class loader problems.",
-					e);
-		}
+		return createAggregationFunction(name, sourceAttribute, ignoreMissings, countOnlyDistinct, null);
 	}
 
 	/**
@@ -320,19 +299,18 @@ public abstract class AggregationFunction {
 			boolean ignoreMissings, boolean countOnlyDistinct, OperatorVersion version) throws OperatorException {
 		Class<? extends AggregationFunction> aggregationFunctionClass = null;
 		// check if the legacy version should be used
-		Iterator<String> iterator = LEGACY_AGGREATION_FUNCTIONS.keySet().iterator();
-		while (iterator.hasNext()) {
-			String current = iterator.next();
-			if (name.equals(current) && version.isAtMost(LEGACY_AGGREATION_FUNCTIONS_VERSIONS.get(current))) {
-				aggregationFunctionClass = LEGACY_AGGREATION_FUNCTIONS.get(current);
-				break;
-			}
+		if (version != null && LEGACY_AGGREGATION_FUNCTIONS.containsKey(name) && version.isAtMost(LEGACY_AGGREGATION_FUNCTIONS.get(name).getKey())) {
+			aggregationFunctionClass = LEGACY_AGGREGATION_FUNCTIONS.get(name).getValue();
 		}
 		if (aggregationFunctionClass == null) {
 			aggregationFunctionClass = AGGREATION_FUNCTIONS.get(name);
 		}
 		if (aggregationFunctionClass == null) {
 			throw new UserError(null, "aggregation.illegal_function_name", name);
+		}
+		// ignore missings on old versions using mode
+		if (version != null && FUNCTION_NAME_MODE.equals(name) && version.isAtMost(AggregationOperator.VERSION_8_2_0)) {
+			ignoreMissings = true;
 		}
 		try {
 			Constructor<? extends AggregationFunction> constructor = aggregationFunctionClass.getConstructor(Attribute.class,

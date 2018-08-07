@@ -555,8 +555,20 @@ public final class ProcessDrawUtils {
 		if (operator.isEnabled()) {
 			return icon;
 		} else {
-			return (ImageIcon) UIManager.getLookAndFeel().getDisabledIcon(DUMMY_LABEL, icon);
+			return getDisabledIcon(icon);
 		}
+	}
+
+	/**
+	 * Returns the given icon in a disabled state.
+	 *
+	 * @param icon
+	 * 		the icon
+	 * @return the icon in a disabled state
+	 * @since 9.0.0
+	 */
+	public static ImageIcon getDisabledIcon(final ImageIcon icon) {
+		return (ImageIcon) UIManager.getLookAndFeel().getDisabledIcon(DUMMY_LABEL, icon);
 	}
 
 	/**

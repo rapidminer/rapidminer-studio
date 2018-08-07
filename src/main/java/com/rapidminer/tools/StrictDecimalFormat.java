@@ -29,6 +29,7 @@ import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeChar;
+import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 
@@ -48,6 +49,9 @@ public class StrictDecimalFormat extends DecimalFormat {
 
 	public static final String PARAMETER_GROUPING_CHARACTER = "grouping_character";
 
+	/** @since 8.2.1 */
+	public static final String PARAMETER_INFINITY_STRING = "infinity_representation";
+
 	{
 		setParseIntegerOnly(false);
 		setGroupingSize(3);
@@ -56,6 +60,9 @@ public class StrictDecimalFormat extends DecimalFormat {
 	public static final char DEFAULT_DECIMAL_CHARACTER = '.';
 
 	public static final char DEFAULT_GROUPING_CHARACTER = ',';
+
+	/** @since 8.2.1 */
+	public static final String DEFAULT_INFINITY_STRING = "";
 
 	public StrictDecimalFormat() {
 		super();
@@ -116,23 +123,40 @@ public class StrictDecimalFormat extends DecimalFormat {
 		setDecimalFormatSymbols(symbols);
 	}
 
+	/**
+	 * Sets the infinity symbol string of this number format.
+	 *
+	 * @param infinityString
+	 * 		the infinity string representation
+	 * @since 8.2.1
+	 */
+	public void setInfinityString(String infinityString) {
+		DecimalFormatSymbols symbols = getDecimalFormatSymbols();
+		symbols.setInfinity(infinityString);
+		setDecimalFormatSymbols(symbols);
+	}
+
 	public static StrictDecimalFormat getInstance(ParameterHandler handler) throws UndefinedParameterError {
 		return getInstance(handler, false);
 	}
 
 	public static StrictDecimalFormat getInstance(ParameterHandler handler, boolean optional) throws UndefinedParameterError {
-		if (optional) {
-			if (!handler.getParameterAsBoolean(PARAMETER_PARSE_NUMBERS)) {
-				return null;
-			}
+		if (optional && !handler.getParameterAsBoolean(PARAMETER_PARSE_NUMBERS)) {
+			return null;
 		}
 		char decimalCharacter = handler.getParameterAsChar(PARAMETER_DECIMAL_CHARACTER);
 		char groupingCharacter = handler.getParameterAsChar(PARAMETER_GROUPING_CHARACTER);
+		StrictDecimalFormat instance;
 		if (handler.getParameterAsBoolean(PARAMETER_GROUPED_DIGITS)) {
-			return new StrictDecimalFormat(decimalCharacter, groupingCharacter);
+			instance = new StrictDecimalFormat(decimalCharacter, groupingCharacter);
 		} else {
-			return new StrictDecimalFormat(decimalCharacter);
+			instance = new StrictDecimalFormat(decimalCharacter);
 		}
+		String infinityString = handler.getParameterAsString(PARAMETER_INFINITY_STRING);
+		if (infinityString != null && !infinityString.trim().isEmpty()) {
+			instance.setInfinityString(infinityString.trim());
+		}
+		return instance;
 	}
 
 	public static List<ParameterType> getParameterTypes(ParameterHandler handler) {
@@ -142,27 +166,25 @@ public class StrictDecimalFormat extends DecimalFormat {
 	public static List<ParameterType> getParameterTypes(ParameterHandler handler, boolean optional) {
 		List<ParameterType> types = new LinkedList<>();
 		ParameterType type;
-		if (optional) {
-			type = new ParameterTypeBoolean(PARAMETER_PARSE_NUMBERS, "Specifies whether numbers are parsed.", true, false);
-			types.add(type);
-		}
 		type = new ParameterTypeChar(PARAMETER_DECIMAL_CHARACTER, "The decimal character.", DEFAULT_DECIMAL_CHARACTER, false);
-		if (optional) {
-			type.registerDependencyCondition(new BooleanParameterCondition(handler, PARAMETER_PARSE_NUMBERS, false, true));
-		}
 		types.add(type);
 		type = new ParameterTypeBoolean(PARAMETER_GROUPED_DIGITS, "Parse grouped digits.", false, false);
-		if (optional) {
-			type.registerDependencyCondition(new BooleanParameterCondition(handler, PARAMETER_PARSE_NUMBERS, false, true));
-		}
 		types.add(type);
 		type = new ParameterTypeChar(PARAMETER_GROUPING_CHARACTER, "The grouping character.", DEFAULT_GROUPING_CHARACTER,
 				false);
-		if (optional) {
-			type.registerDependencyCondition(new BooleanParameterCondition(handler, PARAMETER_PARSE_NUMBERS, false, true));
-		}
 		type.registerDependencyCondition(new BooleanParameterCondition(handler, PARAMETER_GROUPED_DIGITS, false, true));
 		types.add(type);
+		type = new ParameterTypeString(StrictDecimalFormat.PARAMETER_INFINITY_STRING,
+				"The infinity representation that should be recognized during parsing.", true, true);
+		type.setDefaultValue(DEFAULT_INFINITY_STRING);
+		types.add(type);
+		if (optional) {
+			type = new ParameterTypeBoolean(PARAMETER_PARSE_NUMBERS, "Specifies whether numbers are parsed.", true, false);
+			BooleanParameterCondition parseNumbersCondition = new BooleanParameterCondition(
+					handler, PARAMETER_PARSE_NUMBERS, false, true);
+			types.forEach(t -> t.registerDependencyCondition(parseNumbersCondition));
+			types.add(0, type);
+		}
 		return types;
 	}
 }

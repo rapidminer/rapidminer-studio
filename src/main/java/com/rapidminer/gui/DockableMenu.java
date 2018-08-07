@@ -29,9 +29,8 @@ import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 
+import com.rapidminer.gui.flow.ProcessPanel;
 import com.rapidminer.gui.processeditor.ProcessLogTab;
 import com.rapidminer.gui.processeditor.results.ResultDisplay;
 import com.rapidminer.gui.processeditor.results.ResultTab;
@@ -157,9 +156,10 @@ public class DockableMenu extends ResourceMenu {
 				continue;
 			}
 			DockKey dockKey = state.getDockable().getDockKey();
+			String keyName = dockKey.getKey();
 			boolean cont = false;
 			for (String prefix : HIDE_IN_DOCKABLE_MENU_PREFIX_REGISTRY) {
-				if (dockKey.getKey().startsWith(prefix)) {
+				if (keyName.startsWith(prefix)) {
 					cont = true;
 					break;
 				}
@@ -182,11 +182,11 @@ public class DockableMenu extends ResourceMenu {
 			item.addActionListener(e -> toggleState(state));
 
 			// special handling for results overview dockable in Results perspective
-			// this dockable is not allowed to be closed so we disable this item while in said
-			// perspective
-			if (RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName()
-					.equals(PerspectiveModel.RESULT)
-					&& ResultDisplay.RESULT_DOCK_KEY.equals(state.getDockable().getDockKey().getKey())) {
+			// and process view dockable in Design perspective
+			// these dockables are not allowed to be closed so we disable this item while in respective perspective
+			String perspectiveName = RapidMinerGUI.getMainFrame().getPerspectiveController().getModel().getSelectedPerspective().getName();
+			if ((PerspectiveModel.RESULT.equals(perspectiveName) && ResultDisplay.RESULT_DOCK_KEY.equals(keyName))
+					|| (PerspectiveModel.DESIGN.equals(perspectiveName) && ProcessPanel.PROCESS_PANEL_DOCK_KEY.equals(keyName))) {
 				item.setEnabled(false);
 			}
 			add(item);

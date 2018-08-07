@@ -72,6 +72,7 @@ import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tutorial.Tutorial;
 
 
@@ -198,18 +199,26 @@ public final class ProcessDrawer {
 	private static final double MAX_HEADER_RATIO = 1.35;
 
 	private static final ImageIcon IMAGE_WARNING = SwingTools.createIcon("16/sign_warning2.png");
+	private static final ImageIcon IMAGE_WARNING_ZOOMED = SwingTools.createIcon("32/sign_warning2.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_WITHIN = SwingTools.createIcon("16/breakpoint.png");
+	private static final ImageIcon IMAGE_BREAKPOINT_WITHIN_ZOOMED = SwingTools.createIcon("32/breakpoint.png");
 	private static final ImageIcon IMAGE_BREAKPOINTS = SwingTools.createIcon("16/breakpoints.png");
+	private static final ImageIcon IMAGE_BREAKPOINTS_ZOOMED = SwingTools.createIcon("32/breakpoints.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_BEFORE = SwingTools.createIcon("16/breakpoint_left.png");
+	private static final ImageIcon IMAGE_BREAKPOINT_BEFORE_ZOOMED = SwingTools.createIcon("32/breakpoint_left.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_AFTER = SwingTools.createIcon("16/breakpoint_right.png");
+	private static final ImageIcon IMAGE_BREAKPOINT_AFTER_ZOOMED = SwingTools.createIcon("32/breakpoint_right.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_WITHIN_LARGE = SwingTools.createIcon("24/breakpoint.png");
 	private static final ImageIcon IMAGE_BREAKPOINTS_LARGE = SwingTools.createIcon("24/breakpoints.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_BEFORE_LARGE = SwingTools.createIcon("24/breakpoint_left.png");
 	private static final ImageIcon IMAGE_BREAKPOINT_AFTER_LARGE = SwingTools.createIcon("24/breakpoint_right.png");
-	private static final ImageIcon IMAGE_BRANCH = SwingTools.createIcon("16/elements_tree.png");
+	private static final ImageIcon IMAGE_BLACKLISTED = SwingTools.createIcon("16/lock.png");
+	private static final ImageIcon IMAGE_BLACKLISTED_ZOOMED = SwingTools.createIcon("32/lock.png");
 
 	private static final ImageIcon OPERATOR_RUNNING = SwingTools.createIcon("16/media_play2.png");
+	private static final ImageIcon OPERATOR_RUNNING_ZOOMED = SwingTools.createIcon("32/media_play2.png");
 	private static final ImageIcon OPERATOR_READY = SwingTools.createIcon("16/check.png");
+	private static final ImageIcon OPERATOR_READY_ZOOMED = SwingTools.createIcon("32/check.png");
 
 	/** the size of the operator icon */
 	private static final int OPERATOR_ICON_SIZE = 24;
@@ -811,63 +820,80 @@ public final class ProcessDrawer {
 			animation.draw(g2);
 			g2.setTransform(transformBefore);
 		} else {
-			// Icon
-			ImageIcon icon = operator.getOperatorDescription().getIcon();
+			// Icon double size of required icon to make zooming in look smooth
+			ImageIcon icon = operator.getOperatorDescription().getLargeIcon();
 			if (icon != null) {
 				if (!operator.isEnabled()) {
 					icon = ProcessDrawUtils.getIcon(operator, icon);
 				}
-				icon.paintIcon(null, g2, (int) (frame.getX() + frame.getWidth() / 2 - icon.getIconWidth() / 2),
-						(int) yPosition);
+				int iconSize = 24;
+				RenderingHints originalRenderingHints = g2.getRenderingHints();
+				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+				g2.drawImage(icon.getImage(), (int) (frame.getX() + frame.getWidth() / 2 - iconSize / 2), (int) yPosition, iconSize, iconSize, null);
+				g2.setRenderingHints(originalRenderingHints);
 			}
 		}
 
 		// Small icons
 		int iconX = (int) frame.getX() + 3;
+		int iconSize = 16;
 		// Dirtyness
 		ImageIcon opIcon;
 		if (operator.isRunning()) {
-			opIcon = OPERATOR_RUNNING;
+			opIcon = model.getZoomFactor() <= 1d ? OPERATOR_RUNNING : OPERATOR_RUNNING_ZOOMED;
 		} else if (!operator.isDirty()) {
-			opIcon = OPERATOR_READY;
+			opIcon = model.getZoomFactor() <= 1d ? OPERATOR_READY : OPERATOR_READY_ZOOMED;
 		} else {
 			opIcon = null;
 		}
 
 		if (opIcon != null) {
-			ProcessDrawUtils.getIcon(operator, opIcon).paintIcon(null, g2, iconX,
-					(int) (frame.getY() + frame.getHeight() - opIcon.getIconHeight() - 1));
+			ImageIcon icon = ProcessDrawUtils.getIcon(operator, opIcon);
+			RenderingHints originalRenderingHints = g2.getRenderingHints();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g2.drawImage(icon.getImage(), iconX, (int) (frame.getY() + frame.getHeight() - iconSize - 1), iconSize, iconSize, null);
+			g2.setRenderingHints(originalRenderingHints);
 		}
-		iconX += 16;
+		iconX += iconSize + 1;
 
 		// Errors
-		if (!operator.getErrorList().isEmpty()) {
-			int iconY = (int) (frame.getY() + frame.getHeight() - IMAGE_WARNING.getIconHeight() - 2);
-			ProcessDrawUtils.getIcon(operator, IMAGE_WARNING).paintIcon(null, g2, iconX, iconY);
+		boolean isBlacklisted = OperatorService.isOperatorBlacklisted(operator.getOperatorDescription().getKey());
+		ImageIcon errorIcon;
+		if (model.getZoomFactor() <= 1d) {
+			errorIcon = isBlacklisted ? IMAGE_BLACKLISTED : IMAGE_WARNING;
+		} else {
+			errorIcon = isBlacklisted ? IMAGE_BLACKLISTED_ZOOMED : IMAGE_WARNING_ZOOMED;
 		}
-		iconX += IMAGE_WARNING.getIconWidth() + 1;
+		if (!operator.getErrorList().isEmpty() || isBlacklisted) {
+			int iconY = (int) (frame.getY() + frame.getHeight() - iconSize - 2);
+			ImageIcon icon = ProcessDrawUtils.getIcon(operator, errorIcon);
+			RenderingHints originalRenderingHints = g2.getRenderingHints();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g2.drawImage(icon.getImage(), iconX, iconY, iconSize, iconSize, null);
+			g2.setRenderingHints(originalRenderingHints);
+		}
+		iconX += iconSize + 1;
 
 		// Breakpoint
 		if (operator.hasBreakpoint()) {
 			ImageIcon breakpointIcon;
 			if (operator.getNumberOfBreakpoints() == 1) {
 				if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_BEFORE)) {
-					breakpointIcon = IMAGE_BREAKPOINT_BEFORE;
+					breakpointIcon = model.getZoomFactor() <= 1d ? IMAGE_BREAKPOINT_BEFORE : IMAGE_BREAKPOINT_BEFORE_ZOOMED;
 				} else if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_AFTER)) {
-					breakpointIcon = IMAGE_BREAKPOINT_AFTER;
+					breakpointIcon = model.getZoomFactor() <= 1d ? IMAGE_BREAKPOINT_AFTER : IMAGE_BREAKPOINT_AFTER_ZOOMED;
 				} else {
-					breakpointIcon = IMAGE_BREAKPOINT_WITHIN;
+					breakpointIcon = model.getZoomFactor() <= 1d ? IMAGE_BREAKPOINT_WITHIN : IMAGE_BREAKPOINT_WITHIN_ZOOMED;
 				}
 			} else {
-				breakpointIcon = IMAGE_BREAKPOINTS;
+				breakpointIcon = model.getZoomFactor() <= 1d ? IMAGE_BREAKPOINTS : IMAGE_BREAKPOINTS_ZOOMED;
 			}
-			ProcessDrawUtils.getIcon(operator, breakpointIcon).paintIcon(null, g2, iconX,
-					(int) (frame.getY() + frame.getHeight() - breakpointIcon.getIconHeight() - 1));
+			ImageIcon icon = ProcessDrawUtils.getIcon(operator, breakpointIcon);
+			RenderingHints originalRenderingHints = g2.getRenderingHints();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g2.drawImage(icon.getImage(), iconX, (int) (frame.getY() + frame.getHeight() - iconSize - 1), iconSize, iconSize, null);
+			g2.setRenderingHints(originalRenderingHints);
 		}
-		iconX += IMAGE_BREAKPOINTS.getIconWidth() + 1;
-
-		// placeholder for workflow annotations icon
-		iconX += IMAGE_BREAKPOINTS.getIconWidth() + 1;
 	}
 
 	/**

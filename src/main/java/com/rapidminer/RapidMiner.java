@@ -26,6 +26,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.AccessControlException;
+import java.security.AccessController;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -62,6 +64,8 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypePassword;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.security.PluginSandboxPolicy;
+import com.rapidminer.settings.Telemetry;
 import com.rapidminer.test.asserter.AsserterFactoryRapidMiner;
 import com.rapidminer.test_utils.RapidAssert;
 import com.rapidminer.tools.FileSystemService;
@@ -129,6 +133,10 @@ public class RapidMiner {
 		EMBEDDED_AS_APPLET(false, false, false, false),
 		/** RM is running within Java Web Start. */
 		WEBSTART(false, true, true, true),
+		/** RM is running inside the Job Container **/
+		JOB_CONTAINER(true, false, false, false),
+		/** RM is running inside the Scoring Agent **/
+		SCORING_AGENT(true, false, false, false),
 		/** We are executing unit tests. */
 		TEST(true, false, false, true);
 
@@ -395,9 +403,11 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_PROCESSES = "rapidminer.general.number_of_processes";
 
 	/**
-	 * The name of the property indicating whether beta features should be activated.
+	 * The name of the property indicating whether beta features should be activated. Increase the version number if
+	 * the beta features should be set to disabled again for everyone. The settings.xml and Settings.properties
+	 * have to be adjusted as well.
 	 */
-	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features";
+	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features.v2";
 	
 	/**
 	 * The name of the property indicating whether or not additional permissions should be enabled
@@ -443,6 +453,16 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_SOCKS_VERSION = "rapidminer.proxy.socksProxyVersion";
 	public final static String[] RAPIDMINER_SOCKS_VERSIONS = { "Version 4", "Version 5" };
 
+	/**
+	 * Set this parameter to {@code true} to allow https to http redirects
+	 */
+	public static final String RAPIDMINER_FOLLOW_HTTPS_TO_HTTP = "rapidminer.system.network.follow_https_to_http";
+
+	/**
+	 * Set this parameter to {@code true} to allow http to https redirects
+	 */
+	public static final String RAPIDMINER_FOLLOW_HTTP_TO_HTTPS = "rapidminer.system.network.follow_http_to_https";
+
 	public static final String PROCESS_FILE_EXTENSION = "rmp";
 
 	/**
@@ -460,12 +480,16 @@ public class RapidMiner {
 		Set<String> protectedParameters = new HashSet<>();
 
 		// add Protected Preferences to the List
-		protectedParameters.add(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS);
+		for (Telemetry telemetry : Telemetry.values()) {
+			protectedParameters.add(telemetry.getKey());
+		}
 
-		PROTECTED_PARAMETERS = Collections.unmodifiableSet(protectedParameters);
+		protectedParameters.add(Plugin.PROPERTY_PLUGINS_WHITELIST);
+		protectedParameters.add(OperatorService.OPERATOR_BLACKLIST_KEY);
+
+		PROTECTED_PARAMETERS = Collections.synchronizedSet(protectedParameters);
 
 		System.setProperty(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getLongVersion());
-		ParameterService.setParameterValue(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getLongVersion());
 
 		parameterTypesDescription = new HashSet<>();
 
@@ -473,7 +497,7 @@ public class RapidMiner {
 		String[] default_language = new String[1];
 		default_language[0] = "eng";
 
-		// scan language definitons. skip comments
+		// scan language definitions. skip comments
 		Vector<String> languages = new Vector<>();
 		Scanner scanLanguageDefs = new Scanner(
 				RapidMiner.class.getResourceAsStream("/com/rapidminer/resources/i18n/language_definitions.txt"));
@@ -555,8 +579,12 @@ public class RapidMiner {
 
 		registerParameter(new ParameterTypeInt(WebServiceTools.WEB_SERVICE_TIMEOUT, "", 1, Integer.MAX_VALUE, 20000),
 				"system");
+
+		registerParameter(new ParameterTypeBoolean(RAPIDMINER_FOLLOW_HTTP_TO_HTTPS, "", true), "system");
+		registerParameter(new ParameterTypeBoolean(RAPIDMINER_FOLLOW_HTTPS_TO_HTTP, "", true), "system");
+
 		registerParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, "", false));
-		registerParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS, "", false));
+		registerProtectedParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS, "", false));
 
 		// initialize the state of IOObjects
 		ioObjectCache = new IOObjectMap();
@@ -681,6 +709,7 @@ public class RapidMiner {
 		// check if this version is started for the first time
 		performInitialSettings();
 		ParameterService.init();
+		ParameterService.setParameterValue(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getLongVersion());
 
 		// initializing networking tools
 		GlobalAuthenticator.init();
@@ -748,8 +777,6 @@ public class RapidMiner {
 
 		RapidMiner.splashMessage("init_configurables");
 		ConfigurationManager.getInstance().initialize();
-
-
 
 		// initialize xml serialization
 		RapidMiner.splashMessage("xml_serialization");
@@ -1022,6 +1049,10 @@ public class RapidMiner {
 	 * The descriptions will be set by {@link #initSettingsDescriptions()} later.
 	 */
 	public static void registerParameter(ParameterType parameterType) {
+		// if it is protected, don't allow an overwrite
+		if (isParameterProtected(parameterType.getKey())) {
+			return;
+		}
 		ParameterService.registerParameter(parameterType);
 		RapidMiner.parameterTypesDescription.add(parameterType);
 	}
@@ -1033,8 +1064,59 @@ public class RapidMiner {
 	 * The descriptions will be set by {@link #initSettingsDescriptions()} later.
 	 */
 	public static void registerParameter(ParameterType parameterType, String group) {
+		// if it is protected, don't allow an overwrite
+		if (isParameterProtected(parameterType.getKey())) {
+			return;
+		}
 		ParameterService.registerParameter(parameterType, group);
 		RapidMiner.parameterTypesDescription.add(parameterType);
+	}
+
+	/**
+	 * Registers a {@link ParameterType} as a protected setting. Only signed extensions can do so
+	 * and protected settings can not be overwritten. Protected settings can only be set by signed extensions.
+	 *
+	 * @param type
+	 * 		the type to be registered as protected
+	 * @see #registerProtectedParameter(ParameterType, String)
+	 * @since 9.0
+	 */
+	public static void registerProtectedParameter(ParameterType type) {
+		registerProtectedParameter(type, null);
+	}
+
+	/**
+	 * Registers a {@link ParameterType} as a protected setting. Only signed extensions can do so
+	 * and protected settings can not be overwritten. Protected settings can only be set by signed extensions.
+	 *
+	 * @param type
+	 * 		the type to be registered as protected
+	 * @param group
+	 * 		the group to be assigned to the parameter, can be {@code null}
+	 * @see #isParameterProtected(String)
+	 * @see #registerParameter(ParameterType)
+	 * @see #registerParameter(ParameterType, String)
+	 * @since 9.0
+	 */
+	public static void registerProtectedParameter(ParameterType type, String group) {
+		// if it is already protected, don't allow an overwrite
+		if (isParameterProtected(type.getKey())) {
+			return;
+		}
+		try {
+			// only signed extensions are allowed to register protected settings
+			if (System.getSecurityManager() != null) {
+				AccessController.checkPermission(new RuntimePermission(PluginSandboxPolicy.RAPIDMINER_INTERNAL_PERMISSION));
+			}
+		} catch (AccessControlException e) {
+			return;
+		}
+		if (group == null) {
+			registerParameter(type);
+		} else {
+			registerParameter(type, group);
+		}
+		PROTECTED_PARAMETERS.add(type.getKey());
 	}
 
 	public static ExecutionMode getExecutionMode() {

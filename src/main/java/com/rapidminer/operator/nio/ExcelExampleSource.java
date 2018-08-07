@@ -1,28 +1,31 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.nio;
 
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import com.rapidminer.core.io.data.DataSetException;
+import com.rapidminer.core.io.data.source.DataSource;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
@@ -42,6 +45,7 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.EqualStringCondition;
 import com.rapidminer.parameter.conditions.NonEqualStringCondition;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.io.Encoding;
 
 
@@ -61,7 +65,7 @@ import com.rapidminer.tools.io.Encoding;
  * by cells containing only &quot;?&quot;.
  * </p>
  *
- * @author Ingo Mierswa, Tobias Malbrecht, Sebastian Loh, Sebastian Land, Marco Boeck
+ * @author Ingo Mierswa, Tobias Malbrecht, Sebastian Loh, Sebastian Land, Marco Boeck, Marcel Seifert
  */
 public class ExcelExampleSource extends AbstractDataResultSetReader {
 
@@ -109,19 +113,27 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 	private static final String[] SHEET_SELECTION_MODES = {PARAMETER_SHEET_NUMBER.replace("_", " "), PARAMETER_SHEET_NAME.replace("_", " ")};
 
 	/**
-	 * The parameter name for &quot;Indicates which column should be used for the label attribute
-	 * (0: no label)&quot;
+	 * @deprecated not used anymore
 	 */
+	@Deprecated
 	public static final String PARAMETER_LABEL_COLUMN = "label_column";
 
 	/**
-	 * The parameter name for &quot;Indicates which column should be used for the Id attribute (0:
-	 * no id)&quot;
+	 * @deprecated since 9.0.0, not used anymore
 	 */
+	@Deprecated
 	public static final String PARAMETER_ID_COLUMN = "id_column";
 
+	/**
+	 * @deprecated since 9.0.0, not used anymore
+	 */
+	@Deprecated
 	public static final String PARAMETER_CREATE_LABEL = "create_label";
 
+	/**
+	 * @deprecated since 9.0.0, not used anymore
+	 */
+	@Deprecated
 	public static final String PARAMETER_CREATE_ID = "create_id";
 
 	public static final String PARAMETER_IMPORTED_CELL_RANGE = "imported_cell_range";
@@ -147,8 +159,8 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 			exampleSet = super.transformDataResultSet(dataResultSet);
 
 			// Remove attributes if they are empty and no meta data is defined
-			for (String attrToRemove : xlsxResultSet.getEmptyColumnNames(DataResultSetTranslationConfiguration
-					.readColumnMetaData(this))) {
+			for (String attrToRemove : xlsxResultSet
+					.getEmptyColumnNames(DataResultSetTranslationConfiguration.readColumnMetaData(this))) {
 				Attribute toRemove = exampleSet.getAttributes().get(attrToRemove);
 				if (toRemove != null) {
 					exampleSet.getAttributes().remove(toRemove);
@@ -167,7 +179,7 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 	}
 
 	@Override
-	protected NumberFormat getNumberFormat() throws OperatorException {
+	protected NumberFormat getNumberFormat() {
 		return null;
 	}
 
@@ -227,6 +239,52 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 		changes[changes.length - 2] = CHANGE_5_0_11_NAME_SCHEMA;
 		changes[changes.length - 1] = CHANGE_6_2_0_OLD_XLSX_IMPORT;
 		return changes;
+	}
+
+	@Override
+	public void configure(DataSource dataSource) throws DataSetException {
+		// set sheet and cell range
+		Map<String, String> configParameters = dataSource.getConfiguration().getParameters();
+
+		setParameter(PARAMETER_EXCEL_FILE, configParameters.get(ExcelResultSetConfiguration.EXCEL_FILE_LOCATION));
+
+
+		String sheetSelectionMode = configParameters.get(ExcelResultSetConfiguration.EXCEL_SHEET_SELECTION_MODE);
+		String sheetName = configParameters.get(ExcelResultSetConfiguration.EXCEL_SHEET_NAME);
+		int sheet = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_SHEET));
+		int columnOffset = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_COLUMN_OFFSET));
+		int columnLast = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_COLUMN_LAST));
+		int rowOffset = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_ROW_OFFSET));
+		int rowLast = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_ROW_LAST));
+		int headerRowIndex = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_HEADER_ROW_INDEX));
+
+		if (rowOffset < 0) {
+			rowOffset = 0;
+		}
+
+		String range = Tools.getExcelColumnName(columnOffset) + (rowOffset + 1);
+
+		// only add end range to cell range parameter if user has specified it explicitly
+		if (Integer.MAX_VALUE != columnLast && Integer.MAX_VALUE != rowOffset) {
+			range += ":" + Tools.getExcelColumnName(columnLast) + (rowLast + 1);
+		}
+
+		setParameter(PARAMETER_IMPORTED_CELL_RANGE, range);
+
+		if (ExcelResultSetConfiguration.SheetSelectionMode.valueOf(sheetSelectionMode) == ExcelResultSetConfiguration.SheetSelectionMode.BY_NAME) {
+			setParameter(PARAMETER_SHEET_SELECTION, SHEET_SELECTION_MODES[SHEET_SELECT_BY_NAME]);
+			setParameter(PARAMETER_SHEET_NAME, sheetName);
+		} else {
+			setParameter(PARAMETER_SHEET_SELECTION, SHEET_SELECTION_MODES[SHEET_SELECT_BY_INDEX]);
+			setParameter(PARAMETER_SHEET_NUMBER, String.valueOf(sheet + 1));
+		}
+
+		// should be set to true when header row belongs is the first row of the selected content
+		String firstRowAsNames = Boolean.toString(headerRowIndex == rowOffset);
+		setParameter(PARAMETER_FIRST_ROW_AS_NAMES, firstRowAsNames);
+
+		// set meta data
+		ImportWizardUtils.setMetaData(dataSource, this);
 	}
 
 }

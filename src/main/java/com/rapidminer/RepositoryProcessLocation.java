@@ -132,6 +132,7 @@ public class RepositoryProcessLocation implements ProcessLocation {
 					boolean isReadOnly = repositoryLocation.getRepository().isReadOnly();
 					if (isReadOnly) {
 						SwingTools.showSimpleErrorMessage("save_to_read_only_repo", "", repositoryLocation.toString());
+						return;
 					} else {
 						UserData<Object> updateRevisionOnSave = process.getRootOperator()
 								.getUserData(UPDATE_REVISION_ON_SAVE_KEY);

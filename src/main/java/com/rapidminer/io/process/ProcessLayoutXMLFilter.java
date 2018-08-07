@@ -140,8 +140,7 @@ public class ProcessLayoutXMLFilter implements ProcessXMLFilter {
 
 		@Override
 		public UserData<Object> copyUserData(Object newParent) {
-			Point newPoint = new Point(point);
-			return new PointWrapper(newPoint);
+			return new PointWrapper(point != null ? new Point(point) : null);
 		}
 	}
 

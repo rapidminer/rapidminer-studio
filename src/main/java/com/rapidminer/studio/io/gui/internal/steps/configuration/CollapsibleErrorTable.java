@@ -24,7 +24,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
+import java.util.Objects;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
@@ -32,8 +32,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellRenderer;
 
 import org.jdesktop.swingx.JXCollapsiblePane;
@@ -111,20 +109,14 @@ public class CollapsibleErrorTable extends JPanel {
 				// add tooltip for last column
 				JComponent component = (JComponent) super.prepareRenderer(renderer, row, column);
 				if (column == getColumnCount() - 1) {
-					component.setToolTipText(getValueAt(row, column).toString());
+					component.setToolTipText(Objects.toString(getValueAt(row, column), ""));
 				}
 				return component;
 			}
 
 		};
 		errorScrollPane = new JScrollPane(errorTable);
-		errorWarningTableModel.addTableModelListener(new TableModelListener() {
-
-			@Override
-			public void tableChanged(TableModelEvent e) {
-				update();
-			}
-		});
+		errorWarningTableModel.addTableModelListener(e -> update());
 		setupGUI();
 	}
 

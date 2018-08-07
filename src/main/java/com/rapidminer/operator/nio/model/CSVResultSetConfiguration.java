@@ -41,6 +41,20 @@ import com.rapidminer.tools.io.Encoding;
  */
 public class CSVResultSetConfiguration implements DataResultSetFactory {
 
+	public static final String CSV_FILE_LOCATION = "csvFile";
+	public static final String CSV_USE_QUOTES = "useQuotes";
+	public static final String CSV_HAS_HEADER_ROW = "hasHeaderRow";
+	public static final String CSV_HEADER_ROW = "headerRow";
+	public static final String CSV_DECIMAL_CHARACTER = "decimalCharacter";
+	public static final String CSV_STARTING_ROW = "startingRow";
+	public static final String CSV_SKIP_COMMENTS = "skipComments";
+	public static final String CSV_COLUMN_SEPARATORS = "columnSeparators";
+	public static final String CSV_COMMENT_CHARACTERS = "commentCharacters";
+	public static final String CSV_ESCAPE_CHARACTER = "escapeCharacter";
+	public static final String CSV_QUOTE_CHARACTER = "quoteCharacter";
+	public static final String CSV_TRIM_LINES = "trimLines";
+	public static final String CSV_ENCODING = "encoding";
+	public static final String CSV_SKIP_UTF_8_BOM = "skipUTF8BOM";
 	private String csvFile;
 
 	private boolean skipComments = true;
@@ -71,15 +85,12 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 	 * This constructor reads all settings from the parameters of the given operator.
 	 */
 	public CSVResultSetConfiguration(CSVExampleSource csvExampleSource) throws OperatorException {
-		// if (csvExampleSource.isParameterSet(CSVExampleSource.PARAMETER_CSV_FILE)) {
-		// setCsvFile(csvExampleSource.getParameterAsString(CSVExampleSource.PARAMETER_CSV_FILE));
-		// }
 		if (csvExampleSource.isFileSpecified()) {
 			setCsvFile(csvExampleSource.getSelectedFile().getAbsolutePath());
 		}
 		setSkipComments(csvExampleSource.getParameterAsBoolean(CSVExampleSource.PARAMETER_SKIP_COMMENTS));
 		setUseQuotes(csvExampleSource.getParameterAsBoolean(CSVExampleSource.PARAMETER_USE_QUOTES));
-		// setFirstRowAsAttributeNames(csvExampleSource.getParameterAsBoolean(CSVExampleSource.PARAMETER_USE_FIRST_ROW_AS_ATTRIBUTE_NAMES));
+		setStartingRow(csvExampleSource.getParameterAsInt(CSVExampleSource.PARAMETER_STARTING_ROW));
 		setTrimLines(csvExampleSource.getParameterAsBoolean(CSVExampleSource.PARAMETER_TRIM_LINES));
 		if (csvExampleSource.isParameterSet(CSVExampleSource.PARAMETER_COLUMN_SEPARATORS)) {
 			setColumnSeparators(csvExampleSource.getParameterAsString(CSVExampleSource.PARAMETER_COLUMN_SEPARATORS));
@@ -101,8 +112,6 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 		source.setParameter(CSVExampleSource.PARAMETER_CSV_FILE, getCsvFile());
 		source.setParameter(CSVExampleSource.PARAMETER_SKIP_COMMENTS, String.valueOf(isSkipComments()));
 		source.setParameter(CSVExampleSource.PARAMETER_USE_QUOTES, String.valueOf(isUseQuotes()));
-		// source.setParameter(CSVExampleSource.PARAMETER_USE_FIRST_ROW_AS_ATTRIBUTE_NAMES,
-		// String.valueOf(isFirstRowAsAttributeNames()));
 		source.setParameter(CSVExampleSource.PARAMETER_COLUMN_SEPARATORS, getColumnSeparators());
 		source.setParameter(CSVExampleSource.PARAMETER_TRIM_LINES, String.valueOf(isTrimLines()));
 		source.setParameter(CSVExampleSource.PARAMETER_QUOTES_CHARACTER, String.valueOf(getQuoteCharacter()));
@@ -119,13 +128,10 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 
 	@Override
 	public TableModel makePreviewTableModel(ProgressListener listener) throws OperatorException, ParseException {
-		final DataResultSet resultSet = makeDataResultSet(null);
 		DefaultPreview preview = null;
-		try {
+		try (DataResultSet resultSet = makeDataResultSet(null)) {
 			this.errors = ((CSVResultSet) resultSet).getErrors();
 			preview = new DefaultPreview(resultSet, listener);
-		} finally {
-			resultSet.close();
 		}
 		return preview;
 	}
@@ -268,20 +274,20 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 	 */
 	public Map<String, String> getParameterMap() {
 		Map<String, String> parameterMap = new HashMap<>();
-		parameterMap.put("csvFile", getCsvFile());
-		parameterMap.put("useQuotes", String.valueOf(isUseQuotes()));
-		parameterMap.put("hasHeaderRow", String.valueOf(hasHeaderRow()));
-		parameterMap.put("headerRow", String.valueOf(getHeaderRow()));
-		parameterMap.put("decimalCharacter", String.valueOf(getDecimalCharacter()));
-		parameterMap.put("startingRow", String.valueOf(getStartingRow()));
-		parameterMap.put("skipComments", String.valueOf(isSkipComments()));
-		parameterMap.put("columnSeparators", getColumnSeparators());
-		parameterMap.put("commentCharacters", getCommentCharacters());
-		parameterMap.put("escapeCharacter", String.valueOf(getEscapeCharacter()));
-		parameterMap.put("quoteCharacter", String.valueOf(getQuoteCharacter()));
-		parameterMap.put("trimLines", String.valueOf(isTrimLines()));
-		parameterMap.put("encoding", String.valueOf(getEncoding()));
-		parameterMap.put("skipUTF8BOM", String.valueOf(isSkippingUTF8BOM()));
+		parameterMap.put(CSV_FILE_LOCATION, getCsvFile());
+		parameterMap.put(CSV_USE_QUOTES, String.valueOf(isUseQuotes()));
+		parameterMap.put(CSV_HAS_HEADER_ROW, String.valueOf(hasHeaderRow()));
+		parameterMap.put(CSV_HEADER_ROW, String.valueOf(getHeaderRow()));
+		parameterMap.put(CSV_DECIMAL_CHARACTER, String.valueOf(getDecimalCharacter()));
+		parameterMap.put(CSV_STARTING_ROW, String.valueOf(getStartingRow()));
+		parameterMap.put(CSV_SKIP_COMMENTS, String.valueOf(isSkipComments()));
+		parameterMap.put(CSV_COLUMN_SEPARATORS, getColumnSeparators());
+		parameterMap.put(CSV_COMMENT_CHARACTERS, getCommentCharacters());
+		parameterMap.put(CSV_ESCAPE_CHARACTER, String.valueOf(getEscapeCharacter()));
+		parameterMap.put(CSV_QUOTE_CHARACTER, String.valueOf(getQuoteCharacter()));
+		parameterMap.put(CSV_TRIM_LINES, String.valueOf(isTrimLines()));
+		parameterMap.put(CSV_ENCODING, String.valueOf(getEncoding()));
+		parameterMap.put(CSV_SKIP_UTF_8_BOM, String.valueOf(isSkippingUTF8BOM()));
 		return parameterMap;
 	}
 }

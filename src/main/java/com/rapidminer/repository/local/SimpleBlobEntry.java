@@ -18,10 +18,6 @@
 */
 package com.rapidminer.repository.local;
 
-import com.rapidminer.repository.BlobEntry;
-import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.RepositoryException;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,6 +25,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import com.rapidminer.repository.BlobEntry;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.RepositoryException;
 
 
 /**
@@ -40,7 +40,7 @@ public class SimpleBlobEntry extends SimpleDataEntry implements BlobEntry {
 
 	private static final String BLOB_SUFFIX = ".blob";
 
-	SimpleBlobEntry(String name, SimpleFolder containingFolder, LocalRepository localRepository) throws RepositoryException {
+	public SimpleBlobEntry(String name, SimpleFolder containingFolder, LocalRepository localRepository) throws RepositoryException {
 		super(name, containingFolder, localRepository);
 		// create physical file here, otherwise it will not really exist and for example cause
 		// errors in the Binary Import Wizard
@@ -81,11 +81,6 @@ public class SimpleBlobEntry extends SimpleDataEntry implements BlobEntry {
 	@Override
 	protected void handleMove(Folder newParent, String newName) throws RepositoryException {
 		moveFile(getFile(), ((SimpleFolder) newParent).getFile(), newName, BLOB_SUFFIX);
-	}
-
-	@Override
-	public String getType() {
-		return BlobEntry.TYPE_NAME;
 	}
 
 	@Override

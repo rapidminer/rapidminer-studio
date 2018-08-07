@@ -59,7 +59,7 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 	private WeakReference<MetaData> metaData = null;
 	private Class<? extends IOObject> dataObjectClass = null;
 
-	SimpleIOObjectEntry(String name, SimpleFolder containingFolder, LocalRepository repository) {
+	public SimpleIOObjectEntry(String name, SimpleFolder containingFolder, LocalRepository repository) {
 		super(name, containingFolder, repository);
 	}
 
@@ -160,11 +160,6 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 		if (existed) {
 			getRepository().fireEntryChanged(this);
 		}
-	}
-
-	@Override
-	public String getType() {
-		return IOObjectEntry.TYPE_NAME;
 	}
 
 	@Override

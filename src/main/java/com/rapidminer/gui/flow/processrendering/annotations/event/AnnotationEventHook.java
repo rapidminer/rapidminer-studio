@@ -20,13 +20,13 @@ package com.rapidminer.gui.flow.processrendering.annotations.event;
 
 import java.awt.Cursor;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.gui.flow.processrendering.annotations.AnnotationDrawer;
@@ -51,8 +51,10 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.RMUrlHandler;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -121,6 +123,7 @@ public final class AnnotationEventHook {
 					if (process != null) {
 						WorkflowAnnotations annotations = rendererModel.getProcessAnnotations(process);
 						if (updateHoveredStatus(point, process, annotations)) {
+							updateHyperlinkHoverStatus(point);
 							e.consume();
 						} else {
 							model.setHovered(null, null);
@@ -140,25 +143,7 @@ public final class AnnotationEventHook {
 						return;
 					}
 					if (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isRightMouseButton(e)) {
-						if (model.getHovered() != null) {
-							model.setSelected(model.getHovered());
-							model.startDragOrResize(e, point, false);
-							e.consume();
-
-							// linux/mac only, otherwise the first click will only select
-							if (e.isPopupTrigger()) {
-								visualizer.showPopupMenu(e);
-								return;
-							}
-						} else {
-							if (model.getSelected() != null) {
-								model.setSelected(null);
-								// if context menu on process should open, don't prevent it
-								if (!e.isPopupTrigger()) {
-									e.consume();
-								}
-							}
-						}
+						handleMousePressedForUnselectedAnnotations(e, point);
 					}
 					break;
 				case MOUSE_RELEASED:
@@ -199,6 +184,7 @@ public final class AnnotationEventHook {
 						for (Operator selOp : selectedOperators) {
 							WorkflowAnnotations annotations = rendererModel.getOperatorAnnotations(selOp);
 							if (updateHoveredStatus(point, process, annotations)) {
+								updateHyperlinkHoverStatus(point);
 								e.consume();
 								return;
 							}
@@ -209,6 +195,7 @@ public final class AnnotationEventHook {
 							}
 							WorkflowAnnotations annotations = rendererModel.getOperatorAnnotations(op);
 							if (updateHoveredStatus(point, process, annotations)) {
+								updateHyperlinkHoverStatus(point);
 								e.consume();
 								return;
 							}
@@ -227,24 +214,7 @@ public final class AnnotationEventHook {
 						if (model.getHovered() instanceof ProcessAnnotation) {
 							return;
 						}
-						if (model.getHovered() != null) {
-							model.setSelected(model.getHovered());
-							model.startDragOrResize(e, point, false);
-							e.consume();
-
-							// linux/mac only, otherwise the first click will only select
-							if (e.isPopupTrigger()) {
-								visualizer.showPopupMenu(e);
-								return;
-							}
-						} else {
-							if (model.getSelected() != null) {
-								model.setSelected(null);
-								if (!e.isPopupTrigger()) {
-									e.consume();
-								}
-							}
-						}
+						handleMousePressedForUnselectedAnnotations(e, point);
 					}
 					break;
 				case MOUSE_RELEASED:
@@ -267,7 +237,8 @@ public final class AnnotationEventHook {
 			if (!visualizer.isActive()) {
 				return;
 			}
-			if (model.getSelected() == null) {
+			WorkflowAnnotation selected = model.getSelected();
+			if (selected == null) {
 				return;
 			}
 
@@ -281,8 +252,8 @@ public final class AnnotationEventHook {
 				case MOUSE_EXITED:
 				case MOUSE_MOVED:
 					// only handle events over the selected annotation
-					if (!model.getSelected().getLocation().contains(point)
-							|| !model.getSelected().getProcess().equals(process)) {
+					if (!selected.getLocation().contains(point)
+							|| !selected.getProcess().equals(process)) {
 						return;
 					}
 					// always consume
@@ -292,6 +263,8 @@ public final class AnnotationEventHook {
 						WorkflowAnnotations annotations = rendererModel.getProcessAnnotations(process);
 						if (!updateHoveredStatus(point, process, annotations)) {
 							model.setHovered(null, null);
+						} else {
+							updateHyperlinkHoverStatus(point);
 						}
 					}
 					break;
@@ -313,8 +286,8 @@ public final class AnnotationEventHook {
 					break;
 				case MOUSE_CLICKED:
 					// only handle events over the selected annotation
-					if (!model.getSelected().getLocation().contains(point)
-							|| !model.getSelected().getProcess().equals(process)) {
+					if (!selected.getLocation().contains(point)
+							|| !selected.getProcess().equals(process)) {
 						return;
 					}
 
@@ -326,12 +299,17 @@ public final class AnnotationEventHook {
 					break;
 				case MOUSE_PRESSED:
 					// only handle events over the selected annotation
-					if (!model.getSelected().getLocation().contains(point)
-							|| !model.getSelected().getProcess().equals(process)) {
+					if (!selected.getLocation().contains(point)
+							|| !selected.getProcess().equals(process)) {
 						return;
 					}
 
 					if (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isRightMouseButton(e)) {
+						if (SwingUtilities.isLeftMouseButton(e) && model.getHoveredResizeDirection() == null && model.getHoveredHyperLink() != null) {
+							RMUrlHandler.handleUrl(model.getHoveredHyperLink().getFirst());
+							e.consume();
+							return;
+						}
 						// only allow popup trigger to pass through
 						if (e.isPopupTrigger()) {
 							if (visualizer.showPopupMenu(e)) {
@@ -350,8 +328,8 @@ public final class AnnotationEventHook {
 					model.stopDragOrResize(point);
 
 					// apart from that, only handle events over the selected annotation
-					if (!model.getSelected().getLocation().contains(point)
-							|| !model.getSelected().getProcess().equals(process)) {
+					if (!selected.getLocation().contains(point)
+							|| !selected.getProcess().equals(process)) {
 						return;
 					}
 
@@ -446,9 +424,11 @@ public final class AnnotationEventHook {
 							rendererModel.getDisplayedChain().getAllInnerOperators());
 					rendererModel.fireAnnotationsMoved(movedAnnos);
 					break;
+				case PROCESS_ZOOM_CHANGED:
+					decorator.reset();
+					break;
 				case MISC_CHANGED:
 				case PROCESS_SIZE_CHANGED:
-				case PROCESS_ZOOM_CHANGED:
 				case DISPLAYED_CHAIN_WILL_CHANGE:
 				default:
 					break;
@@ -560,6 +540,73 @@ public final class AnnotationEventHook {
 			}
 		}
 		return movedAnnos;
+	}
+
+	/**
+	 * Handles a MousePressed event for annotations which are not selected.
+	 *
+	 * @param e
+	 * 		the mouse event
+	 * @param point
+	 * 		the mouse position relative to the clicked process
+	 */
+	private void handleMousePressedForUnselectedAnnotations(MouseEvent e, Point point) {
+		if (model.getHovered() != null) {
+			model.setSelected(model.getHovered());
+			if (SwingUtilities.isLeftMouseButton(e) && model.getHoveredHyperLink() != null) {
+				RMUrlHandler.handleUrl(model.getHoveredHyperLink().getFirst());
+				return;
+			}
+			model.startDragOrResize(e, point, false);
+			e.consume();
+
+			// linux/mac only, otherwise the first click will only select
+			if (e.isPopupTrigger()) {
+				visualizer.showPopupMenu(e);
+			}
+		} else {
+			if (model.getSelected() != null) {
+				model.setSelected(null);
+				if (!e.isPopupTrigger()) {
+					e.consume();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Update hovering status of hyperlinks in annotations. Only call after a directly previous call to {@link
+	 * #updateHoveredStatus(Point, ExecutionUnit, WorkflowAnnotations)} returned {@code true}!
+	 *
+	 * @param relativeMousePosition
+	 * 		the current relative mouse position, already includes zoom level math
+	 */
+	private void updateHyperlinkHoverStatus(Point relativeMousePosition) {
+		WorkflowAnnotation hoveredAnnotation = model.getHovered();
+		Rectangle2D loc = hoveredAnnotation.getLocation();
+		List<Pair<String, Rectangle>> hyperlinkBoundsForAnnotation = model.getHyperlinkBoundsForAnnotation(hoveredAnnotation.getId());
+		for (Pair<String, Rectangle> pair : hyperlinkBoundsForAnnotation) {
+			Rectangle hyperLinkRect = pair.getSecond();
+			// adapt to annotation location
+			int x = (int) (loc.getX() + hyperLinkRect.getX());
+			int y = (int) (loc.getY() + hyperLinkRect.getY());
+			int w = (int) hyperLinkRect.getWidth();
+			int h = (int) hyperLinkRect.getHeight();
+			// sanity checks so that neither width nor height exceeds actual shown content
+			if (x + w > loc.getMaxX()) {
+				w = (int) (loc.getMaxX() - x);
+			}
+			if (y + h > loc.getMaxY()) {
+				h = (int) (loc.getMaxY() - y);
+			}
+			hyperLinkRect = new Rectangle(x, y, w, h);
+			if (hyperLinkRect.contains(relativeMousePosition)) {
+				model.setHoveredHyperLink(pair);
+				return;
+			} else {
+				model.setHoveredHyperLink(null);
+			}
+		}
 	}
 
 }

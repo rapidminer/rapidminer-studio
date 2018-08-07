@@ -81,7 +81,7 @@ public class SaveAsAction extends ResourceAction {
 		if (process.getRepositoryLocation() != null) {
 			initial = process.getRepositoryLocation().toString();
 		}
-		String loc = RepositoryLocationChooser.selectLocation(null, initial, RapidMinerGUI.getMainFrame(), true, false,
+		String loc = RepositoryLocationChooser.selectLocation(null, initial, RapidMinerGUI.getMainFrame().getExtensionsMenu(), true, false,
 				false, true, true);
 		if (loc != null) {
 			try {
@@ -93,11 +93,17 @@ public class SaveAsAction extends ResourceAction {
 						return false;
 					}
 				}
-				process.setProcessLocation(new RepositoryProcessLocation(location));
-			} catch (MalformedRepositoryLocationException e) {
+				RepositoryProcessLocation newProcessLocation = new RepositoryProcessLocation(location);
+				if (newProcessLocation.getRepositoryLocation().getRepository().isReadOnly()) {
+					SwingTools.showSimpleErrorMessage("save_to_read_only_repo", "", location.toString());
+					// fall-through intended, SaveAction will go back to SaveAs due to read-only repository location
+				} else {
+					process.setProcessLocation(newProcessLocation);
+				}
+			} catch (MalformedRepositoryLocationException | RepositoryException e) {
 				SwingTools.showSimpleErrorMessage("cannot_save_process", e, loc, e.getMessage());
-			} catch (RepositoryException e) {
-				SwingTools.showSimpleErrorMessage("cannot_save_process", e, loc, e.getMessage());
+				// cannot reasonably save here now, we had an unexpected error
+				return false;
 			}
 
 			if (async) {

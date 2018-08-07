@@ -19,10 +19,12 @@
 package com.rapidminer.tools;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.util.logging.Level;
 
 import com.rapidminer.gui.tools.SwingTools;
 
@@ -37,51 +39,73 @@ import com.rapidminer.gui.tools.SwingTools;
  */
 public class NetTools {
 
-	protected static final String ICON_PROTOCOL = "icon";
-	protected static final String RESOURCE_PROTOCOL = "resource";
-	protected static final String DYNAMIC_ICON_PROTOCOL = "dynicon";
+	private static final String ICON_PROTOCOL = "icon";
+	private static final String RESOURCE_PROTOCOL = "resource";
+	private static final String DYNAMIC_ICON_PROTOCOL = "dynicon";
 	private static boolean initialized = false;
+	private static URLStreamHandlerFactory existingUrlHandlerFactory;
 
 	public static void init() {
 		if (!initialized) {
-			URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
+			// we need to work around a stupid assumption by a certain JDBC driver (Amazon Redshift) that thinks he is a standalone application and sets the factory
+			try {
+				Field urlHandlerFactoryField = URL.class.getDeclaredField("factory");
+				urlHandlerFactoryField.setAccessible(true);
+				existingUrlHandlerFactory = (URLStreamHandlerFactory) urlHandlerFactoryField.get(null);
+				// now set value of factory to null so that our own factory can be properly set afterwards
+				urlHandlerFactoryField.set(null, null);
+			} catch (NoSuchFieldException | IllegalAccessException | ClassCastException e) {
+				// this should never happen unless Java changes something in that class
+				// We don't stop in this case however, because unless you have a stupid JDBC driver installed, this causes no further problems
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.NetTools.cannot_access_URL_factory", e);
+			}
 
-				@Override
-				public URLStreamHandler createURLStreamHandler(String protocol) {
-					if (ICON_PROTOCOL.equals(protocol)) {
-						return new URLStreamHandler() {
+			// set our own factory now which will ask a potentially previously registered factory if we do nothing with a protocol
+			URL.setURLStreamHandlerFactory(protocol -> {
+				// try our own handlers
+				if (ICON_PROTOCOL.equals(protocol)) {
+					return new URLStreamHandler() {
 
-							@Override
-							protected URLConnection openConnection(URL u) throws IOException {
-								URL resource = Tools.getResource("icons" + u.getPath());
-								if (resource != null) {
-									URLConnection conn = resource.openConnection();
-									WebServiceTools.setURLConnectionDefaults(conn);
-									return conn;
-								}
-								throw new IOException("Icon not found.");
+						@Override
+						protected URLConnection openConnection(URL u) throws IOException {
+							URL resource = Tools.getResource("icons" + u.getPath());
+							if (resource != null) {
+								URLConnection conn = resource.openConnection();
+								WebServiceTools.setURLConnectionDefaults(conn);
+								return conn;
 							}
-						};
-					} else if (RESOURCE_PROTOCOL.equals(protocol)) {
-						return new URLStreamHandler() {
+							throw new IOException("Icon not found.");
+						}
+					};
+				} else if (RESOURCE_PROTOCOL.equals(protocol)) {
+					return new URLStreamHandler() {
 
-							@Override
-							protected URLConnection openConnection(URL u) throws IOException {
-								URL resource = Tools.getResource(u.getPath().substring(1, u.getPath().length()));
-								if (resource != null) {
-									URLConnection conn = resource.openConnection();
-									WebServiceTools.setURLConnectionDefaults(conn);
-									return conn;
-								}
-								throw new IOException("Resource not found.");
-
+						@Override
+						protected URLConnection openConnection(URL u) throws IOException {
+							URL resource = Tools.getResource(u.getPath().substring(1, u.getPath().length()));
+							if (resource != null) {
+								URLConnection conn = resource.openConnection();
+								WebServiceTools.setURLConnectionDefaults(conn);
+								return conn;
 							}
-						};
-					} else if (DYNAMIC_ICON_PROTOCOL.equals(protocol)) {
-						return new DynamicIconUrlStreamHandler();
-					}
-					return null;
+							throw new IOException("Resource not found.");
+
+						}
+					};
+				} else if (DYNAMIC_ICON_PROTOCOL.equals(protocol)) {
+					return new DynamicIconUrlStreamHandler();
 				}
+
+				// try the factory that was registered by some dumb JDBC driver, if something is returned, use it
+				if (existingUrlHandlerFactory != null) {
+					URLStreamHandler handler = existingUrlHandlerFactory.createURLStreamHandler(protocol);
+					if (handler != null) {
+						return handler;
+					}
+				}
+
+				// nothing to do with the protocol, let Java handle it (e.g. http)
+				return null;
 			});
 			initialized = true;
 		}

@@ -20,17 +20,13 @@ package com.rapidminer.studio.io.gui.internal.steps.configuration;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-
 import javax.swing.ImageIcon;
 
 import com.rapidminer.core.io.data.ColumnMetaData;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 
 
@@ -64,20 +60,16 @@ class ErrorWarningTableModel extends AbstractErrorWarningTableModel {
 	private static final String COLUMN_ERROR_TYPE = I18N
 			.getGUILabel("io.dataimport.step.data_column_configuration.error_table.column_error");
 
-	private final List<ParsingError> parsingErrors = new ArrayList<ParsingError>();
-	private final List<ColumnError> columnErrors = new ArrayList<ColumnError>();
+	private final List<ParsingError> parsingErrors = new ArrayList<>();
+	private final List<ColumnError> columnErrors = new ArrayList<>();
 	private List<ColumnMetaData> columnMetaData;
 	private boolean faultTolerant;
 
 	ErrorWarningTableModel(final ConfigureDataValidator validator) {
-		final Observer<Set<Integer>> observer = new Observer<Set<Integer>>() {
-
-			@Override
-			public void update(Observable<Set<Integer>> observable, Set<Integer> arg) {
-				setParsingErrors(validator.getParsingErrors());
-				setColumnErrors(validator.getColumnErrors());
-				fireTableDataChanged();
-			}
+		final Observer<Set<Integer>> observer = (observable, arg) -> {
+			setParsingErrors(validator.getParsingErrors());
+			setColumnErrors(validator.getColumnErrors());
+			fireTableDataChanged();
 		};
 		validator.addObserver(observer, false);
 	}
@@ -162,16 +154,12 @@ class ErrorWarningTableModel extends AbstractErrorWarningTableModel {
 	private void setParsingErrors(Collection<ParsingError> errors) {
 		this.parsingErrors.clear();
 		this.parsingErrors.addAll(errors);
-		Collections.sort(this.parsingErrors, new Comparator<ParsingError>() {
-
-			@Override
-			public int compare(ParsingError o1, ParsingError o2) {
-				int rowDiff = o1.getRow() - o2.getRow();
-				if (rowDiff != 0) {
-					return rowDiff;
-				} else {
-					return o1.getColumn() - o2.getColumn();
-				}
+		this.parsingErrors.sort((o1, o2) -> {
+			int rowDiff = o1.getRow() - o2.getRow();
+			if (rowDiff != 0) {
+				return rowDiff;
+			} else {
+				return o1.getColumn() - o2.getColumn();
 			}
 		});
 	}

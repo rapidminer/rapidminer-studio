@@ -36,8 +36,10 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import com.rapidminer.gui.look.icons.IconFactory;
 import com.rapidminer.gui.properties.SettingsItem.Type;
 import com.rapidminer.gui.properties.celleditors.value.PropertyValueCellEditor;
+import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterType;
@@ -339,8 +341,25 @@ public class SettingsPropertyPanel extends PropertyPanel {
 
 		JPanel surroundingPanel = new JPanel(new BorderLayout());
 		surroundingPanel.add(parameterPanel, BorderLayout.CENTER);
+
+		JPanel helpWrapperPanel = surroundingPanel;
+		if (ParameterService.hasEnforcedValues()) {
+			JPanel infoPanel = new JPanel(new BorderLayout());
+			helpWrapperPanel = new JPanel(new BorderLayout());
+			infoPanel.add(helpWrapperPanel, BorderLayout.CENTER);
+			surroundingPanel.add(infoPanel, BorderLayout.EAST);
+			final JLabel lockedByAdminLabel;
+			if (ParameterService.isValueEnforced(type.getKey())) {
+				SwingTools.setEnabledRecursive(contentsPanel, false);
+				lockedByAdminLabel = new ResourceLabel("preferences.setting_enforced");
+			} else {
+				lockedByAdminLabel = new JLabel(IconFactory.getEmptyIcon16x16());
+			}
+			infoPanel.add(lockedByAdminLabel, BorderLayout.EAST);
+		}
+
 		addHelpLabel(type.getKey(), settingsItem.getTitle(), settingsItem.getDescription(), type.getRange(),
-				type.isOptional(), surroundingPanel);
+				type.isOptional(), helpWrapperPanel);
 
 		containerPanel.add(surroundingPanel);
 		return containerPanel;

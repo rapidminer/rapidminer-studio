@@ -86,4 +86,14 @@ public interface AggregationFunction {
 	 * inputType as one of the static value types defined in {@link Ontology}.
 	 */
 	public int getValueTypeOfResult(int inputType);
+
+	/**
+	 * Sets the target attribute for this aggregation function.
+	 * Allows for nominal target attributes to set up the mapping.
+	 *
+	 * @param attribute
+	 * 		the target attribute
+	 * @since 9.0.0
+	 */
+	default void setTargetAttribute(Attribute attribute) {}
 }

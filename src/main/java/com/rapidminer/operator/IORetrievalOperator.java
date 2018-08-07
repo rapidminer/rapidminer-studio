@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.MDTransformationRule;
@@ -97,7 +98,7 @@ public class IORetrievalOperator extends Operator {
 				throw new UserError(this, 941, name);
 			}
 
-			if (!clazz.isInstance(object)) {
+			if (!clazz.isInstance(object) && !AtPortConverter.isConvertible(object.getClass(), clazz)) {
 				throw new UserError(this, 940, name, objectArray[getParameterAsInt(PARAMETER_IO_OBJECT)]);
 			}
 

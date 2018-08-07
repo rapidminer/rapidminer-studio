@@ -31,6 +31,7 @@ import com.rapidminer.gui.processeditor.results.ResultDisplay;
 import com.rapidminer.gui.properties.OperatorPropertyPanel;
 import com.rapidminer.repository.gui.RepositoryBrowser;
 import com.rapidminer.tools.AbstractObservable;
+import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.DockingConstants;
 import com.vlsolutions.swing.docking.ws.WSDesktop;
 import com.vlsolutions.swing.docking.ws.WSDockKey;
@@ -49,6 +50,7 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 	public static final String RESULT = "result";
 	public static final String DESIGN = "design";
 
+	public static final String TURBO_PREP = "turbo_prep";
 	public static final String MODEL_WIZARD = "model_wizard";
 	public static final String HADOOP_DATA = "hadoop_data";
 
@@ -131,6 +133,13 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 		WSDockKey repositoryKey = new WSDockKey(RepositoryBrowser.REPOSITORY_BROWSER_DOCK_KEY);
 		WSDockKey newOperatorEditorKey = new WSDockKey(NewOperatorEditor.NEW_OPERATOR_DOCK_KEY);
 		WSDockKey operatorHelpKey = new WSDockKey(OperatorDocumentationBrowser.OPERATOR_HELP_DOCK_KEY);
+		MainFrame mainFrame = RapidMinerGUI.getMainFrame();
+		DockKey resultDockKey = null;
+		DockKey processPanelDockKey = null;
+		if (mainFrame != null) {
+			resultDockKey = mainFrame.getResultDisplay().getDockKey();
+			processPanelDockKey = mainFrame.getProcessPanel().getDockKey();
+		}
 
 		if (DESIGN.equals(perspectiveName)) {
 			Perspective designPerspective = getPerspective(DESIGN);
@@ -141,12 +150,24 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 			designDesktop.split(propertyTableKey, operatorHelpKey, DockingConstants.SPLIT_BOTTOM, .66);
 			designDesktop.split(processPanelKey, repositoryKey, DockingConstants.SPLIT_LEFT, 0.25);
 			designDesktop.split(repositoryKey, newOperatorEditorKey, DockingConstants.SPLIT_BOTTOM, 0.5);
+			if (mainFrame != null) {
+				resultDockKey.setCloseEnabled(true);
+				resultDockKey.setAutoHideEnabled(true);
+				processPanelDockKey.setCloseEnabled(false);
+				processPanelDockKey.setAutoHideEnabled(false);
+			}
 		} else if (RESULT.equals(perspectiveName)) {
 			Perspective resultPerspective = getPerspective(RESULT);
 			WSDesktop resultsDesktop = resultPerspective.getWorkspace().getDesktop(0);
 			resultsDesktop.clear();
 			resultsDesktop.addDockable(resultsKey);
 			resultsDesktop.split(resultsKey, repositoryKey, DockingConstants.SPLIT_RIGHT, 0.8);
+			if (mainFrame != null) {
+				resultDockKey.setCloseEnabled(false);
+				resultDockKey.setAutoHideEnabled(false);
+				processPanelDockKey.setCloseEnabled(true);
+				processPanelDockKey.setAutoHideEnabled(true);
+			}
 		} else {
 			throw new IllegalArgumentException("Not a predefined view: " + perspectiveName);
 		}
@@ -222,8 +243,11 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 	 * Updates the selected perspective and notifies the {@link PerspectiveChangeListener}.
 	 *
 	 * @param name
-	 *            the name of the new selected perspective
+	 * 		the name of the new selected perspective
+	 * @deprecated since 8.2.1; use {@link PerspectiveController#showPerspective(String)} instead,
+	 * as this method is not safe and won't be public in the future
 	 */
+	@Deprecated
 	public void setSelectedPerspective(String name) {
 		if (perspectives.containsKey(name)) {
 			setSelectedPerspective(perspectives.get(name));
@@ -234,8 +258,11 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 	 * Updates the selected perspective and notifies the {@link PerspectiveChangeListener}.
 	 *
 	 * @param perspective
-	 *            the new selected perspective
+	 * 		the new selected perspective
+	 * @deprecated since 8.2.1; use {@link PerspectiveController#showPerspective(Perspective)} instead,
+	 * as this method is not safe and won't be public in the future
 	 */
+	@Deprecated
 	public void setSelectedPerspective(Perspective perspective) {
 		if (selectedPerspective == perspective) {
 			return;
@@ -258,7 +285,7 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 			return false;
 		}
 		for (Perspective perspective : perspectives.values()) {
-			if (perspective.getName().toLowerCase().equals(name.toLowerCase())) {
+			if (perspective.getName().equalsIgnoreCase(name)) {
 				return false;
 			}
 		}
@@ -271,16 +298,9 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 	 */
 	public void notifyChangeListener() {
 		// do not fire these in the EDT
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				if (perspectiveChangeListenerList != null) {
-					LinkedList<PerspectiveChangeListener> list = new LinkedList<>(perspectiveChangeListenerList);
-					for (PerspectiveChangeListener listener : list) {
-						listener.perspectiveChangedTo(selectedPerspective);
-					}
-				}
+		new Thread(() -> {
+			if (perspectiveChangeListenerList != null) {
+				new LinkedList<>(perspectiveChangeListenerList).forEach(listener -> listener.perspectiveChangedTo(selectedPerspective));
 			}
 		}).start();
 	}

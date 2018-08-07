@@ -19,11 +19,11 @@
 package com.rapidminer.studio.io.data.internal.file.excel;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.rapidminer.core.io.data.source.DataSourceConfiguration;
+import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
 
 
 /**
@@ -35,12 +35,12 @@ import com.rapidminer.core.io.data.source.DataSourceConfiguration;
  */
 final class ExcelDataSourceConfiguration implements DataSourceConfiguration {
 
-	public static final String HEADER_ROW_INDEX_KEX = "excel.headerRowIndex";
+	public static final String HEADER_ROW_INDEX_KEY = ExcelResultSetConfiguration.EXCEL_HEADER_ROW_INDEX;
 
 	private final Map<String, String> parameters = new HashMap<>();
 
 	ExcelDataSourceConfiguration(ExcelDataSource dataSource) {
-		parameters.put(HEADER_ROW_INDEX_KEX, String.valueOf(dataSource.getHeaderRowIndex()));
+		parameters.put(HEADER_ROW_INDEX_KEY, String.valueOf(dataSource.getHeaderRowIndex()));
 
 		// add parameters from excel result set configuration
 		dataSource.getResultSetConfiguration().storeConfiguration(parameters);
@@ -53,7 +53,7 @@ final class ExcelDataSourceConfiguration implements DataSourceConfiguration {
 
 	@Override
 	public Map<String, String> getParameters() {
-		return Collections.unmodifiableMap(parameters);
+		return parameters;
 	}
 
 	@Override

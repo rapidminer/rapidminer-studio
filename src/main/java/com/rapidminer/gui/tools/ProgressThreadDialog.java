@@ -22,11 +22,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
+import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -61,8 +59,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 	}
 
 	/** mapping between ProgressThread and the UI panel for it */
-	private static Map<ProgressThread, ProgressThreadDisplay> MAPPING_PG_TO_UI = Collections
-	        .synchronizedMap(new HashMap<ProgressThread, ProgressThreadDisplay>());
+	private static final Map<ProgressThread, ProgressThreadDisplay> MAPPING_PG_TO_UI = new ConcurrentHashMap<>();
 
 	/** the panel displaying the running and waiting threads */
 	private JPanel threadPanel;
@@ -111,26 +108,12 @@ public class ProgressThreadDialog extends ButtonDialog {
 			 * Updates the ProgressThread panel in the EDT.
 			 */
 			private void updatePanelInEDT() {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						updateThreadPanel(false);
-					}
-
-				});
+				SwingUtilities.invokeLater(() -> updateThreadPanel(false));
 			}
 
 		});
 
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				initGUI();
-
-			}
-		});
+		SwingUtilities.invokeLater(ProgressThreadDialog.this::initGUI);
 	}
 
 	/**
@@ -209,14 +192,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 		if (ProgressThread.isEmpty()) {
 			// close dialog if not opened by user
 			if (!openedByUser) {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						ProgressThreadDialog.this.dispose();
-					}
-
-				});
+				SwingUtilities.invokeLater(ProgressThreadDialog.this::dispose);
 			}
 
 			// hide status bar
@@ -227,14 +203,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 			if (!ProgressThread.isForegroundRunning()) {
 				// close dialog if not opened by user
 				if (!openedByUser) {
-					SwingUtilities.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-							ProgressThreadDialog.this.dispose();
-						}
-
-					});
+					SwingUtilities.invokeLater(ProgressThreadDialog.this::dispose);
 				}
 			}
 
@@ -270,17 +239,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 		final ProgressThreadDisplay ui = MAPPING_PG_TO_UI.get(pg);
 
 		if (ui != null) {
-			if (SwingUtilities.isEventDispatchThread()) {
-				ui.setProgress(pg.getDisplay().getCompleted());
-			} else {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						ui.setProgress(pg.getDisplay().getCompleted());
-					}
-				});
-			}
+			SwingTools.invokeLater(() -> ui.setProgress(pg.getDisplay().getCompleted()));
 		}
 		updateUI();
 	}
@@ -294,17 +253,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 		final ProgressThreadDisplay ui = MAPPING_PG_TO_UI.get(pg);
 
 		if (ui != null) {
-			if (SwingUtilities.isEventDispatchThread()) {
-				ui.setMessage(pg.getDisplay().getMessage());
-			} else {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						ui.setMessage(pg.getDisplay().getMessage());
-					}
-				});
-			}
+			SwingTools.invokeLater(() -> ui.setMessage(pg.getDisplay().getMessage()));
 		}
 		updateUI();
 	}
@@ -321,6 +270,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 		this.openedByUser = openedByUser;
 		if (visible) {
 			updateThreadPanel(true);
+			setIconImage(ApplicationFrame.getApplicationFrame().getIconImage());
 			setLocationRelativeTo(ApplicationFrame.getApplicationFrame());
 		}
 		super.setVisible(visible);
@@ -328,12 +278,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 
 	@Override
 	public void setVisible(boolean b) {
-		openedByUser = false;
-		if (b) {
-			updateThreadPanel(true);
-			setLocationRelativeTo(ApplicationFrame.getApplicationFrame());
-		}
-		super.setVisible(b);
+		setVisible(false, b);
 	}
 
 	/**

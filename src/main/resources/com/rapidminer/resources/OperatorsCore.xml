@@ -145,6 +145,12 @@
 				</class>
 				<replaces>FPGrowth</replaces>
 			</operator>
+			<operator>
+				<deprecatedSince>9.0</deprecatedSince>
+				<key>fourier_transformation</key>
+				<class>com.rapidminer.operator.features.transformation.FourierTransform</class>
+				<replaces>FourierTransform</replaces>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -904,12 +910,6 @@
 					<class>com.rapidminer.operator.features.transformation.SOMDimensionalityReduction
 					</class>
 					<replaces>SOMDimensionalityReduction</replaces>
-				</operator>
-				<operator>
-					<key>fourier_transformation</key>
-					<class>com.rapidminer.operator.features.transformation.FourierTransform
-					</class>
-					<replaces>FourierTransform</replaces>
 				</operator>
 			</group>
 		</group>

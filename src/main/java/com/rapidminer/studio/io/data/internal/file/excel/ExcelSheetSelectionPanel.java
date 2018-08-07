@@ -302,19 +302,15 @@ final class ExcelSheetSelectionPanel extends JPanel {
 		public void headerRowIndexUpdated(final int newHeaderRowIndex) {
 			updatingUI = true;
 
-			SwingTools.invokeAndWait(new Runnable() {
+			SwingTools.invokeAndWait(() -> {
+				boolean hasHeaderRow = newHeaderRowIndex > ResultSetAdapter.NO_HEADER_ROW;
+				int displayedHeaderRowIndex = hasHeaderRow ? newHeaderRowIndex + 1 : 1;
+				headerRowSpinner.setModel(new SpinnerNumberModel(displayedHeaderRowIndex, 1, Integer.MAX_VALUE, 1));
+				hasHeaderRowCheckBox.setSelected(hasHeaderRow);
+				killCurrentBubbleWindow(headerRowSpinner);
 
-				@Override
-				public void run() {
-					boolean hasHeaderRow = newHeaderRowIndex > ResultSetAdapter.NO_HEADER_ROW;
-					int displayedHeaderRowIndex = hasHeaderRow ? newHeaderRowIndex + 1 : 1;
-					headerRowSpinner.setModel(new SpinnerNumberModel(displayedHeaderRowIndex, 1, Integer.MAX_VALUE, 1));
-					hasHeaderRowCheckBox.setSelected(hasHeaderRow);
-					killCurrentBubbleWindow(headerRowSpinner);
-
-					contentTable.revalidate();
-					contentTable.repaint();
-				}
+				contentTable.revalidate();
+				contentTable.repaint();
 			});
 
 			updatingUI = false;
@@ -505,7 +501,7 @@ final class ExcelSheetSelectionPanel extends JPanel {
 		}
 
 		/**
-		 * Uses the provided start and end ranges to configure the {@link #cellRangeTextField}.
+		 * Uses the provided start and end ranges to configure the {@link ExcelSheetSelectionPanel#cellRangeTextField}.
 		 *
 		 * @param columnIndexStart
 		 *            the 0-based column start index
@@ -671,33 +667,22 @@ final class ExcelSheetSelectionPanel extends JPanel {
 				JPanel headerConfigurationPanel = new JPanel(new GridBagLayout());
 
 				hasHeaderRowCheckBox.setMinimumSize(CELL_CHECKBOX_MIN_DIMENSION);
-				hasHeaderRowCheckBox.addActionListener(new ActionListener() {
+				hasHeaderRowCheckBox.addActionListener(e -> {
+					DataImportWizardUtils.logStats(DataWizardEventType.EXCEL_HEADER_ROW_STATE,
+							Boolean.toString(hasHeaderRowCheckBox.isSelected()));
+					headerRowSpinner.setEnabled(hasHeaderRowCheckBox.isSelected());
 
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						DataImportWizardUtils.logStats(DataWizardEventType.EXCEL_HEADER_ROW_STATE,
-								Boolean.toString(hasHeaderRowCheckBox.isSelected()));
-						headerRowSpinner.setEnabled(hasHeaderRowCheckBox.isSelected());
-
-						if (!hasHeaderRowCheckBox.isSelected()) {
-							sheetSelectionModel.setHeaderRowIndex(ResultSetAdapter.NO_END_ROW);
-						} else {
-							sheetSelectionModel.setHeaderRowIndex(getHeaderRowIndexFromSpinner());
-						}
+					if (!hasHeaderRowCheckBox.isSelected()) {
+						sheetSelectionModel.setHeaderRowIndex(ResultSetAdapter.NO_END_ROW);
+					} else {
+						sheetSelectionModel.setHeaderRowIndex(getHeaderRowIndexFromSpinner());
 					}
-
 				});
 				innerGbc.gridx = 0;
 				headerConfigurationPanel.add(hasHeaderRowCheckBox, innerGbc);
 
 				headerRowSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
-				headerRowSpinner.addChangeListener(new ChangeListener() {
-
-					@Override
-					public void stateChanged(ChangeEvent e) {
-						sheetSelectionModel.setHeaderRowIndex(getHeaderRowIndexFromSpinner());
-					}
-				});
+				headerRowSpinner.addChangeListener(e -> sheetSelectionModel.setHeaderRowIndex(getHeaderRowIndexFromSpinner()));
 				innerGbc.gridx += 1;
 				headerConfigurationPanel.add(headerRowSpinner, innerGbc);
 
@@ -861,19 +846,17 @@ final class ExcelSheetSelectionPanel extends JPanel {
 	 *            arguments for the i18n
 	 */
 	private void createBubbleWindow(JComponent component, BubbleStyle style, String i18n, Object... arguments) {
+		// BubbleWindow requires a visible owner
+		if (!component.isShowing()) {
+			return;
+		}
 		killCurrentBubbleWindow(null);
 		bubbleOwner = component;
 		JButton okayButton = new JButton(I18N.getGUILabel("io.dataimport.step.excel.sheet_selection.got_it"));
 		final ComponentBubbleWindow errorWindow = new ComponentBubbleWindow(component, style,
 				SwingUtilities.getWindowAncestor(ExcelSheetSelectionPanel.this), AlignedSide.TOP, i18n, null, null, false,
 				true, new JButton[] { okayButton }, arguments);
-		okayButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				errorWindow.killBubble(false);
-			}
-		});
+		okayButton.addActionListener(e -> errorWindow.killBubble(false));
 
 		// show and remember error window
 		errorWindow.setVisible(true);
@@ -895,6 +878,14 @@ final class ExcelSheetSelectionPanel extends JPanel {
 	void notifyHeaderRowNotFound() {
 		createBubbleWindow(headerRowSpinner, BubbleStyle.ERROR,
 				"io.dataimport.step.csv.format_specification.header_row_not_found");
+	}
+
+	/**
+	 * Shows a "no rows left"-bubble
+	 */
+	void notifyNoRowsLeft() {
+		createBubbleWindow(headerRowSpinner, BubbleStyle.ERROR,
+				"io.dataimport.step.excel.format_specification.no_rows_left");
 	}
 
 	/**
@@ -1047,6 +1038,17 @@ final class ExcelSheetSelectionPanel extends JPanel {
 						"com.rapidminer.gui.io.dataimport.AbstractWizardStep.changelistener_failed", rte);
 			}
 		}
+	}
+
+
+	/**
+	 * Cancels the loading and removes the bubble window
+	 */
+	void tearDown(){
+		SwingTools.invokeLater(() -> enableHeaderActions(false));
+		sheetSelectionModel.cancelLoading();
+		// ensure error bubble has been killed when leaving the step
+		killCurrentBubbleWindow(null);
 	}
 
 }

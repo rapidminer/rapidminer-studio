@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.nio.model;
 
 import java.io.File;
@@ -27,6 +27,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import com.rapidminer.core.io.data.DataSetException;
+import com.rapidminer.core.io.data.source.DataSource;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Annotations;
@@ -220,14 +222,14 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	 * Returns either the selected file referenced by the value of the parameter with the name
 	 * {@link #getFileParameterName()} or the file delivered at {@link #fileInputPort}. Which of
 	 * these options is chosen is determined by the parameter {@link com.rapidminer.operator.nio.file.WriteFileOperator#PARAMETER_DESTINATION_TYPE}.
-	 * */
+	 */
 	public File getSelectedFile() throws OperatorException {
 		return filePortHandler.getSelectedFile();
 	}
 
 	/**
 	 * Same as {@link #getSelectedFile()}, but opens the stream.
-	 * */
+	 */
 	public InputStream openSelectedFile() throws OperatorException, IOException {
 		return filePortHandler.openSelectedFile();
 	}
@@ -235,7 +237,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	/**
 	 * Same as {@link #getSelectedFile()}, but returns true if file is specified (in the respective
 	 * way).
-	 * */
+	 */
 	public boolean isFileSpecified() {
 		return filePortHandler.isFileSpecified();
 	}
@@ -268,8 +270,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 		List<ParameterType> types = new LinkedList<>();
 
 		if (isSupportingFirstRowAsNames()) {
-			types.add(new ParameterTypeBoolean(
-					PARAMETER_FIRST_ROW_AS_NAMES,
+			types.add(new ParameterTypeBoolean(PARAMETER_FIRST_ROW_AS_NAMES,
 					"Indicates if the first row should be used for the attribute names. If activated no annotations can be used.",
 					true, false));
 		}
@@ -280,7 +281,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 		ParameterType type = new ParameterTypeList(PARAMETER_ANNOTATIONS, "Maps row numbers to annotation names.", //
 				new ParameterTypeInt("row_number", "Row number which contains an annotation", 0, Integer.MAX_VALUE), //
 				new ParameterTypeCategory("annotation", "Name of the annotation to assign this row.",
-						annotations.toArray(new String[annotations.size()]), 0), true);
+						annotations.toArray(new String[0]), 0), true);
 		if (isSupportingFirstRowAsNames()) {
 			type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_FIRST_ROW_AS_NAMES, false, false));
 		}
@@ -344,6 +345,21 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 		changes[changes.length - 2] = DataResultSetTranslator.VERSION_6_0_3;
 		changes[changes.length - 1] = DataResultSetTranslator.BEFORE_ATTRIBUTE_TRIMMING;
 		return changes;
+	}
+
+	/**
+	 * Configures the operator with the specified {@link DataSource}. Will throw {@link UnsupportedOperationException}
+	 * unless overwritten by subclasses.
+	 *
+	 * @param dataSource
+	 * 		the datasource
+	 * @throws DataSetException
+	 * 		if something goes wrong during configuration
+	 * @since 9.0.0
+	 */
+	public void configure(DataSource dataSource) throws DataSetException {
+		// reader not supported if this method is not overridden in subclass
+		throw new UnsupportedOperationException("This reader is not (yet) supported by the data import wizards.");
 	}
 
 }

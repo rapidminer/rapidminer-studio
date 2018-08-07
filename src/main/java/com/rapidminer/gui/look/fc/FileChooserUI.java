@@ -146,14 +146,17 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 			String name = SwingTools.showInputDialog("file_chooser.new_folder", "");
 
+			// abort if cancelled or user entered nothing
+			if (name == null || name.isEmpty()) {
+				return;
+			}
+
 			try {
-				if (name != null && !"".equals(name)) {
-					newFolder = fsv.createNewFolder(currentDirectory);
-					if (newFolder.renameTo(fsv.createFileObject(fsv.getParentDirectory(newFolder), name))) {
-						newFolder = fsv.createFileObject(fsv.getParentDirectory(newFolder), name);
-					} else {
-						SwingTools.showVerySimpleErrorMessage("file_chooser.new_folder.rename", name);
-					}
+				newFolder = fsv.createNewFolder(currentDirectory);
+				if (newFolder.renameTo(fsv.createFileObject(fsv.getParentDirectory(newFolder), name))) {
+					newFolder = fsv.createFileObject(fsv.getParentDirectory(newFolder), name);
+				} else {
+					SwingTools.showVerySimpleErrorMessage("file_chooser.new_folder.rename", name);
 				}
 			} catch (IOException exc) {
 				SwingTools.showVerySimpleErrorMessage("file_chooser.new_folder.create", name);

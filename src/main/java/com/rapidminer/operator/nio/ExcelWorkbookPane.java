@@ -25,6 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.table.TableModel;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
@@ -137,45 +138,56 @@ public class ExcelWorkbookPane extends JPanel {
 				getProgressListener().setTotal(100);
 				getProgressListener().setCompleted(10);
 
+				// read the excel file
+				TableModel[] models;
+				int numberOfSheets;
+				try {
+					numberOfSheets = configuration.getNumberOfSheets();
+					models = new TableModel[numberOfSheets];
+					for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++) {
+						models[sheetIndex] = configuration.createExcelTableModel(sheetIndex, XlsxReadMode.WIZARD_WORKPANE, getProgressListener());
+					}
+				} catch (InvalidFormatException | BiffException | IOException | OperatorException
+						| ParseException e) {
+					ImportWizardUtils.showErrorMessage(configuration.getResourceName(), e.toString(), e);
+					getProgressListener().complete();
+					return;
+				}
+
 				// now add everything to gui
-				SwingUtilities.invokeLater(new Runnable() {
+				SwingUtilities.invokeLater(() -> {
+					try {
+						tables = new ExtendedJTable[numberOfSheets];
 
-					@Override
-					public void run() {
-						try {
-							tables = new ExtendedJTable[configuration.getNumberOfSheets()];
+						String[] sheetNames = configuration.getSheetNames();
+						for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++) {
+							tables[sheetIndex] = new ExtendedJTable(models[sheetIndex], false, false);
+							tables[sheetIndex].setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+							tables[sheetIndex].setBorder(null);
 
-							String[] sheetNames = configuration.getSheetNames();
-							for (int sheetIndex = 0; sheetIndex < configuration.getNumberOfSheets(); sheetIndex++) {
-								tables[sheetIndex] = new ExtendedJTable(configuration.createExcelTableModel(sheetIndex,
-										XlsxReadMode.WIZARD_WORKPANE, getProgressListener()), false, false);
-								tables[sheetIndex].setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-								tables[sheetIndex].setBorder(null);
+							// momentary disable selection in tables
+							tables[sheetIndex].setRowSelectionAllowed(false);
+							tables[sheetIndex].setColumnSelectionAllowed(false);
+							tables[sheetIndex].setCellSelectionEnabled(true);
 
-								// momentary disable selection in tables
-								tables[sheetIndex].setRowSelectionAllowed(false);
-								tables[sheetIndex].setColumnSelectionAllowed(false);
-								tables[sheetIndex].setCellSelectionEnabled(true);
-
-								// add table to gui
-								ExtendedJScrollPane pane = new ExtendedJScrollPane(tables[sheetIndex]);
-								pane.setBorder(null);
-								if (sheetIndex == 0) {
-									sheetsPane.removeAll();
-								}
-								sheetsPane.addTab(sheetNames[sheetIndex], pane);
+							// add table to gui
+							ExtendedJScrollPane pane = new ExtendedJScrollPane(tables[sheetIndex]);
+							pane.setBorder(null);
+							if (sheetIndex == 0) {
+								sheetsPane.removeAll();
 							}
-							ExcelWorkbookSelection selection = new ExcelWorkbookSelection(configuration.getSheet(),
-									configuration.getColumnOffset(), configuration.getRowOffset(),
-									configuration.getColumnLast(), configuration.getRowLast());
-
-							setSelection(selection);
-						} catch (InvalidFormatException | BiffException | IOException | OperatorException
-								| ParseException e) {
-							ImportWizardUtils.showErrorMessage(configuration.getResourceName(), e.toString(), e);
-						} finally {
-							getProgressListener().complete();
+							sheetsPane.addTab(sheetNames[sheetIndex], pane);
 						}
+						ExcelWorkbookSelection selection = new ExcelWorkbookSelection(configuration.getSheet(),
+								configuration.getColumnOffset(), configuration.getRowOffset(),
+								configuration.getColumnLast(), configuration.getRowLast());
+
+						setSelection(selection);
+					} catch (InvalidFormatException | BiffException | IOException | OperatorException
+							e) {
+						ImportWizardUtils.showErrorMessage(configuration.getResourceName(), e.toString(), e);
+					} finally {
+						getProgressListener().complete();
 					}
 				});
 			}

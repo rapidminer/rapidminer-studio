@@ -120,7 +120,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	 *            The containing dialog. Is used to create {@link ToolTipWindow}s for tabs.
 	 * @param filter
 	 *            Used to filter the setting parameters
-	 * @param cache
+	 * @param propertyCache
 	 *            which should be used to retrieve the values
 	 */
 	public SettingsTabs(SettingsDialog settingsDialog, String filter, Properties propertyCache) {

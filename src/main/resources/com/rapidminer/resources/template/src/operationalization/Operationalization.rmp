@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.6.000-SNAPSHOT">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.6.000-SNAPSHOT" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Data source 1" width="90" x="45" y="442">
+        <parameter key="repository_entry" value="//Samples/Templates/Operationalization/data"/>
+      </operator>
+      <operator activated="true" class="filter_examples" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Filter Examples" width="90" x="246" y="442">
+        <parameter key="parameter_expression" value=""/>
+        <parameter key="condition_class" value="custom_filters"/>
+        <parameter key="invert_filter" value="false"/>
+        <list key="filters_list">
+          <parameter key="filters_entry_key" value="Age.lt.70"/>
+          <parameter key="filters_entry_key" value="Age.gt.18"/>
+        </list>
+        <parameter key="filters_logic_and" value="true"/>
+        <parameter key="filters_check_metadata" value="true"/>
+      </operator>
+      <operator activated="true" class="set_role" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Set Role n1" width="90" x="380" y="442">
+        <parameter key="attribute_name" value="ChurnIndicator"/>
+        <parameter key="target_role" value="label"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Read Model" width="90" x="45" y="187">
+        <parameter key="repository_entry" value="//Samples/Templates/Operationalization/model"/>
+      </operator>
+      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Data source 2" width="90" x="45" y="544">
+        <parameter key="repository_entry" value="//Samples/Templates/Operationalization/data2"/>
+      </operator>
+      <operator activated="true" class="set_role" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Set Role n2" width="90" x="380" y="544">
+        <parameter key="attribute_name" value="ChurnIndicator"/>
+        <parameter key="target_role" value="label"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" class="append" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Append" width="90" x="514" y="442">
+        <parameter key="datamanagement" value="double_array"/>
+        <parameter key="merge_type" value="all"/>
+      </operator>
+      <operator activated="true" class="apply_model" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Apply Model" width="90" x="246" y="187">
+        <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
+      </operator>
+      <operator activated="true" class="set_role" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Set Role" width="90" x="380" y="187">
+        <parameter key="attribute_name" value="ChurnIndicator"/>
+        <parameter key="target_role" value="label"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" class="performance" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="514" y="187">
+        <parameter key="use_example_weights" value="true"/>
+      </operator>
+      <operator activated="true" class="branch" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="What now?" width="90" x="715" y="238">
+        <parameter key="condition_type" value="min_performance_value"/>
+        <parameter key="condition_value" value=".99"/>
+        <parameter key="expression" value=""/>
+        <parameter key="io_object" value="ANOVAMatrix"/>
+        <parameter key="return_inner_output" value="true"/>
+        <process expanded="true">
+          <operator activated="true" class="store" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Store Results" width="90" x="45" y="85">
+            <parameter key="repository_entry" value="results"/>
+            <description align="center" color="blue" colored="true" width="126">Regularly store the results</description>
+          </operator>
+          <connect from_port="condition" to_port="input 1"/>
+          <connect from_port="input 1" to_op="Store Results" to_port="input"/>
+          <connect from_op="Store Results" from_port="through" to_port="input 2"/>
+          <portSpacing port="source_condition" spacing="0"/>
+          <portSpacing port="source_input 1" spacing="0"/>
+          <portSpacing port="source_input 2" spacing="0"/>
+          <portSpacing port="sink_input 1" spacing="0"/>
+          <portSpacing port="sink_input 2" spacing="0"/>
+          <portSpacing port="sink_input 3" spacing="0"/>
+          <description align="center" color="yellow" colored="false" height="50" resized="true" width="344" x="10" y="10">If performance was OK, then just store the results (or publish in your CRM or send a mail or...)</description>
+        </process>
+        <process expanded="true">
+          <operator activated="false" class="productivity:execute_process" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Execute Process" width="90" x="45" y="289">
+            <parameter key="use_input" value="true"/>
+            <parameter key="store_output" value="false"/>
+            <parameter key="propagate_metadata_recursively" value="true"/>
+            <parameter key="cache_process" value="true"/>
+            <list key="macros"/>
+            <parameter key="fail_for_unknown_macros" value="true"/>
+            <description align="center" color="yellow" colored="true" width="126">... or directly re-train the model (enable and configure the training process)</description>
+          </operator>
+          <operator activated="false" class="productivity:execute_program" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Execute Program" width="90" x="179" y="289">
+            <parameter key="log_stdout" value="true"/>
+            <parameter key="log_stderr" value="true"/>
+            <list key="env_variables"/>
+            <description align="center" color="purple" colored="true" width="126">... or call some other tool&lt;br&gt;(enable and configure the operator)</description>
+          </operator>
+          <operator activated="false" class="send_mail" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Send Mail" width="90" x="313" y="289">
+            <parameter key="use_html" value="false"/>
+            <list key="headers"/>
+            <parameter key="ignore_errors" value="false"/>
+            <description align="center" color="green" colored="true" width="126">... or alert someone (enable and configure text and address)</description>
+          </operator>
+          <operator activated="true" class="store" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Store Bad Results" width="90" x="45" y="85">
+            <parameter key="repository_entry" value="bad_results"/>
+            <description align="center" color="blue" colored="true" width="126">Either just write something somewhere so you can use this as a trigger</description>
+          </operator>
+          <connect from_port="condition" to_port="input 1"/>
+          <connect from_port="input 1" to_op="Store Bad Results" to_port="input"/>
+          <connect from_op="Store Bad Results" from_port="through" to_port="input 2"/>
+          <portSpacing port="source_condition" spacing="0"/>
+          <portSpacing port="source_input 1" spacing="0"/>
+          <portSpacing port="source_input 2" spacing="0"/>
+          <portSpacing port="sink_input 1" spacing="0"/>
+          <portSpacing port="sink_input 2" spacing="0"/>
+          <portSpacing port="sink_input 3" spacing="441"/>
+          <description align="center" color="red" colored="true" height="50" resized="true" width="355" x="10" y="10">If it was too low, let's do something about it... Operationalize!</description>
+          <description align="center" color="red" colored="true" height="50" resized="true" width="397" x="27" y="524">Whatever suits you!</description>
+        </process>
+        <description align="center" color="yellow" colored="true" width="126">This branch operator checks if a certain condition is fulfilled - here: if performance is above/below a certain threshold&lt;br&gt;&lt;br&gt;Adapt to check any condition while building and monitoring models.</description>
+      </operator>
+      <connect from_op="Data source 1" from_port="output" to_op="Filter Examples" to_port="example set input"/>
+      <connect from_op="Filter Examples" from_port="example set output" to_op="Set Role n1" to_port="example set input"/>
+      <connect from_op="Set Role n1" from_port="example set output" to_op="Append" to_port="example set 1"/>
+      <connect from_op="Read Model" from_port="output" to_op="Apply Model" to_port="model"/>
+      <connect from_op="Data source 2" from_port="output" to_op="Set Role n2" to_port="example set input"/>
+      <connect from_op="Set Role n2" from_port="example set output" to_op="Append" to_port="example set 2"/>
+      <connect from_op="Append" from_port="merged set" to_op="Apply Model" to_port="unlabelled data"/>
+      <connect from_op="Apply Model" from_port="labelled data" to_op="Set Role" to_port="example set input"/>
+      <connect from_op="Set Role" from_port="example set output" to_op="Performance" to_port="labelled data"/>
+      <connect from_op="Performance" from_port="performance" to_op="What now?" to_port="condition"/>
+      <connect from_op="Performance" from_port="example set" to_op="What now?" to_port="input 1"/>
+      <connect from_op="What now?" from_port="input 1" to_port="result 1"/>
+      <connect from_op="What now?" from_port="input 2" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <description align="left" color="green" colored="true" height="230" resized="true" width="147" x="20" y="105">Step 3:&lt;br/&gt;Model trained somewhere else is read</description>
+      <description align="left" color="blue" colored="true" height="230" resized="true" width="417" x="220" y="105">Step 4:&lt;br&gt;Model is applied to the data to discover who is a future customer and then performance is calculated and monitored</description>
+      <description align="left" color="purple" colored="true" height="285" resized="true" width="420" x="220" y="360">Step 2:&lt;br/&gt;Edit, transform &amp;amp; load (ETL) - Data is prepared and combined as needed</description>
+      <description align="left" color="blue" colored="true" height="285" resized="true" width="150" x="20" y="360">Step 1:&lt;br&gt;Data from various sources is read (could be DBs, files, Hive...)</description>
+      <description align="left" color="gray" colored="true" height="540" resized="true" width="150" x="685" y="105">Now what?&lt;br&gt;If performance falls below a threshold, we have to react! Double-click on the operator to see more&lt;br&gt;</description>
+      <description align="left" color="yellow" colored="false" height="70" resized="true" width="815" x="20" y="25">OPERATIONALIZATION&lt;br&gt;Embed Predictive Analytics into your business processes: Operationalize predictive results and trigger actions automatically upon fulfillment of conditions.</description>
+	  <description align="left" color="yellow" colored="false" height="35" resized="true" width="813" x="21" y="657">Outputs: model performance, data set with predictions</description>
+    </process>
+  </operator>
+</process>

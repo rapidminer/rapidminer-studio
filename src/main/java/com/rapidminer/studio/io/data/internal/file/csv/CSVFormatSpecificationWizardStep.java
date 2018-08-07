@@ -15,14 +15,11 @@
  * 
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.io.data.internal.file.csv;
 
 import java.util.Map;
-
 import javax.swing.JComponent;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.gui.ImportWizard;
@@ -45,25 +42,17 @@ import com.rapidminer.studio.io.gui.internal.steps.AbstractWizardStep;
 public class CSVFormatSpecificationWizardStep extends AbstractWizardStep {
 
 	static final String CSV_FORMAT_SPECIFICATION_STEP_ID = "csv.format_specification";
-
-	private Map<String, String> enteringConfiguration;
-	private boolean calculateMetaData = true;
-	private String lastGuessedCSVfile;
-
 	private final CSVFormatSpecificationPanel formatPanel;
 	private final CSVDataSource csvDataSource;
 	private final ImportWizard wizard;
+	private Map<String, String> enteringConfiguration;
+	private boolean calculateMetaData = true;
+	private String lastGuessedCSVFile;
 
 	CSVFormatSpecificationWizardStep(CSVDataSource csvDataSource, ImportWizard wizard) {
 		this.wizard = wizard;
 		this.formatPanel = new CSVFormatSpecificationPanel(csvDataSource.getResultSetConfiguration());
-		this.formatPanel.addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				fireStateChanged();
-			}
-		});
+		this.formatPanel.addChangeListener(e -> fireStateChanged());
 		this.csvDataSource = csvDataSource;
 	}
 
@@ -91,9 +80,18 @@ public class CSVFormatSpecificationWizardStep extends AbstractWizardStep {
 		if (direction == WizardDirection.NEXT) {
 			final String csvFile = csvDataSource.getResultSetConfiguration().getCsvFile();
 			// guess separator if that has not been done for this file before
-			if (csvFile != null && (lastGuessedCSVfile == null || !lastGuessedCSVfile.equals(csvFile))) {
-				formatPanel.setColumnSeparator(CSVResultSet.guessColumnSplitter(csvFile));
-				lastGuessedCSVfile = csvFile;
+			if (csvFile != null && (lastGuessedCSVFile == null || !lastGuessedCSVFile.equals(csvFile))) {
+				CSVResultSet.ColumnSplitter columnSplitter = CSVResultSet.guessColumnSplitter(csvFile);
+				formatPanel.setColumnSeparator(columnSplitter);
+				formatPanel.setTextQualifier(CSVResultSet.guessTextQualifier(csvFile));
+
+				if (columnSplitter.equals(CSVResultSet.ColumnSplitter.COMMA)) {
+					formatPanel.setDecimalCharacter(CSVResultSet.DecimalCharacter.PERIOD);
+				} else {
+					formatPanel.setDecimalCharacter(CSVResultSet.guessDecimalSeparator(csvFile));
+				}
+
+				lastGuessedCSVFile = csvFile;
 			}
 		}
 

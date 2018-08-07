@@ -5631,6 +5631,7 @@
          <tag>Average</tag>
          <tag>Avg</tag>
          <tag>Mean</tag>
+         <tag>Concatenation</tag>
     </tags>
   </operator>
     <operator>

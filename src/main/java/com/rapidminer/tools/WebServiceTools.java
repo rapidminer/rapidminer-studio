@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rapidminer.tools.net.UrlFollower;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
 
 
@@ -135,7 +136,7 @@ public class WebServiceTools {
 			throw new IllegalArgumentException("url must not be null!");
 		}
 
-		URLConnection connection = url.openConnection();
+		URLConnection connection = UrlFollower.follow(url);
 		setURLConnectionDefaults(connection);
 		return connection.getInputStream();
 	}

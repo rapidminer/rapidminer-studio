@@ -38,7 +38,7 @@ public class CreateFolderAction extends AbstractRepositoryAction<Folder> {
 	private static final long serialVersionUID = 1L;
 
 	public CreateFolderAction(RepositoryTree tree) {
-		super(tree, Folder.class, false, "repository_create_folder");
+		super(tree, Folder.class, true, "repository_create_folder");
 	}
 
 	@Override
@@ -52,14 +52,7 @@ public class CreateFolderAction extends AbstractRepositoryAction<Folder> {
 					try {
 						folder.createFolder(name);
 						final RepositoryLocation location = new RepositoryLocation(folder.getLocation(), name);
-						SwingUtilities.invokeLater(new Runnable() {
-
-							@Override
-							public void run() {
-								tree.expandAndSelectIfExists(location);
-							}
-
-						});
+						SwingUtilities.invokeLater(() -> tree.expandAndSelectIfExists(location));
 					} catch (RepositoryException e) {
 						SwingTools.showSimpleErrorMessage("cannot_create_folder_with_reason", e, name, e.getMessage());
 					} catch (Exception e) {

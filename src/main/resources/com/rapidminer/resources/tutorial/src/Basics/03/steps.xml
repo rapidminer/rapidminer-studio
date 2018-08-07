@@ -7,7 +7,7 @@
 	<step name="Download your data.">
 		<tasks>
 			<task><activity>Download</activity> this <link url="http://www.rapidminer.com/titanic/">Excel file</link> to your computer.</task>
-			<task>To import the downloaded data into RapidMiner, <activity>click <icon>16/add.png</icon> <ui>Add Data</ui></activity> in the <ui>Repository</ui> panel and follow the steps in the wizard.</task>
+			<task>To import the downloaded data into RapidMiner, <activity>click <icon>16/add.png</icon> <ui>Import Data</ui></activity> in the <ui>Repository</ui> panel and follow the steps in the wizard.</task>
 			<task>When you complete the import, <activity>store the data</activity> as <file>Titanic</file> in your <folder>Local Repository</folder>.</task>
 		</tasks>
 		<info>The <ui>Repository</ui> panel, in the upper left corner by default, is the place to store all your data, processes, and results. You should always import data into the repository, especially when it comes from files like XLS or CSV. This will simplify the design of analytical processes a lot since RapidMiner's repository stores describing meta data together with the data.</info>

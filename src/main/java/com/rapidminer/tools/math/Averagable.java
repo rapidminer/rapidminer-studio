@@ -101,7 +101,7 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	// ================================================================================
 
 	/**
-	 * This method builds the makro average of two averagables of the same type. First this method
+	 * This method builds the macro average of two averagables of the same type. First this method
 	 * checks if the classes of <code>this</code> and <code>performance</code> are the same and if
 	 * the {@link #getName()} methods return the same String. Otherwise a RuntimeException is
 	 * thrown. <br>
@@ -109,7 +109,7 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	 * its square is added to {@link #meanSquaredSum} and {@link #averageCount} is increased by one.
 	 * These values are used in the {@link #getMakroAverage()} and {@link #getMakroVariance()}
 	 * methods. <br>
-	 * Subclasses should implement the method buildSingleAverage() to build the mikro (weighted)
+	 * Subclasses should implement the method buildSingleAverage() to build the micro (weighted)
 	 * average of <code>this</code> averagable and the given <code>averagable</code>. They must be
 	 * weighted by the number of examples used for calculating the averagables.
 	 */
@@ -138,7 +138,7 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	}
 
 	/**
-	 * This method returns the makro average if it was defined and the mikro average (the current
+	 * This method returns the macro average if it was defined and the micro average (the current
 	 * value) otherwise. This method should be used instead of {@link #getMikroAverage()} for
 	 * optimization purposes, i.e. by methods like <code>getFitness()</code> of performance
 	 * criteria.
@@ -155,7 +155,7 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	}
 
 	/**
-	 * This method returns the makro variance if it was defined and the mikro variance otherwise.
+	 * This method returns the macro variance if it was defined and the micro variance otherwise.
 	 */
 	public final double getVariance() {
 		double variance = Double.NaN;
@@ -169,7 +169,7 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	}
 
 	/**
-	 * This method returns the makro standard deviation if it was defined and the mikro standard
+	 * This method returns the macro standard deviation if it was defined and the micro standard
 	 * deviation otherwise.
 	 */
 	public final double getStandardDeviation() {
@@ -302,7 +302,7 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 		}
 
 		if (makroUsable) {
-			result.append(" (mikro: ");
+			result.append(" (micro average: ");
 		}
 
 		result.append(formatValue(getMikroAverage()));

@@ -1,0 +1,21 @@
+apply plugin: 'java'
+
+def templateSrc = file('src/main/resources/com/rapidminer/resources/template/src').absolutePath
+// Generate .template files task
+task buildTemplates << {
+    new File(templateSrc).eachDir {
+        ant.zip(destfile: templateSrc+'/../'+it.name+'.template', basedir: it.path){
+        }
+    }
+}
+buildTemplates.group = 'build'
+buildTemplates.description = 'Assembles template archives.'
+
+//Run buildTemplates before the jar task
+jar.dependsOn(buildTemplates)
+
+//Exclude template source files from build
+sourceSets.main.resources{
+    exclude 'com/rapidminer/resources/template/src/**'
+    exclude 'com/rapidminer/resources/template/src'
+}

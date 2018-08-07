@@ -18,9 +18,9 @@
 */
 package com.rapidminer.gui.flow.processrendering.annotations;
 
+import java.awt.Font;
 import java.io.IOException;
 import java.io.StringWriter;
-
 import javax.swing.JEditorPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.style.AnnotationStyle;
+import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 
@@ -44,7 +45,7 @@ import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 public final class AnnotationDrawUtils {
 
 	/** surrounding HTML for annotations where styling information can be set */
-	private static final String ANNOTATION_HTML_FORMAT = "<div id=\"anno_style_div\" style=\"font-size: 10px; font-family: 'Open Sans'; padding: %dpx; %s\">%s</div>";
+	private static final String ANNOTATION_HTML_FORMAT = "<div id=\"anno_style_div\" style=\"padding: %dpx; %s\">%s</div>";
 
 	/** this is removed from the beginning of the document */
 	private static final String ANNOTATION_HTML_FORMATTING_START_REGEX = "\\s*<html>\\s*(<head>)?\\s*.*\\s*(</head>)?\\s*<body>\\s*";
@@ -60,6 +61,9 @@ public final class AnnotationDrawUtils {
 
 	/** the signal we fake everytime the user enters a newline */
 	public static final String ANNOTATION_HTML_NEWLINE_SIGNAL = "\r";
+
+	/** the font for the annotations */
+	public static final Font ANNOTATION_FONT = FontTools.getFont("Open Sans", Font.PLAIN, 13);
 
 	/**
 	 * Private constructor which throws if called.
@@ -178,7 +182,7 @@ public final class AnnotationDrawUtils {
 	 *            the width of the content
 	 * @return the preferred height given the comment
 	 */
-	public static int getContentHeight(final String comment, final int width) {
+	public static int getContentHeight(final String comment, final int width, final Font font) {
 		if (comment == null) {
 			throw new IllegalArgumentException("comment must not be null!");
 		}
@@ -190,6 +194,8 @@ public final class AnnotationDrawUtils {
 		dummyEditorPane.setText(comment);
 		dummyEditorPane.setBorder(null);
 		dummyEditorPane.setSize(width, Short.MAX_VALUE);
+		dummyEditorPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+		dummyEditorPane.setFont(font);
 
 		// height is not exact. Multiply by magic number to get a more fitting value...
 		if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX

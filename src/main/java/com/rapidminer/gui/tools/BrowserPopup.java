@@ -102,7 +102,7 @@ public class BrowserPopup extends JDialog implements Supplier<String> {
 				closeWithReason(url);
 				// It is freezing on Linux otherwise
 				SwingUtilities.invokeLater(() -> {
-					RMUrlHandler.openInBrowser(url);
+					RMUrlHandler.handleUrl(url);
 				});
 			}
 		}

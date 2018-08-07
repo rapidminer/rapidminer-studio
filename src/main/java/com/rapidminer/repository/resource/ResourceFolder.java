@@ -18,7 +18,6 @@
 */
 package com.rapidminer.repository.resource;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
@@ -43,7 +42,7 @@ import com.rapidminer.tools.Tools;
 /**
  * Reference on a folder in the repository.
  *
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  */
 public class ResourceFolder extends ResourceEntry implements Folder {
 
@@ -54,7 +53,7 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 	private final Lock readLock = lock.readLock();
 	private final Lock writeLock = lock.writeLock();
 
-	protected ResourceFolder(ResourceFolder parent, String name, String resource, ResourceRepository repository) {
+	public ResourceFolder(ResourceFolder parent, String name, String resource, ResourceRepository repository) {
 		super(parent, name, resource, repository);
 	}
 
@@ -78,7 +77,7 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 
 	}
 
-	private boolean containsEntryNotThreadSafe(String name) throws RepositoryException {
+	private boolean containsEntryNotThreadSafe(String name) {
 		for (Entry entry : data) {
 			if (entry.getName().equals(name)) {
 				return true;
@@ -144,48 +143,71 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 		if (isLoaded()) {
 			return;
 		}
+		this.folders = new LinkedList<>();
+		this.data = new LinkedList<>();
+		ensureLoaded(folders, data);
+	}
 
-		String resourcePath = getResource() + "/CONTENTS";
-		InputStream in = null;
-		try {
-			in = Tools.getResourceInputStream(resourcePath);
-		} catch (IOException e1) {
-			throw new RepositoryException("Cannot find contents of folder " + getResource(), e1);
-		}
-		this.folders = new LinkedList<Folder>();
-		this.data = new LinkedList<DataEntry>();
-		try {
-			String[] lines = Tools.readTextFile(new InputStreamReader(in, "UTF-8")).split("\n");
+	/**
+	 * The actual loading of the content is done in this method. This allows subclasses to easily implement their own loading mechanisms.
+	 *
+	 * @param folders
+	 * 		the folders list to fill
+	 * @param data
+	 * 		the data list to fill
+	 * @throws RepositoryException
+	 * 		if an error occurs
+	 * @since 9.0
+	 */
+	protected void ensureLoaded(List<Folder> folders, List<DataEntry> data) throws RepositoryException{
+		try (InputStream in = getResourceStream("/CONTENTS");
+			 InputStreamReader reader = new InputStreamReader(in, "UTF-8")) {
+			String[] lines = Tools.readTextFile(reader).split("\n");
 			for (String line : lines) {
 				line = line.trim();
-				if (!line.isEmpty()) {
-					int space = line.indexOf(" ");
-					String name = space != -1 ? line.substring(space + 1).trim() : null;
-					if (line.startsWith("FOLDER ")) {
-						folders.add(new ResourceFolder(this, name, getPath() + "/" + name, getRepository()));
-					} else if (line.startsWith("ENTRY")) {
-						String nameWOExt = name.substring(0, name.length() - 4);
-						if (name.endsWith(".rmp")) {
-							data.add(
-									new ResourceProcessEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository()));
-						} else if (name.endsWith(".ioo")) {
-							data.add(new ResourceIOObjectEntry(this, nameWOExt, getPath() + "/" + nameWOExt,
-									getRepository()));
-						} else {
-							throw new RepositoryException("Unknown entry type infolder '" + getName() + "': " + name);
-						}
-					} else {
-						throw new RepositoryException("Illegal entry type in folder '" + getName() + "': " + line);
+				int space = line.indexOf(' ');
+				if (line.isEmpty() || space == -1) {
+					continue;
+				}
+				String name = line.substring(space + 1).trim();
+				String errorSource = null;
+				if (line.startsWith("FOLDER ")) {
+					folders.add(new ResourceFolder(this, name, getPath() + "/" + name, getRepository()));
+				} else if (line.startsWith("ENTRY")) {
+					int suffixStart = name.lastIndexOf('.');
+					String nameWOExt = name;
+					String suffix = "";
+					if (suffixStart >= 0) {
+						nameWOExt = name.substring(0, suffixStart);
+						suffix = name.substring(suffixStart + 1);
 					}
+					DataEntry entry;
+					switch (suffix) {
+						case "rmp":
+							entry = new ResourceProcessEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository());
+							break;
+						case "ioo":
+							entry = new ResourceIOObjectEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository());
+							break;
+						case "blob":
+							entry = new ResourceBlobEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository());
+							break;
+						default:
+							entry = null;
+							errorSource = name;
+					}
+					if (entry != null) {
+						data.add(entry);
+					}
+				} else {
+					errorSource = line;
+				}
+				if (errorSource != null) {
+					throw new RepositoryException("Illegal entry type in folder '" + getName() + "': " + errorSource);
 				}
 			}
 		} catch (Exception e) {
 			throw new RepositoryException("Error reading contents of folder " + getName() + ": " + e, e);
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
-			}
 		}
 	}
 
@@ -194,7 +216,7 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 		acquireReadLock();
 		try {
 			if (isLoaded()) {
-				return folders;
+				return Collections.unmodifiableList(folders);
 			}
 		} finally {
 			releaseReadLock();
@@ -202,7 +224,7 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 		acquireWriteLock();
 		try {
 			ensureLoaded();
-			return folders;
+			return Collections.unmodifiableList(folders);
 		} finally {
 			releaseWriteLock();
 		}
@@ -223,11 +245,6 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 	@Override
 	public String getDescription() {
 		return getResource();
-	}
-
-	@Override
-	public String getType() {
-		return Folder.TYPE_NAME;
 	}
 
 	@Override

@@ -18,8 +18,6 @@
 */
 package com.rapidminer.repository;
 
-
-
 /**
  * An entry that can store processes.
  * 
@@ -28,10 +26,15 @@ package com.rapidminer.repository;
  */
 public interface ProcessEntry extends DataEntry {
 
-	public static final String TYPE_NAME = "process";
+	String TYPE_NAME = "process";
 
-	public String retrieveXML() throws RepositoryException;
+	@Override
+	default String getType() {
+		return TYPE_NAME;
+	}
 
-	public void storeXML(String xml) throws RepositoryException;
+	String retrieveXML() throws RepositoryException;
+
+	void storeXML(String xml) throws RepositoryException;
 
 }
