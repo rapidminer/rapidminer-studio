@@ -22,9 +22,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.clustering.CentroidClusterModel;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.parameter.ParameterType;
@@ -68,6 +71,18 @@ public class XMeans extends RMAbstractClusterer {
 	 */
 	public static final String PARAMETER_MAX_OPTIMIZATION_STEPS = "max_optimization_steps";
 
+
+	/**
+	 * After this version the Operator parameters are propagated to the internal operators. There is also a change in
+	 * the behaviour of the internal operators, that affects the final result.
+	 */
+	public static final OperatorVersion VERSION_9_0_0_LABEL_ROLE_BUG = new OperatorVersion(9, 0, 0);
+
+	/**
+	 * After this version the points counted twice bug that was introduced with the {@link #VERSION_9_0_0_LABEL_ROLE_BUG} fix should no longer appear.
+	 */
+	public static final OperatorVersion VERSION_9_1_0_POINTS_COUNTED_TWICE_BUG = new OperatorVersion(9, 0, 3);
+
 	OperatorDescription Description = null;
 
 	public XMeans(OperatorDescription description) {
@@ -87,8 +102,17 @@ public class XMeans extends RMAbstractClusterer {
 		int maxOptimizationSteps = getParameterAsInt(PARAMETER_MAX_OPTIMIZATION_STEPS);
 		int maxRuns = getParameterAsInt(PARAMETER_MAX_RUNS);
 
+
 		XMeansCore xm = new XMeansCore(eSet, k_min, k_max, kpp, maxOptimizationSteps, maxRuns, Description, measure, fast_k);
+
+		xm.setCompatibilityLevel(this.getCompatibilityLevel());
+
+		if (this.getCompatibilityLevel().isAbove(VERSION_9_0_0_LABEL_ROLE_BUG)) {
+			xm.setParameter(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL, getParameter(RMAbstractClusterer.PARAMETER_ADD_AS_LABEL));
+			xm.setParameter(RMAbstractClusterer.PARAMETER_ADD_CLUSTER_ATTRIBUTE, getParameter(RMAbstractClusterer.PARAMETER_ADD_CLUSTER_ATTRIBUTE));
+		}
 		xm.setExecutingOperator(this);
+
 
 		return xm.doXMean();
 	}
@@ -112,11 +136,11 @@ public class XMeans extends RMAbstractClusterer {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeInt(PARAMETER_K_Min, "The minimal number of clusters which should be detected.", 2,
-				Integer.MAX_VALUE, 2, false));
+				Integer.MAX_VALUE, 3, false));
 		types.add(new ParameterTypeInt(PARAMETER_K_Max, "The maximal number of clusters which should be detected.", 3,
 				Integer.MAX_VALUE, 60, false));
 
-		ParameterType type = new ParameterTypeBoolean(KMeanspp.PARAMETER_USE_KPP, KMeanspp.SHORT_DESCRIPTION, false);
+		ParameterType type = new ParameterTypeBoolean(KMeanspp.PARAMETER_USE_KPP, KMeanspp.SHORT_DESCRIPTION, true);
 		type.setExpert(false);
 		types.add(type);
 
@@ -135,5 +159,11 @@ public class XMeans extends RMAbstractClusterer {
 	@Override
 	protected Map<String, Object> getMeasureParametersDefaults() {
 		return Collections.singletonMap(DistanceMeasures.PARAMETER_MEASURE_TYPES, DistanceMeasures.NUMERICAL_MEASURES_TYPE);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[]{VERSION_9_0_0_LABEL_ROLE_BUG, KMeanspp.VERSION_KPP_NOT_WORKING, VERSION_9_1_0_POINTS_COUNTED_TWICE_BUG});
 	}
 }

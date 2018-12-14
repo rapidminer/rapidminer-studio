@@ -21,12 +21,10 @@ package com.rapidminer.studio.io.gui.internal.steps.configuration;
 import java.text.DateFormat;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.swing.table.AbstractTableModel;
 
 import com.rapidminer.core.io.data.ColumnMetaData;
@@ -113,6 +111,15 @@ final class ConfigureDataTableModel extends AbstractTableModel {
 		}
 	}
 
+	/**
+	 * Get the preview data set, e.g. for date format guessing
+	 *
+	 * @since 9.1
+	 */
+	DataSet getDataSet() {
+		return dataSet;
+	}
+
 	private synchronized void read(DataSet dataPreview, ProgressListener listener) throws DataSetException {
 		if (listener != null) {
 			listener.setTotal(previewSize);
@@ -135,13 +142,14 @@ final class ConfigureDataTableModel extends AbstractTableModel {
 		int numberOfColumns = dataPreview.getNumberOfColumns();
 
 		// read in data until preview size is reached
-		while (dataPreview.hasNext()) {
+		// somehow the preview gets a maxEndRow of -1 and then this can take loooong
+		while (dataPreview.hasNext() && dataList.size() < ImportWizardUtils.getPreviewLength()) {
 			DataSetRow dataRow = dataPreview.nextRow();
 			String[] row = new String[numberOfColumns];
 			for (int i = 0; i < row.length; i++) {
 				if (dataRow.isMissing(i)) {
 					row[i] = Attribute.MISSING_NOMINAL_VALUE;
-				} else {
+				} else if (metaData.getColumnMetaData().size() > i) {
 					final ColumnType columnType = metaData.getColumnMetaData(i).getType();
 					readNotMissingEntry(dataRow, row, i, dataPreview.getCurrentRowIndex(), columnType, errorCells);
 				}
@@ -293,12 +301,7 @@ final class ConfigureDataTableModel extends AbstractTableModel {
 	 *            the index for which to delete the entries
 	 */
 	private void removeFromErrors(int columnIndex) {
-		Iterator<ParsingError> iterator = parsingErrorList.iterator();
-		while (iterator.hasNext()) {
-			if (iterator.next().getColumn() == columnIndex) {
-				iterator.remove();
-			}
-		}
+		parsingErrorList.removeIf(parsingError -> parsingError.getColumn() == columnIndex);
 	}
 
 	/**
@@ -351,10 +354,7 @@ final class ConfigureDataTableModel extends AbstractTableModel {
 	 */
 	boolean hasError(int rowIndex, int columnIndex) {
 		Set<Integer> errorRows = errorCells.get(columnIndex);
-		if (errorRows != null && errorRows.contains(rowIndex) && !metaData.getColumnMetaData(columnIndex).isRemoved()) {
-			return true;
-		}
-		return false;
+		return errorRows != null && errorRows.contains(rowIndex) && !metaData.getColumnMetaData(columnIndex).isRemoved();
 	}
 
 }

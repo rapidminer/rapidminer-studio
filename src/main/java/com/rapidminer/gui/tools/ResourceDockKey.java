@@ -66,7 +66,7 @@ public class ResourceDockKey extends DockKey {
 		}
 		setFloatEnabled(true);
 		setCloseEnabled(true);
-		setAutoHideEnabled(true);
+		setAutoHideEnabled(false);
 
 		// setting default dock group to root: Must be overriden if should be result
 		setDockGroup(MainFrame.DOCK_GROUP_ROOT);

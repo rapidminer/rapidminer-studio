@@ -50,13 +50,14 @@ public class ParameterTypeDateFormat extends ParameterTypeStringCategory {
 
 	public static final String TIME_FORMAT_H_MM_A = "h:mm a";
 	public static final String DATE_FORMAT_MM_DD_YYYY = "MM/dd/yyyy";
+	public static final String DATE_FORMAT_DD_DOT_MM_DOT_YYYY = "dd.MM.yyyy";
 	public static final String DATE_FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
 	public static final String DATE_TIME_FORMAT_MM_DD_YYYY_H_MM_A = DATE_FORMAT_MM_DD_YYYY + " " + TIME_FORMAT_H_MM_A;
 	public static final String DATE_TIME_FORMAT_YYYY_MM_DD_HH_MM_SS = DATE_FORMAT_YYYY_MM_DD + " HH:mm:ss";
 	public static final String DATE_TIME_FORMAT_ISO8601_UTC_MS =  "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 	public static final String DATE_TIME_FORMAT_M_D_YY_H_MM_A = "M/d/yy " + TIME_FORMAT_H_MM_A;
-	public static final String[] PREDEFINED_DATE_FORMATS = new String[]{"", DATE_FORMAT_MM_DD_YYYY, DATE_TIME_FORMAT_MM_DD_YYYY_H_MM_A,
-			"dd/MM/yyyy", "dd/MM/yyyy HH:mm", "yyyy.MM.dd G 'at' HH:mm:ss z", "EEE, MMM d, ''yy", TIME_FORMAT_H_MM_A,
+	public static final String[] PREDEFINED_DATE_FORMATS = new String[]{"", DATE_FORMAT_MM_DD_YYYY, DATE_FORMAT_DD_DOT_MM_DOT_YYYY, DATE_TIME_FORMAT_MM_DD_YYYY_H_MM_A,
+			"yyyy/MM/dd", "dd/MM/yyyy", "dd/MM/yyyy HH:mm", "yyyy.MM.dd G 'at' HH:mm:ss z", "EEE, MMM d, ''yy", TIME_FORMAT_H_MM_A,
 			"hh 'o''clock' a, zzzz", "K:mm a, z", "yyyy.MMMMM.dd GGG hh:mm aaa", "EEE, d MMM yyyy HH:mm:ss Z",
 			"yyMMddHHmmssZ", DATE_TIME_FORMAT_ISO8601_UTC_MS, DATE_TIME_FORMAT_YYYY_MM_DD_HH_MM_SS, DATE_TIME_FORMAT_M_D_YY_H_MM_A, DATE_FORMAT_YYYY_MM_DD};
 

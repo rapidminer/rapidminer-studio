@@ -318,6 +318,7 @@ public class Actions implements ProcessEditor {
 		currentStates[ConditionalAction.PROCESS_RUNNING] = processState == Process.PROCESS_STATE_RUNNING;
 		currentStates[ConditionalAction.EDIT_IN_PROGRESS] = EditBlockingProgressThread.isEditing();
 		currentStates[ConditionalAction.PROCESS_SAVED] = process.hasSaveDestination();
+		currentStates[ConditionalAction.PROCESS_HAS_REPOSITORY_LOCATION] = process.getRepositoryLocation() != null;
 		currentStates[ConditionalAction.PROCESS_RENDERER_IS_VISIBLE] = mainFrame.getProcessPanel().getProcessRenderer()
 				.isShowing();
 		currentStates[ConditionalAction.PROCESS_RENDERER_HAS_UNDO_STEPS] = mainFrame.hasUndoSteps();
@@ -339,7 +340,7 @@ public class Actions implements ProcessEditor {
 			if (selectedOperator instanceof ProcessRootOperator) {
 				return;
 			}
-			if (!"false".equals(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_DISCONNECT_ON_DISABLE))) {
+			if ("bridged".equals(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_DELETE_OPERATOR_CONNECTION_BEHAVIOR))) {
 				ActionUtil.doPassthroughPorts(selectedOperator);
 			}
 			selectedOperator.remove();

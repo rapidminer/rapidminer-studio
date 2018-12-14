@@ -32,14 +32,14 @@ import com.rapidminer.operator.OperatorVersion;
 /**
  * Displays the {@link OperatorVersion}s as returned by
  * {@link Operator#getIncompatibleVersionChanges()}. and {@link Operator#getCompatibilityLevel()} .
- * 
+ *
  * @author Simon Fischer
- * 
+ *
  */
 public class CompatibilityLevelSpinnerModel extends AbstractSpinnerModel {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	private int index = 0;

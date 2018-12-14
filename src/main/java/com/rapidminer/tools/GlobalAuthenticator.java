@@ -46,8 +46,8 @@ import com.rapidminer.tools.cipher.CipherTools;
  */
 public class GlobalAuthenticator extends Authenticator {
 
-	private final List<URLAuthenticator> serverAuthenticators = new LinkedList<URLAuthenticator>();
-	private final List<URLAuthenticator> proxyAuthenticators = new LinkedList<URLAuthenticator>();
+	private final List<URLAuthenticator> serverAuthenticators = new LinkedList<>();
+	private final List<URLAuthenticator> proxyAuthenticators = new LinkedList<>();
 	private URLAuthenticator socksProxyAuthenticator = null;
 
 	private static GlobalAuthenticator THE_INSTANCE = new GlobalAuthenticator();
@@ -61,7 +61,7 @@ public class GlobalAuthenticator extends Authenticator {
 	/**
 	 * This method is deprecated use registerServerAuthenticator instead.
 	 */
-	public synchronized static void register(URLAuthenticator authenticator) {
+	public static synchronized void register(URLAuthenticator authenticator) {
 		registerServerAuthenticator(authenticator);
 	}
 
@@ -69,7 +69,7 @@ public class GlobalAuthenticator extends Authenticator {
 	 * This method adds another Authenticator to the GlobalAuthenticator that will be enqueued in
 	 * the list of Authenticators that are tried for URLs that need authentification.
 	 */
-	public synchronized static void registerServerAuthenticator(URLAuthenticator authenticator) {
+	public static synchronized void registerServerAuthenticator(URLAuthenticator authenticator) {
 		THE_INSTANCE.serverAuthenticators.add(authenticator);
 	}
 
@@ -77,14 +77,14 @@ public class GlobalAuthenticator extends Authenticator {
 	 * This method adds another Authenticator to the GlobalAuthenticator that will be enqueued in
 	 * the list of Authenticators that are tried for Proxy requests for authentification.
 	 */
-	public synchronized static void registerProxyAuthenticator(URLAuthenticator authenticator) {
+	public static synchronized void registerProxyAuthenticator(URLAuthenticator authenticator) {
 		THE_INSTANCE.proxyAuthenticators.add(authenticator);
 	}
 
 	/**
 	 * This method adds the default ProxyAuthenticators to the GlobalAuthenticator.
 	 */
-	public synchronized static void refreshProxyAuthenticators() {
+	public static synchronized void refreshProxyAuthenticators() {
 		THE_INSTANCE.proxyAuthenticators.clear();
 		THE_INSTANCE.socksProxyAuthenticator = new SocksProxyAuthenticator(ProxyAuthenticator.SOCKS);
 		registerProxyAuthenticator(new ProxyAuthenticator(ProxyAuthenticator.HTTP));
@@ -95,36 +95,36 @@ public class GlobalAuthenticator extends Authenticator {
 	@Override
 	protected synchronized PasswordAuthentication getPasswordAuthentication() {
 		URL url = getRequestingURL();
-
 		try {
 			if (SocksProxyAuthenticator.SOCKS5.equals(this.getRequestingProtocol())) {
-				PasswordAuthentication auth = socksProxyAuthenticator.getAuthentication(url);
-				return auth;
+				return socksProxyAuthenticator.getAuthentication(url);
 			}
-			switch (getRequestorType()) {
+			RequestorType requestorType = getRequestorType();
+			if (requestorType == null) {
+				return PasswordDialog.getPasswordAuthentication(url.toString(), false, true);
+			}
+			List<URLAuthenticator> authenticators;
+			String logKey = "com.rapidminer.tools.GlobalAuthenticator.authentication_requested";
+			switch (requestorType) {
 				case PROXY:
-					LogService.getRoot().log(Level.FINE,
-							"com.rapidminer.tools.GlobalAuthenticator.authentication_requested_proxy",
-							new Object[] { url, proxyAuthenticators });
-					for (URLAuthenticator a : proxyAuthenticators) {
-						PasswordAuthentication auth = a.getAuthentication(url);
-						if (auth != null) {
-							return auth;
-						}
-					}
-					// this should not be happen
-					return PasswordDialog.getPasswordAuthentication(url.toString(), false, false);
+					logKey += "_proxy";
+					authenticators = proxyAuthenticators;
+					break;
 				case SERVER:
-					LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.GlobalAuthenticator.authentication_requested",
-							new Object[] { url, serverAuthenticators });
-					for (URLAuthenticator a : serverAuthenticators) {
-						PasswordAuthentication auth = a.getAuthentication(url);
-						if (auth != null) {
-							return auth;
-						}
-					}
+					authenticators = serverAuthenticators;
+					break;
+				default:
+					return null;
 			}
-			return PasswordDialog.getPasswordAuthentication(url.toString(), false, true);
+			LogService.getRoot().log(Level.FINE, logKey, new Object[]{url, authenticators});
+			for (URLAuthenticator a : authenticators) {
+				PasswordAuthentication auth = a.getAuthentication(url);
+				if (auth != null) {
+					return auth;
+				}
+			}
+			// this should not happen
+			return PasswordDialog.getPasswordAuthentication(url.toString(), false, requestorType == RequestorType.SERVER);
 		} catch (PasswordInputCanceledException e) {
 			return null;
 		}

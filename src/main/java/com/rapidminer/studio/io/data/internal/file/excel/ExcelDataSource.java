@@ -25,8 +25,10 @@ import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.DataSetMetaData;
 import com.rapidminer.core.io.data.source.DataSource;
 import com.rapidminer.core.io.data.source.DataSourceConfiguration;
+import com.rapidminer.core.io.data.source.DataSourceFeature;
 import com.rapidminer.core.io.data.source.FileDataSource;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.nio.ExcelDateTimeTypeGuesser;
 import com.rapidminer.operator.nio.model.DataResultSet;
 import com.rapidminer.operator.nio.model.DateFormatProvider;
 import com.rapidminer.operator.nio.model.ExcelResultSetConfiguration;
@@ -236,6 +238,7 @@ public final class ExcelDataSource extends FileDataSource {
 			try (DataResultSet resultSet = configuration.makeDataResultSet(null)) {
 				this.metaData = ResultSetAdapterUtils.createMetaData(resultSet, null, getStartRowIndex(),
 						getHeaderRowIndex());
+				this.metaData.configure(ExcelDateTimeTypeGuesser.guessDateTimeColumnType(getData(), metaData));
 			} catch (OperatorException e) {
 				throw new DataSetException(e.getMessage(), e);
 			}
@@ -261,6 +264,11 @@ public final class ExcelDataSource extends FileDataSource {
 			dataSet.close();
 			dataSet = null;
 		}
+	}
+
+	@Override
+	public boolean supportsFeature(DataSourceFeature feature){
+		return feature == DataSourceFeature.DATETIME_METADATA;
 	}
 
 }

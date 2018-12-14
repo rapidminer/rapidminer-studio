@@ -856,6 +856,7 @@ public class ProcessRendererController {
 				if (bestOutput != null) {
 					connect(bestOutput, oldDest);
 				}
+				model.fireOperatorsMoved(Collections.singleton(operator));
 			}
 		} finally {
 			oldDest.unlock();

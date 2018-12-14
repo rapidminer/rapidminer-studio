@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.event.EventListenerList;
@@ -96,7 +97,8 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 
 	private static RepositoryProvider provider = new FileRepositoryProvider();
 
-	private final List<Repository> repositories = new LinkedList<>();
+	// use copy-on-write to prevent modification exceptions on startup
+	private final List<Repository> repositories = new CopyOnWriteArrayList<>();
 
 	private final EventListenerList listeners = new EventListenerList();
 

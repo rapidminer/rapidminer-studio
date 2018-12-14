@@ -269,7 +269,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 					if (amd.isNumerical() && getCompatibilityLevel().isAtMost(VERSION_5_1_6)) {
 						// converting type to mimic NumericalToPolynomial used below
 						amd.setType(Ontology.NOMINAL);
-						amd.setValueSet(Collections.<String> emptySet(), SetRelation.SUPERSET);
+						amd.setValueSet(Collections.<String>emptySet(), SetRelation.SUPERSET);
 					}
 					resultMD.addAttribute(amd);
 				}
@@ -576,8 +576,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 	}
 
 	private void parseLeaf(LeafAggregationTreeNode node, double[] dataOfUpperLevels, List<double[]> allGroupCombinations,
-			List<List<Aggregator>> allAggregators, DataRowFactory factory, Attribute[] newAttributes,
-			List<AggregationFunction> aggregationFunctions) {
+						   List<List<Aggregator>> allAggregators, DataRowFactory factory, Attribute[] newAttributes,
+						   List<AggregationFunction> aggregationFunctions) {
 		// first copying data from groups
 		double[] newGroupCombination = new double[dataOfUpperLevels.length];
 		System.arraycopy(dataOfUpperLevels, 0, newGroupCombination, 0, dataOfUpperLevels.length);
@@ -609,8 +609,8 @@ public class AggregationOperator extends AbstractDataProcessing {
 	}
 
 	private void parseTree(AggregationTreeNode node, Attribute[] groupAttributes, double[] dataOfUpperLevels, int groupLevel,
-			List<double[]> allGroupCombinations, List<List<Aggregator>> allAggregators, DataRowFactory factory,
-			Attribute[] newAttributes, boolean isCountingAllCombinations, List<AggregationFunction> aggregationFunctions)
+						   List<double[]> allGroupCombinations, List<List<Aggregator>> allAggregators, DataRowFactory factory,
+						   Attribute[] newAttributes, boolean isCountingAllCombinations, List<AggregationFunction> aggregationFunctions)
 			throws UserError {
 		Attribute currentAttribute = groupAttributes[groupLevel];
 		if (currentAttribute.isNominal()) {
@@ -775,7 +775,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
-				new OperatorVersion[] { VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6, VERSION_7_4_0, VERSION_8_2_0 });
+				new OperatorVersion[]{VERSION_5_1_6, VERSION_5_2_8, VERSION_6_0_6, VERSION_7_4_0, VERSION_8_2_0});
 	}
 
 	@Override

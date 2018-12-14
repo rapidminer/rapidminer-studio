@@ -238,7 +238,9 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 		pgFast.start();
 
 		// if enabled, add full metadata to index afterwards, so user can search advanced things
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RepositoryGlobalSearch.PROPERTY_FULL_REPOSITORY_INDEXING))) {
+		// don't do it for RestRepositories, the full index is too expensive here
+		boolean isRestRepository = folder instanceof RESTRepository;
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RepositoryGlobalSearch.PROPERTY_FULL_REPOSITORY_INDEXING)) && !isRestRepository) {
 			ProgressThread pgFull = createIndexingThread(folder, true);
 			pgFull.addDependency(pgFast.getID());
 			pgFull.start();

@@ -153,7 +153,9 @@ public class StackingModel extends PredictionModel implements MetaModel {
 			stackingExampleSet.getExampleTable().removeAttribute(tempPrediction);
 		}
 
-		progress.complete();
+		if (progress != null) {
+			progress.complete();
+		}
 		return exampleSet;
 	}
 

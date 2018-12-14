@@ -41,7 +41,7 @@ public class ShowProcessInRepositoryAction extends ResourceActionAdapter {
 	public ShowProcessInRepositoryAction(RepositoryTree tree) {
 		super(true, "link");
 		this.tree = tree;
-		setCondition(PROCESS_SAVED, ConditionalAction.MANDATORY);
+		setCondition(PROCESS_HAS_REPOSITORY_LOCATION, ConditionalAction.MANDATORY);
 	}
 
 	@Override

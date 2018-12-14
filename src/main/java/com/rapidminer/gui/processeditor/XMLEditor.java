@@ -121,7 +121,7 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 
 	@Override
 	public void processUpdated(Process process) {
-		setText(process.getRootOperator().getXML(true));
+		setText(process.getRootOperator().getXML(false));
 	}
 
 	@Override
@@ -155,14 +155,14 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 	public synchronized void validateProcess() throws IOException, XMLException {
 		String editorContent = getXMLFromEditor();
 		Process oldProcess = RapidMinerGUI.getMainFrame().getProcess();
-		String oldXML = oldProcess.getRootOperator().getXML(true);
+		String oldXML = oldProcess.getRootOperator().getXML(false);
 		if (oldXML.trim().equals(editorContent)) {
 			return;
 		}
 		Process newProcess = new Process(editorContent);
 		ProcessRendererView processRenderer = mainFrame.getProcessPanel().getProcessRenderer();
 		ProcessDrawUtils.ensureOperatorsHaveLocation(newProcess, processRenderer.getModel());
-		String newXML = newProcess.getRootOperator().getXML(true);
+		String newXML = newProcess.getRootOperator().getXML(false);
 		if (!newXML.equals(oldXML)) {
 			newProcess.setProcessLocation(oldProcess.getProcessLocation());
 			mainFrame.setProcess(newProcess, false);

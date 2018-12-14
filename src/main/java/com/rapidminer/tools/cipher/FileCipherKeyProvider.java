@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.LogService;
 
@@ -61,7 +62,8 @@ public class FileCipherKeyProvider implements CipherKeyProvider {
 			return KeyGeneratorTool.makeKey(rawKey);
 		} catch (IOException e) {
 			// catch to log the problem, then throw again to indicate error
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.cipher.KeyGeneratorTool.read_key_error",
+			Level logLevel = RapidMiner.getExecutionMode().canAccessFilesystem() ? Level.WARNING : Level.CONFIG;
+			LogService.getRoot().log(logLevel, "com.rapidminer.tools.cipher.KeyGeneratorTool.read_key_error",
 					e.getMessage());
 			throw new KeyLoadingException("Cannot retrieve key: " + e.getMessage());
 		}

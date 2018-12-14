@@ -39,6 +39,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.IntStream;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.table.DataRowFactory;
@@ -82,6 +83,8 @@ public class DataResultSetTranslationConfiguration {
 
 	private boolean trimAttributeNames = true;
 
+	private boolean trimForGuessing = true;
+
 	/**
 	 * This constructor can be used to generate an empty configuration just depending on the given
 	 * resultSet
@@ -91,9 +94,6 @@ public class DataResultSetTranslationConfiguration {
 	 */
 	public DataResultSetTranslationConfiguration(AbstractDataResultSetReader readerOperator) {
 		this(readerOperator, null);
-		if (readerOperator != null) {
-			trimAttributeNames = readerOperator.shouldTrimAttributeNames();
-		}
 	}
 
 	/**
@@ -172,8 +172,12 @@ public class DataResultSetTranslationConfiguration {
 
 			columnMetaData = readColumnMetaData(readerOperator);
 			setFaultTolerant(readerOperator.getParameterAsBoolean(AbstractDataResultSetReader.PARAMETER_ERROR_TOLERANT));
+			trimAttributeNames = readerOperator.shouldTrimAttributeNames();
+			trimForGuessing = readerOperator.trimForGuessing();
 		} else {
 			annotationsMap.put(0, ANNOTATION_NAME);
+			trimAttributeNames = true;
+			trimForGuessing = true;
 		}
 	}
 
@@ -236,21 +240,8 @@ public class DataResultSetTranslationConfiguration {
 	 * This will return all indices of each selected column
 	 */
 	public int[] getSelectedIndices() {
-		int numberOfSelected = 0;
-		int[] selectedIndices = new int[columnMetaData.length];
-		for (int i = 0; i < selectedIndices.length; i++) {
-			if (columnMetaData[i].isSelected()) {
-				selectedIndices[numberOfSelected] = i;
-				numberOfSelected++;
-			}
-		}
-		if (numberOfSelected < selectedIndices.length) {
-			int[] result = new int[numberOfSelected];
-			System.arraycopy(selectedIndices, 0, result, 0, numberOfSelected);
-			return result;
-		} else {
-			return selectedIndices;
-		}
+		return IntStream.range(0, columnMetaData.length).
+				filter(i -> columnMetaData[i].isSelected()).toArray();
 	}
 
 	/**
@@ -261,9 +252,7 @@ public class DataResultSetTranslationConfiguration {
 	}
 
 	public SortedSet<Integer> getAnnotatedRowIndices() {
-		SortedSet<Integer> result = new TreeSet<>();
-		result.addAll(annotationsMap.keySet());
-		return result;
+		return new TreeSet<>(annotationsMap.keySet());
 	}
 
 	public Map<Integer, String> getAnnotationsMap() {
@@ -275,16 +264,12 @@ public class DataResultSetTranslationConfiguration {
 	 * selected.
 	 */
 	public int getNameRow() {
-		if (annotationsMap == null) {
-			return -1;
-		} else {
-			for (Entry<Integer, String> entry : annotationsMap.entrySet()) {
-				if (Annotations.ANNOTATION_NAME.equals(entry.getValue())) {
-					return entry.getKey();
-				}
+		for (Entry<Integer, String> entry : annotationsMap.entrySet()) {
+			if (Annotations.ANNOTATION_NAME.equals(entry.getValue())) {
+				return entry.getKey();
 			}
-			return -1;
 		}
+		return -1;
 	}
 
 	public int getNumerOfColumns() {
@@ -304,7 +289,7 @@ public class DataResultSetTranslationConfiguration {
 	}
 
 	public int getLastAnnotatedRowIndex() {
-		if (annotationsMap == null || annotationsMap.isEmpty()) {
+		if (annotationsMap.isEmpty()) {
 			return -1;
 		}
 		SortedSet<Integer> annotatedRows = getAnnotatedRowIndices();
@@ -435,6 +420,27 @@ public class DataResultSetTranslationConfiguration {
 			}
 		}
 		return columnMetaData;
+	}
+
+	/**
+	 * Indicates if values should be trimmed for type guessing
+	 *
+	 * @return {@code true} if values should be trimmed for type guessing
+	 * @since 9.1.1
+	 */
+	public boolean trimForGuessing() {
+		return trimForGuessing;
+	}
+
+	/**
+	 * Indicates if values should be trimmed for type guessing
+	 *
+	 * @param trimForGuessing
+	 * 		if parameters should be trimmed for guessing
+	 * @since 9.1.1
+	 */
+	public void setTrimForGuessing(boolean trimForGuessing) {
+		this.trimForGuessing = trimForGuessing;
 	}
 
 	/**

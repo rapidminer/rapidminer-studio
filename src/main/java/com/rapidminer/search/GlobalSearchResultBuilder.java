@@ -35,9 +35,11 @@ import org.apache.lucene.search.ScoreDoc;
 public final class GlobalSearchResultBuilder {
 
 	private static final int MAX_RESULTS_DEFAULT = 20;
+	private static final int MORE_RESULTS_DEFAULT = 0;
 
 	private final String searchTerm;
 	private int maxNumberOfResults;
+	private int showMoreResults;
 	private boolean highlightResult;
 	private boolean simpleMode;
 	private ScoreDoc after;
@@ -64,6 +66,7 @@ public final class GlobalSearchResultBuilder {
 
 		//set default values
 		this.maxNumberOfResults = MAX_RESULTS_DEFAULT;
+		this.showMoreResults = MORE_RESULTS_DEFAULT;
 		this.highlightResult = false;
 		this.after = null;
 		this.categories = null;
@@ -83,6 +86,24 @@ public final class GlobalSearchResultBuilder {
 			throw new IllegalArgumentException("maxNumberOfResults must be > 0!");
 		}
 		this.maxNumberOfResults = maxNumberOfResults;
+		return this;
+	}
+
+	/**
+	 * Set the number of additional to the maximum number results to be returned with this search if there are not more
+	 * than maxNumberOfResults + moreResults available.
+	 *
+	 * <p>By default, {@value #MORE_RESULTS_DEFAULT} additional values are returned.</p>
+	 *
+	 * @param moreResults
+	 * 		the maximum number of additional results
+	 * @return the builder instance
+	 */
+	public GlobalSearchResultBuilder setMoreResults(final int moreResults) {
+		if (moreResults < 0) {
+			throw new IllegalArgumentException("moreResults must be >= 0!");
+		}
+		this.showMoreResults = moreResults;
 		return this;
 	}
 
@@ -172,6 +193,6 @@ public final class GlobalSearchResultBuilder {
 	 * 		if the searchQuery was invalid
 	 */
 	public GlobalSearchResult runSearch() throws ParseException {
-		return GlobalSearchHandler.INSTANCE.search(searchTerm, categories, simpleMode, maxNumberOfResults, highlightResult, after);
+		return GlobalSearchHandler.INSTANCE.search(searchTerm, categories, simpleMode, maxNumberOfResults, showMoreResults, highlightResult, after);
 	}
 }

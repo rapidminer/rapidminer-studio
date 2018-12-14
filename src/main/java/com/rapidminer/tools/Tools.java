@@ -121,42 +121,30 @@ public class Tools {
 	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 	// EXTREMELY expensive
 	/** Used for formatting values in the {@link #formatTime(Date)} method. */
-	private static final ThreadLocal<DateFormat> TIME_FORMAT = new ThreadLocal<DateFormat>() {
-
-		@Override
-		protected DateFormat initialValue() {
-			// clone because getDateInstance uses an internal pool which can return the same
-			// instance for multiple threads
-			return (DateFormat) DateFormat.getTimeInstance(DateFormat.LONG, Locale.getDefault()).clone();
-		}
-	};
+	private static final ThreadLocal<DateFormat> TIME_FORMAT = ThreadLocal.withInitial(() -> {
+		// clone because getDateInstance uses an internal pool which can return the same
+		// instance for multiple threads
+		return (DateFormat) DateFormat.getTimeInstance(DateFormat.LONG, Locale.getDefault()).clone();
+	});
 
 	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 	// EXTREMELY expensive
 	/** Used for formatting values in the {@link #formatDate(Date)} method. */
-	private static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-
-		@Override
-		protected DateFormat initialValue() {
-			// clone because getDateInstance uses an internal pool which can return the same
-			// instance for multiple threads
-			return (DateFormat) DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).clone();
-		}
-	};
+	private static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
+		// clone because getDateInstance uses an internal pool which can return the same
+		// instance for multiple threads
+		return (DateFormat) DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).clone();
+	});
 
 	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 	// EXTREMELY expensive
 	/** Used for formatting values in the {@link #formatDateTime(Date)} method. */
-	public static final ThreadLocal<DateFormat> DATE_TIME_FORMAT = new ThreadLocal<DateFormat>() {
-
-		@Override
-		protected DateFormat initialValue() {
-			// clone because getDateInstance uses an internal pool which can return the same
-			// instance for multiple threads
-			return (DateFormat) DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.LONG, Locale.getDefault())
-					.clone();
-		}
-	};
+	public static final ThreadLocal<DateFormat> DATE_TIME_FORMAT = ThreadLocal.withInitial(() -> {
+		// clone because getDateInstance uses an internal pool which can return the same
+		// instance for multiple threads
+		return (DateFormat) DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.LONG, Locale.getDefault())
+				.clone();
+	});
 
 	private static Locale FORMAT_LOCALE = Locale.US;
 

@@ -318,10 +318,8 @@ public class ExcelResultSet implements DataResultSet {
 			Date date = ((DateCell) cell).getDate();
 
 			// hack to get actual date written in excel sheet. converts date to UTC
-			int offset = TimeZone.getDefault().getOffset(date.getTime());
-			date.setTime(date.getTime() - offset);
-
-			return date;
+		    int offset = TimeZone.getDefault().getOffset(date.getTime());
+			return new Date(date.getTime() - offset);
 		} else {
 			String valueString = cell.getContents();
 			DateFormat dateFormat = dateFormatProvider.geDateFormat();

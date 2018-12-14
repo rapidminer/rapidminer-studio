@@ -22,6 +22,7 @@ import com.rapidminer.Process;
 import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.operator.DebugMode;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.ports.DeliveringPortManager;
 import com.rapidminer.operator.ports.OutputPorts;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
@@ -34,7 +35,7 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 
 public class OutputPortImpl extends AbstractOutputPort {
 
-	/** Use the factory method {@link OutputPorts#createPort()} to create OutputPorts. */
+	/** Use the factory method {@link OutputPorts#createPort(String)} to create OutputPorts. */
 	protected OutputPortImpl(Ports<? extends Port> owner, String name, boolean simulatesStack) {
 		super(owner, name, simulatesStack);
 	}
@@ -48,7 +49,7 @@ public class OutputPortImpl extends AbstractOutputPort {
 		// registering history of object
 		if (object != null) {
 			object.appendOperatorToHistory(getPorts().getOwner().getOperator(), this);
-
+			DeliveringPortManager.setLastDeliveringPort(object, this);
 			// set source if not yet set
 			if (object.getSource() == null) {
 				if (getPorts().getOwner().getOperator() != null) {

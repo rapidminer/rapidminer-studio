@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <steps>
-	<step name="Rotating from long to wide table formats.">
+	<step name="Aggregate data and pivot.">
 		<text>In this tutorial, you will learn about another common data blending technique, namely the
 		<emph>Pivoting</emph>
-		of data. You might be familiar with the concept of Pivoting from BI tools or Excel: 
-		rotate the data from a long table format (one attribute with a lot of examples) into a wide table format (lots of attributes with a single example). 
-		This transformation is especially useful after an aggregation since
-		the
-		aggregated information is always stored in a long format. Machine learning models, however,
-		need
-		the data to be stored in
-		a wide column format so you will encounter this preprocessing step
-		frequently
-		before you start with the actual modeling.</text>
+			of data. You might be familiar with the concept of Pivoting from BI tools or Excel:
+			rotate the data from a long table format (one attribute with a lot of examples) into a wide table format
+			(lots of attributes with a single example). This transformation is especially useful to aggregate
+			information along two or more dimensions as a step to prepare the data for machine learning. Machine
+			learning models need the data to be stored in a wide table format so you will encounter this preprocessing
+			step frequently before you start with the actual modeling.
+		</text>
 	</step>
 
-	<step name="Prepare the data.">
+	<step name="Pivot the data.">
 		<info>
-			Let’s start by creating a table that shows how many passengers were in each class, broken down by gender.
+			Let’s create a table that shows how many passengers were in each class, broken down by gender.
 		</info>
 
 		<tasks>
@@ -30,19 +27,23 @@
 			<task>
 				<acticity>Add</acticity>
 				the operator
-				<op>Aggregate</op>
+				<op>Pivot</op>
 				and
 				<activity>connect it</activity>.
 			</task>
 			<task>
 				In its
 				<ui>Parameters</ui>,
-				<activity>select</activity>
-				<value>Passenger Class</value>
-				and
+				<activity>add</activity>
 				<value>Sex</value>
-				as
+				to the
 				<param>group by attributes</param>.
+			</task>
+			<task>
+				<activity>Select</activity>
+				<value>Passenger Class</value>
+				as
+				<param>column grouping attribute</param>.
 			</task>
 			<task>
 				Also use
@@ -56,72 +57,14 @@
 		</tasks>
 
 		<info>
-			The result will be a table with three columns:
-			<value>Passenger Class</value>,
-			<value>Sex</value>, and the count for each of
-			those combinations. The first row is
-			<value>First</value>,
-			<value>Female</value>
-			with a count of
-			<value>144</value>, the second row is
-			<value>First</value>,
-			<value>Male</value>
-			with a count of
-			<value>179</value>
-			and so on. All combinations of the passenger class and the gender
-			are represented as rows which is
-			why we call this a
-			<emph>long</emph>
-			table format.
-		</info>
-	</step>
-
-	<step name="Pivot the data.">
-		<info>
-			Let’s transform the long table format into a wide format that will make the number of males and females in each class a bit clearer.
-		</info>
-
-		<tasks>
-			<task>
-				<activity>Search</activity>
-				for the operator
-				<op>Pivot</op>,
-				<activity>add it</activity>,
-				and
-				<activity>connect it</activity>
-				to
-				<op>Aggregate</op>.
-			</task>
-			<task>
-				<activity>Select</activity>
-				the operator to see its
-				<ui>Parameters</ui>.
-				<activity>Use</activity>
-				<value>Sex</value>
-				as the
-				<param>group attribute</param>.
-			</task>
-			<task>
-				<activity>Use</activity>
-				<value>Passenger Class</value>
-				as
-				<param>index attribute</param>.
-			</task>
-		</tasks>
-
-		<info>
-			The resulting data set has four columns and two rows. Each row represents one of the values from the <value>Sex</value> column 
-			(the <param>group attributes</param> parameter). The three different
-			values of the
-			<param>index attribute</param>
-			(
-			<value>passenger class</value>
-			) become the three new columns. The actual values in the table are representing the
-			counts
-			from the aggregation for the combination of the group (gender) with the index value (or
-			subgroup), which is the passenger class in our case. For example, we will get 144 females who
-			booked first
-			class.
+			The resulting data table has four columns and two rows. Each row represents one of the values from the
+			<value>Sex</value>
+			column, (the <param>group by attributes</param> parameter).
+			The three different values of the <param>column grouping attribute</param> (
+			<value>Passenger Class</value>) become the three new columns. The actual values in the table are
+			representing the counts of each combination of groups in the rows, i.e. the gender, and the groups in the
+			columns, which is the passenger class in our case. For example, we will get <value>144</value> females who
+			booked first class.
 		</info>
 	</step>
 
@@ -179,8 +122,8 @@
 			Since the round brackets have a special meaning here, we need to quote the brackets in the name itself with a
 			backslash. Finally, we can use the capturing groups in the <param>replace by</param>
 			parameter with the dollar sign and the number identifying the group. <value>$1</value> is for
-			the content of the first group, which always happens to be "Passenger Class", and <value>$2</value> is 
-			for identifying the second group.  Those are the three different classes "First", "Second", and "Third".
+			the content of the first group, which always happens to be "Passenger Class", and <value>$2</value> is
+			for identifying the second group. Those are the three different classes "First", "Second", and "Third".
 		</info>
 	</step>
 
@@ -197,15 +140,14 @@
 	</step>
 
 	<step name="Congratulations!">
-		<text>You rotated an aggregated data set from a long to a wide table format - good job! <op>Pivot</op> can be difficult to configure sometimes.  
-		Just keep in mind that the <param>groups</param> parameter will end up in the rows with one row per group while the values of the <param>index attribute</param> 
-		parameter will define the new columns.</text>
+		<text>You rotated an aggregated data set in wide table format - good job! <op>Pivot</op> can be difficult to
+			configure sometimes.
+			Just keep in mind that the <param>group by attributes</param> parameter parameter will define the groups in
+			the rows with one row per group while the values of the column grouping attribute parameter will define the
+			new columns.
+		</text>
 
 		<questions>
-			<question>
-				Add a breakpoint after "Aggregate". Run the process and check out the long table format. How many rows does it have? 
-				Resume the process and compare the long format to wide format.  Don't forget to remove the breakpoint if you no longer need it.
-			</question>
 			<question>
 				Can you change the process so that the column names will be changed to "First Passenger Class", 
 				"Second Passenger Class", and "Third Passenger Class"?
@@ -214,16 +156,23 @@
 				Can you also change them to just say "First Class", "Second Class", and "Third Class"?
 			</question>
 			<question>
-				Change the Pivot so that the gender is transformed into new columns and the class is defining three groups of data.
-				How many columns and rows are you getting now?
+				Change the Pivot so that the gender is transformed into new columns and the passenger class is defining
+				three groups of data. How many columns and rows are you getting now?
 			</question>
 			<question>
-				Try to adapt the renaming so that it just uses the gender as column names after the new Pivoting.
+				Try to adapt the renaming so that it just uses the gender as column names after the new pivoting.
+			</question>
+			<question>
+				Now, remove the Rename by Replacing operator and remove the column grouping attribute from Pivot. Set
+				Sex and Passenger Class as group by attributes and use Passenger Class with count as the aggregation
+				attribute. Run the process and inspect the result. In how far is it different from the first result you
+				obtained through Pivot?
 			</question>
 		</questions>
 		
 		<info>
-			Don't worry if you had trouble with challenges 2, 3, or 5. Regular expressions can be difficult at first but 
+			Don't worry if you had trouble with challenges 2, 3, or 5. Regular expressions can be difficult at first,
+			but
 			they are definitely worth learning. Maybe a book can help you or you will find a lot of training resources 
 			<link url="http://www.ocpsoft.org/opensource/guide-to-regular-expressions-in-java-part-1/">online</link>
 			.

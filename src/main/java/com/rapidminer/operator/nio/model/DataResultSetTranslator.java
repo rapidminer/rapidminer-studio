@@ -22,7 +22,6 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -391,7 +390,7 @@ public class DataResultSetTranslator {
 	private String getString(DataResultSet dataResultSet, int row, int column, boolean isFaultTolerant) throws UserError {
 		try {
 			String string = dataResultSet.getString(column);
-			if (operator.getCompatibilityLevel().isAbove(BEFORE_ATTRIBUTE_TRIMMING)) {
+			if (operator == null || operator.getCompatibilityLevel().isAbove(BEFORE_ATTRIBUTE_TRIMMING)) {
 				string = string == null ? null : string.trim();
 			}
 			return string;
@@ -504,8 +503,6 @@ public class DataResultSetTranslator {
 		if (listener != null) {
 			listener.setCompleted(1);
 		}
-		int[] columnValueTypes = new int[dataResultSet.getNumberOfColumns()];
-		Arrays.fill(columnValueTypes, Ontology.INTEGER);
 
 		// TODO: The following could be made more efficient using an indirect indexing to access the
 		// columns: would
@@ -601,6 +598,10 @@ public class DataResultSetTranslator {
 					} else {
 						// for strings, we try parsing ourselves
 						// fill value buffer for binominal assessment
+						// trim value
+						if (stringRepresentation != null && configuration.trimForGuessing()) {
+							stringRepresentation = stringRepresentation.trim();
+						}
 						definedTypes[column] = guessValueType(definedTypes[column], stringRepresentation,
 								!nominalValues[column].moreThanTwo, dateFormat, numberFormat);
 					}
@@ -615,28 +616,19 @@ public class DataResultSetTranslator {
 		return definedTypes;
 	}
 
+
 	/**
 	 * This method tries to guess the value type by taking into account the current guessed type and
 	 * the string value. The type will be transformed to more general ones.
 	 */
 	private int guessValueType(int currentValueType, String value, boolean onlyTwoValues, DateFormat dateFormat,
 			NumberFormat numberFormat) {
-		if (operator != null && operator.getCompatibilityLevel().isAtMost(VERSION_6_0_3)) {
-			if (currentValueType == Ontology.POLYNOMINAL) {
-				return currentValueType;
-			}
-			if (currentValueType == Ontology.BINOMINAL) {
-				if (onlyTwoValues) {
-					return Ontology.BINOMINAL;
-				} else {
-					return Ontology.POLYNOMINAL;
-				}
-			}
-		} else {
-			if (currentValueType == Ontology.BINOMINAL || currentValueType == Ontology.POLYNOMINAL) {
-				// Don't set to binominal type, it fails too often.
-				return Ontology.POLYNOMINAL;
-			}
+		if (onlyTwoValues && operator != null && operator.getCompatibilityLevel().isAtMost(VERSION_6_0_3)
+				&& currentValueType == Ontology.BINOMINAL) {
+			return Ontology.BINOMINAL;
+		} else if (currentValueType == Ontology.BINOMINAL || currentValueType == Ontology.POLYNOMINAL) {
+			// Don't set to binominal type, it fails too often.
+			return Ontology.POLYNOMINAL;
 		}
 
 		if (currentValueType == Ontology.DATE) {
@@ -655,14 +647,14 @@ public class DataResultSetTranslator {
 			if (numberFormat != null) {
 				try {
 					numberFormat.parse(value);
-					return currentValueType;
+					return Ontology.REAL;
 				} catch (ParseException e) {
 					return guessValueType(Ontology.DATE, value, onlyTwoValues, dateFormat, numberFormat);
 				}
 			} else {
 				try {
 					Double.parseDouble(value);
-					return currentValueType;
+					return Ontology.REAL;
 				} catch (NumberFormatException e) {
 					return guessValueType(Ontology.DATE, value, onlyTwoValues, dateFormat, null);
 				}
@@ -710,9 +702,6 @@ public class DataResultSetTranslator {
 	}
 
 	public ParsingError getErrorByExampleIndexAndColumn(int row, int column) {
-		if (errors == null) {
-			return null;
-		}
 		return errors.get(new Pair<>(row, column));
 	}
 

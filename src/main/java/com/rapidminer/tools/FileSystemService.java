@@ -45,7 +45,7 @@ public class FileSystemService {
 	/** folder which can be used for internal caching of the Global Search feature */
 	private static final String RAPIDMINER_INTERNAL_CACHE_SEARCH = "search";
 
-	public static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL = "internal cache/search";
+	public static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_SEARCH;
 
 	/** folder which can be used to load additional building blocks */
 	public static final String RAPIDMINER_BUILDINGBLOCKS = "buildingblocks";
@@ -76,23 +76,30 @@ public class FileSystemService {
 	}
 
 	public static File getUserRapidMinerDir() {
-		File homeDir = new File(System.getProperty("user.home"));
-		File userHomeDir = new File(homeDir, RAPIDMINER_USER_FOLDER);
-		File extensionsWorkspaceRootFolder = new File(userHomeDir, RAPIDMINER_EXTENSIONS_FOLDER);
+		File rapidMinerDir;
+		String customHome = System.getProperty("rapidminer.user-home");
+		if (customHome != null && !customHome.trim().isEmpty()) {
+			rapidMinerDir = new File(customHome);
+		} else {
+			File homeDir = new File(System.getProperty("user.home"));
+			rapidMinerDir = new File(homeDir, RAPIDMINER_USER_FOLDER);
+		}
+
+		File extensionsWorkspaceRootFolder = new File(rapidMinerDir, RAPIDMINER_EXTENSIONS_FOLDER);
 		File extensionsWorkspaceFolder = new File(extensionsWorkspaceRootFolder, RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER);
-		File sharedDataDir = new File(userHomeDir, RAPIDMINER_SHARED_DATA);
-		File buildingBlocksFolder = new File(userHomeDir, RAPIDMINER_BUILDINGBLOCKS);
-		File internalCacheFolder = new File(userHomeDir, RAPIDMINER_INTERNAL_CACHE);
+		File sharedDataDir = new File(rapidMinerDir, RAPIDMINER_SHARED_DATA);
+		File buildingBlocksFolder = new File(rapidMinerDir, RAPIDMINER_BUILDINGBLOCKS);
+		File internalCacheFolder = new File(rapidMinerDir, RAPIDMINER_INTERNAL_CACHE);
 		File internalCacheSearchFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_SEARCH);
 
-		checkAndCreateFolder(userHomeDir);
+		checkAndCreateFolder(rapidMinerDir);
 		checkAndCreateFolder(extensionsWorkspaceRootFolder);
 		checkAndCreateFolder(internalCacheFolder);
 		checkAndCreateFolder(internalCacheSearchFolder);
 		checkAndCreateFolder(extensionsWorkspaceFolder);
 		checkAndCreateFolder(sharedDataDir);
 		checkAndCreateFolder(buildingBlocksFolder);
-		return userHomeDir;
+		return rapidMinerDir;
 	}
 
 	/**

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,7 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
@@ -47,8 +48,6 @@ import javax.swing.JSpinner;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -80,7 +79,6 @@ import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.PlatformUtilities;
 import com.vlsolutions.swing.docking.DockKey;
@@ -153,29 +151,26 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 
 	private Operator operator;
 
-	private final Observer<String> parameterObserver = new Observer<String>() {
-
-		@Override
-		public void update(Observable<String> observable, String key) {
-			PropertyValueCellEditor editor = getEditorForKey(key);
-			if (editor != null) {
-				Object editorValueObject = editor.getCellEditorValue();
-				ParameterType type = operator.getParameters().getParameterType(key);
-				String editorValue = type.toString(editorValueObject);
-				String opValue = operator.getParameters().getParameterOrNull(key);
-				// Second check prevents an endless validation loop in case opValue and editorValueObject are both null
-				if (!Objects.equals(opValue, editorValue) && opValue != editorValueObject) {
-					editor.getTableCellEditorComponent(null, opValue, false, 0, 1);
-				}
-			} else {
-				setupComponents();
-			}
+	private final transient Observer<String> parameterObserver = (observable, key) -> {
+		PropertyValueCellEditor editor = getEditorForKey(key);
+		if (editor == null) {
+			setupComponents();
+			return;
+		}
+		Object editorValueObject = editor.getCellEditorValue();
+		ParameterType type = operator.getParameters().getParameterType(key);
+		String editorValue = type.toString(editorValueObject);
+		String opValue = operator.getParameters().getParameterOrNull(key);
+		// Second check prevents an endless validation loop in case opValue and editorValueObject are both null
+		if (!Objects.equals(opValue, editorValue) && opValue != editorValueObject) {
+			editor.getTableCellEditorComponent(null, opValue, false, 0, 1);
 		}
 	};
 
 	final transient ToggleAction TOGGLE_EXPERT_MODE_ACTION = new ToggleExpertModeAction();
 
-	private final JSpinner compatibilityLevelSpinner = new JSpinner(new CompatibilityLevelSpinnerModel());
+	private final CompatibilityLevelSpinnerModel compatibilityLevelSpinnerModel = new CompatibilityLevelSpinnerModel();
+	private final JSpinner compatibilityLevelSpinner = new JSpinner(compatibilityLevelSpinnerModel);
 	private final ResourceLabel compatibilityLabel = new ResourceLabel("compatibility_level");
 	private final JPanel compatibilityPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
@@ -205,22 +200,18 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 
 		setupComponents();
 
-		compatibilityLevelSpinner.addChangeListener(new ChangeListener() {
+		compatibilityLevelSpinner.addChangeListener(e -> {
+			// compatibility level
+			OperatorVersion[] versionChanges = operator.getIncompatibleVersionChanges();
 
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				// compatibility level
-				OperatorVersion[] versionChanges = operator.getIncompatibleVersionChanges();
-
-				// sort to have an ascending order
-				Arrays.sort(versionChanges);
-				if (versionChanges.length > 0) {
-					OperatorVersion latestChange = versionChanges[versionChanges.length - 1];
-					if (latestChange.isAtLeast(operator.getCompatibilityLevel())) {
-						compatibilityLabel.setIcon(WARNING_ICON);
-					} else {
-						compatibilityLabel.setIcon(OK_ICON);
-					}
+			// sort to have an ascending order
+			Arrays.sort(versionChanges);
+			if (versionChanges.length > 0) {
+				OperatorVersion latestChange = versionChanges[versionChanges.length - 1];
+				if (latestChange.isAtLeast(operator.getCompatibilityLevel())) {
+					compatibilityLabel.setIcon(WARNING_ICON);
+				} else {
+					compatibilityLabel.setIcon(OK_ICON);
 				}
 			}
 		});
@@ -275,14 +266,7 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 		if (operator != null) {
 			this.operator.getParameters().addObserver(parameterObserver, true);
 			if (isShowParameterHelp()) {
-				PARAMETER_UPDATE_SERVICE.execute(new Runnable() {
-
-					@Override
-					public void run() {
-						parseParameterDescriptions(operator);
-					}
-
-				});
+				PARAMETER_UPDATE_SERVICE.execute(() -> parseParameterDescriptions(operator));
 			}
 
 			// compatibility level
@@ -291,7 +275,7 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 				// no incompatible versions exist
 				changeCompatibility.setVisible(false);
 			} else {
-				((CompatibilityLevelSpinnerModel) compatibilityLevelSpinner.getModel()).setOperator(operator);
+				compatibilityLevelSpinnerModel.setOperator(operator);
 				changeCompatibility.setAction(createCompatibilityAction(operator.getCompatibilityLevel().getLongVersion()));
 				changeCompatibility.setVisible(true);
 			}
@@ -310,15 +294,11 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 			final JScrollPane scrollPane = new ExtendedJScrollPane(this);
 			scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-			scrollPane.getViewport().addChangeListener(new ChangeListener() {
-
-				@Override
-				public void stateChanged(ChangeEvent e) {
-					if (scrollPane.getVerticalScrollBar().isVisible()) {
-						scrollPane.setBorder(BOTH_BORDERS);
-					} else {
-						scrollPane.setBorder(TOP_BORDER);
-					}
+			scrollPane.getViewport().addChangeListener(e -> {
+				if (scrollPane.getVerticalScrollBar().isVisible()) {
+					scrollPane.setBorder(BOTH_BORDERS);
+				} else {
+					scrollPane.setBorder(TOP_BORDER);
 				}
 			});
 
@@ -404,39 +384,24 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 
 	@Override
 	protected List<ParameterType> getProperties() {
-		List<ParameterType> visible = new LinkedList<ParameterType>();
-		int hidden = 0;
+		List<ParameterType> visible = new ArrayList<>();
+		boolean isExpertMode = isExpertMode();
 		int advancedCount = 0;
 		if (operator != null) {
-			for (ParameterType type : operator.getParameters().getParameterTypes()) {
-				if (type.isHidden()) {
-					continue;
-				}
-				if (type.isExpert()) {
-					advancedCount++;
-					if (!isExpertMode()) {
-						hidden++;
-						continue;
-					}
-				}
-				visible.add(type);
+			List<ParameterType> nonHidden = operator.getParameters().getParameterTypes().stream().filter(parameterType -> !parameterType.isHidden()).collect(Collectors.toList());
+			List<ParameterType> nonExpert = nonHidden.stream().filter(pt -> !pt.isExpert()).collect(Collectors.toList());
+			advancedCount = nonHidden.size() - nonExpert.size();
+			if (isExpertMode) {
+				visible = nonHidden;
+			} else {
+				visible = nonExpert;
 			}
 		}
 
-		if (hidden > 0) {
-			hideAdvancedParameters.setVisible(false);
-			showAdvancedParameters.setVisible(true);
-			showAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.show_advanced.tip", hidden));
-		} else {
-			showAdvancedParameters.setVisible(false);
-			if (advancedCount > 0) {
-				hideAdvancedParameters.setVisible(true);
-				hideAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.hide_advanced.tip",
-						advancedCount));
-			} else {
-				hideAdvancedParameters.setVisible(false);
-			}
-		}
+		hideAdvancedParameters.setVisible(isExpertMode && advancedCount > 0);
+		hideAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.hide_advanced.tip", advancedCount));
+		showAdvancedParameters.setVisible(!isExpertMode);
+		showAdvancedParameters.setToolTipText(I18N.getGUIMessage("gui.action.parameters.show_advanced.tip", advancedCount));
 		return visible;
 	}
 

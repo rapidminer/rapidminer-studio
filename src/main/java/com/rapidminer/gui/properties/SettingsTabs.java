@@ -24,16 +24,14 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -44,6 +42,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.ScrollPaneConstants;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.external.alphanum.AlphanumComparator;
 import com.rapidminer.gui.properties.SettingsItem.Type;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTabbedPane;
@@ -52,6 +51,8 @@ import com.rapidminer.gui.tools.components.ToolTipWindow;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TipProvider;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TooltipLocation;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observable;
+import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.ParameterService;
 
 
@@ -61,7 +62,7 @@ import com.rapidminer.tools.ParameterService;
  *
  * @author Sebastian Land, Ingo Mierswa, Adrian Wilke
  */
-public class SettingsTabs extends ExtendedJTabbedPane {
+public class SettingsTabs extends ExtendedJTabbedPane implements Observer<String> {
 
 	private static final long serialVersionUID = -229446448782516589L;
 
@@ -87,20 +88,12 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	public static final Color COLOR_GROUP_DESCRIPTION = SwingTools.RAPIDMINER_GRAY;
 
 	/** Compares titles of SettingItem objects */
-	private static final Comparator<SettingsItem> SETTINGS_ITEM_COMPARATOR = new Comparator<SettingsItem>() {
-
-		@Override
-		public int compare(SettingsItem itemA, SettingsItem itemB) {
-			if (itemA == null && itemB == null) {
-				return 0;
-			} else if (itemA == null) {
-				return 1;
-			} else if (itemB == null) {
-				return -1;
-			} else {
-				return itemA.getTitle().compareTo(itemB.getTitle());
-			}
+	private static final Comparator<String> SETTINGS_TITLE_COMPARATOR = new AlphanumComparator();
+	private static final Comparator<SettingsItem> SETTINGS_ITEM_COMPARATOR = (itemA, itemB) -> {
+		if (itemA == null) {
+			return itemB == null ? 0 : 1;
 		}
+		return itemB == null ? -1 : SETTINGS_TITLE_COMPARATOR.compare(itemA.getTitle(), itemB.getTitle());
 	};
 
 	/**
@@ -110,7 +103,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	 *            The containing dialog. Is used to create {@link ToolTipWindow}s for tabs.
 	 */
 	public SettingsTabs(SettingsDialog settingsDialog) {
-		this(settingsDialog, null, null);
+		this(settingsDialog, null);
 	}
 
 	/**
@@ -120,19 +113,17 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	 *            The containing dialog. Is used to create {@link ToolTipWindow}s for tabs.
 	 * @param filter
 	 *            Used to filter the setting parameters
-	 * @param propertyCache
-	 *            which should be used to retrieve the values
 	 */
-	public SettingsTabs(SettingsDialog settingsDialog, String filter, Properties propertyCache) {
+	public SettingsTabs(SettingsDialog settingsDialog, String filter) {
 		this.settingsDialog = settingsDialog;
 
 		setTabPlacement(JTabbedPane.LEFT);
 		// Get defined-parameters
 		// These are all parameters, which will appear in dialog
-		Collection<String> definedParameterKeys = ParameterService.getDefinedParameterKeys();
+		Collection<String> definedParameterKeys = new HashSet<>(settingsDialog.getParameterHandler().getParameters().getKeys());
 
 		// Get parsed settings items
-		SettingsItems items = SettingsItems.INSTANCE;
+		SettingsItemProvider items = settingsDialog.getSettingsItemProvider();
 
 		// Remove structured settings items, which are not in defined-parameter
 		// (The structure is known, but they would not be used)
@@ -156,7 +147,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 		while (iterator.hasNext()) {
 			String key = iterator.next();
 
-			SettingsItems.createAndAddItem(key, Type.PARAMETER);
+			items.createAndAddItem(key, Type.PARAMETER);
 
 			if (isDebugMode) {
 				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.properties.SettingsTabs.no_parameter_in_xml",
@@ -169,29 +160,22 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 
 		// Create tabs
 		List<SettingsItem> groups = items.getItems(Type.GROUP);
-		if (!items.isStudioXmlParsedSuccessfully()) {
+		if (!items.isGroupingLoaded()) {
 			// Sort groups lexicographically, if XML could not be parsed
-			Collections.sort(groups, SETTINGS_ITEM_COMPARATOR);
+			groups.sort(SETTINGS_ITEM_COMPARATOR);
 		}
 		for (SettingsItem group : groups) {
 			List<SettingsItem> subGroups = group.getChildren(Type.SUB_GROUP, filter);
 			List<SettingsItem> parameters = group.getChildren(Type.PARAMETER, filter);
-			boolean isSubGroupsEmpty = true;
-			for (SettingsItem subGroup : subGroups) {
-				if (!subGroup.getChildren(Type.PARAMETER, filter).isEmpty()) {
-					isSubGroupsEmpty = false;
-					break;
-				}
-			}
-			if (parameters.size() > 0 || !isSubGroupsEmpty) {
-				createTab(group.getKey(), group.getTitle(), group.getDescription(), subGroups, parameters, filter,
-						propertyCache);
+			boolean isSubGroupsEmpty = subGroups.stream().allMatch(subGroup -> subGroup.getChildren(Type.PARAMETER, filter).isEmpty());
+			if (!parameters.isEmpty() || !isSubGroupsEmpty) {
+				createTab(group.getKey(), group.getTitle(), group.getDescription(), subGroups, parameters, filter);
 			}
 		}
 
 		// Remove the used flag to prevent broken settings dialog after second opening.
-		for (String key : SettingsItems.INSTANCE.getKeys()) {
-			SettingsItems.INSTANCE.get(key).setUsedInDialog(false);
+		for (String key : items.getKeys()) {
+			items.get(key).setUsedInDialog(false);
 		}
 	}
 
@@ -211,7 +195,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	 * Creates a tab
 	 */
 	private void createTab(String groupKey, String groupTitle, String groupDescription, List<SettingsItem> subGroups,
-			List<SettingsItem> parameters, String filter, Properties propertyCache) {
+			List<SettingsItem> parameters, String filter) {
 
 		JPanel containerPanel = new JPanel();
 		containerPanel.setLayout(new BoxLayout(containerPanel, BoxLayout.PAGE_AXIS));
@@ -235,18 +219,13 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 		}
 		containerPanel.add(descriptionPanel);
 
-		final SettingsPropertyPanel table = new SettingsPropertyPanel(groupTitle, subGroups, parameters, filter,
-				propertyCache);
+		final SettingsPropertyPanel table = new SettingsPropertyPanel(settingsDialog, groupTitle, subGroups, parameters, filter);
 
 		new ToolTipWindow(settingsDialog, new TipProvider() {
 
 			@Override
 			public String getTip(Object id) {
-				if (id == null) {
-					return null;
-				} else {
-					return SettingsTabs.tooltipDescriptions.get(id);
-				}
+				return id == null ? null : SettingsTabs.tooltipDescriptions.get(id);
 			}
 
 			@Override
@@ -254,19 +233,13 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 				Point tableScreenLocation = table.getLocationOnScreen();
 				int mouseX = point.x + tableScreenLocation.x;
 				int mouseY = point.y + tableScreenLocation.y;
-				for (JComponent component : SettingsTabs.tooltipDescriptions.keySet()) {
-					if (!component.isShowing()) {
-						continue;
-					} else {
-						int compX = component.getLocationOnScreen().x;
-						int compY = component.getLocationOnScreen().y;
-						if (mouseX > compX && mouseY > compY && mouseX < compX + component.getWidth()
-								&& mouseY < compY + component.getHeight()) {
-							return component;
-						}
-					}
-				}
-				return null;
+				return SettingsTabs.tooltipDescriptions.keySet().stream().filter(JComponent::isShowing)
+						.filter(component -> {
+							int compX = component.getLocationOnScreen().x;
+							int compY = component.getLocationOnScreen().y;
+							return  (mouseX > compX && mouseY > compY && mouseX < compX + component.getWidth()
+									&& mouseY < compY + component.getHeight());
+						}).findFirst().orElse(null);
 			}
 
 			@Override
@@ -288,10 +261,16 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 		groupKeysToTabIndexMap.put(groupKey, getTabCount() - 1);
 	}
 
+	@Override
+	public void update(Observable<String> observable, String key) {
+		// find affected property panels in regards to conditions, then update their components
+		parameterPanels.stream().filter(spp -> spp.shownParameterTypes.stream()
+				.flatMap(pt -> pt.getConditions().stream()).anyMatch(pc -> key.equals(pc.getConditionParameter())))
+				.forEach(SettingsPropertyPanel::setupComponents);
+	}
+
 	public void applyProperties() {
-		for (SettingsPropertyPanel panel : parameterPanels) {
-			panel.applyProperties();
-		}
+		settingsDialog.getSettingsItemProvider().applyValues(settingsDialog.getParameterHandler());
 	}
 
 	/**
@@ -299,7 +278,7 @@ public class SettingsTabs extends ExtendedJTabbedPane {
 	 */
 	public void save() throws IOException {
 		applyProperties();
-		ParameterService.saveParameters();
+		settingsDialog.getSettingsItemProvider().saveSettings();
 	}
 
 	/**

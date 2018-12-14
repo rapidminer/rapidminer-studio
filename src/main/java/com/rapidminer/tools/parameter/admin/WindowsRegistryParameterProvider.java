@@ -70,7 +70,7 @@ public class WindowsRegistryParameterProvider implements ParameterProvider {
 			);
 			LogService.getRoot().fine(() -> String.format("Successfully enforced %d settings from the Windows registry.", values.size()));
 			return values;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			LogService.getRoot().log(Level.WARNING, "Failed to access the Windows registry.", e);
 			return null;
 		}

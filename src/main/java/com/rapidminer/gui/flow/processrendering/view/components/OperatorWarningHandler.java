@@ -87,7 +87,7 @@ public class OperatorWarningHandler implements ProcessEventDecorator {
 			Operator operator = model.getHoveringOperator();
 
 			// check if there is a warning icon for this operator
-			if (operator != null && !operator.getErrorList().isEmpty()) {
+			if (operator != null && !operator.getErrorList().isEmpty() && !operator.isRunning()) {
 
 				// calculate the bounding box of the warning icon as it is drawn by {@link
 				Rectangle2D frame = model.getOperatorRect(operator);

@@ -68,7 +68,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
@@ -1255,9 +1254,6 @@ public class SwingTools {
 	 *            the I18n-key which will be used to display the internationalized message
 	 * @param errorMessage
 	 *            the error message associated to this message
-	 * @param displayExceptionMessage
-	 *            indicates if the exception message will be displayed in the dialog or just in the
-	 *            detailed panel
 	 * @param arguments
 	 *            additional arguments for the internationalized message, which replace
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
@@ -1278,9 +1274,6 @@ public class SwingTools {
 	 *            the I18n-key which will be used to display the internationalized message
 	 * @param errorMessage
 	 *            the error message associated to this message
-	 * @param displayExceptionMessage
-	 *            indicates if the exception message will be displayed in the dialog or just in the
-	 *            detailed panel
 	 * @param arguments
 	 *            additional arguments for the internationalized message, which replace
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
@@ -1313,7 +1306,7 @@ public class SwingTools {
 	 * @param displayExceptionMessage
 	 *            indicates if the exception message will be displayed in the dialog or just in the
 	 *            detailed panel
-	 * @param arguments
+	 * @param objects
 	 *            additional arguments for the internationalized message, which replace
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
 	 */
@@ -1335,16 +1328,17 @@ public class SwingTools {
 	 * @param displayExceptionMessage
 	 *            indicates if the exception message will be displayed in the dialog or just in the
 	 *            detailed panel
-	 * @param arguments
+	 * @param objects
 	 *            additional arguments for the internationalized message, which replace
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
 	 * @since 7.5.0
 	 */
 	public static void showFinalErrorMessage(final Window owner, final String key, final Throwable e,
 			final boolean displayExceptionMessage, final Object... objects) {
-		// if debug modus is enabled, print throwable into logger
+		// if debug mode is enabled, print throwable into logger
 		if (ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE).equals("true")) {
-			LogService.getRoot().log(Level.SEVERE, e.getMessage(), e);
+			// Some exceptions don't have messages, logging null throws a NPE
+			LogService.getRoot().log(Level.SEVERE, String.valueOf(e.getMessage()), e);
 		}
 		invokeLater(new Runnable() {
 
@@ -1364,7 +1358,7 @@ public class SwingTools {
 	 *            the I18n-key which will be used to display the internationalized message
 	 * @param e
 	 *            the exception associated to this message
-	 * @param arguments
+	 * @param objects
 	 *            additional arguments for the internationalized message, which replace
 	 *            <code>{0}</code>, <code>{1}</code>, etcpp.
 	 */

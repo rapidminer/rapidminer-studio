@@ -25,6 +25,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -113,6 +114,7 @@ public final class AnnotationsDecorator {
 
 	/** icon depicting annotations on an operator */
 	private static final ImageIcon IMAGE_ANNOTATION = SwingTools.createIcon("16/note_pinned.png");
+	private static final ImageIcon IMAGE_ANNOTATION_ZOOMED = SwingTools.createIcon("32/note_pinned.png");
 
 	/** the width of the edit panel above/below the annotation editor */
 	private static final int EDIT_PANEL_WIDTH = 190;
@@ -334,10 +336,15 @@ public final class AnnotationsDecorator {
 				return;
 			}
 			Rectangle2D frame = rendererModel.getOperatorRect(operator);
-			int xOffset = (IMAGE_ANNOTATION.getIconWidth() + 2) * 2;
-			ProcessDrawUtils.getIcon(operator, IMAGE_ANNOTATION).paintIcon(null, g2,
-					(int) (frame.getX() + frame.getWidth() - xOffset),
-					(int) (frame.getY() + frame.getHeight() - IMAGE_ANNOTATION.getIconHeight() - 1));
+			int iconSize = 16;
+			int xOffset = (iconSize + 2) * 2;
+			int iconX = (int) (frame.getX() + frame.getWidth() - xOffset);
+			int iconY = (int) (frame.getY() + frame.getHeight() - iconSize - 1);
+			ImageIcon icon = ProcessDrawUtils.getIcon(operator, rendererModel.getZoomFactor() <= 1d ? IMAGE_ANNOTATION : IMAGE_ANNOTATION_ZOOMED);
+			RenderingHints originalRenderingHints = g2.getRenderingHints();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g2.drawImage(icon.getImage(), iconX, iconY, iconSize, iconSize, null);
+			g2.setRenderingHints(originalRenderingHints);
 		}
 	};
 

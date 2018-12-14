@@ -18,13 +18,14 @@
 */
 package com.rapidminer.operator.learner.associations;
 
-import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.tools.Tools;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -32,7 +33,7 @@ import java.util.Iterator;
  * 
  * @author Sebastian Land, Ingo Mierswa
  */
-public class FrequentItemSets extends ResultObjectAdapter implements Iterable<FrequentItemSet> {
+public class FrequentItemSets extends ResultObjectAdapter implements Iterable<FrequentItemSet>, Cloneable {
 
 	private static final long serialVersionUID = -6195363961857170621L;
 
@@ -46,7 +47,20 @@ public class FrequentItemSets extends ResultObjectAdapter implements Iterable<Fr
 
 	public FrequentItemSets(int numberOfTransactions) {
 		this.numberOfTransactions = numberOfTransactions;
-		this.frequentSets = new ArrayList<FrequentItemSet>();
+		this.frequentSets = new ArrayList<>();
+	}
+
+	/**
+	 * Clone constructor.
+	 * @since 9.0.2
+	 */
+	private FrequentItemSets(FrequentItemSets other) {
+		this.numberOfTransactions = other.numberOfTransactions;
+		this.frequentSets = new ArrayList<>();
+		this.maximumSetSize = other.maximumSetSize;
+		for (FrequentItemSet set : other.frequentSets) {
+			frequentSets.add((FrequentItemSet) set.clone());
+		}
 	}
 
 	/**
@@ -137,6 +151,16 @@ public class FrequentItemSets extends ResultObjectAdapter implements Iterable<Fr
 			}
 		}
 		return output.toString();
+	}
+
+	@Override
+	public IOObject copy() {
+		return (IOObject) clone();
+	}
+
+	@Override
+	public Object clone() {
+		return new FrequentItemSets(this);
 	}
 
 }

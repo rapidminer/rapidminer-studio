@@ -23,7 +23,7 @@ import java.awt.GraphicsEnvironment;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
-
+import java.util.logging.Level;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
@@ -163,7 +163,13 @@ public class FontTools {
 	 * @return array of available font options
 	 */
 	public static String[] getAvailableFonts() {
-		String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+		String[] fonts;
+		try {
+			fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+		} catch (Exception e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.FontTools.system_font_loading.failed", e);
+			fonts = new String[0];
+		}
 		String[] selectableFonts = new String[fonts.length + 2];
 		selectableFonts[OPTION_INDEX_STANDARD_FONTS] = OPTION_STANDARD_FONTS;
 		selectableFonts[OPTION_INDEX_SYSTEM_FONTS] = OPTION_SYSTEM_FONTS;

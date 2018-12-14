@@ -651,6 +651,13 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 		Point newViewPoint = new Point(center);
 		Rectangle currentViewRect = getViewPort().getViewRect();
 		newViewPoint.translate((int) -currentViewRect.getCenterX(), (int) -currentViewRect.getCenterY());
+		// Don't scroll outside the viewport
+		if (newViewPoint.x < 0) {
+			newViewPoint.x = 0;
+		}
+		if (newViewPoint.y < 0) {
+			newViewPoint.y = 0;
+		}
 		return new Rectangle(newViewPoint, currentViewRect.getSize());
 	}
 

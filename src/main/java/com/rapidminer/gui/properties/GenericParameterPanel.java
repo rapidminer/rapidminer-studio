@@ -24,8 +24,10 @@ import com.rapidminer.parameter.Parameters;
 import com.rapidminer.parameter.UndefinedParameterError;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -57,15 +59,10 @@ public class GenericParameterPanel extends PropertyPanel {
 
 	@Override
 	protected Collection<ParameterType> getProperties() {
-		List<ParameterType> visible = new LinkedList<ParameterType>();
-		if (parameters != null) {
-			for (ParameterType type : parameters.getParameterTypes()) {
-				if (!type.isHidden()) {
-					visible.add(type);
-				}
-			}
+		if (parameters == null) {
+			return Collections.emptyList();
 		}
-		return visible;
+		return parameters.getParameterTypes().stream().filter(pt -> !pt.isHidden()).collect(Collectors.toList());
 	}
 
 	@Override

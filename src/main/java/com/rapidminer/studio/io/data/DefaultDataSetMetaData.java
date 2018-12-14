@@ -78,26 +78,14 @@ public class DefaultDataSetMetaData implements DataSetMetaData {
 	@Override
 	public DateFormat getDateFormat() {
 		if (dateFormat == null) {
-			this.dateFormat = new ThreadLocal<DateFormat>() {
-
-				@Override
-				protected DateFormat initialValue() {
-					return Tools.DATE_TIME_FORMAT.get();
-				}
-			};
+			this.dateFormat = ThreadLocal.withInitial(Tools.DATE_TIME_FORMAT::get);
 		}
 		return this.dateFormat.get();
 	}
 
 	@Override
 	public void setDateFormat(final DateFormat dateFormat) {
-		this.dateFormat = new ThreadLocal<DateFormat>() {
-
-			@Override
-			protected DateFormat initialValue() {
-				return dateFormat;
-			}
-		};
+		this.dateFormat = ThreadLocal.withInitial(() -> dateFormat);
 	}
 
 	@Override
@@ -111,8 +99,8 @@ public class DefaultDataSetMetaData implements DataSetMetaData {
 		for (ColumnMetaData column : other.getColumnMetaData()) {
 			columnList.add(new DefaultColumnMetaData(column));
 		}
-
-		this.setDateFormat((DateFormat) other.getDateFormat().clone());
+		DateFormat otherDateFormat = other.getDateFormat();
+		this.setDateFormat(otherDateFormat != null ? (DateFormat) otherDateFormat.clone() : null);
 		this.setFaultTolerant(other.isFaultTolerant());
 	}
 

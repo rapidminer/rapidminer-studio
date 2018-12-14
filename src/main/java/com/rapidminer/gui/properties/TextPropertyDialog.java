@@ -31,6 +31,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.properties.celleditors.value.TextValueCellEditor;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SQLEditor;
@@ -74,7 +75,7 @@ public class TextPropertyDialog extends PropertyDialog {
 				Dimension currentSize = getSize();
 				if (currentSize.getHeight() != dim.getHeight() && currentSize.getWidth() != dim.getWidth()) {
 					setSize(dim);
-					setLocationRelativeTo(null);
+					setLocationRelativeTo(ApplicationFrame.getApplicationFrame());
 					resizeButton.setText(I18N.getMessage(I18N.getGUIBundle(), "gui.action.text_dialog.shrink.label"));
 					resizeButton.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.action.text_dialog.shrink.tip"));
 					resizeButton.setMnemonic(I18N.getMessage(I18N.getGUIBundle(), "gui.action.text_dialog.shrink.mne")

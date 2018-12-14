@@ -844,10 +844,12 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 	/** Fires the event that the process was paused. */
 	private void fireBreakpointEvent(final Operator operator, final IOContainer ioContainer, final int location) {
+		LinkedList<BreakpointListener> l;
 		synchronized (breakpointListeners) {
-			for (BreakpointListener l : breakpointListeners) {
-				l.breakpointReached(this, operator, ioContainer, location);
-			}
+			l = new LinkedList<>(breakpointListeners);
+		}
+		for (BreakpointListener listener : l) {
+			listener.breakpointReached(this, operator, ioContainer, location);
 		}
 	}
 

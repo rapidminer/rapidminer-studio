@@ -17,8 +17,12 @@
 			<property key="rapidminer.general.fractiondigits.percent" />
 			<property key="rapidminer.general.fractiondigits.numbers" />
 		</group>
+		<group key="rapidminer.preferences.subgroup.general.parallel">
+			<property key="rapidminer.general.number_of_threads" />
+			<property key="rapidminer.general.number_of_processes" />
+			<property key="rapidminer.general.number_of_threads_background" />
+		</group>
 		<property key="rapidminer.general.randomseed" />
-		<property key="rapidminer.general.number_of_threads" />
 		<property key="rapidminer.general.md_nominal_values_limit" />
 		<property key="rapidminer.general.max_rows_used_for_guessing" />
 		<property key="rapidminer.general.max_process_execution_nesting_depth" />
@@ -42,10 +46,12 @@
 	<group key="tools">
 		<group key="rapidminer.preferences.subgroup.tools.mail">
 			<property key="rapidminer.tools.mail.method" />
-			<property key="rapidminer.tools.sendmail.command" />
 			<property key="rapidminer.tools.mail.sender" />
 			<property key="rapidminer.tools.mail.default_recipient" />
 			<property key="rapidminer.tools.mail.process_duration_for_mail" />
+		</group>
+	    <group key="rapidminer.preferences.subgroup.tools.sendmail">
+			<property key="rapidminer.tools.sendmail.command" />
 		</group>
 		<group key="rapidminer.preferences.subgroup.tools.smtp">
 			<property key="rapidminer.tools.smtp.host" />
@@ -111,7 +117,8 @@
 			<property key="rapidminer.gui.snap_to_grid" />
 			<property key="rapidminer.gui.autowire_input" />
 			<property key="rapidminer.gui.autowire_output" />
-			<property key="rapidminer.gui.disconnect_on_disable" />
+			<property key="rapidminer.gui.disable_op_conn_behavior" />
+			<property key="rapidminer.gui.delete_op_conn_behavior" />
 		</group>
 		<property key="rapidminer.gui.entry_open_in_filebrowser" />
 		<property key="rapidminer.gui.add_breakpoint_results_to_history" />

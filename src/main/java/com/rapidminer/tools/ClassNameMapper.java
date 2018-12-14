@@ -18,11 +18,11 @@
 */
 package com.rapidminer.tools;
 
-import com.rapidminer.operator.UserError;
-
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import com.rapidminer.operator.UserError;
 
 
 /**
@@ -33,24 +33,16 @@ import java.util.Map;
  */
 public class ClassNameMapper {
 
-	Map<String, String> classMap = new LinkedHashMap<String, String>();
+	Map<String, String> classMap = new LinkedHashMap<>();
 
 	public ClassNameMapper(String[] classNames) {
-		for (int i = 0; i < classNames.length; i++) {
-			String completeClassName = classNames[i];
-			String simpleClassName = completeClassName;
-
+		for (String completeClassName : classNames) {
 			// if possible, strip package information
-			int index = completeClassName.lastIndexOf('.');
-			if (index > -1) {
-				simpleClassName = completeClassName.substring(index + 1);
-			}
+			String simpleClassName = completeClassName.substring(completeClassName.lastIndexOf('.') + 1);
 
 			// if no class with the same short name is found in the map, add it
 			// else use the complete class name
-			if (classMap.get(simpleClassName) == null) {
-				classMap.put(simpleClassName, completeClassName);
-			} else {
+			if (classMap.putIfAbsent(simpleClassName, completeClassName) != null) {
 				classMap.put(completeClassName, completeClassName);
 			}
 		}
@@ -61,47 +53,25 @@ public class ClassNameMapper {
 	}
 
 	public Class<?> getClassByShortName(String shortName) throws UserError {
-		String completeClassName = getCompleteClassName(shortName);
-
 		// if the name is not found in the map, try to use the one provided as parameter.
-		if (completeClassName == null) {
-			completeClassName = shortName;
-		}
-
-		if (completeClassName == null) {
-			throw new UserError(null, 904, shortName, "No such class.");
-		}
-
+		String completeClassName = classMap.getOrDefault(shortName, shortName);
 		try {
+			Objects.requireNonNull(completeClassName, "No such class");
 			return Class.forName(completeClassName);
-		} catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException | NullPointerException e) {
 			throw new UserError(null, 904, shortName, e.getMessage());
 		}
 	}
 
 	public String[] getShortClassNames() {
-		String[] result = new String[classMap.size()];
-		Iterator<String> it = classMap.keySet().iterator();
-
-		for (int i = 0; i < classMap.size(); i++) {
-			result[i] = it.next();
-		}
-
-		return result;
+		return classMap.keySet().toArray(new String[0]);
 	}
 
 	public Object getInstantiation(String shortName) throws UserError {
-		Object result = null;
 		try {
-			result = getClassByShortName(shortName).newInstance();
-			if (result == null) {
-				throw new UserError(null, 904, shortName, "No such class");
-			}
-		} catch (InstantiationException e) {
-			throw new UserError(null, 904, shortName, e.getMessage());
-		} catch (IllegalAccessException e) {
+			return getClassByShortName(shortName).newInstance();
+		} catch (InstantiationException | IllegalAccessException | NullPointerException e) {
 			throw new UserError(null, 904, shortName, e.getMessage());
 		}
-		return result;
 	}
 }

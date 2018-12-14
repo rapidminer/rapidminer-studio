@@ -145,7 +145,7 @@ public class Plugin {
 	/** @since 9.0.0 */
 	public static final String WHITELIST_SHIPPED = "shipped";
 	/** @since 9.0.0 */
-	private static final String PACKAGED_IDS = "advanced_file_connectors,concurrency,jdbc_connectors,legacy,productivity,professional,remote_repository";
+	private static final String PACKAGED_IDS = "advanced_file_connectors,concurrency,jdbc_connectors,legacy,productivity,professional,remote_repository,blending";
 	/** @since 9.0.0 */
 	private static final Set<String> PACKAGED_EXTENSIONS;
 	/** @since 9.0.0 */

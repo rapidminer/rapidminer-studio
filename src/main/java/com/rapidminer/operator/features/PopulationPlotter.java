@@ -23,6 +23,7 @@ import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.plotter.ScatterPlotter;
 import com.rapidminer.gui.plotter.SimplePlotterDialog;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
@@ -225,7 +226,7 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 
 		frame.getContentPane().add(new ExtendedJScrollPane(visualizationComponent), BorderLayout.CENTER);
 		frame.setSize(600, 400);
-		frame.setLocationRelativeTo(null);
+		frame.setLocationRelativeTo(ApplicationFrame.getApplicationFrame());
 		frame.setVisible(true);
 	}
 }

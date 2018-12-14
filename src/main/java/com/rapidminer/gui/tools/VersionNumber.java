@@ -117,7 +117,7 @@ public class VersionNumber implements Comparable<VersionNumber> {
 			patchLevel = 0;
 		}
 		if (classifierIndex >= 0) {
-			classifier = CLASSIFIER_TAG + version.substring(classifierIndex + 1, version.length());
+			classifier = CLASSIFIER_TAG + version.substring(classifierIndex + 1);
 		} else {
 			classifier = null;
 		}

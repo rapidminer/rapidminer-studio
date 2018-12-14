@@ -38,7 +38,7 @@ public class MedianAggregator extends NumericalAggregator {
 	 * This class implements an array of primitive doubles and provides getter, adder and size
 	 * methods. It is used by the {@link MedianAggregator} as a lightweight data structure.
 	 */
-	private static class VariableDoubleArray {
+	public static class VariableDoubleArray {
 
 		private static final int INITIAL_ARRAY_SIZE = 64;
 
@@ -64,6 +64,15 @@ public class MedianAggregator extends NumericalAggregator {
 			}
 			data[size] = value;
 			size++;
+		}
+
+		public void addAll(VariableDoubleArray other) {
+			if (data.length < size + other.size) {
+				int newSize = size + other.size;
+				data = Arrays.copyOf(data, newSize);
+			}
+			System.arraycopy(other.data, 0, data, size, other.size);
+			size +=other.size;
 		}
 	}
 
@@ -126,7 +135,7 @@ public class MedianAggregator extends NumericalAggregator {
 	 *            The nth value will be selected
 	 * @return The nth value
 	 */
-	private double quickNth(VariableDoubleArray values, double n) {
+	public static double quickNth(VariableDoubleArray values, double n) {
 		// Choose pivot from the middle of the list
 		double pivot = values.getArray()[values.size() / 2];
 

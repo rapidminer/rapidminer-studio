@@ -285,12 +285,8 @@ public class ProcessLayoutXMLFilter implements ProcessXMLFilter {
 		PortSpacingWrapper wrapper = (PortSpacingWrapper) operator.getUserData(KEY_PORT_SPACING);
 		if (wrapper != null) {
 			Map<Port, Integer> spacings = wrapper.get();
-			if (spacings.containsKey(port)) {
-				return spacings.get(port);
-			} else {
-				// no spacing stored for this particular port
-				return 0;
-			}
+			// get spacing or no spacing
+			return spacings.getOrDefault(port, 0);
 		} else {
 			// no spacing data available
 			return 0;

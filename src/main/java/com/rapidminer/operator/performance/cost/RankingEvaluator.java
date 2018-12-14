@@ -19,8 +19,11 @@
 package com.rapidminer.operator.performance.cost;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -29,10 +32,10 @@ import com.rapidminer.example.Tools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.ValueDouble;
-import com.rapidminer.operator.performance.MeasuredPerformance;
 import com.rapidminer.operator.performance.PerformanceCriterion;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.operator.ports.InputPort;
@@ -61,6 +64,9 @@ public class RankingEvaluator extends Operator {
 	private static final String PARAMETER_RANKING_COSTS = "ranking_costs";
 	private static final String PARAMETER_RANK_START = "rank_interval_start";
 	private static final String PARAMETER_RANK_COST = "costs";
+
+	/** Up to and including version 9.0.2 the wrong fitness was returned by the RankingCriterion */
+	static final OperatorVersion WRONG_FITNESS = new OperatorVersion(9, 0, 2);
 
 	private InputPort exampleSetInput = getInputPorts().createPort("example set");
 
@@ -100,17 +106,21 @@ public class RankingEvaluator extends Operator {
 		ExampleSet exampleSet = exampleSetInput.getData(ExampleSet.class);
 		Tools.hasNominalLabels(exampleSet, getOperatorClassName());
 		List<String[]> rankings = getParameterList(PARAMETER_RANKING_COSTS);
+		// Sort rankings
+		if (getCompatibilityLevel().isAbove(WRONG_FITNESS)) {
+			rankings.sort(Comparator.comparingInt(o -> Integer.parseInt(o[0])));
+		}
 		int i = 0;
 		double[] costs = new double[rankings.size()];
 		int[] indices = new int[rankings.size()];
 		for (String[] pair : rankings) {
-			indices[i] = Integer.valueOf(pair[0]);
-			costs[i] = Double.valueOf(pair[1]);
-			// TODO: Check if correctly sorted or sort automatically
+			indices[i] = Integer.parseInt(pair[0]);
+			costs[i] = Double.parseDouble(pair[1]);
 			i++;
 		}
 
-		MeasuredPerformance criterion = new RankingCriterion(indices, costs, exampleSet);
+		RankingCriterion criterion = new RankingCriterion(indices, costs, exampleSet);
+		criterion.setVersion(getCompatibilityLevel());
 		performance = new PerformanceVector();
 		performance.addCriterion(criterion);
 		// now measuring costs
@@ -157,5 +167,11 @@ public class RankingEvaluator extends Operator {
 		type.setPrimary(true);
 		types.add(type);
 		return types;
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[]{WRONG_FITNESS});
 	}
 }

@@ -93,7 +93,11 @@ final class GlobalSearchController {
 			return;
 		}
 
-		searchOrAppendForCategory(previousResult.getLastResult(), lastQuery, categoryId, lastCategoryFilter != null ? NUMBER_OF_RESULTS_SINGLE_CAT : NUMBER_OF_RESULTS_ALL_CATS);
+		int resultNumberLimit = lastCategoryFilter != null ? NUMBER_OF_RESULTS_SINGLE_CAT : NUMBER_OF_RESULTS_ALL_CATS;
+		if (resultNumberLimit == previousResult.getPotentialNumberOfResults() - previousResult.getNumberOfResults() - 1) {
+			resultNumberLimit++;
+		}
+		searchOrAppendForCategory(previousResult.getLastResult(), lastQuery, categoryId, resultNumberLimit);
 	}
 
 
@@ -177,7 +181,7 @@ final class GlobalSearchController {
 			@Override
 			protected GlobalSearchResult doInBackground() throws Exception {
 				model.setPending(categoryId, true);
-				GlobalSearchResultBuilder builder = new GlobalSearchResultBuilder(query.trim()).setMaxNumberOfResults(resultNumberLimit).setHighlightResult(true);
+				GlobalSearchResultBuilder builder = new GlobalSearchResultBuilder(query.trim()).setMaxNumberOfResults(resultNumberLimit).setMoreResults(1).setHighlightResult(true);
 				builder.setSearchCategories(GlobalSearchRegistry.INSTANCE.getSearchCategoryById(categoryId)).setSearchOffset(offset).setSimpleMode(true);
 				return builder.runSearch();
 			}

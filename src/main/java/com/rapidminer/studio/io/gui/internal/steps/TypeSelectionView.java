@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -42,8 +41,6 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
 
 import org.jdesktop.swingx.JXTextField;
 
@@ -140,16 +137,12 @@ public final class TypeSelectionView extends JPanel {
 		{
 
 			this.searchTextField = new JXTextField(I18N.getGUILabel("io.dataimport.step.type_selection.search_placeholder"));
-			this.searchTextField.getDocument().addUndoableEditListener(new UndoableEditListener() {
-
-				@Override
-				public void undoableEditHappened(UndoableEditEvent e) {
-					String searchTerm = searchTextField.getText();
-					if (searchTerm != null && !searchTerm.trim().isEmpty() && searchTerm.trim().length() > 1) {
-						updateTypeSelectionContentPanel(searchTerm, false);
-					} else {
-						updateTypeSelectionContentPanel(null, false);
-					}
+			this.searchTextField.getDocument().addUndoableEditListener(e -> {
+				String searchTerm = searchTextField.getText();
+				if (searchTerm != null && !searchTerm.trim().isEmpty() && searchTerm.trim().length() > 1) {
+					updateTypeSelectionContentPanel(searchTerm, false);
+				} else {
+					updateTypeSelectionContentPanel(null, false);
 				}
 			});
 
@@ -251,9 +244,11 @@ public final class TypeSelectionView extends JPanel {
 	}
 
 	private void enableDataSourceButtons(boolean enable) {
-		for (JButton button : dataSourceSelectionButtons) {
-			button.setEnabled(enable);
-		}
+		SwingTools.invokeLater(() -> {
+			for (JButton button : dataSourceSelectionButtons) {
+				button.setEnabled(enable);
+			}
+		});
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -262,9 +257,7 @@ public final class TypeSelectionView extends JPanel {
 		List<DataSourceFactory> result = new LinkedList<>();
 
 		if (searchTerm == null || searchTerm.trim().isEmpty()) {
-			for (DataSourceFactory factory : factories) {
-				result.add(factory);
-			}
+			result.addAll(factories);
 		} else {
 			// filter factories according to search term
 			for (DataSourceFactory factory : factories) {
@@ -296,154 +289,134 @@ public final class TypeSelectionView extends JPanel {
 			}
 
 			// add new action listener
-			SEARCH_ACTION_LOG_TIMER.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					DataImportWizardUtils.logStats(DataWizardEventType.SEARCH_TYPE, searchTerm);
-				}
-			});
+			SEARCH_ACTION_LOG_TIMER.addActionListener(e -> DataImportWizardUtils.logStats(DataWizardEventType.SEARCH_TYPE, searchTerm));
 
 			// start countdown
 			SEARCH_ACTION_LOG_TIMER.setRepeats(false);
 			SEARCH_ACTION_LOG_TIMER.start();
 		}
 
-		SwingTools.invokeLater(new Runnable() {
+		SwingTools.invokeLater(() -> {
 
-			@Override
-			@SuppressWarnings("rawtypes")
-			public void run() {
+			JButton focusButton = null;
 
-				JButton focusButton = null;
+			boolean resultEmpty;
 
-				boolean resultEmpty = false;
+			// clear panel
+			mainContentPanel.removeAll();
 
-				// clear panel
-				mainContentPanel.removeAll();
+			// add factory buttons panel
+			{
 
-				// add factory buttons panel
-				{
+				JPanel factoryButtonPanel = new JPanel(new GridBagLayout());
+				JScrollPane scrollPane = new JScrollPane(factoryButtonPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+						JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+				scrollPane.setMaximumSize(SCROLL_PANE_SIZE);
+				scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-					JPanel factoryButtonPanel = new JPanel(new GridBagLayout());
-					JScrollPane scrollPane = new JScrollPane(factoryButtonPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-							JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-					scrollPane.setMaximumSize(SCROLL_PANE_SIZE);
-					scrollPane.setBorder(BorderFactory.createEmptyBorder());
+				GridBagConstraints constraint = new GridBagConstraints();
+				constraint.gridx = 0;
+				constraint.gridy = 0;
+				constraint.insets = new Insets(5, 0, 5, 15);
+				constraint.fill = GridBagConstraints.NONE;
 
-					GridBagConstraints constraint = new GridBagConstraints();
-					constraint.gridx = 0;
-					constraint.gridy = 0;
-					constraint.insets = new Insets(5, 0, 5, 15);
-					constraint.fill = GridBagConstraints.NONE;
+				// retrieve factories
+				List<DataSourceFactory> factoryMatches = getFilteredFactories(searchTerm);
 
-					// retrieve factories
-					List<DataSourceFactory> factoryMatches = getFilteredFactories(searchTerm);
+				// reverse list so first registered factories are displayed at the beginning
+				Collections.reverse(factoryMatches);
 
-					// reverse list so first registered factories are displayed at the beginning
-					Collections.reverse(factoryMatches);
+				resultEmpty = factoryMatches.isEmpty();
 
-					resultEmpty = factoryMatches.isEmpty();
+				// set preferred size for scroll pane in case of more than 10 factories.
+				// Otherwise the scrollbar won't show up.
+				if (factoryMatches.size() > 10) {
+					scrollPane.setPreferredSize(SCROLL_PANE_SIZE);
+				}
 
-					// set preferred size for scroll pane in case of more than 10 factories.
-					// Otherwise the scrollbar won't show up.
-					if (factoryMatches.size() > 10) {
-						scrollPane.setPreferredSize(SCROLL_PANE_SIZE);
+				dataSourceSelectionButtons.clear();
+				// show a type selection button for each data source factory
+				for (DataSourceFactory factory : factoryMatches) {
+					JButton typeSelectionButton = createDataSourceSelectionButton(factory);
+					dataSourceSelectionButtons.add(typeSelectionButton);
+
+					if (focusButton == null) {
+						focusButton = typeSelectionButton;
 					}
+					factoryButtonPanel.add(typeSelectionButton, constraint);
 
-					dataSourceSelectionButtons.clear();
-					// show a type selection button for each data source factory
-					for (DataSourceFactory factory : factoryMatches) {
-						JButton typeSelectionButton = createDataSourceSelectionButton(factory);
-						dataSourceSelectionButtons.add(typeSelectionButton);
-
-						if (focusButton == null) {
-							focusButton = typeSelectionButton;
-						}
-						factoryButtonPanel.add(typeSelectionButton, constraint);
-
-						// update constraints for next button
-						constraint.gridx += 1;
-						constraint.insets = new Insets(5, 0, 5, 0);
-						if (constraint.gridx > 1) {
-							constraint.gridx = 0;
-							constraint.gridy += 1;
-							constraint.insets = new Insets(5, 0, 5, 15);
-						}
-					}
-
-					// fix for uneven number of data sources
-					if (factoryMatches.size() % 2 == 1) {
+					// update constraints for next button
+					constraint.gridx += 1;
+					constraint.insets = new Insets(5, 0, 5, 0);
+					if (constraint.gridx > 1) {
 						constraint.gridx = 0;
 						constraint.gridy += 1;
 						constraint.insets = new Insets(5, 0, 5, 15);
 					}
-
-					constraint = new GridBagConstraints();
-					constraint.fill = GridBagConstraints.NONE;
-					constraint.gridwidth = GridBagConstraints.REMAINDER;
-					constraint.weightx = 1;
-					constraint.weighty = 0;
-
-					mainContentPanel.add(scrollPane, constraint);
 				}
 
-				// add link button below factory buttons
-				{
-					JPanel linkButtonPanel = new JPanel();
-
-					// Add "empty result" text in case the search was empty
-					if (resultEmpty) {
-						JPanel noResultsPanel = new JPanel(new BorderLayout());
-
-						JLabel noResultsSymbol = new ResourceLabel("io.dataimport.step.type_selection.empty_search_symbol");
-						noResultsSymbol.setHorizontalAlignment(SwingConstants.CENTER);
-						noResultsSymbol.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-						noResultsPanel.add(noResultsSymbol, BorderLayout.NORTH);
-
-						JLabel noResultsLabel = new ResourceLabel("io.dataimport.step.type_selection.empty_search",
-								searchTerm);
-						noResultsPanel.add(noResultsLabel, BorderLayout.CENTER);
-
-						JPanel searchInMpPanel = new JPanel();
-						LinkRemoteButton searchInMarketplace = new LinkRemoteButton(tryMarketplaceSearchAction);
-						searchInMarketplace.setAlignmentX(SwingConstants.CENTER);
-						searchInMpPanel.add(searchInMarketplace);
-						noResultsPanel.add(searchInMpPanel, BorderLayout.SOUTH);
-
-						linkButtonPanel.add(noResultsPanel);
-					} else {
-						// add "search marketplace" link button
-						LinkRemoteButton searchInMarketplace = new LinkRemoteButton(searchInMarketplaceAction);
-						searchInMarketplace.setAlignmentX(SwingConstants.CENTER);
-						linkButtonPanel.add(searchInMarketplace);
-
-					}
-
-					GridBagConstraints constraint = new GridBagConstraints();
-					constraint.insets = new Insets(10, 0, 0, 0);
-					constraint.gridwidth = GridBagConstraints.REMAINDER;
-					constraint.fill = GridBagConstraints.BOTH;
-					constraint.weighty = 1;
-					mainContentPanel.add(linkButtonPanel, constraint);
+				// fix for uneven number of data sources
+				if (factoryMatches.size() % 2 == 1) {
+					constraint.gridx = 0;
+					constraint.gridy += 1;
+					constraint.insets = new Insets(5, 0, 5, 15);
 				}
 
-				mainContentPanel.revalidate();
-				mainContentPanel.repaint();
+				constraint = new GridBagConstraints();
+				constraint.fill = GridBagConstraints.NONE;
+				constraint.gridwidth = GridBagConstraints.REMAINDER;
+				constraint.weightx = 1;
+				constraint.weighty = 0;
 
-				if (requestFocusForButton && focusButton != null) {
-					final JButton requestFocusButton = focusButton;
-					SwingUtilities.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-							requestFocusButton.requestFocusInWindow();
-						}
-
-					});
-				}
+				mainContentPanel.add(scrollPane, constraint);
 			}
 
+			// add link button below factory buttons
+			{
+				JPanel linkButtonPanel = new JPanel();
+
+				// Add "empty result" text in case the search was empty
+				if (resultEmpty) {
+					JPanel noResultsPanel = new JPanel(new BorderLayout());
+
+					JLabel noResultsSymbol = new ResourceLabel("io.dataimport.step.type_selection.empty_search_symbol");
+					noResultsSymbol.setHorizontalAlignment(SwingConstants.CENTER);
+					noResultsSymbol.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+					noResultsPanel.add(noResultsSymbol, BorderLayout.NORTH);
+
+					JLabel noResultsLabel = new ResourceLabel("io.dataimport.step.type_selection.empty_search",
+							searchTerm);
+					noResultsPanel.add(noResultsLabel, BorderLayout.CENTER);
+
+					JPanel searchInMpPanel = new JPanel();
+					LinkRemoteButton searchInMarketplace = new LinkRemoteButton(tryMarketplaceSearchAction);
+					searchInMarketplace.setAlignmentX(SwingConstants.CENTER);
+					searchInMpPanel.add(searchInMarketplace);
+					noResultsPanel.add(searchInMpPanel, BorderLayout.SOUTH);
+
+					linkButtonPanel.add(noResultsPanel);
+				} else {
+					// add "search marketplace" link button
+					LinkRemoteButton searchInMarketplace = new LinkRemoteButton(searchInMarketplaceAction);
+					searchInMarketplace.setAlignmentX(SwingConstants.CENTER);
+					linkButtonPanel.add(searchInMarketplace);
+
+				}
+
+				GridBagConstraints constraint = new GridBagConstraints();
+				constraint.insets = new Insets(10, 0, 0, 0);
+				constraint.gridwidth = GridBagConstraints.REMAINDER;
+				constraint.fill = GridBagConstraints.BOTH;
+				constraint.weighty = 1;
+				mainContentPanel.add(linkButtonPanel, constraint);
+			}
+
+			mainContentPanel.revalidate();
+			mainContentPanel.repaint();
+
+			if (requestFocusForButton && focusButton != null) {
+				SwingUtilities.invokeLater(focusButton::requestFocusInWindow);
+			}
 		});
 
 	}

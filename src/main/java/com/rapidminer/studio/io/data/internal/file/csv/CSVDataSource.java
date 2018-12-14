@@ -163,12 +163,16 @@ public class CSVDataSource extends FileDataSource {
 			configuration.setColumnSeparators(getResultSetConfiguration().getColumnSeparators());
 			configuration.setHasHeaderRow(getResultSetConfiguration().hasHeaderRow());
 			configuration.setHeaderRow(getResultSetConfiguration().getHeaderRow());
+			configuration.setTrimValuesForParsing(getResultSetConfiguration().trimValuesForParsing());
+			configuration.setStartingRow(getResultSetConfiguration().getStartingRow());
+			configuration.setTrimLines(getResultSetConfiguration().isTrimLines());
+			configuration.setSkipUTF8BOM(getResultSetConfiguration().isSkippingUTF8BOM());
 
 			int headerRowIndex = configuration.hasHeaderRow() ? configuration.getHeaderRow()
 					: ResultSetAdapter.NO_HEADER_ROW;
 			try (DataResultSet dataSet = configuration.makeDataResultSet(null)) {
 				this.metaData = ResultSetAdapterUtils.createMetaData(dataSet, getNumberFormat(), getDataStartRow(),
-						headerRowIndex);
+						headerRowIndex, false, configuration.trimValuesForParsing());
 			} catch (OperatorException e) {
 				throw new DataSetException(e.getMessage(), e);
 			}

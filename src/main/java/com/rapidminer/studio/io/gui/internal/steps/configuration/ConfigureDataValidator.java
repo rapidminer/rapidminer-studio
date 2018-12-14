@@ -125,7 +125,7 @@ class ConfigureDataValidator extends AbstractObservable<Set<Integer>> {
 			// add to name map
 			List<Integer> listForName = columnNames.get(column.getName());
 			if (listForName == null) {
-				List<Integer> indexList = new ArrayList<>();
+				List<Integer> indexList = Collections.synchronizedList(new ArrayList<>());
 				indexList.add(columnIndex);
 				columnNames.put(column.getName(), indexList);
 			} else {
@@ -136,7 +136,7 @@ class ConfigureDataValidator extends AbstractObservable<Set<Integer>> {
 			if (role != null) {
 				List<Integer> listForRole = columnRoles.get(role);
 				if (listForRole == null) {
-					List<Integer> indexList = new ArrayList<>();
+					List<Integer> indexList = Collections.synchronizedList(new ArrayList<>());
 					indexList.add(columnIndex);
 					columnRoles.put(role, indexList);
 				} else {

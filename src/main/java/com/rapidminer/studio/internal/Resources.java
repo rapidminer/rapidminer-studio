@@ -40,7 +40,7 @@ import com.rapidminer.studio.concurrency.internal.StudioConcurrencyContext;
  */
 public class Resources {
 
-	private static final String USER_DATA_KEY = "com.rapidminer.core.concurrency.ContextUserData";
+	public static final String CONTEXT_KEY = "com.rapidminer.core.concurrency.ContextUserData";
 
 	/**
 	 * Wrapper to store {@link ConcurrencyContext} within the root operator of a process.
@@ -73,11 +73,10 @@ public class Resources {
 	 *
 	 * @author Marco Boeck
 	 */
-	public static class OverridingContextUserData implements UserData<Object> {
-
-		private final ConcurrencyContext context;
+	public static class OverridingContextUserData extends ContextUserData {
 
 		public OverridingContextUserData(ConcurrencyContext context) {
+			super(context);
 			// make sure this cannot be called without RapidMiner internal permissions
 			try {
 				if (System.getSecurityManager() != null) {
@@ -86,18 +85,7 @@ public class Resources {
 			} catch (AccessControlException e) {
 				throw new UnsupportedOperationException("Internal API, cannot be called by unauthorized sources.");
 			}
-			this.context = context;
 		}
-
-		@Override
-		public final UserData<Object> copyUserData(Object newParent) {
-			return this;
-		}
-
-		private ConcurrencyContext getContext() {
-			return this.context;
-		}
-
 	}
 
 	/**
@@ -116,20 +104,19 @@ public class Resources {
 		// currently used by RapidMiner Server web services
 		ProcessRootOperator rootOperator = operator.getProcess().getRootOperator();
 		if (rootOperator.getUserData(ConcurrencyExecutionService.OVERRIDING_CONTEXT) != null) {
-			OverridingContextUserData data = (OverridingContextUserData) rootOperator.getUserData(ConcurrencyExecutionService.OVERRIDING_CONTEXT);
+			ContextUserData data = (ContextUserData) rootOperator.getUserData(ConcurrencyExecutionService.OVERRIDING_CONTEXT);
 			return data.getContext();
 		}
 
-		Operator root = operator.getRoot();
-		if (root.getUserData(USER_DATA_KEY) != null) {
-			ContextUserData data = (ContextUserData) root.getUserData(USER_DATA_KEY);
+		if (rootOperator.getUserData(CONTEXT_KEY) != null) {
+			ContextUserData data = (ContextUserData) rootOperator.getUserData(CONTEXT_KEY);
 			return data.getContext();
 		}
 
 		Process process = operator.getProcess();
 		StudioConcurrencyContext context = new StudioConcurrencyContext(process);
 		ContextUserData data = new ContextUserData(context);
-		root.setUserData(USER_DATA_KEY, data);
+		rootOperator.setUserData(CONTEXT_KEY, data);
 		return context;
 	}
 }

@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.flow.processrendering.view;
 
 import java.awt.Component;
@@ -39,12 +39,18 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -92,6 +98,7 @@ import com.rapidminer.gui.flow.processrendering.view.actions.DeleteSelectedConne
 import com.rapidminer.gui.flow.processrendering.view.actions.RenameAction;
 import com.rapidminer.gui.flow.processrendering.view.actions.SelectAllAction;
 import com.rapidminer.gui.flow.processrendering.view.components.ProcessRendererTooltipProvider;
+import com.rapidminer.gui.processeditor.OperatorPortActionRegistry;
 import com.rapidminer.gui.properties.celleditors.value.PropertyValueCellEditor;
 import com.rapidminer.gui.tools.PrintingTools;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -108,6 +115,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ResultObject;
+import com.rapidminer.operator.ports.DeliveringPortManager;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
@@ -520,8 +528,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 					// process render phases that come before the OPERATORS phase, abort in case the
 					// event was consumed
-					for (RenderPhase phase : new RenderPhase[] { RenderPhase.FOREGROUND, RenderPhase.OVERLAY,
-							RenderPhase.OPERATOR_ADDITIONS }) {
+					for (RenderPhase phase : new RenderPhase[]{RenderPhase.FOREGROUND, RenderPhase.OVERLAY,
+							RenderPhase.OPERATOR_ADDITIONS}) {
 						wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, phase);
 						if (wasConsumed) {
 							return;
@@ -540,8 +548,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					}
 
 					// remaining render phases, abort in case the event was consumed
-					for (RenderPhase phase : new RenderPhase[] { RenderPhase.CONNECTIONS, RenderPhase.OPERATOR_BACKGROUND,
-							RenderPhase.OPERATOR_ANNOTATIONS, RenderPhase.ANNOTATIONS, RenderPhase.BACKGROUND }) {
+					for (RenderPhase phase : new RenderPhase[]{RenderPhase.CONNECTIONS, RenderPhase.OPERATOR_BACKGROUND,
+							RenderPhase.OPERATOR_ANNOTATIONS, RenderPhase.ANNOTATIONS, RenderPhase.BACKGROUND}) {
 						wasConsumed |= processPhaseListenerKeyEvent(KeyEventType.KEY_PRESSED, e, phase);
 						if (wasConsumed) {
 							return;
@@ -711,7 +719,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	private final RepaintFilter repaintFilter;
 
 	public ProcessRendererView(final ProcessRendererModel model, final ProcessPanel processPanel,
-			final MainFrame mainFrame) {
+							   final MainFrame mainFrame) {
 		this.mainFrame = mainFrame;
 		this.model = model;
 		this.controller = new ProcessRendererController(this, model);
@@ -779,8 +787,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					case SELECTED_OPERATORS_CHANGED:
 						Operator firstOp = !operators.isEmpty() ? operators.iterator().next() : null;
 						if (firstOp != null) {
-							// only switch displayed chain if not in selected chain and selected op
-							// is not visible
+							// only switch displayed chain if not in selected chain and selected op is not visible
 							OperatorChain displayChain = (OperatorChain) (firstOp instanceof ProcessRootOperator ? firstOp
 									: model.getDisplayedChain() == firstOp ? firstOp : firstOp.getParent());
 							if (displayChain != null && model.getDisplayedChain() != displayChain) {
@@ -791,16 +798,34 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 						repaint();
 						break;
 					case OPERATORS_MOVED:
-						for (Operator op : operators) {
-							boolean wasResized = controller.ensureProcessSizeFits(op.getExecutionUnit(),
-									model.getOperatorRect(op));
-							// need to repaint if process was not resized
-							if (!wasResized) {
-								repaint();
-							}
+						Set<Operator> opsToMove = new LinkedHashSet<>(operators);
+						boolean wasResized = false;
+						while (!opsToMove.isEmpty()) {
+							Iterator<Operator> iterator = opsToMove.iterator();
+							Operator op = iterator.next();
+							iterator.remove();
+							ExecutionUnit executionUnit = op.getExecutionUnit();
+							List<Operator> leftConnectedOperators = getDirectlyConnectedPorts(op.getInputPorts(), InputPort::getSource, executionUnit, Collections.emptyList());
+							List<Operator> rightConnectedOperators = getDirectlyConnectedPorts(op.getOutputPorts(), OutputPort::getDestination, executionUnit, opsToMove);
+
+							final Rectangle2D operatorRect = model.getOperatorRect(op);
+							// check it does not collide with other operators and move it to the right if necessary
+							leftConnectedOperators.stream().map(model::getOperatorRect).filter(r -> r != null && Math.abs(r.getY() - operatorRect.getY()) < 10)
+									.mapToDouble(r -> r.getX() + ProcessDrawer.GRID_AUTOARRANGE_WIDTH - 1).filter(x -> operatorRect.getX() < x).forEach(x -> {
+								operatorRect.setRect(x, operatorRect.getY(), operatorRect.getWidth(), operatorRect.getHeight());
+								model.setOperatorRect(op, operatorRect);
+							});
+							// check all connected operators to the right also
+							opsToMove.addAll(rightConnectedOperators);
+
+							wasResized |= controller.ensureProcessSizeFits(executionUnit, model.getOperatorRect(op));
 
 							// notify registered listeners
 							fireOperatorMoved(op);
+						}
+						// need to repaint if process was not resized
+						if (!wasResized) {
+							repaint();
 						}
 						break;
 					case PORTS_CHANGED:
@@ -813,6 +838,13 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					default:
 						break;
 				}
+			}
+
+			/** @since 9.1 */
+			private<P extends Port> List<Operator> getDirectlyConnectedPorts(Ports<P> ports, Function<P, Port> opposite, ExecutionUnit executionUnit, Collection<Operator> exclude) {
+				// get all connected ports, find their operator, make sure it is an operator on the same process level and is not already moved
+				return ports.getAllPorts().stream().filter(Port::isConnected).map(port -> opposite.apply(port).getPorts().getOwner().getOperator())
+						.filter(co -> executionUnit == co.getExecutionUnit() && !exclude.contains(co)).distinct().collect(Collectors.toList());
 			}
 
 			@Override
@@ -1449,7 +1481,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 
 							@Override
 							public void loggedActionPerformed(final ActionEvent e) {
-								data.setSource(hoveringPort.getPorts().getOwner().getOperator().getName());
+								final Operator operator = hoveringPort.getPorts().getOwner().getOperator();
+								data.setSource(operator.getName());
+								DeliveringPortManager.setLastDeliveringPort(data, hoveringPort);
 								mainFrame.getResultDisplay().showResult((ResultObject) data);
 							}
 
@@ -1464,6 +1498,15 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				}
 				menu.addSeparator();
 			}
+
+			final List<ResourceAction> portActions = OperatorPortActionRegistry.INSTANCE.getPortActions(hoveringPort);
+			for (ResourceAction action : portActions) {
+				menu.add(action);
+			}
+			if (!portActions.isEmpty()) {
+				menu.addSeparator();
+			}
+
 			List<QuickFix> fixes = hoveringPort.collectQuickFixes();
 			if (!fixes.isEmpty()) {
 				JMenu fixMenu = new ResourceMenu("quick_fixes");
@@ -1608,9 +1651,9 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 									@Override
 									public void loggedActionPerformed(final ActionEvent e) {
 										data.setSource(hoveredOp.getName());
+										DeliveringPortManager.setLastDeliveringPort(data, port);
 										mainFrame.getResultDisplay().showResult((ResultObject) data);
 									}
-
 								});
 						menu.add(showResult);
 					}

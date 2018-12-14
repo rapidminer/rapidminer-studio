@@ -50,7 +50,7 @@ public abstract class ParameterCondition {
 	 * implemented by the subclasses. It will be called by reflection!
 	 * 
 	 * Notice that conditions created with this constructor won't work until
-	 * {@link #setOperator(Operator)} is called.
+	 * {@link #setParameterHandler(ParameterHandler)} or {@link #setOperator(Operator)} is called.
 	 */
 	public ParameterCondition(Element conditionElement) {
 		this.parameterHandler = null;
@@ -79,25 +79,35 @@ public abstract class ParameterCondition {
 	 * parameterhandler was known.
 	 */
 	public void setOperator(Operator operator) {
-		this.parameterHandler = operator;
+		setParameterHandler(operator);
+	}
+
+	/**
+	 * This method sets the parameter handler from which the values to check the condition are
+	 * retrieved, this is usually an operator. This can be used if during construction time no
+	 * parameterhandler was known.
+	 *
+	 * @since 9.1
+	 */
+	public void setParameterHandler(ParameterHandler handler) {
+		this.parameterHandler = handler;
+	}
+
+	/** @since 9.1 */
+	public String getConditionParameter() {
+		return conditionParameter;
 	}
 
 	/**
 	 * This returns true if the condition is met and if the ancestor type isn't hidden.
 	 */
-	final public boolean dependencyMet() {
-		// if we don't can check: Return always true
-		if (parameterHandler == null) {
-			return true;
-		}
-
-		// otherwise perform check
-		if (conditionParameter != null) {
-			if (parameterHandler.getParameters().getParameterType(conditionParameter).isHidden()) {
-				return false;
-			}
-		}
-		return isConditionFullfilled();
+	public final boolean dependencyMet() {
+		// if we can't check: Return always true
+		return parameterHandler == null ||
+				// sanity checks
+				(conditionParameter == null || !parameterHandler.getParameters().getParameterType(conditionParameter).isHidden())
+						// otherwise perform check
+						&& isConditionFullfilled();
 	}
 
 	/**

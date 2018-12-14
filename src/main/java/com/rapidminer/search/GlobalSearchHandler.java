@@ -101,6 +101,9 @@ enum GlobalSearchHandler {
 	 * 		if {@code true}, will try to make the query automatically user-friendly; {@code false} will not make any changes to the query
 	 * @param maxNumberOfResults
 	 * 		the maximum number of results
+	 * @param moreResults
+	 * 		the number of optional additional search results. Will add these results if there are no additional results.
+	 * 	 	Will not be used if parameter 'after' is set.
 	 * @param highlightResult
 	 * 		if {@code true}, the {@link GlobalSearchResult#getBestFragments()} will be created
 	 * @param after
@@ -110,7 +113,7 @@ enum GlobalSearchHandler {
 	 * @throws ParseException
 	 * 		if the searchQuery was invalid
 	 */
-	protected GlobalSearchResult search(final String searchQueryString, final List<GlobalSearchCategory> categories, final boolean simpleMode, final int maxNumberOfResults, final boolean highlightResult, final ScoreDoc after) throws ParseException {
+	protected GlobalSearchResult search(final String searchQueryString, final List<GlobalSearchCategory> categories, final boolean simpleMode, final int maxNumberOfResults, final int moreResults, final boolean highlightResult, final ScoreDoc after) throws ParseException {
 		if (searchQueryString == null || searchQueryString.trim().isEmpty()) {
 			return GlobalSearchResult.createEmptyResult(searchQueryString);
 		}
@@ -132,7 +135,11 @@ enum GlobalSearchHandler {
 
 			// sort by the sort field, if provided
 			if (after == null) {
-				result = searcher.search(finalQuery, maxNumberOfResults, SORT, true, false);
+				if (moreResults > 0 && (searcher.count(finalQuery) <= maxNumberOfResults + moreResults)) {
+					result = searcher.search(finalQuery, maxNumberOfResults + moreResults, SORT, true, false);
+				} else {
+					result = searcher.search(finalQuery, maxNumberOfResults, SORT, true, false);
+				}
 			} else {
 				result = searcher.searchAfter(after, finalQuery, maxNumberOfResults, SORT, true, false);
 			}

@@ -161,7 +161,6 @@ public class RapidMinerGUI extends RapidMiner {
 	public static final String PROPERTY_OPEN_IN_FILEBROWSER = "rapidminer.gui.entry_open_in_filebrowser";
 	public static final String PROPERTY_CLOSE_ALL_RESULTS_NOW = "rapidminer.gui.close_all_results_without_confirmation";
 	public static final String PROPERTY_FETCH_DATA_BASE_TABLES_NAMES = "rapidminer.gui.fetch_data_base_table_names";
-	public static final String PROPERTY_DISCONNECT_ON_DISABLE = "rapidminer.gui.disconnect_on_disable";
 	/** determines if a warning notification bubble is shown when no result ports are connected */
 	public static final String PROPERTY_SHOW_NO_RESULT_WARNING = "rapidminer.gui.no_result_port_connected";
 	public static final String PROPERTY_FONT_CONFIG = "rapidminer.gui.font_config";
@@ -184,6 +183,15 @@ public class RapidMinerGUI extends RapidMiner {
 	// Admin Settings
 	public static final String PROPERTY_RAPIDMINER_DISALLOW_REMEMBER_PASSWORD = "rapidminer.disallow.remember.password";
 	public static final String PROPERTY_RAPIDMINER_DISALLOW_STUDIO_UPDATE = "rapidminer.disallow.studio.update";
+
+	// different behavior for disconnecting deleted and disabled operators
+	public static final String PROPERTY_DISABLE_OPERATOR_CONNECTION_BEHAVIOR = "rapidminer.gui.disable_op_conn_behavior";
+	public static final String[] PROPERTY_DISABLE_OPERATOR_CONNECTION_BEHAVIOR_VALUES = { "removed", "bridged", "kept" };
+	public static final String PROPERTY_DELETE_OPERATOR_CONNECTION_BEHAVIOR = "rapidminer.gui.delete_op_conn_behavior";
+	public static final String[] PROPERTY_DELETE_OPERATOR_CONNECTION_BEHAVIOR_VALUES = { "removed", "bridged" };
+	public static final int PROPERTY_DISABLE_OPERATOR_CONNECTION_BEHAVIOR_DEFAULT_VALUE = 1;
+	public static final int PROPERTY_DELETE_OPERATOR_CONNECTION_BEHAVIOR_DEFAULT_VALUE = 1;
+
 
 	static {
 
@@ -208,7 +216,10 @@ public class RapidMinerGUI extends RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeCategory(PROPERTY_CLOSE_ALL_RESULTS_NOW, "",
 				DecisionRememberingConfirmDialog.PROPERTY_VALUES, DecisionRememberingConfirmDialog.ASK));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_FETCH_DATA_BASE_TABLES_NAMES, "", true));
-		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_DISCONNECT_ON_DISABLE, "", true));
+
+		RapidMiner.registerParameter(new ParameterTypeCategory(PROPERTY_DISABLE_OPERATOR_CONNECTION_BEHAVIOR, "", PROPERTY_DISABLE_OPERATOR_CONNECTION_BEHAVIOR_VALUES, PROPERTY_DISABLE_OPERATOR_CONNECTION_BEHAVIOR_DEFAULT_VALUE));
+		RapidMiner.registerParameter(new ParameterTypeCategory(PROPERTY_DELETE_OPERATOR_CONNECTION_BEHAVIOR, "", PROPERTY_DELETE_OPERATOR_CONNECTION_BEHAVIOR_VALUES, PROPERTY_DELETE_OPERATOR_CONNECTION_BEHAVIOR_DEFAULT_VALUE));
+
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_SHOW_NO_RESULT_WARNING, "", true));
 		RapidMiner.registerParameter(new ParameterTypeCategory(RapidMinerGUI.PROPERTY_FONT_CONFIG, "",
 				FontTools.getAvailableFonts(), FontTools.OPTION_INDEX_STANDARD_FONTS));
@@ -352,7 +363,6 @@ public class RapidMinerGUI extends RapidMiner {
 		// As side effect this also initialized the ConstraintManager
 		// with the default product and constraints
 		RapidMiner.init();
-
 
 		// store (possibly new) active license (necessary, since no
 		// ACTIVE_LICENSE_CHANGED event is fired on startup)

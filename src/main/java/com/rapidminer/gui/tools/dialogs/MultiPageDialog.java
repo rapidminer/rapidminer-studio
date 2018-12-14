@@ -44,7 +44,7 @@ public abstract class MultiPageDialog extends ButtonDialog implements ChangeList
 
 	private JPanel cardPanel;
 
-	private final JButton previous = new JButton(new ResourceAction("previous") {
+	protected final JButton previous = new JButton(new ResourceAction("previous") {
 
 		private static final long serialVersionUID = 1L;
 
@@ -53,7 +53,7 @@ public abstract class MultiPageDialog extends ButtonDialog implements ChangeList
 			previous();
 		}
 	});
-	private final JButton next = new JButton(new ResourceAction("next") {
+	protected final JButton next = new JButton(new ResourceAction("next") {
 
 		private static final long serialVersionUID = 1L;
 
@@ -62,7 +62,7 @@ public abstract class MultiPageDialog extends ButtonDialog implements ChangeList
 			next();
 		}
 	});
-	private final JButton finish = new JButton(new ResourceAction("finish") {
+	protected final JButton finish = new JButton(new ResourceAction("finish") {
 
 		private static final long serialVersionUID = 1L;
 

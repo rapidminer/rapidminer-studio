@@ -395,7 +395,7 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_CONFIDENCE,
-				"The confidence level used for the pessimistic error calculation of pruning.", 0.0000001, 0.5, 0.25);
+				"The confidence level used for the pessimistic error calculation of pruning.", 0.0000001, 0.5, 0.1);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_PRUNING, false, true));
 		type.setExpert(false);
 		types.add(type);
@@ -406,7 +406,7 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_MINIMAL_GAIN,
-				"The minimal gain which must be achieved in order to produce a split.", 0.0d, Double.POSITIVE_INFINITY, 0.1d);
+				"The minimal gain which must be achieved in order to produce a split.", 0.0d, Double.POSITIVE_INFINITY, 0.01d);
 		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_PRE_PRUNING, false, true));
 		type.setExpert(false);
 		types.add(type);

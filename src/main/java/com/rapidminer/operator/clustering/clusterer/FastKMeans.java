@@ -19,6 +19,7 @@
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.clustering.CentroidClusterModel;
 import com.rapidminer.operator.clustering.ClusterModel;
@@ -64,7 +66,6 @@ public class FastKMeans extends RMAbstractClusterer {
 	 * initialization that are performed&quot;
 	 */
 	public static final String PARAMETER_MAX_RUNS = "max_runs";
-	boolean kpp = getParameterAsBoolean(KMeanspp.PARAMETER_USE_KPP);
 
 	/**
 	 * The parameter name for &quot;the maximal number of iterations performed for one run of the k
@@ -87,6 +88,7 @@ public class FastKMeans extends RMAbstractClusterer {
 
 	@Override
 	protected ClusterModel generateInternalClusterModel(ExampleSet exampleSet) throws OperatorException {
+		boolean kpp = getParameterAsBoolean(KMeanspp.PARAMETER_USE_KPP) && getCompatibilityLevel().isAbove(KMeanspp.VERSION_KPP_NOT_WORKING);
 		int k = getParameterAsInt(PARAMETER_K);
 		int maxOptimizationSteps = getParameterAsInt(PARAMETER_MAX_OPTIMIZATION_STEPS);
 		int maxRuns = getParameterAsInt(PARAMETER_MAX_RUNS);
@@ -108,7 +110,7 @@ public class FastKMeans extends RMAbstractClusterer {
 
 		// extracting attribute names
 		Attributes attributes = exampleSet.getAttributes();
-		ArrayList<String> attributeNames = new ArrayList<String>(attributes.size());
+		ArrayList<String> attributeNames = new ArrayList<>(attributes.size());
 		for (Attribute attribute : attributes) {
 			attributeNames.add(attribute.getName());
 		}
@@ -125,7 +127,8 @@ public class FastKMeans extends RMAbstractClusterer {
 			// init centroids by assigning one single, unique example!
 			int i = 0;
 			if (kpp) {
-				KMeanspp kmpp = new KMeanspp(getOperatorDescription(), k, exampleSet, measure, generator);
+				KMeanspp kmpp = new KMeanspp(this, k, exampleSet, measure, generator);
+
 				int[] hilf = kmpp.getStart();
 				int i1 = 0;
 
@@ -343,8 +346,8 @@ public class FastKMeans extends RMAbstractClusterer {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeInt(PARAMETER_K, "The number of clusters which should be detected.", 2, Integer.MAX_VALUE,
-				2, false));
-		types.add(new ParameterTypeBoolean(KMeanspp.PARAMETER_USE_KPP, KMeanspp.SHORT_DESCRIPTION, false));
+				5, false));
+		types.add(new ParameterTypeBoolean(KMeanspp.PARAMETER_USE_KPP, KMeanspp.SHORT_DESCRIPTION, true));
 		types.addAll(getMeasureParameterTypes());
 		types.add(new ParameterTypeInt(PARAMETER_MAX_RUNS,
 				"The maximal number of runs of k-Means with random initialization that are performed.", 1, Integer.MAX_VALUE,
@@ -358,5 +361,14 @@ public class FastKMeans extends RMAbstractClusterer {
 	@Override
 	protected Map<String, Object> getMeasureParametersDefaults() {
 		return Collections.singletonMap(DistanceMeasures.PARAMETER_MEASURE_TYPES, DistanceMeasures.NUMERICAL_MEASURES_TYPE);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] incompatibleVersions = super.getIncompatibleVersionChanges();
+		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
+				incompatibleVersions.length + 1);
+		extendedIncompatibleVersions[incompatibleVersions.length] = KMeanspp.VERSION_KPP_NOT_WORKING;
+		return extendedIncompatibleVersions;
 	}
 }

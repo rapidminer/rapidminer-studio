@@ -251,6 +251,8 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 					first = false;
 				}
 				dropInsertionPredecessor = null;
+
+				model.fireOperatorsMoved(newOperators);
 				return true;
 			} else {
 				dropInsertionPredecessor = null;

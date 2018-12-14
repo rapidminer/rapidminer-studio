@@ -235,7 +235,7 @@ public class RelevanceTreeLearner extends OperatorChain implements Learner {
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeDouble(DecisionTreeLearner.PARAMETER_CONFIDENCE, "The confidence level used for pruning.",
-				0.0000001, 0.5, 0.25);
+				0.0000001, 0.5, 0.1);
 		type.setExpert(false);
 		types.add(type);
 		types.add(new ParameterTypeBoolean(DecisionTreeLearner.PARAMETER_NO_PRUNING,

@@ -44,6 +44,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.event.CellEditorListener;
@@ -80,6 +81,7 @@ import com.rapidminer.gui.properties.celleditors.value.RepositoryLocationValueCe
 import com.rapidminer.gui.properties.celleditors.value.SimpleFileValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.SimpleSuggestionBoxValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.TextValueCellEditor;
+import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.ToolTipWindow;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TipProvider;
@@ -339,6 +341,20 @@ public abstract class PropertyPanel extends JPanel {
 			c.weighty = 0;
 
 			add(createParameterPanel(type, editor, editorComponent), c);
+			row++;
+		}
+
+		// label for no parameters case
+		if (row == 0) {
+			c.gridx = 0;
+			c.gridy = 0;
+			c.insets = new Insets(10, 10, 10, 10);
+			c.anchor = GridBagConstraints.CENTER;
+			c.weightx = 1;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			JLabel noParametersLabel = new ResourceLabel("propertyPanel.no_parameters");
+			noParametersLabel.setHorizontalAlignment(SwingConstants.CENTER);
+			add(noParametersLabel, c);
 			row++;
 		}
 

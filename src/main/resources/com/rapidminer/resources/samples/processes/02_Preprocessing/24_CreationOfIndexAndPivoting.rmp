@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><process version="7.4.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="9.1.000-BETA2">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="7.4.000-SNAPSHOT" expanded="true" name="Root">
+  <operator activated="true" class="process" compatibility="9.1.000-BETA2" expanded="true" name="Root" origin="GENERATED_SAMPLE">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -12,7 +12,7 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" width="90" x="45" y="34">
+      <operator activated="true" class="generate_data" compatibility="7.1.001" expanded="true" height="68" name="ExampleSetGenerator" origin="GENERATED_SAMPLE" width="90" x="45" y="34">
         <parameter key="target_function" value="random"/>
         <parameter key="number_examples" value="10"/>
         <parameter key="number_of_attributes" value="2"/>
@@ -23,8 +23,9 @@
         <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="-1"/>
         <parameter key="datamanagement" value="double_array"/>
+        <parameter key="data_management" value="auto"/>
       </operator>
-      <operator activated="true" class="select_attributes" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="AttributeFilter" width="90" x="179" y="34">
+      <operator activated="true" class="select_attributes" compatibility="9.1.000-BETA2" expanded="true" height="82" name="AttributeFilter" origin="GENERATED_SAMPLE" width="90" x="179" y="34">
         <parameter key="attribute_filter_type" value="regular_expression"/>
         <parameter key="attribute" value=""/>
         <parameter key="attributes" value=""/>
@@ -39,7 +40,7 @@
         <parameter key="invert_selection" value="true"/>
         <parameter key="include_special_attributes" value="true"/>
       </operator>
-      <operator activated="true" class="work_on_subset" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="AttributeSubsetPreprocessing" width="90" x="313" y="34">
+      <operator activated="true" class="work_on_subset" compatibility="9.1.000-BETA2" expanded="true" height="82" name="AttributeSubsetPreprocessing" origin="GENERATED_SAMPLE" width="90" x="313" y="34">
         <parameter key="attribute_filter_type" value="regular_expression"/>
         <parameter key="attribute" value=""/>
         <parameter key="attributes" value=""/>
@@ -59,7 +60,7 @@
         <parameter key="deliver_inner_results" value="false"/>
         <parameter key="remove_roles" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="discretize_by_frequency" compatibility="7.1.001" expanded="true" height="103" name="FrequencyDiscretization" width="90" x="447" y="34">
+          <operator activated="true" class="discretize_by_frequency" compatibility="7.1.001" expanded="true" height="103" name="FrequencyDiscretization" origin="GENERATED_SAMPLE" width="90" x="447" y="34">
             <parameter key="return_preprocessing_model" value="false"/>
             <parameter key="create_view" value="false"/>
             <parameter key="attribute_filter_type" value="all"/>
@@ -87,29 +88,29 @@
           <portSpacing port="sink_through 1" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="rename" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="ChangeAttributeName" width="90" x="447" y="34">
+      <operator activated="true" class="rename" compatibility="9.1.000-BETA2" expanded="true" height="82" name="ChangeAttributeName" origin="GENERATED_SAMPLE" width="90" x="447" y="34">
         <parameter key="old_name" value="att1"/>
         <parameter key="new_name" value="Value"/>
         <list key="rename_additional_attributes"/>
       </operator>
-      <operator activated="true" class="rename" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="ChangeAttributeName (2)" width="90" x="581" y="34">
+      <operator activated="true" class="rename" compatibility="9.1.000-BETA2" expanded="true" height="82" name="ChangeAttributeName (2)" origin="GENERATED_SAMPLE" width="90" x="581" y="34">
         <parameter key="old_name" value="att2"/>
         <parameter key="new_name" value="Group"/>
         <list key="rename_additional_attributes"/>
       </operator>
-      <operator activated="true" class="generate_attributes" compatibility="6.4.000" expanded="true" height="82" name="AttributeConstruction" width="90" x="45" y="187">
+      <operator activated="true" class="generate_attributes" compatibility="6.4.000" expanded="true" height="82" name="AttributeConstruction" origin="GENERATED_SAMPLE" width="90" x="45" y="187">
         <list key="function_descriptions">
           <parameter key="Index" value="1"/>
         </list>
         <parameter key="keep_all" value="true"/>
       </operator>
-      <operator activated="true" class="concurrency:loop_values" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="Loop Values" width="90" x="179" y="187">
+      <operator activated="true" class="concurrency:loop_values" compatibility="8.2.000" expanded="true" height="82" name="Loop Values" origin="GENERATED_SAMPLE" width="90" x="179" y="187">
         <parameter key="attribute" value="Group"/>
         <parameter key="iteration_macro" value="loop_value"/>
         <parameter key="reuse_results" value="false"/>
         <parameter key="enable_parallel_execution" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="filter_examples" compatibility="6.4.000" expanded="true" height="103" name="ExampleFilter" width="90" x="45" y="34">
+          <operator activated="true" class="filter_examples" compatibility="6.4.000" expanded="true" height="103" name="ExampleFilter" origin="GENERATED_SAMPLE" width="90" x="45" y="34">
             <parameter key="parameter_string" value="Group = %{loop_value}"/>
             <parameter key="parameter_expression" value=""/>
             <parameter key="condition_class" value="attribute_value_filter"/>
@@ -118,31 +119,31 @@
             <parameter key="filters_logic_and" value="true"/>
             <parameter key="filters_check_metadata" value="true"/>
           </operator>
-          <operator activated="true" class="extract_macro" compatibility="7.4.000-SNAPSHOT" expanded="true" height="68" name="DataMacroDefinition" width="90" x="179" y="34">
+          <operator activated="true" class="extract_macro" compatibility="9.1.000-BETA2" expanded="true" height="68" name="DataMacroDefinition" origin="GENERATED_SAMPLE" width="90" x="179" y="34">
             <parameter key="macro" value="number_of_examples"/>
             <parameter key="macro_type" value="number_of_examples"/>
             <parameter key="statistics" value="average"/>
             <parameter key="attribute_name" value=""/>
             <list key="additional_macros"/>
           </operator>
-          <operator activated="true" class="set_macro" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="SingleMacroDefinition" width="90" x="313" y="34">
+          <operator activated="true" class="set_macro" compatibility="9.1.000-BETA2" expanded="true" height="82" name="SingleMacroDefinition" origin="GENERATED_SAMPLE" width="90" x="313" y="34">
             <parameter key="macro" value="current_index"/>
             <parameter key="value" value="1"/>
           </operator>
-          <operator activated="true" class="concurrency:loop" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="IteratingOperatorChain" width="90" x="447" y="34">
+          <operator activated="true" class="concurrency:loop" compatibility="8.2.000" expanded="true" height="82" name="IteratingOperatorChain" origin="GENERATED_SAMPLE" width="90" x="447" y="34">
             <parameter key="number_of_iterations" value="%{number_of_examples}"/>
             <parameter key="iteration_macro" value="i"/>
             <parameter key="reuse_results" value="false"/>
             <parameter key="enable_parallel_execution" value="true"/>
             <process expanded="true">
-              <operator activated="true" class="set_data" compatibility="7.1.001" expanded="true" height="82" name="SetData" width="90" x="45" y="34">
+              <operator activated="true" class="set_data" compatibility="7.1.001" expanded="true" height="82" name="SetData" origin="GENERATED_SAMPLE" width="90" x="45" y="34">
                 <parameter key="example_index" value="%{current_index}"/>
                 <parameter key="count_backwards" value="false"/>
                 <parameter key="attribute_name" value="Index"/>
                 <parameter key="value" value="%{current_index}"/>
                 <list key="additional_values"/>
               </operator>
-              <operator activated="true" class="generate_macro" compatibility="6.4.000" expanded="true" height="82" name="MacroConstruction" width="90" x="514" y="34">
+              <operator activated="true" class="generate_macro" compatibility="6.4.000" expanded="true" height="82" name="MacroConstruction" origin="GENERATED_SAMPLE" width="90" x="514" y="34">
                 <list key="function_descriptions">
                   <parameter key="current_index" value="cut(str(%{current_index} + 1), 0, 1)"/>
                 </list>
@@ -167,17 +168,17 @@
           <portSpacing port="sink_output 2" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="append" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="ExampleSetMerge" width="90" x="313" y="187">
+      <operator activated="true" class="append" compatibility="9.1.000-BETA2" expanded="true" height="82" name="ExampleSetMerge" origin="GENERATED_SAMPLE" width="90" x="313" y="187">
         <parameter key="datamanagement" value="double_array"/>
+        <parameter key="data_management" value="auto"/>
         <parameter key="merge_type" value="all"/>
       </operator>
-      <operator activated="true" class="pivot" compatibility="7.4.000-SNAPSHOT" expanded="true" height="82" name="Example2AttributePivoting" width="90" x="447" y="187">
-        <parameter key="group_attribute" value="Group"/>
-        <parameter key="index_attribute" value="Index"/>
-        <parameter key="consider_weights" value="true"/>
-        <parameter key="weight_aggregation" value="sum"/>
-        <parameter key="skip_constant_attributes" value="true"/>
-        <parameter key="datamanagement" value="double_array"/>
+      <operator activated="true" class="blending:pivot" compatibility="9.1.000-BETA2" expanded="true" height="82" name="Pivot" width="90" x="447" y="187">
+        <parameter key="group_by_attributes" value="Group"/>
+        <parameter key="column_grouping_attribute" value="Index"/>
+        <list key="aggregation_attributes">
+          <parameter key="Value" value="first"/>
+        </list>
       </operator>
       <connect from_op="ExampleSetGenerator" from_port="output" to_op="AttributeFilter" to_port="example set input"/>
       <connect from_op="AttributeFilter" from_port="example set output" to_op="AttributeSubsetPreprocessing" to_port="example set"/>
@@ -186,8 +187,8 @@
       <connect from_op="ChangeAttributeName (2)" from_port="example set output" to_op="AttributeConstruction" to_port="example set input"/>
       <connect from_op="AttributeConstruction" from_port="example set output" to_op="Loop Values" to_port="input 1"/>
       <connect from_op="Loop Values" from_port="output 1" to_op="ExampleSetMerge" to_port="example set 1"/>
-      <connect from_op="ExampleSetMerge" from_port="merged set" to_op="Example2AttributePivoting" to_port="example set input"/>
-      <connect from_op="Example2AttributePivoting" from_port="example set output" to_port="result 1"/>
+      <connect from_op="ExampleSetMerge" from_port="merged set" to_op="Pivot" to_port="input"/>
+      <connect from_op="Pivot" from_port="output" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="126"/>
       <portSpacing port="sink_result 2" spacing="0"/>

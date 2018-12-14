@@ -33,6 +33,7 @@ import com.rapidminer.studio.concurrency.internal.util.BackgroundExecution;
 import com.rapidminer.studio.concurrency.internal.util.BackgroundExecutionServiceListener;
 import com.rapidminer.studio.concurrency.internal.util.ProcessBackgroundExecution;
 import com.rapidminer.studio.internal.ParameterServiceRegistry;
+import com.rapidminer.studio.internal.Resources;
 
 
 /**
@@ -62,7 +63,9 @@ public interface ConcurrencyExecutionService {
 	 * @return the recommended batch size. Will never be less than the user setting of
 	 *         {@link RapidMiner#PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS}
 	 * @since 7.5
+	 * @deprecated Use {@link #getRecommendedConcurrencyBatchSize(Operator)} instead
 	 */
+	@Deprecated
 	public static int getRecommendedConcurrencyBatchSize() {
 		String threadSettingString = ParameterServiceRegistry.INSTANCE
 				.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
@@ -75,6 +78,24 @@ public interface ConcurrencyExecutionService {
 		if (threadSetting == 0) {
 			threadSetting = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
 		}
+		return Math.max(2_000, threadSetting);
+	}
+
+	/**
+	 * Calculates the recommended batch size for parallel operators. Use when deciding how many
+	 * tasks to submit to
+	 * {@link ConcurrencyExecutionService#executeOperatorTasks(Operator, java.util.List)}
+	 * simultaneously.
+	 *
+	 * @return the recommended batch size. Will never be less than the user setting of
+	 *         {@link RapidMiner#PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS} or {@link RapidMiner#PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND}
+	 * @since 9.1
+	 */
+	public static int getRecommendedConcurrencyBatchSize(Operator operator) {
+		if (operator == null) {
+			return getRecommendedConcurrencyBatchSize();
+		}
+		int threadSetting = Resources.getConcurrencyContext(operator).getParallelism();
 		return Math.max(2_000, threadSetting);
 	}
 

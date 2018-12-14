@@ -97,7 +97,7 @@ public final class LocationSelectionStep extends AbstractWizardStep {
 		final DataSource dataSource = wizard.getDataSource(DataSource.class);
 
 		// update view content
-		viewWrapper.removeAll();
+		SwingTools.invokeAndWait(() -> viewWrapper.removeAll());
 		if (dataSource != null) {
 
 			SwingTools.invokeAndWait(() -> {

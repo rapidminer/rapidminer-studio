@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.rapidminer.belt.Builders;
 import com.rapidminer.belt.Column;
 import com.rapidminer.belt.ColumnTypes;
 import com.rapidminer.belt.Context;
@@ -72,12 +73,11 @@ public class CompatibilityTools {
 		}
 
 		// Replace datetime columns by numeric columns containing the epoch milliseconds
-		TableBuilder builder = Table.from(table);
+		TableBuilder builder = Builders.newTableBuilder(table);
 		for (String label : datetimeLabels) {
-			Column replacement = table.transform(label)
+			Column replacement = table.transform(label).workload(Workload.SMALL)
 					.applyObjectToReal(Instant.class,
 							v -> v != null ? v.toEpochMilli() : Double.NaN,
-							Workload.SMALL,
 							context).toColumn();
 			builder.replace(label, replacement);
 		}

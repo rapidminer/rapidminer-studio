@@ -1,18 +1,18 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
 */
@@ -43,6 +43,7 @@ import org.w3c.dom.Element;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.SimpleListBasedParameterHandler;
 import com.rapidminer.repository.ConnectionListener;
 import com.rapidminer.repository.ConnectionRepository;
 import com.rapidminer.repository.Folder;
@@ -118,7 +119,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 			return false;
 		}
 	};
-	
+
 	/**
 	 * Compares {@link Configurable}s.
 	 */
@@ -151,7 +152,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 	 * {@link ConfigurationManager#createAndRegisterConfigurables(AbstractConfigurator, java.util.Map, java.util.Map, com.rapidminer.repository.internal.remote.RemoteRepository)}
 	 * for mocking a {@link ParameterHandler} when retrieving the list of parameters.
 	 */
-	private static final ParameterHandler EMPTY_PARAMETER_HANDLER = new ConfiguratorParameterHandler() {
+	private static final ParameterHandler EMPTY_PARAMETER_HANDLER = new SimpleListBasedParameterHandler() {
 
 		@Override
 		public List<ParameterType> getParameterTypes() {
@@ -322,10 +323,10 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 			throw new RuntimeException("typeID must not be null for " + configurator.getClass() + "!");
 		}
 		configurators.put(typeId, configurator);
-		configurables.put(typeId, new TreeMap<ComparablePair<String, String>, Configurable>());
+		configurables.put(typeId, new TreeMap<>());
 
 		if (permittedGroups.get(typeId) == null) {
-			permittedGroups.put(typeId, new TreeMap<ComparablePair<String, String>, Set<String>>());
+			permittedGroups.put(typeId, new TreeMap<>());
 		}
 
 	}
@@ -458,7 +459,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 				.map(nameAndSourceToConfigurable::get).orElse(null);
 		if (result == null) {
 			AbstractConfigurator<? extends Configurable> configurator = configurators.get(typeId);
-			throw new ConfigurationException("No such configured object of name " + name + " of " + configurator.getName());
+			throw new ConfigurationException("No such configured object of name " + name + " of " + (configurator != null ? configurator.getName() : "typeId: " + typeId));
 		}
 		return result;
 	}

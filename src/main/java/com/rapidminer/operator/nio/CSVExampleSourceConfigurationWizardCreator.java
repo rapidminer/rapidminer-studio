@@ -26,7 +26,6 @@ import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.studio.io.data.internal.file.csv.CSVDataSourceFactory;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
-import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 
 
 /**

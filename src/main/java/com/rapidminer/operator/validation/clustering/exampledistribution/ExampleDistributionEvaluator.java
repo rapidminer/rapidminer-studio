@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.validation.clustering.exampledistribution;
 
+import java.util.List;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -34,8 +36,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.tools.ClassNameMapper;
 
-import java.util.List;
-
 
 /**
  * Evaluates flat cluster models on how well the examples are distributed over the clusters.
@@ -47,11 +47,11 @@ public class ExampleDistributionEvaluator extends Operator {
 
 	public static final String PARAMETER_MEASURE = "measure";
 
-	private final static String[] DEFAULT_MEASURES = {
-			"com.rapidminer.operator.validation.clustering.exampledistribution.SumOfSquares",
-			"com.rapidminer.operator.validation.clustering.exampledistribution.GiniCoefficient" };
+	private static final String[] DEFAULT_MEASURES = {
+			SumOfSquares.class.getName(),
+			GiniCoefficient.class.getName()};
 
-	private ClassNameMapper MEASURE_MAP;
+	private static final ClassNameMapper MEASURE_MAP = new ClassNameMapper(DEFAULT_MEASURES);
 
 	private double distribution = 0;
 
@@ -111,11 +111,11 @@ public class ExampleDistributionEvaluator extends Operator {
 
 	@Override
 	public List<ParameterType> getParameterTypes() {
-		MEASURE_MAP = new ClassNameMapper(DEFAULT_MEASURES);
 		List<ParameterType> types = super.getParameterTypes();
-
+		String[] shortClassNames = MEASURE_MAP.getShortClassNames();
+		String defaultValue = shortClassNames.length > 0 ? shortClassNames[0] : SumOfSquares.class.getSimpleName();
 		ParameterType type = new ParameterTypeStringCategory(PARAMETER_MEASURE, "the item distribution measure to apply",
-				MEASURE_MAP.getShortClassNames(), "SumOfSquares", true);
+				shortClassNames, defaultValue, true);
 		type.setExpert(false);
 		types.add(type);
 

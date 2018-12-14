@@ -28,13 +28,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.AccessControlException;
 import java.security.AccessController;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Locale;
 import java.util.Set;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import com.rapidminer.core.license.ActionStatisticsLicenseManagerListener;
@@ -63,6 +63,7 @@ import com.rapidminer.parameter.ParameterTypeDirectory;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypePassword;
 import com.rapidminer.parameter.ParameterTypeString;
+import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.security.PluginSandboxPolicy;
 import com.rapidminer.settings.Telemetry;
@@ -87,6 +88,7 @@ import com.rapidminer.tools.cipher.KeyGenerationException;
 import com.rapidminer.tools.cipher.KeyGeneratorTool;
 import com.rapidminer.tools.config.ConfigurationManager;
 import com.rapidminer.tools.plugin.Plugin;
+import com.rapidminer.tools.update.internal.MigrationManager;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 import com.rapidminer.tools.usagestats.UsageStatistics;
 
@@ -225,7 +227,12 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_INIT_OPERATORS = "rapidminer.init.operators";
 
 	public static final String PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE = "rapidminer.general.locale.language";
+	private static final String[] PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE_VALUES = {Locale.ENGLISH.getLanguage()};
+	/** @deprecated since 9.1 */
+	@Deprecated
 	public static final String PROPERTY_RAPIDMINER_GENERAL_LOCALE_COUNTRY = "rapidminer.general.locale.country";
+	/** @deprecated since 9.1 */
+	@Deprecated
 	public static final String PROPERTY_RAPIDMINER_GENERAL_LOCALE_VARIANT = "rapidminer.general.locale.variant";
 
 	/**
@@ -393,9 +400,14 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_GENERAL_TIME_ZONE = "rapidminer.general.timezone";
 
 	/**
-	 * The maximum number of working threads that should be used by processes.
+	 * The maximum number of working threads that should be used by the foreground process.
 	 */
 	public static final String PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS = "rapidminer.general.number_of_threads";
+
+	/**
+	 * The maximum number of working threads that should be used by background processes.
+	 */
+	public static final String PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND = "rapidminer.general.number_of_threads_background";
 
 	/**
 	 * The maximum number of working threads that should be used by processes.
@@ -408,7 +420,7 @@ public class RapidMiner {
 	 * have to be adjusted as well.
 	 */
 	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features.v2";
-	
+
 	/**
 	 * The name of the property indicating whether or not additional permissions should be enabled
 	 */
@@ -420,7 +432,7 @@ public class RapidMiner {
 	 * this property can be used to limit the maximum amount of memory RM Studio will use (in MB)
 	 */
 	public static final String PROPERTY_RAPIDMINER_MAX_MEMORY = "maxMemory";
-	
+
 	/**
 	 * The name of the property indicating whether the row based legacy data management should be used.
 	 */
@@ -451,7 +463,7 @@ public class RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST = "rapidminer.proxy.socksProxyHost";
 	public static final String PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT = "rapidminer.proxy.socksProxyPort";
 	public static final String PROPERTY_RAPIDMINER_SOCKS_VERSION = "rapidminer.proxy.socksProxyVersion";
-	public final static String[] RAPIDMINER_SOCKS_VERSIONS = { "Version 4", "Version 5" };
+	public static final String[] RAPIDMINER_SOCKS_VERSIONS = { "Version 4", "Version 5" };
 
 	/**
 	 * Set this parameter to {@code true} to allow https to http redirects
@@ -493,41 +505,7 @@ public class RapidMiner {
 
 		parameterTypesDescription = new HashSet<>();
 
-		// set default language to english
-		String[] default_language = new String[1];
-		default_language[0] = "eng";
-
-		// scan language definitions. skip comments
-		Vector<String> languages = new Vector<>();
-		Scanner scanLanguageDefs = new Scanner(
-				RapidMiner.class.getResourceAsStream("/com/rapidminer/resources/i18n/language_definitions.txt"));
-		try {
-			while (scanLanguageDefs.hasNextLine()) {
-				String nextLine = scanLanguageDefs.nextLine();
-				if (!nextLine.contains("#")) {
-					languages.add(nextLine);
-				}
-			}
-		} finally {
-			scanLanguageDefs.close();
-		}
-
-		// if there is less then one language, take default language
-		if (languages.size() < 1) {
-			registerParameter(
-					new ParameterTypeCategory(PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE, "", default_language, 0));
-
-		} else {
-			// save vector as array
-			int idx = 0;
-			String[] languageArray = new String[languages.size()];
-			for (String lang : languages) {
-				languageArray[idx] = lang;
-				++idx;
-			}
-			registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE, "", languageArray, 0));
-		}
-
+		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE, "", PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE_VALUES, 0));
 		registerParameter(
 				new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS, "", 0, Integer.MAX_VALUE, 3));
 		registerParameter(
@@ -545,6 +523,7 @@ public class RapidMiner {
 		registerParameter(
 				new ParameterTypeBoolean(CapabilityProvider.PROPERTY_RAPIDMINER_GENERAL_CAPABILITIES_WARN, "", false));
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS, "", 0, Integer.MAX_VALUE, 0));
+		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND, "", 0, Integer.MAX_VALUE, 0));
 		registerParameter(
 				new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_PROCESSES, "", 0, Integer.MAX_VALUE, 0));
 		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_EDITOR, "", true));
@@ -555,15 +534,24 @@ public class RapidMiner {
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_TOOLS_MAIL_DEFAULT_PROCESS_DURATION_FOR_MAIL, "", 0,
 				Integer.MAX_VALUE, 30));
 
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND, "", true));
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST, "", true));
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT, "", true));
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_USER, "", true));
-		registerParameter(new ParameterTypePassword(PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD, ""));
-		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY, "",
-				PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_VALUES, 0));
-		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION, "",
-				PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_VALUES, 0));
+		ParameterType type = new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND, "", true);
+		type.registerDependencyCondition(new EqualTypeCondition(null, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_VALUES, false, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_SENDMAIL));
+		registerParameter(type);
+		ParameterType[] smtpTypes = {
+				new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST, "", true),
+				new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT, "", true),
+				new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SMTP_USER, "", true),
+				new ParameterTypePassword(PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD, ""),
+				new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY, "",
+						PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_VALUES, 0),
+				new ParameterTypeCategory(PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION, "",
+						PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_VALUES, 0),
+		};
+		EqualTypeCondition useSmtp = new EqualTypeCondition(null, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_VALUES, false, PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_SMTP);
+		for (ParameterType smtpType : smtpTypes) {
+			smtpType.registerDependencyCondition(useSmtp);
+			registerParameter(smtpType);
+		}
 
 		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_TOOLS_DB_ONLY_STANDARD_TABLES, "", true));
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_TOOLS_DB_LOGIN_TIMEOUT, "", 0, Integer.MAX_VALUE,
@@ -574,7 +562,7 @@ public class RapidMiner {
 
 		// System parameter types
 		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_MAX_MEMORY, "", 384, Integer.MAX_VALUE, true), "system");
-		
+
 		registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT, "", false), "system");
 
 		registerParameter(new ParameterTypeInt(WebServiceTools.WEB_SERVICE_TIMEOUT, "", 1, Integer.MAX_VALUE, 20000),
@@ -740,7 +728,7 @@ public class RapidMiner {
 		RepositoryManager.init();
 
 		// parse settings xml (before plugins are initialized)
-		SettingsItems.INSTANCE.parseStudioXml();
+		SettingsItems.INSTANCE.loadGrouping();
 
 		// generate encryption key if necessary
 		if (!CipherTools.isKeyAvailable()) {
@@ -865,50 +853,32 @@ public class RapidMiner {
 		if (performedInitialSettings) {
 			return;
 		}
-		boolean firstStart = false;
-		boolean versionChanged = false;
+
 		VersionNumber lastVersionNumber = null;
-		VersionNumber currentVersionNumber = new VersionNumber(getLongVersion());
+		VersionNumber currentVersionNumber = getVersion();
 
 		File lastVersionFile = new File(FileSystemService.getUserRapidMinerDir(), "lastversion");
-		if (!lastVersionFile.exists()) {
-			firstStart = true;
-		} else {
-			String versionString = null;
-			BufferedReader in = null;
-			try (FileReader fr = new FileReader(lastVersionFile)) {
-				in = new BufferedReader(fr);
-				versionString = in.readLine();
-			} catch (IOException e) {
-				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-						"com.rapidminer.RapidMiner.reading_global_version_file_error"), e);
-			} finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-						LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.RapidMiner.closing_stream_error", lastVersionFile), e);
-					}
-				}
-			}
-
-			if (versionString != null) {
+		if (lastVersionFile.exists()) {
+			try (BufferedReader in = new BufferedReader(new FileReader(lastVersionFile))) {
+				String versionString = in.readLine();
 				lastVersionNumber = new VersionNumber(versionString);
-				if (currentVersionNumber.compareTo(lastVersionNumber) > 0) {
-					firstStart = true;
-				}
-				if (currentVersionNumber.compareTo(lastVersionNumber) != 0) {
-					versionChanged = true;
-				}
-			} else {
-				firstStart = true;
+			} catch (IOException e) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.RapidMiner.reading_global_version_file_error", e);
+			} catch (VersionNumber.VersionNumberException e) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.RapidMiner.parsing_global_version_file_error", e);
 			}
 		}
+
+		boolean firstStart = lastVersionNumber == null || currentVersionNumber.isAbove(lastVersionNumber);
+		boolean versionChanged = lastVersionNumber != null && !currentVersionNumber.equals(lastVersionNumber);
 
 		// init this version (workspace etc.)
 		if (firstStart) {
 			performFirstInitialization(lastVersionNumber, currentVersionNumber);
+		}
+
+		if (versionChanged) {
+			MigrationManager.doMigrate(lastVersionNumber, currentVersionNumber);
 		}
 
 		if (firstStart || versionChanged) {
@@ -931,7 +901,7 @@ public class RapidMiner {
 	private static void performFirstInitialization(final VersionNumber lastVersion, final VersionNumber currentVersion) {
 		if (currentVersion != null) {
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.RapidMiner.performing_upgrade",
-					new Object[] { lastVersion != null ? " from version " + lastVersion : "", currentVersion });
+					new Object[] { lastVersion != null ? "from version " + lastVersion : "", currentVersion });
 		}
 
 	}
@@ -1132,22 +1102,30 @@ public class RapidMiner {
 		// parameters for proxy settings
 		registerParameter(new ParameterTypeCategory(RapidMiner.PROPERTY_RAPIDMINER_PROXY_MODE, "",
 				RapidMiner.RAPIDMINER_PROXY_MODES, 0), "proxy");
-		// Global exclusion list (applies on all NON_PROXY_HOSTS)
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_PROXY_EXCLUDE, "", true), "proxy");
-		// HTTP
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_HOST, "", true), "proxy");
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTP_PROXY_PORT, "", 0, 65535, true), "proxy");
-		// HTTPS
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_HTTPS_PROXY_HOST, "", true), "proxy");
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTPS_PROXY_PORT, "", 0, 65535, true), "proxy");
-		// FTP
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_HOST, "", true), "proxy");
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_FTP_PROXY_PORT, "", 0, 65535, true), "proxy");
-
-		registerParameter(new ParameterTypeString(PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST, "", true), "proxy");
-		registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT, "", 0, 65535, true), "proxy");
-		registerParameter(new ParameterTypeCategory(PROPERTY_RAPIDMINER_SOCKS_VERSION, "", RAPIDMINER_SOCKS_VERSIONS, 1),
-				"proxy");
+		ParameterType[] manualTypes = {
+				// Global exclusion list (applies on all NON_PROXY_HOSTS)
+				new ParameterTypeString(PROPERTY_RAPIDMINER_PROXY_EXCLUDE, "", true),
+				// HTTP
+				new ParameterTypeString(PROPERTY_RAPIDMINER_HTTP_PROXY_HOST, "", true),
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTP_PROXY_PORT, "", 0, 65535, true),
+				// HTTPS
+				new ParameterTypeString(PROPERTY_RAPIDMINER_HTTPS_PROXY_HOST, "", true),
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_HTTPS_PROXY_PORT, "", 0, 65535, true),
+				// FTP
+				new ParameterTypeString(PROPERTY_RAPIDMINER_FTP_PROXY_HOST, "", true),
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_FTP_PROXY_PORT, "", 0, 65535, true),
+				// SOCKS
+				new ParameterTypeString(PROPERTY_RAPIDMINER_SOCKS_PROXY_HOST, "", true),
+				new ParameterTypeInt(PROPERTY_RAPIDMINER_SOCKS_PROXY_PORT, "", 0, 65535, true),
+				new ParameterTypeCategory(PROPERTY_RAPIDMINER_SOCKS_VERSION, "", RAPIDMINER_SOCKS_VERSIONS, 1)
+		};
+		// register dependency to manual proxy mode
+		int manualIndex = Arrays.asList(RapidMiner.RAPIDMINER_PROXY_MODES).indexOf(RAPIDMINER_PROXY_MODE_MANUAL);
+		EqualTypeCondition manualSelected = new EqualTypeCondition(null, RapidMiner.PROPERTY_RAPIDMINER_PROXY_MODE, RapidMiner.RAPIDMINER_PROXY_MODES, false, manualIndex);
+		for (ParameterType type : manualTypes) {
+			type.registerDependencyCondition(manualSelected);
+			registerParameter(type, "proxy");
+		}
 		ProxySettings.apply();
 	}
 
@@ -1171,7 +1149,7 @@ public class RapidMiner {
 	}
 
 	/**
-	 * @deprecated Use {@link #ParameterService.registerParameter(ParameterType)} instead
+	 * @deprecated Use {@link ParameterService#registerParameter(ParameterType)} instead
 	 */
 	@Deprecated
 	public static void registerYaleProperty(final ParameterType type) {

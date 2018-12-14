@@ -60,7 +60,7 @@ public class ExampleSetDataRenderer extends AbstractDataTableTableRenderer {
 	@Override
 	public Component getVisualizationComponent(Object renderable, IOContainer ioContainer) {
 		ExampleSet exampleSet = (ExampleSet) renderable;
-		return new DataViewer(exampleSet, true);
+		return new DataViewer(exampleSet);
 	}
 
 	/**

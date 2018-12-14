@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.rapidminer.RapidMiner;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.ExecutionUnit;
@@ -34,7 +33,7 @@ import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.ParameterService;
+import com.rapidminer.studio.internal.Resources;
 
 
 /**
@@ -64,7 +63,7 @@ public abstract class ParallelOperatorChain extends OperatorChain {
 	 * @return
 	 */
 	protected boolean checkParallelizability() {
-		if(Integer.parseInt(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS)) == 1) {
+		if(Resources.getConcurrencyContext(this).getParallelism() == 1) {
 			return false;
 		}
 

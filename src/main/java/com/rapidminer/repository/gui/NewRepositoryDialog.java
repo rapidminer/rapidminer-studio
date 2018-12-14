@@ -22,7 +22,6 @@ import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -112,6 +111,35 @@ public class NewRepositoryDialog extends MultiPageDialog {
 		} catch (RepositoryException e) {
 			SwingTools.showSimpleErrorMessage(this, "cannot_create_repository", e);
 		}
+	}
+
+	@Override
+	protected void previous() {
+		// reset the finish button when going back, e.g. when selecting another type of repo
+		if (!localButton.isSelected() && finish.isEnabled()) {
+			updateFinishButton(false);
+		}
+		super.previous();
+	}
+
+	@Override
+	protected void next() {
+		super.next();
+		// set the finish button when reaching the last page
+		if (!localButton.isSelected() && finish.isEnabled()) {
+			updateFinishButton(true);
+		}
+	}
+
+	/**
+	 * Sets or resets the {@link #finish} button for the selected repository panel
+	 *
+	 * @param set to set or reset the finish button
+	 * @since 9.0.2
+	 */
+	private void updateFinishButton(boolean set) {
+		repoConfigPanels.values().stream().filter(p -> p.getSecond().isSelected())
+				.forEach(p -> p.getFirst().setOkButton(set ? finish : null));
 	}
 
 	@Override

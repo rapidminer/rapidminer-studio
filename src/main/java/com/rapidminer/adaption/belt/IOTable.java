@@ -74,7 +74,7 @@ public final class IOTable extends ResultObjectAdapter {
 		str.append(table.height()).append(" examples,").append(Tools.getLineSeparator());
 		str.append(table.width()).append(" attributes,").append(Tools.getLineSeparator());
 
-		List<String> withRoles = table.withMetaData(ColumnRole.class);
+		List<String> withRoles = table.select().withMetaData(ColumnRole.class).labels();
 		boolean first = true;
 		for (String label : withRoles) {
 			if (first) {

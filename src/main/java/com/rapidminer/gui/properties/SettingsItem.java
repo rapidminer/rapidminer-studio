@@ -18,10 +18,14 @@
 */
 package com.rapidminer.gui.properties;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 import java.util.logging.Level;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.parameter.ParameterType;
@@ -36,9 +40,11 @@ import com.rapidminer.tools.ParameterService;
  *
  * Parent/child relations are completely handled in the constructors.
  *
- * @author Adrian Wilke
+ * @author Adrian Wilke, Jan Czogalla
  */
 public class SettingsItem {
+
+	private String groupKey;
 
 	/**
 	 * Regarding the {@link SettingsDialog}, this represents either a tab (GROUP), a heading in a
@@ -48,7 +54,7 @@ public class SettingsItem {
 		GROUP, SUB_GROUP, PARAMETER
 	}
 
-	public final static String DEFAULT_PARAMETER_PREFIX = "rapidminer.";
+	public static final String DEFAULT_PARAMETER_PREFIX = "rapidminer.";
 
 	/** Key of properties file */
 	private String key;
@@ -67,15 +73,28 @@ public class SettingsItem {
 
 	/**
 	 * Sets object variables and updates parent/child relations.
+	 *  @param key
+	 *            The element's key
+	 * @param parent
+	 *            Parent SettingsItem or <code>null</code>, if there is none
+ * @param type
+	 */
+	public SettingsItem(String key, SettingsItem parent, Type type) {
+		this(null, key, parent, type);
+	}
+
+	/**
+	 * Sets object variables and updates parent/child relations.
 	 *
+	 * @param groupKey The element's group's key
 	 * @param key
-	 *            The elements key
+	 *            The element's key
 	 * @param parent
 	 *            Parent SettingsItem or <code>null</code>, if there is none
 	 * @param type
 	 *            The type of the item
 	 */
-	public SettingsItem(String key, SettingsItem parent, Type type) {
+	public SettingsItem(String groupKey, String key, SettingsItem parent, Type type) {
 		if (key == null || key.isEmpty()) {
 			throw new IllegalArgumentException(
 					"Settings item has no Key." + (parent == null ? "" : " Parent: " + parent.toString()));
@@ -85,6 +104,7 @@ public class SettingsItem {
 					"Settings item has no type." + (parent == null ? "" : " Parent: " + parent.toString()));
 		}
 
+		this.groupKey = groupKey;
 		this.key = key;
 		this.parent = parent;
 		this.type = type;
@@ -135,26 +155,17 @@ public class SettingsItem {
 		if (!child.type.equals(Type.PARAMETER)) {
 			return true;
 		}
-		if (filter != null && !filter.trim().isEmpty()) {
-			String trimmedFilter = filter.trim();
-			String[] filterTokens = trimmedFilter.split(" ");
-			for (String token : filterTokens) {
-				String unifiedToken = token.toLowerCase(Locale.ENGLISH);
-				if (!child.type.equals(Type.PARAMETER)) {
-					return true;
-				} else if (child.getKey().toLowerCase(Locale.ENGLISH).contains(unifiedToken)) {
-					return true;
-				} else if (child.getTitle() != null && child.getTitle().toLowerCase(Locale.ENGLISH).contains(unifiedToken)) {
-					return true;
-				} else if (child.getDescription() != null
-						&& child.getDescription().toLowerCase(Locale.ENGLISH).contains(unifiedToken)) {
-					return true;
-				}
-			}
-			return false;
-		} else {
+		filter = StringUtils.stripToNull(filter);
+		if (filter == null) {
 			return true;
 		}
+		String[] filterTokens = filter.split(" ");
+		for (int i = 0; i < filterTokens.length; i++) {
+			filterTokens[i] = filterTokens[i].toLowerCase(Locale.ENGLISH);
+		}
+		List<Supplier<String>> stringProviders = Arrays.asList(child::getKey, child::getTitle, child::getDescription);
+		return stringProviders.stream().map(Supplier::get).filter(s -> s != null && !s.isEmpty())
+				.map(s -> s.toLowerCase(Locale.ENGLISH)).anyMatch(s -> Arrays.stream(filterTokens).anyMatch(s::contains));
 	}
 
 	/**
@@ -184,7 +195,7 @@ public class SettingsItem {
 	 * Returns the group key. Or <code>null</code>, if the group key is not known.
 	 */
 	public String getGroupKey() {
-		return ParameterService.getGroupKey(getKey());
+		return groupKey;
 	}
 
 	/**
@@ -231,7 +242,9 @@ public class SettingsItem {
 	/**
 	 * Returns the type of the defined parameter identified by its ID. Returns <code>null</code> if
 	 * its key is unknown.
+	 * @deprecated since 9.1; use {@link SettingsPropertyPanel#getParameterType(SettingsItem)} instead
 	 */
+	@Deprecated
 	public ParameterType getParameterType() {
 		return ParameterService.getParameterType(key);
 	}
@@ -253,61 +266,46 @@ public class SettingsItem {
 	 */
 	public String getTitle() {
 		String title = I18N.getSettingsMessage(key, I18N.SettingsType.TITLE);
-		if (title.equals(key + I18N.SettingsType.TITLE)) {
-
-			// Show warning, if in debug mode
-			if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE))) {
-				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.properties.SettingsItem.no_i18n_title_error",
-						key);
-			}
-
-			// Do not use the '.title' suffix
-			title = key;
-
-			if (getType().equals(Type.GROUP)) {
-				title = title.replace("_", " ");
-				title = new String(new char[] { title.charAt(0) }).toUpperCase() + title.substring(1, title.length());
-
-			} else if (getType().equals(Type.SUB_GROUP)) {
-				// Remove 'rapidminer.settings.subgroup.'
-				int prefixLength = SettingsXmlHandler.SUBGROUP_PREFIX.length();
-				if (title.length() > prefixLength) {
-					title = title.substring(prefixLength);
-				}
-				// Remove group name
-				int index = title.indexOf(".");
-				if (index != -1) {
-					title = title.substring(index);
-				}
-				// Replacements
-				title = title.replace(".", " ");
-				title = title.replace("_", " ");
-				title = title.trim();
-				if (!title.isEmpty()) {
-					title = new String(new char[] { title.charAt(0) }).toUpperCase() + title.substring(1, title.length());
-				}
-
-			} else {
-				// Remove 'rapidminer.'
-				if (title.startsWith(DEFAULT_PARAMETER_PREFIX)) {
-					title = title.substring(DEFAULT_PARAMETER_PREFIX.length());
-				}
-				// Remove group prefix
-				if (getGroupKey() != null) {
-					String groupPrefix = getGroupKey() + ".";
-					if (title.startsWith(groupPrefix)) {
-						title = title.substring(groupPrefix.length());
-					}
-				}
-				title = title.replace("_", " ");
-				title = title.replace(".", " ");
-				title = title.trim();
-				if (!title.isEmpty()) {
-					title = new String(new char[] { title.charAt(0) }).toUpperCase() + title.substring(1, title.length());
-				}
-			}
+		if (!title.equals(key + I18N.SettingsType.TITLE)) {
+			return title;
 		}
-		return title;
+
+		// Show warning, if in debug mode
+		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE))) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.properties.SettingsItem.no_i18n_title_error",
+					key);
+		}
+
+		// Do not use the '.title' suffix
+		title = key;
+
+		if (getType() == Type.SUB_GROUP) {
+			// Remove 'rapidminer.settings.subgroup.'
+			int prefixLength = SettingsXmlHandler.SUBGROUP_PREFIX.length();
+			if (title.length() > prefixLength) {
+				title = title.substring(prefixLength);
+			}
+			// Remove group name
+			int index = title.indexOf('.');
+			if (index != -1) {
+				title = title.substring(index);
+			}
+			// Replacements
+			title = title.replace('.', ' ');
+		} else if (getType() != Type.GROUP){
+			// Remove 'rapidminer.'
+			if (title.startsWith(DEFAULT_PARAMETER_PREFIX)) {
+				title = title.substring(DEFAULT_PARAMETER_PREFIX.length());
+			}
+			// Remove group prefix
+			if (groupKey != null && title.startsWith(groupKey + '.')) {
+				title = title.substring(groupKey.length() + 1);
+			}
+			title = title.replace('.', ' ');
+		}
+		title = title.replace('_', ' ');
+		title = title.trim();
+		return title.isEmpty() ? title : Character.toUpperCase(title.charAt(0)) + title.substring(1, title.length());
 	}
 
 	/**
@@ -337,16 +335,16 @@ public class SettingsItem {
 	 */
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		if (parent != null) {
 			sb.append(parent.toString());
 			sb.append(" | ");
 		}
-		if (type.equals(Type.PARAMETER)) {
+		if (type == Type.PARAMETER) {
 			sb.append("[");
 		}
 		sb.append(key);
-		if (type.equals(Type.PARAMETER)) {
+		if (type == Type.PARAMETER) {
 			sb.append("]");
 		}
 		return sb.toString();

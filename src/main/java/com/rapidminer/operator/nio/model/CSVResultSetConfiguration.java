@@ -23,7 +23,6 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.table.TableModel;
 
 import com.rapidminer.operator.Operator;
@@ -55,6 +54,7 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 	public static final String CSV_TRIM_LINES = "trimLines";
 	public static final String CSV_ENCODING = "encoding";
 	public static final String CSV_SKIP_UTF_8_BOM = "skipUTF8BOM";
+	public static final String CSV_TRIM_VALUES_PARSING = "trimValuesForParsing";
 	private String csvFile;
 
 	private boolean skipComments = true;
@@ -62,6 +62,7 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 	private boolean skipUTF8BOM = false;
 	private boolean trimLines = false;
 	private boolean hasHeaderRow = true;
+	private boolean trimValuesForParsing = true;
 
 	private String columnSeparators = ";";
 
@@ -105,6 +106,7 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 			setQuoteCharacter(csvExampleSource.getParameterAsChar(CSVExampleSource.PARAMETER_QUOTES_CHARACTER));
 		}
 		encoding = Encoding.getEncoding(csvExampleSource);
+		trimValuesForParsing = csvExampleSource.trimForGuessing();
 	}
 
 	@Override
@@ -252,6 +254,27 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 		this.headerRow = headerRow;
 	}
 
+	/**
+	 * Whether values should be trimmed for parsing
+	 *
+	 * @return {@code true} if they should be trimmed
+	 * @since 9.1.1
+	 */
+	public boolean trimValuesForParsing() {
+		return trimValuesForParsing;
+	}
+
+	/**
+	 * Set whether values should be trimmed for parsing
+	 *
+	 * @param trimValuesForParsing
+	 * 		{@code true} if they should be trimmed
+	 * @since 9.1.1
+	 */
+	public void setTrimValuesForParsing(boolean trimValuesForParsing) {
+		this.trimValuesForParsing = trimValuesForParsing;
+	}
+
 	@Override
 	public String getResourceName() {
 		return getCsvFile();
@@ -288,6 +311,7 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 		parameterMap.put(CSV_TRIM_LINES, String.valueOf(isTrimLines()));
 		parameterMap.put(CSV_ENCODING, String.valueOf(getEncoding()));
 		parameterMap.put(CSV_SKIP_UTF_8_BOM, String.valueOf(isSkippingUTF8BOM()));
+		parameterMap.put(CSV_TRIM_VALUES_PARSING, String.valueOf(trimValuesForParsing));
 		return parameterMap;
 	}
 }

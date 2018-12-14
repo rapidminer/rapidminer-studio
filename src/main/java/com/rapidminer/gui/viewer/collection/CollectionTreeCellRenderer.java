@@ -21,7 +21,6 @@ package com.rapidminer.gui.viewer.collection;
 import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JLabel;
@@ -46,7 +45,7 @@ public class CollectionTreeCellRenderer extends DefaultTreeCellRenderer {
 	private final Icon ICON_FOLDER_OPEN = SwingTools.createIcon("16/folder_open.png");
 	private final Icon ICON_FOLDER_CLOSED = SwingTools.createIcon("16/folder.png");
 
-	private final Map<IOObject, String> childNames = new HashMap<IOObject, String>();
+	private final Map<IOObject, String> childNames = new HashMap<>();
 
 	public CollectionTreeCellRenderer(IOObject collection) {
 		if (collection instanceof MetaModel) {
@@ -70,17 +69,15 @@ public class CollectionTreeCellRenderer extends DefaultTreeCellRenderer {
 			if (name == null) {
 				name = ro.getName();
 			}
-			String source = ro.getSource() != null ? " (<small>" + ro.getSource() + "</small>)" : "";
-			label.setText("<html>" + name + source + "</html>");
+			label.setText("<html>" + name + "</html>");
 			if (ro instanceof IOObjectCollection) {
 				label.setIcon(expanded ? ICON_FOLDER_OPEN : ICON_FOLDER_CLOSED);
 			} else {
 				Icon resultIcon = ro.getResultIcon();
 				label.setIcon(resultIcon);
 			}
-		} else if (ioobject instanceof IOObject) {
-			IOObject ioo = ioobject;
-			label.setText(ioo.getClass().getSimpleName());
+		} else if (ioobject != null) {
+			label.setText(ioobject.getClass().getSimpleName());
 		}
 		return label;
 	}

@@ -1,41 +1,51 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.io.gui.internal.steps.configuration;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -57,21 +67,29 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import com.rapidminer.core.io.data.ColumnMetaData;
+import com.rapidminer.core.io.data.ColumnMetaData.ColumnType;
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.DataSetMetaData;
 import com.rapidminer.core.io.data.source.DataSource;
+import com.rapidminer.core.io.data.source.DataSourceFeature;
 import com.rapidminer.core.io.gui.InvalidConfigurationException;
 import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.renderer.MatchingEntry;
+import com.rapidminer.gui.renderer.MatchingEntryRenderer;
 import com.rapidminer.gui.tools.AttributeGuiTools;
 import com.rapidminer.gui.tools.ColoredTableCellRenderer;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadStoppedException;
+import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.RowNumberTable;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.nio.DateFormatGuesser;
+import com.rapidminer.operator.nio.DateTimeTypeGuesser;
 import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 import com.rapidminer.studio.io.gui.internal.DataWizardEventType;
@@ -90,9 +108,14 @@ final class ConfigureDataView extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String PROGRESS_THREAD_ID = "io.dataimport.step.data_column_configuration.prepare_data_preview";
+	private static final String PREVIEW_PROGRESS_ID = "io.dataimport.step.data_column_configuration.prepare_data_preview";
+	private static final String GUESSING_DATE_PROGRESS_ID = "io.dataimport.step.data_column_configuration.guessing_date_format";
 
-	/** Number of ui components to create at once on the edt */
+	private static final String ERROR_LOADING_DATA_KEY = "io.dataimport.step.data_column_configuration.error_loading_data";
+
+	/**
+	 * Number of ui components to create at once on the edt
+	 */
 	private static final int CHUNK_SIZE = 50;
 
 	public static final Color BACKGROUND_COLUMN_DISABLED = new Color(232, 232, 232);
@@ -100,14 +123,16 @@ final class ConfigureDataView extends JPanel {
 	private static final String ERROR_TOOLTIP_CONTENT = "<p style=\"padding-bottom:4px\">"
 			+ I18N.getGUILabel("io.dataimport.step.data_column_configuration.replace_errors_checkbox.tip") + "</p>";
 
-	/** cell renderer that displays icons */
+	/**
+	 * cell renderer that displays icons
+	 */
 	private static final DefaultTableCellRenderer ICON_CELL_RENDERER = new DefaultTableCellRenderer() {
 
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-				int row, int column) {
+													   int row, int column) {
 			JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			label.setText(null);
 			label.setIcon((ImageIcon) value);
@@ -125,12 +150,16 @@ final class ConfigureDataView extends JPanel {
 	private static final Border WARNING_BORDER = BorderFactory.createCompoundBorder(
 			BorderFactory.createLineBorder(Color.ORANGE, 2), BorderFactory.createEmptyBorder(0, 8, 0, 3));
 
-	/** Cell renderer that marks error cells with a colored border */
+	private static final double DATE_COLUMN_CONFIDENCE = 0.75;
+
+	/**
+	 * Cell renderer that marks error cells with a colored border
+	 */
 	private final ColoredTableCellRenderer ERROR_MARKING_CELL_RENDERER = new ColoredTableCellRenderer() {
 
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-				int row, int column) {
+													   int row, int column) {
 			JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			if (tableModel.hasError(row, column)) {
 				if (errorHandlingCheckBox.isSelected()) {
@@ -148,20 +177,33 @@ final class ConfigureDataView extends JPanel {
 
 	private DataSetMetaData dataSetMetaData;
 	private ConfigureDataTableModel tableModel;
+	private ConfigureDataTableHeader[] tableHeaders;
 	private JPanel centerPanel;
 	private JPanel upperPanel;
 	private final JCheckBox errorHandlingCheckBox;
 	private final ConfigureDataValidator validator;
 	private final ErrorWarningTableModel errorTableModel;
 	private final CollapsibleErrorTable collapsibleErrorTable;
-	private final JComboBox<String> dateFormatField;
+	private final LinkLocalButton ignoreWarning;
+	private final JLabel dateLabel;
+	private final JComboBox<MatchingEntry> dateFormatField;
 	private Window owner;
 
 	private transient ProgressThread currentThread;
 
 	private boolean fatalError;
+	private boolean requiresDateFormat = true;
 
 	private volatile boolean initialized;
+
+	private final Vector<MatchingEntry> matchingEntries;
+	private final MatchingEntry emptyFormatEntry;
+	private MatchingEntry lastCustomDateFormat;
+	private MatchingEntry lastSelectedDateFormat;
+	private DateFormatGuesser dfg;
+
+	private final JLabel matchLabel = new JLabel();
+	private String guessedDateFormat;
 
 	/**
 	 * The constructor that creates a new {@link ConfigureDataView} instance.
@@ -172,6 +214,15 @@ final class ConfigureDataView extends JPanel {
 		errorTableModel = new ErrorWarningTableModel(validator);
 		errorTableModel.addTableModelListener(e -> fireStateChanged());
 		collapsibleErrorTable = new CollapsibleErrorTable(errorTableModel);
+		ignoreWarning = new LinkLocalButton(new ResourceAction("io.dataimport.step.data_column_configuration.ignore_errors") {
+
+			@Override
+			public void loggedActionPerformed(final ActionEvent e) {
+				if(!errorHandlingCheckBox.isSelected()) {
+					errorHandlingCheckBox.doClick();
+				}
+			}});
+		errorTableModel.addTableModelListener(e -> ignoreWarning.setVisible(errorTableModel.getErrorCount() > 0));
 
 		setLayout(new BorderLayout());
 		upperPanel = new JPanel(new GridBagLayout());
@@ -190,34 +241,74 @@ final class ConfigureDataView extends JPanel {
 		errorHandlingPanel.add(errorHandlingCheckBox, BorderLayout.CENTER);
 		SwingTools.addTooltipHelpIconToLabel(ERROR_TOOLTIP_CONTENT, errorHandlingPanel, owner);
 
-		dateFormatField = new JComboBox<>(ParameterTypeDateFormat.PREDEFINED_DATE_FORMATS);
-
+		matchingEntries = MatchingEntry.createVector(ParameterTypeDateFormat.PREDEFINED_DATE_FORMATS);
+		emptyFormatEntry = matchingEntries.stream().filter(me -> me.getEntryName().isEmpty()).findFirst().orElse(MatchingEntry.create("", Double.NaN));
+		dateFormatField = new JComboBox<>(matchingEntries);
+		dateFormatField.setRenderer(new MatchingEntryRenderer());
 		dateFormatField.setEditable(true);
 		// do not fire action event when using keyboard to move up and down
 		dateFormatField.putClientProperty("JComboBox.isTableCellEditor", Boolean.TRUE);
-		dateFormatField.addActionListener(new ActionListener() {
+		dateFormatField.addActionListener(e -> {
+			// prevent two updates on enter key
+			if (!"comboBoxChanged".equals(e.getActionCommand())) {
+				return;
+			}
+			Object selectedItem = dateFormatField.getSelectedItem();
+			if (selectedItem == null) {
+				selectedItem = emptyFormatEntry;
+			}
+			String datePattern = selectedItem.toString();
+			if (selectedItem instanceof String) {
+				// find match in existing if possible
+				selectedItem = getMatchingDateFormat(datePattern);
+			}
+			if (selectedItem instanceof MatchingEntry) {
+				selectMatchingDateFormat((MatchingEntry) selectedItem);
+			} else {
+				// recalculate if date format correct
+				try {
+					SimpleDateFormat checkedDateFormat = ParameterTypeDateFormat.createCheckedDateFormat(datePattern.trim(), null);
+					String finalDatePattern = datePattern;
+					ProgressThread guessingThread = new ProgressThread(GUESSING_DATE_PROGRESS_ID) {
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// prevent two updates on enter key
-				if (!"comboBoxChanged".equals(e.getActionCommand())) {
-					return;
-				}
-				String datePattern = (String) dateFormatField.getSelectedItem();
-				if (datePattern != null && !datePattern.isEmpty()) {
-					try {
-						updateDateFormat(ParameterTypeDateFormat.createCheckedDateFormat(datePattern, null));
-					} catch (UserError userError) {
-						// reset
-						dateFormatField.setSelectedItem("");
-					}
+						@Override
+						public void run() {
+							guessDateFormatForPreview(finalDatePattern);
+							MatchingEntry me = getMatchingDateFormat(finalDatePattern);
+							if (me == null) {
+								me = MatchingEntry.create(finalDatePattern, 0);
+							}
+							selectMatchingDateFormat(me);
+						}
+					};
+					guessingThread.addDependency(PREVIEW_PROGRESS_ID, GUESSING_DATE_PROGRESS_ID);
+					guessingThread.start();
+					currentThread = guessingThread;
+				} catch (UserError userError) {
+					// do nothing and go back to previous selected
+					selectMatchingDateFormat(MatchingEntry.create(datePattern, 0));
+					datePattern = lastSelectedDateFormat.getEntryName();
 				}
 			}
 
+			try {
+				SimpleDateFormat checkedDateFormat = ParameterTypeDateFormat.createCheckedDateFormat(datePattern.trim(), null);
+				if (checkedDateFormat.equals(dataSetMetaData.getDateFormat())) {
+					if (dfg != null) {
+						SwingTools.invokeLater(() -> setPredictedDateColumnTypes(dfg, checkedDateFormat.toPattern()));
+					}
+					return;
+				}
+				updateDateFormat(checkedDateFormat);
+			} catch (UserError userError) {
+				// do nothing and go back to previous selected
+				// reset
+				selectMatchingDateFormat(lastSelectedDateFormat);
+			}
 		});
 
-		JLabel datelabel = new ResourceLabel("date_format");
-		datelabel.setLabelFor(dateFormatField);
+		dateLabel = new ResourceLabel("date_format");
+		dateLabel.setLabelFor(dateFormatField);
 
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = GridBagConstraints.RELATIVE;
@@ -226,23 +317,35 @@ final class ConfigureDataView extends JPanel {
 		gbc.weightx = 0.0;
 		gbc.anchor = GridBagConstraints.WEST;
 
-		upperPanel.add(datelabel, gbc);
+		upperPanel.add(dateLabel, gbc);
+
+		gbc.insets = new Insets(0, 0, 0, 15);
+		upperPanel.add(dateFormatField, gbc);
 
 		gbc.insets = new Insets(0, 0, 0, 70);
-		upperPanel.add(dateFormatField, gbc);
+		matchLabel.setSize(70, 20);
+		matchLabel.setPreferredSize(new Dimension(70, 20));
+		matchLabel.setToolTipText("The preview was tested for different date formats and this is the confidence for the selected date format.");
+		upperPanel.add(matchLabel, gbc);
 
 		gbc.insets = new Insets(0, 0, 0, 0);
 		upperPanel.add(errorHandlingPanel, gbc);
 
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.weightx = 1.0;
-		upperPanel.add(new JLabel(), gbc);
+
+		upperPanel.add(new JPanel(), gbc);
 
 		add(upperPanel, BorderLayout.NORTH);
 		centerPanel = new JPanel(new GridBagLayout());
 		add(centerPanel, BorderLayout.CENTER);
-		add(collapsibleErrorTable, BorderLayout.SOUTH);
+		JPanel southPanel = new JPanel(new BorderLayout());
+		southPanel.add(collapsibleErrorTable, BorderLayout.NORTH);
+		southPanel.add(ignoreWarning, BorderLayout.EAST);
+		add(southPanel, BorderLayout.SOUTH);
 		collapsibleErrorTable.setVisible(false);
+		ignoreWarning.setVisible(false);
+
 
 		owner.addWindowListener(new WindowAdapter() {
 			@Override
@@ -253,19 +356,38 @@ final class ConfigureDataView extends JPanel {
 	}
 
 	/**
+	 * Returns the initially guessed date format
+	 *
+	 * @return the guessed date format, or the standard date format if nothing was guessed
+	 */
+	String getGuessedDateFormat(){
+		return guessedDateFormat;
+	}
+
+	/**
 	 * Takes the current data source, copies the meta data and configures the view according to the
 	 * data and meta data within a progress thread.
 	 *
 	 * @param dataSource
-	 *            the data source to retrieve the meta data and preview data from
+	 * 		the data source to retrieve the meta data and preview data from
 	 * @throws InvalidConfigurationException
-	 *             in case the meta data could not be retrieved
+	 * 		in case the meta data could not be retrieved
 	 */
 	void updatePreviewContent(final DataSource dataSource) throws InvalidConfigurationException {
 		fatalError = false;
+		requiresDateFormat = !dataSource.supportsFeature(DataSourceFeature.DATETIME_METADATA);
+		dateFormatField.setVisible(requiresDateFormat);
+		matchLabel.setVisible(requiresDateFormat);
+		dateLabel.setText(requiresDateFormat ? dateLabel.getText() : "");
 
 		// copy meta data to work on copy instead of real instance
 		try {
+			// clean up if metaData has changed
+			if (dataSetMetaData == null || !Objects.equals(dataSource.getMetadata().getDateFormat(), dataSetMetaData.getDateFormat()) ||
+					!Objects.equals(extractColumnNames(dataSource.getMetadata()), extractColumnNames(dataSetMetaData))) {
+				guessedDateFormat = null;
+				lastSelectedDateFormat = null;
+			}
 			dataSetMetaData = dataSource.getMetadata().copy();
 		} catch (DataSetException e) {
 			SwingTools.showSimpleErrorMessage(owner,
@@ -273,20 +395,11 @@ final class ConfigureDataView extends JPanel {
 			throw new InvalidConfigurationException();
 		}
 
-		errorHandlingCheckBox.setSelected(dataSetMetaData.isFaultTolerant());
-		DateFormat dateFormat = dataSetMetaData.getDateFormat();
-		if (dateFormat instanceof SimpleDateFormat) {
-			// remove action listeners before setting the date format pattern to prevent
-			// unnecessary update
-			ActionListener[] listeners = dateFormatField.getActionListeners();
-			dateFormatField.removeActionListener(listeners[0]);
-			dateFormatField.setSelectedItem(((SimpleDateFormat) dateFormat).toPattern());
-			dateFormatField.addActionListener(listeners[0]);
-		}
+		SwingTools.invokeAndWait(() -> errorHandlingCheckBox.setSelected(dataSetMetaData.isFaultTolerant()));
 		errorTableModel.setColumnMetaData(dataSetMetaData.getColumnMetaData());
 		validator.init(dataSetMetaData.getColumnMetaData());
 
-		ProgressThread loadDataPG = new ProgressThread(PROGRESS_THREAD_ID) {
+		ProgressThread loadDataPG = new ProgressThread(PREVIEW_PROGRESS_ID) {
 
 			@Override
 			public void run() {
@@ -302,6 +415,13 @@ final class ConfigureDataView extends JPanel {
 					setDisplayLabel("io.dataimport.step.data_column_configuration.prepare_preview_table");
 					getProgressListener().setCompleted(0);
 
+					// init with the best matching dateformat, or the last selected date format if it exists
+					if (lastSelectedDateFormat != null && !Objects.equals(lastSelectedDateFormat.getEntryName(), guessedDateFormat)) {
+						guessDateFormatForPreview(lastSelectedDateFormat.getEntryName());
+					} else {
+						guessDateFormatForPreview(null);
+					}
+
 					// adapt view after table has been loaded
 					final ExtendedJTable previewTable = SwingTools.invokeAndWaitWithResult(this::createPreviewTable);
 					if (previewTable == null) {
@@ -313,9 +433,15 @@ final class ConfigureDataView extends JPanel {
 
 					// Add scroll pane, error table etc.
 					SwingTools.invokeLater(() -> finalizePreviewTable(previewTable));
+					DateFormat dateFormat = dataSetMetaData.getDateFormat();
+					if (dateFormat instanceof SimpleDateFormat) {
+						if (lastSelectedDateFormat == null || !Objects.equals(lastSelectedDateFormat.getEntryName(), ((SimpleDateFormat) dateFormat).toPattern())) {
+							updateDateFormat((SimpleDateFormat) dateFormat);
+						}
+						selectMatchingDateFormat(getMatchingDateFormat(((SimpleDateFormat) dateFormat).toPattern()));
+					}
 				} catch (final DataSetException e) {
-					SwingTools.invokeLater(() -> showErrorNotification("io.dataimport.step.data_column_configuration.error_loading_data",
-							e.getMessage()));
+					SwingTools.invokeLater(() -> showErrorNotification(ERROR_LOADING_DATA_KEY, e.getMessage()));
 				} catch (ProgressThreadStoppedException pts) {
 					// this is logged internally by the progress thread
 				} finally {
@@ -347,17 +473,18 @@ final class ConfigureDataView extends JPanel {
 					@Override
 					public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
 						Component c = super.prepareRenderer(renderer, row, column);
-						ColumnMetaData metaData = dataSetMetaData.getColumnMetaData().get(column);
+						List<ColumnMetaData> columnMetaDataList = dataSetMetaData.getColumnMetaData();
+						// This was exploding on a switch between a file with less columns then the one before
+						if (column >= columnMetaDataList.size()) {
+							return c;
+						}
+						ColumnMetaData metaData = columnMetaDataList.get(column);
 						if (metaData.isRemoved()) {
 							c.setBackground(BACKGROUND_COLUMN_DISABLED);
 							c.setForeground(FOREGROUND_COLUMN_DISABLED);
 						} else {
 							String role = metaData.getRole();
-							if (role != null) {
-								c.setBackground(AttributeGuiTools.getColorForAttributeRole(role));
-							} else {
-								c.setBackground(Color.WHITE);
-							}
+							c.setBackground(role != null ? AttributeGuiTools.getColorForAttributeRole(role) : Color.WHITE);
 							c.setForeground(Color.BLACK);
 						}
 						return c;
@@ -390,6 +517,7 @@ final class ConfigureDataView extends JPanel {
 				final int columnCount = columnModel.getColumnCount();
 				// Initialize total size
 				getProgressListener().setTotal((columnCount + CHUNK_SIZE - 1) / CHUNK_SIZE);
+				tableHeaders = new ConfigureDataTableHeader[columnCount];
 				for (int columnIndex = 0; columnIndex < columnCount; columnIndex += CHUNK_SIZE) {
 					final int baseIndex = columnIndex;
 					getProgressListener().setCompleted(baseIndex / CHUNK_SIZE);
@@ -399,6 +527,7 @@ final class ConfigureDataView extends JPanel {
 							TableColumn column = columnModel.getColumn(index);
 							ConfigureDataTableHeader headerRenderer = new ConfigureDataTableHeader(previewTable,
 									index, dataSetMetaData, validator, ConfigureDataView.this);
+							tableHeaders[index] = headerRenderer;
 							column.setHeaderRenderer(headerRenderer);
 							column.setMinWidth(120);
 						}
@@ -488,9 +617,128 @@ final class ConfigureDataView extends JPanel {
 				collapsibleErrorTable.setVisible(true);
 			}
 		};
-		loadDataPG.addDependency(PROGRESS_THREAD_ID);
+		loadDataPG.addDependency(PREVIEW_PROGRESS_ID);
 		loadDataPG.start();
 		currentThread = loadDataPG;
+	}
+
+	private void guessDateFormatForPreview(String preferredPattern) {
+		if (!requiresDateFormat) {
+			return;
+		}
+
+		// Keep the currentCustomFormat, lastCustomFormat and the dataSetMetaData format
+
+		List<String> customPatterns = new ArrayList<>();
+		Optional.ofNullable(dateFormatField.getSelectedItem()).map(Object::toString).ifPresent(customPatterns::add);
+		Optional.ofNullable(lastCustomDateFormat).map(MatchingEntry::getEntryName).ifPresent(customPatterns::add);
+		Stream.of(dataSetMetaData.getDateFormat()).filter(SimpleDateFormat.class::isInstance).map(SimpleDateFormat.class::cast).map(SimpleDateFormat::toPattern).forEach(customPatterns::add);
+
+		DateFormatGuesser dateFormatGuesser = null;
+		try {
+			dateFormatGuesser = DateFormatGuesser.guessDateFormat(tableModel.getDataSet(), customPatterns, preferredPattern);
+		} catch (DataSetException e) {
+			SwingTools.invokeLater(() -> showErrorNotification(ERROR_LOADING_DATA_KEY, e.getMessage()));
+		}
+		if (dateFormatGuesser == null) {
+			dfg = null;
+			return;
+		}
+		SimpleDateFormat bestDateFormat = dateFormatGuesser.getBestMatch(DATE_COLUMN_CONFIDENCE);
+		String bestPattern = bestDateFormat != null ? bestDateFormat.toPattern() : null;
+		MatchingEntry bestMatchingEntry = null;
+		Map<String, Double> results = dateFormatGuesser.getResults(DATE_COLUMN_CONFIDENCE);
+		/// update existing entries with new match values
+		for (MatchingEntry matchingEntry : matchingEntries) {
+			String entryName = matchingEntry.getEntryName();
+			double match = results.getOrDefault(entryName, 0d);
+			matchingEntry.setMatch(match);
+			if (entryName.equals(bestPattern)) {
+				bestMatchingEntry = matchingEntry;
+			}
+		}
+
+		// add new entry
+		if (bestPattern != null && bestMatchingEntry == null) {
+			bestMatchingEntry = MatchingEntry.create(bestPattern, results.getOrDefault(bestPattern, 0d));
+			DefaultComboBoxModel<MatchingEntry> comboBoxModel = (DefaultComboBoxModel<MatchingEntry>) dateFormatField.getModel();
+			if (lastCustomDateFormat != null) {
+				comboBoxModel.removeElement(lastCustomDateFormat);
+			}
+			comboBoxModel.addElement(bestMatchingEntry);
+			lastCustomDateFormat = bestMatchingEntry;
+		}
+		matchingEntries.sort(MatchingEntry::compareTo);
+		if (bestDateFormat != null) {
+			dataSetMetaData.setDateFormat(bestDateFormat);
+		}
+		if (guessedDateFormat == null) {
+			guessedDateFormat = bestPattern != null ? bestPattern : "";
+		}
+		dfg = dateFormatGuesser;
+	}
+
+	private void setPredictedDateColumnTypes(DateFormatGuesser dateFormatGuesser, String formatPattern) {
+		if (dateFormatGuesser == null || !requiresDateFormat) {
+			return;
+		}
+		List<Integer> dateAttributes = dateFormatGuesser.getDateAttributes(formatPattern, DATE_COLUMN_CONFIDENCE);
+		Set<Integer> changedAttributes = new HashSet<>();
+		// reset current date attributes
+		int index = 0;
+		for (ColumnMetaData cmd : dataSetMetaData.getColumnMetaData()) {
+			switch (cmd.getType()) {
+				case DATE:
+				case TIME:
+				case DATETIME:
+					cmd.setType(ColumnType.CATEGORICAL);
+					changedAttributes.add(index);
+					break;
+				default:
+			}
+			index++;
+		}
+		ColumnType dateType = DateTimeTypeGuesser.patternToColumnType(formatPattern);
+		// set new date attributes
+		dateAttributes.forEach(dateAttribute -> dataSetMetaData.getColumnMetaData(dateAttribute).setType(dateType));
+		changedAttributes.addAll(dateAttributes);
+		changedAttributes.forEach(i -> {
+			if (tableHeaders == null || tableHeaders[i] == null) {
+				return;
+			}
+			tableHeaders[i].updateMetadataUI();
+		});
+	}
+
+	private MatchingEntry getMatchingDateFormat(String pattern) {
+		for (MatchingEntry me : matchingEntries) {
+			if (me.getEntryName().equals(pattern)) {
+				return me;
+			}
+		}
+		if (lastCustomDateFormat != null && lastCustomDateFormat.getEntryName().equals(pattern)) {
+			return lastCustomDateFormat;
+		}
+		return null;
+	}
+
+	private void selectMatchingDateFormat(MatchingEntry matchingEntry) {
+		if (matchingEntry == null) {
+			SwingTools.invokeAndWait(() -> {
+				dateFormatField.setSelectedIndex(-1);
+				matchLabel.setText("");
+			});
+			return;
+		}
+		SwingTools.invokeAndWait(() -> {
+			lastSelectedDateFormat = matchingEntry;
+			Object selectedItem = dateFormatField.getSelectedItem();
+			if (selectedItem != matchingEntry) {
+				dateFormatField.setSelectedItem(matchingEntry);
+			}
+			String matchtext = matchingEntry.getEntryName().isEmpty() ? "" : MatchingEntryRenderer.getMatchtext(matchingEntry.getMatch());
+			matchLabel.setText(matchtext);
+		});
 	}
 
 	void showErrorNotification(String i18nKey, Object... arguments) {
@@ -504,9 +752,9 @@ final class ConfigureDataView extends JPanel {
 	 * loading).
 	 *
 	 * @param i18nKey
-	 *            the notification I18N key to lookup the label text and icon
+	 * 		the notification I18N key to lookup the label text and icon
 	 * @param arguments
-	 *            the I18N arguments
+	 * 		the I18N arguments
 	 */
 	private void showNotificationLabel(String i18nKey, Object... arguments) {
 		upperPanel.setVisible(false);
@@ -548,8 +796,7 @@ final class ConfigureDataView extends JPanel {
 	 * Checks whether the current view configuration is valid.
 	 *
 	 * @throws InvalidConfigurationException
-	 *             in case the configuration is invalid
-	 *
+	 * 		in case the configuration is invalid
 	 */
 	public void validateConfiguration() throws InvalidConfigurationException {
 		if (fatalError || tableModel == null || tableModel.getRowCount() == 0 || errorTableModel.getErrorCount() > 0) {
@@ -561,7 +808,7 @@ final class ConfigureDataView extends JPanel {
 	 * Registers a new change listener.
 	 *
 	 * @param changeListener
-	 *            the listener to register
+	 * 		the listener to register
 	 */
 	void addChangeListener(ChangeListener changeListener) {
 		this.changeListeners.add(changeListener);
@@ -586,7 +833,7 @@ final class ConfigureDataView extends JPanel {
 	 * Updates date format for the date and reloads it.
 	 *
 	 * @param format
-	 *            the new date format
+	 * 		the new date format
 	 */
 	private void updateDateFormat(SimpleDateFormat format) {
 		DataImportWizardUtils.logStats(DataWizardEventType.DATE_FORMAT_CHANGED, format.toPattern());
@@ -595,11 +842,11 @@ final class ConfigureDataView extends JPanel {
 
 			@Override
 			public void run() {
+				setPredictedDateColumnTypes(dfg, format.toPattern());
 				try {
 					tableModel.reread(getProgressListener());
 				} catch (final DataSetException e) {
-					SwingTools.invokeLater(() -> showErrorNotification("io.dataimport.step.data_column_configuration.error_loading_data",
-							e.getMessage()));
+					SwingTools.invokeLater(() -> showErrorNotification(ERROR_LOADING_DATA_KEY, e.getMessage()));
 					return;
 				}
 				SwingTools.invokeLater(() -> {
@@ -610,6 +857,7 @@ final class ConfigureDataView extends JPanel {
 			}
 		};
 
+		rereadThread.addDependency(GUESSING_DATE_PROGRESS_ID);
 		rereadThread.start();
 		currentThread = rereadThread;
 	}
@@ -630,5 +878,16 @@ final class ConfigureDataView extends JPanel {
 	 */
 	public boolean isInitialized() {
 		return initialized;
+	}
+
+	/**
+	 * Extracts the column names from the DataSetMetaData
+	 *
+	 * @param metaData
+	 * 		the meta data
+	 * @return the column names
+	 */
+	private static List<String> extractColumnNames(DataSetMetaData metaData) {
+		return metaData.getColumnMetaData().stream().map(ColumnMetaData::getName).collect(Collectors.toList());
 	}
 }

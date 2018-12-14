@@ -23,7 +23,6 @@ import java.awt.Dimension;
 import java.awt.GraphicsConfiguration;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.LinkedList;
@@ -32,10 +31,8 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.event.ChangeListener;
 
 import com.rapidminer.core.io.data.DataSetException;
@@ -72,7 +69,7 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 	/**
 	 * A template for the header which includes a HTML progress bar.
 	 */
-	private final String INFO_LABEL_TEXT_TEMPLATE = "<div style='text-align:center;'><h2>%s</h2>"
+	private static final String INFO_LABEL_TEXT_TEMPLATE = "<div style='text-align:center;'><h2>%s</h2>"
 			+ "<div style='background-color: #BBBBBB; width: 100%%;height: 4px;'><div style='width: %s; background-color: #34AD65;height: 4px;'>"
 			+ "</div></div>";
 
@@ -183,10 +180,6 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 				closeDataSource();
 			}
 		});
-
-		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false),
-				"FINISH");
-		getRootPane().getActionMap().put("FINISH", finishAction);
 	}
 
 	/**
@@ -227,11 +220,10 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 		}
 		this.currentStepID = stepId;
 
-		updateButtons();
-		updateTitle();
-		updateInfoHeader();
-
 		SwingTools.invokeLater(() -> {
+			updateButtons();
+			updateTitle();
+			updateInfoHeader();
 			// show step
 			cardLayout.show(cardPanel, stepId);
 		});
@@ -292,12 +284,10 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 	}
 
 	private void disableButtons() {
-		SwingTools.invokeLater(() -> {
-			previousButton.setEnabled(false);
-			nextButton.setEnabled(false);
-			finishButton.setEnabled(false);
-			cancelButton.setEnabled(false);
-		});
+		previousButton.setEnabled(false);
+		nextButton.setEnabled(false);
+		finishButton.setEnabled(false);
+		cancelButton.setEnabled(false);
 	}
 
 	/**
@@ -379,8 +369,10 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 
 	@Override
 	public void previousStep() {
-		previousButton.setIcon(LOADING_ICON);
-		disableButtons();
+		SwingTools.invokeLater(() -> {
+			previousButton.setIcon(LOADING_ICON);
+			disableButtons();
+		});
 		new Thread(() -> {
 			try {
 				getCurrentStep().viewWillBecomeInvisible(WizardDirection.PREVIOUS);
@@ -389,29 +381,33 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 				String previousStepID = previousStepIDs.remove(previousStepIDs.size() - 1);
 				showStep(previousStepID, WizardDirection.PREVIOUS);
 			} catch (InvalidConfigurationException e) {
-				updateButtons();
+				SwingTools.invokeLater(this::updateButtons);
 			}
 		}).start();
 	}
 
 	@Override
 	public void nextStep(final String stepId) {
-		nextButton.setIcon(LOADING_ICON);
-		disableButtons();
+		SwingTools.invokeLater(() -> {
+			nextButton.setIcon(LOADING_ICON);
+			disableButtons();
+		});
 		new Thread(() -> {
 			try {
 				getCurrentStep().viewWillBecomeInvisible(WizardDirection.NEXT);
 				showStep(stepId, WizardDirection.NEXT);
 			} catch (InvalidConfigurationException e) {
-				updateButtons();
+				SwingTools.invokeLater(this::updateButtons);
 			}
 		}).start();
 	}
 
 	@Override
 	public void nextStep() {
-		nextButton.setIcon(LOADING_ICON);
-		disableButtons();
+		SwingTools.invokeLater(() -> {
+			nextButton.setIcon(LOADING_ICON);
+			disableButtons();
+		});
 		new Thread(() -> {
 			try {
 				/*
@@ -424,7 +420,7 @@ final class DataImportWizard extends ButtonDialog implements ImportWizard {
 				String nextStepID = getCurrentStep().getNextStepID();
 				showStep(nextStepID, WizardDirection.NEXT);
 			} catch (InvalidConfigurationException e) {
-				updateButtons();
+				SwingTools.invokeLater(this::updateButtons);
 			}
 		}).start();
 	}

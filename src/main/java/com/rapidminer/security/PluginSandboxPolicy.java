@@ -37,10 +37,14 @@ import java.security.ProtectionDomain;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.PropertyPermission;
 import java.util.logging.Level;
 import java.util.logging.LoggingPermission;
-
+import java.util.stream.Collectors;
 import javax.sound.sampled.AudioPermission;
 import javax.xml.bind.DatatypeConverter;
 
@@ -78,6 +82,12 @@ public final class PluginSandboxPolicy extends Policy {
 			+ "anxWScOfVW6yDxEjgEHJvMiMzZkGNklYC3ULBCkHfIrih5hO83k5FileuUWDNO4BrLrawmjo9AmYksPVOMmd4/DtDpnehpLy0hQtjBJsz61h"
 			+ "AGVDnPGpvbsW0rjFAjE4fR5+4RwUNo+SsD/44Jc8bui5seVH5vZuTj02XokybGR4BikrqvJZ4rHe4OGowl8uIr9sEN/+0eIJXQIDAQAB";
 
+	/** the Base 64 encoded public key of our partner (#0001) which is used to verify their signed extensions */
+	private static final String KEY_PARTNER_0001_B64_ENCODED = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqO43pd2Zzsn1Rx4+"
+			+ "RiKtDnuxL7+lOEfwxGTpZcxeD+jXMA2n10rznXeSYmNSxn22678qCVcwJs9Hs+qH8cQ8iuEj6sxrP9W1QAZ+b0KeMh7G3jvuhw2zgRp/0PHbO9BK"
+			+ "eJl+JDeXqkbmgf5+UQZaWZG73C+9XcDczgJWSvJuTuwalp+40z60qykFH87BFXLtzg/kg2FQ2zuQ3fA51aAUPMFx+uCg+5VJTGMSWcILiB5rYEWV"
+			+ "Uedeq5Bf6Dz1MvAcZjXLZnXdT+V7V6BHAbvQFlYKM5006O+RgVTxkM92WI2Hs4Bqexso0UOS66cQacOH8y1gJ/SE1lUa4G51an3OVQIDAQAB";
+
 	/**
 	 * the system property which can be set to {@code true} to enforce plugin sandboxing even on
 	 * SNAPSHOT versions
@@ -85,7 +95,10 @@ public final class PluginSandboxPolicy extends Policy {
 	private static final String PROPERTY_SECURITY_ENFORCED = "com.rapidminer.security.enforce";
 
 	/** Our public key used to verify the certificates */
-	private static PublicKey key;
+	private static final PublicKey RAPIDMINER_KEY;
+
+	/** The public key of partner (#0001) used to verify the certificates */
+	private static final List<PublicKey> KEY_PARTNERS;
 
 	/**
 	 * if {@code true}, plugin sandboxing is enforced even on SNAPSHOT versions
@@ -93,18 +106,16 @@ public final class PluginSandboxPolicy extends Policy {
 	private static volatile Boolean enforced;
 
 	static {
-		try {
-			KeyFactory factory = KeyFactory.getInstance(KEY_ALGORITHM);
-			X509EncodedKeySpec spec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(KEY_B64_ENCODED));
-			key = factory.generatePublic(spec);
-		} catch (GeneralSecurityException e) {
-			key = null;
-			// no log service available yet, so use syserr
-			System.err.println(
-					"Failed to initialize public key to verify extension certificates. Revoking permissions for all extensions!");
-			e.printStackTrace();
-		}
+		List<PublicKey> tempList = new ArrayList<>(1);
+		// our own code-signing key
+		RAPIDMINER_KEY = createPublicKey(KEY_B64_ENCODED);
+
+		// add all partner keys below
+		tempList.add(createPublicKey(KEY_PARTNER_0001_B64_ENCODED));
+
+		KEY_PARTNERS = Collections.unmodifiableList(tempList.stream().filter(Objects::nonNull).collect(Collectors.toList()));
 	}
+
 
 	@Override
 	public PermissionCollection getPermissions(ProtectionDomain domain) {
@@ -138,6 +149,26 @@ public final class PluginSandboxPolicy extends Policy {
 	}
 
 	/**
+	 * Creates the public key based on the Base64 encoded key string.
+	 *
+	 * @param base64EncodedKey
+	 * 		the Base64 encoded public key
+	 * @return the key or {@code null} if creation failed
+	 */
+	private static PublicKey createPublicKey(final String base64EncodedKey) {
+		try {
+			KeyFactory factory = KeyFactory.getInstance(KEY_ALGORITHM);
+			X509EncodedKeySpec spec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(base64EncodedKey));
+			return factory.generatePublic(spec);
+		} catch (GeneralSecurityException e) {
+			// no log service available yet, so use syserr
+			System.err.println("Failed to initialize public key to verify extension certificates!");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
 	 * Checks whether the given domain belongs to a special internal extension or not.
 	 *
 	 * @param domain
@@ -165,8 +196,8 @@ public final class PluginSandboxPolicy extends Policy {
 			return false;
 		}
 
-		// if the public key could not be initialized, we treat all plugins as unsafe
-		if (key == null) {
+		// if the public keys could not be initialized, we treat all plugins as unsafe
+		if (RAPIDMINER_KEY == null && KEY_PARTNERS.isEmpty()) {
 			return true;
 		}
 
@@ -387,30 +418,36 @@ public final class PluginSandboxPolicy extends Policy {
 	 * Verify the given certificates and see if at least one was signed by us.
 	 *
 	 * @param certificates
-	 *            the array of certificates to check
+	 * 		the array of certificates to check
 	 * @throws GeneralSecurityException
-	 *             if no certificate could be verified, will throw the last exception that occured
-	 *             during verification of all certificates. Can be {@code null}
+	 * 		if no certificate could be verified, will throw the last exception that occurred during verification of all
+	 * 		certificates.
 	 */
 	private static void verifyCertificates(Certificate[] certificates) throws GeneralSecurityException {
 		if (certificates == null || certificates.length == 0) {
 			throw new GeneralSecurityException("No code certificates found!");
 		}
 
-		GeneralSecurityException lastException = null;
-		boolean verified = false;
+		GeneralSecurityException lastException = new GeneralSecurityException("Failed to verify code certificate!");
+		List<PublicKey> keysToCheck = new ArrayList<>(1 + KEY_PARTNERS.size());
+		keysToCheck.add(RAPIDMINER_KEY);
+		keysToCheck.addAll(KEY_PARTNERS);
 		for (Certificate certificate : certificates) {
-			try {
-				certificate.verify(key);
-				verified = true;
-				break;
-			} catch (GeneralSecurityException e) {
-				lastException = e;
+			// try all available keys
+			for (PublicKey key : keysToCheck) {
+				try {
+					certificate.verify(key);
+					// no exception? Verified successfully, can return now
+					return;
+				} catch (GeneralSecurityException e) {
+					lastException = e;
+				}
 			}
 		}
-		if (!verified) {
-			throw lastException;
-		}
+
+		// if at any point we have not encountered an exception, we have already returned, so throw here
+		// if we end up here, neither our own nor any partner keys have verified the code signature
+		throw lastException;
 	}
 
 	/**

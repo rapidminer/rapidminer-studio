@@ -24,6 +24,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.performance.MeasuredPerformance;
 import com.rapidminer.tools.math.Averagable;
 
@@ -38,6 +39,22 @@ public class RankingCriterion extends MeasuredPerformance {
 
 	private static final long serialVersionUID = -7466139591781285005L;
 
+	/**
+	 * Behaves like the pre 9.0.3
+	 * @since 9.0.3
+	 */
+	private static final int BROKEN_FITNESS = 0;
+	/**
+	 * Reserved for future use
+	 * @since 9.0.3
+	 */
+	private static final int AFTER_BROKEN_FITNESS = 1;
+	/**
+	 * If the version field is missing from a serialized object, the default value is used (0 = BROKEN_FITNESS)
+	 * @since 9.0.3
+	 */
+	private int version = AFTER_BROKEN_FITNESS;
+
 	private double costs;
 	private Attribute label;
 	private Attribute[] confidenceAttributes;
@@ -45,6 +62,33 @@ public class RankingCriterion extends MeasuredPerformance {
 	private int[] rankIntervallStarts;
 	private double[] rankIntervallCost;
 	private HashMap<String, Integer> confidenceAttributesMap = new HashMap<String, Integer>();
+
+	/**
+	 * Clone Constructor
+	 * @since 9.0.3
+	 */
+	public RankingCriterion(RankingCriterion other) {
+		super(other);
+		this.costs = other.costs;
+		if (other.label != null) {
+			this.label = (Attribute) other.label.clone();
+		}
+		if (other.confidenceAttributes != null) {
+			this.confidenceAttributes = new Attribute[other.confidenceAttributes.length];
+			for (int i = 0; i < other.confidenceAttributes.length; i++) {
+				if (other.confidenceAttributes[i] != null) {
+					this.confidenceAttributes[i] = (Attribute) other.confidenceAttributes[i].clone();
+				} else {
+					this.confidenceAttributes[i] = null;
+				}
+			}
+		}
+		this.exampleCount = other.exampleCount;
+		this.rankIntervallStarts = other.rankIntervallStarts != null ? other.rankIntervallStarts.clone() : null;
+		this.rankIntervallCost = other.rankIntervallCost != null ? other.rankIntervallCost.clone() : null;
+		this.confidenceAttributesMap = other.confidenceAttributesMap != null ? new HashMap<>(other.confidenceAttributesMap) : null;
+		this.version = other.version;
+	}
 
 	public RankingCriterion(int[] rankIntervallStarts, double[] rankIntervallCost, ExampleSet exampleSet) {
 		label = exampleSet.getAttributes().getLabel();
@@ -102,11 +146,21 @@ public class RankingCriterion extends MeasuredPerformance {
 
 	@Override
 	public double getFitness() {
-		return -costs;
+		if (version == BROKEN_FITNESS) {
+			return -costs;
+		} else {
+			return -getMikroAverage();
+		}
 	}
 
 	@Override
-	protected void buildSingleAverage(Averagable averagable) {}
+	protected void buildSingleAverage(Averagable averagable) {
+		if (version != BROKEN_FITNESS) {
+			RankingCriterion criterion = (RankingCriterion) averagable;
+			this.costs += criterion.costs;
+			this.exampleCount += criterion.exampleCount;
+		}
+	}
 
 	@Override
 	public double getMikroAverage() {
@@ -115,7 +169,26 @@ public class RankingCriterion extends MeasuredPerformance {
 
 	@Override
 	public double getMikroVariance() {
-		return 0;
+		if (version == BROKEN_FITNESS) {
+			return 0;
+		} else {
+			return Double.NaN;
+		}
+	}
+
+	/**
+	 * Makes this criterion behave like the given version
+	 *
+	 * @param compatibilityLevel
+	 * 		The compatibility level
+	 * @since 9.0.3
+	 */
+	public void setVersion(OperatorVersion compatibilityLevel) {
+		if (compatibilityLevel.isAtMost(RankingEvaluator.WRONG_FITNESS)) {
+			this.version = BROKEN_FITNESS;
+		} else {
+			this.version = AFTER_BROKEN_FITNESS;
+		}
 	}
 
 }

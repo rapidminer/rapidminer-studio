@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.processeditor.results;
 
 import java.awt.BorderLayout;
@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
-
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
@@ -84,15 +83,15 @@ public class ResultDisplayTools {
 	/**
 	 * In these cases the unnecessary additional panel is suppressed
 	 */
-	private static final Set<String> NO_CARD_KEYS = new HashSet<>(Arrays.asList(new String[] { "collection", "metamodel",
-	"delegation_model" }));
+	private static final Set<String> NO_CARD_KEYS = new HashSet<>(Arrays.asList(new String[]{"collection", "metamodel",
+			"delegation_model"}));
 
 	static {
 		defaultResultIcon = SwingTools.createIcon("16/" + DEFAULT_RESULT_ICON_NAME);
 	}
 
 	public static JPanel createVisualizationComponent(IOObject resultObject, IOContainer resultContainer,
-			String usedResultName) {
+													  String usedResultName) {
 		return createVisualizationComponent(resultObject, resultContainer, usedResultName, true);
 	}
 
@@ -116,7 +115,7 @@ public class ResultDisplayTools {
 	 *            will not be shown
 	 */
 	public static JPanel createVisualizationComponent(IOObject result, final IOContainer resultContainer,
-			String usedResultName, final boolean showCards) {
+													  String usedResultName, final boolean showCards) {
 		result = TableViewingTools.replaceTable(result);
 		final String resultName = RendererService.getName(result.getClass());
 		ButtonBarCardPanel visualisationComponent;
@@ -180,28 +179,23 @@ public class ResultDisplayTools {
 							}
 							getProgressListener().setCompleted(80);
 
-							SwingUtilities.invokeLater(new Runnable() {
+							SwingUtilities.invokeLater(() -> {
+								// update container
+								// renderer is finished, remove placeholder
+								inConstructionPanel.removeAll();
 
-								@Override
-								public void run() {
-									// update container
-									// renderer is finished, remove placeholder
-									inConstructionPanel.removeAll();
-
-									// add license information if necessary
-									if (!violationList.isEmpty()) {
-										JPanel warnPanel = new ResultLimitPanel(rendererComponent.getBackground(),
-												violationList.get(0));
-										inConstructionPanel.add(warnPanel, BorderLayout.NORTH);
-									}
-
-									// add real renderer
-									inConstructionPanel.add(rendererComponent, BorderLayout.CENTER);
-
-									inConstructionPanel.revalidate();
-									inConstructionPanel.repaint();
+								// add license information if necessary
+								if (!violationList.isEmpty()) {
+									JPanel warnPanel = new ResultLimitPanel(rendererComponent.getBackground(),
+											violationList.get(0));
+									inConstructionPanel.add(warnPanel, BorderLayout.NORTH);
 								}
 
+								// add real renderer
+								inConstructionPanel.add(rendererComponent, BorderLayout.CENTER);
+
+								inConstructionPanel.revalidate();
+								inConstructionPanel.repaint();
 							});
 							getProgressListener().complete();
 						}

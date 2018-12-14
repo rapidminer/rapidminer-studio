@@ -43,10 +43,15 @@ class CSVResultSetAdapter extends ResultSetAdapter {
 		@Override
 		public Date getDate(int columnIndex) throws ParseException {
 			String value = getString(columnIndex);
+			String trimmedValue = value == null ? "" : value.trim();
 
 			// check for missing value
-			if (value == null || value.trim().isEmpty()) {
+			if (trimmedValue.isEmpty()) {
 				return null;
+			}
+
+			if (dataSource.getResultSetConfiguration().trimValuesForParsing()) {
+				value = trimmedValue;
 			}
 
 			// parse to Date
@@ -76,10 +81,15 @@ class CSVResultSetAdapter extends ResultSetAdapter {
 		@Override
 		public double getDouble(int columnIndex) throws ParseException {
 			String value = getString(columnIndex);
+			String trimmedValue = value == null ? "" : value.trim();
 
 			// check for missing value
-			if (value == null || value.trim().isEmpty()) {
+			if (trimmedValue.isEmpty()) {
 				return Double.NaN;
+			}
+
+			if (dataSource.getResultSetConfiguration().trimValuesForParsing()) {
+				value = trimmedValue;
 			}
 
 			// parse to double

@@ -22,6 +22,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.parameter.ParameterType;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -75,5 +76,17 @@ public class ID3Learner extends AbstractTreeLearner {
 		return new TreeBuilder(createCriterion(getParameterAsDouble(PARAMETER_MINIMAL_GAIN)),
 				getTerminationCriteria(exampleSet), getPruner(), getSplitPreprocessing(), new DecisionTreeLeafCreator(),
 				true, 0, getParameterAsInt(PARAMETER_MINIMAL_SIZE_FOR_SPLIT), getParameterAsInt(PARAMETER_MINIMAL_LEAF_SIZE));
+	}
+
+	@Override
+	public List<ParameterType> getParameterTypes() {
+		List<ParameterType> types = super.getParameterTypes();
+
+		for (ParameterType type: types) {
+			if (PARAMETER_MINIMAL_GAIN.equals(type.getKey())) {
+				type.setDefaultValue(0.01d);
+			}
+		}
+		return types;
 	}
 }

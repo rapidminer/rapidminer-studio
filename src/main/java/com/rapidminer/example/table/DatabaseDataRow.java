@@ -21,6 +21,7 @@ package com.rapidminer.example.table;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -141,11 +142,21 @@ public class DatabaseDataRow extends DataRow {
 		int valueType = attribute.getValueType();
 		double value;
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATE_TIME)) {
-			Timestamp timestamp = resultSet.getTimestamp(name);
-			if (resultSet.wasNull()) {
-				value = Double.NaN;
-			} else {
-				value = timestamp.getTime();
+			try {
+				Timestamp timestamp = resultSet.getTimestamp(name);
+				if (resultSet.wasNull()) {
+					value = Double.NaN;
+				} else {
+					value = timestamp.getTime();
+				}
+			} catch (ClassCastException e) {
+				// DBase JDBC driver is a bit special and returns an SQL date here. So try that one as well
+				Date date = resultSet.getDate(name);
+				if (resultSet.wasNull()) {
+					value = Double.NaN;
+				} else {
+					value = date.getTime();
+				}
 			}
 		} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NUMERICAL)) {
 			value = resultSet.getDouble(name);

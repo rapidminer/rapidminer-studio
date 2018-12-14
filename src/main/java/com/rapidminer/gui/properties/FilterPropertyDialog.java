@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.EtchedBorder;
 
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.properties.tablepanel.TablePanel;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
@@ -200,7 +201,7 @@ public class FilterPropertyDialog extends PropertyDialog {
 		buttonPanel.add(cancelButton, gbc);
 
 		panel.add(innerPanel, BorderLayout.CENTER);
-		setLocationRelativeTo(null);
+		setLocationRelativeTo(ApplicationFrame.getApplicationFrame());
 		setDefaultSize(ButtonDialog.LARGE);
 		layoutDefault(panel, buttonPanel);
 	}

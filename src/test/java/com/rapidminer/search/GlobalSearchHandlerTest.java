@@ -1,5 +1,4 @@
 /**
- *
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
  * Complete list of developers available at our web site:
  *
@@ -76,7 +75,8 @@ public class GlobalSearchHandlerTest {
 		int maxNumberOfResults = 23;
 		boolean highlightResult = false;
 		ScoreDoc after = null;
-		GlobalSearchResult searchResult = GlobalSearchHandler.INSTANCE.search(null, categories, simpleMode, maxNumberOfResults, highlightResult, after);
+		final int moreResults = 0;
+		GlobalSearchResult searchResult = GlobalSearchHandler.INSTANCE.search(null, categories, simpleMode, maxNumberOfResults, moreResults, highlightResult, after);
 		Assert.assertEquals("The result has to be empty since nothing was added to the Global Search", 0, searchResult.getNumberOfResults());
 	}
 
@@ -88,11 +88,11 @@ public class GlobalSearchHandlerTest {
 		int maxNumberOfResults = 23;
 		boolean highlightResult = false;
 		ScoreDoc after = null;
-		GlobalSearchResult searchResult = GlobalSearchHandler.INSTANCE.search(searchQueryString, categories, simpleMode, maxNumberOfResults, highlightResult, after);
+		GlobalSearchResult searchResult = GlobalSearchHandler.INSTANCE.search(searchQueryString, categories, simpleMode, maxNumberOfResults, 0, highlightResult, after);
 		Assert.assertEquals("The result has to be empty since nothing was added to the Global Search", 0, searchResult.getNumberOfResults());
 
 		searchQueryString = "  \t  \n \t    \r  ";
-		searchResult = GlobalSearchHandler.INSTANCE.search(searchQueryString, categories, simpleMode, maxNumberOfResults, highlightResult, after);
+		searchResult = GlobalSearchHandler.INSTANCE.search(searchQueryString, categories, simpleMode, maxNumberOfResults, 0, highlightResult, after);
 		Assert.assertEquals("The result has to be empty since nothing was added to the Global Search", 0, searchResult.getNumberOfResults());
 	}
 
@@ -125,7 +125,7 @@ public class GlobalSearchHandlerTest {
 	}
 
 	private GlobalSearchResult checkGlobalSearchResult(List<GlobalSearchCategory> categories, boolean simpleMode, int maxNumberOfResults, boolean highlightResult, ScoreDoc after, String searchQueryString, int expected) throws ParseException {
-		GlobalSearchResult life = GlobalSearchHandler.INSTANCE.search(searchQueryString, categories, simpleMode, maxNumberOfResults, highlightResult, after);
+		GlobalSearchResult life = GlobalSearchHandler.INSTANCE.search(searchQueryString, categories, simpleMode, maxNumberOfResults, 0, highlightResult, after);
 		Assert.assertEquals("Should have found " + expected + " results for " + (simpleMode ? "simple" : "advanced") + " searchQuery '" + searchQueryString + "'" + (after != null ? " after given ScoreDoc" : ""), expected, life.getNumberOfResults());
 		if (highlightResult) {
 			Assert.assertEquals("Should have found " + expected + " highlight results for " + (simpleMode ? "simple" : "advanced") + " searchQuery '" + searchQueryString + "'" + (after != null ? " after given ScoreDoc" : ""), expected, life.getBestFragments().size());

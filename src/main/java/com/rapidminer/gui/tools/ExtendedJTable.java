@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools;
 
 import java.awt.Color;
@@ -153,12 +153,12 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	}
 
 	public ExtendedJTable(final TableModel model, final boolean sortable, final boolean columnMovable,
-			final boolean autoResize) {
+						  final boolean autoResize) {
 		this(model, sortable, columnMovable, autoResize, true, false);
 	}
 
 	public ExtendedJTable(final TableModel model, final boolean sortable, final boolean columnMovable,
-			final boolean autoResize, final boolean useColoredCellRenderer, final boolean fixFirstColumn) {
+						  final boolean autoResize, final boolean useColoredCellRenderer, final boolean fixFirstColumn) {
 		super();
 		this.sortable = sortable;
 		this.useColoredCellRenderer = useColoredCellRenderer;
@@ -314,7 +314,7 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	 * given row is the currently highlighted row.
 	 *
 	 * @param row
-	 *            the row to check
+	 * 		the row to check
 	 * @return {@code true} if it is currently highlighted; {@code false} otherwise
 	 */
 	public boolean isRowHighlighted(int row) {
@@ -329,7 +329,7 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	 * Sets the last highlighted row.
 	 *
 	 * @param row
-	 *            the last highlighted row
+	 * 		the last highlighted row
 	 */
 	public void setLastHighlightedRow(int row) {
 		if (!rowHighlightingEnabled) {
@@ -758,7 +758,7 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 	 * They might difer if the table is sorted.
 	 *
 	 * @param rowIndex
-	 *            The index of the row in the view.
+	 * 		The index of the row in the view.
 	 * @return The index of the row in the original model.
 	 */
 	public int getModelIndex(final int rowIndex) {
@@ -899,5 +899,27 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 			Pair<Integer, Integer> cellId = (Pair<Integer, Integer>) id;
 			return getToolTipText(cellId.getFirst(), cellId.getSecond());
 		}
+	}
+
+	@Override
+	public Rectangle getCellRect(int row, int column, boolean includeSpacing) {
+		Rectangle rect = super.getCellRect(row, column, includeSpacing);
+		if (rect.y < 0) {
+			// If y < 0 the amount of rows times rowheight exceeds Integer.MAX_VALUE and becomes negative.
+			// This workaround will show a huge table, secured by factor 10 because else initially the table might be blank
+			rect.y = Integer.MAX_VALUE - (rect.height * 10);
+		}
+		return rect;
+	}
+
+	/**
+	 * Check if there are more rows than those that can be displayed due to swing's height limitation that can not be
+	 * larger than Integer.MAX_VALUE.
+	 *
+	 * @return {@code true} if the table is completely displayable and no rows are missing, else it would be useful to display the information about invisible rows.
+	 * @since 9.1
+	 */
+	public boolean canShowAllRows() {
+		return (long) getRowHeight() * getRowCount() < Integer.MAX_VALUE;
 	}
 }

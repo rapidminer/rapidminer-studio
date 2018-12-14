@@ -93,8 +93,9 @@ public class RepositoryTreeUtil {
 			TreePath path = tree.getPathForRow(i);
 			boolean isExpanded = tree.isExpanded(path);
 			boolean isSelected = tree.isPathSelected(path);
-			if (isExpanded ||isSelected) {
-				Entry entry = (Entry) path.getLastPathComponent();
+			Object entryObject = path.getLastPathComponent();
+			if ((isExpanded || isSelected) && entryObject instanceof Entry) {
+				Entry entry = (Entry) entryObject;
 				String absoluteLocation = entry.getLocation().getAbsoluteLocation();
 				if (isExpanded) {
 					expandedNodes.add(absoluteLocation);

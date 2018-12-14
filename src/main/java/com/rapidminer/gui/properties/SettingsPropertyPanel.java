@@ -26,8 +26,10 @@ import java.awt.GridLayout;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
-
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -42,17 +44,17 @@ import com.rapidminer.gui.properties.celleditors.value.PropertyValueCellEditor;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.ParameterService;
 
 
 /**
  * The SettingsPropertyPanel is used to display settings of the same group. The used settings items
- * are read from the {@link ParameterService}. This class also holds a method for applying changes
- * in the value back to the {@link ParameterService}.
+ * are read from the {@link com.rapidminer.tools.ParameterService ParameterService}. This class also holds a method for applying changes
+ * in the value back to the {@link com.rapidminer.tools.ParameterService ParameterService}.
  *
- * @author Sebastian Land, Simon Fischer, Adrian Wilke
+ * @author Sebastian Land, Simon Fischer, Adrian Wilke, Jan Czogalla
  */
 public class SettingsPropertyPanel extends PropertyPanel {
 
@@ -60,9 +62,10 @@ public class SettingsPropertyPanel extends PropertyPanel {
 	private static final int FIRST_SUBGROUP_TOP_MARGIN = 6;
 	private static final int SUBGROUP_TOP_MARGIN = 20;
 
-	private final Collection<ParameterType> shownParameterTypes;
-	private final Collection<ParameterType> allParameterTypes;
-	private final Properties allParameterValues;
+	final transient Collection<ParameterType> shownParameterTypes;
+
+	private final transient ParameterHandler parameterHandler;
+	private final transient SettingsItemProvider settingsItemProvider;
 
 	private final String groupTitle;
 
@@ -78,38 +81,40 @@ public class SettingsPropertyPanel extends PropertyPanel {
 	/** Sub-group with the title of the tab should one be used one time */
 	private boolean subGroupTabNameUsed = false;
 
-	public SettingsPropertyPanel(String groupTitle, List<SettingsItem> itemSubGroups, List<SettingsItem> itemParameters,
-			String filter, Properties propertyCache) {
+	public SettingsPropertyPanel(SettingsDialog settingsDialog, String groupTitle, List<SettingsItem> itemSubGroups, List<SettingsItem> itemParameters, String filter) {
+		parameterHandler = settingsDialog.getParameterHandler();
+		settingsItemProvider = settingsDialog.getSettingsItemProvider();
+
 		this.groupTitle = groupTitle;
 
 		// These data structures are used to provide overwritten PropertyPanel methods
 		shownParameterTypes = new LinkedList<>();
-		allParameterTypes = new LinkedList<>();
-		if (propertyCache != null) {
-			allParameterValues = propertyCache;
-		} else {
-			allParameterValues = new Properties();
-		}
 
+
+		Set<String> definedKeys = parameterHandler.getParameters().getDefinedKeys();
 		// Add parameters of sub-groups first
 		for (SettingsItem subGroup : itemSubGroups) {
-			for (SettingsItem item : subGroup.getChildren(Type.PARAMETER, filter)) {
-				shownParameterTypes.add(item.getParameterType());
-			}
 			for (SettingsItem item : subGroup.getChildren(Type.PARAMETER)) {
-				allParameterTypes.add(item.getParameterType());
-				if (propertyCache == null || !propertyCache.containsKey(item.getKey())) {
-					allParameterValues.put(item.getKey(), ParameterService.getParameterValue(item.getKey()));
+				if (subGroup.isInFilter(item, filter)) {
+					ParameterType parameterType = getParameterType(item);
+					if (parameterType != null) {
+						shownParameterTypes.add(parameterType);
+					}
+				}
+				if (!definedKeys.contains(item.getKey())) {
+					parameterHandler.setParameter(item.getKey(), getParameterValue(item));
 				}
 			}
 		}
 
 		// Add parameters without sub-group
 		for (SettingsItem item : itemParameters) {
-			allParameterTypes.add(item.getParameterType());
-			shownParameterTypes.add(item.getParameterType());
-			if (propertyCache == null || !propertyCache.containsKey(item.getKey())) {
-				allParameterValues.put(item.getKey(), ParameterService.getParameterValue(item.getKey()));
+			ParameterType parameterType = getParameterType(item);
+			if (parameterType != null) {
+				shownParameterTypes.add(parameterType);
+			}
+			if (!definedKeys.contains(item.getKey())) {
+				parameterHandler.setParameter(item.getKey(), getParameterValue(item));
 			}
 		}
 
@@ -120,14 +125,24 @@ public class SettingsPropertyPanel extends PropertyPanel {
 		setupComponents();
 	}
 
+	/** @since 9.1 */
+	private ParameterType getParameterType(SettingsItem item) {
+		return parameterHandler.getParameters().getParameterType(item.getKey());
+	}
+
+	/** @since 9.1 */
+	private String getParameterValue(SettingsItem item) {
+		return settingsItemProvider.getValue(item.getKey());
+	}
+
 	@Override
 	protected Collection<ParameterType> getProperties() {
-		return shownParameterTypes;
+		return shownParameterTypes.stream().filter(pt -> !pt.isHidden()).collect(Collectors.toList());
 	}
 
 	@Override
 	protected String getValue(ParameterType type) {
-		String value = allParameterValues.getProperty(type.getKey());
+		String value = parameterHandler.getParameters().getParameterOrNull(type.getKey());
 		if (value == null) {
 			return null;
 		} else {
@@ -137,20 +152,21 @@ public class SettingsPropertyPanel extends PropertyPanel {
 
 	@Override
 	protected void setValue(Operator operator, ParameterType type, String value) {
-		allParameterValues.put(type.getKey(), value);
-
-		if (!SettingsItems.INSTANCE.containsKey(type.getKey())) {
+		if (!settingsItemProvider.containsKey(type.getKey())) {
 			// Object is automatically added to an internal list
-			SettingsItems.createAndAddItem(type.getKey(), Type.PARAMETER);
+			settingsItemProvider.createAndAddItem(type.getKey(), Type.PARAMETER);
 		}
+		parameterHandler.setParameter(type.getKey(), value);
 	}
 
-	/** Applies the properties without saving them. */
+	/**
+	 * Applies the properties without saving them.
+	 * @deprecated since 9.1; this does nothing anymore
+	 * @see SettingsTabs#applyProperties()
+	 */
+	@Deprecated
 	public void applyProperties() {
-		for (ParameterType type : allParameterTypes) {
-			String value = allParameterValues.getProperty(type.getKey());
-			ParameterService.setParameterValue(type, value);
-		}
+		// noop; handled in SettingsTabs now
 	}
 
 	@Override
@@ -195,15 +211,9 @@ public class SettingsPropertyPanel extends PropertyPanel {
 	 * @return if the parent item should be added
 	 */
 	private boolean useParentAsHeading(SettingsItem parent) {
-		if (!parent.getType().equals(Type.SUB_GROUP)) {
-			// Only sub-groups are added as headings
-			return false;
-		} else if (parent.isUsedInDialog()) {
-			// No sub-group should be added twice
-			return false;
-		} else {
-			return true;
-		}
+		// Only sub-groups are added as headings
+		// No sub-group should be added twice
+		return parent.getType() == Type.SUB_GROUP && !parent.isUsedInDialog();
 	}
 
 	/**
@@ -214,18 +224,10 @@ public class SettingsPropertyPanel extends PropertyPanel {
 	 * @return if the heading 'misc' should be added
 	 */
 	private boolean useMiscHeading(SettingsItem parent) {
-		if (parent.getType().equals(Type.SUB_GROUP)) {
-			// Do not add Miscellaneous, if the is a sub-group with a better title
-			return false;
-		} else if (subGroupMiscUsed) {
-			// The sub group 'Misc' should not be added twice
-			return false;
-		} else if (!useSubGroups) {
-			// Only use 'Misc', if there are other known sub-groups
-			return false;
-		} else {
-			return true;
-		}
+		// Do not add Miscellaneous, if there is a sub-group with a better title
+		// The sub group 'Misc' should not be added twice
+		// Only use 'Misc', if there are other known sub-groups
+		return parent.getType() != Type.SUB_GROUP && !subGroupMiscUsed && useSubGroups;
 	}
 
 	/**
@@ -236,18 +238,10 @@ public class SettingsPropertyPanel extends PropertyPanel {
 	 * @return if the tab name should be added as heading
 	 */
 	private boolean useTabHeading(SettingsItem parent) {
-		if (parent.getType().equals(Type.SUB_GROUP)) {
-			// Do not add tab name, if the is a sub-group with a better title
-			return false;
-		} else if (subGroupTabNameUsed) {
-			// The heading should only be added one time
-			return false;
-		} else if (useSubGroups) {
-			// Only use tab name, if no other sub-groups are used
-			return false;
-		} else {
-			return true;
-		}
+		// Do not add tab name, if the is a sub-group with a better title
+		// The heading should only be added one time
+		// Only use tab name, if no other sub-groups are used
+		return parent.getType() != Type.SUB_GROUP && !subGroupTabNameUsed && !useSubGroups;
 	}
 
 	@Override
@@ -262,7 +256,7 @@ public class SettingsPropertyPanel extends PropertyPanel {
 		JPanel containerPanel = new JPanel();
 		containerPanel.setLayout(new BoxLayout(containerPanel, BoxLayout.PAGE_AXIS));
 
-		SettingsItem settingsItem = SettingsItems.INSTANCE.get(type.getKey());
+		SettingsItem settingsItem = settingsItemProvider.get(type.getKey());
 
 		// Add sub-group title before adding properties
 
@@ -343,13 +337,13 @@ public class SettingsPropertyPanel extends PropertyPanel {
 		surroundingPanel.add(parameterPanel, BorderLayout.CENTER);
 
 		JPanel helpWrapperPanel = surroundingPanel;
-		if (ParameterService.hasEnforcedValues()) {
+		if (settingsItemProvider.hasEnforcedSettings()) {
 			JPanel infoPanel = new JPanel(new BorderLayout());
 			helpWrapperPanel = new JPanel(new BorderLayout());
 			infoPanel.add(helpWrapperPanel, BorderLayout.CENTER);
 			surroundingPanel.add(infoPanel, BorderLayout.EAST);
 			final JLabel lockedByAdminLabel;
-			if (ParameterService.isValueEnforced(type.getKey())) {
+			if (settingsItemProvider.isSettingEnforced(type.getKey())) {
 				SwingTools.setEnabledRecursive(contentsPanel, false);
 				lockedByAdminLabel = new ResourceLabel("preferences.setting_enforced");
 			} else {
@@ -365,4 +359,17 @@ public class SettingsPropertyPanel extends PropertyPanel {
 		return containerPanel;
 	}
 
+	@Override
+	public void setupComponents() {
+		// reset items used state
+		shownParameterTypes.stream().flatMap(pt -> {
+			SettingsItem item = settingsItemProvider.get(pt.getKey());
+			return Stream.of(item, item.getParent());
+		}).filter(Objects::nonNull)//.filter(item -> item.getType() != Type.GROUP)
+				.forEach(si -> si.setUsedInDialog(false));
+		// reset other states
+		useSubGroups = subGroupMiscUsed = subGroupTabNameUsed = false;
+		isFirstSubGroup = true;
+		super.setupComponents();
+	}
 }

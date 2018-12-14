@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<process version="7.3.000">
+<?xml version="1.0" encoding="UTF-8"?><process version="7.3.000">
   <context>
     <input/>
     <output/>
@@ -15,6 +14,12 @@
     </macros>
   </context>
   <operator activated="true" class="process" compatibility="7.3.000" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
       <operator activated="true" class="retrieve" compatibility="7.3.000" expanded="true" height="68" name="Load Past Data" width="90" x="45" y="187">
         <parameter key="repository_entry" value="//Samples/Templates/Direct Marketing/Past Campaign Data"/>
@@ -22,7 +27,16 @@
       <operator activated="true" class="select_attributes" compatibility="7.3.000" expanded="true" height="82" name="Remove ID-like Column" width="90" x="179" y="187">
         <parameter key="attribute_filter_type" value="single"/>
         <parameter key="attribute" value="Name"/>
+        <parameter key="attributes" value=""/>
+        <parameter key="use_except_expression" value="false"/>
+        <parameter key="value_type" value="attribute_value"/>
+        <parameter key="use_value_type_exception" value="false"/>
+        <parameter key="except_value_type" value="time"/>
+        <parameter key="block_type" value="attribute_block"/>
+        <parameter key="use_block_type_exception" value="false"/>
+        <parameter key="except_block_type" value="value_matrix_row_start"/>
         <parameter key="invert_selection" value="true"/>
+        <parameter key="include_special_attributes" value="false"/>
       </operator>
       <operator activated="true" class="multiply" compatibility="7.3.000" expanded="true" height="103" name="Multiply Data" width="90" x="313" y="187"/>
       <operator activated="true" class="retrieve" compatibility="7.3.000" expanded="true" height="68" name="Load New Data" width="90" x="246" y="442">
@@ -30,13 +44,22 @@
       </operator>
       <operator activated="true" class="weight_by_information_gain" compatibility="7.3.000" expanded="true" height="82" name="Calculate Weights" width="90" x="581" y="187">
         <parameter key="normalize_weights" value="true"/>
+        <parameter key="sort_weights" value="true"/>
         <parameter key="sort_direction" value="descending"/>
       </operator>
       <operator activated="true" class="weights_to_data" compatibility="7.3.000" expanded="true" height="68" name="Weights to Data" width="90" x="715" y="187"/>
       <operator activated="true" class="concurrency:cross_validation" compatibility="7.3.000" expanded="true" height="145" name="Cross Validation" width="90" x="45" y="391">
-		<parameter key="sampling_type" value="stratified sampling"/>
+        <parameter key="split_on_batch_attribute" value="false"/>
+        <parameter key="leave_one_out" value="false"/>
+        <parameter key="number_of_folds" value="10"/>
+        <parameter key="sampling_type" value="stratified sampling"/>
+        <parameter key="use_local_random_seed" value="false"/>
+        <parameter key="local_random_seed" value="1992"/>
+        <parameter key="enable_parallel_execution" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="naive_bayes" compatibility="7.3.000" expanded="true" height="82" name="Naive Bayes" width="90" x="45" y="34"/>
+          <operator activated="true" class="naive_bayes" compatibility="7.3.000" expanded="true" height="82" name="Naive Bayes" width="90" x="45" y="34">
+            <parameter key="laplace_correction" value="true"/>
+          </operator>
           <connect from_port="training set" to_op="Naive Bayes" to_port="training set"/>
           <connect from_op="Naive Bayes" from_port="model" to_port="model"/>
           <portSpacing port="source_training set" spacing="0"/>
@@ -46,10 +69,33 @@
         <process expanded="true">
           <operator activated="true" class="apply_model" compatibility="7.3.000" expanded="true" height="82" name="Apply Model (2)" width="90" x="45" y="34">
             <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
           </operator>
           <operator activated="true" class="performance_binominal_classification" compatibility="7.3.000" expanded="true" height="82" name="Performance (2)" width="90" x="179" y="34">
+            <parameter key="main_criterion" value="first"/>
             <parameter key="accuracy" value="false"/>
+            <parameter key="classification_error" value="false"/>
+            <parameter key="kappa" value="false"/>
+            <parameter key="AUC (optimistic)" value="false"/>
+            <parameter key="AUC" value="false"/>
+            <parameter key="AUC (pessimistic)" value="false"/>
             <parameter key="precision" value="true"/>
+            <parameter key="recall" value="false"/>
+            <parameter key="lift" value="false"/>
+            <parameter key="fallout" value="false"/>
+            <parameter key="f_measure" value="false"/>
+            <parameter key="false_positive" value="false"/>
+            <parameter key="false_negative" value="false"/>
+            <parameter key="true_positive" value="false"/>
+            <parameter key="true_negative" value="false"/>
+            <parameter key="sensitivity" value="false"/>
+            <parameter key="specificity" value="false"/>
+            <parameter key="youden" value="false"/>
+            <parameter key="positive_predictive_value" value="false"/>
+            <parameter key="negative_predictive_value" value="false"/>
+            <parameter key="psep" value="false"/>
+            <parameter key="skip_undefined_labels" value="true"/>
+            <parameter key="use_example_weights" value="true"/>
           </operator>
           <connect from_port="model" to_op="Apply Model (2)" to_port="model"/>
           <connect from_port="test set" to_op="Apply Model (2)" to_port="unlabelled data"/>
@@ -67,7 +113,12 @@
       <operator activated="true" class="subprocess" compatibility="7.3.000" expanded="true" height="82" name="Calculate Threshold" width="90" x="581" y="442">
         <process expanded="true">
           <operator activated="true" class="find_threshold" compatibility="7.3.000" expanded="true" height="82" name="Find Threshold" width="90" x="179" y="34">
+            <parameter key="define_labels" value="false"/>
+            <parameter key="misclassification_costs_first" value="1.0"/>
             <parameter key="misclassification_costs_second" value="3.0"/>
+            <parameter key="show_roc_plot" value="false"/>
+            <parameter key="use_example_weights" value="true"/>
+            <parameter key="roc_bias" value="optimistic"/>
             <description align="center" color="yellow" colored="true" width="126">Specify the costs of missing a potential respondent vs. the costs of including somebody into the campaign.</description>
           </operator>
           <connect from_port="in 1" to_op="Find Threshold" to_port="example set"/>
@@ -80,6 +131,7 @@
       </operator>
       <operator activated="true" class="apply_model" compatibility="7.3.000" expanded="true" height="82" name="Apply Model" width="90" x="380" y="391">
         <list key="application_parameters"/>
+        <parameter key="create_view" value="false"/>
       </operator>
       <operator activated="true" class="apply_threshold" compatibility="7.3.000" expanded="true" height="82" name="Apply Threshold" width="90" x="715" y="391"/>
       <connect from_op="Load Past Data" from_port="output" to_op="Remove ID-like Column" to_port="example set input"/>

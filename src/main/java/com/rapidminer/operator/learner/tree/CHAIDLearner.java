@@ -133,10 +133,18 @@ public class CHAIDLearner extends DecisionTreeLearner {
 		// remove criterion selection
 		Iterator<ParameterType> i = types.iterator();
 		while (i.hasNext()) {
-			if (i.next().getKey().equals(PARAMETER_CRITERION)) {
+			ParameterType type = i.next();
+			if (PARAMETER_CRITERION.equals(type.getKey())) {
 				i.remove();
+			} else if (PARAMETER_CONFIDENCE.equals(type.getKey())) {
+				type.setDefaultValue(0.1d);
+			} else if (PARAMETER_MINIMAL_GAIN.equals(type.getKey())) {
+				type.setDefaultValue(0.01d);
+			} else if (PARAMETER_MAXIMAL_DEPTH.equals(type.getKey())) {
+				type.setDefaultValue(10);
 			}
 		}
+
 		return types;
 	}
 

@@ -25,7 +25,6 @@ import java.awt.Window;
 import java.net.PasswordAuthentication;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
-
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -37,8 +36,8 @@ import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.security.UserCredential;
 import com.rapidminer.gui.security.Wallet;
-import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.PasswordInputCanceledException;
@@ -200,7 +199,8 @@ public class PasswordDialog extends ButtonDialog {
 		if (authentication == null) {
 			authentication = new UserCredential(forUrl, null, null);
 		}
-		if (i18nKey == null || i18nKey.contains("authentication")) {
+		// only set to default authentication key if provided key not available
+		if (i18nKey == null || i18nKeyNotAvailable(i18nKey)) {
 			i18nKey = "authentication";
 			args = new Object[] { authentication.getURL() };
 		}
@@ -210,41 +210,15 @@ public class PasswordDialog extends ButtonDialog {
 		final String passwordI18N = i18nKey;
 
 		// create PasswordDialog on EDT
-		final PasswordDialog pd = SwingTools.invokeAndWaitWithResult(new ResultRunnable<PasswordDialog>() {
-
-			@Override
-			public PasswordDialog run() {
-				PasswordDialog pd = new PasswordDialog(ApplicationFrame.getApplicationFrame(), passwordI18N,
-						passwordDialogCredentials, pdArgs);
-				// Onboarding is already a APPLICATION_MODAL
-				pd.setModalityType(ModalityType.TOOLKIT_MODAL);
-				pd.setVisible(true);
-				return pd;
-			}
+		final PasswordDialog pd = SwingTools.invokeAndWaitWithResult(() -> {
+			PasswordDialog pd1 = new PasswordDialog(ApplicationFrame.getApplicationFrame(), passwordI18N,
+					passwordDialogCredentials, pdArgs);
+			// Onboarding is already a APPLICATION_MODAL
+			pd1.setModalityType(ModalityType.TOOLKIT_MODAL);
+			pd1.setVisible(true);
+			return pd1;
 		});
-		if (pd.wasConfirmed()) {
-			PasswordAuthentication result = pd.makeAuthentication();
-			if (pd.rememberBox.isSelected()) {
-				UserCredential userCredential = new UserCredential(forUrl, result.getUserName(), result.getPassword());
-				if (id != null) {
-					Wallet.getInstance().registerCredentials(id, userCredential);
-				} else {
-					// compatibility with old API
-					Wallet.getInstance().registerCredentials(userCredential);
-				}
-				Wallet.getInstance().saveCache();
-			} else {
-				if (id != null) {
-					Wallet.getInstance().removeEntry(id, forUrl);
-				} else {
-					// compatibility with old API
-					Wallet.getInstance().removeEntry(forUrl);
-				}
-				Wallet.getInstance().saveCache();
-			}
-
-			return result;
-		} else {
+		if (!pd.wasConfirmed()) {
 			// If the user canceled the Password Dialog on forceRefresh the password is at this
 			// point null. Restore old value to prevent NPEs.
 			if (forceRefresh) {
@@ -252,6 +226,37 @@ public class PasswordDialog extends ButtonDialog {
 			}
 			throw new PasswordInputCanceledException();
 		}
+		PasswordAuthentication result = pd.makeAuthentication();
+		if (pd.rememberBox.isSelected()) {
+			UserCredential userCredential = new UserCredential(forUrl, result.getUserName(), result.getPassword());
+			if (id != null) {
+				Wallet.getInstance().registerCredentials(id, userCredential);
+			} else {
+				// compatibility with old API
+				Wallet.getInstance().registerCredentials(userCredential);
+			}
+		} else if (id != null) {
+			Wallet.getInstance().removeEntry(id, forUrl);
+		} else {
+			// compatibility with old API
+			Wallet.getInstance().removeEntry(forUrl);
+		}
+		Wallet.getInstance().saveCache();
+
+		return result;
+	}
+
+	/**
+	 * Tests the availability of a given i18n key. More specifically tests if the key
+	 * <p>{@code gui.dialog.<i18nKey>.title} can be found.
+	 *
+	 * @param i18nKey the i18n key to test for dialog purposes
+	 * @return whether the key is available
+	 * @since 9.0.2
+	 */
+	private static boolean i18nKeyNotAvailable(String i18nKey) {
+		String fullKey = "gui.dialog." + i18nKey + ".title";
+		return fullKey.equals(I18N.getMessage(I18N.getGUIBundle(), fullKey));
 	}
 
 	public static PasswordAuthentication getPasswordAuthentication(String forUrl, boolean forceRefresh,

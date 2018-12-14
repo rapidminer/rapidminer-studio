@@ -76,6 +76,9 @@ public abstract class ConditionalAction extends LoggedAbstractAction {
 
 	public static final int PROCESS_IS_ON_REMOTE_REPOSITORY = 10;
 
+	/**
+	 * Process is stored and editable
+	 */
 	public static final int PROCESS_SAVED = 11;
 
 	public static final int PROCESS_RENDERER_IS_VISIBLE = 12;
@@ -86,7 +89,13 @@ public abstract class ConditionalAction extends LoggedAbstractAction {
 
 	public static final int PROCESS_HAS_BREAKPOINTS = 15;
 
-	public static final int NUMBER_OF_CONDITIONS = 16;
+	/**
+	 * Process has a repository location
+	 * @since 9.0.2
+	 */
+	public static final int PROCESS_HAS_REPOSITORY_LOCATION = 16;
+
+	public static final int NUMBER_OF_CONDITIONS = 17;
 
 	private final int[] conditions = new int[NUMBER_OF_CONDITIONS];
 

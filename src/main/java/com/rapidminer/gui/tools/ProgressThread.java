@@ -298,7 +298,7 @@ public abstract class ProgressThread implements Runnable {
 	}
 
 	/**
-	 * Note that this method has nothing to do with Thread.strart. It merely enqueues this Runnable
+	 * Note that this method has nothing to do with Thread.start. It merely enqueues this Runnable
 	 * in the Executor's queue.
 	 */
 	public void start() {

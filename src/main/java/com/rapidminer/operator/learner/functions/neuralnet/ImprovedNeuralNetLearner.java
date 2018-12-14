@@ -166,26 +166,26 @@ public class ImprovedNeuralNetLearner extends AbstractLearner {
 				new ParameterTypeInt(
 						"hidden_layer_sizes",
 						"The size of the hidden layers. A size of < 0 leads to a layer size of (number_of_attributes + number of classes) / 2 + 1.",
-						-1, Integer.MAX_VALUE, -1));
+						-1, Integer.MAX_VALUE, 2));
 		type.setExpert(false);
 		type.setPrimary(true);
 		types.add(type);
 
 		type = new ParameterTypeInt(PARAMETER_TRAINING_CYCLES,
-				"The number of training cycles used for the neural network training.", 1, Integer.MAX_VALUE, 500);
+				"The number of training cycles used for the neural network training.", 1, Integer.MAX_VALUE, 200);
 		type.setExpert(false);
 		types.add(type);
 
 		type = new ParameterTypeDouble(PARAMETER_LEARNING_RATE,
 				"The learning rate determines by how much we change the weights at each step. May not be 0.",
-				Double.MIN_VALUE, 1.0d, 0.3d);
+				Double.MIN_VALUE, 1.0d, 0.01d);
 		type.setExpert(false);
 		types.add(type);
 
 		types.add(new ParameterTypeDouble(
 				PARAMETER_MOMENTUM,
 				"The momentum simply adds a fraction of the previous weight update to the current one (prevent local maxima and smoothes optimization directions).",
-				0.0d, 1.0d, 0.2d));
+				0.0d, 1.0d, 0.9d));
 
 		types.add(new ParameterTypeBoolean(PARAMETER_DECAY,
 				"Indicates if the learning rate should be decreased during learningh", false));
@@ -202,7 +202,7 @@ public class ImprovedNeuralNetLearner extends AbstractLearner {
 
 		types.add(new ParameterTypeDouble(PARAMETER_ERROR_EPSILON,
 				"The optimization is stopped if the training error gets below this epsilon value.", 0.0d,
-				Double.POSITIVE_INFINITY, 0.00001d));
+				Double.POSITIVE_INFINITY, 0.0001d));
 
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 

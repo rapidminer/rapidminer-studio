@@ -105,13 +105,7 @@ public class ScriptingOperator extends Operator {
 	 */
 	private static class ConcurrentBindingDelegator extends Binding {
 
-		private final ThreadLocal<Binding> binding = new ThreadLocal<Binding>() {
-
-			@Override
-			protected Binding initialValue() {
-				return new Binding();
-			}
-		};
+		private final ThreadLocal<Binding> binding = ThreadLocal.withInitial(Binding::new);
 
 		@Override
 		public Object getVariable(String name) {
@@ -216,7 +210,7 @@ public class ScriptingOperator extends Operator {
 	public void doWork() throws OperatorException {
 		String script = getParameterAsString(PARAMETER_SCRIPT);
 		if (getParameterAsBoolean(PARAMETER_STANDARD_IMPORTS)) {
-			StringBuffer imports = new StringBuffer();
+			StringBuilder imports = new StringBuilder();
 			imports.append("import com.rapidminer.example.*;\n");
 			imports.append("import com.rapidminer.example.set.*;\n");
 			imports.append("import com.rapidminer.example.table.*;\n");
@@ -234,11 +228,7 @@ public class ScriptingOperator extends Operator {
 			// inside a loop to start many parsings at the same time
 			Object lock;
 			synchronized (LOCK_MAP) {
-				lock = LOCK_MAP.get(script);
-				if (lock == null) {
-					lock = new Object();
-					LOCK_MAP.put(script, lock);
-				}
+				lock = LOCK_MAP.computeIfAbsent(script, s -> new Object());
 			}
 
 			Script cachedScript;
@@ -277,7 +267,7 @@ public class ScriptingOperator extends Operator {
 		if (result instanceof Object[]) {
 			outExtender.deliver(Arrays.asList((IOObject[]) result));
 		} else if (result instanceof List) {
-			List<IOObject> results = new LinkedList<IOObject>();
+			List<IOObject> results = new LinkedList<>();
 			for (Object single : (List<?>) result) {
 				if (single instanceof IOObject) {
 					results.add((IOObject) single);

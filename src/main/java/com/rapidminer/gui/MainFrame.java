@@ -21,10 +21,9 @@ package com.rapidminer.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -50,7 +49,6 @@ import com.rapidminer.Process;
 import com.rapidminer.ProcessLocation;
 import com.rapidminer.ProcessStorageListener;
 import com.rapidminer.RapidMiner;
-import com.rapidminer.RapidMiner.ExitMode;
 import com.rapidminer.core.io.data.source.DataSourceFactoryRegistry;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.actions.AboutAction;
@@ -524,19 +522,14 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		// check all ConditionalActions on perspective switch
 		getActions().enableActions();
 
-		// toggle result display and process panels properties depending on shwon perspective
-		boolean isDesign = PerspectiveModel.DESIGN.equals(perspective.getName());
-		boolean isResult = PerspectiveModel.RESULT.equals(perspective.getName());
-		processPanel.getDockKey().setCloseEnabled(!isDesign);
-		processPanel.getDockKey().setAutoHideEnabled(!isDesign);
-		resultDisplay.getDockKey().setCloseEnabled(!isResult);
-		resultDisplay.getDockKey().setAutoHideEnabled(!isResult);
+		SwingTools.invokeLater(() -> {
 
-		// try to request focus for the process renderer so actions are enabled after
-		// perspective switch and ProcessRenderer is visible
-		if (getProcessPanel().getProcessRenderer().isShowing()) {
-			getProcessPanel().getProcessRenderer().requestFocusInWindow();
-		}
+			// try to request focus for the process renderer so actions are enabled after
+			// perspective switch and ProcessRenderer is visible
+			if (getProcessPanel().getProcessRenderer().isShowing()) {
+				getProcessPanel().getProcessRenderer().requestFocusInWindow();
+			}
+		});
 	};
 
 	private long lastUpdate = 0;
@@ -685,6 +678,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		toolBarContainer.add(dockingDesktop, BorderLayout.CENTER);
 
 		systemMonitor.startMonitorThread();
+		processPanel.getDockKey().setCloseEnabled(false);
+		resultDisplay.getDockKey().setCloseEnabled(false);
 		resultDisplay.init(this);
 
 		// menu bar
@@ -1233,8 +1228,20 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 				// location string exceeding arbitrary number will be cut into repository name +
 				// /.../ + process name
 				if (locString.length() > MAX_LOCATION_TITLE_LENGTH) {
-					locString = RepositoryLocation.REPOSITORY_PREFIX + process.getRepositoryLocation().getRepositoryName()
-							+ RepositoryLocation.SEPARATOR + "..." + RepositoryLocation.SEPARATOR + loc.getShortName();
+					if (process.getRepositoryLocation() != null) {
+						locString = RepositoryLocation.REPOSITORY_PREFIX + process.getRepositoryLocation().getRepositoryName()
+								+ RepositoryLocation.SEPARATOR + "..." + RepositoryLocation.SEPARATOR + loc.getShortName();
+					} else {
+						// build a string like /home/jdoe/.../processes/process.rmp
+						int maxPartLength = MAX_LOCATION_TITLE_LENGTH / 2;
+						// determine length of the first part
+						int firstPartEnd = locString.lastIndexOf(File.separator, maxPartLength);
+						// + 1 to include the separator char
+						firstPartEnd = firstPartEnd == -1 ? maxPartLength : firstPartEnd + 1;
+						int secondPartStart = locString.indexOf(File.separator, locString.length() - maxPartLength);
+						secondPartStart = secondPartStart == -1 ? locString.length() - maxPartLength : secondPartStart;
+						locString = new StringBuilder().append(locString, 0, firstPartEnd).append("...").append(locString, secondPartStart, locString.length()).toString();
+					}
 				}
 			} else {
 				locString = "<new process";

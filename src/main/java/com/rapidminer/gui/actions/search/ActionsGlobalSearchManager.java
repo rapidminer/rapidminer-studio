@@ -25,6 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.swing.Action;
@@ -95,6 +97,12 @@ public class ActionsGlobalSearchManager extends AbstractGlobalSearchManager {
 	/** when the perspective changes, we need to re-index the dockables to have them up-to-date */
 	private final PerspectiveChangeListener perspectiveChangeListener;
 
+	/**
+	 * actions that are registered are stored here. This is used for a quick lookup if an action is part of the index.
+	 * Searching the actual index takes way more time.
+	 */
+	private final Set<String> registeredActions;
+
 
 	protected ActionsGlobalSearchManager() {
 		super(ActionsGlobalSearch.CATEGORY_ID, ADDITIONAL_FIELDS, new GlobalSearchDefaultField(FIELD_DESCRIPTION, FIELD_BOOST_DESCRIPTION));
@@ -113,6 +121,8 @@ public class ActionsGlobalSearchManager extends AbstractGlobalSearchManager {
 			deleteAllDockableActions();
 			indexDockables();
 		};
+
+		registeredActions = ConcurrentHashMap.newKeySet();
 	}
 
 	@Override
@@ -206,6 +216,7 @@ public class ActionsGlobalSearchManager extends AbstractGlobalSearchManager {
 		Document doc = createDocument(action);
 		if (doc != null) {
 			removeDocumentFromIndex(doc);
+			registeredActions.remove(action.getKey());
 		}
 	}
 
@@ -221,15 +232,8 @@ public class ActionsGlobalSearchManager extends AbstractGlobalSearchManager {
 			throw new IllegalArgumentException("action must not be null!");
 		}
 
-		// search for element that has id = key
-		try {
-			GlobalSearchResultBuilder builder = new GlobalSearchResultBuilder(GlobalSearchUtilities.FIELD_UNIQUE_ID + GlobalSearchUtilities.QUERY_FIELD_SPECIFIER + action.getKey());
-			builder.setMaxNumberOfResults(1).setSearchCategories(GlobalSearchRegistry.INSTANCE.getSearchCategoryById(getSearchCategoryId()));
-			return builder.runSearch().getNumberOfResults() == 1;
-		} catch (ParseException e) {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.actions.search.ActionsGlobalSearchManager.error.delete_views_error", e);
-			return false;
-		}
+		// search for action with given key
+		return registeredActions.contains(action.getKey());
 	}
 
 	/**
@@ -317,8 +321,11 @@ public class ActionsGlobalSearchManager extends AbstractGlobalSearchManager {
 			fields.add(GlobalSearchUtilities.INSTANCE.createFieldForIdentifiers(FIELD_DOCKABLE_TYPE, String.valueOf(Boolean.TRUE)));
 		}
 
+		// add to registered actions map
+		registeredActions.add(action.getKey());
+
 		// i18n key is the unique ID for the action category
-		return GlobalSearchUtilities.INSTANCE.createDocument(action.getKey(), String.valueOf(name), fields.toArray(new Field[fields.size()]));
+		return GlobalSearchUtilities.INSTANCE.createDocument(action.getKey(), String.valueOf(name), fields.toArray(new Field[0]));
 	}
 
 	/**

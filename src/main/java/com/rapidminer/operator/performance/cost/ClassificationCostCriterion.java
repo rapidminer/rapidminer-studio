@@ -23,13 +23,14 @@ import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.performance.MeasuredPerformance;
 import com.rapidminer.tools.math.Averagable;
 
 
 /**
  * This performance Criterion works with a given cost matrix. Every classification result creates
- * costs. Costs should be minimized since that the fitness is - cost.
+ * costs. Costs should be minimized since that the fitness is - cost (-getMikroAverage()).
  *
  * @author Sebastian Land
  */
@@ -45,6 +46,22 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	Attribute label;
 	Attribute predictedLabel;
 	private final Map<String, Integer> classOrderMap;
+
+	/**
+	 * Behaves like the pre 9.0.3
+	 * @since 9.0.3
+	 */
+	private static final int BROKEN_FITNESS = 0;
+	/**
+	 * Reserved for future use
+	 * @since 9.0.3
+	 */
+	private static final int AFTER_BROKEN_FITNESS = 1;
+	/**
+	 * If the version field is missing from a serialized object, the default value is used (0 = BROKEN_FITNESS)
+	 * @since 9.0.3
+	 */
+	private int version = AFTER_BROKEN_FITNESS;
 
 	/**
 	 * Clone constructor
@@ -89,6 +106,9 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 		} else {
 			this.costMatrix = null;
 		}
+		this.totalCosts = other.totalCosts;
+		this.totalExampleCount = other.totalExampleCount;
+		this.version = other.version;
 	}
 
 	/**
@@ -145,12 +165,20 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 
 	@Override
 	public double getExampleCount() {
-		return exampleCount;
+		if (version == BROKEN_FITNESS) {
+			return exampleCount;
+		} else {
+			return totalExampleCount;
+		}
 	}
 
 	@Override
 	public double getFitness() {
-		return -costs;
+		if (version == BROKEN_FITNESS) {
+			return -costs;
+		} else {
+			return -getMikroAverage();
+		}
 	}
 
 	@Override
@@ -167,7 +195,11 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 
 	@Override
 	public double getMikroVariance() {
-		return 0;
+		if (version == BROKEN_FITNESS) {
+			return 0;
+		} else {
+			return Double.NaN;
+		}
 	}
 
 	/**
@@ -188,4 +220,18 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 		return totalCosts;
 	}
 
+	/**
+	 * Makes this criterion behave like the given version
+	 *
+	 * @param compatibilityLevel
+	 * 		the compatibility level
+	 * @since 9.0.3
+	 */
+	public void setVersion(OperatorVersion compatibilityLevel) {
+		if (compatibilityLevel.isAtMost(CostEvaluator.WRONG_FITNESS)) {
+			this.version = BROKEN_FITNESS;
+		} else {
+			this.version = AFTER_BROKEN_FITNESS;
+		}
+	}
 }

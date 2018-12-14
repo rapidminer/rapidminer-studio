@@ -105,13 +105,7 @@ public class AbstractObservable<A> implements Observable<A> {
 			synchronized (lock) {
 				copyEDT = new LinkedList<>(observersEDT);
 			}
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					fireUpdate(copyEDT, argument);
-				}
-			});
+			SwingUtilities.invokeLater(() -> fireUpdate(copyEDT, argument));
 		}
 	}
 

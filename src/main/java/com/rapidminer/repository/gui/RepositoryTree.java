@@ -40,6 +40,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.swing.Action;
@@ -433,14 +434,8 @@ public class RepositoryTree extends JTree {
 							// For this case, select the element, which is the target of the drop
 							// operation.
 							if (overwriteIfExists && droppedOnEntry != null) {
-								SwingUtilities.invokeLater(new Runnable() {
-
-									@Override
-									public void run() {
-										RepositoryTree.this.setSelectionPath(RepositoryTreeModel.getPathTo(droppedOnEntry,
-												RepositoryManager.getInstance(null)));
-									}
-								});
+								SwingUtilities.invokeLater(() -> RepositoryTree.this.setSelectionPath(RepositoryTreeModel.getPathTo(droppedOnEntry,
+										RepositoryManager.getInstance(null))));
 
 							}
 
@@ -454,32 +449,28 @@ public class RepositoryTree extends JTree {
 							return false;
 						}
 						// Do not show "cancel" option, if is is an single entry operation
-						int dialogMode = ConfirmDialog.YES_NO_CANCEL_OPTION;
-						if (isSingleEntryOperation) {
-							dialogMode = ConfirmDialog.YES_NO_OPTION;
-						}
+						final int dialogMode = isSingleEntryOperation ? ConfirmDialog.YES_NO_OPTION : ConfirmDialog.YES_NO_CANCEL_OPTION;
+						final String locationName = location.getName() == null ? "" : location.getName();
+						final AtomicInteger result = new AtomicInteger();
 
-						String locationName = location.getName();
-						if (locationName == null) {
-							locationName = "";
-						}
+						SwingTools.invokeAndWait(() -> {
+							final ConfirmDialog dialog;
+							if (e.getMessage() != null && !e.getMessage().isEmpty()) {
+								dialog = new ConfirmDialog(ProgressThreadDialog.getInstance(), "error_in_copy_entry_with_cause",
+										dialogMode, false, locationName, e.getMessage());
+							} else {
+								dialog = new ConfirmDialog(ProgressThreadDialog.getInstance(), "error_in_copy_entry",
+										dialogMode, false, locationName);
+							}
+							dialog.setVisible(true);
+							result.set(dialog.getReturnOption());
+						});
 
-						ConfirmDialog dialog = null;
-						if (e.getMessage() != null && !e.getMessage().isEmpty()) {
-							dialog = new ConfirmDialog(ProgressThreadDialog.getInstance(), "error_in_copy_entry_with_cause",
-									dialogMode, false, locationName, e.getMessage());
-						} else {
-							dialog = new ConfirmDialog(ProgressThreadDialog.getInstance(), "error_in_copy_entry", dialogMode,
-									false, locationName);
-						}
-						dialog.setVisible(true);
-						int retry = dialog.getReturnOption();
-
-						if (retry == ConfirmDialog.YES_OPTION) {
+						if (result.get() == ConfirmDialog.YES_OPTION) {
 							return executeCopyOrMoveOperation(location, isRepositoryInLocations, isSingleEntryOperation,
 									overwriteIfExists);
 
-						} else if (retry == ConfirmDialog.CANCEL_OPTION) {
+						} else if (result.get() == ConfirmDialog.CANCEL_OPTION) {
 							LogService.getRoot().log(Level.WARNING,
 									"com.rapidminer.repository.RepositoryTree.error_during_copying", e);
 							return false;

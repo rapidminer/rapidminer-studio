@@ -224,9 +224,9 @@ public class LineParser {
 		// Character nextChar = null;
 		/** error message to display */
 		String errorMessage = "";
-		/** column index where the error occured */
+		/** column index where the error occurred */
 		int errorColumnIndex = 0;
-		/** string with the last 10 characters read before the error occured */
+		/** string with the last 10 characters read before the error occurred */
 		String errorLastFewReadChars = "";
 		/** current state of the SplitMachine */
 		SplitMachineState machineState = SplitMachineState.NEW_SPLIT;
@@ -235,7 +235,7 @@ public class LineParser {
 		line = trimLine ? line.trim() : line;
 		// go through the line
 		for (int i = 0; i < line.length(); i++) {
-			// read current character and next character (if applicaple)
+			// read current character and next character (if applicable)
 			char currentChar = line.charAt(i);
 			char nextChar;
 			if (i + 1 < line.length()) {

@@ -57,8 +57,6 @@ public class PerspectiveController {
 	private final PerspectiveModel model;
 
 	/** @since 8.2.1 */
-	private final Object switchLock = new Object();
-	/** @since 8.2.1 */
 	private volatile Perspective switchTo;
 	/** @since 8.2.1 */
 	private final Timer switchTimer;
@@ -86,15 +84,8 @@ public class PerspectiveController {
 			}
 		});
 		this.model.makePredefined();
-		switchTimer = new Timer(1, e -> changePerspective()){
-
-			@Override
-			public boolean isRepeats() {
-				synchronized (switchLock) {
-					return switchTo != null;
-				}
-			}
-		};
+		switchTimer = new Timer(10, e -> changePerspective());
+		switchTimer.setRepeats(false);
 	}
 
 	/**
@@ -103,7 +94,7 @@ public class PerspectiveController {
 	 * @param perspectiveName
 	 *            the perspective which should be shown.
 	 */
-	public synchronized void showPerspective(final String perspectiveName) {
+	public void showPerspective(final String perspectiveName) {
 		queuePerspective(perspectiveName);
 	}
 
@@ -114,7 +105,7 @@ public class PerspectiveController {
 	 * 		the name of the perspective to be shown
 	 * @since 8.2.1
 	 */
-	private synchronized void queuePerspective(String perspectiveName) {
+	private void queuePerspective(String perspectiveName) {
 		queuePerspective(model.getPerspective(perspectiveName));
 	}
 
@@ -124,7 +115,7 @@ public class PerspectiveController {
 	 * @param perspective
 	 *            the perspective which should be shown.
 	 */
-	public synchronized void showPerspective(final Perspective perspective) {
+	public void showPerspective(final Perspective perspective) {
 		queuePerspective(perspective);
 	}
 
@@ -135,51 +126,56 @@ public class PerspectiveController {
 	 * 		the perspective to bw shown
 	 * @since 8.2.1
 	 */
-	private synchronized void queuePerspective(Perspective perspective) {
+	private void queuePerspective(Perspective perspective) {
 		// add this perspective to the queue and restart timer if necessary
-		synchronized (switchLock) {
-			boolean startTimer = switchTo == null;
-			switchTo = perspective;
-			if (startTimer) {
-				switchTimer.start();
-			}
-		}
+		switchTo = perspective;
+		switchTimer.restart();
 	}
 
 	/**
 	 * Actually changes the perspective. This should only be called by the {@link #switchTimer} to prevent breaking views.
 	 * The timer switches the views that are queued and stops if there are no more switches left in the queue. The timer
 	 * will be restarted when a new switch is queued.
-	 *
+	 * 
 	 * @since 8.2.1
 	 */
-	private synchronized void changePerspective() {
-		synchronized (switchLock) {
-			if (switchTo == null) {
-				return;
-			}
-			Perspective oldPerspective = model.getSelectedPerspective();
-			if (oldPerspective == switchTo) {
-				switchTo = null;
-				return;
-			}
-			if (!model.getAllPerspectives().contains(switchTo)) {
-				switchTo = null;
-				return;
-			}
-			model.setSelectedPerspective(switchTo);
-			if (oldPerspective != null) {
-				oldPerspective.store(context);
-				ActionStatisticsCollector.getInstance().stopTimer(oldPerspective);
-			}
-			switchTo.apply(context);
-			RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION.setEnabled(!switchTo.isUserDefined());
-			ActionStatisticsCollector.getInstance().startTimer(switchTo, ActionStatisticsCollector.TYPE_PERSPECTIVE,
-					switchTo.getName(), null);
-			ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PERSPECTIVE, switchTo.getName(),
-					"show");
-			switchTo = null;
+	private void changePerspective() {
+		final Perspective target = switchTo;
+		if (target == null) {
+			return;
 		}
+		Perspective oldPerspective = model.getSelectedPerspective();
+		if (oldPerspective == target) {
+			switchTo = null;
+			return;
+		}
+		if (!model.getAllPerspectives().contains(target)) {
+			switchTo = null;
+			return;
+		}
+		model.setSelectedPerspective(target);
+		if (oldPerspective != null) {
+			oldPerspective.store(context);
+			ActionStatisticsCollector.getInstance().stopTimer(oldPerspective);
+		}
+		if (!target.apply(context)) {
+			// retry if switching did not work the first time
+			if (!target.apply(context)) {
+				if (oldPerspective != null) {
+					ActionStatisticsCollector.getInstance().startTimer(oldPerspective, ActionStatisticsCollector.TYPE_PERSPECTIVE,
+							oldPerspective.getName(), null);
+				}
+				// rollback if changing did not work, will be collected by the PerspectiveController switchTimer.
+				switchTo = oldPerspective;
+				return;
+			}
+		}
+		RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION.setEnabled(!target.isUserDefined() && (PerspectiveModel.DESIGN.equals(target.getName()) || PerspectiveModel.RESULT.equals(target.getName())));
+		ActionStatisticsCollector.getInstance().startTimer(target, ActionStatisticsCollector.TYPE_PERSPECTIVE,
+				target.getName(), null);
+		ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PERSPECTIVE, target.getName(),
+				"show");
+		switchTo = null;
 	}
 
 	/**
@@ -203,7 +199,7 @@ public class PerspectiveController {
 	 * @param perspective
 	 *            the perspective which should be deleted
 	 */
-	public synchronized void removePerspective(Perspective perspective) {
+	public void removePerspective(Perspective perspective) {
 		if (!perspective.isUserDefined()) {
 			return;
 		}
@@ -329,8 +325,11 @@ public class PerspectiveController {
 
 	public void restoreDefaultPerspective() {
 		if (!getModel().getSelectedPerspective().isUserDefined()) {
-			getModel().restoreDefault(getModel().getSelectedPerspective().getName());
+			String viewName = getModel().getSelectedPerspective().getName();
+			getModel().restoreDefault(viewName);
 			getModel().getSelectedPerspective().apply(context);
+
+			LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.PerspectiveController.restore_default", viewName);
 		}
 	}
 

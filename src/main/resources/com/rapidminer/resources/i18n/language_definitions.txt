@@ -1,4 +1,0 @@
-# iso639-1 codes
-# see http://www.loc.gov/standards/iso639-2/php/English_list.php
-en
-ja

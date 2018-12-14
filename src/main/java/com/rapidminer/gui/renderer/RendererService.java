@@ -200,19 +200,20 @@ public class RendererService {
 			LogService.getRoot().log(
 					Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
-							"com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_error", e), e);
+							"com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_error",
+							rendererFileName), e);
 		} catch (IOException e) {
 			LogService.getRoot().log(
 					Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_parsing_error",
-							e), e);
+							rendererFileName), e);
 		} catch (SAXException e) {
 			LogService.getRoot().log(
 					Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_parsing_error",
-							e), e);
+							rendererFileName), e);
 		} finally {
 			if (in != null) {
 				try {

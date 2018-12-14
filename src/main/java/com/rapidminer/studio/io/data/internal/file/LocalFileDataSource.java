@@ -26,6 +26,7 @@ import com.rapidminer.core.io.data.DataSetMetaData;
 import com.rapidminer.core.io.data.source.DataSource;
 import com.rapidminer.core.io.data.source.DataSourceConfiguration;
 import com.rapidminer.core.io.data.source.DataSourceFactoryRegistry;
+import com.rapidminer.core.io.data.source.DataSourceFeature;
 import com.rapidminer.core.io.data.source.FileDataSource;
 import com.rapidminer.core.io.data.source.FileDataSourceFactory;
 
@@ -155,4 +156,8 @@ class LocalFileDataSource extends FileDataSource {
 		throw new DataSetException("Unknown file data source for key '" + fileDatasourceKey + "'");
 	}
 
+	@Override
+	public boolean supportsFeature(DataSourceFeature feature) {
+		return fileDataSource != null ? fileDataSource.supportsFeature(feature) : super.supportsFeature(feature);
+	}
 }

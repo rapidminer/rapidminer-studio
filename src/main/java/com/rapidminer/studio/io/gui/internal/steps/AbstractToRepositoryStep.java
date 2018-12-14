@@ -27,17 +27,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.rapidminer.core.io.data.source.FileDataSource;
@@ -48,7 +45,6 @@ import com.rapidminer.core.io.gui.WizardStep;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadDialog;
-import com.rapidminer.gui.tools.ProgressThreadListener;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
@@ -85,7 +81,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 		private static final int IDLE_TIME_MS = 500;
 
 		@Override
-		protected Void doInBackground() throws Exception {
+		protected Void doInBackground() {
 			while (backgroundJob != null || confirmDialog != null) {
 				try {
 					// we've finished the background job, close the obsolete
@@ -107,13 +103,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 	private static final String CARD_ID_PROGRESS = "progress";
 
 	/** Change Listener which is registered to the {@link #chooser} */
-	private final ChangeListener changeListener = new ChangeListener() {
-
-		@Override
-		public void stateChanged(ChangeEvent e) {
-			AbstractToRepositoryStep.this.fireStateChanged();
-		}
-	};
+	private final ChangeListener changeListener = e -> AbstractToRepositoryStep.this.fireStateChanged();
 
 	/** {@link ResultRunnable} for the {@link #confirmDialog} */
 	private final ResultRunnable<Integer> confirmResultRunnable = new ResultRunnable<Integer>() {
@@ -132,11 +122,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 		@Override
 		public void windowClosing(WindowEvent event) {
 			if (backgroundJob != null) {
-				if (SwingTools.invokeAndWaitWithResult(confirmResultRunnable) != ConfirmDialog.YES_OPTION) {
-					closeDialog = false;
-				} else {
-					closeDialog = true;
-				}
+				closeDialog = SwingTools.invokeAndWaitWithResult(confirmResultRunnable) == ConfirmDialog.YES_OPTION;
 				confirmDialog = null;
 				if (closeDialog && backgroundJob != null) {
 					stopButton.doClick();
@@ -258,7 +244,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 			final RepositoryLocation entryLocation = new RepositoryLocation(chooser.getRepositoryLocation());
 			final RepositoryLocation folderLocation = entryLocation.parent();
 			final Entry entry = folderLocation.locateEntry();
-			if (entry == null || !(entry instanceof Folder)) {
+			if (!(entry instanceof Folder)) {
 				fireStateChanged();
 				throw new InvalidConfigurationException();
 			}
@@ -297,28 +283,17 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 			closeDialog = false;
 			isImportCancelled = false;
 			backgroundJob = getImportThread(entryLocation, parent);
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					askBeforeClosing(true);
-					animationLabel.setText(String.format(IMPORTING_TEXT_TEMPLATE, entryLocation));
-					stopButton.setEnabled(true);
-					showCard(CARD_ID_PROGRESS);
-					// this call ensures that the progress bar runs smoothly
-					ProgressThreadDialog.getInstance().setVisible(true, false);
-				}
+			SwingTools.invokeLater(() -> {
+				askBeforeClosing(true);
+				animationLabel.setText(String.format(IMPORTING_TEXT_TEMPLATE, entryLocation));
+				stopButton.setEnabled(true);
+				showCard(CARD_ID_PROGRESS);
+				// this call ensures that the progress bar runs smoothly
+				ProgressThreadDialog.getInstance().setVisible(true, false);
 			});
 
 			// Import data with background worker.
-			backgroundJob.addProgressThreadListener(new ProgressThreadListener() {
-
-				@Override
-				public void threadFinished(ProgressThread thread) {
-					backgroundJob = null;
-
-				}
-			});
+			backgroundJob.addProgressThreadListener(thread -> backgroundJob = null);
 			SwingWorker<Void, Void> progressUpdater = new ProgressUpdater();
 			progressUpdater.execute();
 			backgroundJob.start();
@@ -353,19 +328,15 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 	 *            behavior of the dialog will be used.
 	 */
 	private void askBeforeClosing(final boolean askBeforeClosing) {
-		SwingTools.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				JDialog dialog = wizard.getDialog();
-				if (dialog != null) {
-					if (askBeforeClosing) {
-						dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-						dialog.addWindowListener(closeListener);
-					} else {
-						dialog.setDefaultCloseOperation(defaultCloseOperation);
-						dialog.removeWindowListener(closeListener);
-					}
+		SwingTools.invokeLater(() -> {
+			JDialog dialog = wizard.getDialog();
+			if (dialog != null) {
+				if (askBeforeClosing) {
+					dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+					dialog.addWindowListener(closeListener);
+				} else {
+					dialog.setDefaultCloseOperation(defaultCloseOperation);
+					dialog.removeWindowListener(closeListener);
 				}
 			}
 		});
@@ -427,13 +398,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 	 *            the id of the card
 	 */
 	private void showCard(final String cardId) {
-		SwingTools.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				((CardLayout) mainPanel.getLayout()).show(mainPanel, cardId);
-			}
-		});
+		SwingTools.invokeLater(() -> ((CardLayout) mainPanel.getLayout()).show(mainPanel, cardId));
 	}
 
 	/**

@@ -1281,7 +1281,7 @@
     <key>log_to_weights</key>
   </operator>
     <operator>
-        <name>Pivot</name>
+        <name>Pivot (Deprecated)</name>
         <synopsis>Transforms an example set by grouping multiple examples of
             single units to single examples.</synopsis>
         <help>&lt;p&gt;Transforms an example set by grouping multiple examples
@@ -3195,6 +3195,7 @@
          <tag>Cross-table</tag>
          <tag>Crosstable</tag>
          <tag>Distinct</tag>
+         <tag>Percentile</tag>
     </tags>
   </operator>
     <operator>

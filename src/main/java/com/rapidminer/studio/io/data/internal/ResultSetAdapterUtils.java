@@ -108,7 +108,7 @@ public final class ResultSetAdapterUtils {
 	 * @param trimAttributeNames
 	 * 		whether to trim attribute names before creating meta data or not
 	 * @return the new {@link DataSetMetaData} instance which contains meta data retrieved from the
-	 * column name extraction and column type guessing
+	 *         column name extraction and column type guessing
 	 * @throws HeaderRowNotFoundException
 	 * 		if the header row was not found
 	 * @throws StartRowNotFoundException
@@ -121,6 +121,42 @@ public final class ResultSetAdapterUtils {
 	 */
 	public static DataSetMetaData createMetaData(DataResultSet resultSet, NumberFormat numberFormat, int startingRowIndex, int headerRowIndex, boolean trimAttributeNames)
 			throws HeaderRowNotFoundException, StartRowNotFoundException, HeaderRowBehindStartRowException, DataSetException {
+		return createMetaData(resultSet, numberFormat, startingRowIndex, headerRowIndex, trimAttributeNames, false);
+	}
+
+	/**
+	 * Creates a new {@link DataSetMetaData} instance for the provided {@link DataResultSet} based
+	 * on the provided data range and header row index (if any). This includes reading the column
+	 * names and guessing the column types for the selected columns. For guessing the column types
+	 * the logic from {@link DataResultSetTranslator} is used.
+	 *
+	 * @param resultSet
+	 * 		the {@link DataResultSet} that should be used to extract the meta data
+	 * @param numberFormat
+	 * 		the number format that should be used during column type guessing
+	 * @param startingRowIndex
+	 * 		the 0-based index of the first data row (not including the header row)
+	 * @param headerRowIndex
+	 * 		the 0-based index for the header row (if any,
+	 * 		{@link ResultSetAdapter#NO_HEADER_ROW} otherwise)
+	 * @param trimAttributeNames
+	 * 		whether to trim attribute names before creating meta data or not
+	 * @param trimForGuessing
+	 *      whether values should be trimmed for type guessing
+	 * @return the new {@link DataSetMetaData} instance which contains meta data retrieved from the
+	 *         column name extraction and column type guessing
+	 * @throws HeaderRowNotFoundException
+	 * 		if the header row was not found
+	 * @throws StartRowNotFoundException
+	 * 		if the data start row was not found
+	 * @throws HeaderRowBehindStartRowException
+	 * 		in case the headerRowIndex > startingRowIndex
+	 * @throws DataSetException
+	 * 		if the meta data fetching fails
+	 * @since 9.1.1
+	 */
+	public static DataSetMetaData createMetaData(DataResultSet resultSet, NumberFormat numberFormat, int startingRowIndex, int headerRowIndex, boolean trimAttributeNames, boolean trimForGuessing)
+			throws HeaderRowNotFoundException, StartRowNotFoundException, HeaderRowBehindStartRowException, DataSetException {
 
 		// check whether the header row index is lower or equal to the starting row
 		if (headerRowIndex > startingRowIndex) {
@@ -132,12 +168,11 @@ public final class ResultSetAdapterUtils {
 
 			String[] columnNames = getColumnNames(resultSet, headerRowIndex, startingRowIndex, numberOfColumns, trimAttributeNames);
 			List<ColumnType> columnTypes = guessColumnTypes(resultSet, startingRowIndex, headerRowIndex, numberOfColumns,
-					numberFormat);
+					numberFormat, trimForGuessing);
 			return new DefaultDataSetMetaData(Arrays.asList(columnNames), columnTypes);
 		} catch (OperatorException e) {
 			throw new DataSetException(e.getMessage(), e);
 		}
-
 	}
 
 	/**
@@ -244,10 +279,10 @@ public final class ResultSetAdapterUtils {
 	 * logic and transforming the guessed value types into {@link ColumnType}s.
 	 */
 	private static List<ColumnType> guessColumnTypes(DataResultSet dataResultSet, int startingRow, int headerRow,
-			int numberOfColumns, NumberFormat numberFormat) throws DataSetException {
+			int numberOfColumns, NumberFormat numberFormat, boolean trimForGuessing) throws DataSetException {
 
 		try {
-			int[] valueTypes = getValueTypes(dataResultSet, startingRow, headerRow, numberOfColumns, numberFormat);
+			int[] valueTypes = getValueTypes(dataResultSet, startingRow, headerRow, numberOfColumns, numberFormat, trimForGuessing);
 			List<ColumnType> columnTypes = new ArrayList<>(valueTypes.length);
 			for (int type : valueTypes) {
 				columnTypes.add(transformValueType(type));
@@ -325,12 +360,13 @@ public final class ResultSetAdapterUtils {
 	 *             if the guessing failed because of an IOException
 	 */
 	private static int[] getValueTypes(DataResultSet dataResultSet, int startingRow, int headerRow, int numberOfColumns,
-			NumberFormat numberFormat) throws OperatorException {
+			NumberFormat numberFormat, boolean trimForGuessing) throws OperatorException {
 
 		// generate a DataResultSetTranslationConfiguration
 		DataResultSetTranslationConfiguration translationConfiguration = new DataResultSetTranslationConfiguration(
 				dataResultSet, getAnnotations(startingRow, headerRow));
 		translationConfiguration.setNumberFormat(numberFormat);
+		translationConfiguration.setTrimForGuessing(trimForGuessing);
 
 		// use a translator to guess value types given the configuration
 		new DataResultSetTranslator(null).guessValueTypes(translationConfiguration, dataResultSet, null);

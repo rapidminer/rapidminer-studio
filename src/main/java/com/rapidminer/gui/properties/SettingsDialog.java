@@ -27,11 +27,14 @@ import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Properties;
-
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.Box;
@@ -54,6 +57,9 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.TextFieldWithAction;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.parameter.ParameterHandler;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.SimpleListBasedParameterHandler;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
 
@@ -70,7 +76,7 @@ import com.rapidminer.tools.ParameterService;
  * </p>
  *
  * <p>
- * To add a new preference, you have to use the method {@link ParameterService#registerParameter()}.
+ * To add a new preference, you have to use the method {@link ParameterService#registerParameter(ParameterType)}.
  * Your new parameter can be added to the i18n by adding the related key and a value to the resource
  * file <i>Settings.properties</i>. Configure the structure of your properties by editing the
  * resource file <i>settings.xml</i>. This affects the order and sub-groups. Extensions can use the
@@ -79,7 +85,7 @@ import com.rapidminer.tools.ParameterService;
  * <a href="http://rapidminer.com/documentation/">http://rapidminer.com/documentation/</a>
  * </p>
  *
- * @author Ingo Mierswa, Adrian Wilke
+ * @author Ingo Mierswa, Adrian Wilke, Jan Czogalla
  */
 public class SettingsDialog extends ButtonDialog {
 
@@ -105,14 +111,16 @@ public class SettingsDialog extends ButtonDialog {
 	private JPanel container;
 
 	/**
+	 * cache for the displayed properties
+	 */
+	private transient ParameterHandler parameterHandler;
+
+	private transient SettingsItemProvider settingsItemProvider;
+
+	/**
 	 * the displayed tabs which includes the settings
 	 */
 	private SettingsTabs tabs;
-
-	/**
-	 * cache for the displayed properties
-	 */
-	private Properties propertyCache = new Properties();
 
 	/**
 	 * this label will be shown if no matching settings could be found
@@ -128,7 +136,8 @@ public class SettingsDialog extends ButtonDialog {
 	}
 
 	/**
-	 * Sets up the related {@link SettingsTabs} and buttons.
+	 * Sets up the related {@link SettingsTabs} and buttons for the Studio settings. This uses {@link #getDefaultStudioHandler()}
+	 * and {@link SettingsItems#INSTANCE} for initialization.
 	 *
 	 * Selects the specified selected tab.
 	 *
@@ -136,7 +145,37 @@ public class SettingsDialog extends ButtonDialog {
 	 *            A key of a preferences group to identify the initial selected tab.
 	 */
 	public SettingsDialog(String initialSelectedTab) {
-		super(ApplicationFrame.getApplicationFrame(), "settings", ModalityType.APPLICATION_MODAL, new Object[] {});
+		this(getDefaultStudioHandler(), SettingsItems.INSTANCE, initialSelectedTab);
+		// add listener to remove parameter handler when dialog is closed
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e) {
+				parameterHandler.getParameters().getParameterTypes().stream()
+						.flatMap(pt -> pt.getConditions().stream()).forEach(pc -> pc.setParameterHandler(null));
+			}
+		});
+	}
+
+	/**
+	 * Sets up the related {@link SettingsTabs} and buttons for generic setting.
+	 * <p>
+	 * Selects the specified selected tab.
+	 *
+	 * @param parameterHandler
+	 * 		the parameter handler responsible for these settings and for resolving dependencies; must not be {@code null}
+	 * @param settingsItemProvider
+	 * 		the settings item provider; must not be {@code null}
+	 * @param initialSelectedTab
+	 * 		A key of a preferences group to identify the initial selected tab.
+	 */
+	public SettingsDialog(ParameterHandler parameterHandler, SettingsItemProvider settingsItemProvider, String initialSelectedTab) {
+		super(ApplicationFrame.getApplicationFrame(), "settings", ModalityType.APPLICATION_MODAL, new Object[0]);
+
+		if (parameterHandler == null || settingsItemProvider == null) {
+			throw new IllegalArgumentException("parameter handler and settings item provider must not be null!");
+		}
+		this.parameterHandler = parameterHandler;
+		this.settingsItemProvider = settingsItemProvider;
 
 		// main component container
 		container = new JPanel(new BorderLayout());
@@ -172,8 +211,15 @@ public class SettingsDialog extends ButtonDialog {
 	 * Creates the settings tabs in regard to the filter.
 	 */
 	private JComponent createTabs(String initialSelectedTab, String filter) {
+		if (tabs != null) {
+			// remove old tabs as observer
+			parameterHandler.getParameters().removeObserver(tabs);
+		}
+
 		// Create tabs
-		tabs = new SettingsTabs(this, filter, propertyCache);
+		tabs = new SettingsTabs(this, filter);
+		// add new tabs as observer
+		parameterHandler.getParameters().addObserver(tabs, false);
 
 		// Select tab, if known
 		if (initialSelectedTab != null) {
@@ -221,10 +267,8 @@ public class SettingsDialog extends ButtonDialog {
 		};
 		final DocumentListener filterListener = new DocumentListener() {
 
-			private Timer updateTimer;
-
+			private Timer updateTimer = new Timer(FILTER_TIMER_DELAY, filterAction);
 			{
-				updateTimer = new Timer(FILTER_TIMER_DELAY, filterAction);
 				updateTimer.setRepeats(false);
 			}
 
@@ -286,7 +330,8 @@ public class SettingsDialog extends ButtonDialog {
 		return searchPanel;
 	}
 
-	private void updateFilter(String filter) {
+	protected void updateFilter(String filter) {
+		settingsItemProvider.getKeys().forEach(k -> settingsItemProvider.get(k).setUsedInDialog(false));
 		container.remove(tabs);
 		container.remove(noMatchingSettingsLabel);
 		container.add(createTabs(null, filter), BorderLayout.CENTER);
@@ -305,5 +350,33 @@ public class SettingsDialog extends ButtonDialog {
 			tabs.requestFocusInWindow();
 		}
 		super.setVisible(b);
+	}
+
+	public ParameterHandler getParameterHandler() {
+		return parameterHandler;
+	}
+
+	public SettingsItemProvider getSettingsItemProvider() {
+		return settingsItemProvider;
+	}
+
+	/**
+	 * Creates a simple {@link ParameterHandler} that relies on
+	 * {@link ParameterService#getDefinedParameterKeys()} as its source of parameters
+	 * @since 9.1
+	 */
+	private static ParameterHandler getDefaultStudioHandler() {
+		return new SimpleListBasedParameterHandler() {
+
+			// add all keys' parameter types if available; also set the parameter handler
+			private List<ParameterType> parameterTypes = ParameterService.getParameterKeys().stream()
+					.map(ParameterService::getParameterType).filter(Objects::nonNull)
+					.peek(pt -> pt.getConditions().forEach(pc -> pc.setParameterHandler(this))).collect(Collectors.toList());
+
+			@Override
+			public List<ParameterType> getParameterTypes() {
+				return parameterTypes;
+			}
+		};
 	}
 }

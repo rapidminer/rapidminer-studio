@@ -29,6 +29,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -66,11 +67,12 @@ import com.rapidminer.gui.tools.UpdateQueue;
 import com.rapidminer.gui.tools.components.FeedbackForm;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
-import com.rapidminer.io.process.ProcessOriginProcessXMLFilter.ProcessOriginState;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.plugin.Plugin;
@@ -97,12 +99,9 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 	public static final String OPERATOR_HELP_DOCK_KEY = "operator_help";
 
-
 	private JEditorPane editor;
 
 	private Operator displayedOperator = null;
-
-	private URL currentResourceURL = null;
 
 	private boolean ignoreSelections = false;
 
@@ -204,10 +203,8 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * indicates the corresponding documentation XML file.
 	 */
 	private void assignDocumentation(Operator operator) {
-		URL resourceURL = getDocResourcePath(operator);
 		changeDocumentation(operator);
 		displayedOperator = operator;
-		currentResourceURL = resourceURL;
 	}
 
 	@Override
@@ -234,83 +231,12 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		public void hyperlinkUpdate(HyperlinkEvent e) {
 			if (e.getEventType().equals(EventType.ACTIVATED)) {
 				if (e.getDescription().startsWith("tutorial:")) {
-					// ask for confirmation before stopping the currently running process and
-					// opening another one!
-					if ((RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_RUNNING
-							|| RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED)
-							&& SwingTools.showConfirmDialog("close_running_process", ConfirmDialog.YES_NO_OPTION) != ConfirmDialog.YES_OPTION) {
-						return;
-					}
-
-					// ask user if he wants to save his current process because the example process
-					// will replace his current process
-					if (RapidMinerGUI.getMainFrame().isChanged()) {
-						// current process is flagged as unsaved
-						int returnVal = SwingTools.showConfirmDialog("save_before_show_tutorial_process",
-								ConfirmDialog.YES_NO_CANCEL_OPTION);
-						if (returnVal == ConfirmDialog.CANCEL_OPTION) {
-							return;
-						} else if (returnVal == ConfirmDialog.YES_OPTION) {
-							SaveAction.saveAsync(RapidMinerGUI.getMainFrame().getProcess());
-						}
-					} else {
-						// current process is not flagged as unsaved
-						if (SwingTools.showConfirmDialog("show_tutorial_process",
-								ConfirmDialog.OK_CANCEL_OPTION) == ConfirmDialog.CANCEL_OPTION) {
-							return;
-						}
-					}
-
+					int index = Integer.parseInt(e.getDescription().substring("tutorial:".length())) - 1;
 					try {
-						if (currentResourceURL == null) {
-							// should not happen, because then there would be no link in the first
-							// place
-							return;
-						}
-						Document document = XMLTools.parse(WebServiceTools.openStreamFromURL(currentResourceURL));
-
-						int index = Integer.parseInt(e.getDescription().substring("tutorial:".length()));
-
-						NodeList nodeList = document.getElementsByTagName("tutorialProcess");
-						Node processNode = nodeList.item(index - 1);
-						Node process = null;
-						int i = 0;
-						while (i < processNode.getChildNodes().getLength()) {
-							if (processNode.getChildNodes().item(i).getNodeName().equals("process")) {
-								process = processNode.getChildNodes().item(i);
-							}
-							i++;
-						}
-
-						StringWriter buffer = new StringWriter();
-						DOMSource processSource = new DOMSource(process);
-						Transformer t = TransformerFactory.newInstance().newTransformer();
-						t.transform(processSource, new StreamResult(buffer));
-						Process exampleProcess = new Process(buffer.toString());
-						ProcessOriginProcessXMLFilter.setProcessOriginState(exampleProcess, ProcessOriginState.GENERATED_TUTORIAL);
-						Operator formerOperator = displayedOperator;
 						ignoreSelections = true;
-						RapidMinerGUI.getMainFrame().setProcess(exampleProcess, true);
-						Collection<Operator> displayedOperators = RapidMinerGUI.getMainFrame().getProcess()
-								.getAllOperators();
-						for (Operator item : displayedOperators) {
-							if (item.getClass().equals(formerOperator.getClass())) {
-								RapidMinerGUI.getMainFrame().selectOperator(item);
-								ignoreSelections = false;
-							}
-						}
-					} catch (TransformerException e1) {
-						LogService.getRoot().log(Level.WARNING,
-								"com.rapidminer.tools.documentation.ExampleProcess.creating_example_process_error", e1);
-					} catch (SAXException e1) {
-						LogService.getRoot().log(Level.WARNING,
-								"com.rapidminer.tools.documentation.ExampleProcess.parsing_xml_error", e1);
-					} catch (IOException e1) {
-						LogService.getRoot().log(Level.WARNING,
-								"com.rapidminer.tools.documentation.ExampleProcess.reading_file_error", e1);
-					} catch (XMLException e1) {
-						LogService.getRoot().log(Level.WARNING,
-								"com.rapidminer.tools.documentation.ExampleProcess.parsing_xml_error", e1);
+						openTutorialProcess(displayedOperator.getOperatorDescription().getKey(), index);
+					} finally {
+						ignoreSelections = false;
 					}
 
 				} else if (e.getDescription().startsWith("#")) {
@@ -413,6 +339,12 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		}
 	}
 
+	/**
+	 * Returns the resource path to the operator_name.xml of the given operator
+	 *
+	 * @param op the operator
+	 * @return the resource path
+	 */
 	public static URL getDocResourcePath(Operator op) {
 		Plugin provider = op.getOperatorDescription().getProvider();
 		boolean isExtension = provider != null;
@@ -424,12 +356,12 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 				&& groupPath.startsWith(OperatorDescription.EXTENSIONS_GROUP_IDENTIFIER)) {
 
 			// remove extension group identifier
-			groupPath = groupPath.substring(groupPath.indexOf('/') + 1, groupPath.length());
+			groupPath = groupPath.substring(groupPath.indexOf('/') + 1);
 
 			// remove extension name
 			int firstIndexOfSlash = groupPath.indexOf('/');
 			if (firstIndexOfSlash != -1) {
-				groupPath = groupPath.substring(firstIndexOfSlash + 1, groupPath.length()) + "/";
+				groupPath = groupPath.substring(firstIndexOfSlash + 1) + "/";
 			} else {
 				groupPath = "";
 			}
@@ -442,4 +374,131 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		return Plugin.getMajorClassLoader().getResource(opDescXMLResourcePath);
 	}
 
+	/**
+	 * Tries to open the given tutorial, if the tutorial process exists a confirm dialog is shown
+	 *
+	 * @param operatorKey
+	 * 		the operator key
+	 * @param tutorialIndex
+	 * 		index of the tutorial
+	 */
+	public static void openTutorialProcess(String operatorKey, int tutorialIndex) {
+		String[] tutorialProcesses = OperatorDocumentationBrowser.getTutorialProcesses(operatorKey);
+		if (tutorialIndex < 0 || tutorialIndex >= tutorialProcesses.length) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.documentation.ExampleProcess.invalid_index", new Object[]{operatorKey, tutorialIndex});
+			return;
+		}
+
+		Process exampleProcess;
+		try {
+			exampleProcess = new Process(tutorialProcesses[tutorialIndex]);
+		} catch (IOException | XMLException e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.documentation.ExampleProcess.reading_file_error", e);
+			return;
+		}
+
+		ProcessOriginProcessXMLFilter.setProcessOriginState(exampleProcess, ProcessOriginProcessXMLFilter.ProcessOriginState.GENERATED_TUTORIAL);
+		if (permissionToOpen()) {
+			RapidMinerGUI.getMainFrame().setProcess(exampleProcess, true);
+			Collection<Operator> displayedOperators = RapidMinerGUI.getMainFrame().getProcess()
+					.getAllOperators();
+			for (Operator item : displayedOperators) {
+				if (operatorKey.equals(item.getOperatorDescription().getKey())) {
+					RapidMinerGUI.getMainFrame().selectOperator(item);
+					break;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Returns the tutorial process xml for the given operator key
+	 *
+	 * @param operatorKey
+	 * 		the operator key
+	 * @return the tutorial processes
+	 */
+	private static String[] getTutorialProcesses(String operatorKey) {
+		Operator operator;
+		try {
+			operator = OperatorService.createOperator(operatorKey);
+		} catch (OperatorCreationException e) {
+			LogService.log(LogService.getRoot(), Level.WARNING, e, "com.rapidminer.tools.documentation.ExampleProcess.operator_not_found", operatorKey);
+			return new String[0];
+		}
+		URL currentResourceURL = OperatorDocumentationBrowser.getDocResourcePath(operator);
+		Document document = null;
+		try {
+			document = XMLTools.parse(WebServiceTools.openStreamFromURL(currentResourceURL));
+		} catch (SAXException | IOException e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.documentation.ExampleProcess.parsing_xml_error", e);
+			return new String[0];
+		}
+
+		NodeList nodeList = document.getElementsByTagName("tutorialProcess");
+		if (nodeList.getLength() == 0) {
+			// no tutorial process
+			return new String[0];
+		}
+		Node process = null;
+		List<String> processes = new ArrayList<>();
+		for (int tutorialPos = 0; tutorialPos < nodeList.getLength(); tutorialPos++) {
+			Node processNode = nodeList.item(tutorialPos);
+			for (int i = 0; i < processNode.getChildNodes().getLength(); i++) {
+				if ("process".equals(processNode.getChildNodes().item(i).getNodeName())) {
+					process = processNode.getChildNodes().item(i);
+					break;
+				}
+			}
+
+			StringWriter buffer = new StringWriter();
+			DOMSource processSource = new DOMSource(process);
+			try {
+				Transformer t = TransformerFactory.newInstance().newTransformer();
+				t.transform(processSource, new StreamResult(buffer));
+			} catch (TransformerException e) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.tools.documentation.ExampleProcess.creating_example_process_error", e);
+				return new String[0];
+			}
+			processes.add(buffer.toString());
+		}
+
+		return processes.toArray(new String[0]);
+
+	}
+
+	/**
+	 * Shows a confirmation dialog if needed
+	 *
+	 * @return {@code true} if the user want's to open the tutorial process
+	 */
+	private static boolean permissionToOpen() {
+		// ask for confirmation before stopping the currently running process and
+		// opening another one!
+		if ((RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_RUNNING
+				|| RapidMinerGUI.getMainFrame().getProcessState() == Process.PROCESS_STATE_PAUSED)
+				&& SwingTools.showConfirmDialog("close_running_process", ConfirmDialog.YES_NO_OPTION) != ConfirmDialog.YES_OPTION) {
+			return false;
+		}
+
+		// ask user if he wants to save his current process because the example process
+		// will replace his current process
+		if (RapidMinerGUI.getMainFrame().isChanged()) {
+			// current process is flagged as unsaved
+			int returnVal = SwingTools.showConfirmDialog("save_before_show_tutorial_process",
+					ConfirmDialog.YES_NO_CANCEL_OPTION);
+			if (returnVal == ConfirmDialog.CANCEL_OPTION) {
+				return false;
+			} else if (returnVal == ConfirmDialog.YES_OPTION) {
+				SaveAction.saveAsync(RapidMinerGUI.getMainFrame().getProcess());
+			}
+		} else {
+			// current process is not flagged as unsaved
+			return SwingTools.showConfirmDialog("show_tutorial_process",
+					ConfirmDialog.OK_CANCEL_OPTION) != ConfirmDialog.CANCEL_OPTION;
+		}
+		return true;
+	}
 }
+

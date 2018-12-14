@@ -65,9 +65,10 @@ public class ExampleVisualizer implements ObjectVisualizer {
 	public void startVisualization(final Object objId) {
 		remapIds();
 
-		double idValue = Double.NaN;
 		JComponent main;
+		int dialogSize = ButtonDialog.MESSAGE;
 		if (idAttribute != null) {
+			final double idValue;
 			if (idAttribute.isNominal()) {
 				idValue = objId instanceof String ? idAttribute.getMapping().mapString((String) objId) : (Double) objId;
 			} else {
@@ -76,6 +77,7 @@ public class ExampleVisualizer implements ObjectVisualizer {
 			Example example = exampleSet.getExampleFromId(idValue);
 			if (example != null) {
 				main = makeMainVisualizationComponent(example);
+				dialogSize = ButtonDialog.NARROW;
 			} else {
 				main = new JLabel("No information available for object '" + objId + "'.");
 			}
@@ -84,8 +86,8 @@ public class ExampleVisualizer implements ObjectVisualizer {
 		}
 
 		ButtonDialogBuilder builder = new ButtonDialogBuilder("example_visualizer_dialog");
-		JDialog dialog = builder.setI18nArguments(objId).setContent(main, ButtonDialog.NARROW)
-				.setButtons(DefaultButtons.CLOSE_BUTTON).build();
+		JDialog dialog = builder.setI18nArguments(objId).setContent(main, dialogSize)
+				.setButtons(DefaultButtons.CLOSE_BUTTON).setOwner(ApplicationFrame.getApplicationFrame()).build();
 		dialog.setVisible(true);
 	}
 

@@ -26,7 +26,6 @@ import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.studio.io.data.internal.file.excel.ExcelDataSourceFactory;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
-import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 
 
 /**
@@ -45,7 +44,6 @@ public class ExcelExampleSourceConfigurationWizardCreator extends AbstractConfig
 		DataImportWizardBuilder builder = new DataImportWizardBuilder();
 		JDialog wizard = builder.forOperator(sourceOperator, ExcelDataSourceFactory.EXCEL_DATA_SOURCE_FACTORY_I18N_KEY).build(RapidMinerGUI.getMainFrame()).getDialog();
 		wizard.setVisible(true);
-
 	}
 
 	@Override

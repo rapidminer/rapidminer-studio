@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.studio.io.data.internal.file.csv;
 
 import java.awt.BorderLayout;
@@ -65,6 +65,7 @@ import com.rapidminer.core.io.gui.InvalidConfigurationException;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.CharTextField;
 import com.rapidminer.gui.tools.ColoredTableCellRenderer;
+import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -246,8 +247,7 @@ public class CSVFormatSpecificationPanel extends JPanel {
 					Boolean.toString(headerRow.isSelected()));
 			configuration.setHasHeaderRow(headerRow.isSelected());
 			headerRowSpinner.setEnabled(headerRow.isSelected());
-			previewTable.repaint();
-			fireStateChanged();
+			settingsChanged();
 		});
 
 		encodingComboBox.addItemListener(e -> {
@@ -424,11 +424,9 @@ public class CSVFormatSpecificationPanel extends JPanel {
 		});
 		startRowSpinner.addChangeListener(e -> {
 			updateStartingRow();
-			fireStateChanged();
 		});
 		headerRowSpinner.addChangeListener(e -> {
 			updateHeaderRow();
-			fireStateChanged();
 		});
 	}
 
@@ -512,7 +510,7 @@ public class CSVFormatSpecificationPanel extends JPanel {
 
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-					int row, int column) {
+														   int row, int column) {
 				JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 				adjustCell(row, label, boldFont);
 				return label;
@@ -522,7 +520,7 @@ public class CSVFormatSpecificationPanel extends JPanel {
 
 		loadingContentPane = new LoadingContentPane("loading_data", previewTable);
 
-		tablePane = new JScrollPane(loadingContentPane);
+		tablePane = new ExtendedJScrollPane(loadingContentPane);
 		tablePane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		tablePane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		tablePane.setBorder(null);
@@ -646,7 +644,7 @@ public class CSVFormatSpecificationPanel extends JPanel {
 			public void run() {
 				try {
 					final TableModel model = configuration.makePreviewTableModel(getProgressListener());
-					SwingUtilities.invokeAndWait(() -> {
+					SwingTools.invokeAndWait(() -> {
 						previewTable.setModel(model);
 						tablePane.setRowHeaderView(new RowNumberTable(previewTable));
 						if (model.getRowCount() > 0) {
@@ -718,16 +716,20 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	private void updateStartingRow() {
 		int startingRow = (int) startRowSpinner.getValue();
 		configuration.setStartingRow(startingRow - 1);
-		previewTable.repaint();
+		settingsChanged();
 	}
 
 	/**
 	 * Sets the header row as defined in the headerRowSpinner and repaints the table.
 	 */
 	private void updateHeaderRow() {
-		int headerRow = (int) headerRowSpinner.getValue();
-		configuration.setHeaderRow(headerRow - 1);
-		previewTable.repaint();
+		int headerRowNumber = (int) headerRowSpinner.getValue();
+		configuration.setHeaderRow(headerRowNumber - 1);
+		if (headerRowNumber > configuration.getStartingRow()) {
+			startRowSpinner.getModel().setValue(headerRowNumber);
+			configuration.setStartingRow(headerRowNumber - 1);
+		}
+		settingsChanged();
 	}
 
 	/**
@@ -744,18 +746,18 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	 * Creates an error bubble for the component and kills other error bubbles.
 	 *
 	 * @param component
-	 *            the component for which to show the bubble
+	 * 		the component for which to show the bubble
 	 * @param i18n
-	 *            the i18n key
+	 * 		the i18n key
 	 * @param arguments
-	 *            arguments for the i18n
+	 * 		arguments for the i18n
 	 */
 	private void createErrorBubbleWindow(JComponent component, String i18n, Object... arguments) {
 		killCurrentErrorBubbleWindow();
 		JButton okayButton = new JButton(I18N.getGUILabel("io.dataimport.step.excel.sheet_selection.got_it"));
 		final ComponentBubbleWindow errorWindow = new ComponentBubbleWindow(component, BubbleStyle.ERROR,
 				SwingUtilities.getWindowAncestor(this), AlignedSide.BOTTOM, i18n, null, null, false, true,
-				new JButton[] { okayButton }, arguments);
+				new JButton[]{okayButton}, arguments);
 		okayButton.addActionListener(e -> errorWindow.killBubble(false));
 
 		// show and remember error window
@@ -792,29 +794,28 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	 * Sets the column separator associated to the splitter.
 	 *
 	 * @param splitter
-	 *            a {@link ColumnSplitter}
+	 * 		a {@link ColumnSplitter}
 	 */
 	void setColumnSeparator(ColumnSplitter splitter) {
-		switch (splitter) {
-			case COMMA:
-				separationComboBox.setSelectedItem(ColumnSeparator.COMMA);
-				break;
-			case TAB:
-				separationComboBox.setSelectedItem(ColumnSeparator.TAB);
-				break;
-			case PIPE:
-				regexTextField.setText(splitter.getPattern().pattern());
-				separationComboBox.setSelectedItem(ColumnSeparator.REGULAR_EXPRESSION);
-				break;
-			case TILDE:
-				regexTextField.setText(splitter.getPattern().pattern());
-				separationComboBox.setSelectedItem(ColumnSeparator.REGULAR_EXPRESSION);
-				break;
-			default:
-			case SEMI_COLON:
-				separationComboBox.setSelectedItem(ColumnSeparator.SEMICOLON);
-				break;
-		}
+		SwingTools.invokeLater(() -> {
+			switch (splitter) {
+				case COMMA:
+					separationComboBox.setSelectedItem(ColumnSeparator.COMMA);
+					break;
+				case TAB:
+					separationComboBox.setSelectedItem(ColumnSeparator.TAB);
+					break;
+				case PIPE:
+				case TILDE:
+					regexTextField.setText(splitter.getPattern().pattern());
+					separationComboBox.setSelectedItem(ColumnSeparator.REGULAR_EXPRESSION);
+					break;
+				default:
+				case SEMI_COLON:
+					separationComboBox.setSelectedItem(ColumnSeparator.SEMICOLON);
+					break;
+			}
+		});
 	}
 
 
@@ -822,29 +823,33 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	 * Sets the text qualifier
 	 *
 	 * @param qualifier
-	 *            a {@link com.rapidminer.operator.nio.model.CSVResultSet.TextQualifier}
+	 * 		a {@link com.rapidminer.operator.nio.model.CSVResultSet.TextQualifier}
 	 */
-	void setTextQualifier(CSVResultSet.TextQualifier qualifier){
-		quoteCharacterTextField.setText(qualifier.getString());
-		configuration.setQuoteCharacter(quoteCharacterTextField.getText().charAt(0));
+	void setTextQualifier(CSVResultSet.TextQualifier qualifier) {
+		SwingTools.invokeLater(() -> {
+			quoteCharacterTextField.setText(qualifier.getString());
+			configuration.setQuoteCharacter(quoteCharacterTextField.getText().charAt(0));
+		});
 	}
 
 	/**
 	 * Sets the Decimal Separator
 	 *
 	 * @param character
-	 *			a {@link com.rapidminer.operator.nio.model.CSVResultSet.DecimalCharacter}
+	 * 		a {@link com.rapidminer.operator.nio.model.CSVResultSet.DecimalCharacter}
 	 */
-	void setDecimalCharacter(CSVResultSet.DecimalCharacter character){
-		decimalCharacterTextField.setText(character.getString());
-		configuration.setDecimalCharacter(decimalCharacterTextField.getText().charAt(0));
+	void setDecimalCharacter(CSVResultSet.DecimalCharacter character) {
+		SwingTools.invokeLater(() -> {
+			decimalCharacterTextField.setText(character.getString());
+			configuration.setDecimalCharacter(decimalCharacterTextField.getText().charAt(0));
+		});
 	}
 
 	/**
 	 * Checks that the table has content and the header row is not behind the start row.
 	 *
 	 * @throws InvalidConfigurationException
-	 *             if the conditions are not fulfilled
+	 * 		if the conditions are not fulfilled
 	 */
 	void validateConfiguration() throws InvalidConfigurationException {
 		if (previewTable.getModel().getRowCount() == 0) {
@@ -865,7 +870,7 @@ public class CSVFormatSpecificationPanel extends JPanel {
 	 * Registers a new change listener.
 	 *
 	 * @param changeListener
-	 *            the listener to register
+	 * 		the listener to register
 	 */
 	void addChangeListener(ChangeListener changeListener) {
 		this.changeListeners.add(changeListener);

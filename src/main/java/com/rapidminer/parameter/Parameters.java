@@ -354,6 +354,7 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 
 	public void copyFrom(Parameters parameters) {
 		this.keyToValueMap.putAll(parameters.keyToValueMap);
+		fireUpdate();
 	}
 
 	/**

@@ -20,11 +20,11 @@ package com.rapidminer.repository.gui;
 
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 
 import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.repository.Repository;
@@ -35,7 +35,7 @@ import com.rapidminer.repository.internal.remote.RemoteRepository;
 /**
  * Dialog to configure an existing repository.
  *
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  *
  */
 public class RepositoryConfigurationDialog extends ButtonDialog {
@@ -46,9 +46,8 @@ public class RepositoryConfigurationDialog extends ButtonDialog {
 	private Repository repository;
 
 	public RepositoryConfigurationDialog(Repository repository) {
-		super(ApplicationFrame.getApplicationFrame(), RemoteRepository.class.isAssignableFrom(repository.getClass())
-		        ? "remoterepositoryconfigdialog" : "repositoryconfigdialog", ModalityType.APPLICATION_MODAL,
-		        new Object[] {});
+		super(ApplicationFrame.getApplicationFrame(), (repository instanceof RemoteRepository ? "remote" : "")
+				+ "repositoryconfigdialog", ModalityType.APPLICATION_MODAL, new Object[0]);
 		this.repository = repository;
 		JButton okButton = makeOkButton("repository_configuration_dialog.save");
 		configurationPanel = repository.makeConfigurationPanel();
@@ -65,15 +64,23 @@ public class RepositoryConfigurationDialog extends ButtonDialog {
 
 	@Override
 	protected void ok() {
-		if (!configurationPanel.configure(repository)) {
-			return;
-		}
-		try {
-			repository.refresh();
-			super.ok();
-		} catch (RepositoryException e) {
-			SwingTools.showSimpleErrorMessage(this, "repository_configuration_dialog.cannot_refresh_folder", e);
-		}
+		ProgressThread repoConfigurePT = new ProgressThread("configure_repository", false, repository.getName()) {
+
+			@Override
+			public void run() {
+				if (!configurationPanel.configure(repository)) {
+					return;
+				}
+				try {
+					repository.refresh();
+				} catch (RepositoryException e) {
+					SwingTools.showSimpleErrorMessage(RepositoryConfigurationDialog.this, "repository_configuration_dialog.cannot_refresh_folder", e);
+				}
+			}
+		};
+		repoConfigurePT.setIndeterminate(true);
+		repoConfigurePT.start();
+		super.ok();
 	}
 
 }

@@ -20,10 +20,10 @@ repositories {
 dependencies {
 
 	// belt project for new data core
-	compile 'com.rapidminer:belt:0.2.0'
+	compile 'com.rapidminer:belt:0.3'
 
 	// belt adapter for conversion between old and new core
-	compile ('com.rapidminer:belt-adapter:0.1.0'){
+	compile ('com.rapidminer:belt-adapter:0.2'){
 		exclude group: 'com.rapidminer.studio', module: 'rapidminer-studio-core'
 	}
 
@@ -38,13 +38,13 @@ dependencies {
 	}
 
 	// RapidMiner API
-	compile 'com.rapidminer:rapidminer-api:0.2.1'
+	compile 'com.rapidminer:rapidminer-api:0.2.2'
 	
 	// Alphanumeric sorting
 	compile 'com.rapidminer.external:alphanumeric-sorting:1.0.1'
 
 	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
-	compile 'com.rapidminer.external:vldocking:1.2.2'
+	compile 'com.rapidminer.external:vldocking:9.0.1'
 
 	// Freehep for vector graphic export (http://java.freehep.org/)
 	compile('org.freehep:freehep-graphicsio-ps:2.3') {
@@ -155,7 +155,7 @@ dependencies {
 	compile 'org.jsoup:jsoup:1.8.3'
 
 	// access to windows registry
-	compile 'net.java.dev.jna:jna-platform:4.5.1'
+	compile 'net.java.dev.jna:jna-platform:4.5.2'
 
 	// tests require mockito
 	testCompile 'org.mockito:mockito-core:2.13.0'

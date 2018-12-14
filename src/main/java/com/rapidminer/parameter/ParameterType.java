@@ -20,7 +20,6 @@ package com.rapidminer.parameter;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -216,11 +215,7 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 	 * invocations, because it relies on getting the Parameters object, which is then not created.
 	 */
 	public boolean isHidden() {
-		boolean conditionsMet = true;
-		for (ParameterCondition condition : conditions) {
-			conditionsMet &= condition.dependencyMet();
-		}
-		return isDeprecated || isHidden || !conditionsMet;
+		return isHidden || isDeprecated || !conditions.stream().allMatch(ParameterCondition::dependencyMet);
 	}
 
 	public Collection<ParameterCondition> getConditions() {
@@ -492,19 +487,11 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 				Constructor<?> constructor = conditionClass.getConstructor(Element.class);
 				conditions.add((ParameterCondition) constructor.newInstance(conditionElement));
 			}
-		} catch (ClassNotFoundException e) {
+		} catch (SecurityException | IllegalArgumentException e) {
 			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CONDITION_CLASS, e);
-		} catch (IllegalArgumentException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CONDITION_CLASS, e);
-		} catch (InstantiationException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CONDITION_CLASS, e);
-		} catch (IllegalAccessException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CONDITION_CLASS, e);
-		} catch (InvocationTargetException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CONDITION_CLASS, e);
-		} catch (SecurityException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CONDITION_CLASS, e);
-		} catch (NoSuchMethodException e) {
+		} catch (XMLException | RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
 			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CONDITION_CLASS, e);
 		}
 	}
@@ -521,21 +508,11 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 			Constructor<?> constructor = typeClass.getConstructor(Element.class);
 			Object type = constructor.newInstance(element);
 			return (ParameterType) type;
-		} catch (ClassNotFoundException e) {
+		} catch (SecurityException | IllegalArgumentException e) {
 			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
-		} catch (SecurityException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
-		} catch (NoSuchMethodException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
-		} catch (IllegalArgumentException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
-		} catch (InstantiationException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
-		} catch (IllegalAccessException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
-		} catch (InvocationTargetException e) {
-			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
-		} catch (ClassCastException e) {
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
 			throw new XMLException("Illegal value for attribute " + ATTRIBUTE_CLASS, e);
 		}
 	}

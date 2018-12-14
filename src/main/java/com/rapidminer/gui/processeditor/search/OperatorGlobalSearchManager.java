@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -46,6 +47,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.search.AbstractGlobalSearchManager;
 import com.rapidminer.search.GlobalSearchDefaultField;
 import com.rapidminer.search.GlobalSearchUtilities;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
 
@@ -161,7 +163,7 @@ class OperatorGlobalSearchManager extends AbstractGlobalSearchManager implements
 		} catch (OperatorCreationException e) {
 			// should not happen, if it does, ignore
 		}
-		return GlobalSearchUtilities.INSTANCE.createDocument(opDesc.getKey(), opDesc.getName(), fields.toArray(new Field[fields.size()]));
+		return GlobalSearchUtilities.INSTANCE.createDocument(opDesc.getKey(), opDesc.getName(), fields.toArray(new Field[0]));
 	}
 
 	/**
@@ -237,7 +239,13 @@ class OperatorGlobalSearchManager extends AbstractGlobalSearchManager implements
 			sb.append(' ');
 
 			// to prepare output MD, we need to trigger generation here
-			op.transformMetaData();
+			try {
+				op.transformMetaData();
+			} catch (Exception e) {
+				// some extensions may throw here, just ignore it and move on
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.processeditor.global_search.OperatorSearchManager.error.output_metadata_transform_failed",
+						op.getOperatorDescription().getKey());
+			}
 			for (OutputPort outPort : outputPorts.getAllPorts()) {
 				// we need to use the deprecated method because we don't want specific MD, but whatever MD is there
 				MetaData resultMD = outPort.getMetaData();

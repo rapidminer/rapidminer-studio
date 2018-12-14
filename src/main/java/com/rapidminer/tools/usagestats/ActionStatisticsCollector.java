@@ -24,6 +24,8 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -256,6 +258,15 @@ public enum ActionStatisticsCollector {
 	/** remote_repository | status | uuid (since 8.2.1) */
 	public static final String TYPE_REMOTE_REPOSITORY = "remote_repository";
 
+	/** new_import | guessed_date_wrong | guessed|choosen (since 9.1) */
+	public static final String VALUE_GUESSED_DATE_FORMAT_RIGHT = "guessed_date_format_right";
+	public static final String VALUE_GUESSED_DATE_FORMAT_WRONG = "guessed_date_format_wrong";
+	public static final String ARG_GUESSED_DATE_SEPARATOR  = "|";
+
+	/** es_view_filter | filter_selected | condition (since 9.1) */
+	public static final String TYPE_EXAMPLESET_VIEW_FILTER = "es_view_filter";
+	public static final String VALUE_FILTER_SELECTED = "filter_selected";
+
 	public static final String VALUE_CREATED = "created";
 	public static final String VALUE_CONNECTED = "connected";
 	public static final String VALUE_CONNECTION_ERROR = "connection_error";
@@ -337,6 +348,21 @@ public enum ActionStatisticsCollector {
 		arg.append(categoryId).append(ARG_GLOBAL_SEARCH_SPACER);
 		arg.append(myChosenItem);
 		log(TYPE_GLOBAL_SEARCH, VALUE_ACTION, arg.toString());
+	}
+
+	/**
+	 * Logs the guessed and chosen format
+	 *
+	 * @param guessed The guessed date format pattern
+	 * @param chosenFormat The chosen date format
+	 * @since 9.1
+	 */
+	public void logGuessedDateFormat(String guessed, DateFormat chosenFormat) {
+		guessed = guessed != null ? guessed : "";
+		String chosen = (chosenFormat instanceof SimpleDateFormat) ? ((SimpleDateFormat) chosenFormat).toPattern() : "";
+		String value = guessed.equals(chosen) ? VALUE_GUESSED_DATE_FORMAT_RIGHT : VALUE_GUESSED_DATE_FORMAT_WRONG;
+		String argument = guessed.equals(chosen) ? chosen : guessed + ARG_GUESSED_DATE_SEPARATOR + chosen;
+		log(TYPE_NEW_IMPORT, value, argument);
 	}
 
 	/**

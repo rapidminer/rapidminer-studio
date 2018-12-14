@@ -21,12 +21,16 @@ package com.rapidminer.tools;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
-
 import javax.swing.JComponent;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.RapidMiner;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeCategory;
 
 
 /**
@@ -39,23 +43,23 @@ public class I18N {
 	private static final ExtensibleResourceBundle GUI_BUNDLE;
 	private static final ExtensibleResourceBundle SETTINGS_BUNDLE;
 
-	private static final Locale ORIGINAL_LOCALE;
+	private static final Locale ORIGINAL_LOCALE = Locale.getDefault();
 
 	public static final String SETTINGS_TYPE_TITLE_SUFFIX = ".title";
 	public static final String SETTINGS_TYPE_DESCRIPTION_SUFFIX = ".description";
+	public static final String ICON_SUFFIX = ".icon";
 
 	// init I18N
 	static {
-		ORIGINAL_LOCALE = Locale.getDefault();
 		ParameterService.init();
 
 		String localeLanguage = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE);
-		Locale locale = Locale.getDefault();
-		if (localeLanguage != null) {
-			locale = new Locale(localeLanguage);
+		Locale locale = Locale.forLanguageTag(Objects.toString(localeLanguage,""));
+		if (!locale.getLanguage().isEmpty()) {
 			Locale.setDefault(locale);
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.I18N.set_locale_to", locale);
 		} else {
+			locale = Locale.getDefault();
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.I18N.using_default_locale", locale);
 		}
 		JComponent.setDefaultLocale(locale);
@@ -133,39 +137,54 @@ public class I18N {
 		registerSettingsBundle(bundle, false);
 	}
 
-	/** registers the properties of the given bundle on the global error bundle */
+	/**
+	 * Registers the properties of the given bundle on the global error bundle
+	 * @param bundle bundle to register
+	 * @param overwrite always false, internal api
+	 */
 	public static void registerErrorBundle(ResourceBundle bundle, boolean overwrite) {
-		if (!overwrite) {
-			ERROR_BUNDLE.addResourceBundle(bundle);
-		} else {
-			ERROR_BUNDLE.addResourceBundleAndOverwrite(bundle);
-		}
+		registerBundle(ERROR_BUNDLE, bundle, overwrite);
 	}
 
-	/** registers the properties of the given bundle on the global gui bundle */
+	/**
+	 * Registers the properties of the given bundle on the global gui bundle
+	 * @param bundle bundle to register
+	 * @param overwrite always false, internal api
+	 */
 	public static void registerGUIBundle(ResourceBundle bundle, boolean overwrite) {
-		if (!overwrite) {
-			GUI_BUNDLE.addResourceBundle(bundle);
-		} else {
-			GUI_BUNDLE.addResourceBundleAndOverwrite(bundle);
-		}
+		registerBundle(GUI_BUNDLE, bundle, overwrite);
 	}
 
-	/** registers the properties of the given bundle on the global userError bundle */
+	/**
+	 * Registers the properties of the given bundle on the global userError bundle
+	 * @param bundle bundle to register
+	 * @param overwrite always false, internal api
+	 */
 	public static void registerUserErrorMessagesBundle(ResourceBundle bundle, boolean overwrite) {
-		if (!overwrite) {
-			USER_ERROR_BUNDLE.addResourceBundle(bundle);
-		} else {
-			USER_ERROR_BUNDLE.addResourceBundleAndOverwrite(bundle);
-		}
+		registerBundle(USER_ERROR_BUNDLE, bundle, overwrite);
 	}
 
-	/** registers the properties of the given bundle on the global settings bundle */
+	/**
+	 * Registers the properties of the given bundle on the global settings bundle
+	 * @param bundle bundle to register
+	 * @param overwrite always false, internal api
+	 */
 	public static void registerSettingsBundle(ResourceBundle bundle, boolean overwrite) {
-		if (!overwrite) {
-			SETTINGS_BUNDLE.addResourceBundle(bundle);
+		registerBundle(SETTINGS_BUNDLE, bundle, overwrite);
+	}
+
+	/**
+	 * Registers the given bundle in the targetBundle
+	 *
+	 * @param targetBundle the target bundle
+	 * @param bundle bundle to register
+	 * @param overwrite always false, internal api
+	 */
+	private static void registerBundle(ExtensibleResourceBundle targetBundle, ResourceBundle bundle, boolean overwrite) {
+		if (overwrite) {
+			targetBundle.addResourceBundleAndOverwrite(bundle);
 		} else {
-			SETTINGS_BUNDLE.addResourceBundleAndOverwrite(bundle);
+			targetBundle.addResourceBundle(bundle);
 		}
 	}
 
@@ -175,21 +194,14 @@ public class I18N {
 	 * will be replaced by the first argument, '{1}' with the second and so on.
 	 *
 	 * Catches the exception thrown by ResourceBundle in the latter case.
+	 * @param bundle the bundle that contains the key
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or the key if it does not exists in the bundle
 	 **/
 	public static String getMessage(ResourceBundle bundle, String key, Object... arguments) {
 		try {
-
-			if (arguments == null || arguments.length == 0) {
-				return bundle.getString(key);
-			} else {
-				String message = bundle.getString(key);
-				if (message != null) {
-					return MessageFormat.format(message, arguments);
-				} else {
-					return key;
-				}
-			}
-
+			return getMessageOptimistic(bundle, key, arguments);
 		} catch (MissingResourceException e) {
 			LogService.getRoot().log(Level.FINEST, "com.rapidminer.tools.I18N.missing_key", key);
 			return key;
@@ -199,6 +211,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessage(ResourceBundle, String, Object...)} with return
 	 * value from {@link #getGUIBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or the key if it does not exists in the bundle
 	 */
 	public static String getGUIMessage(String key, Object... arguments) {
 		return getMessage(getGUIBundle(), key, arguments);
@@ -207,6 +223,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessageOrNull(ResourceBundle, String, Object...)} with
 	 * return value from {@link #getGUIBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or null if the key does not exists in the bundle
 	 */
 	public static String getGUIMessageOrNull(String key, Object... arguments) {
 		return getMessageOrNull(getGUIBundle(), key, arguments);
@@ -215,6 +235,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessage(ResourceBundle, String, Object...)} with return
 	 * value from {@link #getErrorBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or the key if it does not exists in the bundle
 	 */
 	public static String getErrorMessage(String key, Object... arguments) {
 		return getMessage(getErrorBundle(), key, arguments);
@@ -223,6 +247,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessageOrNull(ResourceBundle, String, Object...)} with
 	 * return value from {@link #getErrorBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or null if the key does not exists in the bundle
 	 */
 	public static String getErrorMessageOrNull(String key, Object... arguments) {
 		return getMessageOrNull(getErrorBundle(), key, arguments);
@@ -231,6 +259,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessage(ResourceBundle, String, Object...)} with return
 	 * value from {@link #getUserErrorMessagesBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or the key if it does not exists in the bundle
 	 */
 	public static String getUserErrorMessage(String key, Object... arguments) {
 		return getMessage(getUserErrorMessagesBundle(), key, arguments);
@@ -239,6 +271,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessageOrNull(ResourceBundle, String, Object...)} with
 	 * return value from {@link #getUserErrorMessagesBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or null if the key does not exists in the bundle
 	 */
 	public static String getUserErrorMessageOrNull(String key, Object... arguments) {
 		return getMessageOrNull(getUserErrorMessagesBundle(), key, arguments);
@@ -247,6 +283,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessage(ResourceBundle, String, Object...)} with return
 	 * value from {@link #getSettingsBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or the key if it does not exists in the bundle
 	 */
 	public static String getSettingsMessage(String key, SettingsType type, Object... arguments) {
 		return getMessage(getSettingsBundle(), key + type, arguments);
@@ -255,6 +295,10 @@ public class I18N {
 	/**
 	 * Convenience method to call {@link #getMessageOrNull(ResourceBundle, String, Object...)} with
 	 * return value from {@link #getSettingsBundle()} as {@link ResourceBundle}.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or null if the key does not exists in the bundle
 	 */
 	public static String getSettingsMessageOrNull(String key, SettingsType type, Object... arguments) {
 		return getMessageOrNull(getSettingsBundle(), key + type, arguments);
@@ -266,29 +310,29 @@ public class I18N {
 	 * Arguments <b>can</b> be specified which will be used to format the String. In the
 	 * {@link ResourceBundle} the String '{0}' (without ') will be replaced by the first argument,
 	 * '{1}' with the second and so on.
-	 *
+	 * @param bundle the bundle that contains the key
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or null if key not exists in the bundle
 	 */
 	public static String getMessageOrNull(ResourceBundle bundle, String key, Object... arguments) {
-
-		if (bundle.containsKey(key)) {
-			return getMessage(bundle, key, arguments);
-		} else {
+		try {
+			return getMessageOptimistic(bundle, key, arguments);
+		} catch (MissingResourceException e) {
 			return null;
 		}
-
 	}
 
 	/**
 	 * This will return the value of the property gui.label.-key- of the GUI bundle or the key
 	 * itself if unknown.
+	 *
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key, or the key if it does not exists in the bundle
 	 */
 	public static String getGUILabel(String key, Object... arguments) {
-		String completeKey = "gui.label." + key;
-		if (GUI_BUNDLE.containsKey(completeKey)) {
-			return getMessage(GUI_BUNDLE, completeKey, arguments);
-		} else {
-			return completeKey;
-		}
+		return getMessage(GUI_BUNDLE, "gui.label." + key, arguments);
 	}
 
 	/**
@@ -300,5 +344,78 @@ public class I18N {
 	 */
 	public static Locale getOriginalLocale() {
 		return ORIGINAL_LOCALE;
+	}
+
+	/**
+	 * Returns a message if found or the key if not found. Arguments <b>can</b> be specified which
+	 * will be used to format the String. In the {@link ResourceBundle} the String '{0}' (without ')
+	 * will be replaced by the first argument, '{1}' with the second and so on.
+	 *
+	 * @param bundle the bundle that contains the key
+	 * @param key key – the key for the desired string
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string for the given key
+	 * @throws java.util.MissingResourceException – if no object for the given key can be found
+	 */
+	private static String getMessageOptimistic(ResourceBundle bundle, String key, Object... arguments) throws MissingResourceException {
+		String message = bundle.getString(key);
+		if (arguments == null || arguments.length == 0) {
+			return message;
+		}
+		return MessageFormat.format(message, arguments);
+	}
+
+	/**
+	 * <p>
+	 * Registers a new language tag to be shown in the RapidMiner Settings
+	 * </p>
+	 *
+	 * <p>
+	 * Important: Use underscore for the .properties files, but hyphen for the language tag!<br/>
+	 * Examples:
+	 * <table border="1">
+	 * <tr>
+	 * <th>Language Tag</th><th>Filename</th>
+	 * </tr>
+	 * <tr>
+	 * <td>English Fallback</td> <td>MyExtGUI.properties</td>
+	 * </tr>
+	 * <tr>
+	 * <td>"de"</td> <td>MyExtGUI_de.properties</td>
+	 * </tr>
+	 * <tr>
+	 * <td>"de-AT"</td> <td>MyExtGUI_de_AT.properties</td>
+	 * </tr>
+	 * </table>
+	 * If de-AT is the selected language, first de-AT files are checked, second de, finally {@link Locale#ROOT}
+	 *
+	 * @param languageTag
+	 * 		An IETF BCP 47 language tag, i.e. "fr", "zh", "de" or "en-GB"
+	 * @throws IllegalArgumentException
+	 * 		if the given {@code languageTag} is not valid
+	 * @throws NullPointerException
+	 * 		if {@code languageTag} is {@code null}
+	 * @since 9.1.0
+	 */
+	public static void registerLanguage(String languageTag) {
+		// Check if language key is valid
+		if (Locale.forLanguageTag(languageTag).getLanguage().isEmpty()) {
+			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.I18N.add_language_wrong_format", String.valueOf(languageTag));
+			throw new IllegalArgumentException(languageTag + " is not a valid IETF BCP 47 language tag.");
+		}
+
+		ParameterType type = ParameterService.getParameterType(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE);
+		if (!(type instanceof ParameterTypeCategory)) {
+			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.tools.I18N.add_language_failed", languageTag);
+			return;
+		}
+		ParameterTypeCategory lng = ((ParameterTypeCategory) type);
+		if (ArrayUtils.contains(lng.getValues(), languageTag)) {
+			//already registered
+			return;
+		}
+		// Add language key to the end, not sorted
+		String[] languages = (String[]) ArrayUtils.add(lng.getValues(), languageTag);
+		ParameterService.registerParameter(new ParameterTypeCategory(lng.getKey(), lng.getDescription(), languages, lng.getDefault(), lng.isExpert()));
 	}
 }

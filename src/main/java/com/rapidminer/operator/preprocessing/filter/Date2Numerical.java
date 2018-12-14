@@ -18,6 +18,7 @@
 */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
 import com.rapidminer.operator.error.AttributeNotFoundError;
@@ -66,6 +68,12 @@ public class Date2Numerical extends AbstractDateDataProcessing {
 
 	public static final String PARAMETER_KEEP_OLD_ATTRIBUTE = "keep_old_attribute";
 
+	/**
+	 * Last version to use {@link Ontology#INTEGER}, afterwards {@link Ontology#REAL} is used
+	 * @since 9.0.2
+	 */
+	public static final OperatorVersion VERSION_USING_INTEGER = new OperatorVersion(9, 0, 1);
+
 	Calendar calendar = null;
 
 	public Date2Numerical(OperatorDescription description) {
@@ -83,7 +91,7 @@ public class Date2Numerical extends AbstractDateDataProcessing {
 		AttributeMetaData amd = metaData.getAttributeByName(getParameterAsString(PARAMETER_ATTRIBUTE_NAME));
 		if (amd != null) {
 			AttributeMetaData newAttribute = amd.clone();
-			newAttribute.setType(Ontology.INTEGER);
+			newAttribute.setType(getTargetType());
 			newAttribute.getMean().setUnkown();
 			newAttribute.setValueSetRelation(SetRelation.UNKNOWN);
 			if (!getParameterAsBoolean(PARAMETER_KEEP_OLD_ATTRIBUTE)) {
@@ -111,7 +119,7 @@ public class Date2Numerical extends AbstractDateDataProcessing {
 			throw new UserError(this, 218, dateAttribute.getName(), Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType));
 		}
 
-		Attribute newAttribute = AttributeFactory.createAttribute(Ontology.INTEGER);
+		Attribute newAttribute = AttributeFactory.createAttribute(getTargetType());
 		exampleSet.getExampleTable().addAttribute(newAttribute);
 		exampleSet.getAttributes().addRegular(newAttribute);
 
@@ -269,5 +277,21 @@ public class Date2Numerical extends AbstractDateDataProcessing {
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler
 				.getResourceConsumptionEstimator(getInputPort(), Date2Numerical.class, null);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		OperatorVersion[] changes = super.getIncompatibleVersionChanges();
+		changes = Arrays.copyOf(changes, changes.length + 1);
+		changes[changes.length - 1] = VERSION_USING_INTEGER;
+		return changes;
+	}
+
+	/**
+	 * Returns the version dependent target type
+	 * @return either {@link Ontology#INTEGER} or {@link Ontology#REAL}
+	 */
+	private int getTargetType(){
+		return getCompatibilityLevel().isAtMost(VERSION_USING_INTEGER) ? Ontology.INTEGER : Ontology.REAL;
 	}
 }

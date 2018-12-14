@@ -18,19 +18,19 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+
+import com.rapidminer.core.license.ProductLinkRegistry;
 import com.rapidminer.gui.tools.NotificationPopup;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.RMUrlHandler;
-
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 
 
 /**
@@ -45,12 +45,24 @@ public class UpgradeLicenseAction extends ResourceAction {
 
 	/** the uri for the license upgrade */
 	private static final String URI_LICENSE_UPGRADE = I18N.getGUILabel("license.url");
+	private String productId;
 
 	/**
 	 * Creates a new {@link UpgradeLicenseAction} instance.
 	 */
 	public UpgradeLicenseAction() {
+		this(null);
+	}
+
+	/**
+	 * Creates a new {@link UpgradeLicenseAction} instance.
+	 *
+	 * @param productId
+	 * 		the product id that caused the action
+	 */
+	public UpgradeLicenseAction(String productId) {
 		super(false, "upgrade_license");
+		this.productId = productId;
 	}
 
 	@Override
@@ -70,12 +82,12 @@ public class UpgradeLicenseAction extends ResourceAction {
 	 * 
 	 * @return
 	 */
-	private static SwingWorker<Void, Void> createUpgradeWorker() {
+	private SwingWorker<Void, Void> createUpgradeWorker() {
 		return new SwingWorker<Void, Void>() {
 
 			@Override
 			protected Void doInBackground() throws Exception {
-				RMUrlHandler.handleUrl(URI_LICENSE_UPGRADE);
+				RMUrlHandler.handleUrl(ProductLinkRegistry.PURCHASE.get(productId, URI_LICENSE_UPGRADE));
 				return null;
 			}
 

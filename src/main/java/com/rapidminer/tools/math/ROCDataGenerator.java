@@ -31,6 +31,7 @@ import com.rapidminer.example.AttributeTypeException;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.plotter.ScatterPlotter;
 import com.rapidminer.gui.plotter.SimplePlotterDialog;
 import com.rapidminer.gui.viewer.ROCChartPlotter;
@@ -278,7 +279,7 @@ public class ROCDataGenerator implements Serializable {
 		dialog.setTitle("ROC Plot");
 		dialog.add(plotter);
 		dialog.setSize(500, 500);
-		dialog.setLocationRelativeTo(null);
+		dialog.setLocationRelativeTo(ApplicationFrame.getApplicationFrame());
 		dialog.setVisible(true);
 	}
 

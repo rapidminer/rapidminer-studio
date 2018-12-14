@@ -21,6 +21,7 @@ package com.rapidminer.test.asserter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,9 @@ import com.rapidminer.example.table.SparseDataRow;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.clustering.Centroid;
+import com.rapidminer.operator.clustering.CentroidClusterModel;
+import com.rapidminer.operator.clustering.Cluster;
 import com.rapidminer.operator.learner.associations.FrequentItemSet;
 import com.rapidminer.operator.learner.associations.FrequentItemSets;
 import com.rapidminer.operator.learner.functions.LinearRegressionModel;
@@ -677,6 +681,75 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 				Assert.assertEquals(message + " : sum squares residuals values are not equal",
 						expected.getSumSquaresResiduals(), actual.getSumSquaresResiduals(), 1E-15);
 
+			}
+
+		});
+
+		// Asserter for Centroid Cluster Model
+		asserters.add(new Asserter() {
+
+			@Override
+			public Class<?> getAssertable() {
+				return CentroidClusterModel.class;
+			}
+
+			/**
+			 * Tests two Centroid Cluster Model
+			 *
+			 * @param message
+			 *            message to display if an error occurs
+			 * @param expectedObj
+			 *            expected value
+			 * @param actualObj
+			 *            actual value
+			 */
+			@Override
+			public void assertEquals(String message, Object expectedObj, Object actualObj) {
+				CentroidClusterModel expected = (CentroidClusterModel) expectedObj;
+				CentroidClusterModel actual = (CentroidClusterModel) actualObj;
+
+				message = message + " - Centroid Cluster Model  \"" + actual.getSource()
+						+ "\" does not match the expected result";
+
+
+				// compare training header (basic information)
+				Assert.assertEquals(message + " : training headers are not equal", expected.getTrainingHeader().toString(), actual.getTrainingHeader().toString());
+
+				// compare distance measure type
+				Assert.assertEquals(message + " : distance measure types are not equal", expected.getDistanceMeasure().getClass(), actual.getDistanceMeasure().getClass());
+
+				// compare attribute names
+				Assert.assertArrayEquals(message + " : attribute names are not equal", expected.getAttributeNames(), actual.getAttributeNames());
+
+				// compare number of clusters
+				Assert.assertEquals(message + " : number of clusters are not equal", expected.getNumberOfClusters(), actual.getNumberOfClusters());
+
+				// compare centroids
+				Assert.assertArrayEquals(message + " : centroids are not equal", expected.getCentroids().stream().map(Centroid::getCentroid).toArray(), actual.getCentroids().stream().map(Centroid::getCentroid).toArray());
+
+				// compare number of examples
+				Assert.assertArrayEquals(message + " : clusters number of examples are not equal", expected.getClusters().stream().mapToInt(Cluster::getNumberOfExamples).toArray(), actual.getClusters().stream().mapToInt(Cluster::getNumberOfExamples).toArray());
+
+		        // compare cluster ids
+				Assert.assertArrayEquals(message + " : clusters ids are not equal", expected.getClusters().stream().mapToInt(Cluster::getClusterId).toArray(), actual.getClusters().stream().mapToInt(Cluster::getClusterId).toArray());
+
+				// compare cluster example ids
+				Assert.assertArrayEquals(message + " : clusters example ids are not equal", expected.getClusters().stream().map(Cluster::getExampleIds).flatMap(Collection::stream).toArray(Object[]::new), actual.getClusters().stream().map(Cluster::getExampleIds).flatMap(Collection::stream).toArray(Object[]::new));
+
+				// compare is adding label
+				Assert.assertEquals(message + " : is adding label is not equal", expected.isAddingLabel(), actual.isAddingLabel());
+
+				// compare is in target encoding
+				Assert.assertEquals(message + " : is in target encoding is not equal", expected.isInTargetEncoding(), actual.isInTargetEncoding());
+
+				// compare is removing
+				Assert.assertEquals(message + " : is removing unknown assignments is not equal", expected.isRemovingUnknownAssignments(), actual.isRemovingUnknownAssignments());
+
+				// compare is updatable
+				Assert.assertEquals(message + " : is updatable is not equal", expected.isUpdatable(), actual.isUpdatable());
+
+				// check string representation
+				Assert.assertEquals(message + " : string representations are not equal", expected.toString(), actual.toString());
 			}
 
 		});

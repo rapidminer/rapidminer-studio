@@ -149,12 +149,12 @@ public class KNNLearner extends AbstractLearner {
 		List<ParameterType> types = super.getParameterTypes();
 
 		ParameterType type = new ParameterTypeInt(PARAMETER_K, "The used number of nearest neighbors.", 1,
-				Integer.MAX_VALUE, 1);
+				Integer.MAX_VALUE, 5);
 		type.setExpert(false);
 		types.add(type);
 
 		types.add(new ParameterTypeBoolean(PARAMETER_WEIGHTED_VOTE,
-				"Indicates if the votes should be weighted by similarity.", false, false));
+				"Indicates if the votes should be weighted by similarity.", true, false));
 
 		types.addAll(DistanceMeasures.getParameterTypes(this));
 		return types;

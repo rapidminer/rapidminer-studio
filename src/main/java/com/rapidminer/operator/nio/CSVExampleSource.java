@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.nio;
 
 import java.text.NumberFormat;
@@ -23,10 +23,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.source.DataSource;
+import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.io.AbstractReader;
 import com.rapidminer.operator.nio.model.AbstractDataResultSetReader;
 import com.rapidminer.operator.nio.model.CSVResultSetConfiguration;
@@ -65,6 +69,12 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 	public static final String PARAMETER_ESCAPE_CHARACTER = "escape_character";
 	public static final String PARAMETER_STARTING_ROW = "starting_row";
 
+	/**
+	 * Values will be trimmed for guessing after this version
+	 * @since 9.1.1
+	 */
+	public static final OperatorVersion BEFORE_VALUE_TRIMMING_GUESSING = new OperatorVersion(9, 0, 3);
+
 	static {
 		AbstractReader.registerReaderDescription(new ReaderDescription("csv", CSVExampleSource.class, PARAMETER_CSV_FILE));
 	}
@@ -96,6 +106,28 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 	@Override
 	protected String getFileExtension() {
 		return "csv";
+	}
+
+
+	/**
+	 * Whether attributes should be trimmed for guessing
+	 *
+	 * @return {@code true} if compatibility level is above {@link #BEFORE_VALUE_TRIMMING_GUESSING}
+	 * @since 9.1.1
+	 */
+	@Override
+	public boolean trimForGuessing() {
+		return getCompatibilityLevel().isAbove(BEFORE_VALUE_TRIMMING_GUESSING);
+	}
+
+	@Override
+	public ExampleSet createExampleSet() throws OperatorException {
+		// Trim the date format, if the values are trimmed
+		String dateFormat = getParameter(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT);
+		if (dateFormat != null && trimForGuessing()) {
+			setParameter(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT, dateFormat.trim());
+		}
+		return super.createExampleSet();
 	}
 
 	@Override
@@ -163,7 +195,8 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 		setParameter(PARAMETER_QUOTES_CHARACTER, configParameters.get(CSVResultSetConfiguration.CSV_QUOTE_CHARACTER));
 		setParameter(PARAMETER_TRIM_LINES, configParameters.get(CSVResultSetConfiguration.CSV_TRIM_LINES));
 
-		int rowOffset = Integer.parseInt(configParameters.get(CSVResultSetConfiguration.CSV_STARTING_ROW));
+		// the backend uses technical row values starting with 0 but the operator parameters show human readable versions thus +1
+		int rowOffset = Integer.parseInt(configParameters.get(CSVResultSetConfiguration.CSV_STARTING_ROW)) + 1;
 		int headerRowIndex = Integer.parseInt(configParameters.get(CSVResultSetConfiguration.CSV_HEADER_ROW));
 
 		if (rowOffset < 0) {
@@ -175,11 +208,21 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 		if (headerRowEqualsStartingRow) {
 			rowOffset++;
 		}
-		setParameter(PARAMETER_FIRST_ROW_AS_NAMES, String.valueOf(headerRowEqualsStartingRow));
+		setParameter(PARAMETER_FIRST_ROW_AS_NAMES, String.valueOf(Boolean.valueOf(configParameters.get(CSVResultSetConfiguration.CSV_HAS_HEADER_ROW)) || headerRowEqualsStartingRow));
 		setParameter(PARAMETER_STARTING_ROW, String.valueOf(rowOffset));
 
 		// set meta data
 		ImportWizardUtils.setMetaData(dataSource, this);
+
+		// update compatibility level to latest version
+		setCompatibilityLevel(OperatorVersion.getLatestVersion(getOperatorDescription()));
 	}
 
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[]{
+						BEFORE_VALUE_TRIMMING_GUESSING
+				});
+	}
 }

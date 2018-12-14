@@ -37,8 +37,9 @@ import com.rapidminer.tools.PasswordInputCanceledException;
  *
  * @author Nils Woehler
  * @since 6.5.0
- *
+ * @deprecated Use new REST APIs of the Execution Backend instead.
  */
+@Deprecated
 public interface RemoteScheduler {
 
 	/**

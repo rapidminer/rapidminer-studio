@@ -26,7 +26,16 @@ package com.rapidminer.gui;
  */
 public interface PerspectiveChangeListener {
 
-	/** will be called if the current perspective changes */
+	/**
+	 * Will be called if the current perspective changes.
+	 * <p>
+	 *  This method is <b>not</b> called on the EDT.
+	 *  Use {@link com.rapidminer.gui.tools.SwingTools#invokeLater(Runnable) SwingTools.invokeLater} for any GUI manipulation.
+	 * </p>
+	 *
+	 * @param perspective
+	 * 		The new perspective
+	 */
 	public void perspectiveChangedTo(Perspective perspective);
 
 }
