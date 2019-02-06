@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -51,8 +51,17 @@ public class PercentileAggregationFunction extends NumericalAggregationFunction 
 		return getSourceAttribute().isNumerical();
 	}
 
-	private void setPercentile(double value) {
+	/**
+	 * Set the percentile. Must be between 0 and 100.
+	 *
+	 * @param value
+	 * 		the percentage value, between [0, 100]
+	 * @return this aggregation function instance
+	 * @since 9.2.0
+	 */
+	public PercentileAggregationFunction setPercentile(double value) {
 		this.percentileValue = value;
+		return this;
 	}
 
 	@Override

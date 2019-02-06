@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,19 +23,22 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.lang.reflect.InvocationTargetException;
+import java.awt.image.ImageObserver;
 import java.util.List;
-
+import java.util.function.IntUnaryOperator;
+import java.util.stream.IntStream;
 import javax.swing.AbstractCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.GrayFilter;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JList;
@@ -49,6 +52,7 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.autocomplete.AutoCompleteComboBoxAddition;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterType;
@@ -66,6 +70,23 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 
 	private static final long serialVersionUID = -771727412083431607L;
 
+	/** @since 9.2.0 */
+	private static final Image LOADING_ICON = GrayFilter.createDisabledImage(SwingTools.createIcon("16/loading.gif").getImage());
+	private static final String LOADING_STRING = I18N.getGUILabel("parameters.loading");
+	private static final String EMPTY_STRING = I18N.getGUILabel("parameters.empty");
+	private static final Object LOADING = new Object() {
+		@Override
+		public String toString() {
+			return LOADING_STRING;
+		}
+	};
+	private static final Object EMPTY = new Object() {
+		@Override
+		public String toString() {
+			return EMPTY_STRING;
+		}
+	};
+
 	/**
 	 * The model of the combo box which consist of the suggestions
 	 */
@@ -75,16 +96,12 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 	 * The GUI element
 	 */
 	private final SuggestionComboBox comboBox;
+	private final ImageIcon loadingIcon;
 	private final JPanel container;
 
 	private Operator operator;
 
 	private ParameterType type;
-
-	private final static Object LOADING = new Object();
-	private final static Object EMPTY = new Object();
-	private final static String LOADING_STRING = I18N.getGUILabel("parameters.loading");
-	private final static String EMPTY_STRING = I18N.getGUILabel("parameters.empty");
 
 	private ActionListener comboBoxSelectionListener = new ActionListener() {
 
@@ -93,12 +110,8 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Object selectedItem = comboBox.getSelectedItem();
-			if (EMPTY.equals(selectedItem) || LOADING.equals(selectedItem)) {
-				if (currentItem == null) {
-					comboBox.setSelectedItem("");
-				} else {
-					comboBox.setSelectedItem(currentItem);
-				}
+			if (EMPTY == selectedItem || LOADING == selectedItem) {
+				comboBox.setSelectedItem(currentItem == null ? "" : currentItem);
 			} else {
 				currentItem = selectedItem;
 			}
@@ -112,6 +125,8 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 		this.comboBox.setToolTipText(type.getDescription());
 		this.comboBox.setRenderer(new SuggestionComboBoxModelCellRenderer());
 		comboBox.addActionListener(comboBoxSelectionListener);
+
+		loadingIcon = makeLoadingIcon(comboBox);
 
 		new AutoCompleteComboBoxAddition(comboBox);
 
@@ -204,11 +219,13 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 				boolean cellHasFocus) {
 			Component listCellRendererComponent = super.getListCellRendererComponent(list, value, index, isSelected,
 					cellHasFocus);
-			if (LOADING.equals(value) || EMPTY.equals(value)) {
+			boolean isLoading = LOADING == value;
+			if (EMPTY == value || isLoading) {
 				listCellRendererComponent.setBackground(list.getBackground());
 				listCellRendererComponent.setForeground(UIManager.getColor("Label.disabledForeground"));
 				listCellRendererComponent.setEnabled(false);
-				super.setText(LOADING == value ? LOADING_STRING : EMPTY_STRING);
+				setDisabledIcon(isLoading ? loadingIcon : null);
+				setText(value.toString());
 			}
 			return listCellRendererComponent;
 		}
@@ -234,71 +251,31 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 						getProgressListener().setCompleted(0);
 
 						synchronized (lock) {
-							removeAllElements();
+							SwingTools.invokeAndWait(() -> {
+								removeAllElements();
 
-							insertElementAt(LOADING, 0);
-							comboBox.getEditor().setItem(selected);
+								insertElementAt(LOADING, 0);
+								comboBox.getEditor().setItem(selected);
+								makeComboBoxDropDownWider();
+							});
 
 							// fill list with stuff
 							final List<Object> suggestions = getSuggestions(operator, getProgressListener());
 
-							removeAllElements();
 
-							int index = 0;
-							for (Object suggestion : suggestions) {
-								insertElementAt(suggestion, index);
-								++index;
-							}
-							if (suggestions.size() == 0) {
-								insertElementAt(EMPTY, 0);
-							}
-
-							// resize popup
-							try {
-								SwingUtilities.invokeAndWait(new Runnable() {
-
-									@Override
-									public void run() {
-										Object child = comboBox.getAccessibleContext().getAccessibleChild(0);
-										BasicComboPopup popup = (BasicComboPopup) child;
-										JList<?> list = popup.getList();
-										Dimension preferred = list.getPreferredSize();
-										preferred.width = container.getWidth() - 3;
-										int itemCount = comboBox.getItemCount();
-										int rowHeight = 10;
-										if (itemCount > 0) {
-											rowHeight = preferred.height / itemCount;
-										}
-										int maxHeight = comboBox.getMaximumRowCount() * rowHeight;
-										preferred.height = Math.min(preferred.height, maxHeight);
-
-										Container c = SwingUtilities.getAncestorOfClass(JScrollPane.class, list);
-										JScrollPane scrollPane = (JScrollPane) c;
-
-										scrollPane.setPreferredSize(preferred);
-										scrollPane.setMaximumSize(preferred);
-
-										Dimension popupSize = popup.getSize();
-										popupSize.width = preferred.width;
-										popupSize.height = preferred.height + 5;
-										Component parent = popup.getParent();
-										if (parent != null) {
-											parent.setSize(popupSize);
-											parent.validate();
-											parent.repaint();
-										}
-									}
-								});
-
+							SwingTools.invokeAndWait(() -> {
+								removeAllElements();
+								if (suggestions.isEmpty()) {
+									suggestions.add(EMPTY);
+								}
+								int index = 0;
+								for (Object suggestion : suggestions) {
+									insertElementAt(suggestion, index++);
+								}
 								comboBox.getEditor().setItem(selected);
-							} catch (InvocationTargetException e) {
-								// do nothing
-							} catch (InterruptedException e) {
-								// do nothing
-							}
+								makeComboBoxDropDownWider();
+							});
 						}
-
-						getProgressListener().setCompleted(100);
 					} finally {
 						getProgressListener().complete();
 					}
@@ -307,6 +284,49 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 			};
 			t.addDependency("fetching_suggestions");
 			t.start();
+		}
+
+		private void makeComboBoxDropDownWider() {
+			Object child = comboBox.getAccessibleContext().getAccessibleChild(0);
+			BasicComboPopup popup = (BasicComboPopup) child;
+			Insets borderInsets = popup.getBorder().getBorderInsets(popup);
+			JList<?> list = popup.getList();
+			Dimension preferred = list.getPreferredSize();
+
+			IntUnaryOperator extractWidth = i -> comboBox.getRenderer()
+					.getListCellRendererComponent(list, model.getElementAt(i), i, false, false)
+					.getPreferredSize().width + 3;
+			preferred.width = IntStream.range(0, model.getSize()).map(extractWidth)
+					.reduce(comboBox.getWidth() - borderInsets.left - borderInsets.right, Integer::max);
+
+			int itemCount = comboBox.getItemCount();
+			int rowHeight = 10;
+			if (itemCount > 0) {
+				rowHeight = preferred.height / itemCount;
+			}
+			int maxHeight = comboBox.getMaximumRowCount() * rowHeight;
+			preferred.height = Math.min(preferred.height, maxHeight);
+
+			Container c = SwingUtilities.getAncestorOfClass(JScrollPane.class, list);
+			JScrollPane scrollPane = (JScrollPane) c;
+
+			scrollPane.setPreferredSize(preferred);
+			scrollPane.setMaximumSize(preferred);
+
+			if (popup.isShowing()) { // 
+				// a little trick to fire Popup.showPopup method that takes care of correct display
+				popup.setLocation(comboBox.getLocationOnScreen().x, popup.getLocationOnScreen().y - 1);
+			}
+
+			Dimension popupSize = new Dimension();
+			popupSize.width = preferred.width + borderInsets.left + borderInsets.right;
+			popupSize.height = preferred.height + borderInsets.top + borderInsets.bottom;
+			Component parent = popup.getParent();
+			if (parent != null) {
+				parent.setSize(popupSize);
+				parent.validate();
+				parent.repaint();
+			}
 		}
 	}
 
@@ -317,16 +337,12 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 		private SuggestionComboBox(final SuggestionComboBoxModel model) {
 			super(model);
 			setEditable(true);
-			addItemListener(new ItemListener() {
-
-				@Override
-				public void itemStateChanged(ItemEvent e) {
-					if (e.getStateChange() == ItemEvent.SELECTED) {
-						fireEditingStopped();
-					}
+			addItemListener(e -> {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					fireEditingStopped();
 				}
 			});
-			getEditor().getEditorComponent().addFocusListener(new FocusListener() {
+			getEditor().getEditorComponent().addFocusListener(new FocusAdapter() {
 
 				@Override
 				public void focusLost(FocusEvent e) {
@@ -334,9 +350,6 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 						fireEditingStopped();
 					}
 				}
-
-				@Override
-				public void focusGained(FocusEvent e) {}
 			});
 
 			// add popup menu listener
@@ -370,5 +383,30 @@ public abstract class AbstractSuggestionBoxValueCellEditor extends AbstractCellE
 		c.weightx = 0;
 		c.insets = new Insets(0, 5, 0, 0);
 		container.add(button, c);
+	}
+
+	/**
+	 * Creates a grayed out version of the loading gif that can be used in a combobox through an image observer
+	 *
+	 * @since 9.2.0
+	 */
+	private static ImageIcon makeLoadingIcon(JComboBox comboBox) {
+		ImageIcon icon = new ImageIcon(LOADING_ICON);
+		icon.setImageObserver((img, infoflags, x, y, w, h) -> {
+			boolean isFrameOrAll = (infoflags & (ImageObserver.FRAMEBITS | ImageObserver.ALLBITS)) != 0;
+			if (!comboBox.isShowing() || !isFrameOrAll) {
+				return !isFrameOrAll;
+			}
+			if (comboBox.getSelectedIndex() == 0) {
+				comboBox.repaint();
+			}
+			BasicComboPopup p = (BasicComboPopup) comboBox.getAccessibleContext().getAccessibleChild(0);
+			JList list = p.getList();
+			if (list.isShowing()) {
+				list.repaint();
+			}
+			return true;
+		});
+		return icon;
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,7 +19,9 @@
 package com.rapidminer.operator.io;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import com.rapidminer.operator.Annotations;
@@ -53,6 +55,12 @@ public class RepositorySource extends AbstractReader<IOObject> {
 
 	public static final String PARAMETER_REPOSITORY_ENTRY = "repository_entry";
 
+	private static final Map<Class<?>, String> REPO_ERROR_KEYS = new HashMap<>();
+	static {
+		REPO_ERROR_KEYS.put(RepositoryEntryNotFoundException.class, "repository_location_does_not_exist");
+		REPO_ERROR_KEYS.put(RepositoryEntryWrongTypeException.class, "repository_location_wrong_type");
+	}
+
 	public RepositorySource(OperatorDescription description) {
 		super(description, IOObject.class);
 	}
@@ -62,47 +70,32 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		IOObjectEntry entry;
 		try {
 			entry = getRepositoryEntry();
-		} catch (RepositoryEntryNotFoundException e) {
-			addError(new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(), PARAMETER_REPOSITORY_ENTRY,
-					Collections.singletonList(new ParameterSettingQuickFix(getPortOwner().getOperator(), PARAMETER_REPOSITORY_ENTRY)),
-					"repository_location_does_not_exist", getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
-					e.getMessage()));
-			return super.getGeneratedMetaData();
-		}  catch (RepositoryEntryWrongTypeException e) {
-			addError(new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(), PARAMETER_REPOSITORY_ENTRY,
-					Collections.singletonList(new ParameterSettingQuickFix(getPortOwner().getOperator(), PARAMETER_REPOSITORY_ENTRY)),
-					"repository_location_wrong_type", getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
-					e.getMessage()));
-			return super.getGeneratedMetaData();
-		} catch (RepositoryException e) {
-			addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "repository_access_error",
-					getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY), e.getMessage()));
-			return super.getGeneratedMetaData();
-		} catch (UndefinedParameterError e) {
+		} catch (RepositoryException | UndefinedParameterError e) {
+			handleSetupError(e);
 			return super.getGeneratedMetaData();
 		}
-		if (entry != null) {
-			try {
-				MetaData metaData = entry.retrieveMetaData().clone();
-				// We reduce the number of nominal values to a limit here to keep meta data
-				// transformations fast.
-				if (metaData instanceof ExampleSetMetaData) {
-					for (AttributeMetaData amd : ((ExampleSetMetaData) metaData).getAllAttributes()) {
-						if (amd.isNominal()) {
-							amd.shrinkValueSet();
-						}
+		try {
+			MetaData metaData = entry.retrieveMetaData().clone();
+			// We reduce the number of nominal values to a limit here to keep meta data
+			// transformations fast.
+			if (metaData instanceof ExampleSetMetaData) {
+				for (AttributeMetaData amd : ((ExampleSetMetaData) metaData).getAllAttributes()) {
+					if (amd.isNominal()) {
+						amd.shrinkValueSet();
 					}
 				}
-				return metaData;
-			} catch (RepositoryException e) {
-				getLogger().log(Level.INFO, "Error retrieving meta data from " + entry.getLocation() + ": " + e, e);
-				return super.getGeneratedMetaData();
 			}
-		} else {
-			addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "repository_location_does_not_exist",
-					getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY)));
+			return metaData;
+		} catch (RepositoryException e) {
+			getLogger().log(Level.INFO, "Error retrieving meta data from " + entry.getLocation() + ": " + e, e);
 			return super.getGeneratedMetaData();
 		}
+	}
+
+	/** @return {@code true} */
+	@Override
+	protected boolean isMetaDataCacheable() {
+		return true;
 	}
 
 	private IOObjectEntry getRepositoryEntry() throws RepositoryException, UserError {
@@ -115,6 +108,30 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		} else {
 			throw new RepositoryEntryWrongTypeException("Entry '" + location + "' is not a data entry, but " + entry.getType());
 		}
+	}
+
+	/**
+	 * Handles the given exception by adding an appropriate {@link com.rapidminer.operator.ProcessSetupError ProcessSetupError}
+	 * to this operator if applicable.
+	 * <p>
+	 * Exceptions that are not {@link RepositoryException RepositoryExceptions} will be ignored.
+	 * A specific error is added for entries that can not be found or are of the wrong type. Otherwise a generic error is added.
+	 *
+	 * @since 9.2.0
+	 */
+	private void handleSetupError(Exception e) throws UserError{
+		if (!(e instanceof RepositoryException)) {
+			return;
+		}
+		if (e instanceof RepositoryEntryNotFoundException || e instanceof RepositoryEntryWrongTypeException) {
+			addError(new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(), PARAMETER_REPOSITORY_ENTRY,
+					Collections.singletonList(new ParameterSettingQuickFix(getPortOwner().getOperator(), PARAMETER_REPOSITORY_ENTRY)),
+					REPO_ERROR_KEYS.get(e.getClass()), getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
+					e.getMessage()));
+			return;
+		}
+		addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "repository_access_error",
+				getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY), e.getMessage()));
 	}
 
 	@Override

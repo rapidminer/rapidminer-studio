@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -22,13 +22,12 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.operator.ports.metadata.MetaData;
 
 
 /**
  * Super class of all operators requiring no input and creating an {@link ExampleSet}.
  *
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  */
 public abstract class AbstractExampleSource extends AbstractReader<ExampleSet> {
 
@@ -36,8 +35,13 @@ public abstract class AbstractExampleSource extends AbstractReader<ExampleSet> {
 		super(description, ExampleSet.class);
 	}
 
+
+	/**
+	 * @return a basic {@link ExampleSetMetaData} object
+	 * @since 9.2.0
+	 */
 	@Override
-	public MetaData getGeneratedMetaData() throws OperatorException {
+	protected ExampleSetMetaData getDefaultMetaData() {
 		return new ExampleSetMetaData();
 	}
 

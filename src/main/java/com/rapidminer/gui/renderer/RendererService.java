@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -39,6 +40,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.new_plotter.integration.ExpertDataTableRenderer;
+import com.rapidminer.gui.renderer.data.ExampleSetPlotRenderer;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLTools;
@@ -46,9 +50,11 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.tools.DominatingClassFinder;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.XMLParserException;
+import com.rapidminer.tools.plugin.Plugin;
 
 
 /**
@@ -81,6 +87,8 @@ public class RendererService {
 		}
 	}
 
+	private static final String CORE_IOOBJECTS_XML = "ioobjects.xml";
+
 	private static final IconData ICON_DEFAULT_16 = new IconData("data.png", SwingTools.createIcon("16/data.png"));
 	private static final IconData ICON_DEFAULT_24 = new IconData("data.png", SwingTools.createIcon("24/data.png"));
 	private static final IconData ICON_DEFAULT_48 = new IconData("data.png", SwingTools.createIcon("48/data.png"));
@@ -112,17 +120,7 @@ public class RendererService {
 	private static boolean isInitialized = false;
 
 	public static void init() {
-		URL url = Tools.getResource("ioobjects.xml");
-		init(url);
-		init("ioobjects.xml", url, RendererService.class.getClassLoader());
-	}
-
-	public static void init(URL ioObjectsURL) {
-		init(ioObjectsURL.getFile(), ioObjectsURL, RendererService.class.getClassLoader());
-	}
-
-	public static void init(String name, InputStream in) {
-		init(name, in, RendererService.class.getClassLoader());
+		init(CORE_IOOBJECTS_XML, Tools.getResource(CORE_IOOBJECTS_XML), RendererService.class.getClassLoader());
 	}
 
 	public static void init(String name, URL ioObjectsURL, ClassLoader classLoader) {
@@ -252,14 +250,16 @@ public class RendererService {
 				Class<? extends Renderer> rendererClass;
 				try {
 					rendererClass = (Class<? extends Renderer>) Class.forName(rendererClassName, true, classLoader);
-				} catch (Exception e) { // should be unnecessary in most cases, because plugin
-										// loader contains core
-					// classes
-					rendererClass = (Class<? extends Renderer>) Class.forName(rendererClassName);
+				} catch (Exception e) {
+					// let's try with the plugin classloader (some Core renderers are now in bundled extensions)
+					rendererClass = (Class<? extends Renderer>) Class.forName(rendererClassName, false, Plugin.getMajorClassLoader());
 				}
-				Renderer renderer = rendererClass.newInstance();
-				renderers.add(renderer);
-				rendererClassMap.put(renderer.getName(), rendererClass);
+
+				if (rendererClass != null) {
+					Renderer renderer = rendererClass.newInstance();
+					renderers.add(renderer);
+					rendererClassMap.put(renderer.getName(), rendererClass);
+				}
 			}
 
 			rendererNameToRendererClasses.put(reportableName, rendererClassMap);
@@ -351,10 +351,12 @@ public class RendererService {
 	}
 
 	/**
-	 * Returns a list of renderers defined for this IOObject name (as returned by
-	 * {@link #getName(Class)} for the respective object). It is recommended to use
-	 * {@link #getRenderers(IOObject)} instead.
-	 * */
+	 * Returns a list of renderers defined for this IOObject name (as returned by {@link #getName(Class)} for the
+	 * respective object). It is recommended to use {@link #getRenderers(IOObject)} instead.
+	 *
+	 * @deprecated since 9.2.0 use {@link #getRenderersExcludingLegacyRenderers(String)}
+	 */
+	@Deprecated
 	public static List<Renderer> getRenderers(String reportableName) {
 		List<Renderer> renderers = objectRenderers.get(reportableName);
 		if (renderers != null) {
@@ -363,12 +365,54 @@ public class RendererService {
 		return new LinkedList<>();
 	}
 
-	/** Returns a list of shared (i.e. not thread-safe!) renderers defined for this IOObject. */
+	/**
+	 * Returns a list of shared (i.e. not thread-safe!) renderers defined for this IOObject.
+	 * @deprecated since 9.2.0 use {@link #getRenderersExcludingLegacyRenderers(IOObject)} instead
+	 */
+	@Deprecated
 	public static List<Renderer> getRenderers(IOObject ioo) {
 		String reportableName = RendererService.getName(ioo.getClass());
 		return getRenderers(reportableName);
 	}
 
+	/**
+	 * Returns a list of renderers defined for this IOObject name (as returned by {@link #getName(Class)} for the
+	 * respective object), WITHOUT legacy renderers. This
+	 *
+	 * @since 9.2.0
+	 */
+	public static List<Renderer> getRenderersExcludingLegacyRenderers(String reportableName) {
+		List<Renderer> renderers = objectRenderers.get(reportableName);
+		if (renderers != null) {
+			boolean showLegacySimpleCharts = Boolean.parseBoolean(ParameterService.getParameterValue(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_SIMPLE_CHARTS));
+			boolean showLegacyAdvancedCharts = Boolean.parseBoolean(ParameterService.getParameterValue(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_ADVANCED_CHARTS));
+			// filter old charts and old advanced charts unless user has activated them in settings
+			return renderers.stream().filter(renderer -> {
+				if (renderer.getClass().isAssignableFrom(ExampleSetPlotRenderer.class)) {
+					return showLegacySimpleCharts;
+				} else if (renderer.getClass().isAssignableFrom(ExpertDataTableRenderer.class)) {
+					return showLegacyAdvancedCharts;
+				} else {
+					return true;
+				}
+			}).collect(Collectors.toList());
+		}
+		return new LinkedList<>();
+	}
+
+	/**
+	 * Returns a list of shared (i.e. not thread-safe!) renderers defined for this IOObject, WITHOUT legacy renderers.
+	 *
+	 * @since 9.2.0
+	 */
+	public static List<Renderer> getRenderersExcludingLegacyRenderers(IOObject ioo) {
+		String reportableName = RendererService.getName(ioo.getClass());
+		return getRenderersExcludingLegacyRenderers(reportableName);
+	}
+
+	/**
+	 * Returns the given renderer, will also return legay renderers.
+	 */
 	public static Renderer getRenderer(String reportableName, String rendererName) {
 		List<Renderer> renderers = getRenderers(reportableName);
 		for (Renderer renderer : renderers) {

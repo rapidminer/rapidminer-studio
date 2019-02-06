@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,7 +22,9 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.rapidminer.tools.ExtensibleResourceBundle;
@@ -37,6 +39,11 @@ import com.rapidminer.tools.ExtensibleResourceBundle;
  * @since 9.1.0
  */
 public class ExtensibleResourceBundleTest {
+
+	/**
+	 * Remembers the original Locale before the test
+	 */
+	private static Locale locale;
 
 	/**
 	 * Bundle that can hold a single key-value pair, no language hierarchy
@@ -83,6 +90,16 @@ public class ExtensibleResourceBundleTest {
 		public Locale getLocale() {
 			return locale;
 		}
+	}
+
+	@BeforeClass
+	public static void retrieveLocale() {
+		locale = Locale.getDefault();
+	}
+
+	@AfterClass
+	public static void resetLocale() {
+		Locale.setDefault(locale);
 	}
 
 	@Test

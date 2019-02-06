@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -35,6 +35,7 @@ import com.rapidminer.operator.ports.impl.OutputPortsImpl;
 import com.rapidminer.operator.ports.metadata.MDTransformer;
 import com.rapidminer.operator.ports.metadata.Precondition;
 import com.rapidminer.tools.DelegatingObserver;
+import com.rapidminer.tools.ListenerTools;
 import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.patterns.Visitor;
@@ -396,19 +397,13 @@ public abstract class OperatorChain extends Operator {
 	/** Invokes the super method and the method for all children. */
 	@Override
 	public void processStarts() throws OperatorException {
-		super.processStarts();
-		for (ExecutionUnit unit : subprocesses) {
-			unit.processStarts();
-		}
+		ListenerTools.informAllAndThrow(x -> super.processStarts(), Arrays.asList(subprocesses), ExecutionUnit::processStarts);
 	}
 
 	/** Invokes the super method and the method for all children. */
 	@Override
 	public void processFinished() throws OperatorException {
-		super.processFinished();
-		for (ExecutionUnit unit : subprocesses) {
-			unit.processFinished();
-		}
+		ListenerTools.informAllAndThrow(x -> super.processFinished(), Arrays.asList(subprocesses), ExecutionUnit::processFinished);
 	}
 
 	// -------------------- implemented abstract methods

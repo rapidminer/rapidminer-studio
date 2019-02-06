@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -199,6 +199,12 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 		}
 	}
 
+	/** @return {@code true} */
+	@Override
+	protected boolean isMetaDataCacheable() {
+		return true;
+	}
+
 	/**
 	 * Must be implemented by subclasses to return the DataResultSet.
 	 */
@@ -341,7 +347,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	 * Whether values should be trimmed for guessing
 	 *
 	 * @return if this operator requires trimming for guessing
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	public boolean trimForGuessing() {
 		return false;

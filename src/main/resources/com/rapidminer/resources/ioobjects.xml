@@ -22,20 +22,23 @@
     </ioobject>
     
     <!-- Data Tables (Example Sets) -->
-    
-    <ioobject 
-        name="Data Table" 
-        class="com.rapidminer.example.ExampleSet"
-        reportable="true"
-        icon="data.png">
+
+    <ioobject
+            name="Data Table"
+            class="com.rapidminer.example.ExampleSet"
+            reportable="true"
+            icon="data.png">
         <renderer>com.rapidminer.gui.renderer.data.ExampleSetDataRenderer</renderer>
         <renderer>com.rapidminer.gui.renderer.data.ExampleSetMetaDataRenderer</renderer>
+        <!-- New Visualizations.Coming from the HTML5 charts extension -->
+        <renderer>com.rapidminer.extension.html5charts.gui.renderer.ExampleSetVisualizationRenderer</renderer>
+        <!-- Legacy simple chart renderer, scheduled for removal in the future -->
         <renderer>com.rapidminer.gui.renderer.data.ExampleSetPlotRenderer</renderer>
+        <!-- Old advanced chart renderer, legacy and deprecated, hidden unless user selects a checkbox, scheduled for removal in the future -->
         <renderer>com.rapidminer.gui.new_plotter.integration.ExpertDataTableRenderer</renderer>
-        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>     
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
     </ioobject>
-        
-        
+
     <!-- Attribute Weights -->
     
     <ioobject 

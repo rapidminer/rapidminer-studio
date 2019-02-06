@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -387,11 +387,6 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		return rowCountFromGuessing;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.rapidminer.operator.io.AbstractExampleSource#getGeneratedMetaData()
-	 */
 	@Override
 	public ExampleSetMetaData getGeneratedMetaData() {
 		if (attributeNamesDefinedByUser()) {
@@ -400,7 +395,7 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 		}
 
 		if (!guessedValueTypes) {
-			return new ExampleSetMetaData();
+			return getDefaultMetaData();
 		}
 
 		ExampleSetMetaData metaData = new ExampleSetMetaData();
@@ -438,6 +433,11 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 			metaData.attributesAreSuperset();
 		}
 		return metaData;
+	}
+
+	@Override
+	protected boolean isMetaDataCacheable() {
+		return true;
 	}
 
 	private double[] generateRow(DataSet set, List<Attribute> activeAttributes, int rowNumber) throws OperatorException {
@@ -856,11 +856,6 @@ public abstract class AbstractDataReader extends AbstractExampleSource {
 
 	public void setDetectErrorsInPreview(boolean detectErrorsInPreview) {
 		this.detectErrorsInPreview = detectErrorsInPreview;
-	}
-
-	@Override
-	protected boolean isMetaDataCacheable() {
-		return true;
 	}
 
 	/**

@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.set;
 
 import java.lang.reflect.Constructor;
@@ -45,9 +45,9 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 	private static final long serialVersionUID = 877488093216198777L;
 
 	/** Array of short names for the known conditions. */
-	public static final String[] KNOWN_CONDITION_NAMES = { "all", "correct_predictions", "wrong_predictions",
+	public static final String[] KNOWN_CONDITION_NAMES = {"all", "correct_predictions", "wrong_predictions",
 			"no_missing_attributes", "missing_attributes", "no_missing_labels", "missing_labels", "attribute_value_filter",
-			"expression", "custom_filters" };
+			"expression", "custom_filters"};
 
 	public static final int CONDITION_ALL = 0;
 	public static final int CONDITION_CORRECT_PREDICTIONS = 1;
@@ -65,11 +65,11 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 	 * independently of special applications. All conditions given here must provide a construtor
 	 * with arguments (ExampleSet data, String parameters).
 	 */
-	private static final String[] KNOWN_CONDITION_IMPLEMENTATIONS = { AcceptAllCondition.class.getName(),
+	private static final String[] KNOWN_CONDITION_IMPLEMENTATIONS = {AcceptAllCondition.class.getName(),
 			CorrectPredictionCondition.class.getName(), WrongPredictionCondition.class.getName(),
 			NoMissingAttributesCondition.class.getName(), MissingAttributesCondition.class.getName(),
 			NoMissingLabelsCondition.class.getName(), MissingLabelsCondition.class.getName(),
-			AttributeValueFilter.class.getName(), ExpressionFilter.class.getName(), CustomFilter.class.getName() };
+			AttributeValueFilter.class.getName(), ExpressionFilter.class.getName(), CustomFilter.class.getName()};
 
 	private ExampleSet parent;
 
@@ -103,10 +103,10 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 	 * Creates a new example which used only examples fulfilling the given condition.
 	 *
 	 * @param progress
-	 *            the {@link OperatorProgress} to report the progress to
+	 * 		the {@link OperatorProgress} to report the progress to
 	 * @throws ExpressionEvaluationException
 	 * @throws ProcessStoppedException
-	 *             if the process was stopped, can only happen if progress not {@code null}
+	 * 		if the process was stopped, can only happen if progress not {@code null}
 	 */
 	public ConditionedExampleSet(ExampleSet parent, Condition condition, boolean inverted, OperatorProgress progress)
 			throws ExpressionEvaluationException, ProcessStoppedException {
@@ -232,8 +232,8 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 			if (!Condition.class.isAssignableFrom(clazz)) {
 				throw new ConditionCreationException("'" + className + "' does not implement Condition!");
 			}
-			Constructor<?> constructor = clazz.getConstructor(new Class[] { ExampleSet.class, String.class });
-			return (Condition) constructor.newInstance(new Object[] { exampleSet, parameterString });
+			Constructor<?> constructor = clazz.getConstructor(new Class[]{ExampleSet.class, String.class});
+			return (Condition) constructor.newInstance(new Object[]{exampleSet, parameterString});
 		} catch (ClassNotFoundException e) {
 			throw new ConditionCreationException("Cannot find class '" + className + "'. Check your classpath.", e);
 		} catch (NoSuchMethodException e) {
@@ -245,6 +245,9 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 		} catch (InstantiationException e) {
 			throw new ConditionCreationException(className + ": cannot create condition (" + e.getMessage() + ").", e);
 		} catch (Throwable e) {
+			if (e.getCause() instanceof ConditionCreationException) {
+				throw (ConditionCreationException) e.getCause();
+			}
 			throw new ConditionCreationException(className + ": cannot invoke condition ("
 					+ (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()) + ").", e);
 		}

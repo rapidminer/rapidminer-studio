@@ -158,6 +158,12 @@
 				</class>
 				<replaces>Example2AttributePivoting</replaces>
 			</operator>
+			<operator>
+				<deprecatedSince>9.2</deprecatedSince>
+				<key>generate_data_user_specification</key>
+				<class>com.rapidminer.operator.generator.UserSpecificationDataGenerator
+				</class>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -2220,11 +2226,6 @@
 					<class>com.rapidminer.operator.generator.ExampleSetGenerator
 					</class>
 					<replaces>ExampleSetGenerator</replaces>
-				</operator>
-				<operator>
-					<key>generate_data_user_specification</key>
-					<class>com.rapidminer.operator.generator.UserSpecificationDataGenerator
-					</class>
 				</operator>
 				<operator>
 					<key>generate_nominal_data</key>

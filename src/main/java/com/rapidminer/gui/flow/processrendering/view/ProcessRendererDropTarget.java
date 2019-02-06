@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -114,11 +114,8 @@ class ProcessRendererDropTarget extends DropTarget {
 		view.getModel().setImportDragged(false);
 		view.getModel().fireMiscChanged();
 		if (dropTragetListenerList != null) {
-			Object[] listeners = dropTragetListenerList.getListenerList();
-			for (int i = listeners.length - 2; i >= 0; i -= 2) {
-				if (listeners[i] == DropTargetListener.class) {
-					((DropTargetListener) listeners[i + 1]).drop(e);
-				}
+			for (DropTargetListener listener : dropTragetListenerList.getListeners(DropTargetListener.class)) {
+				listener.drop(e);
 			}
 		}
 	}
@@ -127,11 +124,8 @@ class ProcessRendererDropTarget extends DropTarget {
 	public void dropActionChanged(final DropTargetDragEvent e) {
 		super.dropActionChanged(e);
 		if (dropTragetListenerList != null) {
-			Object[] listeners = dropTragetListenerList.getListenerList();
-			for (int i = listeners.length - 2; i >= 0; i -= 2) {
-				if (listeners[i] == DropTargetListener.class) {
-					((DropTargetListener) listeners[i + 1]).dropActionChanged(e);
-				}
+			for (DropTargetListener listener : dropTragetListenerList.getListeners(DropTargetListener.class)) {
+				listener.dropActionChanged(e);
 			}
 		}
 	}

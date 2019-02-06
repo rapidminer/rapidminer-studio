@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -22,7 +22,9 @@ package com.rapidminer.gui.plotter;
  * A helper class for keeping values and names together sortable.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class NameValue implements Comparable<NameValue> {
 
 	private String name;

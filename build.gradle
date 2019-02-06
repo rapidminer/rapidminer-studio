@@ -20,10 +20,10 @@ repositories {
 dependencies {
 
 	// belt project for new data core
-	compile 'com.rapidminer:belt:0.3'
+	compile 'com.rapidminer:belt:0.4'
 
 	// belt adapter for conversion between old and new core
-	compile ('com.rapidminer:belt-adapter:0.2'){
+	compile ('com.rapidminer:belt-adapter:0.3'){
 		exclude group: 'com.rapidminer.studio', module: 'rapidminer-studio-core'
 	}
 
@@ -44,7 +44,7 @@ dependencies {
 	compile 'com.rapidminer.external:alphanumeric-sorting:1.0.1'
 
 	// VLDocking as docking framework (https://code.google.com/p/vldocking/)
-	compile 'com.rapidminer.external:vldocking:9.0.1'
+	compile 'com.rapidminer.external:vldocking:9.0.2'
 
 	// Freehep for vector graphic export (http://java.freehep.org/)
 	compile('org.freehep:freehep-graphicsio-ps:2.3') {
@@ -91,7 +91,7 @@ dependencies {
 	compile 'org.codehaus.groovy:groovy-all:2.4.10'
 
 	// SwingX for various Swing components (https://swingx.java.net/)
-	compile 'org.swinglabs.swingx:swingx-all:1.6.5'
+	compile 'org.swinglabs.swingx:swingx-all:1.6.5-1'
 
 	// XStreams for generic XML serialization (http://xstream.codehaus.org/)
 	compile 'com.thoughtworks.xstream:xstream:1.4.10'

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -40,7 +40,9 @@ import com.rapidminer.operator.ports.ProcessingStep;
  * Please note that this class must NOT store all information in
  *
  * @author Sebastian Land
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public final class PlotterSettingsHistory {
 
 	private static final HashMap<ProcessingStep, PlotterConfigurationSettings> settingsHistory = new HashMap<>();

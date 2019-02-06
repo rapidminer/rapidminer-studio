@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -26,18 +26,19 @@ import com.rapidminer.tools.I18N;
 
 
 /**
- *
- * Data container used in button bard card panels. The title, tooltip, and icon are loaded from the
- * GUI.properties. I18N keys should look like this: 'gui.cards.I18N_KEY.title',
- * 'gui.cards.I18N_KEY.tip', 'gui.cards.I18N_KEY.icon'
+ * Data container used in button bard card panels. The title, tooltip, and icon are loaded from the GUI.properties. I18N
+ * keys should look like this: 'gui.cards.I18N_KEY.title', 'gui.cards.I18N_KEY.tip', 'gui.cards.I18N_KEY.icon'.
+ * <p>
+ * Since 9.2.0: If the card should display a BETA tag, add a 'gui.cards.I18N_KEY.beta = true' entry to the i18n properties.
+ * </p>
  *
  * @author Nils Woehler
- *
  */
 public class ResourceCard implements Card {
 
 	private String title;
 	private final String key;
+	private final boolean isBeta;
 	private String tip;
 	private ImageIcon icon;
 
@@ -68,6 +69,8 @@ public class ResourceCard implements Card {
 			this.icon = SwingTools.createIcon("32/data_information.png"); // default icon
 
 		}
+
+		this.isBeta = Boolean.parseBoolean(I18N.getGUIMessage("gui.cards." + i18nKey + ".beta"));
 	}
 
 	@Override
@@ -95,4 +98,8 @@ public class ResourceCard implements Card {
 		return null; // no caption
 	}
 
+	@Override
+	public boolean isBeta() {
+		return isBeta;
+	}
 }

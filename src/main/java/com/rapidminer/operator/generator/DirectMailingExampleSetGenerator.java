@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -51,14 +51,37 @@ public class DirectMailingExampleSetGenerator extends AbstractExampleSource {
 	/** The parameter name for &quot;The number of generated examples.&quot; */
 	public static final String PARAMETER_NUMBER_EXAMPLES = "number_examples";
 
-	private static String[] ATTRIBUTE_NAMES = { "name", "age", "lifestyle", "zip code", "family status", "car", "sports",
+	private static final String[] ATTRIBUTE_NAMES = { "name", "age", "lifestyle", "zip code", "family status", "car", "sports",
 			"earnings" };
 
-	private static int[] VALUE_TYPES = { Ontology.NOMINAL, Ontology.INTEGER, Ontology.NOMINAL, Ontology.INTEGER,
+	private static final int[] VALUE_TYPES = { Ontology.NOMINAL, Ontology.INTEGER, Ontology.NOMINAL, Ontology.INTEGER,
 			Ontology.NOMINAL, Ontology.NOMINAL, Ontology.NOMINAL, Ontology.INTEGER };
 
-	private static String[][] POSSIBLE_VALUES = { null, null, { "healthy", "active", "cozily" }, null,
+	private static final String[][] POSSIBLE_VALUES = { null, null, { "healthy", "active", "cozily" }, null,
 			{ "married", "single" }, { "practical", "expensive" }, { "soccer", "badminton", "athletics" }, null };
+
+	/** @since 9.2.0 */
+	private static final String RESPONSE_LABEL = "response";
+	/** @since 9.2.0 */
+	private static final String NO_RESPONSE_LABEL = "no response";
+
+	/** @since 9.2.0 */
+	private static final ExampleSetMetaData DEFAULT_META_DATA;
+
+	static {
+		ExampleSetMetaData emd = new ExampleSetMetaData();
+		emd.addAttribute(new AttributeMetaData("label", Attributes.LABEL_NAME, RESPONSE_LABEL, NO_RESPONSE_LABEL));
+		emd.addAttribute(new AttributeMetaData("name", Ontology.NOMINAL));
+		// "name", "age", "lifestyle", "zip code", "family status", "car", "sports", "earnings"
+		emd.addAttribute(new AttributeMetaData("age", null, Ontology.INTEGER, new Range(15, 70)));
+		emd.addAttribute(new AttributeMetaData("lifestyle", null, POSSIBLE_VALUES[2]));
+		emd.addAttribute(new AttributeMetaData("zip code", null, Ontology.INTEGER, new Range(10000, 100000)));
+		emd.addAttribute(new AttributeMetaData("family status", null, POSSIBLE_VALUES[4]));
+		emd.addAttribute(new AttributeMetaData("car", null, POSSIBLE_VALUES[5]));
+		emd.addAttribute(new AttributeMetaData("sports", null, POSSIBLE_VALUES[6]));
+		emd.addAttribute(new AttributeMetaData("earnings", null, Ontology.INTEGER, new Range(20000, 150000)));
+		DEFAULT_META_DATA = emd;
+	}
 
 	public DirectMailingExampleSetGenerator(OperatorDescription description) {
 		super(description);
@@ -70,7 +93,7 @@ public class DirectMailingExampleSetGenerator extends AbstractExampleSource {
 		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
 
 		// create table
-		List<Attribute> attributes = new ArrayList<Attribute>();
+		List<Attribute> attributes = new ArrayList<>();
 		for (int m = 0; m < ATTRIBUTE_NAMES.length; m++) {
 			Attribute current = AttributeFactory.createAttribute(ATTRIBUTE_NAMES[m], VALUE_TYPES[m]);
 			String[] possibleValues = POSSIBLE_VALUES[m];
@@ -82,8 +105,8 @@ public class DirectMailingExampleSetGenerator extends AbstractExampleSource {
 			attributes.add(current);
 		}
 		Attribute label = AttributeFactory.createAttribute("label", Ontology.NOMINAL);
-		label.getMapping().mapString("no response");
-		label.getMapping().mapString("response");
+		label.getMapping().mapString(NO_RESPONSE_LABEL);
+		label.getMapping().mapString(RESPONSE_LABEL);
 		attributes.add(label);
 
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
@@ -106,25 +129,16 @@ public class DirectMailingExampleSetGenerator extends AbstractExampleSource {
 			values[6] = random.nextInt(POSSIBLE_VALUES[6].length);
 			values[7] = random.nextIntInRange(20000, 150000);
 
-			values[8] = label.getMapping().mapString("no response");
-			if (values[1] > 65) {	// age
-				if (random.nextDouble() > 0.05) {
-					values[8] = label.getMapping().mapString("response");
+			values[8] = label.getMapping().mapString(NO_RESPONSE_LABEL);
+			// age && zip code
+			boolean v1Range = values[1] > 55;
+			if (v1Range || values[3] < 15_000) {
+				double d = random.nextDouble();
+				if (values[1] > 65 && d > 0.05 || values[1] > 60 && d > 0.1 || v1Range && d > 0.2 || !v1Range && d > 0.1) {
+					values[8] = label.getMapping().mapString(RESPONSE_LABEL);
 				}
-			} else if (values[1] > 60) {	// age
-				if (random.nextDouble() > 0.1) {
-					values[8] = label.getMapping().mapString("response");
-				}
-			} else if (values[1] > 55) {	// age
-				if (random.nextDouble() > 0.2) {
-					values[8] = label.getMapping().mapString("response");
-				}
-			} else if (values[3] < 15000) { // zip code
-				if (random.nextDouble() > 0.1) {
-					values[8] = label.getMapping().mapString("response");
-				}
-			} else if (values[7] > 140000) { // earnings
-				values[8] = label.getMapping().mapString("response");
+			} else if (values[7] > 140_000) { // earnings
+				values[8] = label.getMapping().mapString(RESPONSE_LABEL);
 			}
 			builder.addRow(values);
 
@@ -151,19 +165,14 @@ public class DirectMailingExampleSetGenerator extends AbstractExampleSource {
 
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
-		ExampleSetMetaData emd = new ExampleSetMetaData();
-		emd.addAttribute(new AttributeMetaData("label", Attributes.LABEL_NAME, "response", "no response"));
-		emd.addAttribute(new AttributeMetaData("name", Ontology.NOMINAL));
-		// "name", "age", "lifestyle", "zip code", "family status", "car", "sports", "earnings"
-		emd.addAttribute(new AttributeMetaData("age", null, Ontology.INTEGER, new Range(15, 70)));
-		emd.addAttribute(new AttributeMetaData("lifestyle", null, POSSIBLE_VALUES[2]));
-		emd.addAttribute(new AttributeMetaData("zip code", null, Ontology.INTEGER, new Range(10000, 100000)));
-		emd.addAttribute(new AttributeMetaData("family status", null, POSSIBLE_VALUES[4]));
-		emd.addAttribute(new AttributeMetaData("car", null, POSSIBLE_VALUES[5]));
-		emd.addAttribute(new AttributeMetaData("sports", null, POSSIBLE_VALUES[6]));
-		emd.addAttribute(new AttributeMetaData("earnings", null, Ontology.INTEGER, new Range(20000, 150000)));
-
+		ExampleSetMetaData emd = getDefaultMetaData();
 		emd.setNumberOfExamples(getParameterAsInt(PARAMETER_NUMBER_EXAMPLES));
 		return emd;
+	}
+
+	/** @since 9.2.0 */
+	@Override
+	protected ExampleSetMetaData getDefaultMetaData() {
+		return DEFAULT_META_DATA.clone();
 	}
 }

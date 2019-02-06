@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -78,7 +78,9 @@ import com.rapidminer.tools.math.MathFunctions;
  * overridden methods might include the methods for plot column and axis column handling.
  *
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public abstract class PlotterAdapter extends JPanel implements Plotter {
 
 	public static final String PARAMETER_SUFFIX_LOG_SCALE = "_log_scale";

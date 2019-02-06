@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,6 +18,7 @@
  */
 package com.rapidminer;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -28,12 +29,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Set;
+import java.util.logging.Level;
 
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.Value;
 import com.rapidminer.parameter.UndefinedMacroError;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.FileSystemService;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 
 
@@ -50,24 +54,27 @@ public class MacroHandler extends Observable {
 	public static final String PROCESS_FILE = "process_file";
 	public static final String PROCESS_PATH = "process_path";
 	public static final String PROCESS_START = "process_start";
+	public static final String TEMP_DIR = "tempdir";
+	/** java.io.tmpdir without trailing File.separator */
+	private static final String TEMP_DIR_PATH;
 
 	/**
 	 * Remaining problem is that predefined macros that are overridden by custom macros are
 	 * evaluated first. The result is the predefined value.
 	 */
 	private static final String[] ALL_PREDEFINED_MACROS = { PROCESS_NAME, PROCESS_FILE, PROCESS_PATH, PROCESS_START, "a",
-			"execution_count", "b", "c", "n", "operator_name", "t", "p[]", "v[]" };
+			"execution_count", "b", "c", "n", "operator_name", "t", "p[]", "v[]", TEMP_DIR };
 
 	/** all predefined macros that do not depend on an operator except for v[] */
 	private static final Set<String> PREDEFINED_OPERATOR_INDEPENDENT_MACROS = new HashSet<>(Arrays.asList(
-			new String[] { PROCESS_NAME, PROCESS_FILE, PROCESS_PATH, PROCESS_START, Operator.STRING_EXPANSION_MACRO_TIME }));
+			PROCESS_NAME, PROCESS_FILE, PROCESS_PATH, PROCESS_START, Operator.STRING_EXPANSION_MACRO_TIME, TEMP_DIR));
 
 	/** all predefined macros that depend on an operator except for p[] */
 	private static final Set<String> PREDEFINED_OPERATOR_DEPENDENT_MACROS = new HashSet<>(
-			Arrays.asList(new String[] { Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_USER_FRIENDLY,
+			Arrays.asList(Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_USER_FRIENDLY,
 					Operator.STRING_EXPANSION_MACRO_OPERATORNAME_USER_FRIENDLY, Operator.STRING_EXPANSION_MACRO_OPERATORNAME,
 					Operator.STRING_EXPANSION_MACRO_OPERATORCLASS, Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES,
-					Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_PLUS_ONE }));
+					Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_PLUS_ONE));
 
 	private static final String[] ALL_USER_FRIENDLY_PREDEFINED_MACROS = { PROCESS_NAME, PROCESS_FILE, PROCESS_PATH,
 			PROCESS_START, Operator.STRING_EXPANSION_MACRO_NUMBER_APPLIED_TIMES_USER_FRIENDLY,
@@ -93,6 +100,16 @@ public class MacroHandler extends Observable {
 				+ Operator.STRING_EXPANSION_MACRO_PARAMETER_START);
 		LEGACY_STRING_EXPANSION_MACRO_KEYS
 				.add(Operator.STRING_EXPANSION_MACRO_OPERATORVALUE + Operator.STRING_EXPANSION_MACRO_PARAMETER_START);
+		String tmpDir = System.getProperty("java.io.tmpdir");
+		try {
+			// Remove trailing {@link java.io.File#separator}, resolve old 8.3 DOS filenames
+			tmpDir = new File(tmpDir).getCanonicalPath();
+		} catch (Exception e) {
+			String internalTemp = FileSystemService.getUserRapidMinerDir().toPath().resolve(FileSystemService.RAPIDMINER_INTERNAL_CACHE_TEMP_FULL).toAbsolutePath().toString();
+			LogService.log(LogService.getRoot(), Level.SEVERE, e, "com.rapidminer.MacroHandler.invalid_temp_dir", "" + tmpDir, internalTemp);
+			tmpDir = internalTemp;
+		}
+		TEMP_DIR_PATH = tmpDir;
 	}
 
 	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
@@ -100,15 +117,11 @@ public class MacroHandler extends Observable {
 	/**
 	 * Used for formatting the %{process_start} and current time %{t} macro
 	 */
-	public static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-
-		@Override
-		protected DateFormat initialValue() {
-			// clone because getDateInstance uses an internal pool which can return the same
-			// instance for multiple threads
-			return new SimpleDateFormat("yyyy_MM_dd-a_KK_mm_ss");
-		}
-	};
+	public static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
+		// clone because getDateInstance uses an internal pool which can return the same
+		// instance for multiple threads
+		return new SimpleDateFormat("yyyy_MM_dd-a_KK_mm_ss");
+	});
 
 	/**
 	 * This HashSet contains the keys of macros which will be replaced while string expansion. Each
@@ -140,11 +153,9 @@ public class MacroHandler extends Observable {
 	}
 
 	public Iterator<String> getDefinedMacroNames() {
-		Iterator<String> iterator = null;
 		synchronized (LOCK) {
-			iterator = new HashMap<>(macroMap).keySet().iterator();
+			return new HashMap<>(macroMap).keySet().iterator();
 		}
-		return iterator;
 	}
 
 	/**
@@ -233,6 +244,8 @@ public class MacroHandler extends Observable {
 							: DATE_FORMAT.get().format(new Date(process.getRootOperator().getStartTime()));
 				case Operator.STRING_EXPANSION_MACRO_TIME:
 					return DATE_FORMAT.get().format(new Date());
+				case TEMP_DIR:
+					return TEMP_DIR_PATH;
 				default:
 					return null;
 			}
@@ -294,8 +307,8 @@ public class MacroHandler extends Observable {
 	 * @param parameterValue
 	 *            the whole ParameterType value String
 	 * @return the complete parameter value with replaced Macros
-	 * @throws UndefinedParameterError
-	 *             this error will be thrown if the CompabilityLevel of the RootOperator is at least
+	 * @throws UndefinedMacroError
+	 *             this error will be thrown if the CompatibilityLevel of the RootOperator is at least
 	 *             6.0.3 and a macro is undefined
 	 */
 	public String resolveMacros(String parameterKey, String parameterValue) throws UndefinedMacroError {
@@ -303,9 +316,9 @@ public class MacroHandler extends Observable {
 		if (startIndex == -1) {
 			return parameterValue;
 		}
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		while (startIndex >= 0) {
-			result.append(parameterValue.substring(0, startIndex));
+			result.append(parameterValue, 0, startIndex);
 			int endIndex = parameterValue.indexOf(Operator.MACRO_STRING_END, startIndex + 2);
 			if (endIndex == -1) {
 				return parameterValue;
@@ -316,7 +329,7 @@ public class MacroHandler extends Observable {
 			if (STRING_EXPANSION_MACRO_KEYS.contains(macroString) || LEGACY_STRING_EXPANSION_MACRO_KEYS
 					.contains(macroString.length() > 1 ? macroString.substring(0, 2) : macroString)) {
 				// skip macro because it will be replaced during the string expansion
-				result.append(Operator.MACRO_STRING_START + macroString + Operator.MACRO_STRING_END);
+				result.append(Operator.MACRO_STRING_START).append(macroString).append(Operator.MACRO_STRING_END);
 			} else {
 				// resolve macro
 				String macroValue = this.getMacro(macroString);
@@ -326,7 +339,7 @@ public class MacroHandler extends Observable {
 					if (this.process.getRootOperator().getCompatibilityLevel().isAtLeast(THROW_ERROR_ON_UNDEFINED_MACRO)) {
 						throw new UndefinedMacroError(parameterKey, macroString);
 					} else {
-						result.append(Operator.MACRO_STRING_START + macroString + Operator.MACRO_STRING_END);
+						result.append(Operator.MACRO_STRING_START).append(macroString).append(Operator.MACRO_STRING_END);
 					}
 				}
 			}
@@ -362,11 +375,11 @@ public class MacroHandler extends Observable {
 		if (str == null) {
 			return null;
 		}
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		int totalStart = 0;
-		int start = 0;
+		int start;
 		while ((start = str.indexOf(Operator.MACRO_STRING_START, totalStart)) >= 0) {
-			result.append(str.substring(totalStart, start));
+			result.append(str, totalStart, start);
 			int end = str.indexOf(Operator.MACRO_STRING_END, start);
 			if (end == -1) {
 				return str;
@@ -424,7 +437,7 @@ public class MacroHandler extends Observable {
 										operatorValuePair[1]);
 							}
 						} else {
-							double doubleValue = ((Double) value.getValue()).doubleValue();
+							double doubleValue = (Double) value.getValue();
 							if (!Double.isNaN(doubleValue)) {
 								result.append(Tools.formatIntegerIfPossible(doubleValue));
 							} else {

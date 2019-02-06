@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -71,7 +71,7 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 
 	/**
 	 * Values will be trimmed for guessing after this version
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	public static final OperatorVersion BEFORE_VALUE_TRIMMING_GUESSING = new OperatorVersion(9, 0, 3);
 
@@ -113,7 +113,7 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 	 * Whether attributes should be trimmed for guessing
 	 *
 	 * @return {@code true} if compatibility level is above {@link #BEFORE_VALUE_TRIMMING_GUESSING}
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	@Override
 	public boolean trimForGuessing() {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -125,8 +125,10 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -800,29 +802,40 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					case OPERATORS_MOVED:
 						Set<Operator> opsToMove = new LinkedHashSet<>(operators);
 						boolean wasResized = false;
+						boolean shouldMoveOperators = Boolean.parseBoolean(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_MOVE_CONNECTED_OPERATORS));
 						while (!opsToMove.isEmpty()) {
 							Iterator<Operator> iterator = opsToMove.iterator();
 							Operator op = iterator.next();
 							iterator.remove();
 							ExecutionUnit executionUnit = op.getExecutionUnit();
-							List<Operator> leftConnectedOperators = getDirectlyConnectedPorts(op.getInputPorts(), InputPort::getSource, executionUnit, Collections.emptyList());
-							List<Operator> rightConnectedOperators = getDirectlyConnectedPorts(op.getOutputPorts(), OutputPort::getDestination, executionUnit, opsToMove);
 
-							final Rectangle2D operatorRect = model.getOperatorRect(op);
-							// check it does not collide with other operators and move it to the right if necessary
-							leftConnectedOperators.stream().map(model::getOperatorRect).filter(r -> r != null && Math.abs(r.getY() - operatorRect.getY()) < 10)
-									.mapToDouble(r -> r.getX() + ProcessDrawer.GRID_AUTOARRANGE_WIDTH - 1).filter(x -> operatorRect.getX() < x).forEach(x -> {
-								operatorRect.setRect(x, operatorRect.getY(), operatorRect.getWidth(), operatorRect.getHeight());
-								model.setOperatorRect(op, operatorRect);
-							});
-							// check all connected operators to the right also
-							opsToMove.addAll(rightConnectedOperators);
+							if (shouldMoveOperators && !Tools.isOperatorInCircle(op, -1)) {
 
+								List<Operator> leftConnectedOperators = getDirectlyConnectedPorts(op.getInputPorts(),
+										InputPort::getSource, executionUnit, Collections.emptyList());
+								List<Operator> rightConnectedOperators = getDirectlyConnectedPorts(op.getOutputPorts(),
+										OutputPort::getDestination, executionUnit, opsToMove);
+
+								final Rectangle2D operatorRect = model.getOperatorRect(op);
+
+								// check it does not collide with other operators and move it to the right if necessary
+								leftConnectedOperators.stream().map(model::getOperatorRect)
+										.filter(r -> r != null && Math.abs(r.getY() - operatorRect.getY()) < r.getHeight())
+										.mapToDouble(r -> r.getX() + ProcessDrawer.GRID_AUTOARRANGE_WIDTH - 1)
+										.filter(x -> operatorRect.getX() < x)
+										.forEach(x -> {
+											operatorRect.setRect(x, operatorRect.getY(), operatorRect.getWidth(), operatorRect.getHeight());
+											model.setOperatorRect(op, operatorRect);
+										});
+
+								// check all connected operators to the right also
+								opsToMove.addAll(rightConnectedOperators);
+							}
 							wasResized |= controller.ensureProcessSizeFits(executionUnit, model.getOperatorRect(op));
-
 							// notify registered listeners
 							fireOperatorMoved(op);
 						}
+
 						// need to repaint if process was not resized
 						if (!wasResized) {
 							repaint();

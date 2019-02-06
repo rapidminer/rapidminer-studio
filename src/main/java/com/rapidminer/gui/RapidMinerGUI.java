@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
+import javax.swing.JPopupMenu;
+import javax.swing.PopupFactory;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
@@ -62,6 +64,7 @@ import com.rapidminer.gui.dialog.EULADialog;
 import com.rapidminer.gui.docking.RapidDockableContainerFactory;
 import com.rapidminer.gui.internal.GUIStartupListener;
 import com.rapidminer.gui.license.LicenseTools;
+import com.rapidminer.gui.look.HeavyweightOSXPopupFactory;
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.fc.BookmarkIO;
 import com.rapidminer.gui.look.ui.RapidDockingUISettings;
@@ -145,6 +148,13 @@ public class RapidMinerGUI extends RapidMiner {
 	public static final String PROPERTY_RAPIDMINER_GUI_MAX_SORTABLE_ROWS = "rapidminer.gui.max_sortable_rows";
 	public static final String PROPERTY_RAPIDMINER_GUI_MAX_DISPLAYED_VALUES = "rapidminer.gui.max_displayed_values";
 	public static final String PROPERTY_RAPIDMINER_GUI_SNAP_TO_GRID = "rapidminer.gui.snap_to_grid";
+
+	/**
+	 * Instead of possibly overlapping operators the connected operators to the right should be moved when moving an operator.
+	 * @since 9.2
+ 	 */
+	public static final String PROPERTY_RAPIDMINER_GUI_MOVE_CONNECTED_OPERATORS = "rapidminer.gui.move_connected_operators";
+
 	/**
 	 * The property name for &quot;Maximum number of states in the undo list.&quot;
 	 *
@@ -204,6 +214,7 @@ public class RapidMinerGUI extends RapidMiner {
 		RapidMiner.registerParameter(new ParameterTypeInt(PROPERTY_RAPIDMINER_GUI_MAX_DISPLAYED_VALUES, "", 1,
 				Integer.MAX_VALUE, MetaDataViewerTableModel.DEFAULT_MAX_DISPLAYED_VALUES));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GUI_SNAP_TO_GRID, "", true));
+		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GUI_MOVE_CONNECTED_OPERATORS, "", true));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_AUTOWIRE_INPUT, "", false));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_AUTOWIRE_OUTPUT, "", false));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS, "", true));
@@ -230,6 +241,8 @@ public class RapidMinerGUI extends RapidMiner {
 
 		// GUI Parameters MainFrame
 
+		RapidMiner.registerParameter(new ParameterTypeBoolean(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_SIMPLE_CHARTS, "", false));
+		RapidMiner.registerParameter(new ParameterTypeBoolean(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_ADVANCED_CHARTS, "", false));
 		RapidMiner.registerParameter(new ParameterTypeInt(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_MATRIXPLOT_SIZE, "", 1,
 				Integer.MAX_VALUE, 200));
 		RapidMiner.registerParameter(new ParameterTypeInt(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_ROWS_MAXIMUM, "", 1,
@@ -519,6 +532,8 @@ public class RapidMinerGUI extends RapidMiner {
 		manager.setDismissDelay(25000); // original: 4000
 		manager.setInitialDelay(1125);   // original: 750
 		manager.setReshowDelay(50);    // original: 500
+		// heavyweight popups are necessary because of native Chromium window by our browser extension (JxBrowser)
+		manager.setLightWeightPopupEnabled(false);
 	}
 
 	/**
@@ -541,6 +556,11 @@ public class RapidMinerGUI extends RapidMiner {
 				Map<String, Object> macUIDefaults = new HashMap<>();
 				macUIDefaults.put("MenuBarUI", UIManager.get("MenuBarUI"));
 				UIManager.setLookAndFeel(new RapidLookAndFeel(macUIDefaults));
+
+				// tooltips are painted behind heavyweight windows (e.g. the native Chromium browser window) on OS X
+				// despite the call above of ToolTipManager#setLightWeightPopupEnabled(false);
+				// so we force a heavyweight popup factory for OS X
+				PopupFactory.setSharedInstance(new HeavyweightOSXPopupFactory());
 			} else {
 				UIManager.setLookAndFeel(new RapidLookAndFeel());
 			}
@@ -548,6 +568,9 @@ public class RapidMinerGUI extends RapidMiner {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.gui.RapidMinerGUI.setting_up_modern_look_and_feel_error"), e);
 		}
+
+		// needed because of native browser window which otherwise renders above all popup menus
+		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 	}
 
 	public static void setMainFrame(final MainFrame mf) {

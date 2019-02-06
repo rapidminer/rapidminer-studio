@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,8 +22,8 @@ import java.io.ObjectStreamException;
 import java.util.List;
 import java.util.Objects;
 
-import com.rapidminer.belt.BeltConverter;
-import com.rapidminer.belt.Table;
+import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.util.ColumnRole;
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.tools.Tools;

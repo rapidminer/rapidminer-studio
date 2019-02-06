@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -32,7 +32,9 @@ import org.jfree.chart.urls.XYURLGenerator;
 
 /**
  * @author Marius Helf
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class FormattedXYAreaRenderer2 extends XYAreaRenderer2 implements FormattedRenderer {
 
 	private static final long serialVersionUID = 1L;

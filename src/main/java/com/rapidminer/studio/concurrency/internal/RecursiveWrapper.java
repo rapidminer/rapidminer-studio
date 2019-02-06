@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -21,9 +21,9 @@ package com.rapidminer.studio.concurrency.internal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountedCompleter;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
@@ -37,7 +37,21 @@ import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
  * @author Michael Knopf, Gisa Meier
  * @since 8.0
  */
-class RecursiveWrapper<T> extends RecursiveAction {
+class RecursiveWrapper<T> extends CountedCompleter<Void> {
+
+	/**
+	 * {@link RuntimeException} that temporarily wraps checked exception in order to unwrap them later.
+	 *
+	 * @since 9.2
+	 */
+	static final class WrapperRuntimeException extends RuntimeException {
+
+		private static final long serialVersionUID = -5276047218418452356L;
+
+		WrapperRuntimeException(Exception e){
+			super(e);
+		}
+	}
 
 	private static final long serialVersionUID = 1L;
 
@@ -47,56 +61,47 @@ class RecursiveWrapper<T> extends RecursiveAction {
 	private final int from;
 	private final int to;
 
-	private RecursiveWrapper<T> next;
-
-	RecursiveWrapper(List<Callable<T>> callables, T[] results, int from, int to, RecursiveWrapper<T> next,
+	RecursiveWrapper(CountedCompleter<?> parent, List<Callable<T>> callables, T[] results, int from, int to,
 					 AtomicBoolean alive) {
+		super(parent);
 		this.callables = callables;
 		this.results = results;
 		this.from = from;
 		this.to = to;
-		this.next = next;
 		this.alive = alive;
 	}
 
 	@Override
-	protected void compute() {
+	public void compute() {
 		if (alive.get()) {
 			int start = this.from;
 			int end = this.to;
 
-			RecursiveWrapper<T> nextPartition = null;
-
 			while (end - start > 1) {
 				int middle = start + end >>> 1;
-				nextPartition = new RecursiveWrapper<>(callables, results, middle, end, nextPartition, alive);
-				nextPartition.fork();
+				addToPendingCount(1);
+				new RecursiveWrapper<>(this, callables, results, middle, end, alive).fork();
 				end = middle;
 			}
 
 			try {
 				results[start] = callables.get(start).call();
-				while (nextPartition != null) {
-					if (nextPartition.tryUnfork()) {
-						nextPartition.compute();
-					} else {
-						nextPartition.join();
-					}
-					nextPartition = nextPartition.next;
-				}
 				// do the same error handling as ForkJoinTask$AdaptedCallable and set sentinel to false
 			} catch (Error | RuntimeException e) {
 				alive.set(false);
 				throw e;
 			} catch (Exception ex) {
 				alive.set(false);
-				throw new RuntimeException(ex);
+				//Use custom wrapper for easier unwrapping
+				throw new WrapperRuntimeException(ex);
 			}
 		}
+		propagateCompletion();
 	}
 
 	/**
-	 * Calls the given callables using {@link RecursiveAction}s. Can only be called from inside a {@link ForkJoinPool}.
+	 * Calls the given callables using {@link CountedCompleter}s. Can only be called from inside a
+	 * {@link ForkJoinPool}.
 	 * 
 	 * @param callables
 	 *            the callables to call
@@ -109,14 +114,17 @@ class RecursiveWrapper<T> extends RecursiveAction {
 	static <T> List<T> call(List<Callable<T>> callables) throws ExecutionException {
 		@SuppressWarnings("unchecked")
 		T[] resultArray = (T[]) new Object[callables.size()];
-		RecursiveWrapper<T> action = new RecursiveWrapper<>(callables, resultArray, 0, callables.size(), null,
+		RecursiveWrapper<T> action = new RecursiveWrapper<>(null, callables, resultArray, 0, callables.size(),
 				new AtomicBoolean(true));
 		try {
-			action.compute();
+			action.invoke();
 			return Arrays.asList(resultArray);
 		} catch (ProcessStoppedRuntimeException e) {
 			// handle ProcessStoppedRuntimeException as done by StudioConcurrencyContext#collectResults
 			throw (ExecutionStoppedException) e.getCause();
+		}catch (WrapperRuntimeException e){
+			// unwrap own wrapped exceptions and wrap into ExecutionException
+			throw new ExecutionException(e.getCause());
 		} catch (Throwable e) {
 			// do same wrapping as ForkJoinTask#get
 			throw new ExecutionException(e);

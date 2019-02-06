@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -208,15 +208,16 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	 * {@link #buildAverage(Averagable)} method.
 	 */
 	public final double getMakroVariance() {
-		double mean = getMakroAverage();
-		double result = meanSquaredSum / averageCount - mean * mean;
-		if (Double.isNaN(result)) {
+		if (averageCount < 2) {
 			return Double.NaN;
-		} else if (result < 0.0d) {
-			return 0.0d;
-		} else {
-			return result;
 		}
+		double besselsCorrection = averageCount / (averageCount - 1.0d);
+		double biasedVariance = meanSquaredSum / averageCount - Math.pow(getMakroAverage(), 2);
+		double unbiasedVariance = besselsCorrection * biasedVariance;
+		if (unbiasedVariance < 0.0d) {
+			return 0.0d;
+		}
+		return unbiasedVariance;
 	}
 
 	/**

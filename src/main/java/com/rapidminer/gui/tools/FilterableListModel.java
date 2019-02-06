@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,11 +19,11 @@
 package com.rapidminer.gui.tools;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
-
 import javax.swing.AbstractListModel;
+
+import com.rapidminer.external.alphanum.AlphanumComparator;
 
 
 /**
@@ -50,13 +50,25 @@ public class FilterableListModel<E> extends AbstractListModel<E> implements Filt
 
 	private String filterValue;
 
-	private LinkedList<FilterCondition> conditions = new LinkedList<FilterCondition>();
+	private LinkedList<FilterCondition> conditions = new LinkedList<>();
 
 	public FilterableListModel() {
+		this(true);
+	}
+
+	/**
+	 * Can sort if desired.
+	 *
+	 * @param sort
+	 * 		if {@code true}, will sort alpha-numerically; if {@code false} will not sort at all
+	 * @since 9.2.0
+	 */
+	public FilterableListModel(boolean sort) {
 		list = new LinkedList<>();
 		filteredList = new LinkedList<>();
-		comparator = (e1, e2) -> e1.toString().compareTo(e2.toString());
-
+		if (sort) {
+			comparator = Comparator.comparing(Object::toString, new AlphanumComparator(AlphanumComparator.AlphanumCaseSensitivity.INSENSITIVE));
+		}
 	}
 
 	@Override
@@ -83,7 +95,9 @@ public class FilterableListModel<E> extends AbstractListModel<E> implements Filt
 
 	public void addElement(E e) {
 		list.add(e);
-		Collections.sort(list, comparator);
+		if (comparator != null) {
+			list.sort(comparator);
+		}
 		if (filterValue == null) {
 			filteredList.add(e);
 		} else {
@@ -91,13 +105,17 @@ public class FilterableListModel<E> extends AbstractListModel<E> implements Filt
 				filteredList.add(e);
 			}
 		}
-		Collections.sort(filteredList, comparator);
+		if (comparator != null) {
+			filteredList.sort(comparator);
+		}
 		fireContentsChanged(this, 0, filteredList.size() - 1);
 	}
 
 	public void removeElement(Object o) {
 		list.remove(o);
-		Collections.sort(list, comparator);
+		if (comparator != null) {
+			list.sort(comparator);
+		}
 		if (filteredList.contains(o)) {
 			filteredList.remove(o);
 		}

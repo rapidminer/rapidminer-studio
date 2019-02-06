@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,12 +18,13 @@
 */
 package com.rapidminer.gui.tools.components;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComponent;
@@ -35,6 +36,8 @@ import javax.swing.plaf.LayerUI;
 
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ListHoverHelper;
+import com.rapidminer.tools.FontTools;
+import com.rapidminer.tools.I18N;
 
 
 /**
@@ -46,6 +49,11 @@ import com.rapidminer.gui.tools.ListHoverHelper;
 public class CardCellRenderer extends DefaultListCellRenderer {
 
 	private static final long serialVersionUID = 1L;
+	private static final String BETA_FLAG = "beta-flag";
+	private static final Font BETA_FONT = FontTools.getFont("Open Sans Semibold", Font.BOLD, 12);
+	private static final Color BETA_COLOR = Colors.RAPIDMINER_ORANGE_BRIGHT;
+	private static final int BETA_Y_OFFSET = 10;
+	private static final int BETA_X_OFFSET = 5;
 
 	protected static final int MAX_CAPTION_LENGTH = 13;
 
@@ -63,6 +71,7 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 		public void paint(Graphics g, JComponent c) {
 			Graphics2D g2 = (Graphics2D) g.create();
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
 			Rectangle rec = getBounds();
 
@@ -82,9 +91,20 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 				g2.fillRect(x, y, w, h);
 			}
 
-			g2.dispose();
-
 			super.paint(g, c);
+
+			if (Boolean.parseBoolean(String.valueOf(c.getClientProperty(BETA_FLAG)))) {
+				String betaString = I18N.getGUIMessage("gui.cards.beta_flag.label");
+				g2.setFont(BETA_FONT);
+				int fontHeight = g2.getFontMetrics().getHeight();
+				int fontWidth = g2.getFontMetrics().stringWidth(betaString);
+				g2.setColor(BETA_COLOR);
+				g2.fillRect(0, BETA_Y_OFFSET, fontWidth + BETA_X_OFFSET * 2, fontHeight);
+				g2.setColor(Color.WHITE);
+				g2.drawString(betaString, BETA_X_OFFSET, BETA_Y_OFFSET + fontHeight - 4);
+			}
+
+			g2.dispose();
 		}
 	}
 
@@ -143,10 +163,10 @@ public class CardCellRenderer extends DefaultListCellRenderer {
 		}
 
 		label.setText(title);
-
 		label.setIcon(card.getIcon());
 
 		layer.setToolTipText(card.getTip());
+		layer.putClientProperty(BETA_FLAG, card.isBeta());
 
 		return layer;
 	}

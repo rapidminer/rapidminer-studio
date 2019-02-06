@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -68,6 +68,8 @@ public class ComboBoxUI extends BasicComboBoxUI {
 	private class RapidLookComboPopup extends BasicComboPopup {
 
 		private static final long serialVersionUID = 1389744017891652801L;
+		/** as wide as our min resolution */
+		private static final int MAX_POPUP_WIDTH = 1280;
 
 		public RapidLookComboPopup(JComboBox<?> comboBox) {
 			super(comboBox);
@@ -128,6 +130,11 @@ public class ComboBoxUI extends BasicComboBoxUI {
 			setListSelection(this.comboBox.getSelectedIndex());
 			Point location = getPopupLocation();
 			show(this.comboBox, location.x, location.y - 3);
+		}
+
+		@Override
+		protected Rectangle computePopupBounds(int px, int py, int pw, int ph) {
+			return super.computePopupBounds(px, py, Math.min(MAX_POPUP_WIDTH, Math.max(comboBox.getPreferredSize().width, pw)), ph);
 		}
 
 		private void setListSelection(int selectedIndex) {

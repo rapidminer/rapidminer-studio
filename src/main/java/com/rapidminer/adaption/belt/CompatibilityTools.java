@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,13 +22,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.rapidminer.belt.Builders;
-import com.rapidminer.belt.Column;
-import com.rapidminer.belt.ColumnTypes;
-import com.rapidminer.belt.Context;
-import com.rapidminer.belt.Table;
-import com.rapidminer.belt.TableBuilder;
-import com.rapidminer.belt.Workload;
+import com.rapidminer.belt.column.Column;
+import com.rapidminer.belt.column.ColumnTypes;
+import com.rapidminer.belt.execution.Context;
+import com.rapidminer.belt.execution.Workload;
+import com.rapidminer.belt.table.Builders;
+import com.rapidminer.belt.table.Table;
+import com.rapidminer.belt.table.TableBuilder;
 
 
 /**

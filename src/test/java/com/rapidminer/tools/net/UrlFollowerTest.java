@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -23,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLConnection;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,7 +60,9 @@ public class UrlFollowerTest {
 
 	@Test
 	public void followHttpToHttps() throws IOException {
-		UrlFollower.follow(UNSECURE_SECURE_REDIRECT, 1, true, false);
+		URLConnection conn = UNSECURE_SECURE_REDIRECT.openConnection();
+		conn.setRequestProperty("User-Agent", "RapidMiner Studio");
+		UrlFollower.follow(conn, 1, true, false);
 	}
 
 	@Test(expected = ForbiddenForwardException.class)

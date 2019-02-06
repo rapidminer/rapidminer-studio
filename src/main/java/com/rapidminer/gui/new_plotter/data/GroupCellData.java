@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -29,8 +29,9 @@ import java.util.Map;
 
 /**
  * @author Marius Helf
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class GroupCellData {
 
 	Map<SeriesUsageType, Map<PlotDimension, double[]>> dimensionToDataMap = new HashMap<ValueSource.SeriesUsageType, Map<PlotDimension, double[]>>();

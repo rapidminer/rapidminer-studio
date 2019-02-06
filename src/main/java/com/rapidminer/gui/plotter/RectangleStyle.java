@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -26,7 +26,9 @@ import java.awt.Graphics2D;
  * Defines the style of plotted rectangles, i.e. the color.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class RectangleStyle {
 
 	public static final int ALPHA = 80;

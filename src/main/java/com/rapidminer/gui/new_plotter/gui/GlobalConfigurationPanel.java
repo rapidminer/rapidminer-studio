@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -42,8 +42,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import com.rapidminer.gui.new_plotter.data.PlotInstance;
 import com.rapidminer.gui.new_plotter.gui.cellrenderer.ColorSchemeComboBoxRenderer;
 import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
-import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
-import com.rapidminer.gui.new_plotter.gui.popup.PopupAction.PopupPosition;
+import com.rapidminer.gui.popup.PopupAction;
+import com.rapidminer.gui.popup.PopupAction.PopupPosition;
 import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
 import com.rapidminer.gui.new_plotter.templates.style.ColorScheme;
@@ -55,8 +55,9 @@ import com.rapidminer.tools.I18N;
 
 /**
  * @author Nils Woehler
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class GlobalConfigurationPanel extends AbstractConfigurationPanel {
 
 	private static final long serialVersionUID = 1L;

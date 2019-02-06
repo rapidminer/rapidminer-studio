@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -169,7 +169,12 @@ public class ProcessThread extends Thread {
 	public void stopProcess() {
 		if (process != null) {
 			this.process.stop();
-			this.interrupt();
+			if (!Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+				// in-pool execution was added with 9.2 initially in beta mode only
+				// we can't interrupt when process execute is in pool, otherwise process is stopped before operator
+				// checks for stop
+				this.interrupt();
+			}
 		}
 	}
 

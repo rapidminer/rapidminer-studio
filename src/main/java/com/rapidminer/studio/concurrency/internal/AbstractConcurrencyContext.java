@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -30,6 +30,9 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.rapidminer.Process;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
@@ -133,7 +136,7 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 		} else {
 			final List<Future<T>> futures = new ArrayList<>(callables.size());
 			for (Callable<T> callable : callables) {
-				futures.add(forkJoinPool.submit(callable));
+				futures.add(forkJoinPool.submit((ForkJoinTask<T>) new AdaptedCallable<>(callable)));
 			}
 			return collectResults(futures);
 		}
@@ -165,14 +168,14 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 				&& ((ForkJoinWorkerThread) currentThread).getPool() == forkJoinPool) {
 			final List<Future<T>> futures = new ArrayList<>(callables.size());
 			for (Callable<T> callable : callables) {
-				futures.add(ForkJoinTask.adapt(callable).fork());
+				futures.add(new FutureWrapper<>(new AdaptedCallable<>(callable).fork()));
 			}
 			return futures;
 		} else {
 			// submit callables without further checks
 			final List<Future<T>> futures = new ArrayList<>(callables.size());
 			for (Callable<T> callable : callables) {
-				futures.add(forkJoinPool.submit(callable));
+				futures.add(new FutureWrapper<>(forkJoinPool.submit((ForkJoinTask<T>) new AdaptedCallable<>(callable))));
 			}
 			return futures;
 		}
@@ -221,6 +224,9 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 				// handled by the operator implementation itself.
 				if (e.getCause() instanceof ProcessStoppedRuntimeException) {
 					throw (ExecutionStoppedException) e.getCause();
+				} else if (e.getCause() instanceof RecursiveWrapper.WrapperRuntimeException) {
+					// unwrap exceptions that we wrapped ourselves in AdaptedCallable
+					throw new ExecutionException(e.getCause().getCause());
 				} else {
 					throw e;
 				}
@@ -265,9 +271,8 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 	/**
 	 * Checks if the JVM-wide, static pool needs to be re-created. Override if a different pool behavior is needed.
 	 *
-	 * @return {@code true} if the current pool is {@code null} or the
-	 *         {@link #getDesiredParallelismLevel} is not equal to the current {@link #getPool}
-	 *         parallelism otherwise {@code false}
+	 * @return {@code true} if the current pool is {@code null} or the {@link #getDesiredParallelismLevel} is not
+	 * equal to the current pool parallelism otherwise {@code false}
 	 */
 	protected boolean isPoolOutdated() {
 		return pool.isPoolOutdated();
@@ -282,5 +287,110 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 	 */
 	protected int getDesiredParallelismLevel() {
 		return pool.getDesiredParallelismLevel();
+	}
+
+
+	/**
+	 * Wrapper for {@link Callable}s that is the same as ForkJoinTask#AdaptedCallable but wraps checked exceptions in
+	 * {@link RecursiveWrapper.WrapperRuntimeException} instead of generic {@link RuntimeException} for easier
+	 * unwrapping.
+	 *
+	 * @since 9.2
+	 */
+	private static final class AdaptedCallable<T> extends ForkJoinTask<T>
+			implements RunnableFuture<T> {
+
+		private static final long serialVersionUID = 23654279569L;
+
+		private final transient Callable<? extends T> callable;
+		private transient T result;
+
+		private AdaptedCallable(Callable<? extends T> callable) {
+			if (callable == null) {
+				throw new NullPointerException();
+			}
+			this.callable = callable;
+		}
+
+		@Override
+		public final T getRawResult() {
+			return result;
+		}
+
+		@Override
+		public final void setRawResult(T v) {
+			result = v;
+		}
+
+		@Override
+		public final boolean exec() {
+			try {
+				result = callable.call();
+				return true;
+			} catch (Error | RuntimeException err) {
+				throw err;
+			} catch (Exception ex) {
+				// the following line is the only difference to ForkJoinTask#AdaptedCallable
+				throw new RecursiveWrapper.WrapperRuntimeException(ex);
+			}
+		}
+
+		@Override
+		public final void run() {
+			super.invoke();
+		}
+	}
+
+	/**
+	 * Wrapper for a {@link Future} that takes care of unwrapping {@link RecursiveWrapper.WrapperRuntimeException}s.
+	 *
+	 * @since 9.2
+	 */
+	private static final class FutureWrapper<T> implements Future<T> {
+
+		private final Future<T> wrappedFuture;
+
+		private FutureWrapper(Future<T> wrappedFuture) {
+			this.wrappedFuture = wrappedFuture;
+		}
+
+		@Override
+		public boolean cancel(boolean mayInterruptIfRunning) {
+			return wrappedFuture.cancel(mayInterruptIfRunning);
+		}
+
+		@Override
+		public boolean isCancelled() {
+			return wrappedFuture.isCancelled();
+		}
+
+		@Override
+		public boolean isDone() {
+			return wrappedFuture.isDone();
+		}
+
+		@Override
+		public T get() throws InterruptedException, ExecutionException {
+			try {
+				return wrappedFuture.get();
+			} catch (ExecutionException e) {
+				if (e.getCause() instanceof RecursiveWrapper.WrapperRuntimeException) {
+					throw new ExecutionException(e.getCause().getCause());
+				}
+				throw e;
+			}
+		}
+
+		@Override
+		public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+			try {
+				return wrappedFuture.get(timeout, unit);
+			} catch (ExecutionException e) {
+				if (e.getCause() instanceof RecursiveWrapper.WrapperRuntimeException) {
+					throw new ExecutionException(e.getCause().getCause());
+				}
+				throw e;
+			}
+		}
 	}
 }

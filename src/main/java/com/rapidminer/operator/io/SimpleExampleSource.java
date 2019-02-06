@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -192,14 +192,19 @@ public class SimpleExampleSource extends AbstractExampleSource {
 	public MetaData getGeneratedMetaData() throws OperatorException {
 		File file = getParameterAsFile(PARAMETER_FILENAME);
 		CSVFileReader reader = createReader(getParameterAsFile(PARAMETER_FILENAME));
-		MetaData metaData = null;
 		try {
-			metaData = reader.getMetaData();
+			return reader.getMetaData();
 		} catch (FileNotFoundException e) {
 			throw new UserError(this, 302, file, e.getMessage());
 		} catch (IOException e) {
 		}
-		return metaData;
+		return getDefaultMetaData();
+	}
+
+	/** @return {@code true} */
+	@Override
+	protected boolean isMetaDataCacheable() {
+		return true;
 	}
 
 	@Override

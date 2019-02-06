@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,8 +23,9 @@ package com.rapidminer.gui.new_plotter;
  * use its subclasses to differentiate between plottime and configuration time errors.
  * 
  * @author Marius Helf, Nils Woehler
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public abstract class ChartCreationException extends Exception {
 
 	private static final long serialVersionUID = 1;

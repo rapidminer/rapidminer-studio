@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,11 +18,11 @@
 */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
+import java.util.HashSet;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.table.DataRow;
-
-import java.util.HashSet;
 
 
 /**
@@ -39,14 +39,30 @@ public abstract class NumericalAggregator implements Aggregator {
 	private boolean isCountingOnlyDistinct = false;
 	private HashSet<Double> distinctValueSet = null;
 
+
 	public NumericalAggregator(AggregationFunction function) {
-		this.sourceAttribute = function.getSourceAttribute();
-		this.ignoreMissings = function.isIgnoringMissings();
-		this.isCountingOnlyDistinct = function.isCountingOnlyDistinct();
-		if (isCountingOnlyDistinct) {
-			distinctValueSet = new HashSet<Double>();
+		if (function != null) {
+			this.sourceAttribute = function.getSourceAttribute();
+			this.ignoreMissings = function.isIgnoringMissings();
+			this.isCountingOnlyDistinct = function.isCountingOnlyDistinct();
+			if (isCountingOnlyDistinct) {
+				distinctValueSet = new HashSet<>();
+			}
 		}
 	}
+
+
+	/**
+	 * Set whether missing values should be ignored when calling {@link #count(double)}.
+	 *
+	 * @param ignoreMissings
+	 * 		{@code true} if missing values ({@link Double#NaN}) should be skipped; {@code false} otherwise
+	 * @since 9.2.0
+	 */
+	public void setIgnoreMissing(boolean ignoreMissings) {
+		this.ignoreMissings = ignoreMissings;
+	}
+
 
 	@Override
 	public final void count(Example example) {
@@ -76,6 +92,38 @@ public abstract class NumericalAggregator implements Aggregator {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Counts the given value directly, does only respect the ignoreMissings flag, but does not check for distinctness.
+	 *
+	 * @param value
+	 * 		the value
+	 * @since 9.2.0
+	 */
+	public void countDirectly(double value) {
+		if (ignoreMissings && Double.isNaN(value)) {
+			return;
+		}
+
+		count(value);
+	}
+
+	/**
+	 * Counts the given value directly, does only respect the ignoreMissings flag, but does not check for distinctness.
+	 *
+	 * @param value
+	 * 		the value
+	 * @param weight
+	 * 		the weight
+	 * @since 9.2.0
+	 */
+	public void countDirectlyWithWeight(double value, double weight) {
+		if (ignoreMissings && Double.isNaN(value)) {
+			return;
+		}
+
+		count(value, weight);
 	}
 
 	/**
@@ -110,6 +158,16 @@ public abstract class NumericalAggregator implements Aggregator {
 	 * This method has to return the numerical value of this aggregator.
 	 */
 	protected abstract double getValue();
+
+	/**
+	 * Gets the aggregation result value.
+	 *
+	 * @return the value.
+	 * @since 9.2.0
+	 */
+	public double getAggregationValue() {
+		return getValue();
+	}
 
 	/**
 	 * Explicitly sets the value of this aggregator. The only place where it makes sense to use this

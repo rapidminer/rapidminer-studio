@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -42,7 +42,9 @@ import javax.swing.Icon;
  * 75%. The whiskers show the 5% and 95% percentiles. Circles beyond the whiskers mark outliers.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class QuartilePlotter extends ColorQuartilePlotter {
 
 	private static final long serialVersionUID = -5115095967846809152L;

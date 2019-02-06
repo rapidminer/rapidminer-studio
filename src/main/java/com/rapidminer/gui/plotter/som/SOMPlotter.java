@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -68,7 +68,9 @@ import com.rapidminer.tools.math.som.RitterAdaptation;
  * the examples are shown as points. There are different styled visualizations of the properties.
  *
  * @author Sebastian Land, Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 
 	private static final long serialVersionUID = -1936359032703929998L;

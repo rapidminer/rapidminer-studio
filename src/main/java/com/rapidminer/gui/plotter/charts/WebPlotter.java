@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -77,8 +77,9 @@ import com.rapidminer.tools.math.function.aggregation.AverageFunction;
  * Web plotter based on the Spiderweb-plotter of JFreechart.
  *
  * @author David Arnu
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class WebPlotter extends LabelRotatingPlotterAdapter implements ChangeListener {
 
 	public static final String PARAMETER_AGGREGATION = "aggregation";

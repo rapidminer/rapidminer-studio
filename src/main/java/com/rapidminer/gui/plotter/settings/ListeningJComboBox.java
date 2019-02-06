@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -25,8 +25,9 @@ import com.rapidminer.gui.tools.ExtendedJComboBox;
 
 /**
  * @author Sebastian Land
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class ListeningJComboBox<E> extends ExtendedJComboBox<E> implements PlotterSettingsChangedListener {
 
 	private static final long serialVersionUID = 4070917820637717260L;

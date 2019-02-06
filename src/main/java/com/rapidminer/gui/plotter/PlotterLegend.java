@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -30,7 +30,9 @@ import javax.swing.JComponent;
  * This plotter legend component can be used by external plotter components.
  * 
  * @author Sebastian Land, Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class PlotterLegend extends JComponent {
 
 	private static final long serialVersionUID = -4737111168245916491L;

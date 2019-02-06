@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -26,10 +26,12 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import javax.swing.JOptionPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
@@ -75,6 +77,9 @@ public class ProcessRendererMouseHandler {
 
 	/** a mapping between dragged operators and their original position */
 	private Map<Operator, Rectangle2D> draggedOperatorsOrigins;
+
+	/** a mapping between dragged operators and their last position */
+	private Map<Operator, Rectangle2D> lastFixedOperatorsPosition;
 
 	/** if connection dragging was canceled */
 	private boolean connectionDraggingCanceled;
@@ -204,6 +209,7 @@ public class ProcessRendererMouseHandler {
 				double maxX = 0;
 				double maxY = 0;
 
+				Set<Operator> movedOperators = new HashSet<>();
 				// shift
 				for (Entry<Operator, Rectangle2D> opAndRectangle : draggedOperatorsOrigins.entrySet()) {
 					Rectangle2D origin = opAndRectangle.getValue();
@@ -220,11 +226,18 @@ public class ProcessRendererMouseHandler {
 					if (origin.getMinX() + difX < 0) {
 						difX = -origin.getMinX() + ProcessDrawer.GRID_X_OFFSET;
 					}
+					final Rectangle2D lastFixedPosition = lastFixedOperatorsPosition.get(opAndRectangle.getKey());
 					Rectangle2D opPos = new Rectangle2D.Double(Math.floor(origin.getX() + difX),
 							Math.floor(origin.getY() + difY), origin.getWidth(), origin.getHeight());
 					model.setOperatorRect(opAndRectangle.getKey(), opPos);
+					if (!opPos.equals(lastFixedPosition)) {
+						movedOperators.add(opAndRectangle.getKey());
+						lastFixedOperatorsPosition.put(opAndRectangle.getKey(), opPos);
+					}
 				}
-				model.fireOperatorsMoved(draggedOperatorsOrigins.keySet());
+				if (!movedOperators.isEmpty()) {
+					model.fireOperatorsMoved(movedOperators);
+				}
 				e.consume();
 			}
 		} else {
@@ -361,6 +374,7 @@ public class ProcessRendererMouseHandler {
 				}
 			}
 			model.setDraggedOperators(draggedOperatorsOrigins.keySet());
+			lastFixedOperatorsPosition = new HashMap<>();
 
 			e.consume();
 		} else if (hoveringPort != null) {
@@ -518,6 +532,7 @@ public class ProcessRendererMouseHandler {
 			mousePositionAtDragStart = null;
 			draggedPort = null;
 			draggedOperatorsOrigins = null;
+			lastFixedOperatorsPosition = null;
 			hasDragged = false;
 			model.clearDraggedOperators();
 		}

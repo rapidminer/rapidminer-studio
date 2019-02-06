@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -324,6 +324,18 @@ public final class PluginSandboxPolicy extends Policy {
 						"read, write"));
 				permissions.add(new FilePermission(userHome + "/.RapidMiner/internal cache/search/-",
 						"read, write, delete"));
+
+				// content mapper permissions
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/internal cache/content mapper/",
+						"read, write"));
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/internal cache/content mapper/-",
+						"read, write, delete"));
+
+				// browser permissions
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/internal cache/browser/",
+						"read, write"));
+				permissions.add(new FilePermission(userHome + "/.RapidMiner/internal cache/browser/-",
+						"read, write, delete, execute"));
 			}
 
 			// unfortunately currently we have to give all location permissons to read/write
@@ -393,6 +405,7 @@ public final class PluginSandboxPolicy extends Policy {
 		permissions.add(new AudioPermission("play"));
 		permissions.add(new AWTPermission("listenToAllAWTEvents"));
 		permissions.add(new AWTPermission("setWindowAlwaysOnTop"));
+		permissions.add(new AWTPermission("showWindowWithoutWarningBanner"));
 		permissions.add(new AWTPermission("watchMousePointer"));
 		permissions.add(new LoggingPermission("control", ""));
 		permissions.add(new SocketPermission("*", "connect, listen, accept, resolve"));

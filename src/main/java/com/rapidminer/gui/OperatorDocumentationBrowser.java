@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -334,7 +334,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 */
 	public void setDisplayedOperator(Operator operator) {
 		if (operator != null && !operator.getOperatorDescription().isDeprecated() && (this.displayedOperator == null || !operator.getOperatorDescription()
-				.getName().equals(this.displayedOperator.getOperatorDescription().getName()))) {
+				.getKey().equals(this.displayedOperator.getOperatorDescription().getKey()))) {
 			assignDocumentation(operator);
 		}
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,6 +19,7 @@
 package com.rapidminer.gui.actions;
 
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
@@ -44,12 +45,12 @@ public class StoreInRepositoryAction extends ResourceAction {
 	private RepositoryLocation lastLocation;
 
 	public StoreInRepositoryAction(IOObject object) {
-		super(true, "store_in_repository", ((object instanceof ResultObject) ? ((ResultObject) object).getName() : "result"));
+		super(true, "store_in_repository", getI18nName(object));
 		this.object = object;
 	}
 
 	public StoreInRepositoryAction(IOObject object, RepositoryLocation initialLocation) {
-		super(true, "store_in_repository", ((object instanceof ResultObject) ? ((ResultObject) object).getName() : "result"));
+		super(true, "store_in_repository", (getI18nName(object)));
 		this.object = object;
 		this.lastLocation = initialLocation;
 	}
@@ -69,17 +70,32 @@ public class StoreInRepositoryAction extends ResourceAction {
 				return;
 			}
 			try {
-				if (location.locateEntry() != null) {
-					// overwrite?
-					if (SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION, location) != ConfirmDialog.YES_OPTION) {
-						return;
-					}
+				// check for overwrite
+				if (location.locateEntry() != null && SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION, location) != ConfirmDialog.YES_OPTION) {
+					return;
 				}
-				RepositoryManager.getInstance(null).store(object, location, null);
-				lastLocation = location;
+				ProgressThread storePT = new ProgressThread("store_ioobject", false, getI18nName(object)) {
+
+					@Override
+					public void run() {
+						try {
+							RepositoryManager.getInstance(null).store(object, location, null);
+							lastLocation = location;
+						} catch (RepositoryException ex) {
+							SwingTools.showSimpleErrorMessage("cannot_store_obj_at_location", ex, loc);
+						}
+					}
+				};
+				storePT.setIndeterminate(true);
+				storePT.start();
 			} catch (RepositoryException ex) {
 				SwingTools.showSimpleErrorMessage("cannot_store_obj_at_location", ex, loc);
 			}
 		}
+	}
+
+	/** @since 9.2.0 */
+	private static String getI18nName(IOObject object) {
+		return (object instanceof ResultObject) ? ((ResultObject) object).getName() : "result";
 	}
 }

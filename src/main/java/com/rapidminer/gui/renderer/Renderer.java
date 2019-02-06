@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -29,36 +29,50 @@ import java.awt.Component;
 
 
 /**
- * This is the renderer interface. A renderer is a visualization component for all types of objects.
- * In addition, it should also deliver an object of the interface {@link Reportable} in order to
- * support automatic reporting actions.
- * 
+ * This is the renderer interface. A renderer is a visualization component for all types of objects. In addition, it
+ * should also deliver an object of the interface {@link Reportable} in order to support automatic reporting actions.
+ * <p>
+ * <strong>Note:</strong> If your renderer contains components that require clean-up or should interrupt long-running
+ * calculations if the visualization component is no longer needed (i.e. the result tab has been closed), these
+ * components should implement the {@link com.rapidminer.gui.CleanupRequiringComponent} interface. The component
+ * hierarchy is traversed and all implementations of the interface are notified that the renderer is no longer needed.
+ * </p>
+ *
  * @author Ingo Mierswa
  */
 public interface Renderer extends ParameterHandler {
 
-	public String getName();
+	String getName();
 
-	// TODO: Find a solution for non existing IOCOntainer
+	// TODO: Find a solution for non existing IOContainer
+
 	/**
-	 * @return the {@link Component} that visualizes the renderable. If if should be
-	 *         printable/exportable the component should extend the {@link PrintableComponent}
-	 *         interface.
+	 * <p>
+	 * <strong>Note:</strong> If your visualization component contains components that require clean-up or should
+	 * interrupt
+	 * long-running calculations if the visualization component is no longer needed (i.e. the result tab has been
+	 * closed), these components should implement the {@link com.rapidminer.gui.CleanupRequiringComponent} interface.
+	 * The component hierarchy is traversed and all implementations of the interface are notified that the renderer is
+	 * no longer needed.
+	 * </p>
+	 *
+	 * @return the {@link Component} that visualizes the renderable. If if should be printable/exportable the component
+	 * should extend the {@link PrintableComponent} interface.
 	 */
-	public Component getVisualizationComponent(Object renderable, IOContainer ioContainer);
+	Component getVisualizationComponent(Object renderable, IOContainer ioContainer);
 
-	// TODO: Find a solution for non existing IOCOntainer
-	public Reportable createReportable(Object renderable, IOContainer ioContainer, int desiredWidth, int desiredHeight);
+	// TODO: Find a solution for non existing IOContainer
+	Reportable createReportable(Object renderable, IOContainer ioContainer, int desiredWidth, int desiredHeight);
 
 	@Override
-	public String toString();
+	String toString();
 
-	public Parameters getParameters(InputPort inputPort);
+	Parameters getParameters(InputPort inputPort);
 
 	/**
 	 * This method overrides all existing parameters. It must be used to ensure, that input Port
 	 * referencing attributes are connected to the correct port, since they are only created once
 	 * and might be initialized from another operator.
 	 */
-	public void updateParameters(InputPort inputPort);
+	void updateParameters(InputPort inputPort);
 }

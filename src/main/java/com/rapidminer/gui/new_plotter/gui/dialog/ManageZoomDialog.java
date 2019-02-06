@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -73,8 +73,9 @@ import com.rapidminer.tools.container.Pair;
  * This dialog allows the user to manually zoom in/do a selection on the chart.
  * 
  * @author Marco Boeck
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class ManageZoomDialog extends JDialog {
 
 	/** the ok {@link JButton} */

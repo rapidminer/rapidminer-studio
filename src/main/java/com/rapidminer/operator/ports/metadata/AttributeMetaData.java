@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -544,11 +544,11 @@ public class AttributeMetaData implements Serializable {
 		if (isNominal()) {
 			if (amd.valueSet != null && this.valueSet != null) {
 				if (!amd.valueSet.equals(this.valueSet)) {
-					this.valueSetRelation.merge(SetRelation.SUBSET);
+					this.valueSetRelation = this.valueSetRelation.merge(SetRelation.SUBSET);
 				}
 				this.valueSet.addAll(amd.valueSet);
 			}
-			this.valueSetRelation.merge(amd.valueSetRelation);
+			this.valueSetRelation = this.valueSetRelation.merge(amd.valueSetRelation);
 		}
 		if (isNumerical()) {
 			if (valueRange != null && amd.valueRange != null) {
@@ -556,7 +556,7 @@ public class AttributeMetaData implements Serializable {
 				double max = Math.max(amd.valueRange.getUpper(), this.valueRange.getUpper());
 				this.valueRange = new Range(min, max);
 			}
-			this.valueSetRelation.merge(amd.valueSetRelation);
+			this.valueSetRelation = this.valueSetRelation.merge(amd.valueSetRelation);
 		}
 	}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -258,7 +258,7 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 	 * Whether values should be trimmed for parsing
 	 *
 	 * @return {@code true} if they should be trimmed
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	public boolean trimValuesForParsing() {
 		return trimValuesForParsing;
@@ -269,7 +269,7 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 	 *
 	 * @param trimValuesForParsing
 	 * 		{@code true} if they should be trimmed
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	public void setTrimValuesForParsing(boolean trimValuesForParsing) {
 		this.trimValuesForParsing = trimValuesForParsing;

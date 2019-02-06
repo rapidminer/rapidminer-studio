@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -33,8 +33,9 @@ import com.rapidminer.tools.ParameterService;
  * Control class used to handle the logic behind preselecting plotter axes.
  *
  * @author David Arnu, Nils Woehler
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class HeuristicPlotterConfigurator {
 
 	public static final int DEFAULT_SELECTION_NUMBER = 3;

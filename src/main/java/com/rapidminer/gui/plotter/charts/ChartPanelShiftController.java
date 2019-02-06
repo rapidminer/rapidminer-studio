@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -47,7 +47,9 @@ import org.jfree.chart.plot.XYPlot;
  * Press the SHIFT key to increase the shift by a factor of 10.
  * 
  * @author Gustavo H. Sberze Ribas (CPqD), Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class ChartPanelShiftController implements MouseMotionListener, MouseListener {
 
 	/** PAN plot by a fixed percentual of the range (eg. 1%) */

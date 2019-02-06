@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -356,7 +356,7 @@ public class DockableResultDisplay extends JPanel implements ResultDisplay {
 			}
 		}
 		// fix for "delete old results" dialog after breakpoint resume
-		if ((!toClose.isEmpty() || !dataTables.isEmpty()) && closeResultsPerRun) {
+		if ((!toClose.isEmpty() || !dataTables.isEmpty()) && closeResultsPerRun != null && closeResultsPerRun) {
 			DockableResultDisplay.this.dataTables.clear();
 			// updateDataTables();
 			for (Dockable dockable : toClose) {

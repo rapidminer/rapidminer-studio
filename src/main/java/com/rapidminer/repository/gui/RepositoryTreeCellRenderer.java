@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,7 +23,6 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JLabel;
@@ -40,6 +39,7 @@ import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.internal.remote.RemoteDataEntry;
 import com.rapidminer.tools.Tools;
 
 
@@ -112,7 +112,11 @@ public class RepositoryTreeCellRenderer extends DefaultTreeCellRenderer {
 				if (size > 0) {
 					appendDash(stateStringBuilder);
 					stateStringBuilder.append(Tools.formatBytes(size));
+				} else if (entry instanceof RemoteDataEntry && size < 0) {
+					appendDash(stateStringBuilder);
+					stateStringBuilder.append("&ge;2 GB");
 				}
+
 			}
 			if (stateStringBuilder.length() > 0) {
 				labelText.append(" <small style=\"color:gray\">(").append(stateStringBuilder).append(")</small>");

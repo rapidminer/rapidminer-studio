@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -24,14 +24,19 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-
-import javax.swing.JComboBox;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.text.JTextComponent;
 
 import com.rapidminer.gui.properties.DefaultRMCellEditor;
+import com.rapidminer.gui.tools.AttributeGuiTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterTypeAttribute;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -50,7 +55,7 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 	public AttributeValueCellEditor(ParameterTypeAttribute type) {
 		super(new AttributeComboBox(type));
 		// this is the AttributeComboBox from above
-		final JComboBox<String> comboBox = (JComboBox<String>) editorComponent;
+		final AttributeComboBox comboBox = (AttributeComboBox) editorComponent;
 		final JTextComponent textField = (JTextComponent) comboBox.getEditor().getEditorComponent();
 
 		comboBox.removeItemListener(this.delegate);
@@ -95,7 +100,7 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 				if (COMBO_BOX_EDITED.equals(actionCommand) || COMBO_BOX_CHANGED.equals(actionCommand)) {
 					super.actionPerformed(event);
 				}
-			};
+			}
 		};
 		comboBox.addActionListener(delegate);
 
@@ -126,6 +131,7 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 				}
 			}
 		});
+		comboBox.setRenderer(createAttributeTypeListRenderer((AttributeComboBox.AttributeComboBoxModel) comboBox.getModel()));
 	}
 
 	@Override
@@ -149,4 +155,34 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 		return getTableCellEditorComponent(table, value, hasFocus, row, column);
 	}
 
+	/**
+	 * Create a list cell renderer for lists that show attributes and their value types.
+	 *
+	 * @return the renderer, never {@code null}
+	 */
+	private DefaultListCellRenderer createAttributeTypeListRenderer(AttributeComboBox.AttributeComboBoxModel model) {
+		return new DefaultListCellRenderer() {
+
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				Pair<String, Integer> valueTypePair = index >= 0 ? model.getAttributePairs().get(index) : null;
+				if (valueTypePair != null) {
+					Integer type = valueTypePair.getSecond();
+					if (type != null) {
+						Icon icon;
+						if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.NUMERICAL)) {
+							icon = AttributeGuiTools.NUMERICAL_COLUMN_ICON;
+						} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.NOMINAL)) {
+							icon = AttributeGuiTools.NOMINAL_COLUMN_ICON;
+						} else {
+							icon = AttributeGuiTools.DATE_COLUMN_ICON;
+						}
+						label.setIcon(icon);
+					}
+				}
+				return label;
+			}
+		};
+	}
 }

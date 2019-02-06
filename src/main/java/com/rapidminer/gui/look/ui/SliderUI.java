@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,6 +18,7 @@
  */
 package com.rapidminer.gui.look.ui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -293,7 +294,7 @@ public class SliderUI extends BasicSliderUI {
 		Graphics2D g2 = (Graphics2D) g;
 
 		int curVal = this.slider.getModel().getValue();
-		double percentage = (double) curVal / (slider.getModel().getMaximum() - slider.getModel().getExtent());
+		double percentage = (double) (curVal - slider.getModel().getMinimum()) / (slider.getModel().getMaximum() - slider.getModel().getMinimum());
 
 		boolean isBackground = false;
 		if (trackRect.width * percentage > x) {

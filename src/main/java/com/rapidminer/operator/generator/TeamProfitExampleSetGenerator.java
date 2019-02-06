@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -60,6 +60,23 @@ public class TeamProfitExampleSetGenerator extends AbstractExampleSource {
 	private static String[][] POSSIBLE_VALUES = { null,
 			{ "Mr. Brown", "Mr. Miller", "Mrs. Smith", "Mrs. Hanson", "Mrs. Green", "Mr. Chang" }, null, { "yes", "no" },
 			null, { "flat", "hierachical" } };
+
+	/** @since 9.2.0 */
+	private static final ExampleSetMetaData DEFAULT_META_DATA;
+	static {
+		ExampleSetMetaData emd = new ExampleSetMetaData();
+		emd.addAttribute(new AttributeMetaData("label", Attributes.LABEL_NAME, "good", "bad"));
+		emd.addAttribute(new AttributeMetaData("teamID", Ontology.NOMINAL));
+		// "size", "leader", "number of qualified employees", "leader changed",
+		// "average years of experience", "structure"
+		emd.addAttribute(new AttributeMetaData("size", null, Ontology.INTEGER, new Range(5, 20)));
+		emd.addAttribute(new AttributeMetaData("leader", null, POSSIBLE_VALUES[1]));
+		emd.addAttribute(new AttributeMetaData("number of qualified employees", null, Ontology.INTEGER, new Range(1, 10)));
+		emd.addAttribute(new AttributeMetaData("leader changed", null, POSSIBLE_VALUES[3]));
+		emd.addAttribute(new AttributeMetaData("average years of experience", null, Ontology.INTEGER, new Range(1, 10)));
+		emd.addAttribute(new AttributeMetaData("structure", null, POSSIBLE_VALUES[5]));
+		DEFAULT_META_DATA = emd;
+	}
 
 	public TeamProfitExampleSetGenerator(OperatorDescription description) {
 		super(description);
@@ -149,19 +166,14 @@ public class TeamProfitExampleSetGenerator extends AbstractExampleSource {
 
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
-		ExampleSetMetaData emd = new ExampleSetMetaData();
-		emd.addAttribute(new AttributeMetaData("label", Attributes.LABEL_NAME, "good", "bad"));
-		emd.addAttribute(new AttributeMetaData("teamID", Ontology.NOMINAL));
-		// "size", "leader", "number of qualified employees", "leader changed",
-		// "average years of experience", "structure"
-		emd.addAttribute(new AttributeMetaData("size", null, Ontology.INTEGER, new Range(5, 20)));
-		emd.addAttribute(new AttributeMetaData("leader", null, POSSIBLE_VALUES[1]));
-		emd.addAttribute(new AttributeMetaData("number of qualified employees", null, Ontology.INTEGER, new Range(1, 10)));
-		emd.addAttribute(new AttributeMetaData("leader changed", null, POSSIBLE_VALUES[3]));
-		emd.addAttribute(new AttributeMetaData("average years of experience", null, Ontology.INTEGER, new Range(1, 10)));
-		emd.addAttribute(new AttributeMetaData("structure", null, POSSIBLE_VALUES[5]));
-
+		ExampleSetMetaData emd = getDefaultMetaData();
 		emd.setNumberOfExamples(getParameterAsInt(PARAMETER_NUMBER_EXAMPLES));
 		return emd;
+	}
+
+	/** @since 9.2.0 */
+	@Override
+	protected ExampleSetMetaData getDefaultMetaData() {
+		return DEFAULT_META_DATA.clone();
 	}
 }

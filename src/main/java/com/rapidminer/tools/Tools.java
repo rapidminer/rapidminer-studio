@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -449,7 +449,7 @@ public class Tools {
 	 * Format double value as a short time string. If value is NaN, returns {@value #MISSING_TIME}.
 	 *
 	 * @param value
-	 *            the value to be formatted as time
+	 * 		the value to be formatted as time
 	 * @return a short time string or {@value #MISSING_TIME} if value was NaN
 	 * @since 6.1.1
 	 */
@@ -462,7 +462,9 @@ public class Tools {
 		}
 	}
 
-	/** Format date as a short date string. */
+	/**
+	 * Format date as a short date string.
+	 */
 	public static String formatDate(Date date) {
 		DATE_FORMAT.get().setTimeZone(getPreferredTimeZone());
 		return DATE_FORMAT.get().format(date);
@@ -472,7 +474,7 @@ public class Tools {
 	 * Format double value as a short date string. If value is NaN, returns {@value #MISSING_DATE}.
 	 *
 	 * @param value
-	 *            the value to be formatted as a date
+	 * 		the value to be formatted as a date
 	 * @return a short date string or {@value #MISSING_DATE} if value was NaN
 	 * @since 6.1.1
 	 */
@@ -496,7 +498,7 @@ public class Tools {
 	 * {@value #MISSING_DATE}.
 	 *
 	 * @param value
-	 *            the value to be formatted as datetime
+	 * 		the value to be formatted as datetime
 	 * @return a short datetime string or {@value #MISSING_DATE} if value was NaN
 	 * @since 6.1.1
 	 */
@@ -718,7 +720,7 @@ public class Tools {
 	 * Clones a {@link List} of {@link Operator}s including connections.
 	 *
 	 * @param operators
-	 *            List of operators.
+	 * 		List of operators.
 	 * @return Cloned list of operators.
 	 */
 	public static List<Operator> cloneOperators(List<Operator> operators) {
@@ -931,7 +933,6 @@ public class Tools {
 	 * 		The required {@link Thread Threads} to be joined before waiting for the process. Commonly used to read all outputs in those before waiting for the process itself.
 	 * @throws OperatorException
 	 * 		If the program execution failed the error will be thrown via an UserError.
-	 *
 	 * @author Andreas Timm
 	 * @since 8.2
 	 */
@@ -1024,7 +1025,7 @@ public class Tools {
 	}
 
 	/**
-	 * @deprecated Use {@link MailUtilities#sendEmail(String,String,String)} instead
+	 * @deprecated Use {@link MailUtilities#sendEmail(String, String, String)} instead
 	 */
 	@Deprecated
 	public static void sendEmail(String address, String subject, String content) {
@@ -1124,9 +1125,9 @@ public class Tools {
 	 * resource names are only allowed to use '/' as separator instead of File.separator!
 	 *
 	 * @throws IOException
-	 *             if stream cannot be opened
+	 * 		if stream cannot be opened
 	 * @throws RepositoryException
-	 *             if resource cannot be found
+	 * 		if resource cannot be found
 	 */
 	public static InputStream getResourceInputStream(String name) throws IOException, RepositoryException {
 		URL resourceURL = Tools.getResource(name);
@@ -1217,10 +1218,10 @@ public class Tools {
 	 * Reads content from the provided input stream.
 	 *
 	 * @param stream
-	 *            the stream to read content from
+	 * 		the stream to read content from
 	 * @return the content as String
 	 * @throws IOException
-	 *             in case something goes wrong
+	 * 		in case something goes wrong
 	 */
 	public static final String parseInputStreamToString(InputStream stream) throws IOException {
 		return parseInputStreamToString(stream, false);
@@ -1230,16 +1231,16 @@ public class Tools {
 	 * Reads content from the provided input stream.
 	 *
 	 * @param stream
-	 *            the stream to read content from
+	 * 		the stream to read content from
 	 * @param html
-	 *            return the string as html with line breaks between the lines
+	 * 		return the string as html with line breaks between the lines
 	 * @return the content as String
 	 * @throws IOException
-	 *             in case something goes wrong
+	 * 		in case something goes wrong
 	 */
 	public static final String parseInputStreamToString(InputStream stream, boolean html) throws IOException {
 		try (InputStreamReader inputStreamReader = new InputStreamReader(stream, StandardCharsets.UTF_8);
-				BufferedReader reader = new BufferedReader(inputStreamReader);) {
+			 BufferedReader reader = new BufferedReader(inputStreamReader);) {
 
 			StringBuilder contentBuilder = new StringBuilder();
 			if (html) {
@@ -1281,9 +1282,9 @@ public class Tools {
 		}
 	}
 
-	public static final String[] TRUE_STRINGS = { "true", "on", "yes", "y" };
+	public static final String[] TRUE_STRINGS = {"true", "on", "yes", "y"};
 
-	public static final String[] FALSE_STRINGS = { "false", "off", "no", "n" };
+	public static final String[] FALSE_STRINGS = {"false", "off", "no", "n"};
 
 	public static boolean booleanValue(String string, boolean deflt) {
 		if (string == null) {
@@ -1348,7 +1349,7 @@ public class Tools {
 	}
 
 	public static void findImplementationsInJar(ClassLoader loader, JarFile jar, Class<?> superClass,
-			List<String> implementations) {
+												List<String> implementations) {
 		Enumeration<JarEntry> e = jar.entries();
 		while (e.hasMoreElements()) {
 			JarEntry entry = e.nextElement();
@@ -1512,17 +1513,16 @@ public class Tools {
 	 * commas inside of a quoted string should not be used as splitting point.
 	 *
 	 * @param line
-	 *            the original line
+	 * 		the original line
 	 * @param splittedTokens
-	 *            the tokens as they were originally splitted
+	 * 		the tokens as they were originally splitted
 	 * @param quoteString
-	 *            the string which should be used as quote indicator, e.g. &quot; or '
+	 * 		the string which should be used as quote indicator, e.g. &quot; or '
 	 * @return the array of strings where the given quoteString was regarded
 	 * @throws IOException
-	 *             if an open quote was not ended
-	 *
+	 * 		if an open quote was not ended
 	 * @deprecated Please use {@link #quotedSplit(String, Pattern, char, char)} or
-	 *             {@link #quotedSplit(String, Pattern)} instead
+	 * {@link #quotedSplit(String, Pattern)} instead
 	 */
 	@Deprecated
 	public static String[] mergeQuotedSplits(String line, String[] splittedTokens, String quoteString) throws IOException {
@@ -1688,7 +1688,7 @@ public class Tools {
 				FileChannel in = null;
 				FileChannel out = null;
 				try (FileInputStream fis = new FileInputStream(srcPath);
-						FileOutputStream fos = new FileOutputStream(dstPath)) {
+					 FileOutputStream fos = new FileOutputStream(dstPath)) {
 					in = fis.getChannel();
 					out = fos.getChannel();
 					long size = in.size();
@@ -1786,12 +1786,10 @@ public class Tools {
 	}
 
 	/**
-	 *
 	 * Returns the column name of the the n'th column like excel names it.
 	 *
 	 * @param index
-	 *            the index of the column
-	 *
+	 * 		the index of the column
 	 * @return
 	 */
 	public static String getExcelColumnName(int index) {
@@ -1818,7 +1816,7 @@ public class Tools {
 	 * "Some people never go crazy, What truly horrible lives they must live\"", "1968", "US"'
 	 */
 	public static String escapeQuoteCharsInQuotes(String line, Pattern separatorPattern, char quotingChar, char escapeChar,
-			boolean showWarning) {
+												  boolean showWarning) {
 		// first remember quoteChar positions which should be escaped:
 		char lastChar = '0';
 		boolean openedQuote = false;
@@ -2072,7 +2070,7 @@ public class Tools {
 	 * most so many tokens will be returned. No more escaping is performed in the last token!
 	 */
 	public static List<String> unescape(String source, char escapeChar, char[] specialCharacters, char splitCharacter,
-			int splitLimit) {
+										int splitLimit) {
 		List<String> result = new LinkedList<>();
 		StringBuilder b = new StringBuilder();
 		// was the last character read an escape character?
@@ -2150,7 +2148,7 @@ public class Tools {
 	 * h%l\lo|mandy => h\%l\\lo%mandy<br>
 	 *
 	 * @param charToMask
-	 *            the character that should be masked. May not be '%' or '\\'
+	 * 		the character that should be masked. May not be '%' or '\\'
 	 */
 	public static String mask(char charToMask, String unmasked) {
 		if (charToMask == '%' || charToMask == '\\') {
@@ -2180,7 +2178,7 @@ public class Tools {
 	 * h\%l\\lo%mandy => h%l\lo|mandy<br>
 	 *
 	 * @param charToUnmask
-	 *            the char that should be unmasked
+	 * 		the char that should be unmasked
 	 */
 	public static String unmask(char charToUnmask, String masked) {
 		if (charToUnmask == '%' || charToUnmask == '\\') {
@@ -2220,7 +2218,7 @@ public class Tools {
 	 * The string <code>foo_bar</code> would return <code>true</code>.
 	 *
 	 * @param fileName
-	 *            if <code>null</code>, returns <code>false</code>
+	 * 		if <code>null</code>, returns <code>false</code>
 	 * @return
 	 */
 	public static boolean canFileBeStoredOnCurrentFilesystem(String fileName) {
@@ -2276,7 +2274,7 @@ public class Tools {
 	 * possible circle has been detected, this method will always return {@code true}.
 	 *
 	 * @param process
-	 *            the root process to check for circles
+	 * 		the root process to check for circles
 	 * @return {@code true} if a possible circle has been found; {@code false} otherwise
 	 * @since 6.5.0
 	 */
@@ -2324,7 +2322,7 @@ public class Tools {
 	 * Tries to load the given process. Will simply return {@code null} if something goes wrong.
 	 *
 	 * @param location
-	 *            the location from which to load
+	 * 		the location from which to load
 	 * @return the process or {@code null}
 	 */
 	private static com.rapidminer.Process loadEmbeddedProcess(RepositoryLocation location) {
@@ -2351,5 +2349,42 @@ public class Tools {
 		}
 
 		return pattern.toString();
+	}
+
+	/**
+	 * Check if an Operator is contained in a circle via BFS.
+	 *
+	 * @param operator
+	 * 		to be checked if there are connections to the inputports that are connected to operators outputports which are connected to the operators outputports.
+	 * @param maxhops
+	 * 		maximum amount of operators to look through when trying to check if it is a circle, will return false if maximum was reached. For 0 or less maxhops the default of 250 will be used.
+	 * @return if there is a circle
+	 * @since 9.2
+	 */
+	public static boolean isOperatorInCircle(Operator operator, int maxhops) {
+		LinkedList<Operator> nextConnectedOperators = new LinkedList<>();
+		Set<Operator> visitedOperators = new HashSet<>();
+		nextConnectedOperators.add(operator);
+		Operator nextOperator;
+		int maxAmountVisitedOperators = maxhops > 0 ? maxhops : 250;
+		while (!nextConnectedOperators.isEmpty()) {
+			nextOperator = nextConnectedOperators.pop();
+			for (OutputPort aPort : nextOperator.getOutputPorts().getAllPorts()) {
+				if (aPort.isConnected()) {
+					final Operator anotherOp = aPort.getDestination().getPorts().getOwner().getOperator();
+					if (visitedOperators.contains(anotherOp)) {
+						return true;
+					}
+					nextConnectedOperators.add(anotherOp);
+					visitedOperators.add(anotherOp);
+					if (--maxAmountVisitedOperators <= 0) {
+						nextConnectedOperators.clear();
+						visitedOperators.clear();
+						break;
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

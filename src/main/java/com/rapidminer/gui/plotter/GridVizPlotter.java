@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -35,7 +35,9 @@ import java.util.Iterator;
  * dimensions that can be displayed increases significantly.
  * 
  * @author Daniel Hakenjos, Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class GridVizPlotter extends RadVizPlotter {
 
 	private static final long serialVersionUID = 9178351977037267613L;

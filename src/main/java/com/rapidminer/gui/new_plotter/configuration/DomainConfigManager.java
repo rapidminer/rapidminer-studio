@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -44,10 +44,11 @@ import java.util.Vector;
  * {@link PlotConfiguration}. This manager is necessary, because switching between grouping types is
  * not possible all the time because of some constraints. The DimensionConfigManager enforces these
  * constraints.
- * 
+ *
  * @author Marius Helf, Nils Woehler
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class DomainConfigManager extends AbstractDimensionConfig implements DimensionConfigListener, Cloneable,
 		AxisParallelLinesConfigurationListener {
 

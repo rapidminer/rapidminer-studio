@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -29,10 +29,11 @@ import javax.swing.tree.TreeNode;
 /**
  * Never use the setUserObject method of this class! Instead use the exchangePlotConfiguration in
  * PlotConfigurationTreeModel class.
- * 
+ *
  * @author Nils Woehler
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class PlotConfigurationTreeNode extends DefaultMutableTreeNode {
 
 	private static final long serialVersionUID = 1L;

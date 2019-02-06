@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -74,7 +74,7 @@ public class TransactionClustersExampleSetGenerator extends AbstractExampleSourc
 		getProgress().setTotal(numberOfClusters + numberOfTransactions);
 
 		// create table
-		List<Attribute> attributes = new ArrayList<Attribute>();
+		List<Attribute> attributes = new ArrayList<>();
 
 		Attribute id = AttributeFactory.createAttribute("Id", Ontology.NOMINAL);
 		for (int i = 1; i <= numberOfCustomers; i++) {

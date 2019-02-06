@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -44,8 +44,18 @@ public class FileSystemService {
 	private static final String RAPIDMINER_INTERNAL_CACHE = "internal cache";
 	/** folder which can be used for internal caching of the Global Search feature */
 	private static final String RAPIDMINER_INTERNAL_CACHE_SEARCH = "search";
+	/** folder which is used by BrowserContext for cache data storage */
+	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser";
+
+	/** folder which can be used for internal caching of the content mapper store */
+	private static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE = "content mapper";
+	/** folder which can be used as an internal fallback temp folder */
+	private static final String RAPIDMINER_INTERNAL_CACHE_TEMP = "temp";
 
 	public static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_SEARCH;
+	public static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE;
+	public static final String RAPIDMINER_INTERNAL_CACHE_BROWSER_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_BROWSER;
+	public static final String RAPIDMINER_INTERNAL_CACHE_TEMP_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_TEMP;
 
 	/** folder which can be used to load additional building blocks */
 	public static final String RAPIDMINER_BUILDINGBLOCKS = "buildingblocks";
@@ -91,14 +101,20 @@ public class FileSystemService {
 		File buildingBlocksFolder = new File(rapidMinerDir, RAPIDMINER_BUILDINGBLOCKS);
 		File internalCacheFolder = new File(rapidMinerDir, RAPIDMINER_INTERNAL_CACHE);
 		File internalCacheSearchFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_SEARCH);
+		File internalCacheRepositoryMapperStoreFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE);
+		File internalCacheBrowserFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_BROWSER);
 
 		checkAndCreateFolder(rapidMinerDir);
 		checkAndCreateFolder(extensionsWorkspaceRootFolder);
 		checkAndCreateFolder(internalCacheFolder);
 		checkAndCreateFolder(internalCacheSearchFolder);
+		checkAndCreateFolder(internalCacheRepositoryMapperStoreFolder);
+		checkAndCreateFolder(internalCacheBrowserFolder);
+
 		checkAndCreateFolder(extensionsWorkspaceFolder);
 		checkAndCreateFolder(sharedDataDir);
 		checkAndCreateFolder(buildingBlocksFolder);
+
 		return rapidMinerDir;
 	}
 

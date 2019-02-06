@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,9 +18,16 @@
 */
 package com.rapidminer.operator.tools;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
+
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.ports.DummyPortPairExtender;
 import com.rapidminer.operator.ports.PortPairExtender;
 import com.rapidminer.parameter.ParameterHandler;
@@ -30,9 +37,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -59,6 +63,11 @@ public class DelayOperator extends Operator {
 		public static final String PARAMETER_DELAY_MIN_AMOUNT = "min_delay_amount";
 
 		public static final String PARAMETER_DELAY_MAX_AMOUNT = "max_delay_amount";
+
+		/**
+		 * The interval between check for stops (in ms)
+		 */
+		private static final int CHECK_FOR_STOP_PERIOD = 1000;
 
 		private int minAmount = 0;
 
@@ -92,6 +101,50 @@ public class DelayOperator extends Operator {
 					Thread.sleep(randomGenerator.nextIntInRange(minAmount, maxAmount));
 				}
 			} catch (InterruptedException e) {
+			}
+		}
+
+		/**
+		 * Delays for the configured amount. Checks every {@link #CHECK_FOR_STOP_PERIOD} milliseconds if the operator
+		 * was stop and aborts in that case.
+		 *
+		 * @param operator
+		 * 		the operator to check if it should stop
+		 */
+		public void delay(Operator operator) {
+			long millis;
+			if (minAmount == maxAmount) {
+				millis = maxAmount;
+			} else {
+				millis = randomGenerator.nextIntInRange(minAmount, maxAmount);
+			}
+			if (millis > 0) {
+				CountDownLatch latch = new CountDownLatch(1);
+				Timer timer = new Timer(true);
+				timer.scheduleAtFixedRate(new TimerTask() {
+					@Override
+					public void run() {
+						try {
+							operator.checkForStop();
+						} catch (ProcessStoppedException e) {
+							latch.countDown();
+							timer.cancel();
+						}
+					}
+				}, CHECK_FOR_STOP_PERIOD, CHECK_FOR_STOP_PERIOD);
+				timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						latch.countDown();
+						timer.cancel();
+					}
+				}, millis);
+				try {
+					latch.await();
+				} catch (InterruptedException e) {
+					timer.cancel();
+					Thread.currentThread().interrupt();
+				}
 			}
 		}
 
@@ -135,7 +188,7 @@ public class DelayOperator extends Operator {
 
 	@Override
 	public void doWork() throws OperatorException {
-		DelayProvider.createDelayProvider(this).delay();
+		DelayProvider.createDelayProvider(this).delay(this);
 		dummyPorts.passDataThrough();
 	}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -273,6 +273,12 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 	private static final long serialVersionUID = 1L;
 
+	/** The property name whether legacy simple charts should still be hidden in the results */
+	public static final String PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_SIMPLE_CHARTS = "rapidminer.gui.plotter.legacy.simple_charts.show";
+
+	/** The property name whether legacy simple charts should still be shown in the results */
+	public static final String PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_ADVANCED_CHARTS = "rapidminer.gui.plotter.legacy.advanced_charts.show";
+
 	/** The property name for &quot;The pixel size of each plot in matrix plots.&quot; */
 	public static final String PROPERTY_RAPIDMINER_GUI_PLOTTER_MATRIXPLOT_SIZE = "rapidminer.gui.plotter.matrixplot.size";
 
@@ -397,10 +403,10 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	public final transient Action MANAGE_CONFIGURABLES_ACTION = new ManageConfigurablesAction();
 
 	public final transient Action TUTORIAL_ACTION = new TutorialAction();
-	public final transient Action BROWSE_VIDEOS_ACTION = new BrowseAction("toolbar_resources.help_videos", URI.create("http://redirects.rapidminer.com/app/studio/8.1/getting-started-video/main_tool_bar"));
-	public final transient Action BROWSE_COMMUNITY_ACTION = new BrowseAction("toolbar_resources.help_forum", URI.create("http://redirects.rapidminer.com/app/studio/7.2/forum/main_tool_bar"));
-	public final transient Action BROWSE_DOCUMENTATION_ACTION = new BrowseAction("toolbar_resources.documentation", URI.create("http://redirects.rapidminer.com/app/studio/7.2/documentation/main_tool_bar"));
-	public final transient Action BROWSE_SUPPORT_ACTION = new BrowseAction("toolbar_resources.support", URI.create("http://redirects.rapidminer.com/app/studio/7.2/support/main_tool_bar"));
+	public final transient Action BROWSE_VIDEOS_ACTION = new BrowseAction("toolbar_resources.help_videos", URI.create("https://redirects.rapidminer.com/app/studio/8.1/getting-started-video/main_tool_bar"));
+	public final transient Action BROWSE_COMMUNITY_ACTION = new BrowseAction("toolbar_resources.help_forum", URI.create("https://redirects.rapidminer.com/app/studio/7.2/forum/main_tool_bar"));
+	public final transient Action BROWSE_DOCUMENTATION_ACTION = new BrowseAction("toolbar_resources.documentation", URI.create("https://redirects.rapidminer.com/app/studio/7.2/documentation/main_tool_bar"));
+	public final transient Action BROWSE_SUPPORT_ACTION = new BrowseAction("toolbar_resources.support", URI.create("https://redirects.rapidminer.com/app/studio/7.2/support/main_tool_bar"));
 	public final transient Action ABOUT_ACTION = new AboutAction();
 
 	// --------------------------------------------------------------------------------

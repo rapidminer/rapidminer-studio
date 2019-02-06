@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,12 +18,12 @@
 */
 package com.rapidminer.gui.tools;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -38,6 +38,7 @@ import java.util.logging.Level;
 import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.processeditor.results.ResultDisplay;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.tools.I18N;
@@ -80,13 +81,13 @@ public abstract class ProgressThread implements Runnable {
 	private static final int BUSY_WAITING_INTERVAL = 500;
 
 	/** the currently running tasks */
-	private static List<ProgressThread> currentThreads = Collections.synchronizedList(new LinkedList<ProgressThread>());
+	private static List<ProgressThread> currentThreads = Collections.synchronizedList(new ArrayList<ProgressThread>());
 
 	/**
 	 * the queue of {@link ProgressThread}s which await execution because they depend on other
 	 * currently running/queued tasks
 	 */
-	private static List<ProgressThread> queuedThreads = Collections.synchronizedList(new LinkedList<ProgressThread>());
+	private static List<ProgressThread> queuedThreads = Collections.synchronizedList(new ArrayList<ProgressThread>());
 
 	/** the list of event listeners */
 	private static EventListenerList listener = new EventListenerList();
@@ -130,7 +131,7 @@ public abstract class ProgressThread implements Runnable {
 	private final Set<ProgressThreadListener> listeners = new CopyOnWriteArraySet<>();
 
 	/** <code>true</code> if the task was cancelled */
-	private boolean cancelled = false;
+	protected boolean cancelled = false;
 
 	/** <code>true</code> if the task is started. (Remains true after canceling.) */
 	private boolean started = false;
@@ -211,9 +212,9 @@ public abstract class ProgressThread implements Runnable {
 		}
 		this.name = I18N.getMessage(I18N.getGUIBundle(), "gui.progress." + i18nKey + ".label", arguments);
 		this.key = i18nKey;
-		this.runInForeground = runInForeground;
+		this.runInForeground = runInForeground && !RapidMiner.getExecutionMode().isHeadless();
 		this.display = new ProgressDisplay(name, this);
-		this.dependencies = new LinkedList<>();
+		this.dependencies = new ArrayList<>();
 	}
 
 	/**
@@ -276,7 +277,19 @@ public abstract class ProgressThread implements Runnable {
 	 * @return
 	 */
 	public List<String> getDependencies() {
-		return new LinkedList<>(dependencies);
+		return new ArrayList<>(dependencies);
+	}
+
+	/**
+	 * Checks whether this {@link ProgressThread} is blocked by anything else but dependencies.
+	 *
+	 * @return {@code false} by default
+	 * @see #isBlockedByDependencies()
+	 * @see #getDependencies()
+	 * @since 9.2
+	 */
+	protected boolean isBlockedByOther() {
+		return false;
 	}
 
 	/**
@@ -302,24 +315,19 @@ public abstract class ProgressThread implements Runnable {
 	 * in the Executor's queue.
 	 */
 	public void start() {
-		// no dependency -> start immediately
-		if (dependencies.isEmpty()) {
+		// see if task is blocked, if not start it immediately
+		boolean blocked = false;
+		synchronized (LOCK) {
+			blocked = isBlockedByDependencies();
+		}
+		if (!blocked) {
 			EXECUTOR.execute(makeWrapper());
 		} else {
-			// see if task is blocked, if not start it anyway
-			boolean blocked = false;
+			// otherwise add to queue, which is checked once another task finishes execution
 			synchronized (LOCK) {
-				blocked = isBlockedByDependencies();
+				queuedThreads.add(this);
 			}
-			if (!blocked) {
-				EXECUTOR.execute(makeWrapper());
-			} else {
-				// otherwise add to queue, which is checked once another task finishes execution
-				synchronized (LOCK) {
-					queuedThreads.add(this);
-				}
-				taskQueued(this);
-			}
+			taskQueued(this);
 		}
 	}
 
@@ -336,32 +344,35 @@ public abstract class ProgressThread implements Runnable {
 		// #checkQueueForDependenciesAndExecuteUnblockedTasks()
 		isWaiting = true;
 		try {
-			// no dependency -> start immediately
-			if (dependencies.isEmpty()) {
-				EXECUTOR.submit(makeWrapper()).get();
-			} else {
-				synchronized (LOCK) {
-					queuedThreads.add(this);
-				}
-				taskQueued(this);
-				// because this method waits, we can't just queue and leave. Instead we check on a
-				// regular basis and see if it can be executed now.
-				do {
-					boolean blocked = true;
-					synchronized (LOCK) {
-						blocked = isBlockedByDependencies();
-					}
-					if (!blocked) {
-						// no longer blocked? Execute and wait and afterwards leave loop
-						synchronized (LOCK) {
-							queuedThreads.remove(this);
-						}
-						EXECUTOR.submit(makeWrapper()).get();
-						break;
-					}
-					Thread.sleep(BUSY_WAITING_INTERVAL);
-				} while (true);
+			boolean blocked;
+			synchronized (LOCK) {
+				blocked = isBlockedByDependencies();
 			}
+			// no dependency -> start immediately
+			if (!blocked) {
+				EXECUTOR.submit(makeWrapper()).get();
+				return;
+			}
+			synchronized (LOCK) {
+				queuedThreads.add(this);
+			}
+			taskQueued(this);
+			// because this method waits, we can't just queue and leave. Instead we check on a
+			// regular basis and see if it can be executed now.
+			do {
+				synchronized (LOCK) {
+					blocked = isBlockedByDependencies();
+				}
+				if (!blocked) {
+					// no longer blocked? Execute and wait and afterwards leave loop
+					synchronized (LOCK) {
+						queuedThreads.remove(this);
+					}
+					EXECUTOR.submit(makeWrapper()).get();
+					break;
+				}
+				Thread.sleep(BUSY_WAITING_INTERVAL);
+			} while (true);
 		} catch (InterruptedException e) {
 			LogService.getRoot().log(
 					Level.SEVERE,
@@ -539,7 +550,7 @@ public abstract class ProgressThread implements Runnable {
 						});
 					}
 				};
-				if (!isRunInForegroundFlagSet() && isStartDialogShowTimer()) {
+				if (!isRunInForegroundFlagSet() && isStartDialogShowTimer() && !RapidMiner.getExecutionMode().isHeadless()) {
 					showProgressTimer.schedule(showProgressTask, getShowDialogTimerDelay());
 				}
 				try {
@@ -617,8 +628,15 @@ public abstract class ProgressThread implements Runnable {
 	 * @return
 	 */
 	private boolean isBlockedByDependencies() {
+		if (isBlockedByOther()) {
+			return true;
+		}
+		List<String> currentDependencies = getDependencies();
+		if (currentDependencies.isEmpty()) {
+			return false;
+		}
 		for (ProgressThread pg : currentThreads) {
-			if (dependencies.contains(pg.getID())) {
+			if (currentDependencies.contains(pg.getID())) {
 				return true;
 			}
 		}
@@ -629,7 +647,7 @@ public abstract class ProgressThread implements Runnable {
 			if (pg.equals(this)) {
 				break;
 			}
-			if (dependencies.contains(pg.getID())) {
+			if (currentDependencies.contains(pg.getID())) {
 				return true;
 			}
 		}
@@ -719,14 +737,14 @@ public abstract class ProgressThread implements Runnable {
 	 * @return the currently executed tasks.
 	 */
 	public static Collection<ProgressThread> getCurrentThreads() {
-		return new LinkedList<>(currentThreads);
+		return new ArrayList<>(currentThreads);
 	}
 
 	/**
 	 * @return the currently queued tasks
 	 */
 	public static Collection<ProgressThread> getQueuedThreads() {
-		return new LinkedList<>(queuedThreads);
+		return new ArrayList<>(queuedThreads);
 	}
 
 	/**
@@ -776,7 +794,7 @@ public abstract class ProgressThread implements Runnable {
 	private static final void checkQueueForDependenciesAndExecuteUnblockedTasks() {
 		// a task has finished, now check tasks in queue if there are ones which are no
 		// longer blocked
-		List<ProgressThread> toRemove = new LinkedList<>();
+		List<ProgressThread> toRemove = new ArrayList<>();
 		synchronized (LOCK) {
 			for (ProgressThread pg : queuedThreads) {
 				if (!pg.isBlockedByDependencies()) {

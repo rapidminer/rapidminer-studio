@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -250,8 +250,10 @@ public class ProcessBackgroundExecutionState extends SimpleObservable<ProcessBac
 	 * state.
 	 */
 	private void cleanup() {
-		this.process.getRootOperator().removeProcessListener(processListener);
-		this.process.removeLoggingListener(loggingListener);
-		this.process = null;
+		if (this.process != null) {
+			this.process.getRootOperator().removeProcessListener(processListener);
+			this.process.removeLoggingListener(loggingListener);
+			this.process = null;
+		}
 	}
 }

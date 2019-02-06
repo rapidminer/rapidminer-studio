@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -60,7 +60,7 @@ import com.rapidminer.tools.XMLException;
  * Collects statistics about usage of operators. Statistics can be sent to a server collecting them.
  * Counting and resetting is thread safe.
  *
- * @see UsageStatsTransmissionDialog
+ * @see ActionStatisticsCollector ActionStatisticsCollector for the actual hooks to log usage stats.
  *
  * @author Simon Fischer
  *

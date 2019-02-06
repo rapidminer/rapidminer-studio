@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -30,7 +30,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
-
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
@@ -180,7 +179,7 @@ public class SingleResultOverview extends JPanel {
 			name = ((ResultObject) result).getName();
 		} else {
 			name = RendererService.getName(result.getClass());
-			List<Renderer> renderers = RendererService.getRenderers(name);
+			List<Renderer> renderers = RendererService.getRenderersExcludingLegacyRenderers(name);
 			if (renderers.isEmpty()) {
 				main = makeTextRenderer(result);
 			} else {
@@ -354,7 +353,7 @@ public class SingleResultOverview extends JPanel {
 		final IOObject result = ioObject.get();
 		if (result != null) {
 			String name = RendererService.getName(result.getClass());
-			final List<Renderer> renderers = RendererService.getRenderers(name);
+			final List<Renderer> renderers = RendererService.getRenderersExcludingLegacyRenderers(name);
 			if (renderers.isEmpty()) {
 				return;
 			}

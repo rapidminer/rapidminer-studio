@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -53,7 +53,7 @@ import com.rapidminer.gui.new_plotter.configuration.ValueSource.SeriesUsageType;
 import com.rapidminer.gui.new_plotter.data.PlotInstance;
 import com.rapidminer.gui.new_plotter.gui.cellrenderer.EnumComboBoxCellRenderer;
 import com.rapidminer.gui.new_plotter.gui.dnd.DataTableColumnListTransferHandler;
-import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
+import com.rapidminer.gui.popup.PopupAction;
 import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.events.PlotConfigurationChangeEvent.PlotConfigurationChangeType;
 import com.rapidminer.gui.tools.ExtendedHTMLJEditorPane;
@@ -67,8 +67,9 @@ import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunctio
 
 /**
  * @author Nils Woehler
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class ValueSourceConfigurationPanel extends AbstractTreeSelectionDependentPanel {
 
 	private static final long serialVersionUID = 1L;

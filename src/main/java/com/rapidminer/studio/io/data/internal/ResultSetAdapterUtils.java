@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -153,7 +153,7 @@ public final class ResultSetAdapterUtils {
 	 * 		in case the headerRowIndex > startingRowIndex
 	 * @throws DataSetException
 	 * 		if the meta data fetching fails
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	public static DataSetMetaData createMetaData(DataResultSet resultSet, NumberFormat numberFormat, int startingRowIndex, int headerRowIndex, boolean trimAttributeNames, boolean trimForGuessing)
 			throws HeaderRowNotFoundException, StartRowNotFoundException, HeaderRowBehindStartRowException, DataSetException {

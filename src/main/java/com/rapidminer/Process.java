@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,6 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -49,6 +50,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.rapidminer.core.concurrency.ExecutionStoppedException;
 import com.rapidminer.core.license.LicenseViolationException;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.datatable.DataTable;
@@ -91,6 +93,7 @@ import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.studio.internal.ProcessFlowFilterRegistry;
+import com.rapidminer.studio.internal.Resources;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.LoggingHandler;
@@ -1316,15 +1319,13 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 		try {
 			ActionStatisticsCollector.getInstance().logExecution(this);
-			if (input != null) {
-				rootOperator.deliverInput(Arrays.asList(input.getIOObjects()));
+
+			IOContainer result;
+			if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
+				result = executeRootInPool(input, storeOutput);
+			} else {
+				result = executeRoot(input, storeOutput);
 			}
-			rootOperator.execute();
-			rootOperator.checkForStop();
-			if (storeOutput) {
-				saveResults();
-			}
-			IOContainer result = rootOperator.getResults(isOmittingNullResults());
 			long end = System.currentTimeMillis();
 
 			getLogger().log(Level.FINE, () -> "Process:" + Tools.getLineSeparator() + getRootOperator().createProcessTree(3));
@@ -1352,6 +1353,42 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		} finally {
 			finishProcess(logHandler);
 		}
+	}
+
+	private IOContainer executeRootInPool(IOContainer input, boolean storeOutput) throws OperatorException {
+		IOContainer result;
+		try {
+			RandomGenerator.stash(this);
+			List<IOContainer> containers = Resources.getConcurrencyContext(rootOperator)
+					.call(Collections.singletonList(() -> {
+						RandomGenerator.restore(this);
+						return executeRoot(input, storeOutput);
+					}));
+			result = containers.get(0);
+		} catch (ExecutionException e) {
+			if (e.getCause() instanceof Error) {
+				throw (Error) e.getCause();
+			} else if (e.getCause() instanceof RuntimeException) {
+				throw (RuntimeException) e.getCause();
+			}
+			//all other checked exceptions must come from called method executeRoot
+			throw (OperatorException) e.getCause();
+		} catch (ExecutionStoppedException e) {
+			throw new ProcessStoppedException();
+		}
+		return result;
+	}
+
+	private IOContainer executeRoot(IOContainer input, boolean storeOutput) throws OperatorException {
+		if (input != null) {
+			rootOperator.deliverInput(Arrays.asList(input.getIOObjects()));
+		}
+		rootOperator.execute();
+		rootOperator.checkForStop();
+		if (storeOutput) {
+			saveResults();
+		}
+		return rootOperator.getResults(isOmittingNullResults());
 	}
 
 	/**
@@ -1493,7 +1530,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 				getLogger().warning("Process not attached to a file. Resolving against user directory: '" + file + "'.");
 				return file;
 			} else {
-				getLogger().warning("Process not attached to a file. Trying abolute filename '" + name + "'.");
+				getLogger().warning("Process not attached to a file. Trying absolute filename '" + name + "'.");
 				return new File(name);
 			}
 		}

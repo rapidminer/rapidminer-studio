@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -41,8 +41,9 @@ import java.util.regex.Pattern;
  * This is a utility class which can transform {@link ExampleSet}s for various needs.
  * 
  * @author Marco Boeck
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class DataTransformation {
 
 	private static final String TO_REPLACE_WITH_DEPIVOT_ATTRIBUTE_LIST = "TO_REPLACE_WITH_DEPIVOT_ATTRIBUTE_LIST";

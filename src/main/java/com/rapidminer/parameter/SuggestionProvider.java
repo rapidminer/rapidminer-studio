@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -45,11 +45,13 @@ public interface SuggestionProvider<R> {
 	 * @return the list of suggestions. The suggestions will be displayed in a combobox popup by
 	 *         calling the {@link #toString()} method.
 	 */
-	public List<R> getSuggestions(Operator op, ProgressListener pl);
+	 List<R> getSuggestions(Operator op, ProgressListener pl);
 
 	/**
 	 * @return a resource action being displayed right next to the combo box if defined. Might be
 	 *         <code>null</code> in case no action should be displayed.
 	 */
-	public ResourceAction getAction();
+	default ResourceAction getAction(){
+		return null;
+	}
 }

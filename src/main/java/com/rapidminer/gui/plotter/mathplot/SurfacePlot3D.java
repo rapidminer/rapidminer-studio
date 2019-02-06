@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -49,7 +49,9 @@ import com.rapidminer.tools.LogService;
  * This plotter can be used to create 3D surface plots of equidistant data.
  *
  * @author Sebastian Land, Ingo Mierswa, Thilo Kamradt
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class SurfacePlot3D extends JMathPlotter3D {
 
 	private static final long serialVersionUID = -8086776011628491876L;

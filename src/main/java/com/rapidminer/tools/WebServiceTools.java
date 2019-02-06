@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
@@ -46,6 +47,8 @@ public class WebServiceTools {
 
 	// three minutes
 	private static final int READ_TIMEOUT = 180000;
+
+	private static final int CHUNKED_SIZE = 4096 * 16;
 
 	public static final String WEB_SERVICE_TIMEOUT = "connection.timeout";
 
@@ -92,8 +95,8 @@ public class WebServiceTools {
 		Map<String, Object> ctxt = port.getRequestContext();
 		ctxt.put("com.sun.xml.ws.developer.JAXWSProperties.CONNECT_TIMEOUT", timeout);
 		ctxt.put("com.sun.xml.ws.connect.timeout", timeout);
-		ctxt.put("com.sun.xml.ws.internal.connect.timeout", timeout);
 		ctxt.put("com.sun.xml.ws.request.timeout", timeout);
+		ctxt.put("com.sun.xml.internal.ws.connect.timeout", timeout);
 		ctxt.put("com.sun.xml.internal.ws.request.timeout", timeout);
 
 		// We don't want to use proprietary Sun code
@@ -111,16 +114,25 @@ public class WebServiceTools {
 
 	/**
 	 * Sets some default settings for {@link URLConnection}s, e.g. timeouts.
-	 *
-	 * @param connection
 	 */
 	public static void setURLConnectionDefaults(URLConnection connection) {
+		setURLConnectionDefaults(connection, false);
+	}
+
+	/**
+	 * Sets some default settings for {@link URLConnection}s, e.g. timeouts. Allows to specify whether the connection
+	 * should have chunked streaming mode enabled (works only for HttpURLConnections).
+	 */
+	public static void setURLConnectionDefaults(URLConnection connection, boolean isChunked) {
 		if (connection == null) {
-			throw new IllegalArgumentException("url must not be null!");
+			throw new IllegalArgumentException("connection must not be null!");
 		}
 
 		connection.setConnectTimeout(TIMEOUT_URL_CONNECTION);
 		connection.setReadTimeout(READ_TIMEOUT);
+		if (connection instanceof HttpURLConnection && isChunked) {
+			((HttpURLConnection) connection).setChunkedStreamingMode(CHUNKED_SIZE);
+		}
 	}
 
 	/**

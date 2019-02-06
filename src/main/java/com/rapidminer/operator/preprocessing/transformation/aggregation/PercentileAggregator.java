@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -34,7 +34,7 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 public class PercentileAggregator extends NumericalAggregator {
 
 	private double percentile;
-	private List<Double> elements = new ArrayList();
+	private List<Double> elements = new ArrayList<>();
 
 	public PercentileAggregator(AggregationFunction function) {
 		super(function);
@@ -51,12 +51,12 @@ public class PercentileAggregator extends NumericalAggregator {
 	}
 
 	@Override
-	protected void count(double value) {
+	public void count(double value) {
 		elements.add(value);
 	}
 
 	@Override
-	protected void count(double value, double weight) {
+	public void count(double value, double weight) {
 		count(value);
 	}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -41,7 +41,9 @@ import java.util.List;
  * coefficients.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class AndrewsCurves extends PlotterAdapter {
 
 	private static final long serialVersionUID = -471636460650394557L;

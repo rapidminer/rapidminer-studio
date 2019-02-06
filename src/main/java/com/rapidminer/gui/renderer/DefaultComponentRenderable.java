@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -29,7 +29,9 @@ import java.awt.Graphics;
  * The default component renderer.
  * 
  * @author Ingo Mierswa
+ * @deprecated deprecated with 9.2.0, will be removed in a future release!
  */
+@Deprecated
 public class DefaultComponentRenderable implements Renderable {
 
 	private Component component;

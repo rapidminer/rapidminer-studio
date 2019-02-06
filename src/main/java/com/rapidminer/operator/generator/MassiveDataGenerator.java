@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -20,6 +20,7 @@ package com.rapidminer.operator.generator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attribute;
@@ -37,7 +38,6 @@ import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MDReal;
 import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
@@ -72,6 +72,8 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 	 */
 	public static final String PARAMETER_SPARSE_REPRESENTATION = "sparse_representation";
 
+	private static final int MAX_METADATA_ATTRIBUTES = 20;
+
 	private static final int OPERATOR_PROGRESS_STEPS = 1_000_000;
 
 	public MassiveDataGenerator(OperatorDescription description) {
@@ -81,36 +83,21 @@ public class MassiveDataGenerator extends AbstractExampleSource {
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
 		ExampleSetMetaData emd = new ExampleSetMetaData();
-		AttributeMetaData amd = new AttributeMetaData("label", Ontology.NOMINAL, Attributes.LABEL_NAME);
-		emd.addAttribute(amd);
+		emd.addAttribute(new AttributeMetaData("label", Ontology.NOMINAL, Attributes.LABEL_NAME));
 		emd.setNumberOfExamples(getParameterAsInt(PARAMETER_NUMBER_EXAMPLES));
-		int desirendNumberOfAttributes = getParameterAsInt(PARAMETER_NUMBER_ATTRIBUTES);
+		int desiredNumberOfAttributes = getParameterAsInt(PARAMETER_NUMBER_ATTRIBUTES);
 		double mean = getParameterAsDouble(PARAMETER_SPARSE_FRACTION);
-		if (desirendNumberOfAttributes > 20) {
-			emd.attributesAreSuperset();
-			// first ten
-			for (int i = 1; i < 11; i++) {
-				AttributeMetaData newAMD = new AttributeMetaData("att" + i, Ontology.REAL);
-				newAMD.setValueRange(new Range(0, 1), SetRelation.EQUAL);
-				newAMD.setMean(new MDReal(mean));
-				emd.addAttribute(newAMD);
-			}
-			// last ten
-			for (int i = desirendNumberOfAttributes - 10; i <= desirendNumberOfAttributes; i++) {
-				AttributeMetaData newAMD = new AttributeMetaData("att" + i, Ontology.REAL);
-				newAMD.setValueRange(new Range(0, 1), SetRelation.EQUAL);
-				newAMD.setMean(new MDReal(mean));
-				emd.addAttribute(newAMD);
-			}
-
+		IntStream attributeIndices;
+		if (desiredNumberOfAttributes <= MAX_METADATA_ATTRIBUTES) {
+			// all attributes
+			attributeIndices = IntStream.range(1, desiredNumberOfAttributes);
 		} else {
-			for (int i = 0; i < desirendNumberOfAttributes; i++) {
-				AttributeMetaData newAMD = new AttributeMetaData("att" + (i + 1), Ontology.REAL);
-				newAMD.setValueRange(new Range(0, 1), SetRelation.EQUAL);
-				newAMD.setMean(new MDReal(mean));
-				emd.addAttribute(newAMD);
-			}
+			// first ten and last ten
+			attributeIndices = IntStream.concat(IntStream.rangeClosed(1, MAX_METADATA_ATTRIBUTES/2),
+					IntStream.rangeClosed(desiredNumberOfAttributes - MAX_METADATA_ATTRIBUTES/2 + 1, desiredNumberOfAttributes));
 		}
+		attributeIndices.mapToObj(i -> new AttributeMetaData("att" + i, null, Ontology.REAL, new Range(0, 1)))
+				.peek(amd -> amd.setMean(new MDReal(mean))).forEach(emd::addAttribute);
 		return emd;
 	}
 

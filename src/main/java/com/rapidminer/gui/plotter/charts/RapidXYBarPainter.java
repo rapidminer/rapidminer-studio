@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -37,7 +37,9 @@ import org.jfree.ui.RectangleEdge;
  * The painter for the bar charts.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class RapidXYBarPainter implements XYBarPainter {
 
 	/** The division point between the first and second gradient regions. */

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -224,6 +224,7 @@ public enum ActionStatisticsCollector {
 	public static final String ARG_FAILED = "failed";
 	public static final String ARG_STARTED = "started";
 	public static final String ARG_STOPPED = "stopped";
+	public static final String ARG_SPACER = "|";
 	public static final String VALUE_CTA_LIMIT = "limit";
 	public static final String ARG_CTA_LIMIT_DELETED_EVENTS = "deleted_events";
 	public static final String ARG_CTA_LIMIT_DECREASED_TIMEFRAME = "decreased_timeframe";
@@ -266,6 +267,19 @@ public enum ActionStatisticsCollector {
 	/** es_view_filter | filter_selected | condition (since 9.1) */
 	public static final String TYPE_EXAMPLESET_VIEW_FILTER = "es_view_filter";
 	public static final String VALUE_FILTER_SELECTED = "filter_selected";
+
+	/** html5_visualization (since 9.2) */
+	public static final String TYPE_HTML5_VISUALIZATION = "html5_visualization";
+	public static final String TYPE_HTML5_VISUALIZATION_BROWSER = "html5_visualization_browser";
+	public static final String VALUE_BROWSER_SETUP_TEST_STARTED = "browser_setup_test_started";
+	public static final String VALUE_BROWSER_SETUP_TEST_FINISHED = "browser_setup_test_finished";
+	public static final String ARG_BROWSER_TEST_BASIC = "basic";
+	public static final String ARG_BROWSER_TEST_EXTENDED = "extended";
+	public static final String VALUE_CHART_CREATION = "chart_creation";
+	public static final String VALUE_CHART_EXPORT = "chart_export";
+	public static final String TYPE_HTML5_VISUALIZATION_CONFIG_UI = "html5_visualization_config_ui";
+	public static final String VALUE_CONFIG_GROUP_EXPANDED = "config_group_expanded";
+
 
 	public static final String VALUE_CREATED = "created";
 	public static final String VALUE_CONNECTED = "connected";
@@ -363,6 +377,122 @@ public enum ActionStatisticsCollector {
 		String value = guessed.equals(chosen) ? VALUE_GUESSED_DATE_FORMAT_RIGHT : VALUE_GUESSED_DATE_FORMAT_WRONG;
 		String argument = guessed.equals(chosen) ? chosen : guessed + ARG_GUESSED_DATE_SEPARATOR + chosen;
 		log(TYPE_NEW_IMPORT, value, argument);
+	}
+
+	/**
+	 * Logs the successful creation of a HTML5 visualization.
+	 *
+	 * @param plotTypes
+	 * 		the list of plot types that were used in the visualization, can be empty but never {@code null}
+	 * @since 9.2.0
+	 */
+	public void logHTML5VisualizationSuccess(List<String> plotTypes) {
+		StringBuilder arg = new StringBuilder();
+		arg.append(ARG_SUCCESS).append(ARG_SPACER);
+		arg.append(String.join(",", plotTypes));
+		log(TYPE_HTML5_VISUALIZATION, VALUE_CHART_CREATION, arg.toString());
+	}
+
+	/**
+	 * Logs the successful creation of a HTML5 visualization.
+	 *
+	 * @param plotTypes
+	 * 		the list of plot types that were used in the visualization, can be empty but never {@code null}
+	 * @param fileExtension
+	 * 		the file extension (e.g. "pdf", "png", etc)
+	 * @since 9.2.0
+	 */
+	public void logHTML5VisualizationExport(List<String> plotTypes, String fileExtension) {
+		StringBuilder arg = new StringBuilder();
+		arg.append(fileExtension).append(ARG_SPACER);
+		arg.append(String.join(",", plotTypes));
+		log(TYPE_HTML5_VISUALIZATION, VALUE_CHART_EXPORT, arg.toString());
+	}
+
+	/**
+	 * Called when an HTML5 visualization could not be created due to misconfiguration by the user.
+	 *
+	 * @param plotTypes
+	 * 		the list of plot types that were used in the visualization, can be empty but never {@code null}
+	 * @param e
+	 * 		the chart configuration/generation exception
+	 * @since 9.2.0
+	 */
+	public void logHTML5VisualizationFailure(List<String> plotTypes, Exception e) {
+		StringBuilder arg = new StringBuilder();
+		arg.append(ARG_FAILED).append(ARG_SPACER);
+		arg.append(String.join(",", plotTypes)).append(ARG_SPACER);
+		arg.append(e.getMessage());
+		log(TYPE_HTML5_VISUALIZATION, VALUE_CHART_CREATION, arg.toString());
+	}
+
+	/**
+	 * Called when an HTML5 visualization could not be created due to an unexpected exception.
+	 *
+	 * @param plotTypes
+	 * 		the list of plot types that were used in the visualization, can be empty but never {@code null}
+	 * @param t
+	 * 		the unexpected throwable
+	 * @since 9.2.0
+	 */
+	public void logHTML5VisualizationException(List<String> plotTypes, Throwable t) {
+		StringBuilder exception = new StringBuilder();
+		exception.append("ex").append(ARG_SPACER);
+		exception.append(t.getClass()).append(ARG_SPACER);
+		exception.append(getThrowablenStackTraceAsString(t));
+
+		StringBuilder arg = new StringBuilder();
+		arg.append(String.join(",", plotTypes)).append(ARG_SPACER);
+		arg.append(exception.toString());
+		log(TYPE_HTML5_VISUALIZATION, VALUE_EXCEPTION, arg.toString());
+	}
+
+	/**
+	 * Called when an HTML5 visualization could not be displayed in the browser due to an unexpected exception.
+	 *
+	 * @param t
+	 * 		the unexpected throwable
+	 * @since 9.2.0
+	 */
+	public void logHTML5VisualizationBrowserException(Throwable t) {
+		StringBuilder exception = new StringBuilder();
+		exception.append("ex").append(ARG_SPACER);
+		exception.append(t.getClass()).append(ARG_SPACER);
+		exception.append(getThrowablenStackTraceAsString(t));
+
+		StringBuilder arg = new StringBuilder();
+		arg.append(exception.toString());
+		log(TYPE_HTML5_VISUALIZATION_BROWSER, VALUE_EXCEPTION, arg.toString());
+	}
+
+	/**
+	 * Called when the setup test of the HTML5 browser is started. Note that this will be logged all the time, but the
+	 * finish (either success or failure) will only be logged when the JVM does not crash during the test.
+	 *
+	 * @param type
+	 * 		the type (basic vs extended)
+	 * @since 9.2.0
+	 */
+	public void logHTML5VisualizationBrowserSetupTestStarted(String type) {
+		log(TYPE_HTML5_VISUALIZATION_BROWSER, VALUE_BROWSER_SETUP_TEST_STARTED, type);
+	}
+
+	/**
+	 * Called when the setup test of the HTML5 browser is done, both in case of success and failure. Note that the start
+	 * will be logged all the time, but this (no matter if success or failure) will only be logged when the JVM does not
+	 * crash during the test.
+	 *
+	 * @param type
+	 * 		the type (basic vs extended)
+	 * @param success
+	 * 		{@code true} if the browser setup test was successful; {@code false} otherwise
+	 * @since 9.2.0
+	 */
+	public void logHTML5VisualizationBrowserSetupTestFinished(String type, boolean success) {
+		StringBuilder arg = new StringBuilder();
+		arg.append(success ? ARG_SUCCESS : ARG_FAILED).append(ARG_SPACER);
+		arg.append(type);
+		log(TYPE_HTML5_VISUALIZATION_BROWSER, VALUE_BROWSER_SETUP_TEST_FINISHED, arg.toString());
 	}
 
 	/**
@@ -754,7 +884,23 @@ public enum ActionStatisticsCollector {
 	 * @return
 	 */
 	public static String getExceptionStackTraceAsString(Exception e) {
-		return Stream.of(e.getStackTrace()).limit(40).map(StackTraceElement::toString).collect(Collectors.joining(","));
+		return getThrowablenStackTraceAsString(e);
+	}
+
+	/**
+	 * Transforms an exception stacktrace into a String
+	 *
+	 * @param t
+	 * 		the throwable, must not be {@code null}
+	 * @return the stacktrace, never {@code null}
+	 * @since 9.2.0
+	 */
+	public static String getThrowablenStackTraceAsString(Throwable t) {
+		if (t == null) {
+			throw new IllegalArgumentException("t must not be null!");
+		}
+
+		return Stream.of(t.getStackTrace()).limit(40).map(StackTraceElement::toString).collect(Collectors.joining(","));
 	}
 
 	/** Listener that logs input and output volume at operator ports. */

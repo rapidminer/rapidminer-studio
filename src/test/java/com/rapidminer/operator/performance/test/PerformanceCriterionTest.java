@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -97,10 +97,20 @@ public class PerformanceCriterionTest {
 		Mockito.when(pcB.getName()).thenReturn("Type A");
 		Mockito.when(pcB.getFitness()).thenReturn(1d);
 		Mockito.when(pcB.compareTo(Mockito.any())).thenCallRealMethod();
+		PerformanceCriterion pcC = Mockito.mock(PerformanceCriterion.class);
+		Mockito.when(pcC.getName()).thenReturn("Type A");
+		Mockito.when(pcC.getFitness()).thenReturn(Double.NaN);
+		Mockito.when(pcC.compareTo(Mockito.any())).thenCallRealMethod();
 		Assert.assertEquals("Not comparable to itself", 0, pcA.compareTo(pcA));
 		Assert.assertEquals("Not comparable to itself", 0, pcB.compareTo(pcB));
+		Assert.assertEquals("Not comparable to itself", 0, pcC.compareTo(pcC));
 		Assert.assertEquals("Comparison of fitness is incorrect", -1, pcA.compareTo(pcB));
 		Assert.assertEquals("Comparison of fitness is incorrect", 1, pcB.compareTo(pcA));
+		Assert.assertEquals("Comparison of fitness is incorrect", 1, pcA.compareTo(pcC));
+		Assert.assertEquals("Comparison of fitness is incorrect", 1, pcB.compareTo(pcC));
+		Assert.assertEquals("Comparison of fitness is incorrect", -1, pcC.compareTo(pcA));
+		Assert.assertEquals("Comparison of fitness is incorrect", -1, pcC.compareTo(pcB));
+
 	}
 
 }

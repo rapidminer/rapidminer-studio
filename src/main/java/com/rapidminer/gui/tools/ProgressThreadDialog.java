@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -31,6 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 
@@ -49,13 +50,15 @@ public class ProgressThreadDialog extends ButtonDialog {
 
 	/** Create dialog in EDT */
 	static {
-		SwingTools.invokeLater(new Runnable() {
+		if (!RapidMiner.getExecutionMode().isHeadless()) {
+			SwingTools.invokeLater(new Runnable() {
 
-			@Override
-			public void run() {
-				INSTANCE = new ProgressThreadDialog();
-			}
-		});
+				@Override
+				public void run() {
+					INSTANCE = new ProgressThreadDialog();
+				}
+			});
+		}
 	}
 
 	/** mapping between ProgressThread and the UI panel for it */
@@ -282,7 +285,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 	}
 
 	/**
-	 * Singleton access to the {@link ProgressThreadDialog}.
+	 * Singleton access to the {@link ProgressThreadDialog} or {@code null} if running in headless mode
 	 */
 	public static ProgressThreadDialog getInstance() {
 		return INSTANCE;

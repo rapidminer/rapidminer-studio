@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -21,6 +21,7 @@ package com.rapidminer.gui.tools.components;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 import javax.swing.Icon;
 
@@ -33,7 +34,7 @@ import javax.swing.Icon;
  */
 public class ColorIcon implements Icon {
 
-	private Color color = Color.RED;
+	private Color color;
 	private Color borderColor = Color.DARK_GRAY;
 
 	private int width = 20;
@@ -77,9 +78,25 @@ public class ColorIcon implements Icon {
 
 	@Override
 	public void paintIcon(Component c, Graphics g, int x, int y) {
-		g.setColor(color);
-		g.fillRoundRect(x, y, getIconWidth() - 1, getIconHeight(), 2, 2);
-		g.setColor(borderColor);
-		g.drawRoundRect(x, y, getIconWidth() - 1, getIconHeight(), 2, 2);
+		Graphics2D g2 = (Graphics2D) g.create();
+		if (color != null) {
+			g2.setColor(color);
+			g2.fillRoundRect(x, y, getIconWidth() - 1, getIconHeight(), 2, 2);
+		} else {
+			// indicate null color
+			g2.setColor(borderColor);
+			int iconWidthQuarter = getIconWidth() / 4;
+			int iconHeightHalf = getIconHeight() / 2;
+			g2.drawLine(x, y + iconHeightHalf, x + iconWidthQuarter, y + getIconHeight());
+			g2.drawLine(x, y, x + 2 * iconWidthQuarter, y + getIconHeight());
+			g2.drawLine(x + iconWidthQuarter, y, x + 3 * iconWidthQuarter, y + getIconHeight());
+			g2.drawLine(x + 2 * iconWidthQuarter, y, x + 4 * iconWidthQuarter - 1, y + getIconHeight());
+			g2.drawLine(x + 3 * iconWidthQuarter, y, x + 4 * iconWidthQuarter - 1, y + getIconHeight() / 2);
+		}
+
+		g2.setColor(borderColor);
+		g2.drawRoundRect(x, y, getIconWidth() - 1, getIconHeight(), 2, 2);
+
+		g2.dispose();
 	}
 }

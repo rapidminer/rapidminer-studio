@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -29,7 +29,9 @@ import org.math.plot.PlotPanel;
  * The abstract super class for all 2D plotters using the JMathPlot library.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public abstract class JMathPlotter2D extends JMathPlotter {
 
 	/**

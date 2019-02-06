@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -33,8 +33,9 @@ import javax.swing.event.ChangeListener;
 
 /**
  * @author Sebastian Land
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public abstract class LocalNormalizationPlotterAdapter extends LabelRotatingPlotterAdapter {
 
 	private static final long serialVersionUID = -232182954939212825L;

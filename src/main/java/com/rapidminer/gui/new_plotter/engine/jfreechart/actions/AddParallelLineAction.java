@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -30,8 +30,9 @@ import java.awt.event.ActionEvent;
  * This action allows the user to add parallel lines (horizontal/vertical) to the current chart.
  * 
  * @author Marco Boeck
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class AddParallelLineAction extends ResourceAction {
 
 	/** the {@link JFreeChartPlotEngine} instance for this action */

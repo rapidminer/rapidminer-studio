@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -237,6 +237,8 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			instance = new RepositoryManager();
 			// initialize Repository Global Search
 			new RepositoryGlobalSearch();
+			// initialize the content store mapper to enable it to update data for repo locations on rename
+			PersistentContentMapperStore.INSTANCE.init();
 			instance.postInstall();
 		}
 	}
@@ -592,7 +594,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 				throw new RepositoryException("Entry '" + location + "' does not exist.");
 			}
 		} else if (entry instanceof IOObjectEntry) {
-			((IOObjectEntry) entry).storeData(ioobject, callingOperator, null);
+			((IOObjectEntry) entry).storeData(ioobject, callingOperator, progressListener);
 			return ioobject;
 		} else {
 			throw new RepositoryException("Entry '" + location + "' is not a data entry, but " + entry.getType());

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -86,13 +86,8 @@ public enum ExecutionExceptionHandling {
 		}
 
 		if (cause != null) {
-			// unpack runtime exceptions if necessary
-			Throwable innerCause = cause;
-			while (innerCause != null && innerCause != innerCause.getCause() && innerCause instanceof RuntimeException) {
-				// we'll assume the cause is the actual nested exception
-				innerCause = innerCause.getCause();
-			}
 
+			Throwable innerCause = cause;
 			// if the inner cause is an instance of an operator exception
 			// we'll handle this exception as root cause
 			if (innerCause instanceof OperatorException) {

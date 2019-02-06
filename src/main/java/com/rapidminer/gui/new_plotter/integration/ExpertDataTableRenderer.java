@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -38,7 +38,9 @@ import java.util.Map;
  * This renderer creates a plot view of the series (for integration in RapidMiner).
  * 
  * @author Marius Helf
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class ExpertDataTableRenderer extends AbstractRenderer {
 
 	/*

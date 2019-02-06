@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
@@ -122,13 +123,7 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 				if (unfold && data instanceof IOObjectCollection) {
 					unfold((IOObjectCollection<?>) data, results, desiredClass, port);
 				} else {
-					if (desiredClass.isInstance(data)) {
-						results.add((T) data);
-					} else {
-						throw new UserError(getPorts().getOwner().getOperator(), 156,
-								RendererService.getName(data.getClass()), port.getName(),
-								RendererService.getName(desiredClass));
-					}
+					addSingle(results, data, desiredClass, port);
 				}
 			}
 		}
@@ -148,13 +143,25 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 			if (obj instanceof IOObjectCollection) {
 				unfold((IOObjectCollection<?>) obj, results, desiredClass, port);
 			} else {
-				if (desiredClass.isInstance(obj)) {
-					results.add((T) obj);
-				} else {
-					throw new UserError(getPorts().getOwner().getOperator(), 156, RendererService.getName(obj.getClass()),
-							port.getName(), RendererService.getName(desiredClass));
-				}
+				addSingle(results, obj, desiredClass, port);
 			}
+		}
+	}
+
+	/**
+	 * Adds the data to the results list if it is of the desired class or convertible to it. Throws an user error
+	 * otherwise.
+	 */
+	private <T extends IOObject> void addSingle(List<T> results, IOObject data, Class<T> desiredClass, Port port)
+			throws UserError {
+		if (desiredClass.isInstance(data)) {
+			results.add(desiredClass.cast(data));
+		} else if (AtPortConverter.isConvertible(data.getClass(), desiredClass)) {
+			results.add(desiredClass.cast(AtPortConverter.convert(data, port)));
+		} else {
+			throw new UserError(getPorts().getOwner().getOperator(), 156,
+					RendererService.getName(data.getClass()), port.getName(),
+					RendererService.getName(desiredClass));
 		}
 	}
 

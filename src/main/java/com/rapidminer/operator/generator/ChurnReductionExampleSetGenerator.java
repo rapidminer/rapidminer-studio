@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -60,6 +60,17 @@ public class ChurnReductionExampleSetGenerator extends AbstractExampleSource {
 
 	/** the index of the label attribute */
 	private static final int LABEL_ATTR_IDX = 5;
+
+	/** @since 9.2.0 */
+	private static final ExampleSetMetaData DEFAULT_META_DATA;
+	static {
+		ExampleSetMetaData emd = new ExampleSetMetaData();
+		emd.addAttribute(new AttributeMetaData("label", Attributes.LABEL_NAME, "ok", "terminate"));
+		for (int i = 1; i < 6; i++) {
+			emd.addAttribute(new AttributeMetaData("Year " + i, null, POSSIBLE_VALUES));
+		}
+		DEFAULT_META_DATA = emd;
+	}
 
 	public ChurnReductionExampleSetGenerator(OperatorDescription description) {
 		super(description);
@@ -132,16 +143,14 @@ public class ChurnReductionExampleSetGenerator extends AbstractExampleSource {
 
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
-		ExampleSetMetaData emd = new ExampleSetMetaData();
-		emd.addAttribute(new AttributeMetaData("label", Attributes.LABEL_NAME, "ok", "terminate"));
-		for (int i = 1; i < 6; i++) {
-			// if you update the order of the list in the next line, be sure to update the constants
-			// in the header!!!
-			emd.addAttribute(new AttributeMetaData("Year " + i, null, "New Credit", "Nothing", "End Credit",
-					"Collect Information", "Additional Credit"));
-		}
-
+		ExampleSetMetaData emd = getDefaultMetaData();
 		emd.setNumberOfExamples(getParameterAsInt(PARAMETER_NUMBER_EXAMPLES));
 		return emd;
+	}
+
+	/** @since 9.2.0 */
+	@Override
+	protected ExampleSetMetaData getDefaultMetaData() {
+		return DEFAULT_META_DATA.clone();
 	}
 }

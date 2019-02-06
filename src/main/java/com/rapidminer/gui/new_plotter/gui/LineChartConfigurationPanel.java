@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -50,8 +50,9 @@ import com.rapidminer.tools.I18N;
 
 /**
  * @author Nils Woehler
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class LineChartConfigurationPanel extends AbstractTreeSelectionDependentPanel {
 
 	private static final long serialVersionUID = 1L;

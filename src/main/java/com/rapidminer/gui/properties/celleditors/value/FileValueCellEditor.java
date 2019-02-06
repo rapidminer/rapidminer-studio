@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,11 +23,9 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
-
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -69,13 +67,7 @@ public abstract class FileValueCellEditor extends AbstractCellEditor implements 
 		panel.setLayout(gridBagLayout);
 		panel.setToolTipText(type.getDescription());
 		textField.setToolTipText(type.getDescription());
-		textField.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				fireEditingStopped();
-			}
-		});
+		textField.addActionListener(e -> fireEditingStopped());
 		textField.addFocusListener(new FocusListener() {
 
 			@Override
@@ -127,6 +119,7 @@ public abstract class FileValueCellEditor extends AbstractCellEditor implements 
 
 	private void buttonPressed() {
 		String value = (String) getCellEditorValue();
+		value = resolveMacros(value);
 		File file = value == null || value.length() == 0 ? null : RapidMinerGUI.getMainFrame().getProcess()
 				.resolveFileName(value);
 		File selectedFile = SwingTools.chooseFile(RapidMinerGUI.getMainFrame(), file, true,
@@ -137,6 +130,14 @@ public abstract class FileValueCellEditor extends AbstractCellEditor implements 
 			fireEditingStopped();
 		} else {
 			fireEditingCanceled();
+		}
+	}
+
+	private String resolveMacros(String value) {
+		try {
+			return type.substituteMacros(value, RapidMinerGUI.getMainFrame().getProcess().getMacroHandler());
+		} catch (Exception e) {
+			return value;
 		}
 	}
 

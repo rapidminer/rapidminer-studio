@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -19,7 +19,7 @@
 package com.rapidminer.adaption.belt;
 
 import com.rapidminer.RapidMiner;
-import com.rapidminer.belt.BeltConverter;
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;

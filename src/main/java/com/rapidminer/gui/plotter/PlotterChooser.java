@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -44,7 +44,7 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 
-import com.rapidminer.gui.new_plotter.gui.popup.PopupAction;
+import com.rapidminer.gui.popup.PopupAction;
 import com.rapidminer.gui.tools.ListHoverHelper;
 import com.rapidminer.gui.tools.MenuShortcutJList;
 import com.rapidminer.gui.tools.SwingTools;
@@ -57,8 +57,9 @@ import com.rapidminer.tools.LogService;
  * {@link PlotterControlPanel}.
  *
  * @author David Arnu, Michael Knopf
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class PlotterChooser extends JButton {
 
 	private static final long serialVersionUID = 1L;

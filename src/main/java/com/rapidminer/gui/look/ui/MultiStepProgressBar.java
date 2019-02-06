@@ -1,7 +1,5 @@
 /**
- * RapidMiner Auto Model and Model Simulator Extension
- *
- * Copyright (C) 2018 RapidMiner GmbH
+ * Copyright (C) 2001-2019 RapidMiner GmbH
  */
 package com.rapidminer.gui.look.ui;
 

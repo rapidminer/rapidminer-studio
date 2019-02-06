@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -32,9 +32,7 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.generator.ExampleSetGenerator;
 import com.rapidminer.operator.nio.file.FileInputPortHandler;
 import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
@@ -275,13 +273,7 @@ public abstract class BytewiseExampleSource extends AbstractExampleSource {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = FileInputPortHandler.makeFileParameterType(this, PARAMETER_FILENAME,
-				"Name of the file to read the data from.", getFileSuffix(), new PortProvider() {
-
-					@Override
-					public Port getPort() {
-						return fileInputPort;
-					}
-				});
+				"Name of the file to read the data from.", getFileSuffix(), () -> fileInputPort);
 		type.setExpert(false);
 		type.setPrimary(true);
 		types.add(type);

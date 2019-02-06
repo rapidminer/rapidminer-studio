@@ -99,7 +99,7 @@ Beta Program
 RapidMiner provides the Beta Software to selected users (the "Beta Testers") for the purpose of previewing new features which may be made generally available in a later public release.  In return, RapidMiner expects Beta Testers to actively participate in the Beta Program as further described in this Exhibit A.
 
 2. Usage Commitment
-The Beta Tester shall use best efforts to fully and diligently exercise the Beta Software. This includes the installation, startup and usage of the Beta Software as applicable. The Beta Tester shall place specific emphasis on testing the features mentioned on the Beta Program web page at http://redirects.rapidminer.com/rm7-beta (the "Beta Website").
+The Beta Tester shall use best efforts to fully and diligently exercise the Beta Software. This includes the installation, startup and usage of the Beta Software as applicable. The Beta Tester shall place specific emphasis on testing the features mentioned on the Beta Program web page at https://redirects.rapidminer.com/rm7-beta (the "Beta Website").
 
 3. Bug and Feedback Submission
 In the event that the Beta Tester experiences a bug or encounters any issue with the Beta Software, the Beta Tester shall report the issue through the issue tracker available at the Beta Website. The Beta Tester shall document and submit bugs in compliance to the measures set forth in Section 2 of Exhibit B.

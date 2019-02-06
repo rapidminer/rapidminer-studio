@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,11 +18,11 @@
 */
 package com.rapidminer.parameter;
 
+import org.w3c.dom.Element;
+
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.XMLException;
-
-import org.w3c.dom.Element;
 
 
 /**
@@ -59,6 +59,14 @@ public class ParameterTypeAttributes extends ParameterTypeAttribute {
 	public ParameterTypeAttributes(final String key, String description, InputPort inPort, boolean optional,
 			int... valueTypes) {
 		super(key, description, inPort, optional, valueTypes);
+	}
+
+	/**
+	 * @since 9.2.0
+	 */
+	public ParameterTypeAttributes(final String key, String description, MetaDataProvider metaDataProvider, boolean optional,
+								   int... valueTypes) {
+		super(key, description, metaDataProvider, optional, valueTypes);
 	}
 
 	public ParameterTypeAttributes(final String key, String description, InputPort inPort, boolean optional, boolean expert) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -173,7 +173,7 @@ public class ExampleSource extends AbstractExampleSource {
 		getLogger().fine("Generating meta data for " + this.getName());
 		File attributeFile = getParameterAsFile(PARAMETER_ATTRIBUTES);
 		if (attributeFile == null) {
-			return new ExampleSetMetaData();
+			return getDefaultMetaData();
 		}
 		AttributeDataSources attributeDataSources;
 		try {
@@ -181,7 +181,7 @@ public class ExampleSource extends AbstractExampleSource {
 		} catch (XMLParserException | XMLException e) {
 			throw new UserError(this, e, 401, e.getMessage());
 		} catch (IOException e) {
-			throw new UserError(this, e, 302, new Object[] { attributeFile, e.getMessage() });
+			throw new UserError(this, e, 302, attributeFile, e.getMessage());
 		} catch (SAXException e) {
 			throw new UserError(this, e, 401, e.toString());
 		}
@@ -199,9 +199,14 @@ public class ExampleSource extends AbstractExampleSource {
 		return emd;
 	}
 
+	/** @return {@code true} iff an attributes file is specified */
 	@Override
 	protected boolean isMetaDataCacheable() {
-		return true;
+		try {
+			return getParameterAsFile(PARAMETER_ATTRIBUTES) != null;
+		} catch (UserError userError) {
+			return true;
+		}
 	}
 
 	@Override
@@ -236,7 +241,7 @@ public class ExampleSource extends AbstractExampleSource {
 		} catch (XMLParserException | XMLException e) {
 			throw new UserError(this, e, 401, e.getMessage());
 		} catch (IOException e) {
-			throw new UserError(this, e, 302, new Object[] { attributeFile, e.getMessage() });
+			throw new UserError(this, e, 302, attributeFile, e.getMessage());
 		} catch (SAXException e) {
 			throw new UserError(this, e, 401, e.toString());
 		}
@@ -245,8 +250,7 @@ public class ExampleSource extends AbstractExampleSource {
 
 		ExampleTable table = new MemoryExampleTable(attributeSet.getAllAttributes(), reader,
 				getParameterAsBoolean(PARAMETER_PERMUTATE));
-		ExampleSet result = table.createExampleSet(attributeSet);
-		return result;
+		return table.createExampleSet(attributeSet);
 	}
 
 	@Override

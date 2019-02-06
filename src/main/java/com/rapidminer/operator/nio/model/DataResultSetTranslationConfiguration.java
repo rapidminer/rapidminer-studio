@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -426,7 +426,7 @@ public class DataResultSetTranslationConfiguration {
 	 * Indicates if values should be trimmed for type guessing
 	 *
 	 * @return {@code true} if values should be trimmed for type guessing
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	public boolean trimForGuessing() {
 		return trimForGuessing;
@@ -437,7 +437,7 @@ public class DataResultSetTranslationConfiguration {
 	 *
 	 * @param trimForGuessing
 	 * 		if parameters should be trimmed for guessing
-	 * @since 9.1.1
+	 * @since 9.2.0
 	 */
 	public void setTrimForGuessing(boolean trimForGuessing) {
 		this.trimForGuessing = trimForGuessing;

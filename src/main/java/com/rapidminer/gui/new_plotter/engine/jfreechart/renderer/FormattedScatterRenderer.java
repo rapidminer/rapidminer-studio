@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -47,8 +47,9 @@ import org.jfree.util.ShapeUtilities;
  * Needs a {@link ValueSourceToMultiValueCategoryDatasetAdapter} as dataset.
  * 
  * @author Marius Helf
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class FormattedScatterRenderer extends ScatterRenderer implements FormattedRenderer {
 
 	private static final long serialVersionUID = 1L;

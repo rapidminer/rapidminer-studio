@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -70,6 +70,29 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 	private static final String[] PRODUCT_CATEGORIES = new String[] { "Books", "Movies", "Electronics", "Home/Garden",
 			"Health", "Toys", "Sports", "Clothing" };
 
+	/** @since 9.2.0 */
+	private static final ExampleSetMetaData DEFAULT_META_DATA;
+	static {
+		ExampleSetMetaData emd = new ExampleSetMetaData();
+		emd.addAttribute(new AttributeMetaData("transaction_id", Ontology.INTEGER, Attributes.ID_NAME));
+		emd.addAttribute(new AttributeMetaData("store_id", null, "Store 01", "Store 02", "Store 03", "Store 04", "Store 05",
+				"Store 06", "Store 07", "Store 08", "Store 09", "Store 10", "Store 11", "Store 12", "Store 13", "Store 14",
+				"Store 15"));
+		String[] customers = new String[MAX_CUSTOMERS];
+		for (int i = 0; i < MAX_CUSTOMERS; i++) {
+			customers[i] = "Customer " + (i + 1);
+		}
+
+		emd.addAttribute(new AttributeMetaData("customer_id", null, customers));
+		emd.addAttribute(new AttributeMetaData("product_id", null, Ontology.INTEGER, new Range(10000, 100000)));
+		emd.addAttribute(new AttributeMetaData("product_category", null, PRODUCT_CATEGORIES));
+
+		emd.addAttribute(new AttributeMetaData("date", Ontology.DATE));
+		emd.addAttribute(new AttributeMetaData("amount", null, Ontology.INTEGER, new Range(1, 10)));
+		emd.addAttribute(new AttributeMetaData("single_price", null, Ontology.INTEGER, new Range(10, 100)));
+		DEFAULT_META_DATA = emd;
+	}
+
 	public SalesExampleSetGenerator(OperatorDescription description) {
 		super(description);
 	}
@@ -79,7 +102,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 		// init
 		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
 
-		List<Attribute> attributes = new ArrayList<Attribute>();
+		List<Attribute> attributes = new ArrayList<>();
 
 		// transaction id
 		Attribute transactionId = AttributeFactory.createAttribute(ATTRIBUTE_NAMES[ATT_TRANSACTION_ID], Ontology.INTEGER);
@@ -164,26 +187,15 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
-		ExampleSetMetaData emd = new ExampleSetMetaData();
-		emd.addAttribute(new AttributeMetaData("transaction_id", Ontology.INTEGER, Attributes.ID_NAME));
-		emd.addAttribute(new AttributeMetaData("store_id", null, "Store 01", "Store 02", "Store 03", "Store 04", "Store 05",
-				"Store 06", "Store 07", "Store 08", "Store 09", "Store 10", "Store 11", "Store 12", "Store 13", "Store 14",
-				"Store 15"));
-		String[] customers = new String[MAX_CUSTOMERS];
-		for (int i = 0; i < MAX_CUSTOMERS; i++) {
-			customers[i] = "Customer " + (i + 1);
-		}
-
-		emd.addAttribute(new AttributeMetaData("customer_id", null, customers));
-		emd.addAttribute(new AttributeMetaData("product_id", null, Ontology.INTEGER, new Range(10000, 100000)));
-		emd.addAttribute(new AttributeMetaData("product_category", null, PRODUCT_CATEGORIES));
-
-		emd.addAttribute(new AttributeMetaData("date", Ontology.DATE));
-		emd.addAttribute(new AttributeMetaData("amount", null, Ontology.INTEGER, new Range(1, 10)));
-		emd.addAttribute(new AttributeMetaData("single_price", null, Ontology.INTEGER, new Range(10, 100)));
-
+		ExampleSetMetaData emd = getDefaultMetaData();
 		emd.setNumberOfExamples(getParameterAsInt(PARAMETER_NUMBER_EXAMPLES));
 		return emd;
+	}
+
+	/** @since 9.2.0 */
+	@Override
+	protected ExampleSetMetaData getDefaultMetaData() {
+		return DEFAULT_META_DATA.clone();
 	}
 
 	@Override

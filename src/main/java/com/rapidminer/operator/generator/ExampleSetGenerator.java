@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -151,8 +151,7 @@ public class ExampleSetGenerator extends AbstractExampleSource {
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
 		TargetFunction function = createTargetFunction();
-		ExampleSetMetaData generatedMD = function.getGeneratedMetaData();
-		return generatedMD;
+		return function.getGeneratedMetaData();
 	}
 
 	@Override

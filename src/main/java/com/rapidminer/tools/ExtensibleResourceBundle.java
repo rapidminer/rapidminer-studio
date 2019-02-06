@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -241,7 +242,7 @@ public class ExtensibleResourceBundle extends ResourceBundle {
 	 */
 	private static void logIfMissing(ResourceBundle bundle, String key) {
 		if (LOG_MISSING_TRANSLATIONS && bundle.getLocale().getLanguage().isEmpty() && !key.endsWith(I18N.ICON_SUFFIX)) {
-			String[] bundlePath = bundle.getBaseBundleName().split("[/.]");
+			String[] bundlePath = Objects.toString(bundle.getBaseBundleName(), "").split("[/.]");
 			MISSING_TRANSLATION_KEYS.add(bundlePath[bundlePath.length - 1] + SEPARATOR + key);
 		}
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -27,8 +27,9 @@ import com.rapidminer.gui.new_plotter.configuration.DataTableColumn;
  * This class stores the column index of a {@link DataTableColumn}.
  * 
  * @author Marius Helf
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class DataTableColumnIndex implements DataTableListener {
 
 	private int index = -1;

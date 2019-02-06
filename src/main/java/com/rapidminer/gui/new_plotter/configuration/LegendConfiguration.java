@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -37,12 +37,13 @@ import com.rapidminer.tools.I18N;
 /**
  *
  * @author Marius Helf, Nils Woehler
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class LegendConfiguration implements Cloneable {
 
 	public enum LegendPosition {
-		TOP(I18N.getGUILabel("plotter.legendposition.TOP.label"), RectangleEdge.TOP), BOTTOM(
+		TOP(I18N.getGUILabel("plotter.legendposition.TOP.label"),RectangleEdge.TOP), BOTTOM(
 				I18N.getGUILabel("plotter.legendposition.BOTTOM.label"),
 				RectangleEdge.BOTTOM), LEFT(I18N.getGUILabel("plotter.legendposition.LEFT.label"),
 						RectangleEdge.LEFT), RIGHT(I18N.getGUILabel("plotter.legendposition.RIGHT.label"),

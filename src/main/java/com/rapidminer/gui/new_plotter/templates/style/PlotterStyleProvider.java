@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -31,8 +31,9 @@ import org.w3c.dom.Element;
  * Abstract class which all style providers for the new plotter templates have to extend.
  * 
  * @author Marco Boeck
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public abstract class PlotterStyleProvider extends Observable {
 
 	public static final String STYLE_ELEMENT = "style";

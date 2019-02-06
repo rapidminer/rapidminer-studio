@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
-
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -59,7 +58,6 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.xml.ws.WebServiceException;
@@ -837,22 +835,6 @@ public class ConfigurableDialog extends ButtonDialog {
 
 		configContainer = new JXTaskPaneContainer();
 		configContainer.setBackgroundPainter(new MattePainter(Color.white));
-
-		/* background color */
-		UIManager.put("TaskPane.background", LIGHTER_GRAY);
-		/* title hover color */
-		UIManager.put("TaskPane.titleOver", SwingTools.RAPIDMINER_ORANGE);
-		UIManager.put("TaskPane.specialTitleOver", SwingTools.RAPIDMINER_ORANGE);
-		/* border color */
-		UIManager.put("TaskPane.borderColor", this.getBackground());
-		/* foreground */
-		UIManager.put("TaskPane.foreground", Color.black);
-		UIManager.put("TaskPane.titleForeground", Color.black);
-		UIManager.put("TaskPane.specialTitleForeground", Color.black);
-		/* title background */
-		UIManager.put("TaskPane.specialTitleBackground", this.getBackground());
-		UIManager.put("TaskPane.titleBackgroundGradientStart", this.getBackground());
-		UIManager.put("TaskPane.titleBackgroundGradientEnd", this.getBackground());
 
 		// add local task pane
 		localTaskPane = new JXTaskPane();

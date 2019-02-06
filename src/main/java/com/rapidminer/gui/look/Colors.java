@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -97,6 +97,17 @@ public class Colors {
 	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_PRESSED_GRADIENT_END = new ColorUIResource(142, 159, 184);
 	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_DISABLED_GRADIENT_START = BUTTON_BACKGROUND_DISABLED_GRADIENT_START;
 	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_DARK_DISABLED_GRADIENT_END = BUTTON_BACKGROUND_DISABLED_GRADIENT_END;
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_GRADIENT_START = new ColorUIResource(255, 255, 255);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_GRADIENT_END = new ColorUIResource(240, 240, 240);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_ROLLOVER_GRADIENT_START = new ColorUIResource(248, 248, 248);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_ROLLOVER_GRADIENT_END = new ColorUIResource(233, 233, 233);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_PRESSED_GRADIENT_START = new ColorUIResource(240, 240, 240);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_PRESSED_GRADIENT_END = new ColorUIResource(255, 255, 255);
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_DISABLED_GRADIENT_START = BUTTON_BACKGROUND_DISABLED_GRADIENT_START;
+	public static final ColorUIResource BUTTON_BACKGROUND_HIGHLIGHTED_WHITE_DISABLED_GRADIENT_END = BUTTON_BACKGROUND_DISABLED_GRADIENT_END;
+
+	public static final ColorUIResource RAPIDMINER_ORANGE = new ColorUIResource(241, 96, 34);
+	public static final ColorUIResource RAPIDMINER_ORANGE_BRIGHT = new ColorUIResource(246, 117, 75);
 
 	public static final ColorUIResource COMBOBOX_BACKGROUND = INPUT_BACKGROUND;
 	public static final ColorUIResource COMBOBOX_BACKGROUND_DARK = INPUT_BACKGROUND_DARK;

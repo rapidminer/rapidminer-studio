@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -59,7 +59,9 @@ import com.rapidminer.tools.Tools;
  * This is the histogram color plotter based on JFreeCharts.
  *
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class HistogramColorChart extends HistogramChart {
 
 	private static final long serialVersionUID = 9140046811324105445L;

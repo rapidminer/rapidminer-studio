@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -20,6 +20,7 @@ package com.rapidminer.example.set;
 
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.tools.I18N;
 
 
 /**
@@ -37,13 +38,17 @@ public class WrongPredictionCondition implements Condition {
 	/**
 	 * Throws an exception since this condition does not support parameter string.
 	 */
-	public WrongPredictionCondition(ExampleSet exampleSet, String parameterString) {
-		if (exampleSet.getAttributes().getLabel() == null) {
-			throw new IllegalArgumentException("FalsePredictionCondition needs an example set with label attribute!");
+	public WrongPredictionCondition(ExampleSet exampleSet, String parameterString) throws ConditionCreationException {
+		final boolean missingLabel = exampleSet.getAttributes().getLabel() == null;
+		final boolean missingPrediction = exampleSet.getAttributes().getPredictedLabel() == null;
+		if (missingLabel && missingPrediction) {
+			throw new ConditionCreationException(I18N.getErrorMessage("com.rapidminer.example.set.WrongPredictionCondition.missing_label_and_prediction"));
 		}
-		if (exampleSet.getAttributes().getPredictedLabel() == null) {
-			throw new IllegalArgumentException(
-					"FalsePredictionCondition needs an example set with predicted label attribute!");
+		if (missingLabel) {
+			throw new ConditionCreationException(I18N.getErrorMessage("com.rapidminer.example.set.WrongPredictionCondition.missing_label"));
+		}
+		if (missingPrediction) {
+			throw new ConditionCreationException(I18N.getErrorMessage("com.rapidminer.example.set.WrongPredictionCondition.missing_prediction"));
 		}
 	}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -26,7 +26,9 @@ import java.awt.Color;
  * point to a color of scheme, representing something like an landscape map.
  * 
  * @author Sebastian Land
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class SOMLandscapeColorizer implements SOMMatrixColorizer {
 
 	private Color[] colors = new Color[] { new Color(0, 0, 255), new Color(0, 255, 255), new Color(255, 255, 185),

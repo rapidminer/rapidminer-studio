@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -46,8 +46,9 @@ import org.jfree.data.statistics.MultiValueCategoryDataset;
  * An adapter which wraps a value source inside a MultiValueCategoryDataset.
  * 
  * @author Marius Helf, Nils Woehler
- * 
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class ValueSourceToMultiValueCategoryDatasetAdapter extends AbstractDataset implements MultiValueCategoryDataset,
 		RangeInfo, Cloneable {
 

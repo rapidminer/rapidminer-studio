@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -119,7 +119,7 @@ public class ResultDisplayTools {
 		result = TableViewingTools.replaceTable(result);
 		final String resultName = RendererService.getName(result.getClass());
 		ButtonBarCardPanel visualisationComponent;
-		Collection<Renderer> renderers = RendererService.getRenderers(resultName);
+		Collection<Renderer> renderers = RendererService.getRenderersExcludingLegacyRenderers(resultName);
 
 		// fallback to default toString method!
 		if (resultName == null) {

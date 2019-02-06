@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -35,8 +35,9 @@ import java.util.List;
  * and if a label will be shown.
  *
  * @author Marius Helf
- *
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class AxisParallelLinesConfiguration implements AxisParallelLineConfigurationListener, Cloneable {
 
 	private List<AxisParallelLineConfiguration> lineConfigurations = new LinkedList<AxisParallelLineConfiguration>();

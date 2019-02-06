@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -65,6 +65,20 @@ public class TransfersExampleSetGenerator extends AbstractExampleSource {
 			{ "Prj01", "Prj02", "Prj03", "Prj04", "Prj05", "Prj06", "Prj07", "Prj08" }, null,
 			{ "Mr. Brown", "Mr. Miller", "Mrs. Smith", "Mrs. Hanson", "Mrs. Green", "Mr. Chang" }, null };
 
+	/** @since 9.2.0 */
+	private static final ExampleSetMetaData DEFAULT_META_DATA;
+	static {
+		ExampleSetMetaData emd = new ExampleSetMetaData();
+		emd.addAttribute(new AttributeMetaData("TransferID", Ontology.INTEGER, Attributes.ID_NAME));
+		emd.addAttribute(new AttributeMetaData("Source", null, POSSIBLE_VALUES[0]));
+		emd.addAttribute(new AttributeMetaData("Target", null, POSSIBLE_VALUES[1]));
+		emd.addAttribute(new AttributeMetaData("ProjectID", null, POSSIBLE_VALUES[2]));
+		emd.addAttribute(new AttributeMetaData("Reason", null, Ontology.INTEGER, new Range(10000, 99999)));
+		emd.addAttribute(new AttributeMetaData("Person", null, POSSIBLE_VALUES[1]));
+		emd.addAttribute(new AttributeMetaData("Amount", null, Ontology.INTEGER, new Range(50000, Double.POSITIVE_INFINITY)));
+		DEFAULT_META_DATA = emd;
+	}
+
 	public TransfersExampleSetGenerator(OperatorDescription description) {
 		super(description);
 	}
@@ -75,7 +89,7 @@ public class TransfersExampleSetGenerator extends AbstractExampleSource {
 		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
 
 		// create table
-		List<Attribute> attributes = new ArrayList<Attribute>();
+		List<Attribute> attributes = new ArrayList<>();
 		Attribute id = AttributeFactory.createAttribute("TransferID", Ontology.INTEGER);
 		attributes.add(id);
 		for (int m = 0; m < ATTRIBUTE_NAMES.length; m++) {
@@ -159,21 +173,17 @@ public class TransfersExampleSetGenerator extends AbstractExampleSource {
 
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
-		ExampleSetMetaData emd = new ExampleSetMetaData();
-		emd.addAttribute(new AttributeMetaData("TransferID", Ontology.INTEGER, Attributes.ID_NAME));
-		emd.addAttribute(new AttributeMetaData("Source", null, POSSIBLE_VALUES[0]));
-		emd.addAttribute(new AttributeMetaData("Target", null, POSSIBLE_VALUES[1]));
-		emd.addAttribute(new AttributeMetaData("ProjectID", null, POSSIBLE_VALUES[2]));
-		emd.addAttribute(new AttributeMetaData("Reason", null, Ontology.INTEGER, new Range(10000, 99999)));
-		emd.addAttribute(new AttributeMetaData("Person", null, POSSIBLE_VALUES[1]));
-		emd.addAttribute(new AttributeMetaData("Amount", null, Ontology.INTEGER, new Range(50000, Double.POSITIVE_INFINITY)));
-
+		ExampleSetMetaData emd = getDefaultMetaData();
 		if (getParameterAsBoolean(PARAMETER_CREATE_FRAUD_LABEL)) {
-			emd.addAttribute(new AttributeMetaData("fraud", Attributes.LABEL_NAME, Ontology.NOMINAL, new String[] { "yes",
-					"no" }));
+			emd.addAttribute(new AttributeMetaData("fraud", Attributes.LABEL_NAME, Ontology.NOMINAL, "yes", "no"));
 		}
-
 		emd.setNumberOfExamples(getParameterAsInt(PARAMETER_NUMBER_EXAMPLES));
 		return emd;
+	}
+
+	/** @since 9.2.0 */
+	@Override
+	protected ExampleSetMetaData getDefaultMetaData() {
+		return DEFAULT_META_DATA.clone();
 	}
 }

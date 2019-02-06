@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.rapidminer.Process;
 import com.rapidminer.ProcessContext;
@@ -51,6 +52,7 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.ListenerTools;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.MailUtilities;
 import com.rapidminer.tools.ParameterService;
@@ -236,18 +238,17 @@ public final class ProcessRootOperator extends OperatorChain {
 	 */
 	@Override
 	public void processStarts() throws OperatorException {
-		super.processStarts();
-		getListenerListCopy().forEach(l -> l.processStarts(process));
+		ListenerTools.informAllAndThrow(x -> super.processStarts(), getListenerListCopy(), l -> l.processStarts(process));
 	}
 
 	/** Counts the step and notifies all process listeners. */
 	public void processStartedOperator(Operator op) {
-		getListenerListCopy().forEach(l -> l.processStartedOperator(process, op));
+		ListenerTools.informAllAndThrow(getListenerListCopy(), (Consumer<ProcessListener>) l -> l.processStartedOperator(process, op));
 	}
 
 	/** Counts the step and notifies all process listeners. */
 	public void processFinishedOperator(Operator op) {
-		getListenerListCopy().forEach(l -> l.processFinishedOperator(process, op));
+		ListenerTools.informAllAndThrow(getListenerListCopy(), (Consumer<ProcessListener>) l -> l.processFinishedOperator(process, op));
 	}
 
 	/**
@@ -256,8 +257,7 @@ public final class ProcessRootOperator extends OperatorChain {
 	 */
 	@Override
 	public void processFinished() throws OperatorException {
-		super.processFinished();
-		getListenerListCopy().forEach(l -> l.processEnded(process));
+		ListenerTools.informAllAndThrow(x-> super.processFinished(), getListenerListCopy(), l -> l.processEnded(process));
 	}
 
 	/**

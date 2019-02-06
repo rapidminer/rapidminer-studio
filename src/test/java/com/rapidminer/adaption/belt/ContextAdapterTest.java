@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,22 +18,30 @@
  */
 package com.rapidminer.adaption.belt;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.Test;
 
-import com.rapidminer.adaption.belt.ContextAdapter;
-import com.rapidminer.belt.Context;
+import com.rapidminer.belt.execution.Context;
+import com.rapidminer.belt.execution.ExecutionAbortedException;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
+import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
+
+import junit.framework.TestCase;
 
 
 /**
@@ -57,8 +65,27 @@ public class ContextAdapterTest {
 		}
 
 		@Override
-		public <T> List<T> call(List<Callable<T>> arg0) {
-			return null;
+		public <T> List<T> call(List<Callable<T>> callables) throws ExecutionException {
+			List<Future<T>> futures = new ArrayList<>();
+			for (Callable<T> callable : callables) {
+				futures.add(pool.submit(callable));
+			}
+			List<T> results = new ArrayList<>();
+			for(Future<T> future: futures){
+				try {
+					results.add(future.get());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					//Do the same as in AbstractConcurrencyContext
+					if (e.getCause() instanceof ProcessStoppedRuntimeException) {
+						throw (ExecutionStoppedException) e.getCause();
+					} else {
+						throw e;
+					}
+				}
+			}
+			return results;
 		}
 
 		@Override
@@ -96,25 +123,118 @@ public class ContextAdapterTest {
 
 	};
 
-	@Test
-	public void testSubmit() throws ExecutionException, InterruptedException {
+	@Test(expected = ExecutionAbortedException.class)
+	public void testNotActive() throws ExecutionException, InterruptedException {
 		Context context = ContextAdapter.adapt(studioContext);
-		Callable<Double> callable = () -> 42.0;
-		Future<Double> future = context.submit(callable);
-		assertEquals(42, future.get(), 0);
+		assertFalse(context.isActive());
+		context.requireActive();
 	}
-
 
 	@Test
 	public void testActive() throws ExecutionException, InterruptedException {
-		Context context = ContextAdapter.adapt(studioContext);
-		assertEquals(false,context.isActive());
+		Context context = ContextAdapter.adapt(new ConcurrencyContext() {
+			@Override
+			public void run(List<Runnable> list) throws ExecutionException, ExecutionStoppedException,
+					IllegalArgumentException {
+
+			}
+
+			@Override
+			public <T> List<T> call(List<Callable<T>> list) throws ExecutionException, ExecutionStoppedException,
+					IllegalArgumentException {
+				return null;
+			}
+
+			@Override
+			public <T> List<Future<T>> submit(List<Callable<T>> list) throws IllegalArgumentException {
+				return null;
+			}
+
+			@Override
+			public <T> List<T> collectResults(List<Future<T>> list) throws ExecutionException,
+					ExecutionStoppedException, IllegalArgumentException {
+				return null;
+			}
+
+			@Override
+			public <T> T invoke(ForkJoinTask<T> forkJoinTask) throws ExecutionException, ExecutionStoppedException,
+					IllegalArgumentException {
+				return null;
+			}
+
+			@Override
+			public <T> List<T> invokeAll(List<ForkJoinTask<T>> list) throws ExecutionException,
+					ExecutionStoppedException, IllegalArgumentException {
+				return null;
+			}
+
+			@Override
+			public void checkStatus() throws ExecutionStoppedException {
+
+			}
+
+			@Override
+			public int getParallelism() {
+				return 0;
+			}
+		});
+		assertTrue(context.isActive());
+		context.requireActive();
 	}
 
 	@Test
 	public void testParallelism() throws ExecutionException, InterruptedException {
 		Context context = ContextAdapter.adapt(studioContext);
 		assertEquals(4,context.getParallelism());
+	}
+
+	@Test
+	public void testCallables() throws ExecutionException {
+		Context ctx = ContextAdapter.adapt(studioContext);
+		List<Callable<String>> callables = new ArrayList<>();
+		for (int i = 0; i < 20; i++) {
+			String val = "" + i;
+			callables.add(() -> val);
+		}
+		List<String> result = ctx.call(callables);
+		List<String> expected = IntStream.range(0, 20).mapToObj(i -> "" + i).collect(Collectors.toList());
+		TestCase.assertEquals(expected, result);
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void testNullCallables() throws ExecutionException {
+		Context ctx = ContextAdapter.adapt(studioContext);
+		ctx.call(null);
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void testNullContainingCallables() throws ExecutionException {
+		Context ctx = ContextAdapter.adapt(studioContext);
+		ctx.call(Arrays.asList(() -> "", null));
+	}
+
+	@Test(expected = ExecutionAbortedException.class)
+	public void testExecutionAborted() throws ExecutionException {
+		Context ctx = ContextAdapter.adapt(studioContext);
+		ctx.call(Arrays.asList(() -> "", () -> {
+			throw new ExecutionAbortedException("bla");
+		}));
+	}
+
+	@Test(expected = ExecutionAbortedException.class)
+	public void testProcessStopped() throws ExecutionException {
+		Context ctx = ContextAdapter.adapt(studioContext);
+		ctx.call(Arrays.asList(() -> "", () -> {
+			throw new ProcessStoppedRuntimeException();
+		}));
+	}
+
+	@Test(expected = ExecutionException.class)
+	public void testRuntimeExceptions() throws ExecutionException {
+		Context ctx = ContextAdapter.adapt(studioContext);
+		ctx.call(Arrays.asList(() -> "", () -> {
+			throw new RuntimeException();
+		}));
 	}
 
 }

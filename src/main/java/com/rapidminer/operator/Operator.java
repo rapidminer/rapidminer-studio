@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -47,6 +47,7 @@ import com.rapidminer.BreakpointListener;
 import com.rapidminer.MacroHandler;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.belt.execution.ExecutionAbortedException;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.gui.wizards.PreviewListener;
@@ -1024,7 +1025,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 				fireUpdate();
 				doWork();
 				getLogger().fine("Completed application " + applyCount.get() + " of operator " + getName());
-			} catch (ProcessStoppedRuntimeException e) {
+			} catch (ProcessStoppedRuntimeException | ExecutionAbortedException e) {
 				// Convert unchecked exception to checked exception (unchecked exception might be
 				// thrown from places where no checked exceptions are possible, e.g. thread pools).
 				throw new ProcessStoppedException(this);

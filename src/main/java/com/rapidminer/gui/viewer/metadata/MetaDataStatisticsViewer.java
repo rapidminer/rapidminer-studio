@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
-
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -80,6 +79,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.gui.actions.export.PrintableComponent;
 import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.CleanupRequiringComponent;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ScrollableJPopupMenu;
@@ -121,7 +121,7 @@ import com.rapidminer.tools.Ontology;
  * @author Marco Boeck
  *
  */
-public class MetaDataStatisticsViewer extends JPanel implements Renderable, PrintableComponent {
+public class MetaDataStatisticsViewer extends JPanel implements Renderable, PrintableComponent, CleanupRequiringComponent {
 
 	private static final long serialVersionUID = -1027619839144846140L;
 
@@ -259,6 +259,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	private final Map<Integer, AttributeStatisticsPanel> mapOfAttributeStatisticsPanels;
 
 	private JPanel outerPanel;
+
 
 	private final class HoverBorderMouseListener extends MouseAdapter {
 
@@ -1256,6 +1257,11 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	@Override
 	public String getExportIconName() {
 		return I18N.getGUIMessage("gui.cards.result_view.meta_data_view.icon");
+	}
+
+	@Override
+	public void cleanUp() {
+		stop();
 	}
 
 	/**

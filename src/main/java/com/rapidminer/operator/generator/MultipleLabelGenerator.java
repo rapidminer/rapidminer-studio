@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,10 +18,13 @@
 */
 package com.rapidminer.operator.generator;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -35,6 +38,7 @@ import com.rapidminer.operator.io.AbstractExampleSource;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
@@ -67,6 +71,10 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 	public static final String PARAMETER_ATTRIBUTES_UPPER_BOUND = "attributes_upper_bound";
 
 	private static final int NUMBER_OF_ATTRIBUTES = 5;
+	private static final int NUMBER_OF_LABELS = 3;
+
+	private static final String POSITIVE_LABEL = "positive";
+	private static final String NEGATIVE_LABEL = "negative";
 
 	public MultipleLabelGenerator(OperatorDescription description) {
 		super(description);
@@ -79,23 +87,27 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 		double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
 
 		ExampleSetMetaData emd = new ExampleSetMetaData();
-		for (int i = 0; i < NUMBER_OF_ATTRIBUTES; i++) {
-			emd.addAttribute(new AttributeMetaData("att" + (i + 1), null, Ontology.REAL, new Range(lower, upper)));
+		for (int i = 1; i <= NUMBER_OF_ATTRIBUTES; i++) {
+			emd.addAttribute(new AttributeMetaData("att" + i, null, Ontology.REAL, new Range(lower, upper)));
 		}
-
+		int labelType;
+		Consumer<AttributeMetaData> amdFinisher;
 		if (getParameterAsBoolean(PARAMETER_REGRESSION)) {
-			emd.addAttribute(new AttributeMetaData("label1", Attributes.LABEL_NAME + 1, Ontology.REAL,
-					new Range(3 * lower, 3 * upper)));
-			emd.addAttribute(new AttributeMetaData("label2", Attributes.LABEL_NAME + 2, Ontology.REAL,
-					new Range(3 * lower, 3 * upper)));
-			emd.addAttribute(new AttributeMetaData("label3", Attributes.LABEL_NAME + 3, Ontology.REAL,
-					new Range(Math.max(lower, 0) * Math.max(lower, 0), upper * upper)));
+			labelType = Ontology.REAL;
+			amdFinisher = amd -> amd.setValueRange(new Range(3 * lower, 3 * upper), SetRelation.EQUAL);
 		} else {
-			emd.addAttribute(new AttributeMetaData("label1", Attributes.LABEL_NAME + 1, "positive", "negative"));
-			emd.addAttribute(new AttributeMetaData("label2", Attributes.LABEL_NAME + 2, "positive", "negative"));
-			emd.addAttribute(new AttributeMetaData("label3", Attributes.LABEL_NAME + 3, "positive", "negative"));
+			labelType = Ontology.NOMINAL;
+			Set<String> values = new TreeSet<>();
+			values.add(POSITIVE_LABEL);
+			values.add(NEGATIVE_LABEL);
+			amdFinisher = amd -> amd.setValueSet(new TreeSet<>(values), SetRelation.EQUAL);
 		}
-
+		for (int i = 1; i <= NUMBER_OF_LABELS; i++) {
+			String name = Attributes.LABEL_NAME + i;
+			AttributeMetaData amd = new AttributeMetaData(name, labelType, name);
+			amdFinisher.accept(amd);
+			emd.addAttribute(amd);
+		}
 		emd.setNumberOfExamples(numberOfExamples);
 		return emd;
 	}
@@ -109,9 +121,9 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 		boolean regression = getParameterAsBoolean(PARAMETER_REGRESSION);
 
 		// create table
-		List<Attribute> attributes = new LinkedList<Attribute>();
-		for (int m = 0; m < NUMBER_OF_ATTRIBUTES; m++) {
-			attributes.add(AttributeFactory.createAttribute("att" + (m + 1), Ontology.REAL));
+		List<Attribute> attributes = new ArrayList<>();
+		for (int m = 1; m <= NUMBER_OF_ATTRIBUTES; m++) {
+			attributes.add(AttributeFactory.createAttribute("att" + m, Ontology.REAL));
 		}
 
 		// generate labels
@@ -119,21 +131,17 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 		if (regression) {
 			type = Ontology.REAL;
 		}
-		Attribute label1 = AttributeFactory.createAttribute("label1", type);
-		attributes.add(label1);
-		Attribute label2 = AttributeFactory.createAttribute("label2", type);
-		attributes.add(label2);
-		Attribute label3 = AttributeFactory.createAttribute("label3", type);
-		attributes.add(label3);
-
-		if (!regression) {
-			label1.getMapping().mapString("positive");
-			label1.getMapping().mapString("negative");
-			label2.getMapping().mapString("positive");
-			label2.getMapping().mapString("negative");
-			label3.getMapping().mapString("positive");
-			label3.getMapping().mapString("negative");
+		List<Attribute> labels = new ArrayList<>();
+		for (int i = 1; i <= NUMBER_OF_LABELS; i++) {
+			Attribute label = AttributeFactory.createAttribute(Attributes.LABEL_NAME + i, type);
+			if (!regression) {
+				label.getMapping().mapString(POSITIVE_LABEL);
+				label.getMapping().mapString(NEGATIVE_LABEL);
+			}
+			labels.add(label);
 		}
+		int positiveIndex = 0;
+		int negativeIndex = 1;
 
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
 
@@ -144,36 +152,25 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 		getProgress().setTotal(numberOfExamples);
 
 		for (int n = 0; n < numberOfExamples; n++) {
-			double[] features = new double[NUMBER_OF_ATTRIBUTES];
-			for (int i = 0; i < features.length; i++) {
-				features[i] = random.nextDoubleInRange(lower, upper);
+			double[] example = new double[NUMBER_OF_ATTRIBUTES + NUMBER_OF_LABELS];
+			for (int i = 0; i < NUMBER_OF_ATTRIBUTES; i++) {
+				example[i] = random.nextDoubleInRange(lower, upper);
 			}
-
-			double[] example = new double[NUMBER_OF_ATTRIBUTES + 3];
-			System.arraycopy(features, 0, example, 0, features.length);
-			if (regression) {
-				example[example.length - 3] = example[0] + example[1] + example[2];
-				example[example.length - 2] = 2 * example[0] + example[3];
-				example[example.length - 1] = example[3] * example[3];
-			} else {
-				example[example.length - 3] = example[0] + example[1] + example[2] > 0
-						? label1.getMapping().mapString("positive") : label1.getMapping().mapString("negative");
-				example[example.length - 2] = 2 * example[0] + example[3] > 0 ? label1.getMapping().mapString("positive")
-						: label1.getMapping().mapString("negative");
-				example[example.length - 1] = example[3] * example[3] - example[2] * example[2] > 0
-						? label1.getMapping().mapString("positive") : label1.getMapping().mapString("negative");
+			example[NUMBER_OF_ATTRIBUTES] = example[0] + example[1] + example[2];
+			example[NUMBER_OF_ATTRIBUTES + 1] = 2 * example[0] + example[3];
+			example[NUMBER_OF_ATTRIBUTES + 2] = example[3] * example[3];
+			if (!regression) {
+				for (int i = 0; i < NUMBER_OF_LABELS; i++) {
+					example[NUMBER_OF_ATTRIBUTES + i] = example[NUMBER_OF_ATTRIBUTES + i] > 0 ? positiveIndex : negativeIndex;
+				}
 			}
 			builder.addRow(example);
-
 			getProgress().step();
 		}
 
 		// create example set and return it
-		Map<Attribute, String> specialMap = new LinkedHashMap<Attribute, String>();
-		specialMap.put(label1, Attributes.LABEL_NAME + 1);
-		specialMap.put(label2, Attributes.LABEL_NAME + 2);
-		specialMap.put(label3, Attributes.LABEL_NAME + 3);
-		ExampleSet result = builder.withRoles(specialMap).build();
+		ExampleSet result = builder.withRoles(labels.stream().collect(Collectors
+				.toMap(l->l, Attribute::getName, (a, b) -> a, LinkedHashMap::new))).build();
 
 		getProgress().complete();
 

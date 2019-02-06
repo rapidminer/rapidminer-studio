@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,12 +18,12 @@
  */
 package com.rapidminer.adaption.belt;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
 
-import com.rapidminer.belt.Context;
+import com.rapidminer.belt.execution.Context;
+import com.rapidminer.belt.execution.ExecutionAbortedException;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
 
@@ -56,14 +56,41 @@ public final class ContextAdapter implements Context {
 	}
 
 	@Override
+	public void requireActive() {
+		try {
+			studioContext.checkStatus();
+		} catch (ExecutionStoppedException e) {
+			throw new ExecutionAbortedException("Execution was aborted");
+		}
+	}
+
+	@Override
 	public int getParallelism() {
 		return studioContext.getParallelism();
 	}
 
 	@Override
-	public <T> Future<T> submit(Callable<T> job) {
-		List<Future<T>> futureList = studioContext.submit(Collections.singletonList(job));
-		return futureList.get(0);
+	public <T> List<T> call(List<Callable<T>> list) throws ExecutionException {
+		// ensure that NPE is thrown instead of IllegalArgumentException by ConcurrencyContext#call
+		if (list == null) {
+			throw new NullPointerException("callables must not be null");
+		}
+		// check for null tasks
+		for (Callable<T> callable : list) {
+			if (callable == null) {
+				throw new NullPointerException("callables must not contain null");
+			}
+		}
+		try {
+			return studioContext.call(list);
+		} catch (ExecutionStoppedException e) {
+			throw new ExecutionAbortedException("Execution was aborted", e);
+		} catch (ExecutionException e) {
+			if (e.getCause() instanceof ExecutionAbortedException) {
+				throw (ExecutionAbortedException) e.getCause();
+			}
+			throw e;
+		}
 	}
 
 	/**

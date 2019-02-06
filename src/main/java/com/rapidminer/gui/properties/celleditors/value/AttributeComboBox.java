@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,7 +19,6 @@
 package com.rapidminer.gui.properties.celleditors.value;
 
 import java.util.Vector;
-
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.SwingUtilities;
@@ -29,6 +28,7 @@ import com.rapidminer.operator.ports.MetaDataChangeListener;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.parameter.MetaDataProvider;
 import com.rapidminer.parameter.ParameterTypeAttribute;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -42,17 +42,16 @@ public class AttributeComboBox extends JComboBox<String> {
 
 	private static final long serialVersionUID = 1L;
 
-	private static class AttributeComboBoxModel extends DefaultComboBoxModel<String> implements MetaDataChangeListener {
+	static class AttributeComboBoxModel extends DefaultComboBoxModel<String> implements MetaDataChangeListener {
 
 		private static final long serialVersionUID = 1L;
 
 		private ParameterTypeAttribute attributeType;
-		private Vector<String> attributes = new Vector<String>();
+		private Vector<Pair<String, Integer>> attributes = new Vector<>();
 
-		public AttributeComboBoxModel(ParameterTypeAttribute attributeType) {
+		AttributeComboBoxModel(ParameterTypeAttribute attributeType) {
 			this.attributeType = attributeType;
 			MetaData metaData = attributeType.getMetaData();
-			// InputPort inputPort = attributeType.getInputPort();
 			if (metaData != null) {
 				informMetaDataChanged(metaData);
 			}
@@ -65,14 +64,14 @@ public class AttributeComboBox extends JComboBox<String> {
 
 		@Override
 		public String getElementAt(int index) {
-			return attributes.get(index);
+			return attributes.get(index).getFirst();
 		}
 
 		/**
 		 * This method will cause this model to register as a MetaDataChangeListener on the given
 		 * input port. Attention! Make sure, it will be proper unregistered to avoid a memory leak!
 		 */
-		protected void registerListener() {
+		void registerListener() {
 			MetaDataProvider mdp = attributeType.getMetaDataProvider();
 			if (mdp != null) {
 				mdp.addMetaDataChangeListener(this);
@@ -82,7 +81,7 @@ public class AttributeComboBox extends JComboBox<String> {
 		/**
 		 * This method will unregister this model from the InputPort.
 		 */
-		protected void unregisterListener() {
+		void unregisterListener() {
 			MetaDataProvider mdp = attributeType.getMetaDataProvider();
 			if (mdp != null) {
 				mdp.removeMetaDataChangeListener(this);
@@ -91,14 +90,17 @@ public class AttributeComboBox extends JComboBox<String> {
 
 		@Override
 		public void informMetaDataChanged(MetaData newMetadata) {
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					attributes = attributeType.getAttributeNames();
-					fireContentsChanged(0, 0, attributes.size());
-				}
+			SwingUtilities.invokeLater(() -> {
+				attributes = attributeType.getAttributeNamesAndTypes(true);
+				fireContentsChanged(0, 0, attributes.size());
 			});
+		}
+
+		/**
+		 * @return the attribute <> value type pairs
+		 */
+		Vector<Pair<String, Integer>> getAttributePairs() {
+			return attributes;
 		}
 	}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -30,23 +30,23 @@ import javax.swing.Icon;
  */
 public interface Card {
 
-	public String getKey();
+	String getKey();
 
 	/**
 	 * @return the title of a card. The title shouldn't be too long and must not be
 	 *         <code>null</code>. The title will be display below the card icon.
 	 */
-	public String getTitle();
+	String getTitle();
 
 	/**
 	 * @return the tooltip that will be shown when hovering over the card.
 	 */
-	public String getTip();
+	String getTip();
 
 	/**
 	 * @return the icon that will be shown above the card title
 	 */
-	public Icon getIcon();
+	Icon getIcon();
 
 	/**
 	 * @return the footer of the card which can be <code>null</code> if the card does not have a
@@ -54,6 +54,13 @@ public interface Card {
 	 *         last {@link CardCellRenderer#MAX_CAPTION_LENGTH} characters of a footer will be
 	 *         shown.
 	 */
-	public String getFooter();
+	String getFooter();
 
+	/**
+	 * @return {@code true} if the card should display a BETA tag, {@code false} otherwise
+	 * @since 9.2.0
+	 */
+	default boolean isBeta() {
+		return false;
+	}
 }

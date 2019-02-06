@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2018 by RapidMiner and the contributors
+ * Copyright (C) 2001-2019 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -54,7 +54,9 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  * {@link PlotterControlPanel} and a {@link Plotter}.
  *
  * @author Ingo Mierswa, Simon Fischer
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class PlotterPanel extends JPanel implements PrintableComponent {
 
 	private static final long serialVersionUID = -8724351470349745191L;
