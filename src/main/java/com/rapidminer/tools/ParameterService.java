@@ -409,12 +409,13 @@ public class ParameterService {
 		for (Entry<String, Parameter> entry : PARAMETER_MAP.entrySet()) {
 			Parameter parameter = entry.getValue();
 			String value = parameter.getValue();
+			String key = entry.getKey();
 			// don't store enforced parameters
-			if (isValueEnforced(entry.getKey())) {
-				value = ENFORCED_PARAMETER.getOriginalValue(entry.getKey());
+			if (isValueEnforced(key)) {
+				value = ENFORCED_PARAMETER.getOriginalValue(key);
 			}
 			if (value != null) {
-				properties.put(entry.getKey(), value);
+				properties.put(key, value);
 			}
 		}
 		BufferedOutputStream out = null;
@@ -447,17 +448,7 @@ public class ParameterService {
 	 * without loosing the data.
 	 */
 	public static void registerParameter(ParameterType type) {
-		// if it is protected, don't allow an overwrite
-		if (RapidMiner.isParameterProtected(type.getKey())) {
-			return;
-		}
-		Parameter parameter = PARAMETER_MAP.get(type.getKey());
-		if (parameter == null) {
-			parameter = new Parameter(type);
-			PARAMETER_MAP.put(type.getKey(), parameter);
-		} else {
-			parameter.setType(type);
-		}
+		registerParameter(type,null, new ParameterScope());
 	}
 
 	/**
@@ -479,11 +470,13 @@ public class ParameterService {
 		}
 		Parameter parameter = PARAMETER_MAP.get(type.getKey());
 		if (parameter == null) {
-			parameter = new Parameter(type, group);
+			parameter = group == null ? new Parameter(type) : new Parameter(type, group);
 			PARAMETER_MAP.put(type.getKey(), parameter);
 		} else {
 			parameter.setType(type);
-			parameter.setGroup(group);
+			if (group != null) {
+				parameter.setGroup(group);
+			}
 		}
 		parameter.setScope(scope);
 	}

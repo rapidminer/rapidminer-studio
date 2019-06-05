@@ -34,8 +34,6 @@ import javax.swing.JToggleButton;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.jdesktop.swingx.prompt.PromptSupport;
-
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.look.RapidLookTools;
@@ -189,8 +187,7 @@ public class FeedbackForm extends JPanel {
 				enableSubmit(!freeTextArea.getText().trim().isEmpty() || state != FeedbackState.NONE);
 			}
 		});
-		PromptSupport.setFontStyle(Font.ITALIC, freeTextArea);
-		PromptSupport.setPrompt(I18N.getGUILabel("feedback_form.freetext.prompt"), freeTextArea);
+		SwingTools.setPrompt(I18N.getGUILabel("feedback_form.freetext.prompt"), freeTextArea);
 		gbc.gridx = 0;
 		gbc.gridy += 1;
 		gbc.weightx = 1.0f;

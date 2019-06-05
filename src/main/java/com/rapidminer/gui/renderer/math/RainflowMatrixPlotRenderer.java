@@ -30,7 +30,9 @@ import com.rapidminer.operator.visualization.dependencies.RainflowMatrix;
 /**
  * 
  * @author Sebastian Land
+ * @deprecated since 9.2.1
  */
+@Deprecated
 public class RainflowMatrixPlotRenderer extends AbstractDataTablePlotterRenderer {
 
 	@Override

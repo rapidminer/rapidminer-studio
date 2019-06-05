@@ -37,12 +37,12 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingWorker;
 
 import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.processeditor.ExtendedProcessEditor;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.gui.tools.NotificationPopup;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
@@ -95,7 +95,7 @@ public final class BlacklistedOperatorProcessEditor implements ExtendedProcessEd
 		if (!OperatorService.hasBlacklistedOperators() || !RapidMinerGUI.getMainFrame().getProcessPanel().isShowing()) {
 			return;
 		}
-		new SwingWorker<Void, Operator>() {
+		new MultiSwingWorker<Void, Operator>() {
 
 			@Override
 			protected Void doInBackground() {
@@ -125,7 +125,7 @@ public final class BlacklistedOperatorProcessEditor implements ExtendedProcessEd
 			protected void process(List<Operator> chunks) {
 				chunks.forEach(BlacklistedOperatorProcessEditor.this::showNotification);
 			}
-		}.execute();
+		}.start();
 	}
 
 

@@ -79,7 +79,7 @@ public class RepositoryTreeModel implements TreeModel {
 			TreePath path = getPathTo(entry.getContainingFolder());
 			int index;
 			if (entry instanceof Repository) {
-				index = RepositoryManager.getInstance(null).getRepositories().indexOf(entry);
+				index = RepositoryManager.getInstance(null).getFilteredRepositories().indexOf(entry);
 			} else {
 				index = getIndexOfChild(entry.getContainingFolder(), entry);
 			}
@@ -279,7 +279,7 @@ public class RepositoryTreeModel implements TreeModel {
 			if (onlyWriteableRepositories) {
 				return getWritableRepositories((RepositoryManager) parent).get(index);
 			}
-			return ((RepositoryManager) parent).getRepositories().get(index);
+			return ((RepositoryManager) parent).getFilteredRepositories().get(index);
 		} else if (parent instanceof Folder) {
 			Folder folder = (Folder) parent;
 			if (folder.willBlock()) {
@@ -409,7 +409,7 @@ public class RepositoryTreeModel implements TreeModel {
 			if (onlyWriteableRepositories) {
 				return getWritableRepositories((RepositoryManager) parent).size();
 			}
-			return ((RepositoryManager) parent).getRepositories().size();
+			return ((RepositoryManager) parent).getFilteredRepositories().size();
 		} else if (parent instanceof Folder) {
 			Folder folder = (Folder) parent;
 			if (folder.willBlock()) {
@@ -456,7 +456,7 @@ public class RepositoryTreeModel implements TreeModel {
 			if (onlyWriteableRepositories) {
 				return getWritableRepositories((RepositoryManager) parent).indexOf(child);
 			}
-			return ((RepositoryManager) parent).getRepositories().indexOf(child);
+			return ((RepositoryManager) parent).getFilteredRepositories().indexOf(child);
 		} else if (parent instanceof Folder) {
 			// don't return -1 for index of pending "folder" (for blocking folder requests)
 			if (PENDING_FOLDER_NAME.equals(child)) {
@@ -534,7 +534,7 @@ public class RepositoryTreeModel implements TreeModel {
 	}
 
 	private List<Repository> getWritableRepositories(RepositoryManager manager) {
-		List<Repository> repositories = manager.getRepositories();
+		List<Repository> repositories = manager.getFilteredRepositories();
 		List<Repository> writeableRepositories = new ArrayList<>();
 		for (Repository repository : repositories) {
 			if (!repository.isReadOnly()) {
@@ -562,13 +562,22 @@ public class RepositoryTreeModel implements TreeModel {
 			treeUtil.saveExpansionState(parentTree);
 		}
 
-		TreeModelEvent e = new TreeModelEvent(RepositoryTreeModel.this, getPathTo(null), new int[] { 0 },
-				new Object[] { null });
+		notifyTreeStructureChanged();
+
+		SwingUtilities.invokeLater(() -> treeUtil.restoreSelectionPaths(parentTree));
+	}
+
+	/**
+	 * Changes from {@link com.rapidminer.repository.RepositoryFilter} may need to trigger an update here
+	 *
+	 * @since 9.3
+	 */
+	public void notifyTreeStructureChanged() {
+		TreeModelEvent e = new TreeModelEvent(RepositoryTreeModel.this, getPathTo(null), new int[]{0},
+				new Object[]{null});
 		for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 			l.treeStructureChanged(e);
 		}
-
-		SwingUtilities.invokeLater(() -> treeUtil.restoreSelectionPaths(parentTree));
 	}
 
 	/**

@@ -55,7 +55,7 @@ public abstract class ColorSlider extends JComponent {
 	protected int minAmountOfColorPoints;
 	protected int maxAmountOfColorPoints;
 
-    private EventListenerList listenerList = new EventListenerList();
+    private EventListenerList eventListeners = new EventListenerList();
 
 
 	/**
@@ -257,7 +257,7 @@ public abstract class ColorSlider extends JComponent {
 	 * @param l the ChangeListener to add
 	 */
 	public void addChangeListener(ChangeListener l) {
-		listenerList.add(ChangeListener.class, l);
+		eventListeners.add(ChangeListener.class, l);
 	}
 
 	/**
@@ -268,7 +268,7 @@ public abstract class ColorSlider extends JComponent {
 
 	 */
 	public void removeChangeListener(ChangeListener l) {
-		listenerList.remove(ChangeListener.class, l);
+		eventListeners.remove(ChangeListener.class, l);
 	}
 
 	/**
@@ -324,7 +324,7 @@ public abstract class ColorSlider extends JComponent {
 	 * changes.
 	 */
 	protected void fireStateChanged() {
-		Object[] listeners = listenerList.getListenerList();
+		Object[] listeners = eventListeners.getListenerList();
 		for (int i = listeners.length - 2; i >= 0; i -= 2) {
 			if (listeners[i] == ChangeListener.class) {
 				((ChangeListener) listeners[i + 1]).stateChanged(new ChangeEvent(this));

@@ -18,7 +18,8 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.SwingUtilities;
@@ -47,7 +48,7 @@ public class AttributeComboBox extends JComboBox<String> {
 		private static final long serialVersionUID = 1L;
 
 		private ParameterTypeAttribute attributeType;
-		private Vector<Pair<String, Integer>> attributes = new Vector<>();
+		private List<Pair<String, Integer>> attributes = new ArrayList<>();
 
 		AttributeComboBoxModel(ParameterTypeAttribute attributeType) {
 			this.attributeType = attributeType;
@@ -99,7 +100,7 @@ public class AttributeComboBox extends JComboBox<String> {
 		/**
 		 * @return the attribute <> value type pairs
 		 */
-		Vector<Pair<String, Integer>> getAttributePairs() {
+		List<Pair<String, Integer>> getAttributePairs() {
 			return attributes;
 		}
 	}

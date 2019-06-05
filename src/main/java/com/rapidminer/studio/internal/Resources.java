@@ -29,6 +29,7 @@ import com.rapidminer.operator.UserData;
 import com.rapidminer.security.PluginSandboxPolicy;
 import com.rapidminer.studio.concurrency.internal.ConcurrencyExecutionService;
 import com.rapidminer.studio.concurrency.internal.StudioConcurrencyContext;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -75,16 +76,13 @@ public class Resources {
 	 */
 	public static class OverridingContextUserData extends ContextUserData {
 
+		/**
+		 * @throws UnsupportedOperationException if used by 3rd parties
+		 */
 		public OverridingContextUserData(ConcurrencyContext context) {
 			super(context);
 			// make sure this cannot be called without RapidMiner internal permissions
-			try {
-				if (System.getSecurityManager() != null) {
-					AccessController.checkPermission(new RuntimePermission(PluginSandboxPolicy.RAPIDMINER_INTERNAL_PERMISSION));
-				}
-			} catch (AccessControlException e) {
-				throw new UnsupportedOperationException("Internal API, cannot be called by unauthorized sources.");
-			}
+			Tools.requireInternalPermission();
 		}
 	}
 

@@ -18,8 +18,15 @@
  */
 package com.rapidminer.search;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import com.rapidminer.search.event.GlobalSearchManagerEventHandler;
 
 
 /**
@@ -32,9 +39,15 @@ public class GlobalSearchCategoryTest {
 
 	@Test
 	public void testEqualsHashcode() {
-		GlobalSearchCategory cat1 = new GlobalSearchCategory("cat1", null);
-		GlobalSearchCategory cat2 = new GlobalSearchCategory("cat2", null);
-		GlobalSearchCategory cat3 = new GlobalSearchCategory("cat3", null);
+		GlobalSearchManager m1 = Mockito.mock(GlobalSearchManager.class);
+		GlobalSearchManager m2 = Mockito.mock(GlobalSearchManager.class);
+		GlobalSearchManager m3 = Mockito.mock(GlobalSearchManager.class);
+		Mockito.when(m1.getSearchCategoryId()).thenReturn("cat1");
+		Mockito.when(m2.getSearchCategoryId()).thenReturn("cat2");
+		Mockito.when(m3.getSearchCategoryId()).thenReturn("cat3");
+		GlobalSearchCategory cat1 = new GlobalSearchCategory(m1);
+		GlobalSearchCategory cat2 = new GlobalSearchCategory(m2);
+		GlobalSearchCategory cat3 = new GlobalSearchCategory(m3);
 
 		Object o = null;
 		Object object = new Object();

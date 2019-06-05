@@ -18,10 +18,12 @@
 */
 package com.rapidminer.parameter;
 
-import com.rapidminer.tools.XMLException;
+import java.util.function.Predicate;
 
 import org.w3c.dom.Element;
 
+import com.rapidminer.operator.Operator;
+import com.rapidminer.tools.XMLException;
 
 /**
  * This parameter type allows to select either Operator Values or Parameters for logging purposes.
@@ -107,13 +109,29 @@ public class ParameterTypeValue extends ParameterTypeSingle {
 		return false;
 	}
 
+	/** @return the updated selection value if the originally associated operator was the one that was renamed */
 	@Override
 	public String notifyOperatorRenaming(String oldOperatorName, String newOperatorName, String parameterValue) {
+		return notifyOperatorRenamingReplacing(oldOperatorName, newOperatorName, s -> true, parameterValue);
+	}
+
+	/** @return the updated selection value if the new operator still fits the value/parameter; unspecified value/parameter otherwise */
+	@Override
+	public String notifyOperatorReplacing(String oldName, Operator oldOp, String newName, Operator newOp, String parameterValue) {
+		// only set new value if the corresponding new operator has that value/parameter; otherwise set the value/parameter to null
+		Predicate<OperatorValueSelection> validation = s -> s.isValue && newOp.getValue(s.valueParameterName) != null
+				|| !s.isValue && newOp.getParameters().getKeys().contains(s.valueParameterName);
+		return notifyOperatorRenamingReplacing(oldName, newName, validation, parameterValue);
+	}
+
+	/** @since 9.3 */
+	private String notifyOperatorRenamingReplacing(String oldName, String newName, Predicate<OperatorValueSelection> validation, String parameterValue) {
 		OperatorValueSelection selection = transformString2OperatorValueSelection(parameterValue);
-		if (selection != null) {
-			if (selection.getOperator().equals(oldOperatorName)) {
-				selection.operatorName = newOperatorName;
+		if (selection != null && selection.getOperator().equals(oldName)) {
+			if (!validation.test(selection)) {
+				selection.valueParameterName = null;
 			}
+			selection.operatorName = newName;
 			return transformOperatorValueSelection2String(selection);
 		}
 		return parameterValue;

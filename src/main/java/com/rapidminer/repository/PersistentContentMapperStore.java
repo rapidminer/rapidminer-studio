@@ -272,7 +272,7 @@ public enum PersistentContentMapperStore {
 			throw new IllegalArgumentException("key must not be null or empty!");
 		}
 		if (location == null && additionalHash == null) {
-			throw new IllegalArgumentException("location and additionalHash must not be null at the same time!");
+			return null;
 		}
 
 		String pathString = createPath(location, additionalHash);
@@ -356,7 +356,7 @@ public enum PersistentContentMapperStore {
 		}
 
 		if (generator == null) {
-			throw new UnsupportedOperationException("No hash generator registered for provided object!");
+			return null;
 		}
 
 		return generator.apply(t);

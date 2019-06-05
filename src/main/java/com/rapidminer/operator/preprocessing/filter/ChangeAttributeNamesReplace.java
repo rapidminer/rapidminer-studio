@@ -56,9 +56,13 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
  */
 public class ChangeAttributeNamesReplace extends AbstractDataProcessing {
 
-	public static final String PARAMETER_REPLACE_WHAT = "replace_what";
+	/** @deprecated since 9.3; use {@link ParameterTypeRegexp#PARAMETER_REPLACE_WHAT} instead */
+	@Deprecated
+	public static final String PARAMETER_REPLACE_WHAT = ParameterTypeRegexp.PARAMETER_REPLACE_WHAT;
 
-	public static final String PARAMETER_REPLACE_BY = "replace_by";
+	/** @deprecated since 9.3; use {@link ParameterTypeRegexp#PARAMETER_REPLACE_BY} instead */
+	@Deprecated
+	public static final String PARAMETER_REPLACE_BY = ParameterTypeRegexp.PARAMETER_REPLACE_BY;
 
 	private final AttributeSubsetSelector attributeSelector = new AttributeSubsetSelector(this, getExampleSetInputPort());
 
@@ -71,9 +75,9 @@ public class ChangeAttributeNamesReplace extends AbstractDataProcessing {
 		String replaceWhat = "";
 		try {
 			ExampleSetMetaData subsetMetaData = attributeSelector.getMetaDataSubset(exampleSetMetaData, false);
-			replaceWhat = getParameterAsString(PARAMETER_REPLACE_WHAT);
+			replaceWhat = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT);
 			Pattern replaceWhatPattern = Pattern.compile(replaceWhat);
-			String replaceByString = isParameterSet(PARAMETER_REPLACE_BY) ? getParameterAsString(PARAMETER_REPLACE_BY) : "";
+			String replaceByString = isParameterSet(ParameterTypeRegexp.PARAMETER_REPLACE_BY) ? getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_BY) : "";
 
 			for (AttributeMetaData attributeMetaData : subsetMetaData.getAllAttributes()) {
 				String name = attributeMetaData.getName();
@@ -84,7 +88,7 @@ public class ChangeAttributeNamesReplace extends AbstractDataProcessing {
 		} catch (UndefinedParameterError e) {
 		} catch (IndexOutOfBoundsException e) {
 			addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), "capturing_group_undefined",
-					PARAMETER_REPLACE_BY, PARAMETER_REPLACE_WHAT));
+					ParameterTypeRegexp.PARAMETER_REPLACE_BY, ParameterTypeRegexp.PARAMETER_REPLACE_WHAT));
 		} catch (PatternSyntaxException e) {
 			addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), "invalid_regex", replaceWhat));
 		}
@@ -95,15 +99,15 @@ public class ChangeAttributeNamesReplace extends AbstractDataProcessing {
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
 		Set<Attribute> attributeSubset = attributeSelector.getAttributeSubset(exampleSet, false);
-		Pattern replaceWhatPattern = Pattern.compile(getParameterAsString(PARAMETER_REPLACE_WHAT));
-		String replaceByString = isParameterSet(PARAMETER_REPLACE_BY) ? getParameterAsString(PARAMETER_REPLACE_BY) : "";
+		Pattern replaceWhatPattern = Pattern.compile(getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT));
+		String replaceByString = isParameterSet(ParameterTypeRegexp.PARAMETER_REPLACE_BY) ? getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_BY) : "";
 
 		try {
 			for (Attribute attribute : attributeSubset) {
 				attribute.setName(replaceWhatPattern.matcher(attribute.getName()).replaceAll(replaceByString));
 			}
 		} catch (IndexOutOfBoundsException e) {
-			throw new UserError(this, 215, replaceByString, PARAMETER_REPLACE_WHAT);
+			throw new UserError(this, 215, replaceByString, ParameterTypeRegexp.PARAMETER_REPLACE_WHAT);
 		}
 
 		return exampleSet;
@@ -114,16 +118,18 @@ public class ChangeAttributeNamesReplace extends AbstractDataProcessing {
 		List<ParameterType> types = super.getParameterTypes();
 		types.addAll(attributeSelector.getParameterTypes());
 
-		ParameterType type = new ParameterTypeRegexp(PARAMETER_REPLACE_WHAT,
+		ParameterTypeRegexp regexp = new ParameterTypeRegexp(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT,
 				"A regular expression defining what should be replaced in the attribute names.", "\\W");
-		type.setShowRange(false);
-		type.setExpert(false);
-		type.setPrimary(true);
-		types.add(type);
+		regexp.setShowRange(false);
+		regexp.setExpert(false);
+		regexp.setPrimary(true);
+		types.add(regexp);
 
-		types.add(new ParameterTypeString(PARAMETER_REPLACE_BY,
+		ParameterTypeString replacement = new ParameterTypeString(ParameterTypeRegexp.PARAMETER_REPLACE_BY,
 				"This string is used as replacement for all parts of the matching attributes where the parameter '"
-						+ PARAMETER_REPLACE_WHAT + "' matches.", true, false));
+						+ ParameterTypeRegexp.PARAMETER_REPLACE_WHAT + "' matches.", true, false);
+		regexp.setReplacementParameter(replacement);
+		types.add(replacement);
 		return types;
 	}
 

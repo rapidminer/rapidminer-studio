@@ -27,6 +27,7 @@ package com.rapidminer.repository;
 public interface ProcessEntry extends DataEntry {
 
 	String TYPE_NAME = "process";
+	String RMP_SUFFIX = ".rmp";
 
 	@Override
 	default String getType() {

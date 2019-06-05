@@ -26,9 +26,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.logging.Level;
@@ -51,6 +53,7 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.internal.ProcessEmbeddingOperator;
 import com.rapidminer.operator.io.RepositorySource;
@@ -65,6 +68,7 @@ import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.usagestats.UsageLoggable;
 
@@ -322,6 +326,15 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				dropNow = () -> dropNow((WorkflowAnnotation) transferData, null);
 			} else {
 				List<Operator> droppedOperators = Tools.cloneOperators(newOperators);
+
+				// find all operators that will be renamed and notify the cloned operators about that
+				Collection<String> allOperatorNames = getProcess().getAllOperatorNames();
+				List<String> oldNames = findAllNames(newOperators);
+				Map<String, String> nameMap = ProcessTools.getNewNames(allOperatorNames, oldNames);
+				if (!nameMap.isEmpty()) {
+					droppedOperators.forEach(op -> nameMap.forEach(op::notifyRenaming));
+				}
+
 				dropNow = () -> dropNow(droppedOperators, null);
 			}
 			boolean result = false;
@@ -343,6 +356,17 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 			}
 			return result;
 		}
+	}
+
+	/**
+	 * Finds the names of all operators, including inner operators
+	 *
+	 * @since 9.3
+	 */
+	private List<String> findAllNames(List<Operator> operators) {
+		return operators.stream().flatMap(op-> op instanceof OperatorChain ?
+				((OperatorChain) op).getAllInnerOperatorsAndMe().stream().map(Operator::getName)
+				: Stream.of(op.getName())).collect(Collectors.toList());
 	}
 
 	/**

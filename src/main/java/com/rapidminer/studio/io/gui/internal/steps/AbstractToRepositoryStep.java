@@ -33,7 +33,6 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 import javax.swing.event.ChangeListener;
 
@@ -43,6 +42,7 @@ import com.rapidminer.core.io.gui.InvalidConfigurationException;
 import com.rapidminer.core.io.gui.WizardDirection;
 import com.rapidminer.core.io.gui.WizardStep;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadDialog;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -76,7 +76,7 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 	/**
 	 * SwingWorker which periodically checks if the background job finished.
 	 */
-	private class ProgressUpdater extends SwingWorker<Void, Void> {
+	private class ProgressUpdater extends MultiSwingWorker<Void, Void> {
 
 		private static final int IDLE_TIME_MS = 500;
 
@@ -294,8 +294,8 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 
 			// Import data with background worker.
 			backgroundJob.addProgressThreadListener(thread -> backgroundJob = null);
-			SwingWorker<Void, Void> progressUpdater = new ProgressUpdater();
-			progressUpdater.execute();
+			MultiSwingWorker<Void, Void> progressUpdater = new ProgressUpdater();
+			progressUpdater.start();
 			backgroundJob.start();
 			try {
 				// this call will block the EDT and will continue as soon as

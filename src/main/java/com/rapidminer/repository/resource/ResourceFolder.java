@@ -1,36 +1,41 @@
 /**
  * Copyright (C) 2001-2019 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.repository.resource;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.repository.BlobEntry;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.EntryCreator;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.ProcessEntry;
@@ -45,6 +50,20 @@ import com.rapidminer.tools.Tools;
  * @author Simon Fischer, Jan Czogalla
  */
 public class ResourceFolder extends ResourceEntry implements Folder {
+
+	/**
+	 * A map of {@link EntryCreator}, one for each {@link ResourceDataEntry}.
+	 * @since 9.3
+	 */
+	private static final Map<String, EntryCreator<String[], ? extends ResourceDataEntry, ResourceFolder, ResourceRepository>> CREATOR_MAP;
+	static {
+		Map<String, EntryCreator<String[], ? extends ResourceDataEntry, ResourceFolder, ResourceRepository>> creatorMap = new HashMap<>();
+		creatorMap.put(BlobEntry.BLOB_SUFFIX, (l, f, r) -> new ResourceBlobEntry(f, l[0], l[1], r));
+		creatorMap.put(ProcessEntry.RMP_SUFFIX, (l, f, r) -> new ResourceProcessEntry(f, l[0], l[1], r));
+		creatorMap.put(IOObjectEntry.IOO_SUFFIX, (l, f, r) -> new ResourceIOObjectEntry(f, l[0], l[1], r));
+		creatorMap.put(ConnectionEntry.CON_SUFFIX, (l, f, r) -> new ResourceConnectionEntry(f, l[0], l[1], r));
+		CREATOR_MAP = Collections.unmodifiableMap(creatorMap);
+	}
 
 	private List<Folder> folders;
 	private List<DataEntry> data;
@@ -103,12 +122,17 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 
 	@Override
 	public IOObjectEntry createIOObjectEntry(String name, IOObject ioobject, Operator callingOperator,
-			ProgressListener newParam) throws RepositoryException {
+											 ProgressListener newParam) throws RepositoryException {
 		throw new RepositoryException("This is a read-only sample repository. Cannot create new entries.");
 	}
 
 	@Override
 	public ProcessEntry createProcessEntry(String name, String processXML) throws RepositoryException {
+		throw new RepositoryException("This is a read-only sample repository. Cannot create new entries.");
+	}
+
+	@Override
+	public ConnectionEntry createConnectionEntry(String name, ConnectionInformation connectionInformation) throws RepositoryException {
 		throw new RepositoryException("This is a read-only sample repository. Cannot create new entries.");
 	}
 
@@ -159,7 +183,7 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 	 * 		if an error occurs
 	 * @since 9.0
 	 */
-	protected void ensureLoaded(List<Folder> folders, List<DataEntry> data) throws RepositoryException{
+	protected void ensureLoaded(List<Folder> folders, List<DataEntry> data) throws RepositoryException {
 		try (InputStream in = getResourceStream("/CONTENTS");
 			 InputStreamReader reader = new InputStreamReader(in, "UTF-8")) {
 			String[] lines = Tools.readTextFile(reader).split("\n");
@@ -179,25 +203,17 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 					String suffix = "";
 					if (suffixStart >= 0) {
 						nameWOExt = name.substring(0, suffixStart);
-						suffix = name.substring(suffixStart + 1);
+						suffix = name.substring(suffixStart);
 					}
-					DataEntry entry;
-					switch (suffix) {
-						case "rmp":
-							entry = new ResourceProcessEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository());
-							break;
-						case "ioo":
-							entry = new ResourceIOObjectEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository());
-							break;
-						case "blob":
-							entry = new ResourceBlobEntry(this, nameWOExt, getPath() + "/" + nameWOExt, getRepository());
-							break;
-						default:
-							entry = null;
+					if (!ConnectionEntry.CON_SUFFIX.equals(suffix) || isSpecialConnectionsFolder()) {
+						//ignore connection entries outside special folder
+						DataEntry entry = CREATOR_MAP.getOrDefault(suffix, EntryCreator.nullCreator())
+								.create(new String[]{nameWOExt, getPath() + "/" + nameWOExt}, this, getRepository());
+						if (entry != null) {
+							data.add(entry);
+						} else {
 							errorSource = name;
-					}
-					if (entry != null) {
-						data.add(entry);
+						}
 					}
 				} else {
 					errorSource = line;

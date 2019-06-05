@@ -116,6 +116,11 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 	/** The weight attribute. Might be null. */
 	private Attribute weightAttribute;
 
+	/**
+	 * True if the user defined positive class should be used instead of the label's default mapping.
+	 */
+	private boolean userDefinedPositiveClass = false;
+
 	public BinaryClassificationPerformance() {
 		type = -1;
 	}
@@ -139,6 +144,7 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 		}
 		this.positiveClassName = o.positiveClassName;
 		this.negativeClassName = o.negativeClassName;
+		this.userDefinedPositiveClass = o.userDefinedPositiveClass;
 	}
 
 	public BinaryClassificationPerformance(int type) {
@@ -198,8 +204,8 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 			throw new UserError(null, 157);
 		}
 
-		this.negativeClassName = predictedLabelAttribute.getMapping().getNegativeString();
-		this.positiveClassName = predictedLabelAttribute.getMapping().getPositiveString();
+		updatePosNegClassNames();
+
 		if (useExampleWeights) {
 			this.weightAttribute = eSet.getAttributes().getWeight();
 		}
@@ -209,9 +215,9 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 	@Override
 	public void countExample(Example example) {
 		String labelString = example.getNominalValue(labelAttribute);
-		int label = predictedLabelAttribute.getMapping().getIndex(labelString);
+		int label = positiveClassName.equals(labelString) ? P : N;
 		String predString = example.getNominalValue(predictedLabelAttribute);
-		int plabel = predictedLabelAttribute.getMapping().getIndex(predString);
+		int plabel = positiveClassName.equals(predString) ? P : N;
 
 		double weight = 1.0d;
 		if (weightAttribute != null) {
@@ -431,5 +437,34 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 
 	public String getTitle() {
 		return super.toString() + " (positive class: " + getPositiveClassName() + ")";
+	}
+
+	/**
+	 * Overrides the default positive class name with a user defined positive class name. If the argument is null it
+	 * falls back to the default positive class name defined by the label's intern mapping.
+	 *
+	 * @param positiveClassName
+	 * 		The positive class name or null to fall back to the default positive class name.
+	 */
+	public void setUserDefinedPositiveClassName(String positiveClassName) {
+		this.positiveClassName = positiveClassName;
+		userDefinedPositiveClass = positiveClassName != null;
+	}
+
+	private void updatePosNegClassNames() throws UserError {
+		String mapNegativeClassName = predictedLabelAttribute.getMapping().getNegativeString();
+		String mapPositiveClassName = predictedLabelAttribute.getMapping().getPositiveString();
+		if (userDefinedPositiveClass) {
+			if (positiveClassName.equals(mapPositiveClassName)) {
+				negativeClassName = mapNegativeClassName;
+			} else if (positiveClassName.equals(mapNegativeClassName)) {
+				negativeClassName = mapPositiveClassName;
+			} else {
+				throw new UserError(null, "invalid_positive_class", positiveClassName);
+			}
+		} else {
+			positiveClassName = mapPositiveClassName;
+			negativeClassName = mapNegativeClassName;
+		}
 	}
 }

@@ -162,6 +162,7 @@ public abstract class AbstractConfigurator<T extends Configurable> {
 		parameterHandlers.put(configurable.getName(), parameterHandlers.remove(oldConfigurableName));
 	}
 
+
 	@Override
 	public String toString() {
 		return getName();

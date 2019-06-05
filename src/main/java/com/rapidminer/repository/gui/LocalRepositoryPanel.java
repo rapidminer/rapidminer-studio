@@ -328,7 +328,7 @@ public class LocalRepositoryPanel extends JPanel implements RepositoryConfigurat
 			if (repo instanceof LocalRepository) {
 				if (((LocalRepository) repo).getRoot().equals(file)) {
 					throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-							"repository.repository_creation_duplicate_location"));
+							"repository.repository_creation_duplicate_location", repo.getName()));
 				}
 			}
 			if (repo.getName().equals(alias)) {

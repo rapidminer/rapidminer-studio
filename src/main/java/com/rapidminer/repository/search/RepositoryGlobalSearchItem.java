@@ -36,6 +36,9 @@ public class RepositoryGlobalSearchItem {
 	private String location;
 	private String modified;
 	private String[] attributes;
+	private String connectionName;
+	private String connectionType;
+	private String[] connectionTags;
 
 	/**
 	 * The name of this item.
@@ -100,6 +103,36 @@ public class RepositoryGlobalSearchItem {
 		return attributes;
 	}
 
+	/**
+	 * The connection name associated with this entry
+	 *
+	 * @return the connection name, may be {@code null} or empty.
+	 * @since 9.3
+	 */
+	public String getConnectionName() {
+		return connectionName;
+	}
+
+	/**
+	 * The connection type associated with this entry
+	 *
+	 * @return the connection type, may be {@code null} or empty
+	 * @since 9.3
+	 */
+	public String getConnectionType() {
+		return connectionType;
+	}
+
+	/**
+	 * The connection tags associated with this entry
+	 *
+	 * @return the connection tags, may be {@code null} or empty
+	 * @since 9.3
+	 */
+	public String[] getConnectionTags() {
+		return connectionTags;
+	}
+
 	public RepositoryGlobalSearchItem setName(String name) {
 		this.name = name;
 		return this;
@@ -133,6 +166,18 @@ public class RepositoryGlobalSearchItem {
 	public RepositoryGlobalSearchItem setAttributes(String[] attributes) {
 		this.attributes = attributes;
 		return this;
+	}
+
+	public void setConnectionName(String connectionName) {
+		this.connectionName = connectionName;
+	}
+
+	public void setConnectionType(String connectionType) {
+		this.connectionType = connectionType;
+	}
+
+	public void setConnectionTags(String[] connectionTags) {
+		this.connectionTags = connectionTags;
 	}
 
 	@Override

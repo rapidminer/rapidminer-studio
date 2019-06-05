@@ -43,6 +43,9 @@ import org.xml.sax.SAXException;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.new_plotter.integration.ExpertDataTableRenderer;
 import com.rapidminer.gui.renderer.data.ExampleSetPlotRenderer;
+import com.rapidminer.gui.renderer.math.NumericalMatrixPlotRenderer;
+import com.rapidminer.gui.renderer.models.KernelModelPlotRenderer;
+import com.rapidminer.gui.renderer.weights.AttributeWeightsPlotRenderer;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLTools;
@@ -88,6 +91,12 @@ public class RendererService {
 	}
 
 	private static final String CORE_IOOBJECTS_XML = "ioobjects.xml";
+
+	/**
+	 * Contains all simple renderers that have been migrated to the new HTML5 Visualizations. Can be removed once the "show legacy simple charts" setting is removed.
+	 */
+	private static final Class<?>[] MIGRATED_SIMPLE_RENDERER_CLASSES = new Class<?>[] {ExampleSetPlotRenderer.class, AttributeWeightsPlotRenderer.class,
+			NumericalMatrixPlotRenderer.class, KernelModelPlotRenderer.class};
 
 	private static final IconData ICON_DEFAULT_16 = new IconData("data.png", SwingTools.createIcon("16/data.png"));
 	private static final IconData ICON_DEFAULT_24 = new IconData("data.png", SwingTools.createIcon("24/data.png"));
@@ -388,7 +397,7 @@ public class RendererService {
 			boolean showLegacyAdvancedCharts = Boolean.parseBoolean(ParameterService.getParameterValue(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_ADVANCED_CHARTS));
 			// filter old charts and old advanced charts unless user has activated them in settings
 			return renderers.stream().filter(renderer -> {
-				if (renderer.getClass().isAssignableFrom(ExampleSetPlotRenderer.class)) {
+				if (isMigratedSimpleRendererClass(renderer.getClass())) {
 					return showLegacySimpleCharts;
 				} else if (renderer.getClass().isAssignableFrom(ExpertDataTableRenderer.class)) {
 					return showLegacyAdvancedCharts;
@@ -536,5 +545,22 @@ public class RendererService {
 			}
 		}
 		return icon;
+	}
+
+	/**
+	 * Checks if the given simple renderer class was already migrated to the new HTML5 visualizations.
+	 *
+	 * @param rendererClass
+	 * 		the renderer class in question, never {@code null}
+	 * @return {@code true} if the given renderer was migrated; {@code false} otherwise
+	 */
+	private static boolean isMigratedSimpleRendererClass(Class<?> rendererClass) {
+		for (Class<?> migratedClass : MIGRATED_SIMPLE_RENDERER_CLASSES) {
+			if (rendererClass.isAssignableFrom(migratedClass)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

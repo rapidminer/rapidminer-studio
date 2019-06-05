@@ -25,10 +25,13 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DragSource;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.logging.Level;
 import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.TransferHandler;
+
+import com.rapidminer.tools.LogService;
 
 
 /**
@@ -151,8 +154,9 @@ public class ExtendedJListTransferHandler<T> extends TransferHandler {
 			}
 			addCount = values.length;
 			return true;
-		} catch (UnsupportedFlavorException | IOException ex) {
-			ex.printStackTrace();
+		} catch (UnsupportedFlavorException | IOException e) {
+			// should never happen, log anyway to be safe
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.tools.dnd.ExtendedJListTransferHandler.unexpected_error", e);
 		}
 
 		return false;

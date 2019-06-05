@@ -64,6 +64,7 @@ import com.rapidminer.tools.documentation.ExampleProcess;
  */
 public class OperatorDocLoader {
 
+	public static final String DEFAULT_IOOBJECT_ICON_NAME = "question_blue.png";
 	/**
 	 * The documentation cache. It is used to cache documentations after reading them for the first
 	 * time.
@@ -289,7 +290,7 @@ public class OperatorDocLoader {
 		String path = null;
 		String iconName;
 		if (clazz == null) {
-			iconName = "plug.png";
+			iconName = DEFAULT_IOOBJECT_ICON_NAME;
 		} else {
 			iconName = RendererService.getIconName(clazz);
 		}

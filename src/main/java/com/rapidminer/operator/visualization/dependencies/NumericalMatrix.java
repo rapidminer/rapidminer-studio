@@ -54,6 +54,9 @@ public class NumericalMatrix extends ResultObjectAdapter {
 
 	private String name;
 
+	private double theoreticalMin = Double.NaN;
+	private double theoreticalMax = Double.NaN;
+
 	private boolean symmetrical = false;
 
 	private String firstAttributeName = "First Attribute";
@@ -166,6 +169,49 @@ public class NumericalMatrix extends ResultObjectAdapter {
 	public void setUseless(boolean useless) {
 		isUseless = useless;
 	}
+
+	/**
+	 * Sets the theoretical min value that can appear in this matrix (e.g. -1 for correlation matrix).
+	 *
+	 * @param min
+	 * 		the min value or {@link Double#NaN}
+	 * @since 9.2.1
+	 */
+	public void setTheoreticalMin(double min) {
+		this.theoreticalMin = min;
+	}
+
+	/**
+	 * Gets the theoretical min value that can appear in this matrix (e.g. -1 for correlation matrix).
+	 *
+	 * @return the min value or {@link Double#NaN} if not set
+	 * @since 9.2.1
+	 */
+	public double getTheoreticalMin() {
+		return theoreticalMin;
+	}
+
+	/**
+	 * Sets the theoretical max value that can appear in this matrix (e.g. 1 for correlation matrix).
+	 *
+	 * @param max
+	 * 		the max value or {@link Double#NaN}
+	 * @since 9.2.1
+	 */
+	public void setTheoreticalMax(double max) {
+		this.theoreticalMax = max;
+	}
+
+	/**
+	 * Gets the theoretical max value that can appear in this matrix (e.g. 1 for correlation matrix).
+	 *
+	 * @return the max value or {@link Double#NaN} if not set
+	 * @since 9.2.1
+	 */
+	public double getTheoreticalMax() {
+		return theoreticalMax;
+	}
+
 
 	public DataTable createMatrixDataTable() {
 		return new DataTableSymmetricalMatrixAdapter(this, this.name, this.columnNames);

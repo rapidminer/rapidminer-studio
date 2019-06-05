@@ -19,9 +19,7 @@
 package com.rapidminer.gui.properties.tablepanel.cells.implementations;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,15 +29,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-
-import org.jdesktop.swingx.prompt.PromptSupport;
-import org.jdesktop.swingx.prompt.PromptSupport.FocusBehavior;
 
 import com.michaelbaranov.microba.calendar.DatePicker;
 import com.rapidminer.example.set.CustomFilter.CustomFilters;
@@ -48,6 +42,7 @@ import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeDate;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeDateTime;
 import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.I18N;
 
 
@@ -179,10 +174,7 @@ public class CellTypeDateImpl extends JPanel implements CellTypeDate, CellTypeDa
 		// set syntax assist if available
 		String syntaxHelp = model.getSyntaxHelpAt(rowIndex, columnIndex);
 		if (syntaxHelp != null && !"".equals(syntaxHelp.trim())) {
-			PromptSupport.setForeground(Color.LIGHT_GRAY, field);
-			PromptSupport.setPrompt(syntaxHelp, field);
-			PromptSupport.setFontStyle(Font.ITALIC, field);
-			PromptSupport.setFocusBehavior(FocusBehavior.SHOW_PROMPT, field);
+			SwingTools.setPrompt(syntaxHelp, field);
 		}
 
 		// misc settings

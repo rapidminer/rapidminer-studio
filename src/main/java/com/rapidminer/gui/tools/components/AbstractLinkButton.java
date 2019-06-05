@@ -21,7 +21,6 @@ package com.rapidminer.gui.tools.components;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.net.URL;
-
 import javax.swing.Action;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
@@ -154,9 +153,23 @@ public class AbstractLinkButton extends ExtendedHTMLJEditorPane {
 		if (action instanceof ResourceAction) {
 			String iconName = ((ResourceAction) action).getIconName();
 			if (iconName != null) {
-				iconUrl = Tools.getResource("icons/16/" + iconName);
+				String regularIconPath = "icons/16/" + iconName;
+				String retinaIconPath = "icons/16/@2x/" + iconName;
+				boolean isRetina = SwingTools.getGUIScaling() == SwingTools.Scaling.RETINA;
+				String iconLookup = isRetina ? retinaIconPath : regularIconPath;
+				try {
+					iconUrl = Tools.getResource(iconLookup);
+					if (iconUrl == null && isRetina) {
+						// fallback if @2x icon is missing on retina displays
+						iconUrl = Tools.getResource(regularIconPath);
+					}
+				} catch (NullPointerException e) {
+					// this can occur if no @2x icon exists on OS X and the security manager throws an NPE
+					iconUrl = Tools.getResource(regularIconPath);
+				}
 			}
 		}
+
 		if (iconUrl != null) {
 			return String.format(TEMPLATE_ICON_HTML, iconUrl.toString(), name);
 		} else {

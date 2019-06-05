@@ -36,6 +36,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.transform.stream.StreamResult;
@@ -73,10 +74,10 @@ import com.rapidminer.operator.ports.metadata.MDTransformer;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataError;
 import com.rapidminer.operator.ports.metadata.Precondition;
-import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.operator.ports.quickfix.RelativizeRepositoryLocationQuickfix;
 import com.rapidminer.operator.preprocessing.filter.AbstractDateDataProcessing;
+import com.rapidminer.parameter.CombinedParameterType;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
@@ -672,7 +673,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 *            This parameter is not longer used.
 	 */
 	public Operator cloneOperator(String name, boolean forParallelExecution) {
-		Operator clone = null;
+		Operator clone;
 		try {
 			clone = operatorDescription.createOperatorInstance();
 		} catch (Exception e) {
@@ -686,13 +687,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 
 		// copy user data entries
 		if (this.userData != null) {
-			for (String key : this.userData.keySet()) {
-				UserData<Object> data = this.userData.get(key);
-				if (data != null) {
-					data = data.copyUserData(clone);
-					clone.setUserData(key, data);
-				}
-			}
+			this.userData.forEach((k, data) -> {if (data != null) clone.setUserData(k, data.copyUserData(clone));});
 		}
 
 		if (forParallelExecution) {
@@ -860,74 +855,69 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 * user. Returns the total number of errors.
 	 */
 	public int checkProperties() {
+		if (!isEnabled()) {
+			return 0;
+		}
 		int errorCount = 0;
-		if (isEnabled()) {
-			Iterator<ParameterType> i = getParameters().getParameterTypes().iterator();
-			while (i.hasNext()) {
-				ParameterType type = i.next();
-				boolean optional = type.isOptional();
-				if (!optional) {
-					boolean parameterSet = getParameters().isSet(type.getKey());
-					if (type.getDefaultValue() == null && !parameterSet) {
-						addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
-								Collections.singletonList(new ParameterSettingQuickFix(this, type.getKey())),
-								"undefined_parameter", new Object[]{type.getKey().replace('_', ' ')}));
-						errorCount++;
-					} else if (type instanceof ParameterTypeAttribute && parameterSet) {
-						try {
-							if ("".equals(getParameter(type.getKey()))) {
-								addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
-										Collections.singletonList(new ParameterSettingQuickFix(this, type.getKey())),
-										"undefined_parameter", new Object[]{type.getKey().replace('_', ' ')}));
-								errorCount++;
-							}
-						} catch (UndefinedParameterError e) {
-							// Ignore
+		for (ParameterType type : getParameters().getParameterTypes()) {
+			boolean optional = type.isOptional();
+			boolean hidden = type.isHidden();
+			String key = type.getKey();
+			if (!optional && !hidden) {
+				boolean parameterSet = getParameters().isSet(key);
+				boolean isUndefined = false;
+				try {
+					isUndefined = parameterSet
+							&& (type instanceof ParameterTypeAttribute || type instanceof CombinedParameterType)
+							&& "".equals(getParameter(key));
+				} catch (UndefinedParameterError e) {
+					// ignore
+				}
+				if (!parameterSet || isUndefined) {
+					addError(new UndefinedParameterSetupError(this, key));
+					errorCount++;
+				}
+			}
+			if (type instanceof ParameterTypeRepositoryLocation) {
+				String value = getParameters().getParameterOrNull(key);
+				if (value != null && !((ParameterTypeRepositoryLocation) type).isAllowAbsoluteEntries()) {
+					if (value.startsWith(RepositoryLocation.REPOSITORY_PREFIX)) {
+						if (!value.startsWith(
+								RepositoryLocation.REPOSITORY_PREFIX + RepositoryManager.SAMPLE_REPOSITORY_NAME)) {
+							addError(new SimpleProcessSetupError(Severity.WARNING, portOwner,
+									"accessing_repository_by_name",
+									key.replace('_', ' '), value));
 						}
+					} else if (value.startsWith(String.valueOf(RepositoryLocation.SEPARATOR))) {
+						addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
+								Collections.singletonList(new RelativizeRepositoryLocationQuickfix(this, key, value)),
+								"absolute_repository_location",
+								key.replace('_', ' '), value));
+						errorCount++;
 					}
 				}
-				if (type instanceof ParameterTypeRepositoryLocation) {
-					String value = getParameters().getParameterOrNull(type.getKey());
-					if (value != null && !((ParameterTypeRepositoryLocation) type).isAllowAbsoluteEntries()) {
-						if (value.startsWith(RepositoryLocation.REPOSITORY_PREFIX)) {
-							if (!value.startsWith(
-									RepositoryLocation.REPOSITORY_PREFIX + RepositoryManager.SAMPLE_REPOSITORY_NAME)) {
-								addError(new SimpleProcessSetupError(Severity.WARNING, portOwner,
-										Collections.<QuickFix>emptyList(), "accessing_repository_by_name",
-										new Object[]{type.getKey().replace('_', ' '), value}));
-							}
-						} else if (value.startsWith(String.valueOf(RepositoryLocation.SEPARATOR))) {
-							addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
-									Collections.singletonList(
-											new RelativizeRepositoryLocationQuickfix(this, type.getKey(), value)),
-									"absolute_repository_location",
-									new Object[]{type.getKey().replace('_', ' '), value}));
+			} else if (type instanceof ParameterTypeDateFormat) {
+				Locale locale = Locale.getDefault();
+				try {
+					int localeIndex;
+					localeIndex = getParameterAsInt(AbstractDataResultSetReader.PARAMETER_LOCALE);
+					if (localeIndex >= 0 && localeIndex < AbstractDateDataProcessing.availableLocales.size()) {
+						locale = AbstractDateDataProcessing.availableLocales.get(localeIndex);
+					}
+				} catch (UndefinedParameterError e) {
+					// ignore and use default locale
+				}
+				try {
+					ParameterTypeDateFormat.createCheckedDateFormat(this, locale, true);
+				} catch (UserError userError) {
+					// will not happen because of isSetup
+				}
 
-						}
-					}
-				} else if (type instanceof ParameterTypeDateFormat) {
-					Locale locale = Locale.getDefault();
-					try {
-						int localeIndex;
-						localeIndex = getParameterAsInt(AbstractDataResultSetReader.PARAMETER_LOCALE);
-						if (localeIndex >= 0 && localeIndex < AbstractDateDataProcessing.availableLocales.size()) {
-							locale = AbstractDateDataProcessing.availableLocales.get(localeIndex);
-						}
-					} catch (UndefinedParameterError e) {
-						// ignore and use default locale
-					}
-					try {
-						ParameterTypeDateFormat.createCheckedDateFormat(this, locale, true);
-					} catch (UserError userError) {
-						// will not happen because of isSetup
-					}
-
-				} else if (!optional && type instanceof ParameterTypeDate) {
-					String value = getParameters().getParameterOrNull(type.getKey());
-					if (value != null && !ParameterTypeDate.isValidDate(value)) {
-						addError(new SimpleProcessSetupError(Severity.WARNING, portOwner, "invalid_date_format",
-								new Object[]{type.getKey().replace('_', ' '), value}));
-					}
+			} else if (!optional && !hidden && type instanceof ParameterTypeDate) {
+				String value = getParameters().getParameterOrNull(key);
+				if (value != null && !ParameterTypeDate.isValidDate(value)) {
+					addError(new SimpleProcessSetupError(Severity.WARNING, portOwner, "invalid_date_format",
+							key.replace('_', ' '), value));
 				}
 			}
 		}
@@ -973,11 +963,9 @@ public abstract class Operator extends AbstractObservable<Operator>
 			return;
 		}
 
-		if (getOperatorDescription().getDeprecationInfo() != null) {
-			if (applyCount.get() == 0) {
-				getLogger().warning("Deprecation warning for " + getOperatorDescription().getName() + ": "
-						+ getOperatorDescription().getDeprecationInfo());
-			}
+		if (getOperatorDescription().getDeprecationInfo() != null && applyCount.get() == 0) {
+			getLogger().warning("Deprecation warning for " + getOperatorDescription().getName() + ": "
+					+ getOperatorDescription().getDeprecationInfo());
 		}
 
 		getOutputPorts().clear(Port.CLEAR_DATA);
@@ -1366,6 +1354,16 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 */
 	@Override
 	public void setParameters(Parameters parameters) {
+		if (this.parameters != parameters) {
+			if (this.parameters != null) {
+				this.parameters.removeObserver(delegatingParameterObserver);
+				this.parameters.removeObserver(dirtyObserver);
+			}
+			if (parameters != null) {
+				parameters.addObserver(delegatingParameterObserver, false);
+				makeDirtyOnUpdate(parameters);
+			}
+		}
 		this.parameters = parameters;
 	}
 
@@ -1432,44 +1430,30 @@ public abstract class Operator extends AbstractObservable<Operator>
 	/** Returns a single named parameter and casts it to int. */
 	@Override
 	public int getParameterAsInt(String key) throws UndefinedParameterError {
-		ParameterType type = this.getParameters().getParameterType(key);
-		String value = getParameter(key);
-		if (type != null) {
-			if (type instanceof ParameterTypeCategory) {
-				String parameterValue = value;
-				try {
-					return Integer.valueOf(parameterValue);
-				} catch (NumberFormatException e) {
-					ParameterTypeCategory categoryType = (ParameterTypeCategory) type;
-					return categoryType.getIndex(parameterValue);
-				}
-			}
-		}
-		try {
-			return Integer.valueOf(value);
-		} catch (NumberFormatException e) {
-			throw new UndefinedParameterError(key, this, "Expected integer but found '" + value + "'.");
-		}
+		return getParameterAsIntNumber(key, Integer::valueOf, Integer::intValue);
 	}
 
 	/** Returns a single named parameter and casts it to long. */
 	@Override
 	public long getParameterAsLong(String key) throws UndefinedParameterError {
+		return getParameterAsIntNumber(key, Long::valueOf, Long::valueOf);
+	}
+
+	private <N extends Number> N getParameterAsIntNumber(String key,
+														 Function<String, N> transformer,
+														 Function<Integer, N> caster) throws UndefinedParameterError{
 		ParameterType type = this.getParameters().getParameterType(key);
 		String value = getParameter(key);
-		if (type != null) {
-			if (type instanceof ParameterTypeCategory) {
-				String parameterValue = value;
-				try {
-					return Long.valueOf(parameterValue);
-				} catch (NumberFormatException e) {
-					ParameterTypeCategory categoryType = (ParameterTypeCategory) type;
-					return categoryType.getIndex(parameterValue);
-				}
+		if (type instanceof ParameterTypeCategory) {
+			try {
+				return transformer.apply(value);
+			} catch (NumberFormatException e) {
+				ParameterTypeCategory categoryType = (ParameterTypeCategory) type;
+				return caster.apply(categoryType.getIndex(value));
 			}
 		}
 		try {
-			return Long.valueOf(value);
+			return transformer.apply(value);
 		} catch (NumberFormatException e) {
 			throw new UndefinedParameterError(key, this, "Expected long but found '" + value + "'.");
 		}
@@ -1585,51 +1569,28 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 * @throws UserError
 	 */
 	@Override
-	public java.io.File getParameterAsFile(String key, boolean createMissingDirectories) throws UserError {
+	public File getParameterAsFile(String key, boolean createMissingDirectories) throws UserError {
 		String fileName = getParameter(key);
 		if (fileName == null) {
 			return null;
 		}
 
 		Process process = getProcess();
+		File result;
 		if (process != null) {
-			File result = process.resolveFileName(fileName);
-			if (createMissingDirectories) {
-				File parent = result.getParentFile();
-				if (parent != null) {
-					if (!parent.exists()) {
-						boolean isDirectoryCreated = parent.mkdirs();
-						if (!isDirectoryCreated) {
-							throw new UserError(null, "io.dir_creation_fail", parent.getAbsolutePath());
-						}
-					}
-				}
-			}
-			return result;
+			result = process.resolveFileName(fileName);
 		} else {
 			getLogger().fine(getName() + " is not attached to a process. Trying '" + fileName + "' as absolute filename.");
-			File result = new File(fileName);
-			if (createMissingDirectories) {
-				if (result.isDirectory()) {
-					boolean isDirectoryCreated = result.mkdirs();
-					if (!isDirectoryCreated) {
-						throw new UserError(null, "io.dir_creation_fail", result.getAbsolutePath());
-					}
-				} else {
-					File parent = result.getParentFile();
-					if (parent != null) {
-						if (!parent.exists()) {
-							boolean isDirectoryCreated = parent.mkdirs();
-							if (!isDirectoryCreated) {
-								throw new UserError(null, "io.dir_creation_fail", parent.getAbsolutePath());
-							}
-						}
-
-					}
-				}
-			}
-			return result;
+			result = new File(fileName);
 		}
+
+		if (createMissingDirectories) {
+			File parent = result.getParentFile();
+			if (parent != null && !parent.exists() && !parent.mkdirs()) {
+				throw new UserError(null, "io.dir_creation_fail", parent.getAbsolutePath());
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -2113,13 +2074,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	private final Observer<String> delegatingParameterObserver = new DelegatingObserver<>(this, this);
 	/** Sets the dirty flag on any update. */
 	@SuppressWarnings("rawtypes")
-	private final Observer dirtyObserver = new Observer<Object>() {
-
-		@Override
-		public void update(Observable<Object> observable, Object arg) {
-			makeDirty();
-		}
-	};
+	private final Observer dirtyObserver = (observable, arg) -> makeDirty();
 	private ExecutionUnit enclosingExecutionUnit;
 
 	/**
@@ -2280,10 +2235,11 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 * ProcessRootOperator!
 	 */
 	public Operator getRoot() {
-		if (getParent() == null) {
+		OperatorChain parent = getParent();
+		if (parent == null) {
 			return this;
 		} else {
-			return getParent().getRoot();
+			return parent.getRoot();
 		}
 	}
 
@@ -2295,6 +2251,26 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 */
 	public void notifyRenaming(String oldName, String newName) {
 		getParameters().notifyRenaming(oldName, newName);
+	}
+
+	/**
+	 * This method is called when the operator given by {@code oldName} (and {@code oldOp} if it is not {@code null})
+	 * was replaced with the operator described by {@code newName} and {@code newOp}.
+	 * This will inform the {@link Parameters} of the replacing.
+	 *
+	 * @param oldName
+	 * 		the name of the old operator
+	 * @param oldOp
+	 * 		the old operator; can be {@code null}
+	 * @param newName
+	 * 		the name of the new operator
+	 * @param newOp
+	 * 		the new operator; must not be {@code null}
+	 * @see Parameters#notifyReplacing(String, Operator, String, Operator)
+	 * @since 9.3
+	 */
+	public void notifyReplacing(String oldName, Operator oldOp, String newName, Operator newOp) {
+		getParameters().notifyReplacing(oldName, oldOp, newName, newOp);
 	}
 
 	@Override

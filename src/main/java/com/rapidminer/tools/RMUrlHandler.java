@@ -44,6 +44,7 @@ import com.rapidminer.gui.security.PasswordManager;
 import com.rapidminer.gui.tools.DockingTools;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.operator.OperatorCreationException;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
@@ -419,6 +420,8 @@ public class RMUrlHandler {
 						if (RapidMinerGUI.getMainFrame().close()) {
 							OpenAction.open(new RepositoryProcessLocation(location), true);
 						}
+					} else if (entry instanceof ConnectionEntry) {
+						OpenAction.showConnectionInformationDialog((ConnectionEntry) entry);
 					} else if (entry instanceof IOObjectEntry) {
 						OpenAction.showAsResult((IOObjectEntry) entry);
 					} else {

@@ -20,15 +20,13 @@ package com.rapidminer.core.license;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.AccessControlException;
-import java.security.AccessController;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import com.rapidminer.license.StudioLicenseConstants;
 import com.rapidminer.license.product.Product;
-import com.rapidminer.security.PluginSandboxPolicy;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -62,7 +60,7 @@ public enum ProductLinkRegistry {
 	 * 		if the link is not a valid url
 	 */
 	public void register(String productId, String link) {
-		checkAccess();
+		Tools.requireInternalPermission();
 		Objects.requireNonNull(productId, "productId must not be null");
 		Objects.requireNonNull(link, "link must not be null");
 		try {
@@ -93,19 +91,4 @@ public enum ProductLinkRegistry {
 		return productLinkMap.getOrDefault(productId, defaultLink);
 	}
 
-	/**
-	 * Checks if the caller has the {@link PluginSandboxPolicy#RAPIDMINER_INTERNAL_PERMISSION}
-	 *
-	 * @throws UnsupportedOperationException
-	 * 		if the caller is not signed
-	 */
-	private static void checkAccess() {
-		try {
-			if (System.getSecurityManager() != null) {
-				AccessController.checkPermission(new RuntimePermission(PluginSandboxPolicy.RAPIDMINER_INTERNAL_PERMISSION));
-			}
-		} catch (AccessControlException e) {
-			throw new UnsupportedOperationException("Internal API, cannot be called by unauthorized sources.");
-		}
-	}
 }

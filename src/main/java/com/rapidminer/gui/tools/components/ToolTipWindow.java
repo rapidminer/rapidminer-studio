@@ -71,6 +71,7 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.RMUrlHandler;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -356,11 +357,11 @@ public class ToolTipWindow {
 		css.addRule("h4 {margin-bottom:0; margin-top:1ex; padding:0}");
 		css.addRule("p  {margin-top:0; margin-bottom:1ex; padding:0}");
 		css.addRule("ul {margin-top:0; margin-bottom:1ex; list-style-image: url("
-				+ getClass().getResource("/com/rapidminer/resources/icons/modern/help/circle.png") + ")}");
+				+ Tools.getResource("icons/help/circle.png") + ")}");
 		css.addRule("ul li {padding-bottom: 2px}");
 		css.addRule("li.outPorts {padding-bottom: 0px}");
 		css.addRule("ul li ul {margin-top:0; margin-bottom:1ex; list-style-image: url("
-				+ getClass().getResource("/com/rapidminer/resources/icons/modern/help/line.png") + ")");
+				+ Tools.getResource("icons/help/line.png") + ")");
 		css.addRule("li ul li {padding-bottom:0}");
 
 		tipScrollPane = new JScrollPane(tipPane);

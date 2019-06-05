@@ -89,4 +89,15 @@ public interface GlobalSearchManager {
 	 */
 	GlobalSearchManagerEventHandler getSearchManagerEventHandler();
 
+	/**
+	 * Returns the {@link GlobalSearchCategory} for this Manager.
+	 * If the {@link GlobalSearchCategory#isVisible()} it will be displayed in the Global Search UI as a new category
+	 * and it entries will appear in the All Studio search.
+	 *
+	 * @return the GlobalSearchCategory
+	 */
+	default GlobalSearchCategory getSearchCategory() {
+		return new GlobalSearchCategory(this);
+	}
+
 }

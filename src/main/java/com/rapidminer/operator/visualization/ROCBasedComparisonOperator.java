@@ -135,6 +135,11 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
 					getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 
+			// It is important to remove any predicted labels that are possibly part of the input example set
+			// before we start our own predictions. Otherwise these predicted labels might be removed
+			// (alongside our own) from the underlying example table, possibly leading to side effects
+			PredictionModel.removePredictedLabel(eSet, false, false);
+
 			// apply subprocess to generate all models
 			eSet.selectSingleSubset(0);
 			trainingSetExtender.deliverToAll(eSet, false);
@@ -166,7 +171,10 @@ public class ROCBasedComparisonOperator extends OperatorChain implements Capabil
 					getParameterAsInt(RandomGenerator.PARAMETER_LOCAL_RANDOM_SEED),
 					getCompatibilityLevel().isAtMost(SplittedExampleSet.VERSION_SAMPLING_CHANGED));
 
-			PredictionModel.removePredictedLabel(eSet);
+			// It is important to remove any predicted labels that are possibly part of the input example set
+			// before we start our own predictions. Otherwise the original predicted labels might be removed
+			// (alongside our own) from the underlying example table, possibly leading to side effects
+			PredictionModel.removePredictedLabel(eSet, false, false);
 
 			for (int iteration = 0; iteration < numberOfFolds; iteration++) {
 				eSet.selectAllSubsetsBut(iteration);

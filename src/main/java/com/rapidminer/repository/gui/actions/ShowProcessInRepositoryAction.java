@@ -49,6 +49,9 @@ public class ShowProcessInRepositoryAction extends ResourceActionAdapter {
 		if (RapidMinerGUI.getMainFrame().getProcess() != null) {
 			RepositoryLocation repoLoc = RapidMinerGUI.getMainFrame().getProcess().getRepositoryLocation();
 			if (repoLoc != null) {
+				// scroll to location
+				// twice because otherwise the repository browser selects the parent...
+				tree.expandAndSelectIfExists(repoLoc);
 				tree.expandAndSelectIfExists(repoLoc);
 			}
 		}

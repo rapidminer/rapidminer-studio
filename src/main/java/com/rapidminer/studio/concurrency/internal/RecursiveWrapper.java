@@ -121,7 +121,7 @@ class RecursiveWrapper<T> extends CountedCompleter<Void> {
 			return Arrays.asList(resultArray);
 		} catch (ProcessStoppedRuntimeException e) {
 			// handle ProcessStoppedRuntimeException as done by StudioConcurrencyContext#collectResults
-			throw (ExecutionStoppedException) e.getCause();
+			throw e;
 		}catch (WrapperRuntimeException e){
 			// unwrap own wrapped exceptions and wrap into ExecutionException
 			throw new ExecutionException(e.getCause());

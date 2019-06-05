@@ -19,7 +19,6 @@
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -71,30 +70,41 @@ public class NominalToBinominal extends PreprocessingOperator {
 
 	@Override
 	protected Collection<AttributeMetaData> modifyAttributeMetaData(ExampleSetMetaData emd, AttributeMetaData amd) {
-		boolean transformBinominal = getParameterAsBoolean(PARAMETER_TRANSFORM_BINOIMINAL);
 		if (amd.isNominal()) {
-			Collection<AttributeMetaData> newAttributeMetaDataCollection = new LinkedList<AttributeMetaData>();
-			if (!transformBinominal && amd.getValueSet().size() == 2) {
+			LinkedList<AttributeMetaData> newAttributeMetaDataCollection = new LinkedList<>();
+			boolean transformBinomial = getParameterAsBoolean(PARAMETER_TRANSFORM_BINOIMINAL);
+			boolean useUnderscoreInName = getParameterAsBoolean(PARAMETER_USE_UNDERSCORE_IN_NAME);
+			if (!transformBinomial && amd.getValueSet().size() == 2) {
 				amd.setType(Ontology.BINOMINAL);
-				return Collections.singletonList(amd);
-			} else {
-				if (amd.getValueSetRelation() != SetRelation.UNKNOWN) {
-					boolean useUnderscoreInName = getParameterAsBoolean(PARAMETER_USE_UNDERSCORE_IN_NAME);
-					for (String value : amd.getValueSet()) {
-						String name = amd.getName() + (useUnderscoreInName ? "_" : " = ") + value;
-						AttributeMetaData newAttributeMetaData = new AttributeMetaData(name, Ontology.BINOMINAL);
-						Set<String> values = new TreeSet<String>();
-						values.add("false");
-						values.add("true");
-						newAttributeMetaData.setValueSet(values, SetRelation.EQUAL);
-						newAttributeMetaDataCollection.add(newAttributeMetaData);
-						emd.mergeSetRelation(amd.getValueSetRelation());
-					}
+				amd.setValueSetRelation(SetRelation.EQUAL);
+				newAttributeMetaDataCollection.add(amd);
+			} else if (amd.getValueSetRelation() == SetRelation.UNKNOWN) {
+				String name = amd.getName();
+				if (transformBinomial) {
+					// In this case we know that the original variable has been replaced. But we do not know the
+					// names and number of the new attributes. Therefore, we mark the variable name with ? to show
+					// that the meta data is incorrect.
+					name += (useUnderscoreInName ? "_" : " = ") + "?";
+					AttributeMetaData newAttributeMetaData = newBinomialAttributeMetaData(name);
+					newAttributeMetaDataCollection.add(newAttributeMetaData);
+				} else {
+					// We assume the value set is of size 2 (binomial) because it is the most common case and
+					// we do not have any information about the attribute's value set.
+					// Whenever this assumption is wrong the meta data will be incorrect.
+					amd.setType(Ontology.BINOMINAL);
+					amd.setValueSetRelation(SetRelation.UNKNOWN);
+					newAttributeMetaDataCollection.add(amd);
 				}
-				return newAttributeMetaDataCollection;
+			} else {
+				for (String value : amd.getValueSet()) {
+					String name = amd.getName() + (useUnderscoreInName ? "_" : " = ") + value;
+					AttributeMetaData newAttributeMetaData = newBinomialAttributeMetaData(name);
+					newAttributeMetaDataCollection.add(newAttributeMetaData);
+				}
 			}
+			return newAttributeMetaDataCollection;
 		} else {
-			return null; // Collections.singleton(amd);
+			return null;
 		}
 	}
 
@@ -147,5 +157,21 @@ public class NominalToBinominal extends PreprocessingOperator {
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
 				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+	}
+
+	/**
+	 * Helper method that creates binomial attribute meta data.
+	 *
+	 * @param name
+	 * 		the attributes name
+	 * @return new meta data
+	 */
+	private AttributeMetaData newBinomialAttributeMetaData(String name) {
+		AttributeMetaData newAttributeMetaData = new AttributeMetaData(name, Ontology.BINOMINAL);
+		Set<String> values = new TreeSet<>();
+		values.add("false");
+		values.add("true");
+		newAttributeMetaData.setValueSet(values, SetRelation.EQUAL);
+		return newAttributeMetaData;
 	}
 }

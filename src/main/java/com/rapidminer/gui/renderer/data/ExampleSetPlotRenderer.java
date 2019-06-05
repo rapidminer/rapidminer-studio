@@ -36,7 +36,9 @@ import com.rapidminer.operator.MissingIOObjectException;
  * A renderer for the plot view of example sets.
  *
  * @author Ingo Mierswa
+ * @deprecated since 9.2.0
  */
+@Deprecated
 public class ExampleSetPlotRenderer extends AbstractDataTablePlotterRenderer {
 
 	@Override

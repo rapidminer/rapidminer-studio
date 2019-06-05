@@ -19,7 +19,7 @@
 package com.rapidminer.search;
 
 /**
- * A search category pojo. Contains only the manager instance and the category id.
+ * A search category pojo. Contains only the manager instance, category id and visibility information.
  *
  * @author Marco Boeck
  * @since 8.1
@@ -30,10 +30,46 @@ public class GlobalSearchCategory {
 
 	private final GlobalSearchManager manager;
 
+	private final boolean visible;
 
+	/**
+	 * Use {@link #GlobalSearchCategory(GlobalSearchManager)} instead
+	 *
+	 * @param categoryId
+	 * 		unused
+	 * @param manager
+	 * 		the global search manager
+	 * @deprecated since 9.3
+	 */
+	@Deprecated
 	GlobalSearchCategory(String categoryId, GlobalSearchManager manager) {
-		this.categoryId = categoryId;
+		this(manager);
+	}
+
+	/**
+	 * Creates a new GlobalSearchCategory that is visible in the UI
+	 *
+	 * @param manager
+	 * 		the global search manager
+	 * @since 9.3
+	 */
+	public GlobalSearchCategory(GlobalSearchManager manager) {
+		this(manager, true);
+	}
+
+	/**
+	 * Creates a new GlobalSearchCategory
+	 *
+	 * @param manager
+	 * 		the global search manager
+	 * @param showInUI
+	 * 		if the category should be shown in global search UI
+	 * @since 9.3
+	 */
+	public GlobalSearchCategory(GlobalSearchManager manager, boolean showInUI) {
+		this.categoryId = manager.getSearchCategoryId();
 		this.manager = manager;
+		this.visible = showInUI;
 	}
 
 	/**
@@ -54,6 +90,16 @@ public class GlobalSearchCategory {
 		return categoryId;
 	}
 
+	/**
+	 * Indicates if the given Search category is visible
+	 *
+	 * @return {@code true} if the category should be shown in the global search ui
+	 * @since 9.3
+	 */
+	public boolean isVisible() {
+		return visible;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -72,4 +118,5 @@ public class GlobalSearchCategory {
 	public int hashCode() {
 		return categoryId.hashCode();
 	}
+
 }

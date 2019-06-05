@@ -29,7 +29,10 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.repository.gui.RepositoryTree;
 
 
@@ -105,6 +108,14 @@ public abstract class AbstractRepositoryAction<T extends Entry> extends Resource
 		if (e.getActionCommand().equals(DeleteRepositoryEntryAction.I18N_KEY)
 				|| e.getActionCommand().equals(CutCopyPasteDeleteAction.DELETE_ACTION_COMMAND_KEY)) {
 			if (entries.size() == 1) {
+				try {
+					Folder connectionFolder = RepositoryTools.getConnectionFolder(entries.get(0).getLocation().getRepository());
+					if (connectionFolder != null && connectionFolder.getLocation().getAbsoluteLocation().equals(entries.get(0).getLocation().getAbsoluteLocation())) {
+						return;
+					}
+				} catch (RepositoryException e1) {
+					// ignore, should not happen anyway and is irrelevant here. Worst case, you get the delete dialog if you should not, but backend blocks delete anyway
+				}
 				if (SwingTools.showConfirmDialog("file_chooser.delete", ConfirmDialog.YES_NO_OPTION,
 						entries.get(0).getName()) != ConfirmDialog.YES_OPTION) {
 					return;

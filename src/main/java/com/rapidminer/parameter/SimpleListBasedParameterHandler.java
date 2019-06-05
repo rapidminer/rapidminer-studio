@@ -44,7 +44,7 @@ public abstract class SimpleListBasedParameterHandler implements ParameterHandle
 
 	@Override
 	public String getParameter(String key) throws UndefinedParameterError {
-		return this.parameters.getParameter(key);
+		return getParameters().getParameter(key);
 	}
 
 	@Override
@@ -169,12 +169,12 @@ public abstract class SimpleListBasedParameterHandler implements ParameterHandle
 
 	@Override
 	public void setListParameter(String key, List<String[]> list) {
-		this.parameters.setParameter(key, ParameterTypeList.transformList2String(list));
+		getParameters().setParameter(key, ParameterTypeList.transformList2String(list));
 	}
 
 	@Override
 	public void setParameter(String key, String value) {
-		this.parameters.setParameter(key, value);
+		getParameters().setParameter(key, value);
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public abstract class SimpleListBasedParameterHandler implements ParameterHandle
 	 * @since 9.1
 	 */
 	private long getParameterAsIntegerType(String key, Function<String, Long> parser) throws UndefinedParameterError {
-		ParameterType type = this.parameters.getParameterType(key);
+		ParameterType type = getParameters().getParameterType(key);
 		String value = getParameter(key);
 		if (type instanceof ParameterTypeCategory) {
 			try {

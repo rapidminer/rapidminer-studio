@@ -18,6 +18,9 @@
 */
 package com.rapidminer.gui.properties;
 
+import static com.rapidminer.gui.search.GlobalSearchGUIUtilities.HTML_TAG_CLOSE;
+import static com.rapidminer.gui.search.GlobalSearchGUIUtilities.HTML_TAG_OPEN;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -26,19 +29,16 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -98,7 +98,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 	private JTabbedPane testExp = null;
 
-	private DefaultListModel<RegExpResult> resultsListModel = new DefaultListModel<RegExpResult>();
+	private DefaultListModel<RegExpResult> resultsListModel = new DefaultListModel<>();
 
 	private static String[][] regexpConstructs = {
 			{ ".", I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.constructs.any_character") },
@@ -168,11 +168,10 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 	private JButton okButton;
 
-	JCheckBox cbCaseInsensitive;
-	JCheckBox cbComments;
-	JCheckBox cbMultiline;
-	JCheckBox cbDotall;
-	JCheckBox cbUnicodeCase;
+	private JCheckBox cbCaseInsensitive;
+	private JCheckBox cbMultiline;
+	private JCheckBox cbDotall;
+	private JCheckBox cbUnicodeCase;
 
 	/** Class representing a single regexp search result. **/
 	private class RegExpResult {
@@ -195,32 +194,32 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		@Override
 		public String toString() {
-			String output = "";
+			StringBuilder output = new StringBuilder();
 			if (!empty) {
-				output += "<html>" + "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">" +
+				output.append(HTML_TAG_OPEN + "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">").append(
 						// "Match "+number+": <b>'"+match+"'</b>" +
 						I18N.getMessage(I18N.getGUIBundle(),
 								"gui.dialog.parameter.regexp.regular_expression.result_list.match", number,
 								"<b>'" + Tools.escapeHTML(match) + "'</b>")
-						+ "</span>";
+				).append("</span>");
 				if (groups.length > 0) {
-					output += "<ol style=\"margin:1px 0 0 24px\">";
-					for (int i = 0; i < groups.length; i++) {
+					output.append("<ol style=\"margin:1px 0 0 24px\">");
+					for (String group : groups) {
 						// output += "<li>Group matches: <b>'" + groups[i] +"'</b></li>";
-						output += "<li>" + I18N.getMessage(I18N.getGUIBundle(),
+						output.append("<li>").append(I18N.getMessage(I18N.getGUIBundle(),
 								"gui.dialog.parameter.regexp.regular_expression.result_list.group_match",
-								"<b>'" + Tools.escapeHTML(groups[i]) + "'</b>") + "</li>";
+								"<b>'" + Tools.escapeHTML(group) + "'</b>")).append("</li>");
 
 					}
-					output += "</ul>";
+					output.append("</ul>");
 				}
-				output += "</html>";
+				output.append(HTML_TAG_CLOSE);
 			} else {
-				output += "<html>" + "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">" + I18N.getMessage(
-						I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.result_list.empty") + "</span>";
-				output += "</html>";
+				output.append(HTML_TAG_OPEN + "<span style=\"font-size:11px;margin:2px 0 2px 4px;\">").append(I18N.getMessage(
+						I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.result_list.empty")).append("</span>");
+				output.append(HTML_TAG_CLOSE);
 			}
-			return output;
+			return output.toString();
 		}
 	}
 
@@ -231,8 +230,8 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		private Matcher matcher = Pattern.compile("").matcher("");
 
-		Style keyStyle;
-		Style rootStyle;
+		private Style keyStyle;
+		private Style rootStyle;
 
 		{
 			rootStyle = addStyle("root", null);
@@ -282,7 +281,13 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 				testExp.setTitleAt(1, I18N.getMessage(I18N.getGUIBundle(),
 						"gui.dialog.parameter.regexp.regular_expression.result_list.title") + " (" + count + ")");
-				inlineReplaceDocument.setText(matcher.replaceAll(replacementTextField.getText()));
+				String replacedText;
+				try {
+					replacedText = matcher.replaceAll(replacementTextField.getText());
+				} catch (Exception e) {
+					replacedText = "";
+				}
+				inlineReplaceDocument.setText(replacedText);
 				updateRegexpOptions();
 			} catch (BadLocationException ex) {
 				LogService.getRoot().log(Level.WARNING, RegexpPropertyDialog.class.getName() + ".bad_location", ex);
@@ -324,12 +329,34 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		}
 	}
 
+	/** Same as {@link #RegexpPropertyDialog(Collection, String, String, String) RegexpPropertyDialog(items, predefinedRegexp, description, null)} */
 	public RegexpPropertyDialog(final Collection<String> items, String predefinedRegexp, String description) {
-		super(ApplicationFrame.getApplicationFrame(), "parameter.regexp", ModalityType.APPLICATION_MODAL, new Object[] {});
+		this(items, predefinedRegexp, description, null);
+	}
+
+	/**
+	 * Creates a new {@link RegexpPropertyDialog} with the given items, predefined regexp and description,
+	 * as well as an optional key for a replacement parameter. If the replacement key is not {@code null},
+	 * the dialog indicates which parameter is associated with the replacement, and the actual replacement expression
+	 * can be extracted using {@link #getReplacement()}. If no replacement key is provided, the dialog will indicate
+	 * that te replacement is only used as a preview.
+	 *
+	 * @param items
+	 * 		list of predefined regexps that can be selected from a dropdown
+	 * @param predefinedRegexp
+	 * 		the initial regex
+	 * @param description
+	 * 		the description of the associated parameter
+	 * @param replacementKey
+	 * 		the key of a parameter that takes care of the replacement; can be {@code null}
+	 * @since 9.3
+	 */
+	public RegexpPropertyDialog(final Collection<String> items, String predefinedRegexp, String description, String replacementKey) {
+		super(ApplicationFrame.getApplicationFrame(), "parameter.regexp", ModalityType.APPLICATION_MODAL, new Object[0]);
 		this.items = items;
 		this.supportsItems = items != null;
-		this.infoText = "<html>" + I18N.getMessage(I18N.getGUIBundle(), getKey() + ".title") + ": <br/>" + description
-				+ "</html>";
+		this.infoText = HTML_TAG_OPEN + I18N.getMessage(I18N.getGUIBundle(), getKey() + ".title") + ": <br/>"
+				+ description + HTML_TAG_CLOSE;
 		Dimension size = new Dimension(420, 500);
 		this.setMinimumSize(size);
 		this.setPreferredSize(size);
@@ -340,18 +367,12 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		regexpTextField = new JTextField(predefinedRegexp);
 		regexpTextField
 				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.tip"));
-		regexpTextField.addKeyListener(new KeyListener() {
-
-			@Override
-			public void keyPressed(KeyEvent e) {}
+		regexpTextField.addKeyListener(new KeyAdapter() {
 
 			@Override
 			public void keyReleased(KeyEvent e) {
 				fireRegularExpressionUpdated();
 			}
-
-			@Override
-			public void keyTyped(KeyEvent e) {}
 
 		});
 		regexpTextField.requestFocus();
@@ -360,18 +381,12 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		replacementTextField = new JTextField();
 		replacementTextField
 				.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.replacement.tip"));
-		replacementTextField.addKeyListener(new KeyListener() {
-
-			@Override
-			public void keyPressed(KeyEvent e) {}
+		replacementTextField.addKeyListener(new KeyAdapter() {
 
 			@Override
 			public void keyReleased(KeyEvent e) {
 				fireRegularExpressionUpdated();
 			}
-
-			@Override
-			public void keyTyped(KeyEvent e) {}
 
 		});
 
@@ -395,20 +410,18 @@ public class RegexpPropertyDialog extends ButtonDialog {
 			}
 
 			private Border getNoFocusBorder() {
-				Border border = BorderFactory.createMatteBorder(0, 0, 1, 0, Color.gray);
-				return border;
+				return BorderFactory.createMatteBorder(0, 0, 1, 0, Color.gray);
 			}
 		};
 
-		JList<RegExpResult> regexpFindingsList = new JList<RegExpResult>(resultsListModel);
+		JList<RegExpResult> regexpFindingsList = new JList<>(resultsListModel);
 		regexpFindingsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		regexpFindingsList.setLayoutOrientation(JList.VERTICAL);
 		regexpFindingsList.setCellRenderer(resultCellRenderer);
 
 		// regexp panel on left side of dialog
 		JPanel regexpPanel = new JPanel(new GridBagLayout());
-		regexpPanel.setBorder(createTitledBorder(
-				I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.border")));
+		regexpPanel.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.regular_expression.border")));
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(4, 4, 4, 0);
 		c.gridx = 0;
@@ -439,14 +452,10 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		JButton clearRegexpTextFieldButton = new JButton(SwingTools.createIcon("16/delete.png"));
-		clearRegexpTextFieldButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				regexpTextField.setText("");
-				fireRegularExpressionUpdated();
-				regexpTextField.requestFocusInWindow();
-			}
+		clearRegexpTextFieldButton.addActionListener(e -> {
+			regexpTextField.setText("");
+			fireRegularExpressionUpdated();
+			regexpTextField.requestFocusInWindow();
 		});
 
 		regexpPanel.add(clearRegexpTextFieldButton, c);
@@ -463,8 +472,14 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		// create replacement panel
 		JPanel replacementPanel = new JPanel(new GridBagLayout());
-		replacementPanel.setBorder(
-				createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.replacement.border")));
+		String replacementBorderKey;
+		if (replacementKey == null) {
+			replacementBorderKey = "gui.dialog.parameter.regexp.replacement.border";
+		} else {
+			replacementBorderKey = "gui.dialog.parameter.regexp.replacement_non_preview.border";
+			replacementKey = replacementKey.replace('_', ' ');
+		}
+		replacementPanel.setBorder(createTitledBorder(I18N.getMessage(I18N.getGUIBundle(), replacementBorderKey, replacementKey)));
 
 		JPanel testerPanel = new JPanel(new GridBagLayout());
 
@@ -517,13 +532,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		inlineSearchPanel.add(new JScrollPane(replaceTextPane), c);
 
 		// create regexp options panel
-		ItemListener defaultOptionListener = new ItemListener() {
-
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				fireRegexpOptionsChanged();
-			}
-		};
+		ItemListener defaultOptionListener = e -> fireRegexpOptionsChanged();
 
 		cbCaseInsensitive = new JCheckBox(I18N.getMessage(I18N.getGUIBundle(),
 				"gui.dialog.parameter.regexp.regular_expression.regexp_options.case_insensitive"));
@@ -620,11 +629,11 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 		if (supportsItems) {
 			// item shortcuts list
-			itemShortcutsList = new JList<String>(items.toArray(new String[items.size()]));
+			itemShortcutsList = new JList<>(items.toArray(new String[0]));
 			itemShortcutsList
 					.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.item_shortcuts.tip"));
 			itemShortcutsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			itemShortcutsList.addMouseListener(new MouseListener() {
+			itemShortcutsList.addMouseListener(new MouseAdapter() {
 
 				@Override
 				public void mouseClicked(MouseEvent e) {
@@ -633,7 +642,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 						int cursorPosition = regexpTextField.getCaretPosition();
 						int index = itemShortcutsList.getSelectedIndex();
 						if (index > -1 && index < itemShortcutsList.getModel().getSize()) {
-							String insertionString = itemShortcutsList.getModel().getElementAt(index).toString();
+							String insertionString = itemShortcutsList.getModel().getElementAt(index);
 							String newText = text.substring(0, cursorPosition) + insertionString
 									+ (cursorPosition < text.length() ? text.substring(cursorPosition) : "");
 							regexpTextField.setText(newText);
@@ -643,26 +652,14 @@ public class RegexpPropertyDialog extends ButtonDialog {
 						}
 					}
 				}
-
-				@Override
-				public void mouseEntered(MouseEvent e) {}
-
-				@Override
-				public void mouseExited(MouseEvent e) {}
-
-				@Override
-				public void mousePressed(MouseEvent e) {}
-
-				@Override
-				public void mouseReleased(MouseEvent e) {}
 			});
 			JScrollPane itemShortcutsPane = new ExtendedJScrollPane(itemShortcutsList);
 			itemShortcutsPane.setBorder(createTitledBorder(
 					I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.item_shortcuts.border")));
 
 			// matched items list
-			matchedItemsListModel = new DefaultListModel<String>();
-			JList<String> matchedItemsList = new JList<String>(matchedItemsListModel);
+			matchedItemsListModel = new DefaultListModel<>();
+			JList<String> matchedItemsList = new JList<>(matchedItemsListModel);
 			matchedItemsList
 					.setToolTipText(I18N.getMessage(I18N.getGUIBundle(), "gui.dialog.parameter.regexp.matched_items.tip"));
 			// add custom cell renderer to disallow selections
@@ -723,10 +720,11 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		if (pattern.startsWith("(?-")) {
 			return "";
 		}
-		if (pattern.indexOf(")") == -1) {
+		int closingBracket = pattern.indexOf(')');
+		if (closingBracket == -1) {
 			return "";
 		}
-		String flags = pattern.substring(2, pattern.indexOf(")"));
+		String flags = pattern.substring(2, closingBracket);
 		return flags.split("-")[0];
 	}
 
@@ -778,12 +776,12 @@ public class RegexpPropertyDialog extends ButtonDialog {
 			}
 		}
 
-		if (!flags.equals("") || pattern.startsWith("(?") && getFlags(pattern).equals("")) {
+		if (!flags.isEmpty() || pattern.startsWith("(?") && getFlags(pattern).isEmpty()) {
 			flags = "(?" + flags + ")";
 		}
 
 		if (pattern.startsWith("(?") && !pattern.startsWith("(?-")) {
-			int oldFlagsEnd = pattern.indexOf(")");
+			int oldFlagsEnd = pattern.indexOf(')');
 			if (oldFlagsEnd == -1) {
 				oldFlagsEnd = 1;
 			}
@@ -803,7 +801,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 	}
 
 	private void fireRegularExpressionUpdated() {
-		boolean regularExpressionValid = false;
+		boolean regularExpressionValid;
 		Pattern pattern = null;
 		try {
 			pattern = Pattern.compile(regexpTextField.getText());
@@ -813,7 +811,7 @@ public class RegexpPropertyDialog extends ButtonDialog {
 		}
 		if (supportsItems) {
 			matchedItemsListModel.clear();
-			if (regularExpressionValid && pattern != null) {
+			if (regularExpressionValid) {
 				for (String previewString : items) {
 					if (pattern.matcher(previewString).matches()) {
 						matchedItemsListModel.addElement(previewString);
@@ -908,6 +906,24 @@ public class RegexpPropertyDialog extends ButtonDialog {
 
 	public String getRegexp() {
 		return regexpTextField.getText();
+	}
+
+	/**
+	 * Get the content of the {@link #replacementTextField}.
+	 *
+	 * @since 9.3
+	 */
+	public String getReplacement() {
+		return replacementTextField.getText();
+	}
+
+	/**
+	 * Set the content of the {@link #replacementTextField}.
+	 *
+	 * @since 9.3
+	 */
+	public void setReplacement(String replacement) {
+		replacementTextField.setText(replacement);
 	}
 
 	@Override

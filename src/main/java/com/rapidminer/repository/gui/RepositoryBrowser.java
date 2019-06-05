@@ -29,6 +29,7 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -44,6 +45,7 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.DropDownPopupButton;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
@@ -75,6 +77,13 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 
 	private final RepositoryTree tree;
 
+	/**
+	 * Tracking this {@link JPopupMenu} to be able to add items via {@link RepositoryBrowser#addMenuItem(JMenuItem)}
+	 *
+	 * @since 9.3
+	 */
+	private final JPopupMenu furtherActionsMenu = new JPopupMenu();
+
 	public RepositoryBrowser() {
 		this(null);
 	}
@@ -100,6 +109,8 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 
 			if (entry instanceof ProcessEntry) {
 				RepositoryTree.openProcess((ProcessEntry) entry);
+			} else if (entry instanceof ConnectionEntry) {
+				OpenAction.showConnectionInformationDialog((ConnectionEntry) entry);
 			} else if (entry instanceof IOObjectEntry) {
 				OpenAction.showAsResult((IOObjectEntry) entry);
 			} else {
@@ -110,7 +121,6 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 
 		setLayout(new BorderLayout());
 
-		final JPopupMenu furtherActionsMenu = new JPopupMenu();
 		furtherActionsMenu.add(ADD_REPOSITORY_ACTION);
 		furtherActionsMenu.add(tree.CREATE_FOLDER_ACTION);
 		final JMenu sortActionsMenu = new JMenu(SORT_REPOSITORY_ACTION);
@@ -181,5 +191,27 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 	 */
 	public void expandToRepositoryLocation(RepositoryLocation storedRepositoryLocation) {
 		tree.expandAndSelectIfExists(storedRepositoryLocation);
+	}
+
+	/**
+	 * Add a {@link JMenuItem} to the popup-button in the upper right corner of this RepositoryBrowser
+	 *
+	 * @param item
+	 * 		the {@link JMenuItem} to be added to this {@link RepositoryBrowser}
+	 * @since 9.3
+	 */
+	public void addMenuItem(JMenuItem item) {
+		furtherActionsMenu.add(item);
+	}
+
+	/**
+	 * Remove a {@link JMenuItem} from the popup-button in the upper right corner of this RepositoryBrowser
+	 *
+	 * @param item
+	 * 		the {@link JMenuItem} to be removed from this {@link RepositoryBrowser}
+	 * @since 9.3
+	 */
+	public void removeMenuItem(JMenuItem item) {
+		furtherActionsMenu.remove(item);
 	}
 }

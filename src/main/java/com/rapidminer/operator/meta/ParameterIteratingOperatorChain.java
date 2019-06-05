@@ -44,10 +44,9 @@ import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeConfiguration;
-import com.rapidminer.parameter.ParameterTypeInnerOperator;
 import com.rapidminer.parameter.ParameterTypeList;
+import com.rapidminer.parameter.ParameterTypeOperatorParameterTupel;
 import com.rapidminer.parameter.ParameterTypeParameterValue;
-import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeTupel;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
@@ -90,10 +89,6 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain impl
 	private static final int PARAMETER_VALUES_ARRAY_LENGTH_SCALED_GRID = 4;
 
 	private static final String PARAMETER_OPERATOR_PARAMETER_PAIR = "operator_parameter_pair";
-
-	private static final String PARAMETER_OPERATOR = "operator_name";
-
-	private static final String PARAMETER_PARAMETER = "parameter_name";
 
 	public static final String PARAMETER_ERROR_HANDLING = "error_handling";
 
@@ -308,9 +303,7 @@ public abstract class ParameterIteratingOperatorChain extends OperatorChain impl
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeList(ParameterConfigurator.PARAMETER_PARAMETERS, "The parameters.",
-				new ParameterTypeTupel(PARAMETER_OPERATOR_PARAMETER_PAIR, "The operator and it's parameter",
-						new ParameterTypeInnerOperator(PARAMETER_OPERATOR, "The operator."),
-						new ParameterTypeString(PARAMETER_PARAMETER, "The parameter.")),
+				new ParameterTypeOperatorParameterTupel(PARAMETER_OPERATOR_PARAMETER_PAIR, "The operator and it's parameter"),
 				new ParameterTypeParameterValue(ParameterConfigurator.PARAMETER_VALUES,
 						"The value specifications for the parameters."));
 		type.setHidden(true);

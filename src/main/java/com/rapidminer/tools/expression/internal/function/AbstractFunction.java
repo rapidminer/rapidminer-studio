@@ -111,11 +111,15 @@ public abstract class AbstractFunction implements Function {
 	 * @return {@code true} if the result of this function is constant
 	 */
 	protected boolean isResultConstant(ExpressionEvaluator... inputEvaluators) {
-		boolean isConstant = isConstantOnConstantInput();
-		for (ExpressionEvaluator input : inputEvaluators) {
-			isConstant = isConstant && input.isConstant();
+		if (!isConstantOnConstantInput()) {
+			return false;
 		}
-		return isConstant;
+		for (ExpressionEvaluator inputEvaluator : inputEvaluators) {
+			if (!inputEvaluator.isConstant()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

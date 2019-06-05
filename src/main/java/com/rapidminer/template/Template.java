@@ -37,7 +37,9 @@ import com.rapidminer.gui.tools.ScaledImageIcon;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.io.process.ProcessOriginProcessXMLFilter.ProcessOriginState;
+import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.resource.ZipStreamResource;
@@ -225,9 +227,9 @@ public class Template implements ZipStreamResource {
 						props.load(zip);
 						title = props.getProperty("template.name", NO_TITLE);
 						shortDescription = props.getProperty("template.short_description", NO_DESCRIPTION);
-					} else if (entryName.endsWith(".rmp")) {
+					} else if (entryName.endsWith(ProcessEntry.RMP_SUFFIX)) {
 						processName = entryName.split("\\.")[0];
-					} else if (entryName.endsWith(".ioo")) {
+					} else if (entryName.endsWith(IOObjectEntry.IOO_SUFFIX)) {
 						demoData.add(entryName.split("\\.")[0]);
 					} else if ("icon.png".equals(entryName)) {
 						icon = new ImageIcon(Tools.readInputStream(zip));

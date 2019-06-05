@@ -38,6 +38,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -55,6 +56,7 @@ import com.rapidminer.gui.actions.AboutAction;
 import com.rapidminer.gui.actions.Actions;
 import com.rapidminer.gui.actions.AutoWireAction;
 import com.rapidminer.gui.actions.BrowseAction;
+import com.rapidminer.gui.actions.CreateConnectionAction;
 import com.rapidminer.gui.actions.ExitAction;
 import com.rapidminer.gui.actions.ExportProcessAction;
 import com.rapidminer.gui.actions.ImportDataAction;
@@ -393,6 +395,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	public final transient Action VALIDATE_ACTION = new ValidateProcessAction();
 	public final transient ToggleAction VALIDATE_AUTOMATICALLY_ACTION = new ValidateAutomaticallyAction();
 
+	public final transient Action CREATE_CONNECTION = new CreateConnectionAction();
+
 	private transient JButton runRemoteToolbarButton;
 
 	public final transient Action NEW_PERSPECTIVE_ACTION = new NewPerspectiveAction();
@@ -475,6 +479,8 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	private final JMenu settingsMenu;
 
 	private final JMenu connectionsMenu;
+
+	private final JMenu legacyConnectionsMenu;
 
 	private final JMenu viewMenu;
 
@@ -799,7 +805,12 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		// connections menu
 		connectionsMenu = new ResourceMenu("connections");
 		connectionsMenu.setMargin(menuBarInsets);
+		connectionsMenu.add(CREATE_CONNECTION);
+		connectionsMenu.addSeparator();
 		menuBar.add(connectionsMenu);
+
+		// legacy connections menu
+		legacyConnectionsMenu = new ResourceMenu("legacy_connections");
 
 		// help menu
 		helpMenu = new ResourceMenu("help");
@@ -861,9 +872,17 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 		// Configurators (if they exist)
 		if (!ConfigurationManager.getInstance().isEmpty()) {
-			connectionsMenu.addSeparator();
-			connectionsMenu.add(MANAGE_CONFIGURABLES_ACTION);
+			legacyConnectionsMenu.add(MANAGE_CONFIGURABLES_ACTION);
 		}
+
+		// Add legacy menu (if not empty)
+		if (legacyConnectionsMenu.getMenuComponentCount() > 0) {
+			connectionsMenu.addSeparator();
+			connectionsMenu.add(legacyConnectionsMenu);
+		}
+
+		// remove duplicated separators
+		removeDuplicatedSeparators(connectionsMenu);
 
 		// add export and exit as last file menu actions
 		fileMenu.addSeparator();
@@ -1623,6 +1642,14 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	}
 
 	/**
+	 * This returns the legacy connections menu to change menu entries
+	 * @since 9.3
+	 */
+	public JMenu getLegacyConnectionsMenu() {
+		return legacyConnectionsMenu;
+	}
+
+	/**
 	 * This returns the settings menu to change menu entries.
 	 *
 	 * @deprecated the tools menu was split into multiple menus. Use {@link #getConnectionsMenu()}
@@ -1780,5 +1807,24 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 		// no showstopper
 		return false;
+	}
+
+	/**
+	 * Removes duplicated separators from a JMenu
+	 *
+	 * @param menu the menu
+	 */
+	private static void removeDuplicatedSeparators(JMenu menu) {
+		int separatorCount = 0;
+		for (Component component : menu.getMenuComponents()) {
+			if (component instanceof JPopupMenu.Separator) {
+				separatorCount++;
+			} else {
+				separatorCount = 0;
+			}
+			if (separatorCount > 1) {
+				menu.remove(component);
+			}
+		}
 	}
 }

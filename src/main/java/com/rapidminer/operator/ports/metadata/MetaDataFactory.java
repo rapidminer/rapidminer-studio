@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2019 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports.metadata;
 
 import com.rapidminer.adaption.belt.IOTable;
@@ -24,6 +24,7 @@ import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.Model;
+import com.rapidminer.connection.ConnectionInformationContainerIOObject;
 import com.rapidminer.tools.DominatingClassFinder;
 import com.rapidminer.tools.LogService;
 
@@ -34,12 +35,12 @@ import java.util.logging.Level;
 
 /**
  * Factory class for creating {@link MetaData} objects for given {@link IOObject}s.
- * 
+ *
  * See {@link #registerIOObjectMetaData(Class, Class)} and
  * {@link #createMetaDataforIOObject(IOObject, boolean)} for a description.
- * 
+ *
  * @author Nils Woehler
- * 
+ *
  */
 public class MetaDataFactory {
 
@@ -60,6 +61,7 @@ public class MetaDataFactory {
 		MetaDataFactory.registerIOObjectMetaData(IOTable.class, ExampleSetMetaData.class);
 		MetaDataFactory.registerIOObjectMetaData(IOObjectCollection.class, CollectionMetaData.class);
 		MetaDataFactory.registerIOObjectMetaData(Model.class, ModelMetaData.class);
+		MetaDataFactory.registerIOObjectMetaData(ConnectionInformationContainerIOObject.class, ConnectionInformationMetaData.class);
 	}
 
 	/**
@@ -70,7 +72,7 @@ public class MetaDataFactory {
 	 * clutter their visual representation).
 	 */
 	public static void registerIOObjectMetaData(Class<? extends IOObject> ioObjectClass,
-			Class<? extends MetaData> metaDataClass) {
+												Class<? extends MetaData> metaDataClass) {
 		try {
 			metaDataClass.getConstructor(ioObjectClass, boolean.class);
 		} catch (Throwable e) {
@@ -107,7 +109,7 @@ public class MetaDataFactory {
 	}
 
 	private MetaData instantiateMetaData(Class<? extends MetaData> metaDataClass,
-			Class<? extends IOObject> compatibleIOObjectClass, IOObject ioo, boolean shortened) {
+										 Class<? extends IOObject> compatibleIOObjectClass, IOObject ioo, boolean shortened) {
 		if (metaDataClass != null) {
 			try {
 				return metaDataClass.getConstructor(compatibleIOObjectClass, boolean.class).newInstance(ioo, shortened);

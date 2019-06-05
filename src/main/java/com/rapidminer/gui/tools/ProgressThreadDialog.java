@@ -93,7 +93,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 
 			@Override
 			public void progressThreadFinished(ProgressThread pg) {
-				updatePanelInEDT();
+				updatePanelAndRemoveInEDT(pg);
 				updateUI();
 
 				MAPPING_PG_TO_UI.remove(pg);
@@ -101,7 +101,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 
 			@Override
 			public void progressThreadCancelled(ProgressThread pg) {
-				updatePanelInEDT();
+				updatePanelAndRemoveInEDT(pg);
 				updateUI();
 
 				MAPPING_PG_TO_UI.remove(pg);
@@ -112,6 +112,15 @@ public class ProgressThreadDialog extends ButtonDialog {
 			 */
 			private void updatePanelInEDT() {
 				SwingUtilities.invokeLater(() -> updateThreadPanel(false));
+			}
+
+			private void updatePanelAndRemoveInEDT(ProgressThread pg) {
+				SwingUtilities.invokeLater(() -> {
+					updateThreadPanel(false);
+					// remove pg here again, otherwise it can happen that it is first removed by progressThreadFinished
+					// and then added again by updateThreadPanel, leading to a memory leak
+					MAPPING_PG_TO_UI.remove(pg);
+				});
 			}
 
 		});
@@ -195,7 +204,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 		if (ProgressThread.isEmpty()) {
 			// close dialog if not opened by user
 			if (!openedByUser) {
-				SwingUtilities.invokeLater(ProgressThreadDialog.this::dispose);
+				SwingTools.invokeLater(ProgressThreadDialog.this::dispose);
 			}
 
 			// hide status bar
@@ -206,7 +215,7 @@ public class ProgressThreadDialog extends ButtonDialog {
 			if (!ProgressThread.isForegroundRunning()) {
 				// close dialog if not opened by user
 				if (!openedByUser) {
-					SwingUtilities.invokeLater(ProgressThreadDialog.this::dispose);
+					SwingTools.invokeLater(ProgressThreadDialog.this::dispose);
 				}
 			}
 

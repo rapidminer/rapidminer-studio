@@ -235,7 +235,7 @@ public class WindowChoreographer {
 		parentBounds.setLocation(parent.getLocationOnScreen());
 		int rightX = (int) (parentBounds.getX() + parent.getWidth() - DEFAULT_RIGHT_MARGIN);
 		// this was going crazy sometimes
-		int topY = Math.max((int) parentBounds.getY(), 0);
+		int topY = (int) parentBounds.getY();
 		int yOffset = windowYOffset.get(position);
 		// Recalculate the window positions
 		window.setLocation(rightX - window.getWidth(), topY + yOffset - window.getHeight());

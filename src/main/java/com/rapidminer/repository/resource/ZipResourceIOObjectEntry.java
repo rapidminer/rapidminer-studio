@@ -53,10 +53,4 @@ public class ZipResourceIOObjectEntry extends ResourceIOObjectEntry {
 	protected InputStream getResourceStream(String suffix) throws RepositoryException {
 		return zipStream.getStream(getName(), getResource(), suffix);
 	}
-
-	@Override
-	public boolean willBlock() {
-		return metaData == null;
-	}
-
 }

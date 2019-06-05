@@ -20,6 +20,7 @@ package com.rapidminer.parameter;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -203,7 +204,7 @@ public class ParameterTypeTupel extends CombinedParameterType {
 		while (split.size() < 2) {
 			split.add(null);
 		}
-		return split.toArray(new String[split.size()]);
+		return split.toArray(new String[0]);
 	}
 
 	public static String transformTupel2String(String firstValue, String secondValue) {
@@ -228,11 +229,23 @@ public class ParameterTypeTupel extends CombinedParameterType {
 		return builder.toString();
 	}
 
+	/** @return the changed value after all tupel entries were notified */
 	@Override
 	public String notifyOperatorRenaming(String oldOperatorName, String newOperatorName, String parameterValue) {
+		return notifyOperatorRenamingReplacing((t, v) -> t.notifyOperatorRenaming(oldOperatorName, newOperatorName, v), parameterValue);
+	}
+
+	/** @return the changed value after all tupel entries were notified */
+	@Override
+	public String notifyOperatorReplacing(String oldName, Operator oldOp, String newName, Operator newOp, String parameterValue) {
+		return notifyOperatorRenamingReplacing((t, v) -> t.notifyOperatorReplacing(oldName, oldOp, newName, newOp, v), parameterValue);
+	}
+
+	/** @since 9.3 */
+	private String notifyOperatorRenamingReplacing(BiFunction<ParameterType, String, String> replacer, String parameterValue) {
 		String[] tupel = transformString2Tupel(parameterValue);
 		for (int i = 0; i < types.length; i++) {
-			tupel[i] = types[i].notifyOperatorRenaming(oldOperatorName, newOperatorName, tupel[i]);
+			tupel[i] = replacer.apply(types[i], tupel[i]);
 		}
 		return transformTupel2String(tupel);
 	}

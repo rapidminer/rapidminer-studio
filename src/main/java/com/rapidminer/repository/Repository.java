@@ -21,6 +21,7 @@ package com.rapidminer.repository;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
 
 
@@ -62,6 +63,20 @@ public interface Repository extends Folder {
 	/** Returns true if the repository is configurable. In that case, */
 	boolean isConfigurable();
 
+	/**
+	 * Returns whether this repository can successfully handle the {@link com.rapidminer.connection.ConnectionInformation
+	 * ConnectionInformation} objects introduced with RapidMiner Studio 9.3.
+	 *
+	 * @return {@code true} if this repository supports connections; {@code false} otherwise. By default, returns {@code
+	 * false}
+	 * @see Folder#createConnectionEntry(String, ConnectionInformation)
+	 * @since 9.3.0
+	 */
+	default boolean supportsConnections() {
+		return false;
+	}
+
 	/** Creates a configuration panel. */
 	RepositoryConfigurationPanel makeConfigurationPanel();
+
 }

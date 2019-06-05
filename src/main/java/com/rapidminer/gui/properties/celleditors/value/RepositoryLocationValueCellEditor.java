@@ -23,10 +23,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -63,13 +61,7 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 		panel.setLayout(gridBagLayout);
 		panel.setToolTipText(type.getDescription());
 		textField.setToolTipText(type.getDescription());
-		textField.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				fireEditingStopped();
-			}
-		});
+		textField.addActionListener(e -> fireEditingStopped());
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
@@ -106,7 +98,7 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 						fireEditingStopped();
 			}
 		});
-		button.addFocusListener(new FocusListener() {
+		button.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -124,9 +116,6 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 					fireEditingStopped();
 				}
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {}
 		});
 		button.setMargin(new Insets(0, 0, 0, 0));
 		c.gridwidth = GridBagConstraints.REMAINDER;
@@ -134,7 +123,7 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 		c.insets = new Insets(0, 5, 0, 0);
 		panel.add(button, c);
 
-		textField.addFocusListener(new FocusListener() {
+		textField.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -152,9 +141,6 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 					fireEditingStopped();
 				}
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {}
 		});
 
 	}

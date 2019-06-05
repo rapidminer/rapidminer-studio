@@ -1,26 +1,25 @@
 /**
  * Copyright (C) 2001-2019 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.gui.viewer.MetaDataViewerTableModel;
-
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,14 +34,31 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.rapidminer.example.Attribute;
+import com.rapidminer.gui.viewer.MetaDataViewerTableModel;
+
 
 /**
  * Instances of this class can be used to annotate {@link IOObject}s, {@link Attribute}s, etc.
- * 
+ *
  * @author Simon Fischer, Marius Helf
- * 
  */
 public class Annotations implements Serializable, Map<String, String>, Cloneable {
+
+	private static final ObjectReader reader;
+
+	private static final ObjectWriter writer;
+
+	static {
+		ObjectMapper mapper = new ObjectMapper();
+		reader = mapper.reader(Annotations.class);
+		// Remove the forType() call, if we want to support subclasses
+		writer = mapper.writerWithDefaultPrettyPrinter().withType(Annotations.class);
+	}
+
 
 	private static final long serialVersionUID = 1L;
 
@@ -85,17 +101,17 @@ public class Annotations implements Serializable, Map<String, String>, Cloneable
 	public static final String KEY_DC_INSTRUCTIONAL_METHOD = "dc.description";
 
 	/** Custom keys defined by RapidMiner */
-	public static final String[] KEYS_RAPIDMINER_IOOBJECT = { KEY_SOURCE, KEY_COMMENT };
+	public static final String[] KEYS_RAPIDMINER_IOOBJECT = {KEY_SOURCE, KEY_COMMENT};
 
 	/** Custom keys defined by the Dublin Core standard. */
-	public static final String[] KEYS_DUBLIN_CORE = { KEY_DC_AUTHOR, KEY_DC_TITLE, KEY_DC_SUBJECT, KEY_DC_COVERAGE,
+	public static final String[] KEYS_DUBLIN_CORE = {KEY_DC_AUTHOR, KEY_DC_TITLE, KEY_DC_SUBJECT, KEY_DC_COVERAGE,
 			KEY_DC_DESCRIPTION, KEY_DC_CREATOR, KEY_DC_PUBLISHER, KEY_DC_CONTRIBUTOR, KEY_DC_RIGHTS_HOLDER, KEY_DC_RIGHTS,
-			KEY_DC_PROVENANCE, KEY_DC_SOURCE, KEY_DC_RELATION, KEY_DC_AUDIENCE, KEY_DC_INSTRUCTIONAL_METHOD, };
+			KEY_DC_PROVENANCE, KEY_DC_SOURCE, KEY_DC_RELATION, KEY_DC_AUDIENCE, KEY_DC_INSTRUCTIONAL_METHOD,};
 
 	/** All keys that are supposed to be used with {@link IOObject}s. */
-	public static final String[] ALL_KEYS_IOOBJECT = { KEY_SOURCE, KEY_COMMENT, KEY_FILENAME,
+	public static final String[] ALL_KEYS_IOOBJECT = {KEY_SOURCE, KEY_COMMENT, KEY_FILENAME,
 
-	KEY_DC_AUTHOR, KEY_DC_TITLE, KEY_DC_SUBJECT, KEY_DC_COVERAGE, KEY_DC_DESCRIPTION, KEY_DC_CREATOR, KEY_DC_PUBLISHER,
+			KEY_DC_AUTHOR, KEY_DC_TITLE, KEY_DC_SUBJECT, KEY_DC_COVERAGE, KEY_DC_DESCRIPTION, KEY_DC_CREATOR, KEY_DC_PUBLISHER,
 			KEY_DC_CONTRIBUTOR, KEY_DC_RIGHTS_HOLDER, KEY_DC_RIGHTS, KEY_DC_PROVENANCE, KEY_DC_SOURCE, KEY_DC_RELATION,
 			KEY_DC_AUDIENCE, KEY_DC_INSTRUCTIONAL_METHOD,
 
@@ -105,9 +121,9 @@ public class Annotations implements Serializable, Map<String, String>, Cloneable
 	 * Keys that can be assigned to {@link Attribute}s. If you extend this list, also extend
 	 * {@link MetaDataViewerTableModel#COLUMN_NAMES}.
 	 */
-	public static final String[] ALL_KEYS_ATTRIBUTE = { KEY_COMMENT, KEY_UNIT };
+	public static final String[] ALL_KEYS_ATTRIBUTE = {KEY_COMMENT, KEY_UNIT};
 
-	private LinkedHashMap<String, String> keyValueMap = new LinkedHashMap<String, String>();
+	private LinkedHashMap<String, String> keyValueMap = new LinkedHashMap<>();
 
 	/** Pseudo-annotation to be used for attribute names. */
 	public static final String ANNOTATION_NAME = "Name";
@@ -118,7 +134,7 @@ public class Annotations implements Serializable, Map<String, String>, Cloneable
 	 * Clone constructor.
 	 */
 	public Annotations(Annotations annotations) {
-		this.keyValueMap = new LinkedHashMap<String, String>(annotations.keyValueMap);
+		this.keyValueMap = new LinkedHashMap<>(annotations.keyValueMap);
 	}
 
 	public void setAnnotation(String key, String value) {
@@ -130,7 +146,7 @@ public class Annotations implements Serializable, Map<String, String>, Cloneable
 	}
 
 	public List<String> getKeys() {
-		return new ArrayList<String>(keyValueMap.keySet());
+		return new ArrayList<>(keyValueMap.keySet());
 	}
 
 	public void removeAnnotation(String key) {
@@ -253,14 +269,12 @@ public class Annotations implements Serializable, Map<String, String>, Cloneable
 	}
 
 	public List<String> getDefinedAnnotationNames() {
-		List<String> result = new LinkedList<String>();
-		result.addAll(keySet());
-		return result;
+		return new LinkedList<>(keySet());
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#clone()
 	 */
 	@Override
@@ -271,27 +285,45 @@ public class Annotations implements Serializable, Map<String, String>, Cloneable
 	/**
 	 * Copies all annotations from the input argument to this Annotations object. Existing entries
 	 * will be overwritten.
-	 * 
 	 */
 	public void addAll(Annotations annotations) {
 		if (annotations != null) {
-			this.keyValueMap.putAll(annotations);
+			keyValueMap.putAll(annotations);
 		}
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof Annotations)) {
-			return false;
-		}
-		return keyValueMap.equals(((Annotations) obj).keyValueMap);
+		return obj instanceof Annotations && keyValueMap.equals(((Annotations) obj).keyValueMap);
 	}
+
+	/**
+	 * Retrieve an {@link InputStream} that contains the written object. Use stream for storing in combination with {@link Annotations#fromPropertyStyle(InputStream)}.
+	 *
+	 * @return String with the written {@link Annotations} object
+	 * @throws IOException
+	 * 		in case writing was not successful
+	 */
+	public String asPropertyStyle() throws IOException {
+		return writer.writeValueAsString(this);
+	}
+
+	/**
+	 * Helper method to load {@link Annotations} that were stored using {@link Annotations#asPropertyStyle()}.
+	 *
+	 * @param in
+	 * 		{@link InputStream} to read the {@link Annotations} content from
+	 * @return a new {@link Annotations} instance
+	 * @throws IOException
+	 * 		in case the {@link InputStream} could not be read
+	 */
+	public static Annotations fromPropertyStyle(InputStream in) throws IOException {
+		return reader.readValue(in);
+	}
+
 }

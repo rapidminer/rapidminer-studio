@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import com.rapidminer.gui.properties.SettingsItem.Type;
 import com.rapidminer.parameter.ParameterHandler;
+import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
@@ -90,8 +91,16 @@ public final class SettingsItems extends AbstractSettingsItemProvider {
 	public void applyValues(ParameterHandler parameterHandler) {
 		Parameters parameters = parameterHandler.getParameters();
 		Collection<String> parameterKeys = ParameterService.getParameterKeys();
-		parameters.getDefinedKeys().stream().filter(parameterKeys::contains)
-				.forEach(k -> ParameterService.setParameterValue(k, parameters.getParameterOrNull(k)));
+		for (String k : parameters.getDefinedKeys()) {
+			if (parameterKeys.contains(k)) {
+				ParameterType type = parameters.getParameterType(k);
+				String value = parameters.getParameterOrNull(k);
+				if (type != null && value != null) {
+					value = type.toString(value);
+				}
+				ParameterService.setParameterValue(k, value);
+			}
+		}
 	}
 
 	/** @see ParameterService#saveParameters()  */

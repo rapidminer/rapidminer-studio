@@ -29,7 +29,9 @@ import com.rapidminer.operator.learner.functions.kernel.KernelModel;
  * A renderer for the plot view of kernel models.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.2.1
  */
+@Deprecated
 public class KernelModelPlotRenderer extends AbstractDataTablePlotterRenderer {
 
 	@Override

@@ -20,6 +20,8 @@ package com.rapidminer.parameter;
 
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.w3c.dom.Element;
 
@@ -31,6 +33,7 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.expression.ExpressionParserBuilder;
+import com.rapidminer.tools.expression.internal.function.process.ParameterValue;
 
 
 /**
@@ -47,6 +50,10 @@ public class ParameterTypeExpression extends ParameterTypeString {
 	private static final long serialVersionUID = -1938925853519339382L;
 
 	private static final String ATTRIBUTE_INPUT_PORT = "port-name";
+	/** @since 9.3 */
+	private static final String PARAMETER_VALUE_FUNCTION_NAME = new ParameterValue(null).getFunctionName();
+	/** @since 9.3 */
+	private static final String RENAMING_PATTERN = PARAMETER_VALUE_FUNCTION_NAME + " *\\( *\"(%s)\" *,.*?\\)";
 
 	private transient InputPort inPort;
 
@@ -91,8 +98,7 @@ public class ParameterTypeExpression extends ParameterTypeString {
 	 * @param key
 	 * @param description
 	 *
-	 * @deprecated use {@link #ParameterTypeExpression(String, String, OperatorVersionCallable)}
-	 *             instead
+	 * @deprecated use {@link #ParameterTypeExpression(String, String, OperatorVersionCallable)} instead
 	 */
 	@Deprecated
 	public ParameterTypeExpression(final String key, String description) {
@@ -104,12 +110,12 @@ public class ParameterTypeExpression extends ParameterTypeString {
 	 * associated {@link InputPort} to verify the expressions.
 	 *
 	 * @param key
-	 *            the parameter key
+	 * 		the parameter key
 	 * @param description
-	 *            the parameter description
+	 * 		the parameter description
 	 * @param operatorVersion
-	 *            a functional which allows to query the current operator version. Must not be
-	 *            {@code null} and must not return null
+	 * 		a functional which allows to query the current operator version. Must not be
+	 * 		{@code null} and must not return null
 	 */
 	public ParameterTypeExpression(final String key, String description, OperatorVersionCallable operatorVersion) {
 		this(key, description, null, false, operatorVersion);
@@ -125,23 +131,21 @@ public class ParameterTypeExpression extends ParameterTypeString {
 	}
 
 	public ParameterTypeExpression(final String key, String description, final InputPort inPort, boolean optional) {
-		this(key, description, inPort, optional, new Callable<OperatorVersion>() {
-
-			@Override
-			public OperatorVersion call() throws Exception {
-				if (inPort != null) {
-					return inPort.getPorts().getOwner().getOperator().getCompatibilityLevel();
-				} else {
-
-					// callers that do not provide an input port are not be able to use the
-					// expression parser functions
-					return new OperatorVersion(6, 4, 0);
-				}
-			}
-		});
+		this(key, description, inPort, optional, getOperatorVersionProvider(inPort));
 		if (inPort == null) {
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.parameter.ParameterTypeExpression.no_input_port_provided");
 		}
+	}
+
+	/** @since 9.3 */
+	private static Callable<OperatorVersion> getOperatorVersionProvider(InputPort inPort) {
+		if (inPort != null) {
+			Operator operator = inPort.getPorts().getOwner().getOperator();
+			return operator::getCompatibilityLevel;
+		}
+		// callers that do not provide an input port are not able to use the
+		// expression parser functions => use corresponding compatibility level
+		return () -> ExpressionParserBuilder.OLD_EXPRESSION_PARSER_FUNCTIONS;
 	}
 
 	private ParameterTypeExpression(final String key, String description, InputPort inPort, boolean optional,
@@ -210,6 +214,29 @@ public class ParameterTypeExpression extends ParameterTypeString {
 		} else {
 			return parameterValue;
 		}
+	}
 
+	@Override
+	public String notifyOperatorRenaming(String oldName, String newName, String value) {
+		if (!value.contains(PARAMETER_VALUE_FUNCTION_NAME) || !value.contains(oldName)) {
+			return value;
+		}
+		Pattern pattern = Pattern.compile(String.format(RENAMING_PATTERN, Pattern.quote(oldName)));
+		Matcher matcher = pattern.matcher(value);
+		int pos = 0;
+		StringBuilder newValue = new StringBuilder();
+		while (matcher.find(pos)) {
+			int start = matcher.start(1);
+			// constant part before the first match or after previous match
+			if (start > pos) {
+				newValue.append(value.substring(pos, start));
+			}
+			newValue.append(newName);
+			pos = matcher.end(1);
+		}
+		if (pos > 0 && pos < value.length()) {
+			newValue.append(value.substring(pos));
+		}
+		return newValue.toString();
 	}
 }

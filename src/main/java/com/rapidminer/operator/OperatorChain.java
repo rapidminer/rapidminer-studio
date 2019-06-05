@@ -574,12 +574,19 @@ public abstract class OperatorChain extends Operator {
 
 	@Override
 	public void notifyRenaming(String oldName, String newName) {
-		for (ExecutionUnit subprocess : subprocesses) {
-			for (Operator child : subprocess.getOperators()) {
-				child.notifyRenaming(oldName, newName);
-			}
-		}
-		getParameters().notifyRenaming(oldName, newName);
+		Arrays.stream(subprocesses).forEach(unit -> unit.getOperators().forEach(op -> op.notifyRenaming(oldName, newName)));
+		super.notifyRenaming(oldName, newName);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Also all inner operators will be notified.
+	 */
+	@Override
+	public void notifyReplacing(String oldName, Operator oldOp, String newName, Operator newOp) {
+		Arrays.stream(subprocesses).forEach(unit -> unit.getOperators().forEach(op -> op.notifyReplacing(oldName, oldOp, newName, newOp)));
+		super.notifyReplacing(oldName, oldOp, newName, newOp);
 	}
 
 	@Override

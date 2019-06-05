@@ -80,8 +80,10 @@ public interface Port extends Observable<Port> {
 
 	/**
 	 * This method returns the object of the desired class or throws an UserError if no object is
-	 * present or cannot be casted to the desiredClass. * @throws UserError if data is missing or of
-	 * wrong class.
+	 * present or cannot be casted to the desiredClass.
+	 *
+	 * @throws UserError
+	 * 		if data is missing or of wrong class.
 	 */
 	public <T extends IOObject> T getData(Class<T> desiredClass) throws UserError;
 

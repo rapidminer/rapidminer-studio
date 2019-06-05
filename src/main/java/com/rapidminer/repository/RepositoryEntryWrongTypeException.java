@@ -18,6 +18,8 @@
 */
 package com.rapidminer.repository;
 
+import com.rapidminer.tools.I18N;
+
 /**
  * Thrown if a repository entry was of the wrong type.
  *
@@ -31,6 +33,11 @@ public class RepositoryEntryWrongTypeException extends RepositoryException {
 
 	public RepositoryEntryWrongTypeException(String message) {
 		super(message);
+	}
+
+	/** @since 9.3 */
+	public RepositoryEntryWrongTypeException(RepositoryLocation location, String expectedType, String actualType) {
+		this(I18N.getErrorMessage("repository.error.mismatched_entry_type", location, expectedType, actualType));
 	}
 
 	public RepositoryEntryWrongTypeException(Throwable cause) {

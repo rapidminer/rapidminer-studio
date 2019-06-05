@@ -107,7 +107,9 @@ public abstract class AbstractPerformanceEvaluator extends Operator implements C
 	/** Indicates if example weights should be used for performance calculations. */
 	private static final String PARAMETER_USE_EXAMPLE_WEIGHTS = "use_example_weights";
 
-	private InputPort exampleSetInput = getInputPorts().createPort("labelled data");
+	public static final String INPUT_PORT_LABELLED_DATA = "labelled data";
+
+	private InputPort exampleSetInput = getInputPorts().createPort(INPUT_PORT_LABELLED_DATA);
 	private InputPort performanceInput = getInputPorts().createPort("performance");
 	private OutputPort performanceOutput = getOutputPorts().createPort("performance");
 	private OutputPort exampleSetOutput = getOutputPorts().createPort("example set");
@@ -560,7 +562,7 @@ public abstract class AbstractPerformanceEvaluator extends Operator implements C
 						.getName(), "true"));
 			}
 		}
-		return super.checkDeprecations();
+		return super.checkDeprecations() + super.checkProperties();
 	}
 
 	@Override

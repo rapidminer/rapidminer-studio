@@ -1,37 +1,40 @@
 /**
  * Copyright (C) 2001-2019 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.actions;
 
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-
+import java.util.logging.Level;
+import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.Process;
 import com.rapidminer.ProcessLocation;
 import com.rapidminer.RepositoryProcessLocation;
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.operator.ResultObject;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
@@ -39,6 +42,9 @@ import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
+import com.rapidminer.connection.ConnectionInformationContainerIOObject;
+import com.rapidminer.repository.gui.actions.EditConnectionAction;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.XMLException;
 
 
@@ -62,7 +68,9 @@ public class OpenAction extends ResourceAction {
 		open();
 	}
 
-	/** Loads the data held by the given entry (in the background) and opens it as a result. */
+	/**
+	 * Loads the data held by the given entry (in the background) and opens it as a result.
+	 */
 	public static void showAsResult(final IOObjectEntry data) {
 		if (data == null) {
 			throw new IllegalArgumentException("data entry must not be null");
@@ -96,14 +104,14 @@ public class OpenAction extends ResourceAction {
 					Entry entry = location.locateEntry();
 					if (entry instanceof ProcessEntry) {
 						open(new RepositoryProcessLocation(location), true);
+					} else if (entry instanceof ConnectionEntry) {
+						showConnectionInformationDialog((ConnectionEntry) entry);
 					} else if (entry instanceof IOObjectEntry) {
 						showAsResult((IOObjectEntry) entry);
 					} else {
 						SwingTools.showVerySimpleErrorMessage("no_data_or_process");
 					}
-				} catch (MalformedRepositoryLocationException e) {
-					SwingTools.showSimpleErrorMessage("while_loading", e, locationString, e.getMessage());
-				} catch (RepositoryException e) {
+				} catch (MalformedRepositoryLocationException | RepositoryException e) {
 					SwingTools.showSimpleErrorMessage("while_loading", e, locationString, e.getMessage());
 				}
 			}
@@ -142,17 +150,11 @@ public class OpenAction extends ResourceAction {
 					if (isCancelled()) {
 						return;
 					}
-					SwingUtilities.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-							RapidMinerGUI.getMainFrame().setOpenedProcess(process);
-						}
-					});
+					SwingUtilities.invokeLater(() -> RapidMinerGUI.getMainFrame().setOpenedProcess(process));
 				} catch (XMLException ex) {
 					try {
 						RapidMinerGUI.getMainFrame()
-						.handleBrokenProxessXML(processLocation, processLocation.getRawXML(), ex);
+								.handleBrokenProxessXML(processLocation, processLocation.getRawXML(), ex);
 					} catch (IOException e) {
 						SwingTools.showSimpleErrorMessage("while_loading", e, processLocation, e.getMessage());
 						return;
@@ -174,13 +176,26 @@ public class OpenAction extends ResourceAction {
 			Entry entry = location.locateEntry();
 			if (entry instanceof ProcessEntry) {
 				open(new RepositoryProcessLocation(location), showInfo);
+			} else if (entry instanceof ConnectionEntry) {
+				showConnectionInformationDialog((ConnectionEntry) entry);
 			} else if (entry instanceof IOObjectEntry) {
-				OpenAction.showAsResult((IOObjectEntry) entry);
+				showAsResult((IOObjectEntry) entry);
 			} else {
 				throw new RepositoryException("Cannot open entries of type " + entry.getType() + ".");
 			}
 		} catch (Exception e) {
 			SwingTools.showSimpleErrorMessage("while_loading", e, openLocation, e.getMessage());
 		}
+	}
+
+	/**
+	 * ConnectionManagement Frontend : show a dialog
+	 *
+	 * @param connectionEntry
+	 * 		the entry to be shown
+	 * @since 9.3
+	 */
+	public static void showConnectionInformationDialog(ConnectionEntry connectionEntry) {
+		EditConnectionAction.editConnection(connectionEntry, false);
 	}
 }

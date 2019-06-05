@@ -36,6 +36,7 @@ import com.rapidminer.gui.CleanupRequiringComponent;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.CloseAllResultsAction;
+import com.rapidminer.gui.actions.CloseAllResultsExceptCurrentResultAction;
 import com.rapidminer.gui.actions.StoreInRepositoryAction;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.ProgressThread;
@@ -92,8 +93,10 @@ public class ResultTab extends JPanel implements Dockable {
 
 			@Override
 			public void visitTabSelectorPopUp(JPopupMenu popUpMenu, Dockable dockable) {
-				popUpMenu.add(new JMenuItem(new StoreInRepositoryAction(resultObject)));
+				popUpMenu.add(new JMenuItem(new CloseAllResultsExceptCurrentResultAction(RapidMinerGUI.getMainFrame(), dockKey.getKey())));
 				popUpMenu.add(new JMenuItem(new CloseAllResultsAction(RapidMinerGUI.getMainFrame())));
+				popUpMenu.addSeparator();
+				popUpMenu.add(new JMenuItem(new StoreInRepositoryAction(resultObject)));
 			}
 		};
 		customizer.setTabSelectorPopUpCustomizer(true); // enable tabbed dock custom popup menu

@@ -36,7 +36,6 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.QuadCurve2D;
 import java.beans.PropertyChangeListener;
-
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JTabbedPane;
@@ -163,7 +162,35 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 
 	@Override
 	protected MouseListener createMouseListener() {
-		return new MouseHandler();
+		MouseListener defaultMouseListener = super.createMouseListener();
+		return new MouseListener() {
+
+			public void mouseEntered(MouseEvent e) {
+				defaultMouseListener.mouseEntered(e);
+			}
+
+			public void mouseExited(MouseEvent e) {
+				defaultMouseListener.mouseExited(e);
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				defaultMouseListener.mouseClicked(e);
+			}
+
+			public void mousePressed(MouseEvent e) {
+				// by default, Java changes tabs with ANY mouse button (left, right, middle, thumb buttons, ...)
+				// we only want a tab change on left click. Additional actions need to be registered by developer anyhow
+				if (SwingUtilities.isLeftMouseButton(e)) {
+					defaultMouseListener.mousePressed(e);
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				defaultMouseListener.mouseReleased(e);
+			}
+		};
 	}
 
 	@Override

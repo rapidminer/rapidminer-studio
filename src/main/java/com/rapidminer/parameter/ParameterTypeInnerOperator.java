@@ -64,6 +64,7 @@ public class ParameterTypeInnerOperator extends ParameterTypeSingle {
 		return false;
 	}
 
+	/** @return the new operator name if the old value matched the old operator name */
 	@Override
 	public String notifyOperatorRenaming(String oldOperatorName, String newOperatorName, String parameterValue) {
 		if (oldOperatorName.equals(parameterValue)) {

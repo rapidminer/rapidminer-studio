@@ -19,18 +19,16 @@
 package com.rapidminer.gui.viewer.metadata;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
-
-import javax.swing.SwingWorker;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.UpdateQueue;
 import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.MetaDataStatisticsModel;
@@ -53,7 +51,9 @@ public class MetaDataStatisticsController {
 	 * the barrier which is used to update the stats of all {@link AttributeStatisticsPanel}s once
 	 * the {@link ExampleSet} statistics have been calculated
 	 */
-	private CyclicBarrier barrier;
+	private final CountDownLatch barrier;
+
+	private volatile boolean aborted = false;
 
 	/** the model backing this */
 	private MetaDataStatisticsModel model;
@@ -61,8 +61,8 @@ public class MetaDataStatisticsController {
 	/** the {@link UpdateQueue} used to sort */
 	private UpdateQueue sortingQueue;
 
-	/** the {@link SwingWorker} to recalculate statistics */
-	private SwingWorker<Void, Void> worker;
+	/** the {@link ProgressThread} to recalculate statistics */
+	private ProgressThread worker;
 
 	/**
 	 * needed to restore the initial order; faster way as opposed to sorting (which is not easily
@@ -73,9 +73,6 @@ public class MetaDataStatisticsController {
 	/**
 	 * Creates a new {@link MetaDataStatisticsController} instance. Does not store
 	 *
-	 * @param exampleSet
-	 *            the {@link ExampleSet} for which the meta data statistics should be created. No
-	 *            reference to it is stored to prevent memory leaks.
 	 * @param view
 	 * @param model
 	 */
@@ -86,7 +83,7 @@ public class MetaDataStatisticsController {
 		this.model = model;
 
 		backupInitialOrderList = new ArrayList<>();
-		barrier = createUpdateBarrier();
+		barrier = new CountDownLatch(1);
 
 		// start up sorting queue (for future sorting)
 		sortingQueue = new UpdateQueue("Attribute Sorting");
@@ -99,19 +96,25 @@ public class MetaDataStatisticsController {
 	}
 
 	/**
-	 * Call to let the controller know that GUI or calculations are done. Once both are done (aka
-	 * this method has been called twice after initialization), the GUI will be notified to display
-	 * everything.
+	 * Call to let the controller know that GUI is done. Once statistics calculation is also done (aka count down latch
+	 * counted down), the GUI will be notified to display everything.
+	 *
+	 * @return whether the statistics calculation has been successful
 	 */
-	public void waitAtBarrier() {
+	boolean waitAtBarrier() {
 		try {
-			// GUI is done, tell barrier so once GUI and calculations are done the GUI can be
-			// updated
+			// GUI is done, wait until calculations are done and the GUI can be updated
 			barrier.await();
+			if (aborted) {
+				LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.meta_data_view.calc_cancelled");
+				return false;
+			} else {
+				updateStatistics();
+				return true;
+			}
 		} catch (InterruptedException e) {
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.meta_data_view.calc_interrupted");
-		} catch (BrokenBarrierException e) {
-			LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.meta_data_view.calc_sync_broken");
+			return false;
 		}
 	}
 
@@ -332,7 +335,7 @@ public class MetaDataStatisticsController {
 	 * Stops the statistics recalculation and the sorting queue.
 	 */
 	void stop() {
-		worker.cancel(true);
+		worker.cancel();
 		sortingQueue.shutdown();
 	}
 
@@ -444,23 +447,19 @@ public class MetaDataStatisticsController {
 	 * Applies the current sorting.
 	 */
 	private void applySorting() {
-		sortingQueue.execute(new Runnable() {
-
-			@Override
-			public void run() {
-				if (model.getSortingDirection(SortingType.NAME) != SortingDirection.UNDEFINED) {
-					sortByName(model.getOrderedAttributeStatisticsModels(), model.getSortingDirection(SortingType.NAME));
-				}
-				if (model.getSortingDirection(SortingType.TYPE) != SortingDirection.UNDEFINED) {
-					sortByType(model.getOrderedAttributeStatisticsModels(), model.getSortingDirection(SortingType.TYPE));
-				}
-				if (model.getSortingDirection(SortingType.MISSING) != SortingDirection.UNDEFINED) {
-					sortByMissing(model.getOrderedAttributeStatisticsModels(),
-							model.getSortingDirection(SortingType.MISSING));
-				}
-
-				model.fireOrderChangedEvent();
+		sortingQueue.execute(() -> {
+			if (model.getSortingDirection(SortingType.NAME) != SortingDirection.UNDEFINED) {
+				sortByName(model.getOrderedAttributeStatisticsModels(), model.getSortingDirection(SortingType.NAME));
 			}
+			if (model.getSortingDirection(SortingType.TYPE) != SortingDirection.UNDEFINED) {
+				sortByType(model.getOrderedAttributeStatisticsModels(), model.getSortingDirection(SortingType.TYPE));
+			}
+			if (model.getSortingDirection(SortingType.MISSING) != SortingDirection.UNDEFINED) {
+				sortByMissing(model.getOrderedAttributeStatisticsModels(),
+						model.getSortingDirection(SortingType.MISSING));
+			}
+
+			model.fireOrderChangedEvent();
 		});
 	}
 
@@ -470,21 +469,17 @@ public class MetaDataStatisticsController {
 	 * @param direction
 	 */
 	private void sortByName(List<AbstractAttributeStatisticsModel> list, final SortingDirection direction) {
-		sort(list, new Comparator<AbstractAttributeStatisticsModel>() {
-
-			@Override
-			public int compare(AbstractAttributeStatisticsModel o1, AbstractAttributeStatisticsModel o2) {
-				int sortResult = o1.getAttribute().getName().compareTo(o2.getAttribute().getName());
-				switch (direction) {
-					case ASCENDING:
-						return -1 * sortResult;
-					case DESCENDING:
-						return sortResult;
-					case UNDEFINED:
-						return 0;
-					default:
-						return sortResult;
-				}
+		sort(list, (o1, o2) -> {
+			int sortResult = o1.getAttribute().getName().compareTo(o2.getAttribute().getName());
+			switch (direction) {
+				case ASCENDING:
+					return -1 * sortResult;
+				case DESCENDING:
+					return sortResult;
+				case UNDEFINED:
+					return 0;
+				default:
+					return sortResult;
 			}
 		});
 	}
@@ -495,22 +490,18 @@ public class MetaDataStatisticsController {
 	 * @param direction
 	 */
 	private void sortByType(List<AbstractAttributeStatisticsModel> list, final SortingDirection direction) {
-		sort(list, new Comparator<AbstractAttributeStatisticsModel>() {
-
-			@Override
-			public int compare(AbstractAttributeStatisticsModel o1, AbstractAttributeStatisticsModel o2) {
-				int sortResult = Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o1.getAttribute().getValueType())
-						.compareTo(Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o2.getAttribute().getValueType()));
-				switch (direction) {
-					case ASCENDING:
-						return -1 * sortResult;
-					case DESCENDING:
-						return sortResult;
-					case UNDEFINED:
-						return 0;
-					default:
-						return sortResult;
-				}
+		sort(list, (o1, o2) -> {
+			int sortResult = Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o1.getAttribute().getValueType())
+					.compareTo(Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(o2.getAttribute().getValueType()));
+			switch (direction) {
+				case ASCENDING:
+					return -1 * sortResult;
+				case DESCENDING:
+					return sortResult;
+				case UNDEFINED:
+					return 0;
+				default:
+					return sortResult;
 			}
 		});
 	}
@@ -521,32 +512,28 @@ public class MetaDataStatisticsController {
 	 * @param direction
 	 */
 	private void sortByMissing(List<AbstractAttributeStatisticsModel> list, final SortingDirection direction) {
-		sort(list, new Comparator<AbstractAttributeStatisticsModel>() {
+		sort(list, (o1, o2) -> {
+			ExampleSet exSet = model.getExampleSetOrNull();
+			if (exSet == null) {
+				return 0;
+			}
 
-			@Override
-			public int compare(AbstractAttributeStatisticsModel o1, AbstractAttributeStatisticsModel o2) {
-				ExampleSet exSet = model.getExampleSetOrNull();
-				if (exSet == null) {
+			Double missing1 = exSet.getStatistics(o1.getAttribute(), Statistics.UNKNOWN);
+			Double missing2 = exSet.getStatistics(o2.getAttribute(), Statistics.UNKNOWN);
+
+			if (missing1 == null || missing2 == null) {
+				return 0;
+			}
+			int sortResult = missing1.compareTo(missing2);
+			switch (direction) {
+				case ASCENDING:
+					return -1 * sortResult;
+				case DESCENDING:
+					return sortResult;
+				case UNDEFINED:
 					return 0;
-				}
-
-				Double missing1 = exSet.getStatistics(o1.getAttribute(), Statistics.UNKNOWN);
-				Double missing2 = exSet.getStatistics(o2.getAttribute(), Statistics.UNKNOWN);
-
-				if (missing1 == null || missing2 == null) {
-					return 0;
-				}
-				int sortResult = missing1.compareTo(missing2);
-				switch (direction) {
-					case ASCENDING:
-						return -1 * sortResult;
-					case DESCENDING:
-						return sortResult;
-					case UNDEFINED:
-						return 0;
-					default:
-						return sortResult;
-				}
+				default:
+					return sortResult;
 			}
 		});
 	}
@@ -572,54 +559,59 @@ public class MetaDataStatisticsController {
 	}
 
 	/**
-	 * Creates a {@link CyclicBarrier} which will update the statistics part of all
-	 * {@link AttributeStatisticsPanel}s.
-	 *
-	 * @return
+	 * Update the statistics part of all {@link AttributeStatisticsPanel}s.
 	 */
-	private CyclicBarrier createUpdateBarrier() {
-		return new CyclicBarrier(2, new Runnable() {
+	private void updateStatistics() {
+		ExampleSet exampleSet = model.getExampleSetOrNull();
+		if (exampleSet == null) {
+			throw new IllegalArgumentException("model exampleSet must not be null at construction time!");
+		}
 
-			@Override
-			public void run() {
-				// once both barriers are broken
-				ExampleSet exampleSet = model.getExampleSetOrNull();
-				if (exampleSet == null) {
-					throw new IllegalArgumentException("model exampleSet must not be null at construction time!");
-				}
+		// update stats on all attribute stat models
+		for (AbstractAttributeStatisticsModel statModel : model.getOrderedAttributeStatisticsModels()) {
+			statModel.updateStatistics(exampleSet);
+		}
 
-				// update stats on all attribute stat models
-				for (AbstractAttributeStatisticsModel statModel : model.getOrderedAttributeStatisticsModels()) {
-					statModel.updateStatistics(exampleSet);
-				}
+		// allow sorting and filtering
+		model.setAllowSortingAndFiltering();
 
-				// allow sorting and filtering
-				model.setAllowSortingAndFiltering();
-
-				// signal that everything is done
-				model.fireInitDoneEvent();
-			}
-		});
+		// signal that everything is done
+		model.fireInitDoneEvent();
 	}
 
 	/**
-	 * Calculates the statistics of the given {@link ExampleSet} in a {@link SwingWorker}. Once the
-	 * statistics are calculated, will update the stats on all {@link AttributeStatisticsPanel}s.
+	 * Calculates the statistics of the given {@link ExampleSet} in a {@link ProgressThread}. Once the statistics are
+	 * calculated, will update the stats on all {@link AttributeStatisticsPanel}s.
 	 *
 	 * @param exampleSet
+	 * 		the example of which to recalculate the statistics
 	 */
 	private void calculateStatistics(final ExampleSet exampleSet) {
-		worker = new SwingWorker<Void, Void>() {
+
+		// wrap into a future task so that cancelling with an interrupt is possible
+		FutureTask<Void> task = new FutureTask<>(() -> {
+			exampleSet.recalculateAllAttributeStatistics();
+			barrier.countDown();
+			return null;
+		});
+
+		//execute with indeterminate progress thread
+		worker = new ProgressThread("statistics_calculation") {
 
 			@Override
-			protected Void doInBackground() throws Exception {
-				exampleSet.recalculateAllAttributeStatistics();
-				waitAtBarrier();
+			public void run() {
+				task.run();
+			}
 
-				return null;
+			@Override
+			protected void executionCancelled() {
+				task.cancel(true);
+				aborted = true;
+				barrier.countDown();
 			}
 		};
-		worker.execute();
+		worker.setIndeterminate(true);
+		worker.start();
 	}
 
 	/**
@@ -630,8 +622,8 @@ public class MetaDataStatisticsController {
 	 * @param comp
 	 */
 	private static void sort(List<AbstractAttributeStatisticsModel> listOfStatModels,
-			Comparator<AbstractAttributeStatisticsModel> comp) {
-		Collections.sort(listOfStatModels, comp);
+							 Comparator<AbstractAttributeStatisticsModel> comp) {
+		listOfStatModels.sort(comp);
 	}
 
 }

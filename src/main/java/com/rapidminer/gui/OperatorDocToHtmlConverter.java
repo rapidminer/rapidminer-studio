@@ -18,6 +18,8 @@
 */
 package com.rapidminer.gui;
 
+import static com.rapidminer.gui.OperatorDocLoader.DEFAULT_IOOBJECT_ICON_NAME;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -541,25 +543,21 @@ public class OperatorDocToHtmlConverter {
 	 */
 	@SuppressWarnings("unchecked")
 	public static String getIconNameForType(String type) {
-		String iconName;
-		if (type == null || type.isEmpty()) {
-			iconName = "plug.png";
-		} else {
+		String iconName = DEFAULT_IOOBJECT_ICON_NAME;
+		if (type != null && !type.isEmpty()) {
 			Class<? extends IOObject> typeClass;
 			try {
 				typeClass = (Class<? extends IOObject>) Class.forName(type);
 				iconName = RendererService.getIconName(typeClass);
 				if (iconName == null) {
-					iconName = "plug.png";
+					iconName = DEFAULT_IOOBJECT_ICON_NAME;
 				}
 			} catch (ClassNotFoundException e) {
 				LogService.getRoot().finer("Failed to lookup class '" + type + "'. Reason: " + e.getLocalizedMessage());
-				iconName = "plug.png";
 			}
 		}
 
-		String path = SwingTools.getIconPath("24/" + iconName);
-		return path;
+		return SwingTools.getIconPath("24/" + iconName);
 	}
 	
 	public static String getTagHtmlForKey(String operatorKey) {

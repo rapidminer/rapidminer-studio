@@ -21,11 +21,11 @@ package com.rapidminer.gui;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import javax.swing.SwingUtilities;
 
@@ -50,7 +50,8 @@ public class MetaDataUpdateQueue extends UpdateQueue {
 	/** @since 9.2.0 */
 	static final String REVALIDATE_PROCESS_KEY = "re" + VALIDATE_PROCESS_KEY;
 	/** @since 9.2.0 */
-	private static final Map<Process, List<MDGenerationChecker>> MD_GENERATION_CHECKERS = Collections.synchronizedMap(new HashMap<>());
+	private static final Map<Process, List<MDGenerationChecker>> MD_GENERATION_CHECKERS =
+			Collections.synchronizedMap(new WeakHashMap<>());
 
 	private final MainFrame mainFrame;
 

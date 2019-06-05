@@ -18,7 +18,6 @@
 */
 package com.rapidminer.repository.local;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -27,60 +26,32 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.rapidminer.repository.BlobEntry;
-import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 
 
 /**
  * Reference on BLOB entries in the repository.
  * 
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  */
 public class SimpleBlobEntry extends SimpleDataEntry implements BlobEntry {
-
-	private static final String BLOB_SUFFIX = ".blob";
 
 	public SimpleBlobEntry(String name, SimpleFolder containingFolder, LocalRepository localRepository) throws RepositoryException {
 		super(name, containingFolder, localRepository);
 		// create physical file here, otherwise it will not really exist and for example cause
 		// errors in the Binary Import Wizard
-		if (!getFile().exists()) {
+		if (!getDataFile().exists()) {
 			try {
-				getFile().createNewFile();
+				getDataFile().createNewFile();
 			} catch (IOException e) {
-				throw new RepositoryException(e.getMessage());
+				throw new RepositoryException(e);
 			}
 		}
 	}
 
-	private File getFile() {
-		return new File(((SimpleFolder) getContainingFolder()).getFile(), getName() + BLOB_SUFFIX);
-	}
-
 	@Override
-	public long getDate() {
-		return getFile().lastModified();
-	}
-
-	@Override
-	public long getSize() {
-		return getFile().length();
-	}
-
-	@Override
-	public void delete() throws RepositoryException {
-		getFile().delete();
-		super.delete();
-	}
-
-	@Override
-	protected void handleRename(String newName) throws RepositoryException {
-		renameFile(getFile(), newName);
-	}
-
-	@Override
-	protected void handleMove(Folder newParent, String newName) throws RepositoryException {
-		moveFile(getFile(), ((SimpleFolder) newParent).getFile(), newName, BLOB_SUFFIX);
+	public String getSuffix() {
+		return BLOB_SUFFIX;
 	}
 
 	@Override
@@ -91,9 +62,9 @@ public class SimpleBlobEntry extends SimpleDataEntry implements BlobEntry {
 	@Override
 	public InputStream openInputStream() throws RepositoryException {
 		try {
-			return new FileInputStream(getFile());
+			return new FileInputStream(getDataFile());
 		} catch (FileNotFoundException e) {
-			throw new RepositoryException("Cannot open stream from '" + getFile() + "': " + e, e);
+			throw new RepositoryException("Cannot open stream from '" + getDataFile() + "': " + e, e);
 		}
 	}
 
@@ -101,9 +72,9 @@ public class SimpleBlobEntry extends SimpleDataEntry implements BlobEntry {
 	public OutputStream openOutputStream(String mimeType) throws RepositoryException {
 		putProperty("mimetype", mimeType);
 		try {
-			return new FileOutputStream(getFile());
+			return new FileOutputStream(getDataFile());
 		} catch (IOException e) {
-			throw new RepositoryException("Cannot open stream from '" + getFile() + "': " + e, e);
+			throw new RepositoryException("Cannot open stream from '" + getDataFile() + "': " + e, e);
 		}
 	}
 }

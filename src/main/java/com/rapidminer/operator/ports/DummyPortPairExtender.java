@@ -18,6 +18,7 @@
 */
 package com.rapidminer.operator.ports;
 
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.ports.metadata.MDTransformationRule;
@@ -43,28 +44,30 @@ public class DummyPortPairExtender extends PortPairExtender {
 	 */
 	@Override
 	public MDTransformationRule makePassThroughRule() {
-		return new MDTransformationRule() {
-
-			@Override
-			public void transformMD() {
-				boolean somethingConnected = false;
-				for (PortPair pair : getManagedPairs()) {
-					// testing if connected for execution order
-					somethingConnected |= pair.getInputPort().isConnected() || pair.getOutputPort().isConnected();
-					// transforming meta data.
-					MetaData inData = pair.getInputPort().getMetaData();
-					if (inData != null) {
-						inData = transformMetaData(inData.clone());
-						inData.addToHistory(pair.getOutputPort());
-						pair.getOutputPort().deliverMD(inData);
-					} else {
-						pair.getOutputPort().deliverMD(null);
-					}
+		return () -> {
+			boolean somethingConnected = false;
+			for (PortPair pair : getManagedPairs()) {
+				// testing if connected for execution order
+				somethingConnected |= pair.getInputPort().isConnected() || pair.getOutputPort().isConnected();
+				// transforming meta data.
+				MetaData inData = pair.getInputPort().getMetaData();
+				if (inData != null) {
+					inData = transformMetaData(inData.clone());
+					inData.addToHistory(pair.getOutputPort());
+					pair.getOutputPort().deliverMD(inData);
+				} else {
+					pair.getOutputPort().deliverMD(null);
 				}
-				if (!somethingConnected) {
-					PortOwner owner = getManagedPairs().get(0).getInputPort().getPorts().getOwner();
-					owner.getOperator().addError(
-							new SimpleProcessSetupError(Severity.WARNING, owner, "execution_order_undefined"));
+			}
+			if (!somethingConnected) {
+				PortOwner owner = getManagedPairs().get(0).getInputPort().getPorts().getOwner();
+				Operator operator = owner.getOperator();
+				// check all other ports, too
+				InputPorts inputPorts = operator.getInputPorts();
+				OutputPorts outputPorts = operator.getOutputPorts();
+				if ((inputPorts.getNumberOfPorts() == getManagedPairs().size() || inputPorts.getNumberOfConnectedPorts() == 0)
+						&& (outputPorts.getNumberOfPorts() == getManagedPairs().size() || outputPorts.getNumberOfConnectedPorts() == 0)) {
+					operator.addError(new SimpleProcessSetupError(Severity.WARNING, owner, "execution_order_undefined"));
 				}
 			}
 		};

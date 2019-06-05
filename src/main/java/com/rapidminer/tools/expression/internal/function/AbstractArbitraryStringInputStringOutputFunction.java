@@ -87,8 +87,8 @@ public abstract class AbstractArbitraryStringInputStringOutputFunction extends A
 	 */
 	protected Callable<String> makeStringCallable(final ExpressionEvaluator[] inputEvaluators) {
 		final int inputLength = inputEvaluators.length;
-		final String[] constantValues = new String[inputLength];
 		try {
+			final String[] constantValues = new String[inputLength];
 			int i = 0;
 			// evaluate which expressions are constant
 			for (ExpressionEvaluator exp : inputEvaluators) {
@@ -100,30 +100,18 @@ public abstract class AbstractArbitraryStringInputStringOutputFunction extends A
 			if (isResultConstant(inputEvaluators)) {
 				// compute the result only once and re-use this
 				final String result = compute(constantValues);
-				return new Callable<String>() {
+				return () -> result;
 
-					@Override
-					public String call() throws Exception {
-						return result;
-					}
-				};
-
-			} else {
-				final String[] values = new String[inputLength];
-
-				return new Callable<String>() {
-
-					@Override
-					public String call() throws Exception {
-						// collect the constant values and fetch the not constant values
-						for (int j = 0; j < inputLength; j++) {
-							values[j] = inputEvaluators[j].isConstant() ? constantValues[j] : inputEvaluators[j]
-									.getStringFunction().call();
-						}
-						return compute(values);
-					}
-				};
 			}
+			return () -> {
+				final String[] values = new String[inputLength];
+				// collect the constant values and fetch the not constant values
+				for (int j = 0; j < inputLength; j++) {
+					values[j] = inputEvaluators[j].isConstant() ? constantValues[j] : inputEvaluators[j]
+							.getStringFunction().call();
+				}
+				return compute(values);
+			};
 		} catch (ExpressionParsingException e) {
 			throw e;
 		} catch (Exception e) {

@@ -62,9 +62,13 @@ import com.rapidminer.tools.OperatorResourceConsumptionHandler;
  */
 public class AttributeValueReplace extends AbstractValueProcessing {
 
-	public static final String PARAMETER_REPLACE_WHAT = "replace_what";
+	/** @deprecated since 9.3; use {@link ParameterTypeRegexp#PARAMETER_REPLACE_WHAT} instead */
+	@Deprecated
+	public static final String PARAMETER_REPLACE_WHAT = ParameterTypeRegexp.PARAMETER_REPLACE_WHAT;
 
-	public static final String PARAMETER_REPLACE_BY = "replace_by";
+	/** @deprecated since 9.3; use {@link ParameterTypeRegexp#PARAMETER_REPLACE_BY} instead */
+	@Deprecated
+	public static final String PARAMETER_REPLACE_BY = ParameterTypeRegexp.PARAMETER_REPLACE_BY;
 
 	public AttributeValueReplace(OperatorDescription description) {
 		super(description);
@@ -72,7 +76,7 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 
 	@Override
 	public ExampleSetMetaData applyOnFilteredMetaData(ExampleSetMetaData emd) throws UndefinedParameterError {
-		String replaceWhat = getParameterAsString(PARAMETER_REPLACE_WHAT);
+		String replaceWhat = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT);
 		Pattern whatPattern;
 		try {
 			whatPattern = Pattern.compile(replaceWhat);
@@ -81,8 +85,8 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 			return emd;
 		}
 		String replaceBy = "";
-		if (isParameterSet(PARAMETER_REPLACE_BY)) {
-			replaceBy = getParameterAsString(PARAMETER_REPLACE_BY);
+		if (isParameterSet(ParameterTypeRegexp.PARAMETER_REPLACE_BY)) {
+			replaceBy = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_BY);
 		}
 		for (AttributeMetaData amd : emd.getAllAttributes()) {
 			Set<String> valueSet = new TreeSet<>();
@@ -106,7 +110,7 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 
 	@Override
 	public ExampleSet applyOnFiltered(ExampleSet exampleSet) throws OperatorException {
-		String replaceWhat = getParameterAsString(PARAMETER_REPLACE_WHAT);
+		String replaceWhat = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT);
 		Pattern whatPattern;
 		try {
 			whatPattern = Pattern.compile(replaceWhat);
@@ -114,8 +118,8 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 			throw new UserError(this, 206, replaceWhat, e.getMessage());
 		}
 		String replaceBy = "";
-		if (isParameterSet(PARAMETER_REPLACE_BY)) {
-			replaceBy = getParameterAsString(PARAMETER_REPLACE_BY);
+		if (isParameterSet(ParameterTypeRegexp.PARAMETER_REPLACE_BY)) {
+			replaceBy = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_BY);
 		}
 
 		LinkedHashMap<Attribute, Attribute> attributeMap = new LinkedHashMap<>();
@@ -176,13 +180,15 @@ public class AttributeValueReplace extends AbstractValueProcessing {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeRegexp(PARAMETER_REPLACE_WHAT, "A regular expression specifying what should be replaced.",
+		ParameterTypeRegexp regexp = new ParameterTypeRegexp(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT, "A regular expression specifying what should be replaced.",
 				false, false);
-		type.setPrimary(true);
-		types.add(type);
-		types.add(new ParameterTypeString(PARAMETER_REPLACE_BY,
+		regexp.setPrimary(true);
+		types.add(regexp);
+		ParameterTypeString replacement = new ParameterTypeString(ParameterTypeRegexp.PARAMETER_REPLACE_BY,
 				"The replacement for the region matched by the regular expression. Possibly including capturing groups.",
-				true, false));
+				true, false);
+		regexp.setReplacementParameter(replacement);
+		types.add(replacement);
 		return types;
 	}
 

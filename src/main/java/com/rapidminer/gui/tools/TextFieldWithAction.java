@@ -153,7 +153,7 @@ public class TextFieldWithAction extends JPanel {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (!(field.getText().isEmpty() || field.getText() == null) && SwingUtilities.isLeftMouseButton(e)) {
-					action.actionPerformed(new ActionEvent(actionLabel, ActionEvent.ACTION_PERFORMED, "click"));
+					action.actionPerformed(new ActionEvent(field, ActionEvent.ACTION_PERFORMED, "click"));
 				}
 			}
 
@@ -273,4 +273,13 @@ public class TextFieldWithAction extends JPanel {
 		}
 	}
 
+	/**
+	 * Returns the actual text field.
+	 *
+	 * @return the field, never {@code null}
+	 * @since 9.2.1
+	 */
+	public JTextField getField() {
+		return field;
+	}
 }

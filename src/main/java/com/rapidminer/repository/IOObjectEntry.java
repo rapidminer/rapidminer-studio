@@ -30,6 +30,8 @@ import com.rapidminer.tools.ProgressListener;
 public interface IOObjectEntry extends DataEntry {
 
 	String TYPE_NAME = "data";
+	String MD_SUFFIX = ".md";
+	String IOO_SUFFIX = ".ioo";
 
 	@Override
 	default String getType() {

@@ -228,8 +228,7 @@ public class UserSpecificationDataGenerator extends AbstractExampleSource {
 				"This parameter defines the attributes and their values in the single example returned.",
 				new ParameterTypeString(PARAMETER_ATTRIBUTE_NAME, "This is the name of the generated attribute.", false),
 				new ParameterTypeExpression(PARAMETER_ATTRIBUTE_VALUE,
-						"An expression that is parsed to derive the value of this attribute.",
-						new OperatorVersionCallable(this)),
+						"An expression that is parsed to derive the value of this attribute.", new OperatorVersionCallable(this)),
 				false);
 		type.setPrimary(true);
 		types.add(type);

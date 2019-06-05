@@ -28,26 +28,30 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
-
 import javax.swing.Action;
 
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryConnectionsFolderDuplicateException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryNotConnectionsFolderException;
+import com.rapidminer.repository.RepositoryStoreOtherInConnectionsFolderException;
+import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.container.Pair;
 
 
 /**
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  */
 public abstract class SimpleEntry implements Entry {
 
-	protected static final String PROPERTIES_SUFFIX = ".properties";
 	protected static final String DOT = ".";
 
 	private Properties properties;
@@ -203,7 +207,14 @@ public abstract class SimpleEntry implements Entry {
 	 * {@link RepositoryException} will be thrown.
 	 */
 	private void checkRename(Folder newParent, String newName) throws RepositoryException {
-
+		// only connection entries can be moved inside special folder, folders need special handling
+		if (RepositoryTools.isInSpecialConnectionsFolder(newParent) && !(this instanceof ConnectionEntry) && !(this instanceof Folder)) {
+			throw new RepositoryStoreOtherInConnectionsFolderException(Folder.MESSAGE_CONNECTION_FOLDER);
+		} else if (!newParent.isSpecialConnectionsFolder() && (this instanceof ConnectionEntry)) {
+			throw new RepositoryNotConnectionsFolderException(Folder.MESSAGE_CONNECTION_CREATION);
+		} else if (newParent instanceof Repository && Folder.isConnectionsFolderName(newName, false)) {
+			throw new RepositoryConnectionsFolderDuplicateException(Folder.MESSAGE_CONNECTION_FOLDER_DUPLICATE);
+		}
 		if (!RepositoryLocation.isNameValid(newName)) {
 			throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(), "repository.illegal_entry_name", newName,
 					getLocation()));
@@ -212,14 +223,14 @@ public abstract class SimpleEntry implements Entry {
 		if (containingFolder != null) {
 			List<DataEntry> dataEntries = newParent.getDataEntries();
 			for (Entry entry : dataEntries) {
-				if (entry.getName().equals(newName)) {
+				if (entry.getName().equalsIgnoreCase(newName)) {
 					throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
 							"repository.repository_entry_with_same_name_already_exists", newName));
 				}
 			}
 			List<Folder> subfolders = newParent.getSubfolders();
 			for (Folder folder : subfolders) {
-				if (folder.getName().equals(newName)) {
+				if (folder.getName().equalsIgnoreCase(newName)) {
 					throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
 							"repository.repository_entry_with_same_name_already_exists", newName));
 				}
@@ -228,7 +239,7 @@ public abstract class SimpleEntry implements Entry {
 	}
 
 	private Pair<String, String> extractNameAndSuffix(File file) {
-		String name = null;
+		String name;
 		String suffix = null;
 		String fileName = file.getName();
 		int dot = fileName.lastIndexOf(DOT);
@@ -240,7 +251,7 @@ public abstract class SimpleEntry implements Entry {
 			name = fileName.substring(0, dot);
 			suffix = fileName.substring(dot + 1);
 		}
-		return new Pair<String, String>(name, suffix);
+		return new Pair<>(name, suffix);
 	}
 
 	/**
@@ -397,12 +408,19 @@ public abstract class SimpleEntry implements Entry {
 		return getProperties().getProperty(key);
 	}
 
+	/**
+	 * Get a file associated with this {@link Entry}, specified by the given suffix.
+	 * The returned file is located in the {@link #getContainingFolder() containing folder} and it's name is
+	 * a concatenation of {@link #getName()} and the {@code suffix}.
+	 *
+	 * @since 9.3
+	 */
+	protected File getFile(String suffix) {
+		return new File(((SimpleFolder) getContainingFolder()).getFile(), getName() + suffix);
+	}
+
 	private File getPropertiesFile() {
-		if (getContainingFolder() != null) {
-			return new File(((SimpleFolder) getContainingFolder()).getFile(), getName() + PROPERTIES_SUFFIX);
-		} else {
-			return new File(getRepository().getRoot(), getName() + PROPERTIES_SUFFIX);
-		}
+		return getFile(PROPERTIES_SUFFIX);
 	}
 
 	@Override

@@ -34,17 +34,29 @@ import com.vlsolutions.swing.docking.Dockable;
  */
 public interface ResultDisplay extends Dockable, ProcessEditor {
 
-	public static final String RESULT_DOCK_KEY = "result";
+	String RESULT_DOCK_KEY = "result";
 
 	/** Initializer called after the main frame is set up. */
-	public void init(MainFrame mainFrame);
+	void init(MainFrame mainFrame);
 
-	public void showResult(ResultObject result);
+	void showResult(ResultObject result);
 
-	public void showData(final IOContainer resultContainer, final String message);
+	void showData(final IOContainer resultContainer, final String message);
 
-	public void addDataTable(DataTable dataTable);
+	void addDataTable(DataTable dataTable);
 
-	public void clearAll();
+	void clearAll();
+
+	/**
+	 * Removes all results from this result display except the results with the given key(s).
+	 *
+	 * @param key
+	 * 		optional keys of results that should not be removed. If no keys are given, behaves the same as {@link
+	 *        #clearAll()}
+	 * @since 9.3
+	 */
+	default void clearAllExcept(String... key) {
+		clearAll();
+	}
 
 }

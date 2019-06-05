@@ -352,11 +352,34 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 	}
 
 	/**
-	 * This method gives a hook for the parameter type to react on a renaming of an operator. It
-	 * must return the correctly modified String value. The default implementation does nothing.
+	 * This method gives a hook for the parameter type to react to the renaming of an operator. It
+	 * must return the correctly modified parameter value as string.
+	 *
+	 * @return the unmodified <em>parameterValue</em> by default
 	 */
 	public String notifyOperatorRenaming(String oldOperatorName, String newOperatorName, String parameterValue) {
 		return parameterValue;
+	}
+
+	/**
+	 * This method gives a hook for the parameter type to react to the replacing of an operator. It
+	 * must return the correctly modified parameter value as string.
+	 *
+	 * @param oldName
+	 * 		the name of the old operator; must not be {@code null}
+	 * @param oldOp
+	 * 		the old operator; can be {@code null}
+	 * @param newName
+	 * 		the name of the new operator; must not be {@code null}
+	 * @param newOp
+	 * 		the new operator; must not be {@code null}
+	 * @param parameterValue
+	 * 		the original parameter value
+	 * @return the same as {@link #notifyOperatorRenaming(String, String, String) notifyOperatorRenaming} by default
+	 * @since 9.3
+	 */
+	public String notifyOperatorReplacing(String oldName, Operator oldOp, String newName, Operator newOp, String parameterValue) {
+		return notifyOperatorRenaming(oldName, newName, parameterValue);
 	}
 
 	/** Returns a string representation of this value. */

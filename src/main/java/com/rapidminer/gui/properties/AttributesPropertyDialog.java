@@ -25,13 +25,13 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.swing.Action;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
@@ -61,9 +61,9 @@ public class AttributesPropertyDialog extends PropertyDialog {
 
 	private static final long serialVersionUID = 5396725165122306231L;
 
-	private final ArrayList<String> items;
+	private final List<String> items;
 
-	private final ArrayList<String> selectedItems;
+	private final List<String> selectedItems;
 
 	private final Map<String, Integer> valueTypeMap;
 
@@ -105,7 +105,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 			int[] indices = selectedItemList.getSelectedIndices();
 			selectedItemList.setSelectedIndices(new int[] {});
 			for (int i = indices.length - 1; i >= 0; i--) {
-				String item = selectedItemListModel.getElementAt(indices[i]).toString();
+				String item = selectedItemListModel.getElementAt(indices[i]);
 				itemListModel.addElement(item);
 				selectedItemListModel.removeElementAt(indices[i]);
 				items.add(item);
@@ -136,22 +136,20 @@ public class AttributesPropertyDialog extends PropertyDialog {
 		JPanel panel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 
-		items = new ArrayList<>();
-		selectedItems = new ArrayList<>();
-		valueTypeMap = new HashMap<>();
-
-		itemListModel = new FilterableListModel<>(true);
-		selectedItemListModel = new FilterableListModel<>(sortAttributes);
-		for (Pair<String, Integer> item : type.getAttributeNamesAndTypes(sortAttributes)) {
-			if (!preselectedItems.contains(item.getFirst())) {
-				items.add(item.getFirst());
-				itemListModel.addElement(item.getFirst());
-			}
-			valueTypeMap.put(item.getFirst(), item.getSecond());
+		List<Pair<String, Integer>> attributeNamesAndTypes = type.getAttributeNamesAndTypes(false);
+		items = attributeNamesAndTypes.stream().map(Pair::getFirst).filter(att -> !preselectedItems.contains(att)).collect(Collectors.toList());
+		valueTypeMap = attributeNamesAndTypes.stream().collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
+		selectedItems = new ArrayList<>(preselectedItems);
+		if (sortAttributes) {
+			items.sort(FilterableListModel.STRING_COMPARATOR);
+			selectedItems.sort(FilterableListModel.STRING_COMPARATOR);
 		}
-		for (String item : preselectedItems) {
-			selectedItems.add(item);
-			selectedItemListModel.addElement(item);
+
+		itemListModel = new FilterableListModel<>(items, false);
+		selectedItemListModel = new FilterableListModel<>(selectedItems, false);
+		if (sortAttributes) {
+			itemListModel.setComparator(FilterableListModel.STRING_COMPARATOR);
+			selectedItemListModel.setComparator(FilterableListModel.STRING_COMPARATOR);
 		}
 
 		itemSearchField = new FilterTextField();
@@ -181,7 +179,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 
 		itemList = new JList<>(itemListModel);
 		itemList.setCellRenderer(createAttributeTypeListRenderer());
-		itemList.addMouseListener(new MouseListener() {
+		itemList.addMouseListener(new MouseAdapter() {
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -189,18 +187,6 @@ public class AttributesPropertyDialog extends PropertyDialog {
 					selectAttributesAction.actionPerformed(null);
 				}
 			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {}
-
-			@Override
-			public void mouseExited(MouseEvent e) {}
-
-			@Override
-			public void mousePressed(MouseEvent e) {}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {}
 		});
 		JScrollPane itemListPane = new ExtendedJScrollPane(itemList);
 		itemListPane.setBorder(createBorder());
@@ -274,7 +260,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 
 		selectedItemList = new JList<>(selectedItemListModel);
 		selectedItemList.setCellRenderer(createAttributeTypeListRenderer());
-		selectedItemList.addMouseListener(new MouseListener() {
+		selectedItemList.addMouseListener(new MouseAdapter() {
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -282,18 +268,6 @@ public class AttributesPropertyDialog extends PropertyDialog {
 					deselectAttributesAction.actionPerformed(null);
 				}
 			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {}
-
-			@Override
-			public void mouseExited(MouseEvent e) {}
-
-			@Override
-			public void mousePressed(MouseEvent e) {}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {}
 		});
 		JScrollPane selectedItemListPane = new ExtendedJScrollPane(selectedItemList);
 		selectedItemListPane.setBorder(createBorder());

@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
@@ -37,11 +38,11 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
+import com.rapidminer.operator.UndefinedParameterSetupError;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.Value;
 import com.rapidminer.operator.ports.DummyPortPairExtender;
 import com.rapidminer.operator.ports.PortPairExtender;
-import com.rapidminer.operator.ports.metadata.MDTransformationRule;
 import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -118,64 +119,111 @@ public class ProcessLogOperator extends Operator {
 
 		getTransformer().addRule(dummyPorts.makePassThroughRule());
 		// check if the user entered duplicate column names
-		getTransformer().addRule(new MDTransformationRule() {
-
-			@Override
-			public void transformMD() {
-				try {
-					getColumnNames();
-				} catch (UserError e) {
-					addError(new SimpleProcessSetupError(Severity.INFORMATION, ProcessLogOperator.this.getPortOwner(),
-							Collections.singletonList(new ParameterSettingQuickFix(ProcessLogOperator.this, PARAMETER_LOG)),
-							"duplicate_log_column"));
-				}
+		getTransformer().addRule(() -> {
+			try {
+				getColumnNames();
+			} catch (UserError e) {
+				addError(new SimpleProcessSetupError(Severity.INFORMATION, ProcessLogOperator.this.getPortOwner(),
+						Collections.singletonList(new ParameterSettingQuickFix(ProcessLogOperator.this, PARAMETER_LOG)),
+						"duplicate_log_column"));
 			}
 		});
 	}
 
+	@Override
+	protected void performAdditionalChecks() {
+		File file = null;
+		try {
+			file = getParameterAsFile(PARAMETER_FILENAME);
+		} catch (UserError e) {
+			// tries to determine a file for output writing
+			// if no file was specified -> do not write results in file
+		}
+		if (file == null) {
+			if (getParameterAsBoolean(PARAMETER_PERSISTENT)) {
+				addError(new UndefinedParameterSetupError(this, PARAMETER_FILENAME));
+			}
+			return;
+		}
+		boolean existedBefore = file.exists();
+		File topExisting = null;
+		List<ParameterSettingQuickFix> fileNameQuickFix = Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_FILENAME));
+		if (!existedBefore) {
+			topExisting = file;
+			while (topExisting != null && !topExisting.exists()) {
+				topExisting = topExisting.getParentFile();
+			}
+			if (topExisting == null) {
+				addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), fileNameQuickFix,
+						"io.invalid_filepath", file.getAbsolutePath()));
+				return;
+			}
+			try {
+				file = getParameterAsFile(PARAMETER_FILENAME, true);
+			} catch (UserError e) {
+				// file cannot be created -> error and stop
+				addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), fileNameQuickFix,
+						"io.dir_creation_fail", file.getAbsolutePath(), e.getMessage()));
+				return;
+			}
+		}
+		try (FileWriter fw = new FileWriter(file, existedBefore)) {
+			// test if writable
+		} catch (IOException e) {
+			addError(new SimpleProcessSetupError(Severity.ERROR, getPortOwner(), fileNameQuickFix,
+					"io.writing_fail", file.getAbsolutePath(), e.getLocalizedMessage()));
+		}
+		if (!existedBefore) {
+			// clean up created directories
+			do {
+				file = file.getParentFile();
+			} while (!topExisting.equals(file) && file.delete());
+		}
+	}
+
 	private double fetchValue(OperatorValueSelection selection, int column) throws UndefinedParameterError {
 		Operator operator = lookupOperator(selection.getOperator());
-		if (operator != null) {
-			if (selection.isValue()) {
-				Value value = operator.getValue(selection.getValueName());
-				if (value == null) {
-					getLogger().warning("No such value in '" + selection + "'");
+		if (operator == null) {
+			logWarning("Unknown operator '" + selection.getOperator() + "' in '" + selection + "'");
+			return Double.NaN;
+		}
+		if (selection.isValue()) {
+			Value value = operator.getValue(selection.getValueName());
+			if (value == null) {
+				getLogger().warning("No such value in '" + selection + "'");
+				return Double.NaN;
+			}
+			if (value.isNominal()) {
+				Object actualValue = value.getValue();
+				if (actualValue != null) {
+					String valueString = value.getValue().toString();
+					SimpleDataTable table = (SimpleDataTable) getProcess().getDataTable(getName());
+					return table.mapString(column, valueString);
+				} else {
 					return Double.NaN;
 				}
-				if (value.isNominal()) {
-					Object actualValue = value.getValue();
-					if (actualValue != null) {
-						String valueString = value.getValue().toString();
-						SimpleDataTable table = (SimpleDataTable) getProcess().getDataTable(getName());
-						return table.mapString(column, valueString);
-					} else {
-						return Double.NaN;
-					}
-				} else {
-					return ((Double) value.getValue()).doubleValue();
-				}
-
 			} else {
-				ParameterType parameterType = operator.getParameterType(selection.getParameterName());
-				if (parameterType == null) {
-					logWarning("No such parameter in '" + selection + "'");
-					return Double.NaN;
-				} else {
-					if (parameterType.isNumerical()) { // numerical
-						try {
-							return Double.parseDouble(operator.getParameter(selection.getParameterName()).toString());
-						} catch (NumberFormatException e) {
-							logWarning("Cannot parse parameter value of '" + selection + "'");
-						}
-					} else { // nominal
-						String value = parameterType.toString(operator.getParameter(selection.getParameterName()));
-						SimpleDataTable table = (SimpleDataTable) getProcess().getDataTable(getName());
-						return table.mapString(column, value);
+				return (Double) value.getValue();
+			}
+
+		} else {
+			ParameterType parameterType = operator.getParameterType(selection.getParameterName());
+			if (parameterType == null) {
+				logWarning("No such parameter in '" + selection + "'");
+				return Double.NaN;
+			} else {
+				if (parameterType.isNumerical()) { // numerical
+					try {
+						return operator.getParameterAsDouble(selection.getParameterName());
+					} catch (UndefinedParameterError e) {
+						logWarning("Cannot parse parameter value of '" + selection + "'");
 					}
+				} else { // nominal
+					String value = parameterType.toString(operator.getParameter(selection.getParameterName()));
+					SimpleDataTable table = (SimpleDataTable) getProcess().getDataTable(getName());
+					return table.mapString(column, value);
 				}
 			}
-		} else {
-			logWarning("Unknown operator '" + selection.getOperator() + "' in '" + selection + "'");
 		}
 		return Double.NaN;
 	}
@@ -201,8 +249,20 @@ public class ProcessLogOperator extends Operator {
 		}
 
 		DataTableRow row = fetchAllValues();
-		if (getParameterAsInt(PARAMETER_SORTING_TYPE) == SORTING_TYPE_NONE && getParameterAsBoolean(PARAMETER_PERSISTENT)) {
-			writeOnline(row);
+		if (getParameterAsInt(PARAMETER_SORTING_TYPE) == SORTING_TYPE_NONE && getParameterAsBoolean(PARAMETER_PERSISTENT) && row.getNumberOfValues() > 0) {
+			File logFile = null;
+			try {
+				logFile = getParameterAsFile(PARAMETER_FILENAME);
+			} catch (UserError e) {
+			}
+			if (logFile == null) {
+				// only log once, e.g. in a loop
+				if (getApplyCount() < 2) {
+					getLogger().log(Level.WARNING, "com.rapidminer.ProcessLogOperator.unspecified_logfile", getName());
+				}
+			} else {
+				writeOnline(row);
+			}
 		}
 
 		dummyPorts.passDataThrough();
@@ -238,64 +298,70 @@ public class ProcessLogOperator extends Operator {
 	private DataTableRow fetchAllValues() throws UndefinedParameterError {
 		Collection<OperatorValueSelection> valueDescriptions = getValueDescriptions();
 		double[] row = new double[valueDescriptions.size()];
+		if (row.length == 0) {
+			if (getApplyCount() < 2) {
+				getLogger().log(Level.WARNING, "com.rapidminer.ProcessLogOperator.empty_loglist", getName());
+			}
+			return new SimpleDataTableRow(row);
+		}
 		int i = 0;
 		for (OperatorValueSelection selection : valueDescriptions) {
 			row[i] = fetchValue(selection, i);
 			i++;
 		}
-		DataTableRow dataRow = new SimpleDataTableRow(row, null);
+		DataTableRow dataRow = new SimpleDataTableRow(row);
 		SimpleDataTable dataTable = (SimpleDataTable) getProcess().getDataTable(getName());
 
 		int sortingType = getParameterAsInt(PARAMETER_SORTING_TYPE);
 		if (sortingType == SORTING_TYPE_NONE || dataTable.getNumberOfRows() < getParameterAsInt(PARAMETER_SORTING_K)) {
 			dataTable.add(dataRow);
+			return dataRow;
+		}
+		// sorting
+		String sortingDimension = getParameterAsString(PARAMETER_SORTING_DIMENSION);
+		int sortingDimensionIndex = dataTable.getColumnIndex(sortingDimension);
+
+		if (dataTable.isNominal(sortingDimensionIndex)) {
+			String currentWorst = null;
+			int currentWorstIndex = -1;
+			for (int r = 0; r < dataTable.getNumberOfRows(); r++) {
+				double currentValue = dataTable.getRow(r).getValue(sortingDimensionIndex);
+				String currentNominalValue = dataTable.mapIndex(sortingDimensionIndex, (int) currentValue);
+				if (currentWorst == null || sortingType == SORTING_TYPE_TOP_K
+						&& currentNominalValue.compareTo(currentWorst) < 0 || sortingType == SORTING_TYPE_BOTTOM_K
+						&& currentNominalValue.compareTo(currentWorst) > 0) {
+					currentWorst = currentNominalValue;
+					currentWorstIndex = r;
+				}
+			}
+
+			double candidateValue = dataRow.getValue(sortingDimensionIndex);
+			String candidateNominalValue = dataTable.mapIndex(sortingDimensionIndex, (int) candidateValue);
+			if (currentWorstIndex >= 0 && sortingType == SORTING_TYPE_TOP_K
+					&& candidateNominalValue.compareTo(currentWorst) > 0 || sortingType == SORTING_TYPE_BOTTOM_K
+					&& candidateNominalValue.compareTo(currentWorst) < 0) {
+				dataTable.remove(dataTable.getRow(currentWorstIndex));
+				dataTable.add(dataRow);
+				dataTable.cleanMappingTables();
+			}
 		} else {
-			// sorting
-			String sortingDimension = getParameterAsString(PARAMETER_SORTING_DIMENSION);
-			int sortingDimensionIndex = dataTable.getColumnIndex(sortingDimension);
+			double currentWorst = Double.NaN;
+			int currentWorstIndex = -1;
+			for (int r = 0; r < dataTable.getNumberOfRows(); r++) {
+				double currentValue = dataTable.getRow(r).getValue(sortingDimensionIndex);
+				if (Double.isNaN(currentWorst) || sortingType == SORTING_TYPE_TOP_K && currentValue < currentWorst
+						|| sortingType == SORTING_TYPE_BOTTOM_K && currentValue > currentWorst) {
+					currentWorst = currentValue;
+					currentWorstIndex = r;
+				}
+			}
 
-			if (dataTable.isNominal(sortingDimensionIndex)) {
-				String currentWorst = null;
-				int currentWorstIndex = -1;
-				for (int r = 0; r < dataTable.getNumberOfRows(); r++) {
-					double currentValue = dataTable.getRow(r).getValue(sortingDimensionIndex);
-					String currentNominalValue = dataTable.mapIndex(sortingDimensionIndex, (int) currentValue);
-					if (currentWorst == null || sortingType == SORTING_TYPE_TOP_K
-							&& currentNominalValue.compareTo(currentWorst) < 0 || sortingType == SORTING_TYPE_BOTTOM_K
-							&& currentNominalValue.compareTo(currentWorst) > 0) {
-						currentWorst = currentNominalValue;
-						currentWorstIndex = r;
-					}
-				}
-
-				double candidateValue = dataRow.getValue(sortingDimensionIndex);
-				String candidateNominalValue = dataTable.mapIndex(sortingDimensionIndex, (int) candidateValue);
-				if (currentWorstIndex >= 0 && sortingType == SORTING_TYPE_TOP_K
-						&& candidateNominalValue.compareTo(currentWorst) > 0 || sortingType == SORTING_TYPE_BOTTOM_K
-						&& candidateNominalValue.compareTo(currentWorst) < 0) {
-					dataTable.remove(dataTable.getRow(currentWorstIndex));
-					dataTable.add(dataRow);
-					dataTable.cleanMappingTables();
-				}
-			} else {
-				double currentWorst = Double.NaN;
-				int currentWorstIndex = -1;
-				for (int r = 0; r < dataTable.getNumberOfRows(); r++) {
-					double currentValue = dataTable.getRow(r).getValue(sortingDimensionIndex);
-					if (Double.isNaN(currentWorst) || sortingType == SORTING_TYPE_TOP_K && currentValue < currentWorst
-							|| sortingType == SORTING_TYPE_BOTTOM_K && currentValue > currentWorst) {
-						currentWorst = currentValue;
-						currentWorstIndex = r;
-					}
-				}
-
-				double candidateValue = dataRow.getValue(sortingDimensionIndex);
-				if (currentWorstIndex >= 0 && sortingType == SORTING_TYPE_TOP_K && candidateValue > currentWorst
-						|| sortingType == SORTING_TYPE_BOTTOM_K && candidateValue < currentWorst) {
-					dataTable.remove(dataTable.getRow(currentWorstIndex));
-					dataTable.add(dataRow);
-					dataTable.cleanMappingTables();
-				}
+			double candidateValue = dataRow.getValue(sortingDimensionIndex);
+			if (currentWorstIndex >= 0 && sortingType == SORTING_TYPE_TOP_K && candidateValue > currentWorst
+					|| sortingType == SORTING_TYPE_BOTTOM_K && candidateValue < currentWorst) {
+				dataTable.remove(dataTable.getRow(currentWorstIndex));
+				dataTable.add(dataRow);
+				dataTable.cleanMappingTables();
 			}
 		}
 		return dataRow;
@@ -305,24 +371,26 @@ public class ProcessLogOperator extends Operator {
 	public void processFinished() throws OperatorException {
 		super.processFinished();
 
-		if (!getParameterAsBoolean(PARAMETER_PERSISTENT)) {
-			DataTable table = getProcess().getDataTable(getName());
-			if (table != null) {
-				File file = null;
-				try {
-					file = getParameterAsFile(PARAMETER_FILENAME, true);
-				} catch (UndefinedParameterError e) {
-					// tries to determine a file for output writing
-					// if no file was specified --> do not write results in file
-				}
-				if (file != null) {
-					log("Writing data to '" + file.getName() + "'");
-					try (FileWriter fw = new FileWriter(file); PrintWriter out = new PrintWriter(fw)) {
-						table.write(out);
-					} catch (IOException e) {
-						throw new UserError(this, 303, file.getName(), e.getMessage());
-					}
-				}
+		if (getParameterAsBoolean(PARAMETER_PERSISTENT)) {
+			return;
+		}
+		DataTable table = getProcess().getDataTable(getName());
+		if (table == null) {
+			return;
+		}
+		File file = null;
+		try {
+			file = getParameterAsFile(PARAMETER_FILENAME, true);
+		} catch (UndefinedParameterError e) {
+			// tries to determine a file for output writing
+			// if no file was specified --> do not write results in file
+		}
+		if (file != null) {
+			log("Writing data to '" + file.getName() + "'");
+			try (FileWriter fw = new FileWriter(file); PrintWriter out = new PrintWriter(fw)) {
+				table.write(out);
+			} catch (IOException e) {
+				throw new UserError(this, 303, file.getName(), e.getMessage());
 			}
 		}
 	}
@@ -339,8 +407,8 @@ public class ProcessLogOperator extends Operator {
 				PARAMETER_LOG,
 				"List of key value pairs where the key is the column name and the value specifies the process value to log.",
 				new ParameterTypeString(PARAMETER_COLUMN_NAME, "The name of the column in the process log."),
-				new ParameterTypeValue(PARAMETER_COLUMN_VALUE, "operator.OPERATORNAME.[value|parameter].VALUE_NAME"));
-		type.setExpert(false);
+				new ParameterTypeValue(PARAMETER_COLUMN_VALUE, "operator.OPERATORNAME.[value|parameter].VALUE_NAME"), false);
+		type.setOptional(false);
 		type.setPrimary(true);
 		types.add(type);
 
@@ -379,7 +447,7 @@ public class ProcessLogOperator extends Operator {
 	 */
 	private String[] getColumnNames() throws UserError {
 		List<String[]> parameters = getParameterList(PARAMETER_LOG);
-		String columnNames[] = new String[parameters.size()];
+		String[] columnNames = new String[parameters.size()];
 		Iterator<String[]> i = parameters.iterator();
 		int counter = 0;
 		while (i.hasNext()) {

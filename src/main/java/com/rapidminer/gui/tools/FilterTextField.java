@@ -18,8 +18,6 @@
 */
 package com.rapidminer.gui.tools;
 
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
@@ -28,9 +26,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import javax.swing.JTextField;
 import javax.swing.text.Document;
-
-import org.jdesktop.swingx.prompt.PromptSupport;
-import org.jdesktop.swingx.prompt.PromptSupport.FocusBehavior;
 
 import com.rapidminer.tools.I18N;
 
@@ -47,8 +42,8 @@ public class FilterTextField extends JTextField {
 
 	private String defaultFilterText = I18N.getMessage(I18N.getGUIBundle(), "gui.filter_text_field.label");
 
-	/** the value of the field when the last update was fired */
-	private String valueLastUpdate = null;
+	/** the value of the field when the last update was fired, init with default getText() result */
+	private String valueLastUpdate = "";
 
 	private final Collection<FilterListener> filterListeners;
 
@@ -77,10 +72,7 @@ public class FilterTextField extends JTextField {
 		if (text != null && text.length() != 0) {
 			setDefaultFilterText(text);
 		}
-		PromptSupport.setForeground(Color.LIGHT_GRAY, this);
-		PromptSupport.setPrompt(defaultFilterText, this);
-		PromptSupport.setFontStyle(Font.ITALIC, this);
-		PromptSupport.setFocusBehavior(FocusBehavior.SHOW_PROMPT, this);
+		SwingTools.setPrompt(defaultFilterText, this);
 		addKeyListener(new KeyListener() {
 
 			@Override
@@ -179,7 +171,7 @@ public class FilterTextField extends JTextField {
 
 	public void setDefaultFilterText(String text) {
 		this.defaultFilterText = text;
-		PromptSupport.setPrompt(text, this);
+		SwingTools.setPrompt(text, this);
 	}
 	
 	public void setFilterText(String filterText) {

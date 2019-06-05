@@ -1327,6 +1327,39 @@ public class Plugin {
 		callPluginInitMethods("initPluginTests", new Class[] {}, new Object[] {}, false);
 	}
 
+	/**
+	 * Finds the given object's {@link Plugin} if possible. Returns {@code null} for objects whose classes were
+	 * not loaded through a {@link PluginClassLoader}.
+	 *
+	 * @param o
+	 * 		the object to check
+	 * @return the plugin associated with the given object or {@code null} if it was not loaded through a plugin
+	 * @since 9.3
+	 */
+	public static Plugin getPluginForObject(Object o) {
+		if (o == null) {
+			return null;
+		}
+		return getPluginForClass(o.getClass());
+	}
+
+	/**
+	 * Finds the given class' {@link Plugin} if possible. Returns {@code null} for classes that were
+	 * not loaded through a {@link PluginClassLoader}.
+	 *
+	 * @param c
+	 * 		the class to check
+	 * @return the plugin associated with the given object or {@code null} if it was not loaded through a plugin
+	 * @since 9.3
+	 */
+	public static Plugin getPluginForClass(Class<?> c) {
+		ClassLoader cl = c.getClassLoader();
+		if (cl instanceof PluginClassLoader) {
+			return getPluginByExtensionId(((PluginClassLoader) cl).getPluginKey());
+		}
+		return null;
+	}
+
 	private static void callPluginInitMethods(String methodName, Class<?>[] arguments, Object[] argumentValues,
 			boolean useOriginalJarClassLoader) {
 		for (Plugin plugin : PLUGIN_INITIALIZATION_ORDER) {

@@ -18,6 +18,7 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,7 +45,7 @@ import com.rapidminer.operator.ports.OutputPort;
  */
 public class MDTransformer {
 
-	private final LinkedList<MDTransformationRule> transformationRules = new LinkedList<MDTransformationRule>();
+	private final LinkedList<MDTransformationRule> transformationRules = new LinkedList<>();
 	private final Operator operator;
 
 	public MDTransformer(Operator op) {
@@ -53,7 +54,7 @@ public class MDTransformer {
 
 	/** Executes all rules added by {@link #addRule}. */
 	public void transformMetaData() {
-		for (MDTransformationRule rule : transformationRules) {
+		for (MDTransformationRule rule : new ArrayList<>(transformationRules)) {
 			try {
 				rule.transformMD();
 			} catch (Exception e) {

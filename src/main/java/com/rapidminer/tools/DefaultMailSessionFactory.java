@@ -18,6 +18,7 @@
  */
 package com.rapidminer.tools;
 
+import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -44,13 +45,13 @@ public class DefaultMailSessionFactory implements MailSessionFactory {
 	/** Check if 256 is allowed */
 	private static final boolean AES_256_ALLOWED = isAES256Supported();
 
-	/** Elliptic curve Diffie-Hellman Cyphersuites recommended by BSI TR-02102-2 */
+	/** Elliptic curve Diffie-Hellman cipher suites recommended by BSI TR-02102-2 */
 	private static final String ECDH_CIPHERSUITES = "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 "
 			+ "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 " + "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 "
 			+ "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 ";
 	private static final String ECDH_UNLIMITED_CIPHERSUITES = "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 "
 			+ "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 ";
-	/** Diffie-Hellman Cyphersuites recommended by BSI TR-02102-2 */
+	/** Diffie-Hellman cipher suites recommended by BSI TR-02102-2 */
 	private static final String DH_CIPHERSUITES = "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256 "
 			+ "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256 " + "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 ";
 	private static final String DH_UNLIMITED_CIPHERSUITES = "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256 "
@@ -79,7 +80,7 @@ public class DefaultMailSessionFactory implements MailSessionFactory {
 			} else {
 				props.put("mail.from", "no-reply@rapidminer.com");
 			}
-			final String user = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_USER);
+			final String user = Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_USER), "");
 			props.put("mail.user", user);
 
 			// Allow debug mode
@@ -89,7 +90,7 @@ public class DefaultMailSessionFactory implements MailSessionFactory {
 			}
 
 			// Setup Security
-			switch (ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY)) {
+			switch (Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY), "")) {
 				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS:
 					props.setProperty("mail.smtp.starttls.enable", "true");
 					break;
@@ -121,48 +122,49 @@ public class DefaultMailSessionFactory implements MailSessionFactory {
 
 			// Setup Authentication
 			Authenticator authenticator = null;
-			final String passwd;
-			try {
-				if (CipherTools.isKeyAvailable()) {
-					passwd = CipherTools
-							.decrypt(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD));
-				} else {
-					passwd = "";
+			String passwd = Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD), "");
+			if (CipherTools.isKeyAvailable()) {
+				try {
+					passwd = CipherTools.decrypt(passwd);
+				} catch (CipherException e) {
+					// passwd is in plaintext
 					LogService.getRoot().log(Level.WARNING,
-							"com.rapidminer.tools.DefaultMailSessionFactory.smtp_password_cipher_missing");
+							"com.rapidminer.tools.DefaultMailSessionFactory.smtp_password_decode_failed");
 				}
-				if (passwd.length() > 0) {
-					props.setProperty("mail.smtp.submitter", user);
-					props.setProperty("mail.smtp.auth", "true");
-
-					// Set the Authentication mechanism
-					switch (ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION)) {
-						case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_CRAM_MD5:
-							props.setProperty("mail.smtp.sasl.enable", "true");
-							props.setProperty("mail.smtp.sasl.mechanisms", "CRAM-MD5");
-							// Workaround for silent sasl downgrade bug in JavaMail < 1.5.2
-							props.setProperty("mail.smtp.auth.mechanisms", "DIGEST-MD5");
-							break;
-						case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_NTLM:
-							props.setProperty("mail.smtp.auth.mechanisms", "NTLM");
-							break;
-						case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_AUTO:
-						default:
-							break;
-					}
-
-					authenticator = new Authenticator() {
-
-						@Override
-						protected PasswordAuthentication getPasswordAuthentication() {
-							return new PasswordAuthentication(user, passwd);
-						}
-					};
-				}
-			} catch (CipherException e) {
+			} else {
 				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.DefaultMailSessionFactory.smtp_password_decode_failed");
+						"com.rapidminer.tools.DefaultMailSessionFactory.smtp_password_cipher_missing");
 			}
+			if (passwd.length() > 0) {
+				props.setProperty("mail.smtp.submitter", user);
+				props.setProperty("mail.smtp.auth", "true");
+
+				// Set the Authentication mechanism
+				switch (Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION), "")) {
+					case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_CRAM_MD5:
+						props.setProperty("mail.smtp.sasl.enable", "true");
+						props.setProperty("mail.smtp.sasl.mechanisms", "CRAM-MD5");
+						// Workaround for silent sasl downgrade bug in JavaMail < 1.5.2
+						props.setProperty("mail.smtp.auth.mechanisms", "DIGEST-MD5");
+						break;
+					case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_NTLM:
+						props.setProperty("mail.smtp.auth.mechanisms", "NTLM");
+						break;
+					case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_AUTO:
+					default:
+						break;
+				}
+
+				final String password = passwd;
+				authenticator = new Authenticator() {
+
+					@Override
+					protected PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(user, password);
+					}
+				};
+			}
+
 			String port = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT);
 			if (port != null) {
 				props.setProperty("mail.smtp.port", port);
@@ -172,33 +174,33 @@ public class DefaultMailSessionFactory implements MailSessionFactory {
 	}
 
 	/**
-	 * Get all PFS Ciphersuites
+	 * Get all PFS cipher suites
 	 *
-	 * @return
+	 * @return the supported PFS cipher suites
 	 */
 	private static String getSupportedPFSCipherSuites() {
 		// Tries to follow the BSI TR-02102-2 recommendation
 		// User has to set jdk.tls.ephemeralDHKeySize to 2048 or matched for DH
-		String cypherSuites = ECDH_CIPHERSUITES;
+		StringBuilder cypherSuites = new StringBuilder(ECDH_CIPHERSUITES);
 		if (AES_256_ALLOWED) {
-			cypherSuites += ECDH_UNLIMITED_CIPHERSUITES;
+			cypherSuites.append(ECDH_UNLIMITED_CIPHERSUITES);
 		}
 		if ("2048".equals(DH_SIZE) || "matched".equals(DH_SIZE)) {
-			cypherSuites += DH_CIPHERSUITES;
+			cypherSuites.append(DH_CIPHERSUITES);
 			if (AES_256_ALLOWED) {
-				cypherSuites += DH_UNLIMITED_CIPHERSUITES;
+				cypherSuites.append(DH_UNLIMITED_CIPHERSUITES);
 			}
 		}
-		return cypherSuites;
+		return cypherSuites.toString();
 	}
 
 	/**
 	 * Check if AES_256 is allowed
 	 *
-	 * @return
+	 * @return {@code true} if AES_256 is allowed
 	 */
 	private static boolean isAES256Supported() {
-		boolean allowed = false;
+		boolean allowed;
 		try {
 			allowed = Cipher.getMaxAllowedKeyLength("AES") >= 256;
 		} catch (Exception e) {

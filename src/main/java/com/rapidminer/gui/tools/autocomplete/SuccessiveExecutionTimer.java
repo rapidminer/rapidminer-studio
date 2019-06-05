@@ -21,8 +21,9 @@ package com.rapidminer.gui.tools.autocomplete;
 import java.awt.event.ActionEvent;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
-import javax.swing.SwingWorker;
 import javax.swing.Timer;
+
+import com.rapidminer.gui.tools.MultiSwingWorker;
 
 
 /**
@@ -114,7 +115,7 @@ class SuccessiveExecutionTimer {
 		if (lastExecution != null && !lastExecution.isDone()) {
 			restart();
 		} else {
-			SwingWorker<Void, Void> newExecution = new SwingWorker<Void, Void>() {
+			MultiSwingWorker<Void, Void> newExecution = new MultiSwingWorker<Void, Void>() {
 				@Override
 				protected Void doInBackground() {
 					synchronized (executionLock) {
@@ -124,7 +125,7 @@ class SuccessiveExecutionTimer {
 				}
 			};
 			lastExecutionReference = new WeakReference<>(newExecution);
-			newExecution.execute();
+			newExecution.start();
 		}
 	}
 }

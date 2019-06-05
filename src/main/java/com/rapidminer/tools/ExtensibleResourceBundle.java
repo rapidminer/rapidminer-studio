@@ -151,11 +151,9 @@ public class ExtensibleResourceBundle extends ResourceBundle {
 	 */
 	public void addResourceBundleAndOverwrite(ResourceBundle bundle) {
 		try {
-			if (System.getSecurityManager() != null) {
-				AccessController.checkPermission(new RuntimePermission(PluginSandboxPolicy.RAPIDMINER_INTERNAL_PERMISSION));
-			}
-		} catch (AccessControlException ace) {
-			LogService.getRoot().log(Level.FINEST, "Internal API, cannot be called by unauthorized sources.", ace);
+			Tools.requireInternalPermission();
+		} catch (UnsupportedOperationException u) {
+			LogService.getRoot().log(Level.FINEST, u.getMessage(), u.getCause());
 			addResourceBundle(bundle);
 			return;
 		}

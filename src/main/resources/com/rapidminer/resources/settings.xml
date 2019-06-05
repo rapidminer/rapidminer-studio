@@ -42,6 +42,9 @@
 			<property key="rapidminer.system.network.follow_https_to_http" />
 			<property key="rapidminer.system.network.follow_http_to_https" />
 		</group>
+		<group key="rapidminer.preferences.subgroup.system.file_cache">
+			<property key="rapidminer.system.file_cache.connection.keep" />
+		</group>
 	</group>
 	<group key="tools">
 		<group key="rapidminer.preferences.subgroup.tools.mail">

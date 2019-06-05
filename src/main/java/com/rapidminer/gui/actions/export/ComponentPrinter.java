@@ -18,13 +18,16 @@
  */
 package com.rapidminer.gui.actions.export;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Printable;
+import java.util.Map;
 
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.license.LicenseTools;
@@ -44,7 +47,7 @@ public class ComponentPrinter implements Printable, Pageable {
 
 	private PageFormat pageFormat = PrintingTools.getPrinterJob().defaultPage();
 
-	public static final Font TITLE_FONT = FontTools.getFont("LucidaSans", Font.PLAIN, 9);
+	public static final Font TITLE_FONT = FontTools.getFont(Font.DIALOG, Font.PLAIN, 9);
 
 	/** The given components that should be printed. */
 	public ComponentPrinter(PrintableComponent... components) {
@@ -61,8 +64,8 @@ public class ComponentPrinter implements Printable, Pageable {
 	 *
 	 * @param g
 	 *            the graphics object
-	 * @param pageFormat
-	 *            the page format
+	 * @param x the x coordinate
+	 * @param y the y coordinate
 	 * @param width
 	 *            the downscaled width
 	 * @param height
@@ -71,16 +74,24 @@ public class ComponentPrinter implements Printable, Pageable {
 	 *            the page index that should be printed
 	 */
 	public int print(Graphics g, double x, double y, double width, double height, int pageIndex) {
-		if (pageIndex >= components.length) {
+		if (pageIndex >= components.length || !(g instanceof Graphics2D)) {
 			return NO_SUCH_PAGE;
+		}
+
+		// Make the header text less pixelated
+		Graphics2D g2d = (Graphics2D) g;
+		Map<?, ?> desktopHints = (Map<?, ?>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
+		if (desktopHints != null) {
+			g2d.setRenderingHints(desktopHints);
 		}
 
 		String title = components[pageIndex].getExportName();
 		if (title == null) {
 			title = LicenseTools.translateProductName(ProductConstraintManager.INSTANCE.getActiveLicense());
 		}
-		Rectangle2D rect = TITLE_FONT.getStringBounds(title, ((Graphics2D) g).getFontRenderContext());
+		Rectangle2D rect = TITLE_FONT.getStringBounds(title, g2d.getFontRenderContext());
 		g.setFont(TITLE_FONT);
+		g.setColor(Color.BLACK);
 		int stringX = (int) (x + width / 2 - rect.getWidth() / 2);
 		int stringY = (int) (y - rect.getY());
 		g.drawString(title, stringX, stringY);

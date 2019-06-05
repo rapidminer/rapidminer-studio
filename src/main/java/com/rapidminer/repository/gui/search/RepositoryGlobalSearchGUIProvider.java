@@ -36,11 +36,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 
 import org.apache.lucene.document.Document;
 
+import com.rapidminer.connection.util.ConnectionI18N;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.gui.dnd.TransferableRepositoryEntry;
@@ -48,8 +48,10 @@ import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.search.GlobalSearchGUIUtilities;
 import com.rapidminer.gui.search.GlobalSearchableGUIProvider;
 import com.rapidminer.gui.tools.IconSize;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Model;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.ConnectionRepository;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
@@ -257,7 +259,7 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 	 * 		the type icon label
 	 */
 	private void loadEntryDetailsAsync(final Document document, final JLabel iconListLabel) {
-		SwingWorker<Entry, Void> worker = new SwingWorker<Entry, Void>() {
+		MultiSwingWorker<Entry, Void> worker = new MultiSwingWorker<Entry, Void>() {
 
 			@Override
 			protected Entry doInBackground() throws Exception {
@@ -278,7 +280,7 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 					// no error here? Entry located successfully.
 
 					// put icon in cache for faster retrieval next time
-					Icon icon = getIconForEntry(locatedEntry);
+					Icon icon = getIconForEntry(locatedEntry, document);
 					ICON_CACHE.put(locatedEntry.getLocation().getAbsoluteLocation(), icon);
 
 					iconListLabel.setIcon(icon);
@@ -290,7 +292,7 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 				}
 			}
 		};
-		worker.execute();
+		worker.start();
 	}
 
 	/**
@@ -300,7 +302,7 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 	 * 		the document for which to load the repository entry
 	 */
 	private void openEntryAsync(final Document document) {
-		SwingWorker<Entry, Void> worker = new SwingWorker<Entry, Void>() {
+		MultiSwingWorker<Entry, Void> worker = new MultiSwingWorker<Entry, Void>() {
 
 			@Override
 			protected Entry doInBackground() throws Exception {
@@ -316,6 +318,8 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 
 					if (locatedEntry instanceof ProcessEntry) {
 						RepositoryTree.openProcess((ProcessEntry) locatedEntry);
+					} else if (locatedEntry instanceof ConnectionEntry) {
+						OpenAction.showConnectionInformationDialog((ConnectionEntry) locatedEntry);
 					} else if (locatedEntry instanceof IOObjectEntry) {
 						OpenAction.showAsResult((IOObjectEntry) locatedEntry);
 					} else {
@@ -328,7 +332,7 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 				}
 			}
 		};
-		worker.execute();
+		worker.start();
 	}
 
 	/**
@@ -353,13 +357,19 @@ public class RepositoryGlobalSearchGUIProvider implements GlobalSearchableGUIPro
 	 *
 	 * @param entry
 	 * 		the entry, must not be {@code null}
+	 * @param document
+	 * 		the document, must not be {@code null}
 	 * @return the icon, never {@code null}
 	 */
-	private static Icon getIconForEntry(final Entry entry) {
+	private static Icon getIconForEntry(final Entry entry, final Document document) {
 		if (entry instanceof ProcessEntry) {
 			return PROCESS_ICON;
 		} else if (entry instanceof Model) {
 			return MODEL_ICON;
+		} else if (entry instanceof ConnectionEntry) {
+			String connectionType = document.get(RepositoryGlobalSearch.FIELD_CONNECTION_TYPE);
+			// server connections do not have the type known unless detailed indexing is enabled, so make sure we show the generic connection icon and not crash
+			return ConnectionI18N.getConnectionIcon(connectionType != null ? connectionType : "", IconSize.SMALL);
 		} else if (entry instanceof IOObjectEntry) {
 			IOObjectEntry dataEntry = (IOObjectEntry) entry;
 			return RendererService.getIcon(dataEntry.getObjectClass(), IconSize.SMALL);

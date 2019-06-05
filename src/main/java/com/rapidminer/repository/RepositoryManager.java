@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2019 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.repository;
 
 import java.io.IOException;
@@ -34,12 +34,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.event.EventListenerList;
+import javax.swing.tree.TreeModel;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.connection.ConnectionInformationContainerIOObject;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.RepositoryGuiTools;
 import com.rapidminer.io.process.ProcessOriginProcessXMLFilter.ProcessOriginState;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.repository.gui.RepositoryTreeModel;
 import com.rapidminer.repository.internal.db.DBRepository;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.repository.local.LocalRepository;
@@ -72,9 +76,11 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 
 	/** @since 9.0 */
 	static final List<String> SPECIAL_RESOURCE_REPOSITORY_NAMES = new ArrayList<>();
+
 	static {
 		SPECIAL_RESOURCE_REPOSITORY_NAMES.add(SAMPLE_REPOSITORY_NAME);
 	}
+
 	/** @since 9.0.0 */
 	private static final Map<String, ProcessOriginState> REPOSITORY_ORIGINS = new HashMap<>();
 
@@ -84,7 +90,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	/** @since 9.0 */
 	private static final String LOG_IGNORE_FOLDER_PREFIX = LOG_SAMPLES_PREFIX + "ignore_folder.";
 	/** @since 9.0 */
-	private static final String LOG_REGISTER_ERROR_PREFIX  = LOG_SAMPLES_PREFIX + "register_error.";
+	private static final String LOG_REGISTER_ERROR_PREFIX = LOG_SAMPLES_PREFIX + "register_error.";
 
 	private static RepositoryManager instance;
 	private static final Object INSTANCE_LOCK = new Object();
@@ -101,6 +107,9 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	private final List<Repository> repositories = new CopyOnWriteArrayList<>();
 
 	private final EventListenerList listeners = new EventListenerList();
+
+	/** @since 9.3 */
+	private final List<RepositoryFilter> repositoryFilters = new CopyOnWriteArrayList<>();
 
 	/**
 	 * listener which reacts on repository changes like renaming and sorts the list of repositories
@@ -123,7 +132,6 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		@Override
 		public void entryAdded(Entry newEntry, Folder parent) {}
 	};
-
 
 	/**
 	 * Ordered types of {@link Repository}s
@@ -474,6 +482,23 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	}
 
 	/**
+	 * Returns the filtered, visible list of {@link Repository Repositories}
+	 *
+	 * @return a list of repositories where all filters were applied
+	 */
+	public List<Repository> getFilteredRepositories() {
+		List<Repository> result = new ArrayList<>(repositories);
+		for (RepositoryFilter repositoryFilter : repositoryFilters) {
+			try {
+				result = repositoryFilter.filter(result);
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "com.rapidminer.repository.RepositoryManager.filter_failure", e);
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Gets a registered ({@link #addRepository(Repository)} repository by
 	 * {@link Repository#getName()}
 	 */
@@ -559,6 +584,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	 */
 	public void save() {
 		provider.save(getRepositories());
+		repositoryFilters.forEach(RepositoryFilter::save);
 	}
 
 	/** Stores an IOObject at the given location. Creates entries if they don't exist. */
@@ -569,8 +595,13 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 
 	/** Stores an IOObject at the given location. Creates entries if they don't exist. */
 	public IOObject store(IOObject ioobject, RepositoryLocation location, Operator callingOperator,
-			ProgressListener progressListener) throws RepositoryException {
+						  ProgressListener progressListener) throws RepositoryException {
 		Entry entry = location.locateEntry();
+		boolean isConnectionEntry = entry instanceof ConnectionEntry;
+		if (entry != null && isConnectionEntry != ioobject instanceof ConnectionInformationContainerIOObject) {
+			String expectedType = isConnectionEntry ? "connection" : "data";
+			throw new RepositoryEntryWrongTypeException(location, expectedType, entry.getType());
+		}
 		if (entry == null) {
 			RepositoryLocation parentLocation = location.parent();
 			if (parentLocation != null) {
@@ -588,16 +619,23 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 				} else {
 					parentFolder = parentLocation.createFoldersRecursively();
 				}
-				parentFolder.createIOObjectEntry(childName, ioobject, callingOperator, progressListener);
+				if (ioobject instanceof ConnectionInformationContainerIOObject) {
+					parentFolder.createConnectionEntry(childName, ((ConnectionInformationContainerIOObject) ioobject).getConnectionInformation());
+				} else {
+					parentFolder.createIOObjectEntry(childName, ioobject, callingOperator, progressListener);
+				}
 				return ioobject;
 			} else {
-				throw new RepositoryException("Entry '" + location + "' does not exist.");
+				throw new RepositoryEntryNotFoundException(location);
 			}
+		} else if (isConnectionEntry) {
+			((ConnectionEntry) entry).storeConnectionInformation(((ConnectionInformationContainerIOObject) ioobject).getConnectionInformation());
+			return ioobject;
 		} else if (entry instanceof IOObjectEntry) {
 			((IOObjectEntry) entry).storeData(ioobject, callingOperator, progressListener);
 			return ioobject;
 		} else {
-			throw new RepositoryException("Entry '" + location + "' is not a data entry, but " + entry.getType());
+			throw new RepositoryEntryWrongTypeException(location, IOObjectEntry.TYPE_NAME, entry.getType());
 		}
 	}
 
@@ -622,12 +660,12 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 				}
 				return parentFolder.createBlobEntry(childName);
 			} else {
-				throw new RepositoryException("Entry '" + location + "' does not exist.");
+				throw new RepositoryEntryNotFoundException(location);
 			}
 		} else if (entry instanceof BlobEntry) {
 			return (BlobEntry) entry;
 		} else {
-			throw new RepositoryException("Entry '" + location + "' is not a blob entry, but a " + entry.getType());
+			throw new RepositoryEntryWrongTypeException(location, BlobEntry.TYPE_NAME, entry.getType());
 		}
 	}
 
@@ -658,7 +696,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	 * old name will be kept.
 	 */
 	public void copy(RepositoryLocation source, Folder destination, String newName, boolean overwriteIfExists,
-			ProgressListener listener) throws RepositoryException {
+					 ProgressListener listener) throws RepositoryException {
 		if (listener != null) {
 			listener.setTotal(DEFAULT_TOTAL_PROGRESS);
 			listener.setCompleted(0);
@@ -673,7 +711,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	}
 
 	private void copy(RepositoryLocation source, Folder destination, String newName, boolean overwriteIfExists,
-			ProgressListener listener, int minProgress, int maxProgress) throws RepositoryException {
+					  ProgressListener listener, int minProgress, int maxProgress) throws RepositoryException {
 		Entry entry = source.locateEntry();
 		if (entry == null) {
 			throw new RepositoryException("No such entry: " + source);
@@ -682,7 +720,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	}
 
 	private void copy(Entry entry, Folder destination, String newName, boolean overwriteIfExists, ProgressListener listener,
-			int minProgress, int maxProgress) throws RepositoryException {
+					  int minProgress, int maxProgress) throws RepositoryException {
 		if (listener != null) {
 			listener.setMessage(entry.getName());
 		}
@@ -735,7 +773,11 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			if (listener != null) {
 				listener.setCompleted((minProgress + maxProgress) / 2);
 			}
-			destination.createIOObjectEntry(newName, original, null, null);
+			if (original instanceof ConnectionInformationContainerIOObject) {
+				destination.createConnectionEntry(newName, ((ConnectionInformationContainerIOObject) original).getConnectionInformation());
+			} else {
+				destination.createIOObjectEntry(newName, original, null, null);
+			}
 			if (listener != null) {
 				listener.setCompleted(maxProgress);
 			}
@@ -753,7 +795,12 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 				throw new RepositoryException(e);
 			}
 		} else if (entry instanceof Folder) {
-			String sourceAbsolutePath = entry.getLocation().getAbsoluteLocation();
+			Folder folder = (Folder) entry;
+			Folder connectionFolder = RepositoryTools.getConnectionFolder(folder.getLocation().getRepository());
+			if (connectionFolder != null && connectionFolder.getLocation().getAbsoluteLocation().equals(folder.getLocation().getAbsoluteLocation())) {
+				throw new RepositoryConnectionsFolderImmutableException(Folder.MESSAGE_CONNECTION_FOLDER_CHANGE);
+			}
+			String sourceAbsolutePath = folder.getLocation().getAbsoluteLocation();
 			String destinationAbsolutePath = destination.getLocation().getAbsoluteLocation();
 			// make sure same folder moves are forbidden
 			if (sourceAbsolutePath.equals(destinationAbsolutePath)) {
@@ -767,8 +814,8 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			}
 			Folder destinationFolder = destination.createFolder(newName);
 			List<Entry> allChildren = new LinkedList<>();
-			allChildren.addAll(((Folder) entry).getSubfolders());
-			allChildren.addAll(((Folder) entry).getDataEntries());
+			allChildren.addAll(folder.getSubfolders());
+			allChildren.addAll(folder.getDataEntries());
 			final int count = allChildren.size();
 			int progressStart = minProgress;
 			int progressDiff = maxProgress - minProgress;
@@ -797,7 +844,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 
 	/** Moves an entry to a given destination folder with the name newName. */
 	public void move(RepositoryLocation source, Folder destination, String newName, boolean overwriteIfExists,
-			ProgressListener listener) throws RepositoryException {
+					 ProgressListener listener) throws RepositoryException {
 		Entry entry = source.locateEntry();
 		if (entry == null) {
 			throw new RepositoryException("No such entry: " + source);
@@ -1024,22 +1071,81 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	}
 
 	/**
+	 * Add a filter to hide parts of the {@link Repository}
+	 *
+	 * @param filter
+	 * 		a custom filter
+	 * @since 9.3
+	 */
+	public void registerRepositoryFilter(RepositoryFilter filter) {
+		if (!RapidMiner.getExecutionMode().isHeadless() && filter != null) {
+			repositoryFilters.add(filter);
+			filter.notificationCallback(() -> {
+				TreeModel treeModel = RapidMinerGUI.getMainFrame().getRepositoryBrowser().getRepositoryTree().getModel();
+				if (treeModel instanceof RepositoryTreeModel) {
+					((RepositoryTreeModel) treeModel).notifyTreeStructureChanged();
+				}
+			});
+		}
+	}
+
+	/**
+	 * Remove a previously registered filter
+	 *
+	 * @param filter
+	 * 		to be removed
+	 * @since 9.3
+	 */
+	public void unregisterRepositoryFilter(RepositoryFilter filter) {
+		repositoryFilters.remove(filter);
+	}
+
+	/**
+	 * Due to the filters the results for an action that wants to highlight a repository entry may be hidden.
+	 * The {@link com.rapidminer.repository.gui.RepositoryTree} will ask this manager to unhide a repository name.
+	 *
+	 * @param repositoryName
+	 * 		the name of the repository to show
+	 * @since 9.3
+	 */
+	public void unhide(String repositoryName) {
+		Repository repository;
+		try {
+			repository = getRepository(repositoryName);
+		} catch (RepositoryException e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.RepositoryManager.repository_does_not_exist", e);
+			return;
+		}
+		if (repository != null && !getFilteredRepositories().contains(repository)) {
+			List<Repository> singleRepoList = Collections.singletonList(repository);
+			// reset filters that hide the requested repository
+			repositoryFilters.stream().filter(filter -> filter.filter(singleRepoList).isEmpty()).forEach( filter -> {
+				try {
+					filter.reset();
+				} catch (Exception e) {
+					LOGGER.log(Level.WARNING, "com.rapidminer.repository.RepositoryManager.filter_failure", e);
+				}
+			});
+		}
+	}
+
+
+	/**
 	 * Generates new entry name for copies
 	 *
 	 * @param destination
 	 *            The folder, to which the entry has to be copied
-	 * @param newName
+	 * @param originalName
 	 *            The name of the entry, which has to be copied
 	 * @return A new, not used entry name
 	 * @throws RepositoryException
 	 */
-	private String getNewNameForExistingEntry(Folder destination, String newName) throws RepositoryException {
-		String originalName = newName;
-		newName = "Copy of " + newName;
+	private String getNewNameForExistingEntry(Folder destination, String originalName) throws RepositoryException {
+		String newName;
 		int i = 2;
-		while (destination.containsEntry(newName)) {
-			newName = "Copy " + i++ + " of " + originalName;
-		}
+		do {
+			newName = originalName + " - " + i++;
+		} while (destination.containsEntry(newName));
 		return newName;
 	}
 

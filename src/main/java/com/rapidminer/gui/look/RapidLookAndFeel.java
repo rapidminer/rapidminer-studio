@@ -20,6 +20,7 @@ package com.rapidminer.gui.look;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -117,7 +118,7 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 		// enables AntiAliasing if AntiAliasing is enabled in the OS
 		// EXCEPT for key "Menu.opaque" which will glitch out JMenues
 		UIDefaults lookAndFeelDefaults = UIManager.getLookAndFeelDefaults();
-		Hashtable<Object, Object> copy = new Hashtable<>(lookAndFeelDefaults);
+		Hashtable<Object, Object> copy = new Hashtable<>(lookAndFeelDefaults != null ? lookAndFeelDefaults : Collections.emptyMap());
 		for (Object key : copy.keySet()) {
 			if (!String.valueOf(key).equals("Menu.opaque")) {
 				table.put(key, lookAndFeelDefaults.get(key));

@@ -428,8 +428,11 @@ public class OperatorService {
 						String groupKey = currentGroup.getFullyQualifiedKey();
 						OperatorDescription desc = new OperatorDescription(groupKey, childElement, classLoader, provider,
 								bundle);
-						desc.setUseExtensionTreeRoot(provider != null ? provider.useExtensionTreeRoot() : false);
+						desc.setUseExtensionTreeRoot(provider != null && provider.useExtensionTreeRoot());
 						registerOperator(desc, bundle);
+						if (desc.getIconName() == null && currentGroup.getIconName() != null) {
+							desc.setIconName(currentGroup.getIconName());
+						}
 						if (desc.getReplacedKeys() != null) {
 							for (String replaces : desc.getReplacedKeys()) {
 								DEPRECATION_MAP.put(replaces, desc.getKey());

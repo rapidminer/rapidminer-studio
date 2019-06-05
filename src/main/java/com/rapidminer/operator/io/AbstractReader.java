@@ -70,6 +70,8 @@ import com.rapidminer.tools.io.Encoding;
  */
 public abstract class AbstractReader<T extends IOObject> extends Operator {
 
+	protected static final String TRANSFORMER_THREAD_KEY = "AbstractReader.transform_metadata";
+
 	private final OutputPort outputPort = getOutputPorts().createPort("output");
 	private final Class<? extends IOObject> generatedClass;
 
@@ -113,17 +115,11 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	 * @since 9.2.0
 	 */
 	private ProgressThread createTransformationProgressThread() {
-		return new ProgressThread("AbstractReader.transform_metadata", false, getName()) {
-
-			@Override
-			public boolean isIndeterminate() {
-				return true;
-			}
+		ProgressThread progressThread = new ProgressThread(TRANSFORMER_THREAD_KEY, false, getName()) {
 
 			@Override
 			public void start() {
 				if (transformationScheduled.compareAndSet(false, true)) {
-					cancelled = false;
 					MetaDataUpdateQueue.registerMDGeneration(getProcess(), this);
 					super.start();
 				}
@@ -140,6 +136,9 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 				transformationScheduled.set(false);
 			}
 		};
+		progressThread.setDependencyPopups(false);
+		progressThread.setIndeterminate(true);
+		return progressThread;
 	}
 
 	/**
@@ -366,6 +365,17 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	protected void registerOperator(Process process) {
 		super.registerOperator(process);
 		cacheDirty = true;
+	}
+
+	/**
+	 * Returns the cached {@link MetaData}, if any
+	 *
+	 * @return the cached meta data; might be {@code null}
+	 * @see #isMetaDataCacheable()
+	 * @since 9.3
+	 */
+	protected MetaData getCachedMetaData() {
+		return cachedMetaData;
 	}
 
 	protected boolean supportsEncoding() {

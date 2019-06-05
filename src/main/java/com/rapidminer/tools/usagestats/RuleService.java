@@ -29,8 +29,8 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RapidMiner.ExecutionMode;
 import com.rapidminer.RapidMinerVersion;
@@ -53,6 +53,8 @@ enum RuleService {
 	INSTANCE;
 
 	private final Pattern prohibitedKeywords;
+
+	private final ObjectReader reader;
 
 	private final Set<VerifiableRule> rules = new HashSet<>();
 
@@ -88,6 +90,8 @@ enum RuleService {
 
 		// Create a "\b(JOIN|CREATE|...)\b" regex, where \b matches word boundaries
 		this.prohibitedKeywords = Pattern.compile("\\b(" + String.join("|", prohibitedKeywords) + ")\\b", Pattern.CASE_INSENSITIVE);
+		ObjectMapper mapper = new ObjectMapper();
+		this.reader = mapper.reader(mapper.getTypeFactory().constructCollectionType(List.class, Rule.class));
 		reloadRules();
 	}
 
@@ -103,7 +107,6 @@ enum RuleService {
 			return;
 		}
 
-		ObjectMapper mapper = new ObjectMapper();
 		List<VerifiableRule> loadedRules = null;
 		Iterator<RuleProvider> ruleProvider = RuleProviderRegistry.INSTANCE.getRuleProvider().iterator();
 
@@ -111,8 +114,7 @@ enum RuleService {
 			RuleProvider provider = ruleProvider.next();
 			try (InputStream ruleJson = provider.getRuleJson()) {
 				if (ruleJson != null) {
-					loadedRules = checkAndConvertRules(mapper.readValue(ruleJson, new TypeReference<List<Rule>>() {
-					}));
+					loadedRules = checkAndConvertRules(reader.readValue(ruleJson));
 				} else {
 					LogService.getRoot().log(Level.FINE, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.tools.usagestats.RuleService.load.empty", provider.getClass().getSimpleName()));

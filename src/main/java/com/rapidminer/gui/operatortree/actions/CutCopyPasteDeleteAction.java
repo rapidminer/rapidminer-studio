@@ -50,16 +50,12 @@ public class CutCopyPasteDeleteAction extends ResourceAction {
 		super(i18nKey);
 		putValue(ACTION_COMMAND_KEY, action);
 		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-		manager.addPropertyChangeListener("permanentFocusOwner", new PropertyChangeListener() {
-
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				Object o = evt.getNewValue();
-				if (o instanceof JComponent) {
-					focusOwner = (JComponent) o;
-				} else {
-					focusOwner = null;
-				}
+		manager.addPropertyChangeListener("permanentFocusOwner", evt -> {
+			Object o = evt.getNewValue();
+			if (o instanceof JComponent) {
+				focusOwner = (JComponent) o;
+			} else {
+				focusOwner = null;
 			}
 		});
 	}

@@ -115,7 +115,7 @@ public final class StoreDataWizardStep extends RepositoryLocationSelectionWizard
 										// Switch to result
 										try {
 											Entry entry = location.locateEntry();
-											if (entry != null && entry instanceof IOObjectEntry) {
+											if (entry instanceof IOObjectEntry) {
 												OpenAction.showAsResult((IOObjectEntry) entry);
 											}
 										} catch (RepositoryException e) {

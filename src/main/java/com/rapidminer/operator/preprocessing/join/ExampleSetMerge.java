@@ -139,7 +139,7 @@ public class ExampleSetMerge extends Operator {
 
 				// now unify all single attributes meta data
 				if (emds.size() > 0) {
-					ExampleSetMetaData resultEMD = emds.get(0);
+					ExampleSetMetaData resultEMD = emds.get(0).clone();
 					for (int i = 1; i < emds.size(); i++) {
 						ExampleSetMetaData mergerEMD = emds.get(i);
 						resultEMD.getNumberOfExamples().add(mergerEMD.getNumberOfExamples());

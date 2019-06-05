@@ -274,7 +274,7 @@ public enum GlobalSearchUtilities {
 	 * @return the field which is used for sorting, never {@code null}
 	 */
 	public Field createSortingField(final long value) {
-		return new SortedNumericDocValuesField("sort", value);
+		return new SortedNumericDocValuesField(FIELD_SORTING, value);
 	}
 
 	/**

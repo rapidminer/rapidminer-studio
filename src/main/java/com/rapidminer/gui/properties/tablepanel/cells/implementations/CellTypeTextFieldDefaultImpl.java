@@ -18,6 +18,15 @@
 */
 package com.rapidminer.gui.properties.tablepanel.cells.implementations;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFormattedTextField.AbstractFormatter;
+import javax.swing.JPanel;
+import javax.swing.text.DefaultFormatterFactory;
+
 import com.rapidminer.gui.properties.tablepanel.TablePanel;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellType;
 import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFieldDefault;
@@ -27,21 +36,6 @@ import com.rapidminer.gui.properties.tablepanel.cells.interfaces.CellTypeTextFie
 import com.rapidminer.gui.properties.tablepanel.model.TablePanelModel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.I18N;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFormattedTextField;
-import javax.swing.JFormattedTextField.AbstractFormatter;
-import javax.swing.JPanel;
-import javax.swing.text.DefaultFormatterFactory;
-
-import org.jdesktop.swingx.prompt.PromptSupport;
-import org.jdesktop.swingx.prompt.PromptSupport.FocusBehavior;
 
 
 /**
@@ -89,10 +83,7 @@ public class CellTypeTextFieldDefaultImpl extends JPanel implements CellTypeText
 		// set syntax assist if available
 		String syntaxHelp = model.getSyntaxHelpAt(rowIndex, columnIndex);
 		if (syntaxHelp != null && !"".equals(syntaxHelp.trim())) {
-			PromptSupport.setForeground(Color.LIGHT_GRAY, field);
-			PromptSupport.setPrompt(syntaxHelp, field);
-			PromptSupport.setFontStyle(Font.ITALIC, field);
-			PromptSupport.setFocusBehavior(FocusBehavior.SHOW_PROMPT, field);
+			SwingTools.setPrompt(syntaxHelp, field);
 		}
 
 		// see if content assist is possible for this field, if so add it

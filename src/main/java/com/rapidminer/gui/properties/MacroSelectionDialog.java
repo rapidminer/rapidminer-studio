@@ -28,7 +28,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -69,6 +68,12 @@ public class MacroSelectionDialog extends JDialog {
 
 	/** indicator if the expression part is highlighted */
 	private boolean expressionHighlighted = false;
+
+	/** panel showing the 'Insert as evaluated attribute' part */
+	private JPanel attributePanel = new JPanel();
+
+	/** indicator if the attribute part is highlighted */
+	private boolean attributeHighlighted = false;
 
 	/** indicates if the old macro handling is used */
 	private boolean deprecated = false;
@@ -124,6 +129,22 @@ public class MacroSelectionDialog extends JDialog {
 	/** end of the expression, when the user selects the expression part */
 	private static final String EXPRESSION_CALL_END_DEPRECATED = "}";
 
+	/** title of the attribute part */
+	private static final String ATTRIBUTE_TITLE = I18N.getGUILabel("macro_selection_dialog.attribute.title");
+
+	/** description of the attribute part 1 */
+	private static final String ATTRIBUTE_DESCRIPTION = I18N.getGUILabel("macro_selection_dialog.attribute" +
+			".description");
+
+	/** expression, when the user selects the attribute part */
+	private static final String ATTRIBUTE_CALL = "#{macro_name}";
+
+	/** start of the expression, when the user selects the attribute part */
+	private static final String ATTRIBUTE_CALL_START = "#{";
+
+	/** end of the expression, when the user selects the attribute part */
+	private static final String ATTRIBUTE_CALL_END = "}";
+
 	/**
 	 * Creates a dialog for a given {@link FunctionInputType#MACRO} to choose between inserting the
 	 * macro as a pure value or as an interpreted expression.
@@ -168,7 +189,7 @@ public class MacroSelectionDialog extends JDialog {
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		setTitle(DIALOG_TITLE);
 		setIconImage(SwingTools.createIcon("16/rapidminer_studio.png").getImage());
-		setSize(new Dimension(300, 300));
+		setSize(new Dimension(300, 375));
 
 		JPanel main = new JPanel();
 		GridBagLayout mainLayout = new GridBagLayout();
@@ -186,6 +207,7 @@ public class MacroSelectionDialog extends JDialog {
 		valuePanel.setLayout(new GridBagLayout());
 		valuePanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		valuePanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
+		gbc.insets = new Insets(5, 3, 2, 0);
 		// add text
 		if (deprecated) {
 			valuePanel.add(new JLabel("<html><p align=\"left\"><b><font size=4>" + VALUE_TITLE
@@ -217,6 +239,7 @@ public class MacroSelectionDialog extends JDialog {
 			public void mouseEntered(MouseEvent e) {
 				highlightValue(true);
 				highlightExpression(false);
+				highlightAttribute(false);
 			}
 
 			@Override
@@ -224,7 +247,7 @@ public class MacroSelectionDialog extends JDialog {
 				highlightValue(false);
 			}
 		});
-
+		gbc.insets = new Insets(0, 0, 0, 0);
 		main.add(valuePanel, gbc);
 
 		// EVALUATED EXPRESSION PART
@@ -232,6 +255,7 @@ public class MacroSelectionDialog extends JDialog {
 		expressionPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		expressionPanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
 		// add text
+		gbc.insets = new Insets(5, 3, 2, 0);
 		if (deprecated) {
 			expressionPanel.add(new JLabel("<html><p align=\"left\"><b><font size=4>" + EXPRESSION_TITLE
 					+ "</font></b><br><font size=3 color=\"gray\">" + EXPRESSION_CALL_DEPRECATED + "</font><br><br>"
@@ -261,6 +285,7 @@ public class MacroSelectionDialog extends JDialog {
 			public void mouseEntered(MouseEvent e) {
 				highlightExpression(true);
 				highlightValue(false);
+				highlightAttribute(false);
 			}
 
 			@Override
@@ -272,6 +297,45 @@ public class MacroSelectionDialog extends JDialog {
 		gbc.insets = new Insets(10, 0, 0, 0);
 		main.add(expressionPanel, gbc);
 
+		// EVALUATED ATTRIBUTE PART
+
+		attributePanel.setLayout(new GridBagLayout());
+		attributePanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		attributePanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
+		// add text
+		gbc.insets = new Insets(5, 3, 2, 0);
+		attributePanel.add(new JLabel("<html><p align=\"left\"><b><font size=4>" + ATTRIBUTE_TITLE
+				+ "</font></b><br><font size=3 color=\"gray\">" + ATTRIBUTE_CALL + "</font><br><br>"
+				+ ATTRIBUTE_DESCRIPTION + "</p></html>"), gbc);
+
+
+		// add highlighting behavior and store the expression if the user selects a type of
+		// expression
+		attributePanel.addMouseListener(new MouseAdapter() {
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				expression = ATTRIBUTE_CALL_START + escape(macroPanel.getInputName()) + ATTRIBUTE_CALL_END;
+				MacroSelectionDialog.this.setVisible(false);
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				highlightAttribute(true);
+				highlightExpression(false);
+				highlightValue(false);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				highlightAttribute(false);
+			}
+		});
+		gbc.gridy += 1;
+		gbc.insets = new Insets(10, 0, 0, 0);
+		main.add(attributePanel, gbc);
+
+
 		// add highlighting behavior for keys and store the expression if the user selects a type of
 		// expression
 		addKeyListener(new KeyAdapter() {
@@ -282,16 +346,22 @@ public class MacroSelectionDialog extends JDialog {
 					if (expressionHighlighted) {
 						highlightExpression(false);
 						highlightValue(true);
-					} else if (!valueHighlighted) {
+					} else if (attributeHighlighted) {
 						highlightExpression(true);
+						highlightAttribute(false);
+					} else if (!valueHighlighted) {
+						highlightAttribute(true);
 						highlightValue(false);
 					}
 				} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
 					if (valueHighlighted) {
 						highlightExpression(true);
 						highlightValue(false);
-					} else if (!expressionHighlighted) {
+					} else if (expressionHighlighted) {
 						highlightExpression(false);
+						highlightAttribute(true);
+					} else if (!attributeHighlighted) {
+						highlightAttribute(false);
 						highlightValue(true);
 					}
 				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -310,6 +380,9 @@ public class MacroSelectionDialog extends JDialog {
 						} else {
 							expression = EXPRESSION_CALL_START + escape(macroPanel.getInputName()) + EXPRESSION_CALL_END;
 						}
+						MacroSelectionDialog.this.setVisible(false);
+					} else if (attributeHighlighted) {
+						expression = ATTRIBUTE_CALL_START + escape(macroPanel.getInputName()) + ATTRIBUTE_CALL_END;
 						MacroSelectionDialog.this.setVisible(false);
 					}
 				} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
@@ -373,4 +446,23 @@ public class MacroSelectionDialog extends JDialog {
 		}
 	}
 
+	/**
+	 * Highlights the part to select, if the user wants to insert the attribute associated to the macro content
+	 *
+	 * @param highlight
+	 * 		whether it should be highlighted
+	 */
+	private void highlightAttribute(boolean highlight) {
+
+		attributeHighlighted = highlight;
+
+		if (highlight) {
+			attributePanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, SwingTools.RAPIDMINER_ORANGE));
+			attributePanel.setBackground(Color.LIGHT_GRAY);
+		} else {
+
+			attributePanel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
+			attributePanel.setBackground(defaultBackground);
+		}
+	}
 }

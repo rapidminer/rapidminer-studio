@@ -26,6 +26,7 @@ import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.tools.expression.internal.ConstantResolver;
 import com.rapidminer.tools.expression.internal.SimpleExpressionContext;
 import com.rapidminer.tools.expression.internal.antlr.AntlrParser;
+import com.rapidminer.tools.expression.internal.function.eval.AttributeEvaluation;
 import com.rapidminer.tools.expression.internal.function.eval.Evaluation;
 import com.rapidminer.tools.expression.internal.function.eval.TypeConstants;
 import com.rapidminer.tools.expression.internal.function.process.MacroValue;
@@ -78,6 +79,9 @@ public class ExpressionParserBuilder {
 			evalFunction = new Evaluation();
 			functions.add(evalFunction);
 		}
+		//add the attribute eval function
+		AttributeEvaluation attributeEvalFunction = new AttributeEvaluation();
+		functions.add(attributeEvalFunction);
 
 		// add eval constants
 		constantResolvers.add(new ConstantResolver(TypeConstants.INSTANCE.getKey(), TypeConstants.INSTANCE.getConstants()));
@@ -90,6 +94,7 @@ public class ExpressionParserBuilder {
 			// set parser for eval function
 			evalFunction.setParser(parser);
 		}
+		attributeEvalFunction.setContext(context);
 
 		return parser;
 	}

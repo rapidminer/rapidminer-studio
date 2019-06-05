@@ -18,19 +18,30 @@
 */
 package com.rapidminer.operator.performance;
 
+import static com.rapidminer.tools.FunctionWithThrowable.suppress;
+
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.Optional;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Tools;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeSuggestion;
+import com.rapidminer.parameter.SuggestionProvider;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.LogService;
+import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.Ontology;
 
 
@@ -68,76 +79,58 @@ import com.rapidminer.tools.Ontology;
  */
 public class BinominalClassificationPerformanceEvaluator extends AbstractPerformanceEvaluator {
 
-	/** The proper criteria to the names. */
-	private static final Class<?>[] SIMPLE_CRITERIA_CLASSES = {
-		com.rapidminer.operator.performance.AreaUnderCurve.Optimistic.class,
-		com.rapidminer.operator.performance.AreaUnderCurve.Optimistic.class,
-		com.rapidminer.operator.performance.AreaUnderCurve.Neutral.class,
-		com.rapidminer.operator.performance.AreaUnderCurve.Pessimistic.class };
+	/**
+	 * Iff this checkbox is {@code true}, the positive class parameter is shown to the user.
+	 */
+	public static final String PARAMETER_POSITIVE_CLASS_CHECKBOX = "manually_set_positive_class";
+
+	/**
+	 * The user optionally can use this parameter to explicitly specify the positive class.
+	 */
+	public static final String PARAMETER_POSITIVE_CLASS = "positive_class";
+
+	/**
+	 * The positive class parameter checkbox and the positive class parameter are added to the existing parameter types
+	 * at this index.
+	 */
+	private static final int POSITIVE_CLASS_PARAMETER_INDEX = 0;
+
+	private String positiveClassName;
 
 	public BinominalClassificationPerformanceEvaluator(OperatorDescription description) {
 		super(description);
-	}
-
-	@Override
-	protected void checkCompatibility(ExampleSet exampleSet) throws OperatorException {
-		Tools.isNonEmpty(exampleSet);
-		Tools.hasNominalLabels(exampleSet, "the calculation of performance criteria for binominal classification tasks");
-
-		Attribute label = exampleSet.getAttributes().getLabel();
-		if (label.getMapping().size() != 2) {
-			throw new UserError(this, 114, "the calculation of performance criteria for binominal classification tasks",
-					label.getName());
-		}
-	}
-
-	/** Returns null. */
-	@Override
-	protected double[] getClassWeights(Attribute label) throws UndefinedParameterError {
-		return null;
+		positiveClassName = null;
 	}
 
 	@Override
 	public List<PerformanceCriterion> getCriteria() {
-		List<PerformanceCriterion> performanceCriteria = new LinkedList<PerformanceCriterion>();
+		List<PerformanceCriterion> performanceCriteria = new LinkedList<>();
 
 		// standard classification measures
 		for (int i = 0; i < MultiClassificationPerformance.NAMES.length; i++) {
 			performanceCriteria.add(new MultiClassificationPerformance(i));
 		}
 
-		for (int i = 0; i < SIMPLE_CRITERIA_CLASSES.length; i++) {
-			try {
-				performanceCriteria.add((PerformanceCriterion) SIMPLE_CRITERIA_CLASSES[i].newInstance());
-			} catch (InstantiationException e) {
-				// LogService.getGlobal().logError("Cannot instantiate " +
-				// SIMPLE_CRITERIA_CLASSES[i] + ". Skipping...");
-				LogService
-				.getRoot()
-				.log(Level.SEVERE,
-						"com.rapidminer.operator.performance.BinominalClassificationPerformanceEvaluator.instantiating_simple_criteria_classes_error",
-						SIMPLE_CRITERIA_CLASSES[i]);
-			} catch (IllegalAccessException e) {
-				// LogService.getGlobal().logError("Cannot instantiate " +
-				// SIMPLE_CRITERIA_CLASSES[i] + ". Skipping...");
-				LogService
-				.getRoot()
-				.log(Level.SEVERE,
-						"com.rapidminer.operator.performance.BinominalClassificationPerformanceEvaluator.instantiating_simple_criteria_classes_error",
-						SIMPLE_CRITERIA_CLASSES[i]);
-			}
-		}
+		// AUC
+		AreaUnderCurve aucOpt = new AreaUnderCurve.Optimistic();
+		AreaUnderCurve auc = new AreaUnderCurve.Neutral();
+		AreaUnderCurve aucPes = new AreaUnderCurve.Pessimistic();
+
+		aucOpt.setUserDefinedPositiveClassName(positiveClassName);
+		auc.setUserDefinedPositiveClassName(positiveClassName);
+		aucPes.setUserDefinedPositiveClassName(positiveClassName);
+
+		performanceCriteria.add(aucOpt);
+		performanceCriteria.add(auc);
+		performanceCriteria.add(aucPes);
 
 		// binary classification criteria
 		for (int i = 0; i < BinaryClassificationPerformance.NAMES.length; i++) {
-			performanceCriteria.add(new BinaryClassificationPerformance(i));
+			BinaryClassificationPerformance b = new BinaryClassificationPerformance(i);
+			b.setUserDefinedPositiveClassName(positiveClassName);
+			performanceCriteria.add(b);
 		}
 		return performanceCriteria;
-	}
-
-	@Override
-	protected boolean canEvaluate(int valueType) {
-		return Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.BINOMINAL);
 	}
 
 	@Override
@@ -161,5 +154,80 @@ public class BinominalClassificationPerformanceEvaluator extends AbstractPerform
 			default:
 				return false;
 		}
+	}
+
+	@Override
+	public List<ParameterType> getParameterTypes() {
+		List<ParameterType> types = new ArrayList<>(super.getParameterTypes());
+		ParameterType posClassType = createPositiveClassParameter();
+		posClassType.registerDependencyCondition(new BooleanParameterCondition(this,
+				PARAMETER_POSITIVE_CLASS_CHECKBOX, true, true));
+		types.add(POSITIVE_CLASS_PARAMETER_INDEX, posClassType);
+		types.add(POSITIVE_CLASS_PARAMETER_INDEX, new ParameterTypeBoolean(PARAMETER_POSITIVE_CLASS_CHECKBOX,
+				"Check this to manually specify the positive class.", false, false));
+		return types;
+	}
+
+	@Override
+	protected void checkCompatibility(ExampleSet exampleSet) throws OperatorException {
+		Tools.isNonEmpty(exampleSet);
+		Tools.hasNominalLabels(exampleSet, "the calculation of performance criteria for binominal classification tasks");
+
+		Attribute label = exampleSet.getAttributes().getLabel();
+		NominalMapping mapping = label.getMapping();
+		if (mapping.size() != 2) {
+			throw new UserError(this, 114, "the calculation of performance criteria for binominal classification tasks",
+					label.getName());
+		}
+
+		// check if there is a user specified positive class and if it is valid
+		if (getParameterAsBoolean(PARAMETER_POSITIVE_CLASS_CHECKBOX)) {
+			String posClass = Optional.of(getParameterAsString(PARAMETER_POSITIVE_CLASS)).filter(s -> !s.isEmpty()).orElse(null);
+			if (posClass == null || mapping.getIndex(posClass) == -1) {
+				throw new UserError(this, "invalid_positive_class", posClass);
+			}
+		}
+	}
+
+	@Override
+	protected void init(ExampleSet exampleSet) {
+		super.init(exampleSet);
+		if (getParameterAsBoolean(PARAMETER_POSITIVE_CLASS_CHECKBOX)) {
+			positiveClassName = Optional.of(PARAMETER_POSITIVE_CLASS).map(suppress(this::getParameterAsString))
+					.filter(s -> !s.isEmpty()).orElse(null);
+		} else {
+			positiveClassName = null;
+		}
+	}
+
+	/**
+	 * Returns null.
+	 */
+	@Override
+	protected double[] getClassWeights(Attribute label) throws UndefinedParameterError {
+		return null;
+	}
+
+	@Override
+	protected boolean canEvaluate(int valueType) {
+		return Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.BINOMINAL);
+	}
+
+	/**
+	 * Creates the positive class parameter as {@link ParameterTypeSuggestion}.
+	 */
+	private ParameterType createPositiveClassParameter() {
+		InputPort in = getInputPorts().getPortByName(INPUT_PORT_LABELLED_DATA);
+		SuggestionProvider<String> suggestionProvider = (op, pl) -> {
+			if (op != BinominalClassificationPerformanceEvaluator.this) {
+				return new ArrayList<>();
+			}
+			return Optional.ofNullable(in).map(suppress(ip -> ip.getMetaData(ExampleSetMetaData.class)))
+					.map(ExampleSetMetaData::getLabelMetaData).filter(AttributeMetaData::isNominal)
+					.map(AttributeMetaData::getValueSet).filter(vs -> vs.size() == 2)
+					.map(ArrayList::new).orElse(new ArrayList<>());
+		};
+		return new ParameterTypeSuggestion(PARAMETER_POSITIVE_CLASS, "Please select the positive class.",
+				suggestionProvider, true);
 	}
 }

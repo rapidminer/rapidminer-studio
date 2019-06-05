@@ -18,6 +18,8 @@
 */
 package com.rapidminer.tools;
 
+import static com.rapidminer.tools.FunctionWithThrowable.suppress;
+
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -38,6 +40,8 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.AccessControlException;
+import java.security.AccessController;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -59,7 +63,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -94,6 +97,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.security.PluginSandboxPolicy;
 import com.rapidminer.tools.io.Encoding;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
 import com.rapidminer.tools.plugin.Plugin;
@@ -1350,26 +1354,13 @@ public class Tools {
 
 	public static void findImplementationsInJar(ClassLoader loader, JarFile jar, Class<?> superClass,
 												List<String> implementations) {
-		Enumeration<JarEntry> e = jar.entries();
-		while (e.hasMoreElements()) {
-			JarEntry entry = e.nextElement();
-			String name = entry.getName();
-			int dotClass = name.lastIndexOf(".class");
-			if (dotClass < 0) {
-				continue;
-			}
-			name = name.substring(0, dotClass);
-			name = name.replaceAll("/", "\\.");
-			try {
-				Class<?> c = loader.loadClass(name);
-				if (superClass.isAssignableFrom(c)) {
-					if (!java.lang.reflect.Modifier.isAbstract(c.getModifiers())) {
-						implementations.add(name);
-					}
-				}
-			} catch (Throwable t) {
-			}
-		}
+		String classSuffix = ".class";
+		int suffixLength = classSuffix.length();
+		jar.stream().map(ZipEntry::getName).filter(n -> n.endsWith(classSuffix))
+				.map(n -> n.substring(0, n.length() - suffixLength).replace('/', '.'))
+				.map(suppress(loader::loadClass))
+				.filter(c -> c != null && superClass.isAssignableFrom(c) && !java.lang.reflect.Modifier.isAbstract(c.getModifiers()))
+				.map(Class::getName).forEach(implementations::add);
 	}
 
 	/** TODO: Looks like this can be replaced by {@link Plugin#getMajorClassLoader()} */
@@ -2261,8 +2252,10 @@ public class Tools {
 	 * Copies the given {@link String} to the system {@link Clipboard}.
 	 *
 	 * @param s
+	 * 		the string to copy to the clipboard
 	 */
 	public static void copyStringToClipboard(String s) {
+
 		StringSelection stringSelection = new StringSelection(s);
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
@@ -2372,11 +2365,13 @@ public class Tools {
 			for (OutputPort aPort : nextOperator.getOutputPorts().getAllPorts()) {
 				if (aPort.isConnected()) {
 					final Operator anotherOp = aPort.getDestination().getPorts().getOwner().getOperator();
-					if (visitedOperators.contains(anotherOp)) {
+					if (operator == anotherOp) {
 						return true;
 					}
-					nextConnectedOperators.add(anotherOp);
-					visitedOperators.add(anotherOp);
+					if (!visitedOperators.contains(anotherOp)) {
+						nextConnectedOperators.add(anotherOp);
+						visitedOperators.add(anotherOp);
+					}
 					if (--maxAmountVisitedOperators <= 0) {
 						nextConnectedOperators.clear();
 						visitedOperators.clear();
@@ -2386,5 +2381,22 @@ public class Tools {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Checks if the caller has the {@link PluginSandboxPolicy#RAPIDMINER_INTERNAL_PERMISSION}
+	 *
+	 * @throws UnsupportedOperationException
+	 * 		if the caller is not signed
+	 * @since 9.3
+	 */
+	public static void requireInternalPermission() {
+		try {
+			if (System.getSecurityManager() != null) {
+				AccessController.checkPermission(new RuntimePermission(PluginSandboxPolicy.RAPIDMINER_INTERNAL_PERMISSION));
+			}
+		} catch (AccessControlException e) {
+			throw new UnsupportedOperationException(I18N.getErrorMessage("access_control.no_internal_permission"), e);
+		}
 	}
 }

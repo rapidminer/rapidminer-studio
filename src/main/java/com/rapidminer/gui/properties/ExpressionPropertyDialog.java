@@ -36,7 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
@@ -105,6 +104,17 @@ import com.rapidminer.tools.expression.MacroResolver;
 public class ExpressionPropertyDialog extends PropertyDialog {
 
 	private static final long serialVersionUID = 5567661137372752202L;
+
+	/**
+	 * The maximum number of characters allowed in the syntax error message (without the TRUNCATED_SYMBOL to mark the
+	 * truncated parts).
+	 */
+	private static final int MAX_ERROR_MESSAGE_LENGTH = 124;
+
+	/**
+	 * This string will be used to mark places in the syntax error message that have been truncated.
+	 */
+	private static final String TRUNCATED_SYMBOL = "[...]";
 
 	/**
 	 * An input panel owns an {@link Observer}, which is updated about model changes.
@@ -1417,32 +1427,86 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		// DO NOT CHANGE THIS, AS THE INDENTATION IS WRONG OTHERWISE
 		validationTextArea.setFont(FontTools.getFont(Font.MONOSPACED, Font.PLAIN, 12));
 
-		// set the error message
-		// strip the error message if necessary
 		if (splittedMessage.length > 1) {
-			int buffer = 50;
-			int stepsize = 5;
-			int stringWidth = SwingTools.getStringWidth(validationTextArea, splittedMessage[1]) + buffer;
-			boolean cut = false;
-			while (stringWidth > validationTextArea.getSize().width - stepsize) {
-				cut = true;
-				splittedMessage[1] = splittedMessage[1].substring(stepsize, splittedMessage[1].length());
-				if (splittedMessage.length > 2) {
-					splittedMessage[2] = splittedMessage[2].substring(stepsize, splittedMessage[2].length());
-				}
-				stringWidth = SwingTools.getStringWidth(validationTextArea, splittedMessage[1]) + buffer;
-			}
-			if (cut) {
-				splittedMessage[1] = "[...]" + splittedMessage[1];
-				if (splittedMessage.length > 2) {
-					splittedMessage[2] = "     " + splittedMessage[2];
-				}
-			}
+			// truncate error message to maxMessageLength where necessary to avoid overflow in the validationTextArea
+			truncateMessage(splittedMessage, MAX_ERROR_MESSAGE_LENGTH);
 		}
+		// set the error message
 		String errorMessage = splittedMessage.length > 1 ? splittedMessage[1] : "\n";
 		if (splittedMessage.length > 2) {
 			errorMessage += "\n" + splittedMessage[2];
 		}
 		validationTextArea.setText(errorMessage);
+	}
+
+	/**
+	 * Helper method that truncates the given error message if it is longer than maxChar characters. It does not return
+	 * a new string array but modifies the given one instead. In this case the
+	 * error message will contain as much of the error as possible plus a symmetrical window around it. Parts of the
+	 * original message that have been truncated are marked by the TRUNCATED_SYMBOL constant string.
+	 *
+	 * @param splittedMessage
+	 * 		the original error message
+	 * @param maxChars
+	 * 		the maximum number of characters the error message is allowed to have
+	 */
+	static void truncateMessage(String[] splittedMessage, int maxChars) {
+		if (splittedMessage.length > 2) {
+			// that means the error has been marked. we dont want to cut the error away
+			if (maxChars < splittedMessage[1].length()) {
+				// every character of the error is marked by a '^' in splittedMessage[2]
+				int errorStart = splittedMessage[2].indexOf('^');
+				int errorEnd = splittedMessage[2].lastIndexOf('^');
+				int errorLength = errorEnd - errorStart + 1;
+				int originalMsgLength = splittedMessage[1].length();
+				if (errorLength > maxChars) {
+					// the end of the error has to be cut because there is no space for the whole error
+					splittedMessage[1] = splittedMessage[1].substring(errorStart, errorStart + maxChars);
+					splittedMessage[2] = splittedMessage[2].substring(errorStart, errorStart + maxChars);
+					addTruncatedSymbols(splittedMessage, errorStart, errorEnd, originalMsgLength);
+				} else {
+					// we can preserve the whole error. we will print the error and a symmetrical window around it
+					int rest = maxChars - errorLength;
+					int windowStart = errorStart - (rest / 2);
+					int windowEnd = errorEnd + (rest / 2);
+					// now we need to make sure that the window is inside the strings bounds
+					if (windowStart < 0) {
+						// pushes the window into the strings bounds from the left side
+						windowEnd -= windowStart;
+						windowStart = 0;
+					}
+					if (windowEnd >= originalMsgLength) {
+						// pushes the window into the strings bounds from the right side
+						windowStart -= windowEnd - originalMsgLength + 1;
+						windowEnd = originalMsgLength - 1;
+					}
+					// applies the windows to the error message
+					splittedMessage[1] = splittedMessage[1].substring(windowStart, windowEnd + 1);
+					splittedMessage[2] = splittedMessage[2].substring(windowStart, Math.min(windowEnd + 1,
+							splittedMessage[2].length()));
+					// adds the TRUNCATED_SYMBOL where necessary
+					addTruncatedSymbols(splittedMessage, windowStart, windowEnd, originalMsgLength);
+				}
+			}
+
+		} else {
+			// that means the error has not been marked. therefore we simply cut the end if necessary
+			if (maxChars < splittedMessage[1].length()) {
+				splittedMessage[1] = splittedMessage[1].substring(0, maxChars) + TRUNCATED_SYMBOL;
+			}
+		}
+	}
+
+	/**
+	 * Helper method that adds the TRUNCATED_SYMBOL constant string to the error message where needed
+	 */
+	private static void addTruncatedSymbols(String[] splittedMessage, int windowStart, int windowEnd, int originalMsgLength) {
+		if (windowStart > 0) {
+			splittedMessage[1] = TRUNCATED_SYMBOL + splittedMessage[1];
+			splittedMessage[2] = "     " + splittedMessage[2];
+		}
+		if (windowEnd < (originalMsgLength - 1)) {
+			splittedMessage[1] = splittedMessage[1] + TRUNCATED_SYMBOL;
+		}
 	}
 }

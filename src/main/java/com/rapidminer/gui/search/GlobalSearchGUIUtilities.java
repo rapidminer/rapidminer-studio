@@ -43,6 +43,8 @@ public enum GlobalSearchGUIUtilities {
 	/** the max height of a GUI component that the Global Search GUI will accept */
 	public static final int MAX_HEIGHT = 50;
 
+	public static final String HTML_TAG_OPEN = "<html>";
+	public static final String HTML_TAG_CLOSE = "</html>";
 
 	private static final String CATEGORY_ID_ACTIONS = "actions";
 	private static final String CATEGORY_ID_OPERATOR = "operator";
@@ -58,10 +60,6 @@ public enum GlobalSearchGUIUtilities {
 		PREDEFINED_CATEGORY_ORDER.add(CATEGORY_ID_MARKETPLACE);
 		PREDEFINED_CATEGORY_ORDER.add(CATEGORY_ID_REPOSITORY);
 	}
-
-	private static final String HTML_TAG_OPEN = "<html>";
-	private static final String HTML_TAG_CLOSE = "</html>";
-
 
 	/**
 	 * Adds highlights to strings for search result hits.

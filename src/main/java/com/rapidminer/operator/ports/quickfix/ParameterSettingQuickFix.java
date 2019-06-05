@@ -63,16 +63,14 @@ public class ParameterSettingQuickFix extends AbstractQuickFix {
 			seti18nKey("correct_parameter_settings_with_wizard");
 		} else if (type instanceof ParameterTypeList) {
 			seti18nKey("correct_parameter_settings_list", parameterName.replace('_', ' '));
-		}
-
-		if (value != null) {
-			if (type instanceof ParameterTypeBoolean) {
-				if (value.equals("true")) {
-					seti18nKey("correct_parameter_settings_boolean_enable", parameterName.replace('_', ' '));
-				} else {
-					seti18nKey("correct_parameter_settings_boolean_disable", parameterName.replace('_', ' '));
-				}
+		} else if (value != null && type instanceof ParameterTypeBoolean) {
+			String i18nKey;
+			if (Boolean.parseBoolean(value)) {
+				i18nKey = "correct_parameter_settings_boolean_enable";
+			} else {
+				i18nKey = "correct_parameter_settings_boolean_disable";
 			}
+			seti18nKey(i18nKey, parameterName.replace('_', ' '));
 		}
 	}
 

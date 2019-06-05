@@ -20,7 +20,6 @@ package com.rapidminer.gui.properties;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -49,8 +48,6 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-import org.jdesktop.swingx.prompt.PromptSupport;
 
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -302,9 +299,8 @@ public class SettingsDialog extends ButtonDialog {
 				filterNameField.requestFocusInWindow();
 			}
 		});
-		PromptSupport.setPrompt(I18N.getMessage(I18N.getGUIBundle(), "gui.label.settings.filter_field.prompt"),
+		SwingTools.setPrompt(I18N.getMessage(I18N.getGUIBundle(), "gui.label.settings.filter_field.prompt"),
 				filterNameField);
-		PromptSupport.setFontStyle(Font.ITALIC, filterNameField);
 
 		ResourceAction deleteFilterAction = new ResourceAction(true, "settings.filter_delete") {
 

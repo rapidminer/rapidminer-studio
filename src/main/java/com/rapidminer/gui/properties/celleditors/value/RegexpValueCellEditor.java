@@ -23,10 +23,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -37,6 +35,7 @@ import com.rapidminer.gui.properties.RegexpPropertyDialog;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterTypeRegexp;
+import com.rapidminer.parameter.ParameterTypeString;
 
 
 /**
@@ -54,19 +53,14 @@ public class RegexpValueCellEditor extends AbstractCellEditor implements Propert
 	private final JTextField textField = new JTextField(12);
 
 	private JButton button;
+	private Operator operator;
 
-	public RegexpValueCellEditor(final ParameterTypeRegexp type) {
+	public RegexpValueCellEditor(final ParameterTypeRegexp regexp) {
 		panel.setLayout(new GridBagLayout());
-		panel.setToolTipText(type.getDescription());
-		textField.setToolTipText(type.getDescription());
-		textField.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				fireEditingStopped();
-			}
-		});
-		textField.addFocusListener(new FocusListener() {
+		panel.setToolTipText(regexp.getDescription());
+		textField.setToolTipText(regexp.getDescription());
+		textField.addActionListener(e -> fireEditingStopped());
+		textField.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -82,9 +76,6 @@ public class RegexpValueCellEditor extends AbstractCellEditor implements Propert
 					fireEditingStopped();
 				}
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {}
 		});
 
 		GridBagConstraints c = new GridBagConstraints();
@@ -93,22 +84,37 @@ public class RegexpValueCellEditor extends AbstractCellEditor implements Propert
 		c.weightx = 1;
 		panel.add(textField, c);
 
+		ParameterTypeString replacement = regexp.getReplacementParameter();
+
 		button = new JButton(new ResourceAction(true, "regexp") {
 
 			private static final long serialVersionUID = 3989811306286704326L;
 
 			@Override
 			public void loggedActionPerformed(ActionEvent e) {
-				RegexpPropertyDialog dialog = new RegexpPropertyDialog(type.getPreviewList(), textField.getText(),
-						type.getDescription());
+				String replacementKey = null;
+				if (replacement != null) {
+					replacementKey = replacement.getKey();
+				}
+				RegexpPropertyDialog dialog = new RegexpPropertyDialog(regexp.getPreviewList(), textField.getText(),
+						regexp.getDescription(), replacementKey);
+				if (replacement != null && operator != null) {
+					String replacementValue = operator.getParameters().getParameterOrNull(replacementKey);
+					if (replacementValue != null) {
+						dialog.setReplacement(replacementValue);
+					}
+				}
 				dialog.setVisible(true);
 				if (dialog.wasConfirmed()) {
 					textField.setText(dialog.getRegexp());
+					if (replacement != null && operator != null) {
+						operator.setParameter(replacementKey, dialog.getReplacement());
+					}
 				}
 				fireEditingStopped();
 			}
 		});
-		button.addFocusListener(new FocusListener() {
+		button.addFocusListener(new FocusAdapter() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -116,9 +122,6 @@ public class RegexpValueCellEditor extends AbstractCellEditor implements Propert
 					fireEditingStopped();
 				}
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {}
 		});
 		button.setMargin(new Insets(0, 0, 0, 0));
 		c.weightx = 0;
@@ -137,7 +140,9 @@ public class RegexpValueCellEditor extends AbstractCellEditor implements Propert
 	}
 
 	@Override
-	public void setOperator(Operator operator) {}
+	public void setOperator(Operator operator) {
+		this.operator = operator;
+	}
 
 	@Override
 	public boolean useEditorAsRenderer() {

@@ -34,6 +34,8 @@ import com.rapidminer.operator.io.RepositorySource;
  */
 public interface Entry {
 
+	String PROPERTIES_SUFFIX = ".properties";
+
 	/** Returns the name, the last part of the location. */
 	String getName();
 

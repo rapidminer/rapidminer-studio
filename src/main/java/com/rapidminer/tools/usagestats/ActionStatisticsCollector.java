@@ -40,6 +40,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JToggleButton;
@@ -51,6 +52,9 @@ import org.w3c.dom.NodeList;
 import com.rapidminer.Process;
 import com.rapidminer.ProcessListener;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.connection.ConnectionInformation;
+import com.rapidminer.connection.configuration.ConnectionConfiguration;
+import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -103,6 +107,7 @@ public enum ActionStatisticsCollector {
 	public static final String TYPE_ERROR = "error";
 	public static final String TYPE_IMPORT = "import";
 	public static final String TYPE_DIALOG = "dialog";
+	public static final String TYPE_INJECT_VALUE_PROVIDER_DIALOG = "inject_vp_dialog";
 	public static final String TYPE_CONSTRAINT = "constraint";
 	public static final String TYPE_LICENSE_LEVEL = "license-level";
 	public static final String TYPE_PROGRESS_THREAD = "progress-thread";
@@ -258,6 +263,8 @@ public enum ActionStatisticsCollector {
 
 	/** remote_repository | status | uuid (since 8.2.1) */
 	public static final String TYPE_REMOTE_REPOSITORY = "remote_repository";
+	/** remote_repository_saml | status | uuid (since 9.3) */
+	public static final String TYPE_REMOTE_REPOSITORY_SAML = "remote_repository_saml";
 
 	/** new_import | guessed_date_wrong | guessed|choosen (since 9.1) */
 	public static final String VALUE_GUESSED_DATE_FORMAT_RIGHT = "guessed_date_format_right";
@@ -280,6 +287,11 @@ public enum ActionStatisticsCollector {
 	public static final String TYPE_HTML5_VISUALIZATION_CONFIG_UI = "html5_visualization_config_ui";
 	public static final String VALUE_CONFIG_GROUP_EXPANDED = "config_group_expanded";
 
+	/** connections (since 9.3) */
+	public static final String TYPE_CONNECTION = "connection";
+	public static final String TYPE_CONNECTION_TEST = "connection_test";
+	public static final String TYPE_OLD_CONNECTION = "old_connection";
+	public static final String TYPE_CONNECTION_INJECTION = "connection_injection";
 
 	public static final String VALUE_CREATED = "created";
 	public static final String VALUE_CONNECTED = "connected";
@@ -439,7 +451,7 @@ public enum ActionStatisticsCollector {
 		StringBuilder exception = new StringBuilder();
 		exception.append("ex").append(ARG_SPACER);
 		exception.append(t.getClass()).append(ARG_SPACER);
-		exception.append(getThrowablenStackTraceAsString(t));
+		exception.append(getThrowableStackTraceAsString(t));
 
 		StringBuilder arg = new StringBuilder();
 		arg.append(String.join(",", plotTypes)).append(ARG_SPACER);
@@ -458,7 +470,8 @@ public enum ActionStatisticsCollector {
 		StringBuilder exception = new StringBuilder();
 		exception.append("ex").append(ARG_SPACER);
 		exception.append(t.getClass()).append(ARG_SPACER);
-		exception.append(getThrowablenStackTraceAsString(t));
+		exception.append(t.getMessage()).append(ARG_SPACER);
+		exception.append(getThrowableStackTraceAsString(t));
 
 		StringBuilder arg = new StringBuilder();
 		arg.append(exception.toString());
@@ -494,6 +507,37 @@ public enum ActionStatisticsCollector {
 		arg.append(type);
 		log(TYPE_HTML5_VISUALIZATION_BROWSER, VALUE_BROWSER_SETUP_TEST_FINISHED, arg.toString());
 	}
+
+	/**
+	 * Logs the usage of a connection in an operator.
+	 *
+	 * @param operator
+	 * 		the operator where the connection is used
+	 * @param connection
+	 * 		the connection used in the operator
+	 * @since 9.3.0
+	 */
+	public void logNewConnection(Operator operator, ConnectionInformation connection) {
+		log(ActionStatisticsCollector.TYPE_OPERATOR, operator.getOperatorDescription().getKey(),
+				TYPE_CONNECTION + ARG_SPACER + connection.getConfiguration().getType() + ARG_SPACER
+						+ getConnectionInjections(connection.getConfiguration()));
+	}
+
+	/**
+	 * Logs the usage of an old connection (configurable or database connection configuration) in an operator.
+	 *
+	 * @param operator
+	 * 		the operator where the old connection is used
+	 * @param oldConnectionType
+	 * 		the type of the old connection
+	 * @since 9.3.0
+	 */
+	public void logOldConnection(Operator operator, String oldConnectionType) {
+		log(ActionStatisticsCollector.TYPE_OPERATOR, operator.getOperatorDescription().getKey(),
+				TYPE_OLD_CONNECTION + ARG_SPACER + oldConnectionType);
+	}
+
+
 
 	/**
 	 * A Key defines an identifier that is used to store some collected usage data associated with it. It has 3 levels,
@@ -884,7 +928,7 @@ public enum ActionStatisticsCollector {
 	 * @return
 	 */
 	public static String getExceptionStackTraceAsString(Exception e) {
-		return getThrowablenStackTraceAsString(e);
+		return getThrowableStackTraceAsString(e);
 	}
 
 	/**
@@ -895,12 +939,32 @@ public enum ActionStatisticsCollector {
 	 * @return the stacktrace, never {@code null}
 	 * @since 9.2.0
 	 */
-	public static String getThrowablenStackTraceAsString(Throwable t) {
+	public static String getThrowableStackTraceAsString(Throwable t) {
 		if (t == null) {
 			throw new IllegalArgumentException("t must not be null!");
 		}
 
-		return Stream.of(t.getStackTrace()).limit(40).map(StackTraceElement::toString).collect(Collectors.joining(","));
+		return Stream.of(t.getStackTrace()).limit(40).map(StackTraceElement::toString).collect(Collectors.joining(","
+		));
+	}
+
+	/**
+	 * Creates a string from the injections for the given connection configuration as the comma-separated injection
+	 * sources followed by {@code |} followed by the comma-separated injection parameter names.
+	 *
+	 * @param configuration
+	 * 		the configuration of a connection
+	 * @return the injections of the form {@code source1,source2|param1,param2,param3}
+	 */
+	public static String getConnectionInjections(ConnectionConfiguration configuration) {
+		String injectionSources = configuration.getValueProviders().stream()
+				.map(ValueProvider::getType)
+				.collect(Collectors.joining(","	));
+		String injectedParameters =	configuration.getKeyMap().entrySet().stream()
+				.filter(e -> e.getValue().isInjected())
+				.map(Entry::getKey)
+				.collect(Collectors.joining(","));
+		return injectionSources + ARG_SPACER + injectedParameters;
 	}
 
 	/** Listener that logs input and output volume at operator ports. */

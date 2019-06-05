@@ -116,6 +116,7 @@ import com.rapidminer.gui.new_plotter.listener.events.ValueSourceChangeEvent;
 import com.rapidminer.gui.new_plotter.listener.events.ValueSourceChangeEvent.ValueSourceChangeType;
 import com.rapidminer.gui.plotter.CoordinateTransformation;
 import com.rapidminer.gui.plotter.NullCoordinateTransformation;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
@@ -309,7 +310,7 @@ public class JFreeChartPlotEngine
 	private synchronized void updateChartPanelChart(final boolean informPlotConfigWhenDone) {
 		updatingChart.getAndSet(true);
 
-		SwingWorker<JFreeChart, Void> updateChartWorker = new SwingWorker<JFreeChart, Void>() {
+		MultiSwingWorker<JFreeChart, Void> updateChartWorker = new MultiSwingWorker<JFreeChart, Void>() {
 
 			@Override
 			public JFreeChart doInBackground() throws Exception {
@@ -368,7 +369,7 @@ public class JFreeChartPlotEngine
 
 		};
 
-		updateChartWorker.execute();
+		updateChartWorker.start();
 	}
 
 	/**

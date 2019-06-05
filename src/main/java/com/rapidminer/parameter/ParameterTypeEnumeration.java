@@ -19,7 +19,11 @@
 package com.rapidminer.parameter;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -77,16 +81,14 @@ public class ParameterTypeEnumeration extends CombinedParameterType {
 	public Element getXML(String key, String value, boolean hideDefault, Document doc) {
 		Element element = doc.createElement("enumeration");
 		element.setAttribute("key", key);
-		String[] list = null;
+		String[] list;
 		if (value != null) {
 			list = transformString2Enumeration(value);
 		} else {
 			list = transformString2Enumeration(getDefaultValueAsString());
 		}
-		if (list != null) {
-			for (String string : list) {
-				element.appendChild(type.getXML(type.getKey(), string, false, doc));
-			}
+		for (String string : list) {
+			element.appendChild(type.getXML(type.getKey(), string, false, doc));
 		}
 		return element;
 	}
@@ -129,63 +131,81 @@ public class ParameterTypeEnumeration extends CombinedParameterType {
 		return type;
 	}
 
+	/** @return the changed value after all entries were notified */
 	@Override
 	public String notifyOperatorRenaming(String oldOperatorName, String newOperatorName, String parameterValue) {
-		String[] enumeratedValues = transformString2Enumeration(parameterValue);
-		for (int i = 0; i < enumeratedValues.length; i++) {
-			enumeratedValues[i] = type.notifyOperatorRenaming(oldOperatorName, newOperatorName, enumeratedValues[i]);
-		}
-		return transformEnumeration2String(Arrays.asList(enumeratedValues));
-
+		return notifyOperatorRenamingReplacing((t, v) -> t.notifyOperatorRenaming(oldOperatorName, newOperatorName, v), parameterValue);
 	}
 
+	/** @return the changed value after all entries were notified */
+	@Override
+	public String notifyOperatorReplacing(String oldName, Operator oldOp, String newName, Operator newOp, String parameterValue) {
+		return notifyOperatorRenamingReplacing((t, v) -> t.notifyOperatorReplacing(oldName, oldOp, newName, newOp, v), parameterValue);
+	}
+
+	/** @since 9.3 */
+	private String notifyOperatorRenamingReplacing(BiFunction<ParameterType, String, String> replacer, String parameterValue) {
+		return transformEnumeration2String(Arrays.stream(transformString2Enumeration(parameterValue))
+				.map(v -> replacer.apply(type, v))
+				.collect(Collectors.toList()));
+	}
+
+	/**
+	 * Transforms the given list into an enumeration parameter string. Will escape all occurrences of
+	 * {@link #SEPERATOR_CHAR the separator char} and join them with that same separator.
+	 *
+	 * @param list
+	 * 		the list of individual parameter values
+	 * @return the enumeration parameter string
+	 */
 	public static String transformEnumeration2String(List<String> list) {
-		StringBuilder builder = new StringBuilder();
-		boolean isFirst = true;
-		for (String string : list) {
-			if (!isFirst) {
-				builder.append(SEPERATOR_CHAR);
-			}
-			if (string != null) {
-				builder.append(Tools.escape(string, ESCAPE_CHAR, SPECIAL_CHARACTERS));
-			}
-			isFirst = false;
-		}
-		return builder.toString();
+		return list.stream().filter(Objects::nonNull).map(string -> Tools.escape(string, ESCAPE_CHAR, SPECIAL_CHARACTERS))
+				.collect(Collectors.joining(Character.toString(SEPERATOR_CHAR)));
 	}
 
-	public static String[] transformString2Enumeration(String parameterValue) {
+	/**
+	 * Transforms a parameter value into a list of strings representing each entry.
+	 * Inverse method to {@link #transformEnumeration2String(List)}.
+	 * @since 9.3
+	 */
+	public static List<String> transformString2List(String parameterValue) {
 		if (parameterValue == null || "".equals(parameterValue)) {
-			return new String[0];
+			return Collections.emptyList();
 		}
-		List<String> split = Tools.unescape(parameterValue, ESCAPE_CHAR, SPECIAL_CHARACTERS, SEPERATOR_CHAR);
-		return split.toArray(new String[split.size()]);
+		return Tools.unescape(parameterValue, ESCAPE_CHAR, SPECIAL_CHARACTERS, SEPERATOR_CHAR);
+	}
+
+	/**  Same as {@link #transformString2List(String)}, but returns an array representation */
+	public static String[] transformString2Enumeration(String parameterValue) {
+		return transformString2List(parameterValue).toArray(new String[0]);
 	}
 
 	@Override
 	public String substituteMacros(String parameterValue, MacroHandler mh) throws UndefinedParameterError {
-		if (parameterValue.indexOf("%{") == -1) {
+		if (!parameterValue.contains("%{")) {
 			return parameterValue;
 		}
-		String[] list = transformString2Enumeration(parameterValue);
-		String[] result = new String[list.length];
-		for (int i = 0; i < list.length; i++) {
-			result[i] = getValueType().substituteMacros(list[i], mh);
+		List<String> list = transformString2List(parameterValue);
+		ParameterType valueType = getValueType();
+		for (int i = 0; i < list.size(); i++) {
+			String value = list.get(i);
+			list.set(i, valueType.substituteMacros(value, mh));
 		}
-		return transformEnumeration2String(Arrays.asList(result));
+		return transformEnumeration2String(list);
 	}
 
 	@Override
 	public String substitutePredefinedMacros(String parameterValue, Operator operator) throws UndefinedParameterError {
-		if (parameterValue.indexOf("%{") == -1) {
+		if (!parameterValue.contains("%{")) {
 			return parameterValue;
 		}
-		String[] list = transformString2Enumeration(parameterValue);
-		String[] result = new String[list.length];
-		for (int i = 0; i < list.length; i++) {
-			result[i] = getValueType().substitutePredefinedMacros(list[i], operator);
+		List<String> list = transformString2List(parameterValue);
+		ParameterType valueType = getValueType();
+		for (int i = 0; i < list.size(); i++) {
+			String value = list.get(i);
+			list.set(i, valueType.substitutePredefinedMacros(value, operator));
 		}
-		return transformEnumeration2String(Arrays.asList(result));
+		return transformEnumeration2String(list);
 	}
 
 	/**
@@ -195,7 +215,7 @@ public class ParameterTypeEnumeration extends CombinedParameterType {
 	 */
 	@Override
 	public boolean isSensitive() {
-		return getValueType() != null ? getValueType().isSensitive() : false;
+		return getValueType() != null && getValueType().isSensitive();
 	}
 
 	@Override

@@ -18,159 +18,44 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-
 import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.OpenAction;
-import com.rapidminer.gui.tools.ProgressThread;
-import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterTypeProcessLocation;
 import com.rapidminer.repository.ProcessEntry;
-import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 
 
 /**
- * Cell editor that allows to select a repository entry by pressing a button.
+ * Repository location cell editor that is specialized for {@link ProcessEntry ProcessEntries} and adds a second button
+ * that allows to open the selected process.
  *
- * @author Marcel Seifert, Nils Woehler
+ * @author Marcel Seifert, Nils Woehler, Jan Czogalla
  *
  */
-public class ProcessLocationValueCellEditor extends RepositoryLocationValueCellEditor {
+public class ProcessLocationValueCellEditor extends RepositoryLocationWithExtraValueCellEditor {
 
 	private static final long serialVersionUID = 1L;
 
-	private final JPanel surroundingPanel = new JPanel(new GridBagLayout());
-
-	private final JButton openProcessButton = new JButton(new ResourceAction(true, "execute_process.open_process") {
-
-		private static final long serialVersionUID = 1L;
-		{
-			putValue(NAME, null);
-		}
-
-		@Override
-		public void loggedActionPerformed(ActionEvent e) {
-			RepositoryLocation repositoryLocation;
-			RepositoryProcessLocation repositoryProcessLocation = null;
-			try {
-				if (getTextField() != null) {
-					repositoryLocation = RepositoryLocation.getRepositoryLocation(getTextFieldText(), getOperator());
-
-					if (repositoryLocation != null) {
-						repositoryProcessLocation = new RepositoryProcessLocation(repositoryLocation);
-						if (repositoryProcessLocation != null && RapidMinerGUI.getMainFrame().close()) {
-							OpenAction.open(repositoryProcessLocation, true);
-						}
-					}
-				}
-			} catch (UserError e1) {
-				SwingTools.showVerySimpleErrorMessage("malformed_repository_location", getTextField().getText());
-			}
-		}
-
-	});
-
-	private final CellEditorListener listener = new CellEditorListener() {
-
-		@Override
-		public void editingStopped(ChangeEvent e) {
-			checkOpenProcessButtonEnabled();
-		}
-
-		@Override
-		public void editingCanceled(ChangeEvent e) {
-			// do nothing
-		}
-	};
-
 	public ProcessLocationValueCellEditor(final ParameterTypeProcessLocation type) {
 		super(type);
-		openProcessButton.setEnabled(false);
-
-		GridBagConstraints gbc = new GridBagConstraints();
-
-		gbc.gridx = 0;
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.fill = GridBagConstraints.BOTH;
-		surroundingPanel.add(getPanel(), gbc);
-
-		gbc.gridx += 1;
-		gbc.weightx = 0.0;
-		gbc.fill = GridBagConstraints.VERTICAL;
-		gbc.insets = new Insets(0, 2, 0, 0);
-		surroundingPanel.add(openProcessButton, gbc);
-		addCellEditorListener(listener);
-
 	}
 
 	@Override
-	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int col) {
-		// ensure text field is filled with correct values
-		super.getTableCellEditorComponent(table, value, isSelected, row, col);
-		checkOpenProcessButtonEnabled();
-		return surroundingPanel;
+	protected String getExtraActionKey() {
+		return "execute_process.open_process";
 	}
 
 	@Override
-	public void activate() {
-		if (openProcessButton.isEnabled()) {
-			openProcessButton.doClick();
-		} else {
-			super.activate();
+	protected void doExtraAction(RepositoryLocation repositoryLocation) {
+		if (RapidMinerGUI.getMainFrame().close()) {
+			RepositoryProcessLocation repositoryProcessLocation = new RepositoryProcessLocation(repositoryLocation);
+			OpenAction.open(repositoryProcessLocation, true);
 		}
 	}
 
-	/**
-	 * Checks whether the provided repository location is valid and is a process.
-	 */
-	private void checkOpenProcessButtonEnabled() {
-		final String location = getTextFieldText();
-		ProgressThread t = new ProgressThread("check_process_location_available", false, location) {
-
-			@Override
-			public void run() {
-				boolean enabled = true;
-				try {
-					// check whether the process can be found
-					enabled = RepositoryLocation.getRepositoryLocation(location, getOperator()).locateEntry() instanceof ProcessEntry;
-				} catch (UserError | RepositoryException e) {
-					enabled = false;
-				}
-				final boolean enable = enabled;
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						openProcessButton.setEnabled(enable);
-					}
-				});
-			}
-		};
-		t.setIndeterminate(true);
-		t.start();
-
-	}
-
-	/**
-	 * @return the text of the text field which cannot be null
-	 */
-	private String getTextFieldText() {
-		return getTextField().getText() != null ? getTextField().getText() : "";
+	@Override
+	protected Class<ProcessEntry> getExpectedEntryClass() {
+		return ProcessEntry.class;
 	}
 }

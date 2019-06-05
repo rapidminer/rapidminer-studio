@@ -18,7 +18,10 @@
 */
 package com.rapidminer.repository;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.rapidminer.external.alphanum.AlphanumComparator;
 import com.rapidminer.external.alphanum.AlphanumComparator.AlphanumCaseSensitivity;
@@ -79,6 +82,10 @@ public final class RepositoryTools {
 	 *         less, equal or higher than {@link Entry}2s name.
 	 */
 	public static final Comparator<Entry> ENTRY_COMPARATOR = (entry1, entry2) -> {
+		int specialFolderSorting = specialFolderFirst(entry1, entry2);
+		if (specialFolderSorting != 0) {
+			return specialFolderSorting;
+		}
 		Integer nullComparison = compareForNull(entry1, entry2);
 		if (nullComparison != null) {
 			return nullComparison;
@@ -99,6 +106,10 @@ public final class RepositoryTools {
 	 * @since 7.4
 	 */
 	public static final Comparator<Entry> ENTRY_COMPARATOR_LAST_MODIFIED = (entry1, entry2) -> {
+		int specialFolderSorting = specialFolderFirst(entry1, entry2);
+		if (specialFolderSorting != 0) {
+			return specialFolderSorting;
+		}
 		boolean entry1HasDate = entry1 instanceof DateEntry;
 		boolean entry2HasDate = entry2 instanceof DateEntry;
 		// sort entries without modification date to front (i.e. usually folder)
@@ -117,6 +128,19 @@ public final class RepositoryTools {
 		// same date or no date at all => sort by name or null
 		return ENTRY_COMPARATOR.compare(entry1, entry2);
 	};
+
+	/**
+	 * Sort special folders before all other folders.
+	 */
+	private static int specialFolderFirst(Entry entry1, Entry entry2) {
+		boolean firstIsSpecial = entry1 instanceof Folder && ((Folder) entry1).isSpecialConnectionsFolder();
+		boolean secondIsSpecial = entry2 instanceof Folder && ((Folder) entry2).isSpecialConnectionsFolder();
+		if (firstIsSpecial) {
+			return secondIsSpecial ? 0 : -1;
+		} else {
+			return secondIsSpecial ? 1 : 0;
+		}
+	}
 
 	/**
 	 * Compares two repositories, ordered by {@link RepositoryType} (Samples, DB, Local
@@ -183,5 +207,61 @@ public final class RepositoryTools {
 			return index2 == -1 ? 0 : 1;
 		}
 		return index2 == -1 ? -1 : index1 - index2;
+	}
+
+	/**
+	 * Checks if the folder is a special connections folder or inside one.
+	 *
+	 * @param folder
+	 * 		the folder to check
+	 * @return whether the folder is or is in a special folder
+	 */
+	public static boolean isInSpecialConnectionsFolder(Folder folder) {
+		// no parent -> repository
+		if (folder.getContainingFolder() == null) {
+			return false;
+		}
+		// find super-folder with its super-folder the repository
+		Folder nextFolder = folder;
+		while (nextFolder.getContainingFolder().getContainingFolder() != null) {
+			nextFolder = nextFolder.getContainingFolder();
+		}
+		// check for the special name
+		return nextFolder.isSpecialConnectionsFolder();
+	}
+
+	/**
+	 * Returns the special connections folder for the repository or {@code null}.
+	 *
+	 * @param repository
+	 * 		the repository for which to retrieve the Connections folder
+	 * @return the connections folder or {@code null}
+	 * @throws RepositoryException
+	 * 		if a repository exception happens while inspecting the subfolders
+	 */
+	public static Folder getConnectionFolder(Repository repository) throws RepositoryException {
+		return repository.getSubfolders().stream()
+				.filter(Folder::isSpecialConnectionsFolder).findAny().orElse(null);
+	}
+
+	/**
+	 * Returns all connections defined for the repository.
+	 *
+	 * @param repository
+	 * 		the repository for which to retrieve the connections
+	 * @return all {@link ConnectionEntry}s in this repository
+	 * @throws RepositoryException
+	 * 		if accessing the connections folder fails
+	 */
+	public static List<ConnectionEntry> getConnections(Repository repository) throws RepositoryException {
+		Folder connectionFolder = getConnectionFolder(repository);
+		if (connectionFolder != null) {
+			return connectionFolder.getDataEntries().stream()
+					.filter(e -> ConnectionEntry.TYPE_NAME.equals(e.getType()))
+					.map(e -> (ConnectionEntry) e)
+					.collect(Collectors.toList());
+		} else {
+			return Collections.emptyList();
+		}
 	}
 }

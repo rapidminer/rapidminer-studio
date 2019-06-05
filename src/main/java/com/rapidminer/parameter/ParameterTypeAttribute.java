@@ -18,6 +18,8 @@
 */
 package com.rapidminer.parameter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -151,42 +153,35 @@ public class ParameterTypeAttribute extends ParameterTypeString {
 	 * @return the vector of pairs between the attribute names and their value type
 	 * @since 9.2.0
 	 */
-	public Vector<Pair<String, Integer>> getAttributeNamesAndTypes(boolean sortAttributes) {
-		Vector<Pair<String, Integer>> names = new Vector<>();
-		Vector<Pair<String, Integer>> regularNames = new Vector<>();
-
+	public List<Pair<String, Integer>> getAttributeNamesAndTypes(boolean sortAttributes) {
+		List<Pair<String, Integer>> names = new ArrayList<>();
+		List<Pair<String, Integer>> regularNames = new ArrayList<>();
 		MetaData metaData = getMetaData();
-		if (metaData != null) {
-			if (metaData instanceof ExampleSetMetaData) {
-				ExampleSetMetaData emd = (ExampleSetMetaData) metaData;
-				for (AttributeMetaData amd : emd.getAllAttributes()) {
-					if (!isFilteredOut(amd) && isOfAllowedType(amd.getValueType())) {
-						if (amd.isSpecial()) {
-							names.add(new Pair<>(amd.getName(), amd.getValueType()));
-						} else {
-							regularNames.add(new Pair<>(amd.getName(), amd.getValueType()));
-						}
-					}
-
-				}
-			} else if (metaData instanceof ModelMetaData) {
-				ModelMetaData mmd = (ModelMetaData) metaData;
-				ExampleSetMetaData emd = mmd.getTrainingSetMetaData();
-				if (emd != null) {
-					for (AttributeMetaData amd : emd.getAllAttributes()) {
-						if (!isFilteredOut(amd) && isOfAllowedType(amd.getValueType())) {
-							if (amd.isSpecial()) {
-								names.add(new Pair<>(amd.getName(), amd.getValueType()));
-							} else {
-								regularNames.add(new Pair<>(amd.getName(), amd.getValueType()));
-							}
-						}
-					}
+		if (metaData == null) {
+			return names;
+		}
+		ExampleSetMetaData emd = null;
+		if (metaData instanceof ExampleSetMetaData) {
+			emd = (ExampleSetMetaData) metaData;
+		} else if (metaData instanceof ModelMetaData) {
+			ModelMetaData mmd = (ModelMetaData) metaData;
+			emd = mmd.getTrainingSetMetaData();
+		}
+		if (emd == null) {
+			return names;
+		}
+		for (AttributeMetaData amd : emd.getAllAttributes()) {
+			if (!isFilteredOut(amd) && isOfAllowedType(amd.getValueType())) {
+				Pair<String, Integer> nameAndType = new Pair<>(amd.getName(), amd.getValueType());
+				if (amd.isSpecial()) {
+					names.add(nameAndType);
+				} else {
+					regularNames.add(nameAndType);
 				}
 			}
 		}
 
-		if (sortAttributes) {
+		if (sortAttributes && (!names.isEmpty() || !regularNames.isEmpty())) {
 			AlphanumComparator alphanumComparator = new AlphanumComparator(AlphanumComparator.AlphanumCaseSensitivity.INSENSITIVE);
 			names.sort((o1, o2) -> alphanumComparator.compare(o1.getFirst(), o2.getFirst()));
 			regularNames.sort((o1, o2) -> alphanumComparator.compare(o1.getFirst(), o2.getFirst()));
@@ -225,7 +220,7 @@ public class ParameterTypeAttribute extends ParameterTypeString {
 	 */
 	protected boolean isFilteredOut(AttributeMetaData amd) {
 		return false;
-	};
+	}
 
 	// public InputPort getInputPort() {
 	// return inPort;

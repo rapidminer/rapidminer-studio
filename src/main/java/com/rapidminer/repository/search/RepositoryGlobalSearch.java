@@ -22,8 +22,8 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.search.GlobalSearchIndexer;
 import com.rapidminer.search.GlobalSearchManager;
-import com.rapidminer.search.GlobalSearchable;
 import com.rapidminer.search.GlobalSearchRegistry;
+import com.rapidminer.search.GlobalSearchable;
 
 
 /**
@@ -36,6 +36,7 @@ import com.rapidminer.search.GlobalSearchRegistry;
 public class RepositoryGlobalSearch implements GlobalSearchable {
 
 	public static final String CATEGORY_ID = "repository";
+	public static final String FIELD_CONNECTION_TYPE = "connection_type";
 
 	/** property controlling whether full repository indexing is enabled */
 	public static final String PROPERTY_FULL_REPOSITORY_INDEXING = "rapidminer.search.repository.enable_full_indexing";

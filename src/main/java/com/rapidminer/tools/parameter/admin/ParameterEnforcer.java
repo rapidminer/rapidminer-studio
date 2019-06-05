@@ -29,9 +29,9 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.logging.Level;
-import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.tools.LogService;
 
 
@@ -245,7 +245,7 @@ public final class ParameterEnforcer {
 	 * Reloads the properties and starts the next timer
 	 */
 	private void readAndRestart() {
-		new SwingWorker<Void, Void>() {
+		new MultiSwingWorker<Void, Void>() {
 
 			@Override
 			protected Void doInBackground() {
@@ -257,7 +257,7 @@ public final class ParameterEnforcer {
 				restartTimer();
 				return null;
 			}
-		}.execute();
+		}.start();
 	}
 
 }

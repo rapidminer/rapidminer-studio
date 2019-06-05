@@ -91,14 +91,18 @@ public enum GlobalSearchRegistry {
 		if (searchable == null) {
 			throw new IllegalArgumentException("searchable must not be null!");
 		}
-		if (searchable.getSearchManager() == null) {
+		GlobalSearchManager searchManager = searchable.getSearchManager();
+		if (searchManager == null) {
 			throw new IllegalArgumentException("searchable must not return null for the GlobalSearchManager!");
 		}
-		GlobalSearchManager searchManager = searchable.getSearchManager();
 		if (searchManager.getAdditionalDefaultSearchFields() == null) {
 			throw new IllegalArgumentException("getAdditionalDefaultSearchFields() must not return null!");
 		}
-		String categoryId = searchManager.getSearchCategoryId();
+		GlobalSearchCategory addedCategory = searchManager.getSearchCategory();
+		if (addedCategory == null) {
+			throw new IllegalArgumentException("getSearchCategory() must not return null for the GlobalSearchManager!");
+		}
+		String categoryId = addedCategory.getCategoryId();
 		if (categoryId == null || categoryId.trim().isEmpty()) {
 			throw new IllegalArgumentException("categoryId must not be null or empty!");
 		}
@@ -110,7 +114,6 @@ public enum GlobalSearchRegistry {
 		}
 
 		searchManager.initialize();
-		GlobalSearchCategory addedCategory = new GlobalSearchCategory(categoryId, searchManager);
 		map.put(categoryId, addedCategory);
 		fireRegistryEvent(GlobalSearchRegistryEvent.RegistrationEvent.SEARCH_CATEGORY_REGISTERED, addedCategory);
 		LogService.getRoot().log(Level.INFO, "com.rapidminer.search.GlobalSearchRegistry.category_added", addedCategory.getCategoryId());

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.repository;
 
+import com.rapidminer.tools.I18N;
+
 /**
  * Thrown if a repository entry cannot be found.
  *
@@ -31,6 +33,11 @@ public class RepositoryEntryNotFoundException extends RepositoryException {
 
 	public RepositoryEntryNotFoundException(String message) {
 		super(message);
+	}
+
+	/** @since 9.3 */
+	public RepositoryEntryNotFoundException(RepositoryLocation location) {
+		this(I18N.getErrorMessage("repository.error.non_existent_entry", location));
 	}
 
 	public RepositoryEntryNotFoundException(Throwable cause) {

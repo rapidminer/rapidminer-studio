@@ -39,23 +39,23 @@ public class UrlFollowerTest {
 
 	private static final URL SECURE_UNSECURE_SECURE_REDIRECT = createUrl("https://redirects.rapidminer.com/test-process/httpstohttp");
 	private static final URL UNSECURE_SECURE_REDIRECT = createUrl("http://redirects.rapidminer.com/test-process/httptohttps");
-	private static final URL SECURE_TARGET = createUrl("https://s3.amazonaws.com/rm-test-https/names.csv");
+	private static final URL SECURE_TARGET = createUrl("https://s3.amazonaws.com/rapidminer.dev-test/names.csv");
 
 	@Test
 	public void followTwoRedirectsSuccess() throws IOException {
-		Assert.assertEquals(((HttpURLConnection) UrlFollower.follow(SECURE_UNSECURE_SECURE_REDIRECT, 2, true, true)).getResponseCode(), HttpURLConnection.HTTP_OK);
+		Assert.assertEquals(HttpURLConnection.HTTP_OK, ((HttpURLConnection) UrlFollower.follow(SECURE_UNSECURE_SECURE_REDIRECT, 2, true, true)).getResponseCode());
 	}
 
 	@Test
 	public void followNoRedirectSuccess() throws IOException {
-		Assert.assertEquals(((HttpURLConnection) UrlFollower.follow(SECURE_TARGET, 0, false, false)).getResponseCode(), HttpURLConnection.HTTP_OK);
+		Assert.assertEquals(HttpURLConnection.HTTP_OK, ((HttpURLConnection) UrlFollower.follow(SECURE_TARGET, 0, false, false)).getResponseCode());
 	}
 
 	@Test
 	public void disableRedirects() throws IOException {
 		HttpURLConnection connection = (HttpURLConnection) UNSECURE_SECURE_REDIRECT.openConnection();
 		connection.setInstanceFollowRedirects(false);
-		Assert.assertEquals(((HttpURLConnection) UrlFollower.follow(connection)).getResponseCode(), HttpURLConnection.HTTP_MOVED_PERM);
+		Assert.assertEquals(HttpURLConnection.HTTP_MOVED_TEMP, ((HttpURLConnection) UrlFollower.follow(connection)).getResponseCode());
 	}
 
 	@Test

@@ -21,6 +21,7 @@ package com.rapidminer.repository.gui.actions;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.gui.RepositoryTree;
 
@@ -40,9 +41,16 @@ public class RenameRepositoryEntryAction extends AbstractRepositoryAction<Entry>
 
 	@Override
 	public void actionPerformed(Entry entry) {
-		// no renaming of repositores allowed, RepositoryConfigurationDialog is responsible for that
+		// no renaming of repositories allowed, RepositoryConfigurationDialog is responsible for that
 		if (entry instanceof Repository) {
 			return;
+		}
+		if (entry instanceof Folder) {
+			Folder f = (Folder) entry;
+			// if this is the connections folder AND it is named properly as "Connections"
+			if (f.isSpecialConnectionsFolder() && Folder.isConnectionsFolderName(f.getName(), true)) {
+				return;
+			}
 		}
 
 		String name = SwingTools.showRepositoryEntryInputDialog("file_chooser.rename", entry.getName(), entry.getName());

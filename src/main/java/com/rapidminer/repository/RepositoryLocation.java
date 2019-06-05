@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.rapidminer.Process;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
 
@@ -201,8 +202,7 @@ public class RepositoryLocation {
 	public Entry locateEntry() throws RepositoryException {
 		Repository repos = getRepository();
 		if (repos != null) {
-			Entry entry = repos.locate(getPath());
-			return entry;
+			return repos.locate(getPath());
 		} else {
 			return null;
 		}
@@ -411,7 +411,7 @@ public class RepositoryLocation {
 	 *             in case the location is malformed
 	 */
 	public static RepositoryLocation getRepositoryLocation(String loc, Operator op) throws UserError {
-		com.rapidminer.Process process = op.getProcess();
+		Process process = op == null ? null : op.getProcess();
 		if (process != null) {
 			RepositoryLocation result;
 			try {

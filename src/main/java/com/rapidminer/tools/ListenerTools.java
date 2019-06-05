@@ -20,6 +20,7 @@ package com.rapidminer.tools;
 
 import static com.rapidminer.tools.ConsumerWithThrowable.wrapAndReturn;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -134,33 +135,19 @@ public final class ListenerTools {
 	 * 		the listener type
 	 * @return a list of non-{@link OperatorException OperatorExceptions} exceptions that have been thrown by the listeners
 	 */
-	@SuppressWarnings("squid:S1181")
+	@SuppressWarnings({"squid:S1181", "unchecked"})
 	public static <L> List<Throwable> informAllAndThrow(ConsumerWithThrowable<Void, OperatorException> initial, Collection<L> listeners,
 														ConsumerWithThrowable<L, OperatorException> method) throws OperatorException {
-		Throwable initialException = null;
-		try {
-			initial.acceptWithException(null);
-		} catch (Throwable e) {
-			initialException = e;
-			if (!(initialException instanceof OperatorException)) {
-				THROWABLE_LOGGER.accept(initialException);
+		List<Object> newListeners = new ArrayList<>(listeners.size() + 1);
+		newListeners.add(initial);
+		listeners.forEach(newListeners::add);
+		ConsumerWithThrowable<Object, OperatorException> newMethod = o -> {
+			if (o == initial) {
+				initial.acceptWithException(null);
+			} else {
+				method.acceptWithException((L) o);
 			}
-		}
-		try {
-			List<Throwable> throwables = informAllAndThrow(listeners, method);
-			if (initialException instanceof OperatorException) {
-				throw (OperatorException) initialException;
-			}
-			if (initialException != null) {
-				throwables.add(0, initialException);
-			}
-			return throwables;
-		} catch (OperatorException e) {
-			if (initialException instanceof OperatorException) {
-				initialException.addSuppressed(e);
-				throw (OperatorException) initialException;
-			}
-			throw e;
-		}
+		};
+		return informAllAndThrow(newListeners, newMethod);
 	}
 }

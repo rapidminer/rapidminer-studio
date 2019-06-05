@@ -28,7 +28,25 @@ import java.util.Collection;
  */
 public class ParameterTypeRegexp extends ParameterTypeString {
 
+	/**
+	 * General parameter key for this type of parameter that indicates what to replace
+	 *
+	 * @since 9.3
+	 */
+	public static final String PARAMETER_REPLACE_WHAT = "replace_what";
+
+	/**
+	 * General parameter key for an accompanying string parameter for the parameter with key {@value #PARAMETER_REPLACE_WHAT}
+	 * that describes the replacement
+	 *
+	 * @since 9.3
+	 */
+	public static final String PARAMETER_REPLACE_BY = "replace_by";
+
 	private static final long serialVersionUID = -4177652183651031337L;
+
+	/** @since 9.3 */
+	private ParameterTypeString replacementParameter;
 
 	public ParameterTypeRegexp(final String key, String description) {
 		this(key, description, true);
@@ -53,6 +71,29 @@ public class ParameterTypeRegexp extends ParameterTypeString {
 
 	public Collection<String> getPreviewList() {
 		return null;
+	}
+
+	/**
+	 * Set the {@link ParameterTypeString} that might be linked to the replacement field
+	 * in the {@link com.rapidminer.gui.properties.RegexpPropertyDialog}.
+	 *
+	 * @param replacementParameter
+	 * 		the parameter linked to replacement; can be {@code null}
+	 * @since 9.3
+	 */
+	public void setReplacementParameter(ParameterTypeString replacementParameter) {
+		this.replacementParameter = replacementParameter;
+	}
+
+	/**
+	 * Returns the {@link ParameterTypeString} linked to the replacement field
+	 * in the {@link com.rapidminer.gui.properties.RegexpPropertyDialog} if it was set.
+	 *
+	 * @return the parameter linked to replacement; can be {@code null}
+	 * @since 9.3
+	 */
+	public ParameterTypeString getReplacementParameter(){
+		return replacementParameter;
 	}
 
 }

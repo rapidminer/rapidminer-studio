@@ -58,6 +58,13 @@ public class RemoveUnusedNominalValuesOperator extends PreprocessingOperator {
 	 */
 	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
+	/**
+	 * Versions <= this version did not sort the internal mapping if an attribute did not have any unused values
+	 * regardless of the sort alphabetically parameter.
+	 */
+	private static final OperatorVersion VERSION_DOESNT_SORT_IF_NO_UNUSED_VARIABLES
+			= new OperatorVersion(9, 2, 1);
+
 	public RemoveUnusedNominalValuesOperator(OperatorDescription description) {
 		super(description);
 	}
@@ -73,7 +80,7 @@ public class RemoveUnusedNominalValuesOperator extends PreprocessingOperator {
 	public PreprocessingModel createPreprocessingModel(ExampleSet exampleSet) throws OperatorException {
 		boolean sortMappings = getParameterAsBoolean(PARAMETER_SORT_MAPPING_ALPHABETICALLY);
 
-		Map<String, MappingTranslation> translations = new HashMap<String, MappingTranslation>();
+		Map<String, MappingTranslation> translations = new HashMap<>();
 
 		exampleSet.recalculateAllAttributeStatistics();
 		for (Attribute attribute : exampleSet.getAttributes()) {
@@ -86,12 +93,14 @@ public class RemoveUnusedNominalValuesOperator extends PreprocessingOperator {
 						translation.newMapping.mapString(value);
 					}
 				}
-				if (translation.newMapping.size() < attribute.getMapping().size()) {
+				if (translation.newMapping.size() < attribute.getMapping().size() ||
+						(sortMappings && getCompatibilityLevel().isAbove(VERSION_DOESNT_SORT_IF_NO_UNUSED_VARIABLES))) {
 					if (sortMappings) {
 						translation.newMapping.sortMappings();
 					}
 					translations.put(attribute.getName(), translation);
 				}
+				// else: don't need a translation as nothing is changed
 			}
 		}
 		return new RemoveUnusedNominalValuesModel(exampleSet, translations);
@@ -130,6 +139,6 @@ public class RemoveUnusedNominalValuesOperator extends PreprocessingOperator {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
-				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+				new OperatorVersion[]{VERSION_MAY_WRITE_INTO_DATA, VERSION_DOESNT_SORT_IF_NO_UNUSED_VARIABLES });
 	}
 }

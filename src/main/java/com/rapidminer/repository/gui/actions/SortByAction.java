@@ -38,31 +38,31 @@ public abstract class SortByAction extends ToggleAction {
 
 	private static final long serialVersionUID = 1L;
 
-	private RepositoryTree tree;
+	private final RepositoryTree tree;
+	private final RepositorySortingMethod method;
 
-	private RepositorySortingMethod method;
-
+	/**
+	 * Creates a new SortByAction
+	 *
+	 * @param i18n the i18n key
+	 * @param tree the repository tree on which the sorting method is applied
+	 * @param method the sorting method represented by this action
+	 */
 	public SortByAction(String i18n, RepositoryTree tree, RepositorySortingMethod method) {
 		super(true, i18n);
 		this.tree = tree;
 		this.method = method;
-		ToggleAction thisAction = this;
-		if (tree.getSortingMethod() != method) {
-			this.setSelected(false);
-		} else {
-			this.setSelected(true);
-		}
-		tree.addRepostorySortingMethodListener(new RepositorySortingMethodListener() {
+		tree.addRepostorySortingMethodListener(this::updateSelectedStatus);
+		updateSelectedStatus(tree.getSortingMethod());
+	}
 
-			@Override
-			public void changedRepositorySortingMethod(RepositorySortingMethod changedToMethod) {
-				if (changedToMethod != method) {
-					thisAction.setSelected(false);
-				} else {
-					thisAction.setSelected(true);
-				}
-			}
-		});
+	/**
+	 * Updates the selected status
+	 *
+	 * @param selectedMethod the currently selected method
+	 */
+	private void updateSelectedStatus(RepositorySortingMethod selectedMethod){
+		setSelected(selectedMethod == method);
 	}
 
 	@Override

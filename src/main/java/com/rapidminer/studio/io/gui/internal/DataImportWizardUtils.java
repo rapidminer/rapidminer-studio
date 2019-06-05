@@ -156,7 +156,7 @@ public final class DataImportWizardUtils {
 				// Switch to result
 				try {
 					Entry entry = entryLocation.locateEntry();
-					if (entry != null && entry instanceof IOObjectEntry) {
+					if (entry instanceof IOObjectEntry) {
 						OpenAction.showAsResult((IOObjectEntry) entry);
 					}
 				} catch (RepositoryException e) {

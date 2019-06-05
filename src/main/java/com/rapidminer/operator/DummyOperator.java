@@ -18,7 +18,6 @@
 */
 package com.rapidminer.operator;
 
-import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import com.rapidminer.RapidMiner;
-import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.operator.ProcessSetupError.Severity;
@@ -98,20 +96,7 @@ public class DummyOperator extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = new ParameterTypeLinkButton(PARAMETER_INSTALL_EXTENSION,
-				I18N.getGUILabel("dummy.parameter.install_extension"), new ResourceAction("install_extension_dummy") {
-
-					private static final long serialVersionUID = 1423879776955743834L;
-
-					@Override
-					public void loggedActionPerformed(ActionEvent e) {
-						try {
-							UpdateManagerRegistry.INSTANCE.get().showUpdateDialog(false, getExtensionId());
-						} catch (URISyntaxException | IOException e1) {
-							SwingTools.showSimpleErrorMessage("dummy.marketplace_connection_error", e1);
-						}
-					}
-
-				});
+				I18N.getGUILabel("dummy.parameter.install_extension"), SwingTools.createMarketplaceDownloadActionForNamespace("install_extension_dummy", getExtensionId()));
 		type.setExpert(false);
 		types.add(type);
 		return types;

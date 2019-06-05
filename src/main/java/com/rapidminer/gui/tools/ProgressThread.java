@@ -18,6 +18,7 @@
 */
 package com.rapidminer.gui.tools;
 
+import java.awt.Window;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,11 +35,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
-
 import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.processeditor.results.ResultDisplay;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.tools.I18N;
@@ -131,7 +132,7 @@ public abstract class ProgressThread implements Runnable {
 	private final Set<ProgressThreadListener> listeners = new CopyOnWriteArraySet<>();
 
 	/** <code>true</code> if the task was cancelled */
-	protected boolean cancelled = false;
+	private boolean cancelled = false;
 
 	/** <code>true</code> if the task is started. (Remains true after canceling.) */
 	private boolean started = false;
@@ -147,7 +148,7 @@ public abstract class ProgressThread implements Runnable {
 	/**
 	 * If set to <code>true</code> and {@link #runInForeground} is set to <code>false</code>, the
 	 * progress dialog will be shown after the amount of time defined by
-	 * {@link #showDialogTimerDelay} if the progress thread has not finished yet by tehen. The
+	 * {@link #showDialogTimerDelay} if the progress thread has not finished yet by then. The
 	 * amount if time can be defined by changing {@link #setShowDialogTimerDelay(long)} which by
 	 * default is set to 2000 milliseconds (2 seconds).
 	 */
@@ -162,6 +163,11 @@ public abstract class ProgressThread implements Runnable {
 	 * If set to <code>true</code> the progress bar will not have a determinate state
 	 */
 	private boolean indeterminate = false;;
+
+	/**
+	 * If set to {@code true} and a progress thread is cancelled, there is a popup about cancelling dependent tasks.
+	 */
+	private boolean dependencyPopups = true;
 
 	/**
 	 * Creates a new {@link ProgressThread} instance with the specified {@link I18N} key. Uses its
@@ -312,16 +318,18 @@ public abstract class ProgressThread implements Runnable {
 
 	/**
 	 * Note that this method has nothing to do with Thread.start. It merely enqueues this Runnable
-	 * in the Executor's queue.
+	 * in the Executor's queue. It sets cancelled and started to false so that progress threads can be reused.
 	 */
 	public void start() {
+		cancelled = false;
+		started = false;
 		// see if task is blocked, if not start it immediately
 		boolean blocked = false;
 		synchronized (LOCK) {
 			blocked = isBlockedByDependencies();
 		}
 		if (!blocked) {
-			EXECUTOR.execute(makeWrapper());
+			EXECUTOR.execute(makeWrapper(true));
 		} else {
 			// otherwise add to queue, which is checked once another task finishes execution
 			synchronized (LOCK) {
@@ -333,13 +341,16 @@ public abstract class ProgressThread implements Runnable {
 
 	/**
 	 * Enqueues this task and waits for its completion. If you call this method, you probably want
-	 * to set the runInForeground flag in the constructor to true.
+	 * to set the runInForeground flag in the constructor to true. This methods sets cancelled and started to false at
+	 * the beginning so that progress threads can be reused.
 	 * <p>
 	 * Be careful when using this method for {@link ProgressThread}s with dependencies, this call
 	 * might block for a long time.
 	 * </p>
 	 */
 	public void startAndWait() {
+		cancelled = false;
+		started = false;
 		// set flag indicating we are a busy waiting task - these are not started automatically by
 		// #checkQueueForDependenciesAndExecuteUnblockedTasks()
 		isWaiting = true;
@@ -350,7 +361,7 @@ public abstract class ProgressThread implements Runnable {
 			}
 			// no dependency -> start immediately
 			if (!blocked) {
-				EXECUTOR.submit(makeWrapper()).get();
+				EXECUTOR.submit(makeWrapper(true)).get();
 				return;
 			}
 			synchronized (LOCK) {
@@ -367,8 +378,9 @@ public abstract class ProgressThread implements Runnable {
 					// no longer blocked? Execute and wait and afterwards leave loop
 					synchronized (LOCK) {
 						queuedThreads.remove(this);
+						currentThreads.add(this);
 					}
-					EXECUTOR.submit(makeWrapper()).get();
+					EXECUTOR.submit(makeWrapper(false)).get();
 					break;
 				}
 				Thread.sleep(BUSY_WAITING_INTERVAL);
@@ -402,8 +414,8 @@ public abstract class ProgressThread implements Runnable {
 			dependentThreads = checkQueuedThreadDependOnCurrentThread();
 		}
 		if (dependentThreads) {
-			if (ConfirmDialog.OK_OPTION != SwingTools.showConfirmDialog("cancel_pg_with_dependencies",
-					ConfirmDialog.OK_CANCEL_OPTION)) {
+			if (dependencyPopups && ConfirmDialog.OK_OPTION != SwingTools.showConfirmDialog(getCancellationOwner(),
+					"cancel_pg_with_dependencies", ConfirmDialog.OK_CANCEL_OPTION)) {
 				return;
 			} else {
 				synchronized (LOCK) {
@@ -417,11 +429,27 @@ public abstract class ProgressThread implements Runnable {
 				executionCancelled();
 				currentThreads.remove(this);
 			} else {
-				// cancel and not started? Can only be in queue
-				queuedThreads.remove(this);
+				// cancel and not started? Can be in queue or already in current
+				boolean found = queuedThreads.remove(this);
+				if (!found) {
+					//handle the case that run method not already started
+					currentThreads.remove(this);
+				}
 			}
 		}
 		taskCancelled(this);
+	}
+
+	/**
+	 * Gets the owner for the dependency cancellation popup. This is the progress thread dialog if it is visible so
+	 * that the cancellation is not shown behind it.
+	 */
+	private Window getCancellationOwner() {
+		ProgressThreadDialog dialog = ProgressThreadDialog.getInstance();
+		if (dialog == null || !dialog.isVisible()) {
+			return ApplicationFrame.getApplicationFrame();
+		}
+		return dialog;
 	}
 
 	/**
@@ -466,7 +494,6 @@ public abstract class ProgressThread implements Runnable {
 				cancelledThreads.add(pg.getID());
 			}
 		}
-
 		// also remove all the ones depending on the ones that have been cancelled.
 		if (!cancelledThreads.isEmpty()) {
 			removeQueuedThreadsWithDependency(cancelledThreads.toArray(new String[cancelledThreads.size()]));
@@ -501,9 +528,9 @@ public abstract class ProgressThread implements Runnable {
 	 * Creates a wrapper that executes this class' run method, sets {@link #current} and
 	 * subsequently removes it from the list of pending tasks and shows a
 	 * {@link ProgressThreadDialog} if necessary. As a side effect, calling this method also results
-	 * in adding this ProgressThread to the list of pending tasks.
+	 * in adding this ProgressThread to the list of pending tasks if addToCurrent is {@code true}.
 	 * */
-	private Runnable makeWrapper() {
+	private Runnable makeWrapper(boolean addToCurrent) {
 		// show dialog if wanted
 		if (runInForeground) {
 			SwingUtilities.invokeLater(new Runnable() {
@@ -516,9 +543,10 @@ public abstract class ProgressThread implements Runnable {
 				};
 			});
 		}
-
-		synchronized (LOCK) {
-			currentThreads.add(ProgressThread.this);
+		if (addToCurrent) {
+			synchronized (LOCK) {
+				currentThreads.add(ProgressThread.this);
+			}
 		}
 		taskStarted(this);
 		return new Runnable() {
@@ -533,24 +561,21 @@ public abstract class ProgressThread implements Runnable {
 					}
 					started = true;
 				}
-				final Timer showProgressTimer = new Timer("show-pg-timer", true);
-				final TimerTask showProgressTask = new TimerTask() {
+				Timer showProgressTimer = null;
+				if (!isRunInForegroundFlagSet() && isStartDialogShowTimer() && !RapidMiner.getExecutionMode().isHeadless()) {
+					showProgressTimer = new Timer("show-pg-timer", true);
+					final TimerTask showProgressTask = new TimerTask() {
 
-					@Override
-					public void run() {
-						SwingUtilities.invokeLater(new Runnable() {
-
-							@Override
-							public void run() {
+						@Override
+						public void run() {
+							SwingUtilities.invokeLater(() -> {
 								runInForeground = true;
 								if (!ProgressThreadDialog.getInstance().isVisible()) {
 									ProgressThreadDialog.getInstance().setVisible(false, true);
 								}
-							};
-						});
-					}
-				};
-				if (!isRunInForegroundFlagSet() && isStartDialogShowTimer() && !RapidMiner.getExecutionMode().isHeadless()) {
+							});
+						}
+					};
 					showProgressTimer.schedule(showProgressTask, getShowDialogTimerDelay());
 				}
 				try {
@@ -559,17 +584,24 @@ public abstract class ProgressThread implements Runnable {
 					ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
 							"started");
 					ProgressThread.this.run();
-					showProgressTimer.cancel();
+					if (showProgressTimer != null) {
+						showProgressTimer.cancel();
+					}
 					ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
 							"completed");
 				} catch (ProgressThreadStoppedException e) {
-					showProgressTimer.cancel();
+					if (showProgressTimer != null) {
+						showProgressTimer.cancel();
+					}
 					ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
 							"stopped");
-					LogService.getRoot().log(Level.FINE, "com.rapidminer.gui.tools.ProgressThread.progress_thread_aborted",
+					LogService.getRoot().log(Level.FINE,
+							"com.rapidminer.gui.tools.ProgressThread.progress_thread_aborted",
 							getName());
 				} catch (Exception e) {
-					showProgressTimer.cancel();
+					if (showProgressTimer != null) {
+						showProgressTimer.cancel();
+					}
 					ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_PROGRESS_THREAD, key,
 							"failed");
 					LogService.getRoot().log(
@@ -734,6 +766,25 @@ public abstract class ProgressThread implements Runnable {
 	}
 
 	/**
+	 * Allows to define whether a popup is shown if the user cancels a progress thread that has dependent progress
+	 * threads. By default this is {@code true}.
+	 * </br><b>Note:</b> Changing this is only guaranteed to have an effect before starting the progress thread.
+	 *
+	 * @since 9.3.0
+	 */
+	public void setDependencyPopups(boolean showDependencyPopups) {
+		this.dependencyPopups = showDependencyPopups;
+	}
+
+	/**
+	 * @return whether the progress thread opens a popup when it has dependent progress threads and is cancelled or not
+	 * @since 9.3.0
+	 */
+	public boolean showsDependencyPopups() {
+		return dependencyPopups;
+	}
+
+	/**
 	 * @return the currently executed tasks.
 	 */
 	public static Collection<ProgressThread> getCurrentThreads() {
@@ -794,24 +845,18 @@ public abstract class ProgressThread implements Runnable {
 	private static final void checkQueueForDependenciesAndExecuteUnblockedTasks() {
 		// a task has finished, now check tasks in queue if there are ones which are no
 		// longer blocked
-		List<ProgressThread> toRemove = new ArrayList<>();
 		synchronized (LOCK) {
-			for (ProgressThread pg : queuedThreads) {
+			for (ProgressThread pg : new ArrayList<>(queuedThreads)) {
 				if (!pg.isBlockedByDependencies()) {
 					// busy waiting tasks should not be started here, they will notice themselves
 					if (!pg.isWaiting()) {
-						toRemove.add(pg);
-						EXECUTOR.execute(pg.makeWrapper());
+						queuedThreads.remove(pg);
+						EXECUTOR.execute(pg.makeWrapper(true));
 					}
 				}
 			}
 		}
-		// remove here to avoid concurrent modifications
-		for (ProgressThread pg : toRemove) {
-			synchronized (LOCK) {
-				queuedThreads.remove(pg);
-			}
-		}
+
 	}
 
 	/**

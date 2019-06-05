@@ -45,7 +45,7 @@ public class PopupPanel extends JPanel implements PropertyChangeListener {
 
 	private static final long serialVersionUID = 1L;
 
-	private final List<PopupComponentListener> listenerList = new LinkedList<>();
+	private final List<PopupComponentListener> listeners = new LinkedList<>();
 
 	private static final String PERMANENT_FOCUS_OWNER = "permanentFocusOwner";
 
@@ -106,11 +106,11 @@ public class PopupPanel extends JPanel implements PropertyChangeListener {
 	}
 
 	public void addListener(PopupComponentListener l) {
-		listenerList.add(l);
+		listeners.add(l);
 	}
 
 	public void removeListener(PopupComponentListener l) {
-		listenerList.remove(l);
+		listeners.remove(l);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public class PopupPanel extends JPanel implements PropertyChangeListener {
 	}
 
 	private void fireFocusLost() {
-		for (PopupComponentListener l : listenerList) {
+		for (PopupComponentListener l : listeners) {
 			l.focusLost();
 		}
 		stopTracking();

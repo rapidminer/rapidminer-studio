@@ -63,7 +63,7 @@ public class MultipleLinesLabel extends JComponent implements SwingConstants {
 
 	private FontMetrics fontMetrics;
 
-	private Vector<String> vector;
+	private Vector<String> vector = new Vector<>();
 
 	private boolean needUpdate = true;
 

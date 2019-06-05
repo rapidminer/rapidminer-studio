@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Level;
 
+import com.rapidminer.connection.ConnectionInformationFileUtils;
 import com.rapidminer.core.license.ActionStatisticsLicenseManagerListener;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.RapidMinerGUI;
@@ -698,6 +699,10 @@ public class RapidMiner {
 		performInitialSettings();
 		ParameterService.init();
 		ParameterService.setParameterValue(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getLongVersion());
+		if (getExecutionMode().canAccessFilesystem()) {
+			ConnectionInformationFileUtils.checkForCacheClearing();
+			ConnectionInformationFileUtils.initSettings();
+		}
 
 		// initializing networking tools
 		GlobalAuthenticator.init();

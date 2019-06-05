@@ -166,7 +166,7 @@ public class MetaData implements Serializable {
 	}
 
 	public String getDescription() {
-		String name = RendererService.getName(dataClass);
+		String name = getTitleForDescription();
 		if (name == null) {
 			name = dataClass.getSimpleName();
 		}
@@ -183,6 +183,17 @@ public class MetaData implements Serializable {
 			desc.append("</ul>");
 		}
 		return desc.toString();
+	}
+
+	/**
+	 * Returns the title that is used in the {@link #getDescription()} method
+	 * <p>The default implementation checks {@link RendererService#getName}</p>
+	 * <p>If this method returns {@code null}, the {@link Class#getSimpleName()} of the data class is used.</p>
+	 *
+	 * @return the description title, might contain html
+	 */
+	protected String getTitleForDescription() {
+		return RendererService.getName(dataClass);
 	}
 
 	/**

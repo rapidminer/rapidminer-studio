@@ -58,6 +58,12 @@ public class Real2Integer extends AbstractFilteredDataProcessing {
 	 */
 	private static final OperatorVersion VERSION_MAY_WRITE_INTO_DATA = new OperatorVersion(7, 1, 1);
 
+	/**
+	 * Old version converts infinite real values to Long.MAX_VALUE or Long.MIN_VALUE. The new version preserves infinite
+	 * values.
+	 */
+	private static final OperatorVersion VERSION_CAN_NOT_HANDLE_INFINITY = new OperatorVersion(9, 2, 1);
+
 	public Real2Integer(OperatorDescription description) {
 		super(description);
 	}
@@ -71,14 +77,9 @@ public class Real2Integer extends AbstractFilteredDataProcessing {
 					&& (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(amd.getValueType(), Ontology.INTEGER))) {
 				amd.setType(Ontology.INTEGER);
 			}
-			if (round) {
-				amd.setValueRange(
-						new Range(Math.round(amd.getValueRange().getLower()), Math.round(amd.getValueRange().getUpper())),
-						SetRelation.EQUAL);
-			} else {
-				amd.setValueRange(new Range((long) amd.getValueRange().getLower(), (long) amd.getValueRange().getUpper()),
-						SetRelation.EQUAL);
-			}
+			double lower = realToInt(round, amd.getValueRange().getLower());
+			double upper = realToInt(round, amd.getValueRange().getUpper());
+			amd.setValueRange(new Range(lower, upper), SetRelation.EQUAL);
 		}
 		return emd;
 	}
@@ -100,6 +101,9 @@ public class Real2Integer extends AbstractFilteredDataProcessing {
 					double originalValue = example.getValue(attribute);
 					if (Double.isNaN(originalValue)) {
 						example.setValue(newAttribute, Double.NaN);
+					} else if (Double.isInfinite(originalValue) &&
+							getCompatibilityLevel().isAbove(VERSION_CAN_NOT_HANDLE_INFINITY)) {
+						example.setValue(newAttribute, originalValue);
 					} else {
 						long newValue = round ? Math.round(originalValue) : (long) originalValue;
 						example.setValue(newAttribute, newValue);
@@ -147,6 +151,24 @@ public class Real2Integer extends AbstractFilteredDataProcessing {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
-				new OperatorVersion[] { VERSION_MAY_WRITE_INTO_DATA });
+				new OperatorVersion[]{VERSION_MAY_WRITE_INTO_DATA, VERSION_CAN_NOT_HANDLE_INFINITY });
+	}
+
+	/**
+	 * Helper method that either transforms the real to an int by rounding or by ignoring the fractional part.
+	 */
+	private double realToInt(boolean round, double real) {
+		double result;
+		if (!Double.isFinite(real) && getCompatibilityLevel().isAbove(VERSION_CAN_NOT_HANDLE_INFINITY)) {
+			// preserves pos/neg infinity and NaN
+			result = real;
+		} else {
+			if (round) {
+				result = Math.round(real);
+			} else {
+				result = (long) real;
+			}
+		}
+		return result;
 	}
 }

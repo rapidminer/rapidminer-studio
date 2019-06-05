@@ -77,7 +77,7 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 					super.setValue(x);
 					comboBox.setSelectedItem(value);
 					if (value != null) {
-						textField.setText(value.toString());
+						textField.setText(value);
 					} else {
 						textField.setText("");
 					}
@@ -115,7 +115,6 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 				if (!e.isTemporary()) {
 					comboBox.actionPerformed(new ActionEvent(comboBox, 12, COMBO_BOX_EDITED));
 				}
-				super.focusLost(e);
 			}
 		});
 
@@ -123,11 +122,9 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 
 			@Override
 			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					if (!comboBox.isPopupVisible()) {
-						comboBox.actionPerformed(new ActionEvent(comboBox, 12, COMBO_BOX_EDITED));
-						e.consume();
-					}
+				if (e.getKeyCode() == KeyEvent.VK_ENTER && !comboBox.isPopupVisible()) {
+					comboBox.actionPerformed(new ActionEvent(comboBox, 12, COMBO_BOX_EDITED));
+					e.consume();
 				}
 			}
 		});

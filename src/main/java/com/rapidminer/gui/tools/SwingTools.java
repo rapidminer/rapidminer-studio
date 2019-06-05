@@ -38,17 +38,22 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,8 +65,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -75,6 +81,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
+import javax.swing.text.JTextComponent;
+
+import org.jdesktop.swingx.plaf.AbstractUIChangeHandler;
+import org.jdesktop.swingx.prompt.PromptSupport;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.ApplicationFrame;
@@ -113,6 +123,7 @@ import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.plugin.Plugin;
+import com.rapidminer.tools.update.internal.UpdateManagerRegistry;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -130,7 +141,6 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  * @author Ingo Mierswa
  */
 public class SwingTools {
-
 
 	/**
 	 * Scaling of the GUI of the application. Currently, only non-scaling and Retina displays are supported. Likely to be expanded in the future.
@@ -181,6 +191,9 @@ public class SwingTools {
 		public T value;
 	}
 
+	/** see {@link #setPrompt(String, JTextComponent)} */
+	private static final AtomicBoolean needToMakeSwingXWeakHashMapSynchronized = new AtomicBoolean(false);
+	private static final Color PROMPT_TEXT_COLOR = new Color(160, 160, 160);
 
 	/** whether we are on a Mac or not */
 	private static final boolean IS_MAC = SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX;
@@ -1567,7 +1580,7 @@ public class SwingTools {
 	 * 	    File selectedFile = fileChooser.getSelectedFile();
 	 * </pre>
 	 *
-	 * Usually, the method {@link #chooseFile(Component, File, boolean, boolean, FileFilter[])} or
+	 * Usually, the method {@link #chooseFile(Component, String, File, boolean, boolean, FileFilter[], boolean)} or
 	 * one of the convenience wrapper methods can be used to do this. This method is only useful if
 	 * one is interested, e.g., in the selected file filter.
 	 *
@@ -1606,7 +1619,7 @@ public class SwingTools {
 			}
 		}
 
-		if (file != null) {
+		if (file != null && !file.isDirectory()) {
 			fileChooser.setSelectedFile(file);
 		}
 
@@ -2492,7 +2505,7 @@ public class SwingTools {
 	 * official Swing specification and might not be available.
 	 *
 	 * @return the property to disable clear type on windows or {@code null}
-	 * @see http://stackoverflow.com/questions/18764585/text-antialiasing-broken-in-java-1-7-windows
+	 * @see "http://stackoverflow.com/questions/18764585/text-antialiasing-broken-in-java-1-7-windows"
 	 */
 	private static Object getAaTextProperty() {
 		Object aatextProperty = null;
@@ -2527,5 +2540,92 @@ public class SwingTools {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Replaces {@link PromptSupport#setPrompt(String, JTextComponent)}, as that library contains a bug that can cause
+	 * the entire Studio UI to freeze permanently.
+	 *
+	 * @param promptText
+	 * 		the prompt text or {@code null} if an existing prompt text should be removed
+	 * @param textComponent
+	 * 		the text component for which the prompt should be, must not be {@code null}
+	 * @since 9.3.0
+	 */
+	public static void setPrompt(String promptText, JTextComponent textComponent) {
+		if (textComponent == null) {
+			throw new IllegalArgumentException("textComponent must not be null!");
+		}
+
+		PromptSupport.setPrompt(promptText, textComponent);
+		PromptSupport.setForeground(PROMPT_TEXT_COLOR, textComponent);
+		PromptSupport.setFontStyle(Font.ITALIC, textComponent);
+		PromptSupport.setFocusBehavior(PromptSupport.FocusBehavior.SHOW_PROMPT, textComponent);
+
+		// we already exchanged the map with a synchronized map in SwingX, nothing to do anymore
+		if (!needToMakeSwingXWeakHashMapSynchronized.compareAndSet(false, true)) {
+			return;
+		}
+
+		// we need to exchange the WeakHashMap with a synchronized one once (as it's the same instance all the time)
+		// otherwise we can get a permanent freeze of the UI due to a broken map (https://mailinator.blogspot.com/2009/06/beautiful-race-condition.html)
+		AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+			try {
+				PropertyChangeListener[] uiListener = textComponent.getPropertyChangeListeners("UI");
+				for (PropertyChangeListener listener : uiListener) {
+					if (listener instanceof AbstractUIChangeHandler) {
+						Field installedWeakHashMap = AbstractUIChangeHandler.class.getDeclaredField("installed");
+						installedWeakHashMap.setAccessible(true);
+						Map mapObject = (Map) installedWeakHashMap.get(listener);
+						if (mapObject instanceof WeakHashMap) {
+							installedWeakHashMap.set(listener, Collections.synchronizedMap(mapObject));
+						}
+					}
+				}
+			} catch (NoSuchFieldException | IllegalAccessException e) {
+				// should not happen
+				LogService.getRoot().log(Level.SEVERE, "com.rapidminer.gui.tools.SwingTools.failed_hashmap_fix", e);
+			}
+
+			return null;
+		});
+	}
+
+	/**
+	 * Creates an action that, when triggered, searches the marketplace for the given namespace and offers to download
+	 * the extension.
+	 *
+	 * @param i18nKey
+	 * 		the i18n key that the action uses. Will be resolved to {@code gui.action.{i18nkey}.xyz} where xyz out of
+	 *        {label, icon, tip, mne}
+	 * @param namespace
+	 * 		the namespace, e.g. {@code rmx_my_extension}
+	 * @return the action, never {@code null}
+	 * @since 9.3.0
+	 */
+	public static ResourceAction createMarketplaceDownloadActionForNamespace(String i18nKey, String namespace) {
+		return new ResourceAction(i18nKey, namespace) {
+
+			@Override
+			public void loggedActionPerformed(ActionEvent e) {
+				new ProgressThread("search_extension_on_mp") {
+
+					@Override
+					public void run() {
+						try {
+							String extensionId = UpdateManagerRegistry.INSTANCE.get().getExtensionIdForOperatorPrefix(namespace);
+							if (extensionId != null) {
+								UpdateManagerRegistry.INSTANCE.get().showUpdateDialog(false, extensionId);
+							} else {
+								SwingTools.showVerySimpleErrorMessage("extension_unknown", namespace);
+							}
+						} catch (URISyntaxException | IOException e1) {
+							SwingTools.showSimpleErrorMessage("marketplace_connection_error", e1);
+						}
+					}
+				}.start();
+			}
+
+		};
 	}
 }

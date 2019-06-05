@@ -25,10 +25,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.util.LinkedList;
-
+import java.util.Objects;
+import java.util.Optional;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JLabel;
@@ -40,6 +41,7 @@ import javax.swing.SwingConstants;
 
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.OperatorDocumentationBrowser;
+import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
@@ -50,8 +52,13 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.learner.CapabilityProvider;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
+import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.Precondition;
+import com.rapidminer.tools.I18N;
 
 
 /**
@@ -64,6 +71,7 @@ import com.rapidminer.operator.ports.Ports;
 public class OperatorInfoScreen extends ButtonDialog {
 
 	private static final long serialVersionUID = -6566133238783779634L;
+	public static final String INFO_SCREEN_PREFIX = "operator_info_screen.";
 
 	private final transient Operator operator;
 
@@ -91,7 +99,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 			final JLabel label = new JLabel(SwingTools.createIcon("24/sign_warning.png"));
 			label.setHorizontalTextPosition(SwingConstants.CENTER);
 			label.setVerticalTextPosition(SwingConstants.BOTTOM);
-			label.setText("<html><b>Depreceated!</b></html>");
+			label.setText("<html><b>Deprecated!</b></html>");
 			label.setPreferredSize(new Dimension(180, 50));
 			label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 40));
 			deprecatedPanel.add(label, BorderLayout.WEST);
@@ -104,10 +112,10 @@ public class OperatorInfoScreen extends ButtonDialog {
 
 		if (operator instanceof CapabilityProvider) {
 			JPanel learnerPanel = new JPanel(new BorderLayout());
-			JLabel label = new JLabel(SwingTools.createIcon("24/briefcase2.png"));
+			JLabel label = new ResourceLabel(INFO_SCREEN_PREFIX + "capabilities");
+			label.setHorizontalAlignment(SwingConstants.CENTER);
 			label.setHorizontalTextPosition(SwingConstants.CENTER);
 			label.setVerticalTextPosition(SwingConstants.BOTTOM);
-			label.setText("Capabilities");
 			label.setPreferredSize(new Dimension(180, 50));
 			label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 40));
 			learnerPanel.add(label, BorderLayout.WEST);
@@ -123,16 +131,17 @@ public class OperatorInfoScreen extends ButtonDialog {
 		// ports
 		if (operator.getInputPorts().getNumberOfPorts() > 0 || operator.getOutputPorts().getNumberOfPorts() > 0) {
 			JPanel portPanel = new JPanel(new BorderLayout());
-			JLabel label = new JLabel(SwingTools.createIcon("24/plug.png"));
+			JLabel label = new ResourceLabel(INFO_SCREEN_PREFIX + "ports");
+			label.setHorizontalAlignment(SwingConstants.CENTER);
 			label.setHorizontalTextPosition(SwingConstants.CENTER);
 			label.setVerticalTextPosition(SwingConstants.BOTTOM);
-			label.setText("Ports");
 			label.setPreferredSize(new Dimension(180, 50));
 			label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 40));
 			portPanel.add(label, BorderLayout.WEST);
 
 			portPanel.add(
-					createPortsDescriptionPanel("input_ports", "output_ports", operator.getInputPorts(),
+					createPortsDescriptionPanel(INFO_SCREEN_PREFIX + "input_ports",
+							INFO_SCREEN_PREFIX + "output_ports", operator.getInputPorts(),
 							operator.getOutputPorts()), BorderLayout.CENTER);
 			portPanel.setBorder(BorderFactory.createCompoundBorder(
 					BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
@@ -146,7 +155,8 @@ public class OperatorInfoScreen extends ButtonDialog {
 
 			for (ExecutionUnit subprocess : chain.getSubprocesses()) {
 				JPanel subprocessPanel = new JPanel(new BorderLayout());
-				JLabel label = new JLabel(SwingTools.createIcon("24/elements_tree.png"));
+				JLabel label = new ResourceLabel(INFO_SCREEN_PREFIX + "subprocess");
+				label.setHorizontalAlignment(SwingConstants.CENTER);
 				label.setHorizontalTextPosition(SwingConstants.CENTER);
 				label.setVerticalTextPosition(SwingConstants.BOTTOM);
 				label.setText(subprocess.getName());
@@ -155,7 +165,8 @@ public class OperatorInfoScreen extends ButtonDialog {
 				subprocessPanel.add(label, BorderLayout.WEST);
 
 				subprocessPanel.add(
-						createPortsDescriptionPanel("inner_sources", "inner_sinks", subprocess.getInnerSources(),
+						createPortsDescriptionPanel(INFO_SCREEN_PREFIX + "inner_sources",
+								INFO_SCREEN_PREFIX + "inner_sinks", subprocess.getInnerSources(),
 								subprocess.getInnerSinks()), BorderLayout.CENTER);
 				subprocessPanel.setBorder(BorderFactory.createCompoundBorder(
 						BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
@@ -171,13 +182,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 		final JScrollPane overviewPane = new ExtendedJScrollPane(overviewPanel);
 		overviewPane.setBorder(null);
 		overviewPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		overviewPane.getViewport().addComponentListener(new ComponentListener() {
-
-			@Override
-			public void componentHidden(ComponentEvent e) {}
-
-			@Override
-			public void componentMoved(ComponentEvent e) {}
+		overviewPane.getViewport().addComponentListener(new ComponentAdapter() {
 
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -185,13 +190,9 @@ public class OperatorInfoScreen extends ButtonDialog {
 				overviewPanel.setPreferredSize(new Dimension((int) overviewPane.getViewport().getExtentSize().getWidth(),
 						(int) overviewPanel.getPreferredSize().getHeight()));
 			}
-
-			@Override
-			public void componentShown(ComponentEvent e) {}
-
 		});
-		tabs.add("Overview", overviewPane);
-		tabs.add("Description", browser);
+		tabs.add(I18N.getGUILabel(INFO_SCREEN_PREFIX + "tab.overview.label"), overviewPane);
+		tabs.add(I18N.getGUILabel(INFO_SCREEN_PREFIX + "tab.description.label"), browser);
 		layoutDefault(tabs, NORMAL, makeCloseButton());
 	}
 
@@ -205,7 +206,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 		return "<html><b>"
 				+ operator.getOperatorDescription().getName()
 				+ "</b>"
-				+ (operator.getOperatorDescription().getGroup().equals("") ? "" : "<br/>Group: "
+				+ (operator.getOperatorDescription().getGroup().isEmpty() ? "" : "<br/>Group: "
 						+ operator.getOperatorDescription().getGroupName()) + "</html>";
 	}
 
@@ -230,42 +231,30 @@ public class OperatorInfoScreen extends ButtonDialog {
 		c.weighty = 1;
 
 		final JPanel panel = new JPanel(layout);
-		final Icon inIcon;
-		final Icon outIcon;
 		{
 			JPanel rowPanel = new JPanel(new GridLayout(1, 2));
 			JLabel label = new ResourceLabel(inKey);
 			label.setText("<html><i>" + label.getText() + "</i></html>");
-			inIcon = label.getIcon();
 			label.setIcon(null);
 			rowPanel.add(label);
 			label = new ResourceLabel(outKey);
 			label.setText("<html><i>" + label.getText() + "</i></html>");
-			outIcon = label.getIcon();
 			label.setIcon(null);
 			rowPanel.add(label);
 			panel.add(rowPanel, c);
 		}
-		final LinkedList<FixedWidthLabel> labels = new LinkedList<FixedWidthLabel>();
+		final LinkedList<FixedWidthLabel> labels = new LinkedList<>();
 		for (int i = 0; i < Math.max(numberOfInputPorts, numberOfOutputPorts); i++) {
 			JPanel rowPanel = new JPanel(new GridLayout(1, 2));
 			if (i < numberOfInputPorts) {
-				Port port = inputPorts.getPortByIndex(i);
-				FixedWidthLabel label = new FixedWidthLabel(rowPanel.getWidth() / 2, port.getName());
-				label.setIcon(inIcon);
-				label.setText(// (numberOfInputPorts > 1 ? ("<em>" + (i + 1) + ":</em> ") : "") +
-				port.getName() + (port.getDescription().equals("") ? "" : " (" + port.getDescription() + ")"));
+				FixedWidthLabel label = createPortLabel(inputPorts.getPortByIndex(i), rowPanel.getWidth());
 				labels.add(label);
 				rowPanel.add(label);
 			} else {
 				rowPanel.add(new JLabel());
 			}
 			if (i < numberOfOutputPorts) {
-				Port port = outputPorts.getPortByIndex(i);
-				FixedWidthLabel label = new FixedWidthLabel(rowPanel.getWidth() / 2, port.getName());
-				label.setIcon(outIcon);
-				label.setText(// (numberOfOutputPorts > 1 ? ("<em>" + (i + 1) + ":</em> ") : "") +
-				port.getName() + (port.getDescription().equals("") ? "" : " (" + port.getDescription() + ")"));
+				FixedWidthLabel label = createPortLabel(outputPorts.getPortByIndex(i), rowPanel.getWidth());
 				labels.add(label);
 				rowPanel.add(label);
 			} else {
@@ -273,13 +262,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 			}
 			panel.add(rowPanel, c);
 		}
-		panel.addComponentListener(new ComponentListener() {
-
-			@Override
-			public void componentHidden(ComponentEvent e) {}
-
-			@Override
-			public void componentMoved(ComponentEvent e) {}
+		panel.addComponentListener(new ComponentAdapter() {
 
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -288,9 +271,6 @@ public class OperatorInfoScreen extends ButtonDialog {
 					label.setWidth((int) (panel.getWidth() / 2.2));
 				}
 			}
-
-			@Override
-			public void componentShown(ComponentEvent e) {}
 		});
 		return panel;
 	}
@@ -299,21 +279,12 @@ public class OperatorInfoScreen extends ButtonDialog {
 		final JPanel panel = new JPanel(new BorderLayout());
 		final FixedWidthLabel info = new FixedWidthLabel(200, operator.getOperatorDescription().getDeprecationInfo());
 		panel.add(info, BorderLayout.CENTER);
-		panel.addComponentListener(new ComponentListener() {
-
-			@Override
-			public void componentHidden(ComponentEvent e) {}
-
-			@Override
-			public void componentMoved(ComponentEvent e) {}
+		panel.addComponentListener(new ComponentAdapter() {
 
 			@Override
 			public void componentResized(ComponentEvent e) {
 				info.setWidth(panel.getWidth());
 			}
-
-			@Override
-			public void componentShown(ComponentEvent e) {}
 		});
 		return panel;
 	}
@@ -339,6 +310,38 @@ public class OperatorInfoScreen extends ButtonDialog {
 			capabilitiesPanel.add(capabilityLabel);
 		}
 		return capabilitiesPanel;
+	}
+
+	/**
+	 * Creates a {@link FixedWidthLabel} for the given port, setting the given icon and putting the description
+	 * of the port as text.
+	 *
+	 * @param port
+	 * 		the port
+	 * @param totalWidth
+	 * 		the total width; label width will be half
+	 * @return the label
+	 * @since 9.3
+	 */
+	private static FixedWidthLabel createPortLabel(Port port, int totalWidth) {
+		FixedWidthLabel label = new FixedWidthLabel(totalWidth / 2, port.getName());
+		Icon portIcon = null;
+		if (port instanceof OutputPort) {
+			portIcon = RendererService.getIcon(Optional.of(port).map(Port::getMetaData)
+					.map(MetaData::getObjectClass).orElse(null));
+		} else if (port instanceof InputPort) {
+			portIcon = RendererService.getIcon(((InputPort) port).getAllPreconditions().stream()
+					.map(Precondition::getExpectedMetaData)
+					.filter(Objects::nonNull).map(MetaData::getObjectClass)
+					.findFirst().orElse(null));
+		}
+		label.setIcon(portIcon);
+		String portDesc = port.getDescription();
+		if (!portDesc.isEmpty()) {
+			portDesc = " (" + portDesc + ')';
+		}
+		label.setText(port.getName() + portDesc);
+		return label;
 	}
 
 }

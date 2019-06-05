@@ -38,6 +38,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="latestRevision" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="location" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
  *         &lt;element name="size" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="sizeLong" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="0"/>
  *         &lt;element name="type" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
  *         &lt;element name="user" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
  *       &lt;/sequence>
@@ -55,6 +56,7 @@ import javax.xml.bind.annotation.XmlType;
     "latestRevision",
     "location",
     "size",
+    "sizeLong",
     "type",
     "user"
 })
@@ -67,6 +69,7 @@ public class EntryResponse
     protected int latestRevision;
     protected String location;
     protected int size;
+    protected Long sizeLong;
     protected String type;
     protected String user;
 
@@ -164,6 +167,30 @@ public class EntryResponse
      */
     public void setSize(int value) {
         this.size = value;
+    }
+
+    /**
+     * Gets the value of the sizeLong property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Long }
+     *     
+     */
+    public Long getSizeLong() {
+        return sizeLong;
+    }
+
+    /**
+     * Sets the value of the sizeLong property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Long }
+     *     
+     */
+    public void setSizeLong(Long value) {
+        this.sizeLong = value;
     }
 
     /**

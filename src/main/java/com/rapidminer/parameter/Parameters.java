@@ -18,21 +18,25 @@
 */
 package com.rapidminer.parameter;
 
-import com.rapidminer.tools.AbstractObservable;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observer;
-import com.rapidminer.tools.Tools;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.rapidminer.operator.Operator;
+import com.rapidminer.tools.AbstractObservable;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observer;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -307,14 +311,41 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 		return ParameterTypeList.transformString2List(listString);
 	}
 
+	/** Notify all set parameters of the operator renaming */
 	public void notifyRenaming(String oldName, String newName) {
-		for (String key : keyToValueMap.keySet()) {
-			ParameterType type = keyToTypeMap.get(key);
-			String value = keyToValueMap.get(key);
-			if (type != null && value != null) {
-				keyToValueMap.put(key, type.notifyOperatorRenaming(oldName, newName, value));
+		notifyRenameReplace((t, v) -> t.notifyOperatorRenaming(oldName, newName, v));
+	}
+
+	/**
+	 * This method is called when the operator given by {@code oldName} (and {@code oldOp} if it is not {@code null})
+	 * was replaced with the operator described by {@code newName} and {@code newOp}.
+	 * This will inform all set {@link ParameterType parameters} of the replacing.
+	 *
+	 * @param oldName
+	 * 		the name of the old operator
+	 * @param oldOp
+	 * 		the old operator; can be {@code null}
+	 * @param newName
+	 * 		the name of the new operator
+	 * @param newOp
+	 * 		the new operator; must not be {@code null}
+	 * @see ParameterType#notifyOperatorReplacing(String, Operator, String, Operator, String)
+	 * @since 9.3
+	 */
+	public void notifyReplacing(String oldName, Operator oldOp, String newName, Operator newOp) {
+		notifyRenameReplace((t, v) -> t.notifyOperatorReplacing(oldName, oldOp, newName, newOp, v));
+	}
+
+	/** @since 9.3 */
+	private void notifyRenameReplace(BiFunction<ParameterType, String, String> replacer) {
+		for (Entry<String, String> entry : keyToValueMap.entrySet()) {
+			ParameterType type = keyToTypeMap.get(entry.getKey());
+			if (type != null && entry.getValue() != null) {
+				entry.setValue(replacer.apply(type, entry.getValue()));
 			}
 		}
+		keyToValueMap.values().removeIf(Objects::isNull);
+		fireUpdate();
 	}
 
 	/** Renames a parameter, e.g. during importing old XML process files. */

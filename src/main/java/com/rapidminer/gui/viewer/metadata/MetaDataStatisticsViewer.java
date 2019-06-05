@@ -23,7 +23,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -71,23 +70,22 @@ import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.jdesktop.swingx.prompt.PromptSupport;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.ExampleSetUtilities;
+import com.rapidminer.gui.CleanupRequiringComponent;
+import com.rapidminer.gui.actions.CopyStringToClipboardAction;
 import com.rapidminer.gui.actions.export.PrintableComponent;
 import com.rapidminer.gui.look.Colors;
-import com.rapidminer.gui.CleanupRequiringComponent;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ScrollableJPopupMenu;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.TextFieldWithAction;
 import com.rapidminer.gui.tools.components.DropDownPopupButton;
 import com.rapidminer.gui.tools.components.DropDownPopupButton.PopupMenuProvider;
-import com.rapidminer.gui.viewer.metadata.actions.CopyAllMetaDataToClipboardAction;
 import com.rapidminer.gui.viewer.metadata.actions.ShowConstructionValueAction;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent.EventType;
@@ -105,6 +103,7 @@ import com.rapidminer.report.Renderable;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -166,6 +165,9 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 	/** arrow icon with an arrow pointing down */
 	static final ImageIcon ICON_ARROW_DOWN = SwingTools.createIcon("16/" + "navigate_down.png");
+
+	/** x-like red icon for cancellation */
+	private static final ImageIcon CANCELLATION_ICON = SwingTools.createIcon("16/" + "delete.png");
 
 	/**
 	 * icon used in the {@link TextFieldWithAction} when the filter remove action is hovered
@@ -443,10 +445,11 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	 * Creates all {@link AttributeStatisticsPanel}s in a {@link SwingWorker}.
 	 */
 	private void createAttributeStatisticsPanels() {
-		final SwingWorker<Void, AttributeStatisticsPanel> worker = new SwingWorker<Void, AttributeStatisticsPanel>() {
+		final MultiSwingWorker<Boolean, AttributeStatisticsPanel> worker = new MultiSwingWorker<Boolean,
+				AttributeStatisticsPanel>() {
 
 			@Override
-			protected Void doInBackground() throws Exception {
+			protected Boolean doInBackground() throws Exception {
 				// prepare attribute lists and settings
 				List<AbstractAttributeStatisticsModel> orderedAttributeStatisticsModelList = new LinkedList<>();
 				List<Attribute> listOfAttributes = new LinkedList<>();
@@ -509,8 +512,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 					publish(asp);
 				}
 
-				controller.waitAtBarrier();
-				return null;
+				// wait until statistics calculation is done or aborted
+				return controller.waitAtBarrier();
 			}
 
 			@Override
@@ -526,27 +529,30 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 			@Override
 			protected void done() {
 				try {
-					// do this to see if any errors popped up while doing the
-					// above
-					get();
+					boolean statisticsSuccess = get();
+					if (statisticsSuccess) {
+						// remove placeholder
+						attPanel.remove(labelLoading);
 
-					// remove placeholder
-					attPanel.remove(labelLoading);
+						// once all are done refresh the GUI so they are shown
+						MetaDataStatisticsViewer.this.revalidate();
+						MetaDataStatisticsViewer.this.repaint();
 
-					// once all are done refresh the GUI so they are shown
-					MetaDataStatisticsViewer.this.revalidate();
-					MetaDataStatisticsViewer.this.repaint();
-
-					// allow resizing now
-					resizeNameColumnLabel.setVisible(true);
+						// allow resizing now
+						resizeNameColumnLabel.setVisible(true);
+					} else {
+						labelLoading.setText(I18N.getMessage(I18N.getGUIBundle(),
+								"gui.label.meta_data_stats.cancelled.label"));
+						labelLoading.setIcon(CANCELLATION_ICON);
+					}
 				} catch (Exception e) {
 					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.meta_data_view.calc_error", e);
 				}
 			}
-
 		};
-		worker.execute();
+		worker.start();
 	}
+
 
 	/**
 	 * Setup the GUI. This does NOT include creating the {@link AttributeStatisticsPanel}s, as that
@@ -813,9 +819,8 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 				filterNameField.requestFocusInWindow();
 			}
 		});
-		PromptSupport.setPrompt(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.filter_field.prompt"),
+		SwingTools.setPrompt(I18N.getMessage(I18N.getGUIBundle(), "gui.label.meta_data_stats.filter_field.prompt"),
 				filterNameField);
-		PromptSupport.setFontStyle(Font.ITALIC, filterNameField);
 
 		ResourceAction deleteFilterAction = new ResourceAction(true, "meta_data_stats.filter_delete") {
 
@@ -868,7 +873,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 			private void handlePopup(final MouseEvent e) {
 				if (e.isPopupTrigger()) {
 					JPopupMenu menu = new JPopupMenu();
-					menu.add(new CopyAllMetaDataToClipboardAction(model));
+					menu.add(new CopyStringToClipboardAction(true, "meta_data_stats.copy_all_metadata", MetaDataStatisticsViewer.this::createClipboardData));
 					menu.add(new ShowConstructionValueAction(model));
 					menu.show(e.getComponent(), e.getX(), e.getY());
 				}
@@ -1271,4 +1276,70 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 		controller.stop();
 	}
 
+	/**
+	 * Creates the MD that goes into the clipboard on copy.
+	 */
+	private String createClipboardData() {
+		StringBuilder sb = new StringBuilder();
+		for (AbstractAttributeStatisticsModel statModel : model.getOrderedAttributeStatisticsModels()) {
+			// append general stats like name, type, missing values
+			sb.append(statModel.getAttribute().getName());
+			sb.append("\t");
+
+			String valueTypeString = Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(statModel.getAttribute().getValueType());
+			valueTypeString = valueTypeString.replaceAll("_", " ");
+			valueTypeString = String.valueOf(valueTypeString.charAt(0)).toUpperCase() + valueTypeString.substring(1);
+			sb.append(valueTypeString);
+			sb.append("\t");
+
+			sb.append(Tools.formatIntegerIfPossible(statModel.getNumberOfMissingValues()));
+			sb.append("\t");
+
+			// if construction is shown, also add it
+			if (statModel.isShowConstruction()) {
+				String construction = statModel.getConstruction();
+				construction = construction == null ? "-" : construction;
+				sb.append(construction);
+				sb.append("\t");
+			}
+
+			// append value type specific stuff
+			if (NumericalAttributeStatisticsModel.class.isAssignableFrom(statModel.getClass())) {
+				sb.append(((NumericalAttributeStatisticsModel) statModel).getAverage());
+				sb.append("\t");
+
+				sb.append(((NumericalAttributeStatisticsModel) statModel).getDeviation());
+				sb.append("\t");
+
+				sb.append(((NumericalAttributeStatisticsModel) statModel).getMinimum());
+				sb.append("\t");
+
+				sb.append(((NumericalAttributeStatisticsModel) statModel).getMaximum());
+			} else if (NominalAttributeStatisticsModel.class.isAssignableFrom(statModel.getClass())) {
+				int count = 0;
+				List<String> valueStrings = ((NominalAttributeStatisticsModel) statModel).getValueStrings();
+				for (String valueString : valueStrings) {
+					sb.append(valueString);
+					if (count < valueStrings.size() - 1) {
+						sb.append(", ");
+					}
+
+					count++;
+				}
+			} else if (DateTimeAttributeStatisticsModel.class.isAssignableFrom(statModel.getClass())) {
+				sb.append(((DateTimeAttributeStatisticsModel) statModel).getDuration());
+				sb.append("\t");
+
+				sb.append(((DateTimeAttributeStatisticsModel) statModel).getFrom());
+				sb.append("\t");
+
+				sb.append(((DateTimeAttributeStatisticsModel) statModel).getUntil());
+			}
+
+			// next row for next attribute
+			sb.append(System.lineSeparator());
+		}
+
+		return sb.toString();
+	}
 }

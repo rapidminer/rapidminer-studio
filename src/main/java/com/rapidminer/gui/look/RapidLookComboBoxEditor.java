@@ -18,15 +18,10 @@
 */
 package com.rapidminer.gui.look;
 
-import java.awt.Color;
-import java.awt.Font;
-
 import javax.swing.JTextField;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 
-import org.jdesktop.swingx.prompt.PromptSupport;
-import org.jdesktop.swingx.prompt.PromptSupport.FocusBehavior;
-
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.I18N;
 
 
@@ -51,12 +46,9 @@ public class RapidLookComboBoxEditor extends BasicComboBoxEditor {
 	public void setEnable(boolean val) {
 		this.editor.setEnabled(val);
 		if (val) {
-			PromptSupport.setForeground(Color.LIGHT_GRAY, textField);
-			PromptSupport.setPrompt(PROMPT, textField);
-			PromptSupport.setFontStyle(Font.ITALIC, textField);
-			PromptSupport.setFocusBehavior(FocusBehavior.SHOW_PROMPT, textField);
+			SwingTools.setPrompt(PROMPT, textField);
 		} else {
-			PromptSupport.setPrompt("", textField);
+			SwingTools.setPrompt("", textField);
 		}
 	}
 

@@ -166,7 +166,7 @@ public class FontTools {
 		String[] fonts;
 		try {
 			fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.FontTools.system_font_loading.failed", e);
 			fonts = new String[0];
 		}

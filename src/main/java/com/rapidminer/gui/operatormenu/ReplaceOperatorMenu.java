@@ -19,10 +19,14 @@
 package com.rapidminer.gui.operatormenu;
 
 import java.awt.geom.Rectangle2D;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import com.rapidminer.Process;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.draw.ProcessDrawUtils;
@@ -34,7 +38,13 @@ import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.Ports;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.ProcessTools;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -77,24 +87,19 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 		}
 
 		// remember source and sink connections so we can reconnect them later.
-		Map<String, InputPort> inputPortMap = new HashMap<>();
-		Map<String, OutputPort> outputPortMap = new HashMap<>();
-		for (OutputPort source : selectedOperator.getOutputPorts().getAllPorts()) {
-			if (source.isConnected()) {
-				inputPortMap.put(source.getName(), source.getDestination());
-				source.lock();
-				source.getDestination().lock();
+		Map<String, Port> inputPortMap = getConnectedPorts(selectedOperator.getOutputPorts(), OutputPort::getDestination);
+		Map<String, Port> outputPortMap = getConnectedPorts(selectedOperator.getInputPorts(), InputPort::getSource);
+
+		// copy parameters if possible
+		Parameters oldParameters = selectedOperator.getParameters();
+		Parameters newParameters = operator.getParameters();
+		for (String key : oldParameters.getDefinedKeys()) {
+			ParameterType newType = newParameters.getParameterType(key);
+			// copy if parameter types match
+			if (newType != null && oldParameters.getParameterType(key).getClass() == newType.getClass()) {
+				newParameters.setParameter(key, oldParameters.getParameterOrNull(key));
 			}
 		}
-		for (InputPort sink : selectedOperator.getInputPorts().getAllPorts()) {
-			if (sink.isConnected()) {
-				outputPortMap.put(sink.getName(), sink.getSource());
-				sink.lock();
-				sink.getSource().lock();
-			}
-		}
-		selectedOperator.getOutputPorts().disconnectAll();
-		selectedOperator.getInputPorts().disconnectAll();
 
 		int failedReconnects = 0;
 
@@ -104,37 +109,25 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 			OperatorChain newChain = (OperatorChain) operator;
 			int numCommonSubprocesses = Math.min(oldChain.getNumberOfSubprocesses(), newChain.getNumberOfSubprocesses());
 			for (int i = 0; i < numCommonSubprocesses; i++) {
-				ExecutionUnit oldSubprocess = oldChain.getSubprocess(i);
-				ExecutionUnit newSubprocess = newChain.getSubprocess(i);
-				failedReconnects += newSubprocess.stealOperatorsFrom(oldSubprocess);
+				failedReconnects += newChain.getSubprocess(i).stealOperatorsFrom(oldChain.getSubprocess(i));
 			}
 		}
 		int oldPos = parent.getOperators().indexOf(selectedOperator);
+		Process process = selectedOperator.getProcess();
 		selectedOperator.remove();
+
+		if (process != null) {
+			// find actual new name within process
+			String newName = ProcessTools.getNewName(process.getAllOperatorNames(), operator.getName());
+			// inform parameters of update
+			process.notifyReplacing(selectedOperator.getName(), selectedOperator, newName, operator);
+		}
+
 		parent.addOperator(operator, oldPos);
 
 		// Rewire sources and sinks
-		for (Map.Entry<String, InputPort> entry : inputPortMap.entrySet()) {
-			OutputPort mySource = operator.getOutputPorts().getPortByName(entry.getKey());
-			if (mySource != null) {
-				mySource.connectTo(entry.getValue());
-				mySource.unlock();
-				entry.getValue().unlock();
-			} else {
-				failedReconnects++;
-			}
-		}
-
-		for (Map.Entry<String, OutputPort> entry : outputPortMap.entrySet()) {
-			InputPort mySink = operator.getInputPorts().getPortByName(entry.getKey());
-			if (mySink != null) {
-				entry.getValue().connectTo(mySink);
-				entry.getValue().unlock();
-				mySink.unlock();
-			} else {
-				failedReconnects++;
-			}
-		}
+		failedReconnects += rewirePorts(inputPortMap, operator.getOutputPorts());
+		failedReconnects += rewirePorts(outputPortMap, operator.getInputPorts());
 
 		// copy operator rectangle from old operator to the new one to make the swap in place
 		ProcessRendererModel processModel = mainFrame.getProcessPanel().getProcessRenderer().getModel();
@@ -147,6 +140,62 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 		if (failedReconnects > 0) {
 			SwingTools.showVerySimpleErrorMessage("op_replaced_failed_connections_restored", failedReconnects);
 		}
+	}
 
+	/**
+	 * Gets a map of all connected ports to its connected counter part. The key is the name of the port found by the
+	 * given {@link Ports} instance, the value is the actual {@link Port} object connected to it. The port name corresponds
+	 * to a port belonging to the operator to be replaced.
+	 *
+	 * @since 9.3
+	 */
+	private <P extends Port> LinkedHashMap<String, Port> getConnectedPorts(Ports<P> ports, Function<P, Port> opposite) {
+		return ports.getAllPorts().stream().filter(Port::isConnected).map(p -> getDisconnectedLockedPair(p, opposite.apply(p)))
+				.collect(Collectors.toMap(Pair::getFirst, Pair::getSecond, (a, b) -> b, LinkedHashMap::new));
+	}
+
+	/**
+	 * Gets a pair of connected {@link Port Ports}. Locks both ports, disconnects them and returns the a {@link Pair}
+	 * with the first port's name and the second port.
+	 *
+	 * @see Port#lock()
+	 * @since 9.3
+	 */
+	private Pair<String, Port> getDisconnectedLockedPair(Port port, Port other) {
+		port.lock();
+		other.lock();
+		if (port instanceof OutputPort) {
+			((OutputPort) port).disconnect();
+		} else if (other instanceof OutputPort) {
+			((OutputPort) other).disconnect();
+		}
+		return new Pair<>(port.getName(), other);
+	}
+
+	/**
+	 * Connects all port pairs specified in the map using the {@link Ports port finder} to resolve ports by name. Returns the number
+	 * of failed connections.
+	 *
+	 * @see Ports#getPortByName(String)
+	 * @since 9.3
+	 */
+	private int rewirePorts(Map<String, ? extends Port> connectedPorts, Ports<?> ports) {
+		int sum = 0;
+		for (Entry<String, ? extends Port> e : connectedPorts.entrySet()) {
+			Port p = ports.getPortByName(e.getKey());
+			if (p == null) {
+				sum++;
+				continue;
+			}
+			Port q = e.getValue();
+			if (p instanceof OutputPort) {
+				((OutputPort) p).connectTo((InputPort) q);
+			} else {
+				((OutputPort) q).connectTo((InputPort) p);
+			}
+			p.unlock();
+			q.unlock();
+		}
+		return sum;
 	}
 }

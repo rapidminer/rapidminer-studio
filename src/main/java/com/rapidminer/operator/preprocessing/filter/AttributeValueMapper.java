@@ -46,6 +46,7 @@ import com.rapidminer.operator.preprocessing.AbstractValueProcessing;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeList;
+import com.rapidminer.parameter.ParameterTypeRegexp;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
@@ -96,11 +97,21 @@ public class AttributeValueMapper extends AbstractValueProcessing {
 	/** The parameter name for &quot;The second value which should be merged.&quot; */
 	public static final String PARAMETER_OLD_VALUES = "old_values";
 
-	/** The parameter name for &quot;All occurrences of this value will be replaced.&quot; */
-	public static final String PARAMETER_REPLACE_WHAT = "replace_what";
+	/**
+	 * The parameter name for &quot;All occurrences of this value will be replaced.&quot;
+	 *
+	 * @deprecated since 9.3; use {@link ParameterTypeRegexp#PARAMETER_REPLACE_WHAT} instead
+	 */
+	@Deprecated
+	public static final String PARAMETER_REPLACE_WHAT = ParameterTypeRegexp.PARAMETER_REPLACE_WHAT;
 
-	/** The parameter name for &quot;The new attribute value to use.&quot; */
-	public static final String PARAMETER_REPLACE_BY = "replace_by";
+	/**
+	 * The parameter name for &quot;The new attribute value to use.&quot;
+	 *
+	 * @deprecated since 9.3; use {@link ParameterTypeRegexp#PARAMETER_REPLACE_BY} instead
+	 */
+	@Deprecated
+	public static final String PARAMETER_REPLACE_BY = ParameterTypeRegexp.PARAMETER_REPLACE_BY;
 
 	/**
 	 * The parameter name for &quot;Enables matching based on regular expressions; original values
@@ -152,8 +163,8 @@ public class AttributeValueMapper extends AbstractValueProcessing {
 			boolean useValueRegex = getParameterAsBoolean(PARAMETER_CONSIDER_REGULAR_EXPRESSIONS);
 			List<String[]> mappingParameterList = getParameterList(PARAMETER_VALUE_MAPPINGS);
 
-			String replaceWhat = getParameterAsString(PARAMETER_REPLACE_WHAT);
-			String replaceBy = getParameterAsString(PARAMETER_REPLACE_BY);
+			String replaceWhat = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT);
+			String replaceBy = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_BY);
 			HashMap<String, String> mappings = new LinkedHashMap<String, String>();
 			HashMap<Pattern, String> patternMappings = new LinkedHashMap<Pattern, String>();
 			if (replaceWhat != null && replaceBy != null && !replaceWhat.equals("") && !replaceBy.equals("")) {
@@ -294,8 +305,8 @@ public class AttributeValueMapper extends AbstractValueProcessing {
 		boolean useValueRegex = getParameterAsBoolean(PARAMETER_CONSIDER_REGULAR_EXPRESSIONS);
 		List<String[]> mappingParameterList = getParameterList(PARAMETER_VALUE_MAPPINGS);
 
-		String replaceWhat = getParameterAsString(PARAMETER_REPLACE_WHAT);
-		String replaceBy = getParameterAsString(PARAMETER_REPLACE_BY);
+		String replaceWhat = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT);
+		String replaceBy = getParameterAsString(ParameterTypeRegexp.PARAMETER_REPLACE_BY);
 		HashMap<String, String> mappings = new LinkedHashMap<String, String>();
 		HashMap<Pattern, String> patternMappings = new LinkedHashMap<Pattern, String>();
 		if (replaceWhat != null && replaceBy != null && !replaceWhat.equals("") && !replaceBy.equals("")) {
@@ -458,13 +469,13 @@ public class AttributeValueMapper extends AbstractValueProcessing {
 		type.setPrimary(true);
 		types.add(type);
 
-		type = new ParameterTypeString(PARAMETER_REPLACE_WHAT, "All occurrences of this value will be replaced.", true);
-		type.setExpert(false);
-		types.add(type);
+		ParameterTypeRegexp regexp = new ParameterTypeRegexp(ParameterTypeRegexp.PARAMETER_REPLACE_WHAT, "All occurrences of this value will be replaced.", true, false);
+		types.add(regexp);
 
-		type = new ParameterTypeString(PARAMETER_REPLACE_BY, "The new attribute value to use.", true);
-		type.setExpert(false);
-		types.add(type);
+		ParameterTypeString replacement = new ParameterTypeString(ParameterTypeRegexp.PARAMETER_REPLACE_BY, "The new attribute value to use.", true);
+		regexp.setReplacementParameter(replacement);
+		replacement.setExpert(false);
+		types.add(replacement);
 
 		types.add(new ParameterTypeBoolean(PARAMETER_CONSIDER_REGULAR_EXPRESSIONS,
 				"Enables matching based on regular expressions; original values may be specified as regular expressions.",

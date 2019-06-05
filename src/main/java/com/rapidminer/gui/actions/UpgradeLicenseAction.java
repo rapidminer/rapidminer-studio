@@ -26,6 +26,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import com.rapidminer.core.license.ProductLinkRegistry;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.gui.tools.NotificationPopup;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.tools.I18N;
@@ -67,7 +68,7 @@ public class UpgradeLicenseAction extends ResourceAction {
 
 	@Override
 	public void loggedActionPerformed(final ActionEvent e) {
-		createUpgradeWorker().execute();
+		createUpgradeWorker().start();
 		if (e != null && e.getSource() != null) {
 			NotificationPopup popup = (NotificationPopup) SwingUtilities.getAncestorOfClass(NotificationPopup.class,
 					(Component) e.getSource());
@@ -82,8 +83,8 @@ public class UpgradeLicenseAction extends ResourceAction {
 	 * 
 	 * @return
 	 */
-	private SwingWorker<Void, Void> createUpgradeWorker() {
-		return new SwingWorker<Void, Void>() {
+	private MultiSwingWorker<Void, Void> createUpgradeWorker() {
+		return new MultiSwingWorker<Void, Void>() {
 
 			@Override
 			protected Void doInBackground() throws Exception {

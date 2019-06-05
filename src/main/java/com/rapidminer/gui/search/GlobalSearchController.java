@@ -27,6 +27,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.ScoreDoc;
 
 import com.rapidminer.gui.search.model.GlobalSearchModel;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.search.GlobalSearchCategory;
 import com.rapidminer.search.GlobalSearchRegistry;
 import com.rapidminer.search.GlobalSearchResult;
@@ -176,7 +177,7 @@ final class GlobalSearchController {
 	 */
 	private void searchOrAppendForCategory(final ScoreDoc offset, final String query, final String categoryId, int resultNumberLimit) {
 		final int searchCountSnapshot = searchCounter.get();
-		SwingWorker<GlobalSearchResult, Void> worker = new SwingWorker<GlobalSearchResult, Void>() {
+		MultiSwingWorker<GlobalSearchResult, Void> worker = new MultiSwingWorker<GlobalSearchResult, Void>() {
 
 			@Override
 			protected GlobalSearchResult doInBackground() throws Exception {
@@ -235,7 +236,7 @@ final class GlobalSearchController {
 				}
 			}
 		};
-		worker.execute();
+		worker.start();
 	}
 
 	/**

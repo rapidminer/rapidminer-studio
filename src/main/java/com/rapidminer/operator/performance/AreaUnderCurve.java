@@ -18,6 +18,10 @@
 */
 package com.rapidminer.operator.performance;
 
+import java.io.ObjectStreamException;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
@@ -25,10 +29,6 @@ import com.rapidminer.tools.math.Averagable;
 import com.rapidminer.tools.math.ROCBias;
 import com.rapidminer.tools.math.ROCData;
 import com.rapidminer.tools.math.ROCDataGenerator;
-
-import java.io.ObjectStreamException;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -101,6 +101,11 @@ public class AreaUnderCurve extends MeasuredPerformance {
 		method = ROCBias.OPTIMISTIC;
 	}
 
+	/**
+	 * True iff the user specified the positive class name.
+	 */
+	private boolean userSpecifiedPositiveClass;
+
 	public AreaUnderCurve(ROCBias method) {
 		this.method = method;
 	}
@@ -117,10 +122,13 @@ public class AreaUnderCurve extends MeasuredPerformance {
 	@Override
 	public void startCounting(ExampleSet exampleSet, boolean useExampleWeights) throws OperatorException {
 		super.startCounting(exampleSet, useExampleWeights);
+		this.positiveClass = userSpecifiedPositiveClass ? positiveClass :
+				exampleSet.getAttributes().getPredictedLabel().getMapping().getPositiveString();
 		// create ROC data
-		this.rocData.add(rocDataGenerator.createROCData(exampleSet, useExampleWeights, method));
+		// using null will make the rocDataGenerator fall back to the label's intern mapping
+		this.rocData.add(rocDataGenerator.createROCData(exampleSet, useExampleWeights, method,
+				userSpecifiedPositiveClass ? positiveClass : null));
 		this.auc = rocDataGenerator.calculateAUC(this.rocData.getLast());
-		this.positiveClass = exampleSet.getAttributes().getPredictedLabel().getMapping().getPositiveString();
 	}
 
 	/** Does nothing. Everything is done in {@link #startCounting(ExampleSet, boolean)}. */
@@ -185,5 +193,16 @@ public class AreaUnderCurve extends MeasuredPerformance {
 
 	public void readResolve() throws ObjectStreamException {
 		rocDataGenerator = new ROCDataGenerator(1.0d, 1.0d);
+	}
+
+	/**
+	 * Sets a user defined positive class (overrides the labels original mapping).
+	 *
+	 * @param positiveClass
+	 * 		User defined positive class name. If {@code null}, the last user specified name is deleted.
+	 */
+	public void setUserDefinedPositiveClassName(String positiveClass) {
+		this.positiveClass = positiveClass;
+		userSpecifiedPositiveClass = positiveClass != null;
 	}
 }

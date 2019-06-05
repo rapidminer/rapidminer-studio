@@ -103,8 +103,8 @@ final class DoubleAutoSparseChunk extends DoubleAutoChunk {
 
 	private void changeToDense(int max) {
 		DoubleAutoChunk dense = new DoubleAutoDenseChunk(chunks, id, ensuredSize, management);
-		// allow to change back to sparse when default was guessed
-		if (!testingDefaultValue) {
+		// allow to change back to sparse when default was guessed except when at the threshold
+		if (!testingDefaultValue || max == AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE - 1) {
 			dense.complete();
 		}
 		for (int i = 0; i <= max; i++) {

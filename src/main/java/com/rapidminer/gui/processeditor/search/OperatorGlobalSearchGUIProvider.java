@@ -37,7 +37,6 @@ import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
@@ -51,6 +50,7 @@ import com.rapidminer.gui.dnd.TransferableOperator;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.search.GlobalSearchGUIUtilities;
 import com.rapidminer.gui.search.GlobalSearchableGUIProvider;
+import com.rapidminer.gui.tools.MultiSwingWorker;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -234,7 +234,7 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 			return;
 		}
 
-		new SwingWorker<Void, Void>() {
+		new MultiSwingWorker<Void, Void>() {
 
 			@Override
 			protected Void doInBackground() {
@@ -246,7 +246,7 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 				}
 				return null;
 			}
-		}.execute();
+		}.start();
 	}
 
 	@Override

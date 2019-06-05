@@ -41,6 +41,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -79,6 +80,7 @@ import com.rapidminer.gui.flow.OverviewPanel;
 import com.rapidminer.gui.flow.PanningManager;
 import com.rapidminer.gui.flow.ProcessInteractionListener;
 import com.rapidminer.gui.flow.ProcessPanel;
+import com.rapidminer.gui.flow.processrendering.annotations.model.OperatorAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotations;
 import com.rapidminer.gui.flow.processrendering.draw.OperatorDrawDecorator;
@@ -803,6 +805,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 						Set<Operator> opsToMove = new LinkedHashSet<>(operators);
 						boolean wasResized = false;
 						boolean shouldMoveOperators = Boolean.parseBoolean(ParameterService.getParameterValue(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_MOVE_CONNECTED_OPERATORS));
+						Set<WorkflowAnnotation> movedAnnotations = new HashSet<>();
 						while (!opsToMove.isEmpty()) {
 							Iterator<Operator> iterator = opsToMove.iterator();
 							Operator op = iterator.next();
@@ -817,23 +820,40 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 										OutputPort::getDestination, executionUnit, opsToMove);
 
 								final Rectangle2D operatorRect = model.getOperatorRect(op);
+								final Rectangle2D oldOperatorRect = (Rectangle2D) operatorRect.clone();
 
 								// check it does not collide with other operators and move it to the right if necessary
 								leftConnectedOperators.stream().map(model::getOperatorRect)
-										.filter(r -> r != null && Math.abs(r.getY() - operatorRect.getY()) < r.getHeight())
+										.filter(r -> r != null && isOverlapping(r, operatorRect))
 										.mapToDouble(r -> r.getX() + ProcessDrawer.GRID_AUTOARRANGE_WIDTH - 1)
-										.filter(x -> operatorRect.getX() < x)
-										.forEach(x -> {
+										.filter(x -> operatorRect.getX() < x).max()
+										.ifPresent(x -> {
+											double diff = operatorRect.getX() - x;
 											operatorRect.setRect(x, operatorRect.getY(), operatorRect.getWidth(), operatorRect.getHeight());
 											model.setOperatorRect(op, operatorRect);
+											final WorkflowAnnotations operatorAnnotations = model.getOperatorAnnotations(op);
+											if (operatorAnnotations != null && !operatorAnnotations.isEmpty()) {
+												List<WorkflowAnnotation> annotationsEventOrder = operatorAnnotations.getAnnotationsEventOrder();
+												annotationsEventOrder.stream().filter(anno -> anno instanceof OperatorAnnotation)
+														.map(WorkflowAnnotation::getLocation)
+														.forEach(r -> r.setRect(r.getX() - diff, r.getY(), r.getWidth(), r.getHeight()));
+												movedAnnotations.addAll(annotationsEventOrder);
+											}
 										});
 
 								// check all connected operators to the right also
-								opsToMove.addAll(rightConnectedOperators);
+								// only if this operator really moved either manually or by this feature
+								if (!oldOperatorRect.equals(operatorRect) || operators.contains(op)) {
+									opsToMove.addAll(rightConnectedOperators);
+								}
 							}
 							wasResized |= controller.ensureProcessSizeFits(executionUnit, model.getOperatorRect(op));
 							// notify registered listeners
 							fireOperatorMoved(op);
+						}
+
+						if (!movedAnnotations.isEmpty()) {
+							model.fireAnnotationsMoved(movedAnnotations);
 						}
 
 						// need to repaint if process was not resized
@@ -858,6 +878,16 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				// get all connected ports, find their operator, make sure it is an operator on the same process level and is not already moved
 				return ports.getAllPorts().stream().filter(Port::isConnected).map(port -> opposite.apply(port).getPorts().getOwner().getOperator())
 						.filter(co -> executionUnit == co.getExecutionUnit() && !exclude.contains(co)).distinct().collect(Collectors.toList());
+			}
+
+			/** @since 9.2.1 */
+			private boolean isOverlapping(Rectangle2D a, Rectangle2D b) {
+				return isOverlappingTop(a, b) || isOverlappingTop(b, a);
+			}
+
+			/** @since 9.2.1 */
+			private boolean isOverlappingTop(Rectangle2D top, Rectangle2D bottom) {
+				return top.getY() <= bottom.getY() && bottom.getY() <= top.getMaxY();
 			}
 
 			@Override

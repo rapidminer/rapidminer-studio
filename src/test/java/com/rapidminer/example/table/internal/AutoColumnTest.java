@@ -174,6 +174,21 @@ public class AutoColumnTest {
 	}
 
 	@Test
+	public void doubleAutoColumnSparseToDenseThreshold() {
+		int size = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE + 200;
+		Column column = new DoubleAutoColumn(size, DataManagement.MEMORY_OPTIMIZED);
+		// chose values such that switch from sparse to dense happens at THRESHOLD_CHECK_FOR_SPARSE-1
+		column.setLast(0, 1);
+		for (int i = 1; i < AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE - 1; i++) {
+			column.setLast(i, (i - 1) % 2);
+		}
+		for (int i = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE - 1; i < size; i++) {
+			column.setLast(i, i);
+		}
+		assertEquals(size - 1, column.get(size - 1), 0);
+	}
+
+	@Test
 	public void doubleMemoryColumnTwoDenseChunks() {
 		int size = AutoColumnUtils.CHUNK_SIZE + 1;
 		Column column = new DoubleAutoColumn(size, DataManagement.MEMORY_OPTIMIZED);
@@ -373,6 +388,21 @@ public class AutoColumnTest {
 			column.setLast(i, i);
 		}
 		assertEquals(99, column.get(99), 0);
+		assertEquals(size - 1, column.get(size - 1), 0);
+	}
+
+	@Test
+	public void doubleIncompleteAutoColumnSparseToDenseThreshold() {
+		int size = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE + 200;
+		Column column = new DoubleIncompleteAutoColumn(size, DataManagement.MEMORY_OPTIMIZED);
+		// chose values such that switch from sparse to dense happens at THRESHOLD_CHECK_FOR_SPARSE-1
+		column.setLast(0, 1);
+		for (int i = 1; i < AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE - 1; i++) {
+			column.setLast(i, (i - 1) % 2);
+		}
+		for (int i = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE - 1; i < size; i++) {
+			column.setLast(i, i);
+		}
 		assertEquals(size - 1, column.get(size - 1), 0);
 	}
 
@@ -853,6 +883,24 @@ public class AutoColumnTest {
 	}
 
 	@Test
+	public void integerAutoColumnSparseToDenseThreshold() {
+		int size = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE + 200;
+		Column column = new IntegerAutoColumn(size, DataManagement.MEMORY_OPTIMIZED);
+		//chose switchpoint such that switch from sparse to dense happens at THRESHOLD_CHECK_FOR_SPARSE-1
+		int switchPoint =
+				(int) (AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE
+						* (1 - AutoColumnUtils.THRESHOLD_INTEGER_MEDIUM_SPARSITY_DENSITY)) - 101;
+		column.setLast(0, 1);
+		for (int i = 1; i < switchPoint; i++) {
+			column.setLast(i, 0);
+		}
+		for (int i = switchPoint; i < size; i++) {
+			column.setLast(i, i);
+		}
+		assertEquals(size - 1, column.get(size - 1), 0);
+	}
+
+	@Test
 	public void integerAutoColumnSparse2ndWrite() {
 		int size = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE + 200;
 		Column column = new IntegerAutoColumn(size, DataManagement.AUTO);
@@ -1198,6 +1246,24 @@ public class AutoColumnTest {
 		column.setLast(size - 1, Double.NaN);
 		assertEquals(size - 4, column.get(size - 4), 0);
 		assertEquals(Double.NaN, column.get(size - 1), 0);
+	}
+
+	@Test
+	public void integerIncompleteColumnSparseToDenseThreshold() {
+		int size = AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE + 200;
+		Column column = new IntegerIncompleteAutoColumn(size, DataManagement.MEMORY_OPTIMIZED);
+		//chose switchpoint such that switch from sparse to dense happens at THRESHOLD_CHECK_FOR_SPARSE-1
+		int switchPoint =
+				(int) (AutoColumnUtils.THRESHOLD_CHECK_FOR_SPARSE
+						* (1 - AutoColumnUtils.THRESHOLD_INTEGER_MEDIUM_SPARSITY_DENSITY)) - 101;
+		column.setLast(0, 1);
+		for (int i = 1; i < switchPoint; i++) {
+			column.setLast(i, 0);
+		}
+		for (int i = switchPoint; i < size; i++) {
+			column.setLast(i, i);
+		}
+		assertEquals(size - 1, column.get(size - 1), 0);
 	}
 
 }

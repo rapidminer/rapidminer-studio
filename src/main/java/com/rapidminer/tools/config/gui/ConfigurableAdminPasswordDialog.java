@@ -41,6 +41,7 @@ import com.rapidminer.repository.internal.remote.RemoteRepositoryFactoryRegistry
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.config.ConfigurationManager;
 
+import static com.rapidminer.repository.internal.remote.RemoteRepository.AuthenticationType.BASIC;
 
 /**
  * Dialog asking for admin password of a given {@link RemoteRepository}.
@@ -127,7 +128,7 @@ public class ConfigurableAdminPasswordDialog extends ButtonDialog {
 			public void run() {
 				RemoteRepositoryFactory remoteRepositoryFactory = RemoteRepositoryFactoryRegistry.INSTANCE.get();
 				final String error = remoteRepositoryFactory != null
-		                ? remoteRepositoryFactory.checkConfiguration(sourceName, repositoryURL, getUserName(), getPassword())
+		                ? remoteRepositoryFactory.checkConfiguration(sourceName, repositoryURL, getUserName(), getPassword(), BASIC)
 		                : I18N.getGUILabel("error.configurable_dialog.remote_repo_factory_not_available");
 
 				SwingUtilities.invokeLater(new Runnable() {

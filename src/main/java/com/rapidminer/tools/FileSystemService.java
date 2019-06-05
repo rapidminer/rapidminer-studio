@@ -33,7 +33,6 @@ import java.util.logging.Level;
  * @author Sebastian Land
  */
 public class FileSystemService {
-
 	/** folder in which extensions have their workspace */
 	private static final String RAPIDMINER_EXTENSIONS_FOLDER = "extensions";
 	/** folder in which extensions get their own folder to work with files */
@@ -44,14 +43,17 @@ public class FileSystemService {
 	private static final String RAPIDMINER_INTERNAL_CACHE = "internal cache";
 	/** folder which can be used for internal caching of the Global Search feature */
 	private static final String RAPIDMINER_INTERNAL_CACHE_SEARCH = "search";
-	/** folder which is used by BrowserContext for cache data storage */
-	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser";
+	/** folder which is used for the connection file cache */
+	private static final String RAPIDMINER_INTERNAL_CACHE_CONNECTION = "connectionFiles";
+	/** folder which is used by BrowserContext for cache data storage. Browser cache depends on platform, if you mix DLLs for Win32 and Win64, you get an endless loop */
+	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser" + (PlatformUtilities.getReleasePlatform() != null ? "-" + PlatformUtilities.getReleasePlatform().name() : "");
 
 	/** folder which can be used for internal caching of the content mapper store */
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE = "content mapper";
 	/** folder which can be used as an internal fallback temp folder */
 	private static final String RAPIDMINER_INTERNAL_CACHE_TEMP = "temp";
 
+	public static final String RAPIDMINER_INTERNAL_CACHE_CONNECTION_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_CONNECTION;
 	public static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_SEARCH;
 	public static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE;
 	public static final String RAPIDMINER_INTERNAL_CACHE_BROWSER_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_BROWSER;

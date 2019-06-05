@@ -141,7 +141,7 @@ public class FileInputPortHandler {
 			return operator.isParameterSet(fileParameterName);
 		} else {
 			try {
-				return fileInputPort.getData(IOObject.class) != null;
+				return fileInputPort.getDataOrNull(FileObject.class) != null;
 			} catch (OperatorException e) {
 				return false;
 			}
