@@ -89,7 +89,7 @@ public class SalesExampleSetGenerator extends AbstractExampleSource {
 
 		emd.addAttribute(new AttributeMetaData("date", Ontology.DATE));
 		emd.addAttribute(new AttributeMetaData("amount", null, Ontology.INTEGER, new Range(1, 10)));
-		emd.addAttribute(new AttributeMetaData("single_price", null, Ontology.INTEGER, new Range(10, 100)));
+		emd.addAttribute(new AttributeMetaData("single_price", null, Ontology.REAL, new Range(10, 100)));
 		DEFAULT_META_DATA = emd;
 	}
 

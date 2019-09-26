@@ -275,6 +275,9 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 	private static final long serialVersionUID = 1L;
 
+	/** The property name for the max row check scale modifier for HTML5 visualizations */
+	public static final String PROPERTY_RAPIDMINER_GUI_VISUALIZATIONS_MAX_ROWS_MODIFIER = "rapidminer.gui.visualizations.max_row_modifier";
+
 	/** The property name whether legacy simple charts should still be hidden in the results */
 	public static final String PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_SIMPLE_CHARTS = "rapidminer.gui.plotter.legacy.simple_charts.show";
 
@@ -544,7 +547,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		});
 	};
 
-	private long lastUpdate = 0;
+	private volatile long lastUpdate = 0;
 	private final Timer updateTimer = new Timer(500, e -> updateProcessNow()) {
 
 		private static final long serialVersionUID = 1L;

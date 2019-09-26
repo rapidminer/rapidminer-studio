@@ -51,7 +51,7 @@ import com.rapidminer.tools.RandomGenerator;
 public class StratifiedPartitionBuilder implements PartitionBuilder {
 
 	/** Helper class for sorting according to class values. */
-	private static class ExampleIndex implements Comparable<ExampleIndex> {
+	static class ExampleIndex implements Comparable<ExampleIndex> {
 
 		int exampleIndex;
 
@@ -145,7 +145,24 @@ public class StratifiedPartitionBuilder implements PartitionBuilder {
 			Example example = reader.next();
 			examples.add(new ExampleIndex(index++, example.getNominalValue(label)));
 		}
+		return createPartitionFromIndices(ratio, examples, size, random);
 
+	}
+
+	/**
+	 * Creates a partition based on the examples list.
+	 *
+	 * @param ratio
+	 * 		the desired ratios
+	 * @param examples
+	 * 		the tuples of row index and class name
+	 * @param size
+	 * 		the size of the new partition
+	 * @param random
+	 * 		the random generator for shuffling
+	 * @return the partition
+	 */
+	static int[] createPartitionFromIndices(double[] ratio, List<ExampleIndex> examples, int size, Random random) {
 		// shuffling
 		Collections.shuffle(examples, random);
 
@@ -213,7 +230,25 @@ public class StratifiedPartitionBuilder implements PartitionBuilder {
 			}
 		}
 
-		int[] part = new int[exampleSet.size()];
+		return createPartitionsForClasses(ratio, classLists, exampleSet.size(), random);
+	}
+
+	/**
+	 * Creates a partition that takes the class list into account.
+	 *
+	 * @param ratio
+	 * 		the desired ratios
+	 * @param classLists
+	 * 		a map from classes to the rows where they appear
+	 * @param size
+	 * 		the size of the new partition
+	 * @param random
+	 * 		the random generator for shuffling
+	 * @return the partition
+	 */
+	static int[] createPartitionsForClasses(double[] ratio, Map<String, List<Integer>> classLists, int size,
+											Random random) {
+		int[] part = new int[size];
 
 		// shuffle each class list and create a partition for each class
 		// seperately

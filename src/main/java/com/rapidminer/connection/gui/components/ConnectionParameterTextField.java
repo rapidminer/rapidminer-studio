@@ -65,13 +65,25 @@ public class ConnectionParameterTextField extends JPanel {
 	 * Creates a new {@link ConnectionParameterTextField text field} for the {@link ConnectionParameterModel parameter}
 	 *
 	 * @param type
-	 * 		the {@link com.rapidminer.connection.gui.model.ConnectionModel#getType() connection type}
+	 * 		the {@link com.rapidminer.connection.gui.model.ConnectionModel#getType() connection type} (unused)
+	 * @param parameter
+	 * 		the parameter
+	 * @deprecated since 9.3.1, use {@link #ConnectionParameterTextField(ConnectionParameterModel)} instead
+	 */
+	@Deprecated
+	public ConnectionParameterTextField(String type, ConnectionParameterModel parameter) {
+		this(parameter);
+	}
+
+	/**
+	 * Creates a new {@link ConnectionParameterTextField text field} for the {@link ConnectionParameterModel parameter}
+	 *
 	 * @param parameter
 	 * 		the parameter
 	 */
-	public ConnectionParameterTextField(String type, ConnectionParameterModel parameter) {
+	public ConnectionParameterTextField(ConnectionParameterModel parameter) {
 		super(new GridBagLayout());
-		this.type = type;
+		this.type = parameter.getType();
 		this.parameter = parameter;
 		editComponent = createEditComponent();
 

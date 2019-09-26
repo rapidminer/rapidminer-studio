@@ -39,6 +39,7 @@ import com.rapidminer.gui.tools.AttributeGuiTools;
 import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.ProgressThread;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.DateTimeAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.NominalAttributeStatisticsModel;
@@ -62,6 +63,9 @@ public class DataViewerTable extends ExtendedJTable {
 	protected static final int MIN_ROW_HEIGHT = 25;
 
 	private static final long serialVersionUID = 5535239693801265693L;
+
+	/** Maximal length for displaying nominal values so that the html parsing does not take forever. */
+	private static final int MAX_VALUE_LENGTH = 350;
 
 	private int[] dateColumns;
 
@@ -280,9 +284,9 @@ public class DataViewerTable extends ExtendedJTable {
 			} else if (statsModel instanceof NominalAttributeStatisticsModel) {
 				NominalAttributeStatisticsModel nomStatsModel = (NominalAttributeStatisticsModel) statsModel;
 				toolTipText += I18N.getMessage(I18N.getGUIBundle(), I18NStatsKey + "least.label") + ": "
-						+ nomStatsModel.getLeast() + "<br>";
+						+ SwingTools.getShortenedDisplayName(nomStatsModel.getLeast(), MAX_VALUE_LENGTH) + "<br>";
 				toolTipText += I18N.getMessage(I18N.getGUIBundle(), I18NStatsKey + "most.label") + ": "
-						+ nomStatsModel.getMost() + "<br>";
+						+ SwingTools.getShortenedDisplayName(nomStatsModel.getMost(), MAX_VALUE_LENGTH) + "<br>";
 			} else if (statsModel instanceof DateTimeAttributeStatisticsModel) {
 				DateTimeAttributeStatisticsModel dateStatsModel = (DateTimeAttributeStatisticsModel) statsModel;
 				toolTipText += I18N.getMessage(I18N.getGUIBundle(), I18NStatsKey + "duration.label") + ": "

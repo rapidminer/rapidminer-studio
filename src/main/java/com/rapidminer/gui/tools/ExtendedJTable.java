@@ -86,6 +86,9 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 
 	private static final int DEFAULT_COLUMN_WIDTH = 100;
 
+	/** Limit the tooltip length that the html parsing does not take forever */
+	private static final int MAX_TOOLTIP_LENGTH = 1000;
+
 	public static final int NO_DATE_FORMAT = -1;
 	public static final int DATE_FORMAT = 0;
 	public static final int TIME_FORMAT = 1;
@@ -657,6 +660,7 @@ public class ExtendedJTable extends JTable implements Tableable, MouseListener {
 			}
 		}
 		if (text != null && !text.equals("")) {
+			text = SwingTools.getShortenedDisplayName(text, MAX_TOOLTIP_LENGTH);
 			return SwingTools.transformToolTipText(text, true);
 		} else {
 			return super.getToolTipText();

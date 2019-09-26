@@ -191,9 +191,6 @@ public abstract class PropertyPanel extends JPanel {
 	/** Maps parameter type keys to currently displayed editors. */
 	private final Map<String, PropertyValueCellEditor> currentEditors = new LinkedHashMap<>();
 
-	/** Types currently displayed by editors. */
-	private Collection<ParameterType> currentTypes;
-
 	private boolean showHelpButtons = true;
 
 	public static final int VALUE_CELL_EDITOR_HEIGHT = 32;
@@ -281,8 +278,7 @@ public abstract class PropertyPanel extends JPanel {
 	}
 
 	public void fireEditingStoppedEvent() {
-		Map<String, PropertyValueCellEditor> currentEditors = new LinkedHashMap<>();
-		currentEditors.putAll(this.currentEditors);
+		Map<String, PropertyValueCellEditor> currentEditors = new LinkedHashMap<>(this.currentEditors);
 		if (currentEditors.size() > 0) {
 			for (String key : currentEditors.keySet()) {
 				currentEditors.get(key).stopCellEditing();
@@ -294,7 +290,8 @@ public abstract class PropertyPanel extends JPanel {
 		removeAll();
 		currentEditors.clear();
 
-		currentTypes = getProperties();
+		/** Types currently displayed by editors. */
+		Collection<ParameterType> currentTypes = getProperties();
 		if (currentTypes == null) {
 			revalidate();
 			repaint();
@@ -330,7 +327,7 @@ public abstract class PropertyPanel extends JPanel {
 				public void editingStopped(ChangeEvent e) {
 					Object valueObj = editor.getCellEditorValue();
 					String value = type.toString(valueObj);
-					String last = getValue(type);
+					String last = getValue(typesOperator, type);
 					// Second check prevents an endless validation loop in case valueObj and last are both null
 					if (!Objects.equals(value, last) && valueObj != last) {
 						setValue(typesOperator, type, value, false);
@@ -521,6 +518,24 @@ public abstract class PropertyPanel extends JPanel {
 
 	protected abstract String getValue(ParameterType type);
 
+	/**
+	 * Returns the parameter value for the given operator.
+	 *
+	 * <p>The default implementation ignores the operator parameter and behaves like {@link
+	 * #getValue(ParameterType)}</p>
+	 *
+	 * @param operator
+	 * 		the operator
+	 * @param type
+	 * 		the parameter of the operator
+	 * @return the value for the given operator
+	 * @see #getValue(ParameterType)
+	 * @since 9.4
+	 */
+	protected String getValue(Operator operator, ParameterType type) {
+		return getValue(type);
+	}
+
 	protected abstract void setValue(Operator operator, ParameterType type, String value);
 
 	protected abstract Collection<ParameterType> getProperties();
@@ -550,8 +565,8 @@ public abstract class PropertyPanel extends JPanel {
 			if (editorClass != null) {
 				try {
 					Constructor<? extends PropertyValueCellEditor> constructor = editorClass
-							.getConstructor(new Class[] { typeClass });
-					editor = constructor.newInstance(new Object[] { type });
+							.getConstructor(typeClass);
+					editor = constructor.newInstance(type);
 				} catch (Exception e) {
 					LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.gui.properties.PropertyPanel.construct_property_editor_error", e), e);
@@ -575,12 +590,12 @@ public abstract class PropertyPanel extends JPanel {
 
 		// Title
 		StringBuilder sb = new StringBuilder(TOOLTIP_INITIAL_SIZE);
-		sb.append("<h3 style=\"padding-bottom:4px\">" + title + "</h3>");
+		sb.append("<h3 style=\"padding-bottom:4px\">").append(title).append("</h3>");
 
 		// Description
 		if (description != null && !description.isEmpty()) {
 			sb.append("<p style=\"padding-bottom:4px\">");
-			sb.append("<b>" + I18N.getGUIMessage("gui.dialog.settings.description") + "</b>: ");
+			sb.append("<b>").append(I18N.getGUIMessage("gui.dialog.settings.description")).append("</b>: ");
 			// prevent the Swing HTML parser from stopping here
 			sb.append(CLOSING_TAGS.matcher(description).replaceAll(""));
 			sb.append("</p>");
@@ -589,14 +604,14 @@ public abstract class PropertyPanel extends JPanel {
 		// Range
 		if (range != null && !range.isEmpty()) {
 			sb.append("<p style=\"padding-bottom:4px\">");
-			sb.append("<b>" + I18N.getGUIMessage("gui.dialog.settings.range") + "</b>: ");
+			sb.append("<b>").append(I18N.getGUIMessage("gui.dialog.settings.range")).append("</b>: ");
 			sb.append(range);
 			sb.append("</p>");
 		}
 
 		// Optional/required
 		sb.append("<p style=\"padding-bottom:4px\">");
-		sb.append("<b>" + I18N.getGUIMessage("gui.dialog.settings.optional") + "</b>: ");
+		sb.append("<b>").append(I18N.getGUIMessage("gui.dialog.settings.optional")).append("</b>: ");
 		if (isOptional) {
 			sb.append(I18N.getGUIMessage("gui.dialog.settings.true"));
 		} else {
@@ -605,7 +620,6 @@ public abstract class PropertyPanel extends JPanel {
 		sb.append("</p>");
 
 		return sb.toString();
-
 	}
 
 	/**

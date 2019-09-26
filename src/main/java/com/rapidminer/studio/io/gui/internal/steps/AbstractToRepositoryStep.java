@@ -180,15 +180,23 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 		if (mainPanel == null) {
 			// If the user has selected a location in the repository browser, use it as initial
 			// location for the chooser.
-			String initalLocation = null;
+			String initialLocation = null;
 			RepositoryTree tree = RapidMinerGUI.getMainFrame().getRepositoryBrowser().getRepositoryTree();
 			Entry entry = tree.getSelectedEntry();
-			if (entry != null && !entry.isReadOnly()) {
-				initalLocation = entry.getLocation().getAbsoluteLocation();
+			if (entry == null) {
+				// nothing selected
+			} else if (entry instanceof Folder && ((Folder) entry).isSpecialConnectionsFolder()) {
+				// select repository if it's a connection
+				initialLocation = entry.getContainingFolder().getLocation().getAbsoluteLocation();
+			} else if (entry.getContainingFolder() != null && entry.getContainingFolder().isSpecialConnectionsFolder()) {
+				// select repository if it's a connection
+				initialLocation = entry.getContainingFolder().getContainingFolder().getLocation().getAbsoluteLocation();
+			} else if (!entry.isReadOnly()) {
+				initialLocation = entry.getLocation().getAbsoluteLocation();
 			}
 			// The validity of the step goes hand in hand with the state of the repository location
 			// chooser. Wrap respective events.
-			chooser = initializeChooser(initalLocation);
+			chooser = initializeChooser(initialLocation);
 			chooser.addChangeListener(changeListener);
 			mainPanel = new JPanel(new CardLayout());
 			mainPanel.add(getContentPanel(), CARD_ID_CHOOSER);
@@ -252,6 +260,11 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 			final Folder parent = (Folder) entry;
 			final Entry oldEntry = entryLocation.locateEntry();
 
+			if (parent.isSpecialConnectionsFolder()) {
+				fireStateChanged();
+				throw new InvalidConfigurationException();
+			}
+
 			// Ask user whether to override existing file (if any).
 			if (oldEntry != null) {
 				if (SwingTools.showConfirmDialog(wizard.getDialog(), "overwrite", ConfirmDialog.YES_NO_OPTION,
@@ -269,8 +282,8 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 						oldEntry.delete();
 						retryDelete = false;
 					} catch (RepositoryException e) {
-						if (SwingTools.showConfirmDialog(wizard.getDialog(), "error_in_delete_entry",
-								ConfirmDialog.YES_NO_OPTION) == ConfirmDialog.NO_OPTION) {
+						if (SwingTools.showConfirmDialog(wizard.getDialog(), "error_in_delete_entry_with_cause",
+								ConfirmDialog.YES_NO_OPTION, oldEntry.getName(), e.getMessage()) == ConfirmDialog.NO_OPTION) {
 							fireStateChanged();
 							chooser.addChangeListener(changeListener);
 							throw new InvalidConfigurationException();

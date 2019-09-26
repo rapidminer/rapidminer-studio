@@ -1515,8 +1515,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 		OperatorChain displayedChain = model.getDisplayedChain();
 		if (hoveringPort != null) {
 			// add port actions
-			final IOObject data = hoveringPort.getAnyDataOrNull();
-			if (data != null && data instanceof ResultObject) {
+			final IOObject data = hoveringPort.getRawData();
+			if (data instanceof ResultObject) {
 				JMenuItem showResult = new JMenuItem(
 						new ResourceAction(true, "show_port_data", ((ResultObject) data).getName()) {
 
@@ -1680,8 +1680,8 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 			} else {
 				boolean first = true;
 				for (OutputPort port : hoveredOp.getOutputPorts().getAllPorts()) {
-					final IOObject data = port.getAnyDataOrNull();
-					if (data != null && data instanceof ResultObject) {
+					final IOObject data = port.getRawData();
+					if (data instanceof ResultObject) {
 						if (first) {
 							menu.addSeparator();
 							first = false;

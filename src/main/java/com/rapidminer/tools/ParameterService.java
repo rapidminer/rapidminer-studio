@@ -204,12 +204,7 @@ public class ParameterService {
 		}
 		parameter.setValue(value);
 
-		try {
-			informListenerOfChange(key, value);
-		} catch (Throwable e) {
-			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-					"com.rapidminer.tools.ParameterService.listener_error", e));
-		}
+		informListenerOfChange(key, value);
 	}
 
 	/**
@@ -483,13 +478,21 @@ public class ParameterService {
 
 	private static void informListenerOfChange(String key, String value) {
 		for (ParameterChangeListener listener : PARAMETER_LISTENERS) {
-			listener.informParameterChanged(key, value);
+			try {
+				listener.informParameterChanged(key, value);
+			} catch (Throwable e) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ParameterService.listener_error", e);
+			}
 		}
 	}
 
 	private static void informListenerOfSave() {
 		for (ParameterChangeListener listener : PARAMETER_LISTENERS) {
-			listener.informParameterSaved();
+			try {
+				listener.informParameterSaved();
+			} catch (Throwable e) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ParameterService.listener_error", e);
+			}
 		}
 	}
 

@@ -53,12 +53,14 @@ public class ParallelUsageTest {
 	private static int MIN_AVAILABLE_DOCS = 5; // will make at least this and at most +1 elements available to be searched
 
 	private static final int DURATION_IN_SECONDS = 10;
+	private static final int MAX_TRIES = 300;
 
 	private static List<Instance> instances = new ArrayList<>();
 	private static List<String[]> texts = new ArrayList<>();
 
 	private static List<Exception> exceptions;
 	private static List<Error> errors;
+
 
 	static {
 		// make the entries the same length
@@ -121,18 +123,29 @@ public class ParallelUsageTest {
 
 	@Before
 	public void waitTillReady() {
+		int i = 0;
 		for (Instance inst : instances) {
 			while (!inst.getSearchable().getSearchManager().isInitialized()) {
 				try {
-					Thread.sleep(100);
+					Thread.sleep(100L);
 				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				if (i++ > MAX_TRIES) {
+					throw new IllegalStateException("waitTillReady did not complete in time.");
 				}
 			}
 		}
+
+		i = 0;
 		while (!GlobalSearchIndexer.INSTANCE.isInitialized()) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(100L);
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+			if (i++ > MAX_TRIES) {
+				throw new IllegalStateException("waitTillReady did not complete in time.");
 			}
 		}
 		exceptions = Collections.synchronizedList(new ArrayList<>());
@@ -140,16 +153,23 @@ public class ParallelUsageTest {
 
 		// so lucene needs some time to get up and running, we can only start the tests if it is ready.
 		boolean onefails = true;
+
+		i = 0;
 		while (onefails) {
-			onefails = true;
 			for (String[] text : texts) {
 				for (String query : text) {
 					try {
+						Thread.sleep(100L);
 						onefails = onefails && new GlobalSearchResultBuilder(query).runSearch().getNumberOfResults() == 0;
 					} catch (ParseException e) {
 						e.printStackTrace();
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
 					}
 				}
+			}
+			if (i++ > MAX_TRIES) {
+				throw new IllegalStateException("waitTillReady did not complete in time.");
 			}
 		}
 	}

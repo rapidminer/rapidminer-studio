@@ -60,6 +60,7 @@ public class TestConnectionPanel extends JPanel {
 
 	private static final Color TEST_BACKGROUND = Colors.PANEL_BACKGROUND;
 	private static final Color TEST_BORDER = Colors.TAB_BORDER;
+	private static final int MESSAGE_WIDTH = 300;
 
 	private static final ImageIcon RUNNING_ICON = SwingTools.createIcon("16/" + ConnectionI18N.getConnectionGUIMessage("test.running.icon"));
 	private static final ImageIcon EMPTY_ICON = SwingTools.createIconFromColor(TEST_BACKGROUND, TEST_BACKGROUND, 16, 16, new Rectangle2D.Double(0, 0, 16, 16));
@@ -117,7 +118,7 @@ public class TestConnectionPanel extends JPanel {
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.weightx = 1.0;
 		gbc.weighty = 1.0;
-		resultDisplay = new FixedWidthLabel(300, "");
+		resultDisplay = new FixedWidthLabel(MESSAGE_WIDTH, "");
 		resultDisplay.setBackground(TEST_BACKGROUND);
 		JPopupMenu copyMenu = new JPopupMenu();
 		copyMenu.add(new CopyStringToClipboardAction(true, "connection.test.copy_result", TestConnectionPanel.this::getTestResultText));
@@ -207,6 +208,8 @@ public class TestConnectionPanel extends JPanel {
 		}
 
 		resultDisplay.setText(i18nMessage);
+		int maxWidth = Math.min(resultDisplay.getFontMetrics(resultDisplay.getFont()).stringWidth(i18nMessage), MESSAGE_WIDTH * 2);
+		resultDisplay.setToolTipText("<html><body><div style=\"width:" + maxWidth + "pt\">" + i18nMessage + "</div></body></html>");
 	}
 
 	private String getTestResultText() {

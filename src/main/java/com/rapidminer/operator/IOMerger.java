@@ -43,7 +43,7 @@ public class IOMerger extends Operator {
 	@Override
 	public void doWork() {
 		for (InputPort inputPort : inputExtender.getManagedPorts()) {
-			IOObject input = inputPort.getAnyDataOrNull();
+			IOObject input = inputPort.getRawData();
 			if (input != null) {
 				outputPort.deliver(input);
 				return;

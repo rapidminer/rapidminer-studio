@@ -66,7 +66,7 @@ public final class StoreToRepositoryStep extends AbstractToRepositoryStep<Reposi
 
 	@Override
 	protected RepositoryLocationChooser initializeChooser(String initialDestination) {
-		return new RepositoryLocationChooser(null, null, initialDestination, true, false, true, true, Colors.WHITE);
+		return new RepositoryLocationChooser(null, null, initialDestination, true, false, true, true, Colors.WHITE, RepositoryLocationChooser.NO_CONNECTIONS);
 	}
 
 	@Override

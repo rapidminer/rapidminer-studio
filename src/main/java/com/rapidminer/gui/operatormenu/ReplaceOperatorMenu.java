@@ -96,7 +96,7 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 		for (String key : oldParameters.getDefinedKeys()) {
 			ParameterType newType = newParameters.getParameterType(key);
 			// copy if parameter types match
-			if (newType != null && oldParameters.getParameterType(key).getClass() == newType.getClass()) {
+			if (newType != null && oldParameters.getParameterType(key) != null && oldParameters.getParameterType(key).getClass() == newType.getClass()) {
 				newParameters.setParameter(key, oldParameters.getParameterOrNull(key));
 			}
 		}

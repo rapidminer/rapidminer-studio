@@ -38,6 +38,8 @@ import com.rapidminer.tools.Observable;
  * This interface defines all behavior and properies common to input and output ports. This is
  * basically names, description etc., as well as adding messages about problems in the process setup
  * and quick fixes.
+ * <p>
+ * Implementations should extend {@link com.rapidminer.operator.ports.impl.AbstractPort}.
  * 
  * @see Ports
  * 
@@ -108,7 +110,7 @@ public interface Port extends Observable<Port> {
 
 	/**
 	 * Returns the last object delivered to the connected {@link InputPort} or received from the
-	 * connected {@link OutputPort}
+	 * connected {@link OutputPort}.
 	 * 
 	 * @throws UserError
 	 *             If data is not of the requested type.
@@ -118,9 +120,42 @@ public interface Port extends Observable<Port> {
 	public <T extends IOObject> T getDataOrNull() throws UserError;
 
 	/**
-	 * Returns the last object delivered to the connected {@link InputPort} or received from the
-	 * connected {@link OutputPort}. Never throws an exception.
+	 * Returns the last object delivered to the connected {@link InputPort} or received from the connected {@link
+	 * OutputPort}. Never throws an exception but instead returns {@code null} if there is no data.
+	 *
+	 * @return the data at the port or {@code null}
+	 * @since 9.4
 	 */
+	public default IOObject getRawData(){
+		// default method for compatibility, overwritten by {@link AbstractPort}
+		return getAnyDataOrNull();
+	}
+
+
+	/**
+	 * This method returns the object of the desired class or {@link null} if no object is
+	 * present or it cannot be cast or converted to the desiredClass. Never throws an exception.
+	 *
+	 * @return the data cast or converted to the desired class or {@code null}
+	 * @since 9.4
+	 */
+	public default <T extends IOObject> T getDataAsOrNull(Class<T> desiredClass){
+		// default method for compatibility, overwritten by {@link AbstractPort}
+		try {
+			return getDataOrNull(desiredClass);
+		} catch (UserError userError) {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns the last object delivered to the connected {@link InputPort} or received from the
+	 * connected {@link OutputPort}. Never throws an exception. Converts {@link com.rapidminer.adaption.belt.IOTable}s
+	 * to {@link com.rapidminer.example.ExampleSet}s.
+	 *
+	 * @deprecated since 9.4, use {@link #getRawData()} or {@link #getDataAsOrNull(Class)} instead.
+	 */
+	@Deprecated
 	public IOObject getAnyDataOrNull();
 
 	/** Returns the set of ports to which this port belongs. */

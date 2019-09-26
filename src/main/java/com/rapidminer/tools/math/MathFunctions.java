@@ -18,14 +18,14 @@
 */
 package com.rapidminer.tools.math;
 
-import Jama.Matrix;
+import java.util.Collection;
+import java.util.Iterator;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 
-import java.util.Collection;
-import java.util.Iterator;
+import Jama.Matrix;
 
 
 /**
@@ -387,5 +387,17 @@ public class MathFunctions {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Function to square a double. Use this instead of {@link Math#pow}(value,2) for performance reasons.
+	 *
+	 * @param value
+	 * 		the value to square
+	 * @return the value to the power of two
+	 * @since 9.4.1
+	 */
+	public static double square(double value){
+		return value * value;
 	}
 }

@@ -31,8 +31,6 @@ import java.lang.ref.WeakReference;
 
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.tools.ExampleSetToStream;
 import com.rapidminer.operator.tools.IOObjectSerializer;
@@ -133,14 +131,8 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 		}
 		try {
 			readObject = readMetaDataObject(metaDataFile);
+			MetaData.shrinkValues(readObject);
 			this.metaData = new WeakReference<>(readObject);
-			if (readObject instanceof ExampleSetMetaData) {
-				for (AttributeMetaData amd : ((ExampleSetMetaData) readObject).getAllAttributes()) {
-					if (amd.isNominal()) {
-						amd.shrinkValueSet();
-					}
-				}
-			}
 		} catch (Exception e) {
 			throw new RepositoryException("Cannot load meta data from '" + metaDataFile + "': " + e, e);
 		}

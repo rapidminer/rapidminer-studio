@@ -18,6 +18,7 @@
 */
 package com.rapidminer.tools;
 
+import java.util.function.UnaryOperator;
 import javax.mail.Session;
 
 
@@ -29,5 +30,20 @@ import javax.mail.Session;
  */
 public interface MailSessionFactory {
 
-	public Session makeSession();
+	/** Create a {@link Session} from the properties in the {@link ParameterService} */
+	Session makeSession();
+
+	/**
+	 * Create a session from the given properties. If a password decoder is necessary, it can be provided as the second parameter.
+	 *
+	 * @param properties
+	 * 		The property lookup; must not be {@code null}
+	 * @param pwDecoder
+	 * 		a password decoder; can be {@code null}
+	 * @return the session
+	 * @since 9.4.1
+	 */
+	default Session makeSession(UnaryOperator<String> properties, UnaryOperator<String> pwDecoder) {
+		return makeSession();
+	}
 }

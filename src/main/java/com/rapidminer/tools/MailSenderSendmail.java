@@ -20,6 +20,7 @@ package com.rapidminer.tools;
 
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 
 import com.rapidminer.RapidMiner;
@@ -34,37 +35,34 @@ public class MailSenderSendmail implements MailSender {
 
 	@Override
 	public void sendEmail(String address, String subject, String content, Map<String, String> headers) throws Exception {
-		String command = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND);
+		sendEmail(address, subject, content, headers, MailUtilities.OLD_MAIL_PROPERTIES);
+	}
+
+	@Override
+	public void sendEmail(String address, String subject, String content, Map<String, String> headers, UnaryOperator<String> properties) throws Exception {
+		String command = properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND);
 		if (command == null || command.isEmpty()) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.MailSenderSendMail.specify_sendmail_command");
-		} else {
-			LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.MailSenderSendMail.executing_command", command);
-			if (headers != null && !headers.isEmpty()) {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.MailSenderSendMail.ignoring_mail_headers_for_sendmail");
-			}
-			Process sendmail = Runtime.getRuntime().exec(new String[] { command, address });
-			PrintStream out = null;
-			try {
-				out = new PrintStream(sendmail.getOutputStream());
-				out.println("Subject: " + subject);
-				String from = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_SENDER);
-				if (from != null && !from.trim().isEmpty()) {
-					out.println("From: " + from.trim());
-				} else {
-					out.println("From: RapidMiner");
-				}
-				out.println("To: " + address);
-				out.println();
-				out.println(content);
-			} catch (Exception e) {
-				throw e;
-			} finally {
-				if (out != null) {
-					out.close();
-				}
-			}
-			Tools.waitForProcess(null, sendmail, command);
+			return;
 		}
+		LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.MailSenderSendMail.executing_command", command);
+		if (headers != null && !headers.isEmpty()) {
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.tools.MailSenderSendMail.ignoring_mail_headers_for_sendmail");
+		}
+		Process sendmail = Runtime.getRuntime().exec(new String[] { command, address });
+		try (PrintStream out = new PrintStream(sendmail.getOutputStream())) {
+			out.println("Subject: " + subject);
+			String from = properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_SENDER);
+			if (from != null && !from.trim().isEmpty()) {
+				out.println("From: " + from.trim());
+			} else {
+				out.println("From: RapidMiner");
+			}
+			out.println("To: " + address);
+			out.println();
+			out.println(content);
+		}
+		Tools.waitForProcess(null, sendmail, command);
 	}
 }

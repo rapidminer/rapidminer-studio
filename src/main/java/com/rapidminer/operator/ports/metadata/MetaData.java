@@ -252,4 +252,22 @@ public class MetaData implements Serializable {
 	public void setAnnotations(Annotations annotations) {
 		this.annotations = annotations;
 	}
+
+	/**
+	 * Shrinks the values of the meta data, if possible. For now, this is only done for number of nominal values in
+	 * {@link ExampleSetMetaData}.
+	 *
+	 * @param metaData
+	 * 		the meta data to try to shrink
+	 * @since 9.3.2
+	 */
+	public static void shrinkValues(MetaData metaData) {
+		if (metaData instanceof ExampleSetMetaData) {
+			for (AttributeMetaData amd : ((ExampleSetMetaData) metaData).getAllAttributes()) {
+				if (amd.isNominal()) {
+					amd.shrinkValueSet();
+				}
+			}
+		}
+	}
 }

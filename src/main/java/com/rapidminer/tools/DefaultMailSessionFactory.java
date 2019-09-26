@@ -20,16 +20,15 @@ package com.rapidminer.tools;
 
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
-
 import javax.crypto.Cipher;
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 
 import com.rapidminer.RapidMiner;
-import com.rapidminer.tools.cipher.CipherException;
-import com.rapidminer.tools.cipher.CipherTools;
+import com.rapidminer.tools.mail.connection.MailConnectionHandler;
 
 
 /**
@@ -59,118 +58,115 @@ public class DefaultMailSessionFactory implements MailSessionFactory {
 	/** All supported TLS1.2 PFS Ciphersuites */
 	private static final String PFS_CIPHER_SUITES = getSupportedPFSCipherSuites();
 
+	private static final String ENABLE_STARTTLS = "mail.smtp.starttls.enable";
+	private static final String SSL_PROTOCOLS = "mail.smtp.ssl.protocols";
+
 	@Override
 	public Session makeSession() {
-		String host = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST);
+		return makeSession(MailUtilities.OLD_MAIL_PROPERTIES, MailUtilities.DECRYPT_WITH_CIPHER_KEY);
+	}
+
+	@Override
+	public Session makeSession(UnaryOperator<String> properties, UnaryOperator<String> pwDecoder) {
+		String host = properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST);
 		if (host == null) {
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.tools.DefaultMailSessionFactory.smtp_host_must_be_specified",
 					RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST);
 			return null;
+		}
+		Properties props = new Properties();
+		props.put("mail.smtp.connectiontimeout", WebServiceTools.TIMEOUT_URL_CONNECTION);
+		props.put("mail.smtp.timeout", WebServiceTools.TIMEOUT_URL_CONNECTION);
+		props.put("mail.smtp.host", host);
+
+		// Set the mail sender
+		String from = properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_SENDER);
+		if (from != null && from.contains("@")) {
+			props.put("mail.from", from.trim());
 		} else {
-			Properties props = new Properties();
-			props.put("mail.smtp.connectiontimeout", WebServiceTools.TIMEOUT_URL_CONNECTION);
-			props.put("mail.smtp.timeout", WebServiceTools.TIMEOUT_URL_CONNECTION);
-			props.put("mail.smtp.host", host);
+			props.put("mail.from", MailConnectionHandler.DEFAULT_SENDER);
+		}
+		final String user = Objects.toString(properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_USER), "");
+		props.put("mail.user", user);
 
-			// Set the mail sender
-			String from = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_SENDER);
-			if (from != null && from.contains("@")) {
-				props.put("mail.from", from.trim());
-			} else {
-				props.put("mail.from", "no-reply@rapidminer.com");
-			}
-			final String user = Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_USER), "");
-			props.put("mail.user", user);
+		// Allow debug mode
+		if (Tools.booleanValue(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE),false)) {
+			props.put("mail.debug", "true");
+		}
 
-			// Allow debug mode
-			if (Tools.booleanValue(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE),
-					false)) {
-				props.put("mail.debug", "true");
-			}
+		// Setup Security
+		switch (Objects.toString(properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY), "")) {
+			case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS:
+				props.setProperty(ENABLE_STARTTLS, "true");
+				break;
+			case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE:
+				props.setProperty(ENABLE_STARTTLS, "true");
+				props.setProperty("mail.smtp.starttls.required", "true");
+				break;
+			case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE_PFS:
+				props.setProperty(ENABLE_STARTTLS, "true");
+				props.setProperty("mail.smtp.starttls.required", "true");
+				props.setProperty(SSL_PROTOCOLS, "TLSv1.2");
+				props.setProperty("mail.smtp.ssl.checkserveridentity", "true");
+				props.setProperty("mail.smtp.ssl.ciphersuites", PFS_CIPHER_SUITES);
+				break;
+			case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS:
+				props.setProperty("mail.smtp.ssl.enable", "true");
+				props.setProperty(SSL_PROTOCOLS, "TLSv1 TLSv1.1 TLSv1.2");
+				break;
+			case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS_PFS:
+				props.setProperty("mail.smtp.ssl.enable", "true");
+				props.setProperty(SSL_PROTOCOLS, "TLSv1.2");
+				props.setProperty("mail.smtp.ssl.checkserveridentity", "true");
+				props.setProperty("mail.smtp.ssl.ciphersuites", PFS_CIPHER_SUITES);
+				break;
+			case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_NONE:
+			default:
+				break;
+		}
 
-			// Setup Security
-			switch (Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY), "")) {
-				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS:
-					props.setProperty("mail.smtp.starttls.enable", "true");
+		// Setup Authentication
+		Authenticator authenticator = null;
+		String passwd = Objects.toString(properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD), "");
+		if (pwDecoder != null) {
+			passwd = pwDecoder.apply(passwd);
+		}
+		if (passwd.length() > 0) {
+			props.setProperty("mail.smtp.submitter", user);
+			props.setProperty("mail.smtp.auth", "true");
+
+			// Set the Authentication mechanism
+			switch (Objects.toString(properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION), "")) {
+				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_CRAM_MD5:
+					props.setProperty("mail.smtp.sasl.enable", "true");
+					props.setProperty("mail.smtp.sasl.mechanisms", "CRAM-MD5");
+					// Workaround for silent sasl downgrade bug in JavaMail < 1.5.2
+					props.setProperty("mail.smtp.auth.mechanisms", "DIGEST-MD5");
 					break;
-				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE:
-					props.setProperty("mail.smtp.starttls.enable", "true");
-					props.setProperty("mail.smtp.starttls.required", "true");
+				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_NTLM:
+					props.setProperty("mail.smtp.auth.mechanisms", "NTLM");
 					break;
-				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_STARTTLS_ENFORCE_PFS:
-					props.setProperty("mail.smtp.starttls.enable", "true");
-					props.setProperty("mail.smtp.starttls.required", "true");
-					props.setProperty("mail.smtp.ssl.protocols", "TLSv1.2");
-					props.setProperty("mail.smtp.ssl.checkserveridentity", "true");
-					props.setProperty("mail.smtp.ssl.ciphersuites", PFS_CIPHER_SUITES);
-					break;
-				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS:
-					props.setProperty("mail.smtp.ssl.enable", "true");
-					props.setProperty("mail.smtp.ssl.protocols", "TLSv1 TLSv1.1 TLSv1.2");
-					break;
-				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_TLS_PFS:
-					props.setProperty("mail.smtp.ssl.enable", "true");
-					props.setProperty("mail.smtp.ssl.protocols", "TLSv1.2");
-					props.setProperty("mail.smtp.ssl.checkserveridentity", "true");
-					props.setProperty("mail.smtp.ssl.ciphersuites", PFS_CIPHER_SUITES);
-					break;
-				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_SECURITY_NONE:
+				case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_AUTO:
 				default:
 					break;
 			}
 
-			// Setup Authentication
-			Authenticator authenticator = null;
-			String passwd = Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD), "");
-			if (CipherTools.isKeyAvailable()) {
-				try {
-					passwd = CipherTools.decrypt(passwd);
-				} catch (CipherException e) {
-					// passwd is in plaintext
-					LogService.getRoot().log(Level.WARNING,
-							"com.rapidminer.tools.DefaultMailSessionFactory.smtp_password_decode_failed");
+			final String password = passwd;
+			authenticator = new Authenticator() {
+
+				@Override
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(user, password);
 				}
-			} else {
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.DefaultMailSessionFactory.smtp_password_cipher_missing");
-			}
-			if (passwd.length() > 0) {
-				props.setProperty("mail.smtp.submitter", user);
-				props.setProperty("mail.smtp.auth", "true");
-
-				// Set the Authentication mechanism
-				switch (Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION), "")) {
-					case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_CRAM_MD5:
-						props.setProperty("mail.smtp.sasl.enable", "true");
-						props.setProperty("mail.smtp.sasl.mechanisms", "CRAM-MD5");
-						// Workaround for silent sasl downgrade bug in JavaMail < 1.5.2
-						props.setProperty("mail.smtp.auth.mechanisms", "DIGEST-MD5");
-						break;
-					case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_NTLM:
-						props.setProperty("mail.smtp.auth.mechanisms", "NTLM");
-						break;
-					case RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_AUTHENTICATION_AUTO:
-					default:
-						break;
-				}
-
-				final String password = passwd;
-				authenticator = new Authenticator() {
-
-					@Override
-					protected PasswordAuthentication getPasswordAuthentication() {
-						return new PasswordAuthentication(user, password);
-					}
-				};
-			}
-
-			String port = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT);
-			if (port != null) {
-				props.setProperty("mail.smtp.port", port);
-			}
-			return Session.getInstance(props, authenticator);
+			};
 		}
+
+		String port = properties.apply(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT);
+		if (port != null) {
+			props.setProperty("mail.smtp.port", port);
+		}
+		return Session.getInstance(props, authenticator);
 	}
 
 	/**

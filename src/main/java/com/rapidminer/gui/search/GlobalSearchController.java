@@ -20,7 +20,6 @@ package com.rapidminer.gui.search;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -81,7 +80,7 @@ final class GlobalSearchController {
 	}
 
 	/**
-	 * Handles loading more results (if there are any) in a {@link SwingWorker}.
+	 * Handles loading more results (if there are any).
 	 *
 	 * @param previousResult
 	 * 		the results of the already found results for this category
@@ -103,7 +102,7 @@ final class GlobalSearchController {
 
 
 	/**
-	 * Handles searching in a {@link SwingWorker}.
+	 * Handles searching.
 	 *
 	 * @param query
 	 * 		the search query entered by the user
@@ -240,10 +239,10 @@ final class GlobalSearchController {
 	}
 
 	/**
-	 * Handles the error when a {@link SwingWorker} fails while searching.
+	 * Handles an error while searching.
 	 *
 	 * @param e
-	 * 		the exception of the SwingWorker
+	 * 		the exception
 	 */
 	private void handleSearchError(ExecutionException e) {
 		String message = null;

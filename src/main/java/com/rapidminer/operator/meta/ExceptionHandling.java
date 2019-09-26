@@ -18,10 +18,6 @@
  */
 package com.rapidminer.operator.meta;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
@@ -34,8 +30,13 @@ import com.rapidminer.operator.ports.OutputPorts;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.LogService;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
 
 
 /**
@@ -56,6 +57,8 @@ import com.rapidminer.tools.LogService;
 public class ExceptionHandling extends OperatorChain {
 
 	public static final String PARAMETER_EXCEPTION_MACRO = "exception_macro";
+
+	public static final String PARAMETER_ADD_DETAILS_TO_LOG = "add_details_to_log";
 
 	private boolean withoutError = true;
 	private Throwable throwable;
@@ -119,8 +122,13 @@ public class ExceptionHandling extends OperatorChain {
 			tryProcess.execute();
 			outputExtender.passDataThrough(TRY_SUBPROCESS);
 		} catch (Throwable e) {
-			LogService.getRoot().log(Level.WARNING,
-					"Error occurred and will be neglected by " + getName() + ": " + e.getMessage(), e);
+			if (getParameterAsBoolean(PARAMETER_ADD_DETAILS_TO_LOG)) {
+				LogService.getRoot().log(Level.WARNING,
+						"Error occurred and will be neglected by " + getName() + ": " + e.getMessage(), e);
+			} else {
+				LogService.getRoot().log(Level.WARNING,
+						"Error occurred and will be neglected by " + getName() + ": " + e.getMessage());
+			}
 			if (isParameterSet(PARAMETER_EXCEPTION_MACRO)) {
 				getProcess().getMacroHandler().addMacro(getParameterAsString(PARAMETER_EXCEPTION_MACRO), e.getMessage());
 			}
@@ -138,6 +146,9 @@ public class ExceptionHandling extends OperatorChain {
 		List<ParameterType> types = new LinkedList<ParameterType>();
 		types.add(new ParameterTypeString(PARAMETER_EXCEPTION_MACRO,
 				"The name of the macro a potentially occuring exception message will be stored in.", true));
+		types.add(new ParameterTypeBoolean(PARAMETER_ADD_DETAILS_TO_LOG,
+				"Indicates if the stack trace and details of the handled exception should be also added to the log files in addition to a simple warning message.",
+				false));
 		types.addAll(super.getParameterTypes());
 		return types;
 	}

@@ -24,7 +24,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.AbstractButton;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
@@ -55,6 +54,8 @@ import com.rapidminer.parameter.ParameterTypeDateFormat;
 public class DateFormatValueCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
 
 	private static final long serialVersionUID = -1889899793777695100L;
+	/** the maximal number of menu items derived from nominal value meta data */
+	private static final int MAX_MENU_ITEMS_FROM_VALUESET = 100;
 	private JPanel panel;
 	private JComboBox<String> formatCombo;
 	private AbstractButton selectButton;
@@ -91,6 +92,7 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 							if (selectedAttribute != null && selectedAttribute.isNominal()
 									&& selectedAttribute.getValueSet() != null) {
 								boolean isNotMenuEmpty = false;
+								int count = 0;
 								for (final String value : selectedAttribute.getValueSet()) {
 									menu.add(new JMenuItem(new LoggedAbstractAction(value) {
 
@@ -102,6 +104,10 @@ public class DateFormatValueCellEditor extends AbstractCellEditor implements Pro
 										}
 									}));
 									isNotMenuEmpty = true;
+									count++;
+									if (count > MAX_MENU_ITEMS_FROM_VALUESET) {
+										break;
+									}
 								}
 								if (!isNotMenuEmpty) {
 									menu.add(new JMenuItem(new ResourceAction("no_matches_found") {

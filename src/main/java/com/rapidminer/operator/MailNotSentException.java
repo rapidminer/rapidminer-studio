@@ -57,7 +57,7 @@ public class MailNotSentException extends Exception {
 	 *            for formatting I18N messages
 	 */
 	public MailNotSentException(String message, Throwable cause, String errorKey, Object... arguments) {
-		super(message);
+		super(message, cause);
 		this.errorKey = errorKey;
 		this.arguments = arguments;
 	}

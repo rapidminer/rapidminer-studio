@@ -18,14 +18,17 @@
 */
 package com.rapidminer.repository;
 
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
 import com.rapidminer.Process;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.repository.local.LocalRepository;
 
 
 /**
@@ -43,21 +46,22 @@ public class RepositoryLocation {
 
 	public static final char SEPARATOR = '/';
 	public static final String REPOSITORY_PREFIX = "//";
-	public static final String[] BLACKLISTED_STRINGS = new String[] { "/", "\\", ":", "<", ">", "*", "?", "\"", "|" };
-
+	public static final String[] BLACKLISTED_STRINGS = new String[]{"/", "\\", ":", "<", ">", "*", "?", "\"", "|"};
+	private static final String SEPARATOR_CHAR = String.valueOf(SEPARATOR);
+	private final String[] path;
 	private String repositoryName;
-	private String[] path;
 	private RepositoryAccessor accessor;
+
 
 	/**
 	 * Constructs a RepositoryLocation from a string of the form //Repository/path/to/object.
 	 */
 	public RepositoryLocation(String absoluteLocation) throws MalformedRepositoryLocationException {
 		if (isAbsolute(absoluteLocation)) {
-			initializeFromAbsoluteLocation(absoluteLocation);
+			this.path = initializeFromAbsoluteLocation(absoluteLocation);
 		} else {
 			repositoryName = null;
-			initializeAbsolutePath(absoluteLocation);
+			this.path = initializeAbsolutePath(absoluteLocation);
 		}
 	}
 
@@ -94,13 +98,13 @@ public class RepositoryLocation {
 	public RepositoryLocation(RepositoryLocation parent, String childName) throws MalformedRepositoryLocationException {
 		this.accessor = parent.accessor;
 		if (isAbsolute(childName)) {
-			initializeFromAbsoluteLocation(childName);
-		} else if (childName.startsWith("" + SEPARATOR)) {
+			this.path = initializeFromAbsoluteLocation(childName);
+		} else if (childName.startsWith(SEPARATOR_CHAR)) {
 			this.repositoryName = parent.repositoryName;
-			initializeAbsolutePath(childName);
+			this.path = initializeAbsolutePath(childName);
 		} else {
 			this.repositoryName = parent.repositoryName;
-			String[] components = childName.split("" + SEPARATOR);
+			String[] components = childName.split(SEPARATOR_CHAR);
 
 			// skip empty path components
 			LinkedList<String> newComponents = new LinkedList<>();
@@ -111,24 +115,22 @@ public class RepositoryLocation {
 			}
 
 			for (String component : components) {
-				if (".".equals(component)) {
-					// do nothing
-				} else if ("..".equals(component)) {
+				if ("..".equals(component)) {
 					if (!newComponents.isEmpty()) {
 						newComponents.removeLast();
-					} else {
-						throw new IllegalArgumentException("Cannot resolve relative location '" + childName
-								+ "' with respect to '" + parent + "': Too many '..'");
 					}
-				} else {
+					// If we have more ../ than folder levels we can go up, we would end up outside of our repository.
+					// Usually caused by copying from a deeper structure to a less nested structure
+					// Even though this is technically an incorrect path, we gracefully ignore it and thus never exceed the repository top level
+				} else if (!".".equals(component)) {
 					newComponents.add(component);
 				}
 			}
-			this.path = newComponents.toArray(new String[newComponents.size()]);
+			this.path = newComponents.toArray(new String[0]);
 		}
 	}
 
-	private void initializeFromAbsoluteLocation(String absoluteLocation) throws MalformedRepositoryLocationException {
+	private String[] initializeFromAbsoluteLocation(String absoluteLocation) throws MalformedRepositoryLocationException {
 		if (!isAbsolute(absoluteLocation)) {
 			throw new MalformedRepositoryLocationException(
 					"Repository location '"
@@ -137,35 +139,28 @@ public class RepositoryLocation {
 		}
 
 		String tmp = absoluteLocation.substring(2);
-		int nextSlash = tmp.indexOf(RepositoryLocation.SEPARATOR);
+		int nextSlash = tmp.indexOf(SEPARATOR);
 		if (nextSlash != -1) {
 			repositoryName = tmp.substring(0, nextSlash);
 		} else {
 			throw new MalformedRepositoryLocationException("Malformed repositoy location '" + absoluteLocation
 					+ "': path component missing.");
 		}
-		initializeAbsolutePath(tmp.substring(nextSlash));
+		return initializeAbsolutePath(tmp.substring(nextSlash));
 	}
 
-	private void initializeAbsolutePath(String path) throws MalformedRepositoryLocationException {
-		if (!path.startsWith("" + SEPARATOR)) {
+	private String[] initializeAbsolutePath(String path) throws MalformedRepositoryLocationException {
+		if (!path.startsWith(SEPARATOR_CHAR)) {
 			throw new MalformedRepositoryLocationException("No absolute path: '" + path
 					+ "'. Absolute paths look e.g. like this: '/path/to/object'.");
 		}
 		path = path.substring(1);
-		this.path = path.split("" + SEPARATOR);
+		return path.split(SEPARATOR_CHAR);
 	}
 
-	/** Returns the absolute location of this RepoositoryLocation. */
+	/** Returns the absolute location of this {@link RepositoryLocation}. */
 	public String getAbsoluteLocation() {
-		StringBuilder b = new StringBuilder();
-		b.append(REPOSITORY_PREFIX);
-		b.append(repositoryName);
-		for (String component : path) {
-			b.append(SEPARATOR);
-			b.append(component);
-		}
-		return b.toString();
+		return REPOSITORY_PREFIX + repositoryName + getPath();
 	}
 
 	/**
@@ -184,12 +179,11 @@ public class RepositoryLocation {
 
 	/** Returns the path within the repository. */
 	public String getPath() {
-		StringBuilder b = new StringBuilder();
-		for (String component : path) {
-			b.append(SEPARATOR);
-			b.append(component);
+		StringBuilder builder = new StringBuilder(path.length * 8);
+		for (String p : path) {
+			builder.append(SEPARATOR).append(p);
 		}
-		return b.toString();
+		return builder.toString();
 	}
 
 	/**
@@ -243,12 +237,22 @@ public class RepositoryLocation {
 
 	/**
 	 * Assume absoluteLocation == "//MyRepos/foo/bar/object" and
-	 * relativeToFolder=//MyRepos/foo/baz/, then this method will return ../bar/object.
+	 * relativeToFolder=//MyRepos/foo/baz/, then this method will return "../bar/object".
+	 * <p>
+	 * Assume absoluteLocation == "//MyRepos/Connections/connection" and
+	 * relativeToFolder=//MyRepos/foo/baz/, then this method will return
+	 * "/Connections/connection".
+	 *
+	 * @see Folder#CONNECTION_FOLDER_NAME
 	 */
 	public String makeRelative(RepositoryLocation relativeToFolder) {
 		// can only do something if repositories match.
 		if (!this.repositoryName.equals(relativeToFolder.repositoryName)) {
 			return getAbsoluteLocation();
+		}
+
+		if (isConnectionPath()) {
+			return getPath();
 		}
 
 		int min = Math.min(this.path.length, relativeToFolder.path.length);
@@ -271,10 +275,6 @@ public class RepositoryLocation {
 			}
 		}
 		return result.toString();
-	}
-
-	public static boolean isAbsolute(String loc) {
-		return loc.startsWith(RepositoryLocation.REPOSITORY_PREFIX);
 	}
 
 	/**
@@ -325,6 +325,49 @@ public class RepositoryLocation {
 	}
 
 	/**
+	 * Checks whether this {@link RepositoryLocation} is located in the
+	 * {@link Folder#isConnectionsFolderName(String, boolean) connection folder} of the repository.
+	 * <p>
+	 * <strong>Note:</strong> This method might depend on the repository implementation. Currently the only allowed
+	 * repository w.r.t. case insensitivity is the {@link LocalRepository}
+	 *
+	 * @return if this location represents a connection path entry or not
+	 * @see com.rapidminer.repository.local.SimpleFolder#isConnectionsFolderName(String, boolean) SimpleFolder.isConnectionsFolderName(String, boolean)
+	 * @since 9.3.1
+	 */
+	public boolean isConnectionPath() {
+		try {
+			return path.length == 2 && Folder.isConnectionsFolderName(path[0],
+					repositoryName == null || !(getRepository() instanceof LocalRepository));
+		} catch (RepositoryException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Checks whether the given location string is located in the
+	 * {@link Folder#isConnectionsFolderName(String, boolean) connection folder} of the repository.
+	 * <p>
+	 * <strong>Note:</strong> This method might depend on the repository implementation. Currently the only allowed
+	 * repository w.r.t. case insensitivity is the {@link LocalRepository}
+	 *
+	 * @return if the given location represents a connection path entry or not
+	 * @see com.rapidminer.repository.local.SimpleFolder#isConnectionsFolderName(String, boolean) SimpleFolder.isConnectionsFolderName(String, boolean)
+	 * @since 9.3.1
+	 */
+	public static boolean isConnectionPath(String loc) {
+		try {
+			return new RepositoryLocation(loc).isConnectionPath();
+		} catch (MalformedRepositoryLocationException e) {
+			return false;
+		}
+	}
+
+	public static boolean isAbsolute(String loc) {
+		return loc.startsWith(RepositoryLocation.REPOSITORY_PREFIX);
+	}
+
+	/**
 	 * Checks if the given name is valid as a repository entry. Checks against a blacklist of
 	 * characters.
 	 *
@@ -335,7 +378,7 @@ public class RepositoryLocation {
 		if (name == null) {
 			throw new IllegalArgumentException("name must not be null!");
 		}
-		if ("".equals(name.trim())) {
+		if (name.trim().isEmpty()) {
 			return false;
 		}
 
@@ -354,7 +397,7 @@ public class RepositoryLocation {
 	 * @return
 	 */
 	public static String getIllegalCharacterInName(String name) {
-		if (name == null || "".equals(name.trim())) {
+		if (name == null || name.trim().isEmpty()) {
 			return null;
 		}
 
@@ -369,30 +412,35 @@ public class RepositoryLocation {
 	/**
 	 * Removes locations from list, which are already included in others.
 	 *
-	 * If there are any problems requesting a repository, the input is returned.
-	 *
 	 * Example: [/1/2/3, /1, /1/2] becomes [/1]
 	 */
 	public static List<RepositoryLocation> removeIntersectedLocations(List<RepositoryLocation> repositoryLocations) {
-		List<RepositoryLocation> locations = new LinkedList<>(repositoryLocations);
-		try {
-			Set<RepositoryLocation> removeSet = new HashSet<>();
-			for (RepositoryLocation locationA : locations) {
-				for (RepositoryLocation locationB : locations) {
-					if (!locationA.equals(locationB) && locationA.getRepository().equals(locationB.getRepository())) {
-						String pathA = locationA.getPath();
-						String pathB = locationB.getPath();
-						if (pathA.startsWith(pathB)
-								&& pathA.substring(pathB.length(), pathB.length() + 1).equals(String.valueOf(SEPARATOR))) {
-							removeSet.add(locationA);
+		return removeIntersectedLocations((Collection<RepositoryLocation>) repositoryLocations);
+	}
 
-						}
-					}
+	/**
+	 * Removes locations from list, which are already included in others.
+	 *
+	 * Example: [/1/2/3, /1, /1/2] becomes [/1]
+	 *
+	 * @param repositoryLocations
+	 * 		the collection of repository locations
+	 * @return a filtered list of repository locations
+	 * @since 9.4
+	 */
+	public static List<RepositoryLocation> removeIntersectedLocations(Collection<RepositoryLocation> repositoryLocations) {
+		List<RepositoryLocation> locations = new LinkedList<>(repositoryLocations);
+		Iterator<RepositoryLocation> iterator = locations.iterator();
+		while (iterator.hasNext()) {
+			RepositoryLocation locationA = iterator.next();
+			for (RepositoryLocation locationB : locations) {
+				if (locationA.path.length > locationB.path.length
+						&& Objects.equals(locationA.getRepositoryName(), locationB.getRepositoryName())
+						&& Arrays.equals(Arrays.copyOfRange(locationA.path, 0, locationB.path.length), locationB.path)) {
+					iterator.remove();
+					break;
 				}
 			}
-			locations.removeAll(removeSet);
-		} catch (RepositoryException e) {
-			return repositoryLocations;
 		}
 		return locations;
 	}

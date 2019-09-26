@@ -48,7 +48,7 @@ public class MultiInputPortPairExtender extends MultiPortPairExtender<OutputPort
 	 */
 	public void passDataThrough(int fromIndex) {
 		for (MultiPortPair mpp : getManagedPairs()) {
-			mpp.singlePort.deliver(mpp.multiPorts.get(fromIndex).getAnyDataOrNull());
+			mpp.singlePort.deliver(mpp.multiPorts.get(fromIndex).getRawData());
 		}
 	}
 

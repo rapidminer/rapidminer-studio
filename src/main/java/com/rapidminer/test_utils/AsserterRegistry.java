@@ -21,6 +21,8 @@ package com.rapidminer.test_utils;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.example.ExampleSet;
 import com.rapidminer.test.asserter.AsserterFactory;
 
 
@@ -30,7 +32,7 @@ import com.rapidminer.test.asserter.AsserterFactory;
  */
 public class AsserterRegistry {
 
-	private List<Asserter> registeredAsserters = new LinkedList<Asserter>();
+	private List<Asserter> registeredAsserters = new LinkedList<>();
 
 	public void registerAsserter(Asserter asserter) {
 		registeredAsserters.add(asserter);
@@ -43,9 +45,10 @@ public class AsserterRegistry {
 	}
 
 	public List<Asserter> getAsserterForObject(Object object) {
-		List<Asserter> availableAsserters = new LinkedList<Asserter>();
+		List<Asserter> availableAsserters = new LinkedList<>();
 		for (Asserter asserter : registeredAsserters) {
-			if (asserter.getAssertable().isInstance(object)) {
+			Class<?> assertable = asserter.getAssertable();
+			if (assertableCovered(assertable, object)) {
 				availableAsserters.add(asserter);
 			}
 		}
@@ -56,11 +59,12 @@ public class AsserterRegistry {
 		}
 	}
 
+
 	public List<Asserter> getAsserterForObjects(Object o1, Object o2) {
-		List<Asserter> availableAsserters = new LinkedList<Asserter>();
+		List<Asserter> availableAsserters = new LinkedList<>();
 		for (Asserter asserter : registeredAsserters) {
 			Class<?> clazz = asserter.getAssertable();
-			if (clazz.isInstance(o1) && clazz.isInstance(o2)) {
+			if (assertableCovered(clazz, o1) && assertableCovered(clazz, o2)) {
 				availableAsserters.add(asserter);
 			}
 		}
@@ -72,9 +76,9 @@ public class AsserterRegistry {
 	}
 
 	public List<Asserter> getAsserterForClass(Class<?> clazz) {
-		List<Asserter> availableAsserters = new LinkedList<Asserter>();
+		List<Asserter> availableAsserters = new LinkedList<>();
 		for (Asserter asserter : registeredAsserters) {
-			if (asserter.getAssertable().isAssignableFrom(clazz)) {
+			if (assertableCovered(asserter.getAssertable(), clazz)) {
 				availableAsserters.add(asserter);
 			}
 		}
@@ -83,5 +87,13 @@ public class AsserterRegistry {
 		} else {
 			return availableAsserters;
 		}
+	}
+
+	private boolean assertableCovered(Class<?> assertable, Object object) {
+		return assertable.isInstance(object) || (ExampleSet.class.equals(assertable) && (object instanceof IOTable));
+	}
+
+	private boolean assertableCovered(Class<?> assertable, Class<?> clazz) {
+		return assertable.isAssignableFrom(clazz) || (ExampleSet.class.equals(assertable) && IOTable.class.isAssignableFrom(clazz));
 	}
 }

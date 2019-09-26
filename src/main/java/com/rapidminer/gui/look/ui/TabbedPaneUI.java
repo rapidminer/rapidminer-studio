@@ -98,12 +98,16 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 	});
 
 	// update the state of this UI in case of client property change
-	private PropertyChangeListener startDialogListener = e -> isStartDialogTab = isStartDialogTab();
+	private PropertyChangeListener startDialogListener = e -> {
+		isStartDialogTab = isStartDialogTab();
+		isFullWidthTab = isFullWidthTab();
+	};
 
 	private int rolloveredTabIndex = -1;
 
 	private boolean isDockingFrameworkTab;
 	private boolean isStartDialogTab;
+	private boolean isFullWidthTab;
 
 	public static ComponentUI createUI(JComponent c) {
 		return new TabbedPaneUI();
@@ -114,12 +118,13 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		super.installUI(c);
 		isDockingFrameworkTab = isDockingFrameworkTab();
 		isStartDialogTab = isStartDialogTab();
+		isFullWidthTab = isFullWidthTab();
 	}
 
 	@Override
 	public void uninstallUI(JComponent c) {
 		super.uninstallUI(c);
-		isDockingFrameworkTab = isStartDialogTab = false;
+		isDockingFrameworkTab = isStartDialogTab = isFullWidthTab = false;
 	}
 
 	@Override
@@ -138,6 +143,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		this.tabPane.addChangeListener(this.tabSelListener);
 		if (!isDockingFrameworkTab) {
 			this.tabPane.addPropertyChangeListener(RapidLookAndFeel.START_DIALOG_INDICATOR_PROPERTY, startDialogListener);
+			this.tabPane.addPropertyChangeListener(RapidLookTools.PROPERTY_TABBED_PANE_FULL_WIDTH, startDialogListener);
 		}
 	}
 
@@ -149,6 +155,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		this.tabPane.removeChangeListener(this.tabSelListener);
 		if (!isDockingFrameworkTab) {
 			this.tabPane.removePropertyChangeListener(RapidLookAndFeel.START_DIALOG_INDICATOR_PROPERTY, startDialogListener);
+			this.tabPane.removePropertyChangeListener(RapidLookTools.PROPERTY_TABBED_PANE_FULL_WIDTH, startDialogListener);
 		}
 	}
 
@@ -193,10 +200,28 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		};
 	}
 
+	/**
+	 * Without overriding this, selecting a tab in a multi-row tab layout shifts position of the selected tab row. This
+	 * is HIGHLY confusing. Returning {@code false} here ensures that all tabs stay in their position they were in
+	 * originally, no matter which tab becomes the active tab.
+	 */
+	@Override
+	protected boolean shouldRotateTabRuns(int tabPlacement) {
+		return false;
+	}
+
+	@Override
+	protected int getTabRunOverlay(int tabPlacement) {
+		// that's how much the currently active "run" (aka row) gains in additional height. We don't want any.
+		return 0;
+	}
+
 	@Override
 	protected int calculateTabWidth(int tabPlacement, int tabIndex, FontMetrics metrics) {
 		if (isDockingFrameworkTab) {
 			return super.calculateTabWidth(tabPlacement, tabIndex, metrics) - 5;
+		} else if (isFullWidthTab){
+			return super.calculateTabWidth(tabPlacement, tabIndex, metrics);
 		}
 
 		return super.calculateTabWidth(tabPlacement, tabIndex, metrics) + 5;
@@ -216,8 +241,14 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 					if (isStartDialogTab) {
 						calculateStartDialogTabs(tabPlacement, tabCount);
 						return;
+					} else if (isFullWidthTab) {
+						calculateFullWidthTabs(tabPlacement, tabCount);
+						return;
+					} else if (isDockingFrameworkTab) {
+						calculateVLDockingTabRects(tabPlacement, tabCount);
+					} else {
+						calculateRegularTabs(tabPlacement, tabCount);
 					}
-					calculateVLDockingTabRects(tabPlacement, tabCount);
 				}
 
 				/**
@@ -228,12 +259,11 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 				private void calculateVLDockingTabRects(int tabPlacement, int tabCount) {
 					super.calculateTabRects(tabPlacement, tabCount);
 
-					final int spacer = -5;
 					final int indent = 0;
 					for (int i = 1; i < rects.length; i++) {
-						// hack to get the tabs closer together. Don't shift leftmost tab(s)
+						// hack to get the tabs closer together no longer necessary. Can be used to add an indent later.
 						if (rects[i].x > 0) {
-							rects[i].x += i * spacer + indent;
+							rects[i].x += indent;
 						}
 					}
 				}
@@ -244,13 +274,41 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 				 * @since 8.2
 				 */
 				private void calculateStartDialogTabs(int tabPlacement, int tabCount) {
-
 					super.calculateTabRects(tabPlacement, tabCount);
 
 					for (int i = 0; i < rects.length; i++) {
 						rects[i].x += i * ( RapidLookAndFeel.START_TAB_GAP + RapidLookAndFeel.START_TAB_INDENT) + RapidLookAndFeel.START_TAB_INDENT;
 						rects[i].width += RapidLookAndFeel.START_TAB_GAP;
 					}
+				}
+
+				/**
+				 * Calculates the tab rectangles for a full width tabbed pane.
+				 *
+				 * @since 9.4.0
+				 */
+				private void calculateFullWidthTabs(int tabPlacement, int tabCount) {
+					super.calculateTabRects(tabPlacement, tabCount);
+
+					int width = (tabPane.getSize().width - ((2 * tabCount - 1) * RapidLookAndFeel.START_TAB_INDENT)) / tabCount;
+					for (int i = 0; i < rects.length; i++) {
+						rects[i].x = (i == 0 ? RapidLookAndFeel.START_TAB_INDENT : 2 * RapidLookAndFeel.START_TAB_INDENT + (width * i));
+						rects[i].width = width;
+					}
+
+					// special case for only a single tab
+					if (rects.length == 1) {
+						rects[0].width -= RapidLookAndFeel.START_TAB_INDENT;
+					}
+				}
+
+				/**
+				 * Calculates regular tabs.
+				 *
+				 * @since 9.4.1
+				 */
+				private void calculateRegularTabs(int tabPlacement, int tabCount) {
+					super.calculateTabRects(tabPlacement, tabCount);
 				}
 			};
 		}
@@ -275,11 +333,9 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		Insets t = new Insets(1, 5, 0, 5);
 		if (tabPlacement == SwingConstants.TOP) {
 			t.top = 0;
-			if (isDockingFrameworkTab || isStartDialogTab) {
-				t.right = 0;
-			}
-			if (isStartDialogTab) {
+			if (isStartDialogTab || isFullWidthTab) {
 				t.left = 0;
+				t.right = 0;
 			}
 		}
 		return t;
@@ -310,6 +366,10 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		int height = this.tabPane.getHeight();
 		Insets insets = this.tabPane.getInsets();
 
+		// if the parent has an inset, for some reason the x coordinate supplied here is offset by the left border inset
+		// so we have to grab it, and change x back for some calls later.
+		int wrongXOffset = -insets.left;
+
 		int x = insets.left;
 		int y = insets.top;
 		int w = width - insets.right - insets.left;
@@ -338,7 +398,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 				// left corner, bottom left corner, or in the middle. Reason for that is that the
 				// top
 				// left or bottom left tab has no upper/lower left corner at all
-				g2.setColor(isStartDialogTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
+				g2.setColor(isStartDialogTab || isFullWidthTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
 				if (selTabBounds.y < r) {
 					g2.fillRect(x - 1, y + 1, 5, selTabBounds.height - 1);
 
@@ -393,40 +453,34 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 				// now we remove the top line of the rect depending on whether the tab is in the top
 				// left corner, top right corner, or in the middle. Reason for that is that the top
 				// left or top right tab has no upper left/right corner at all
-				g2.setColor(isStartDialogTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
+				g2.setColor(isStartDialogTab ||isFullWidthTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
 				if (selTabBounds.x < r) {
-					g2.fillRect(x + 1, y - 1, selTabBounds.width - 1, 5);
-
-					// now we draw the top border line again but not below the selected tab
-					g2.setColor(Colors.TAB_CONTENT_BORDER);
-					g2.drawLine(x + selTabBounds.x + selTabBounds.width - 1, y, x + w - r, y);
+					if (selTabBounds.y + selTabBounds.height == y) {
+						// this is the bottom row tab, paint over bottom border so that selected tab is "open" to content below
+						g2.fillRect(x + 1 + wrongXOffset, selTabBounds.y + selTabBounds.height - 2, selTabBounds.width - 2, 3);
+					}
 
 					// there are missing border pixels that needs fixing
+					g2.setColor(Colors.TAB_CONTENT_BORDER);
 					g2.drawLine(x, y, x, y);
-					g2.drawLine(x + selTabBounds.x + selTabBounds.width - 1, y - 1, x + selTabBounds.x + selTabBounds.width
-							- 1, y - 1);
 				} else if (w - (x + selTabBounds.x + selTabBounds.width) < r) {
-					g2.fillRect(x + selTabBounds.x + 1, y - 1, selTabBounds.width - 2, 5);
-
-					// now we draw the top border line again but not below the selected tab
-					g2.setColor(Colors.TAB_CONTENT_BORDER);
-					g2.drawLine(x, y, selTabBounds.x - x, y);
+					if (selTabBounds.y + selTabBounds.height == y) {
+						// this is the bottom row tab, paint over bottom border so that selected tab is "open" to content below
+						g2.fillRect(x + selTabBounds.x + 1 + wrongXOffset, selTabBounds.y + selTabBounds.height - 2, selTabBounds.width - 2, 3);
+					}
 
 					// there are missing border pixels that needs fixing
-					g2.drawLine(x + w, y, x + w, y);
+					g2.setColor(Colors.TAB_CONTENT_BORDER);
 					g2.drawLine(x + w - selTabBounds.width, y - 1, x + w - selTabBounds.width, y - 1);
 				} else {
-					g2.fillRect(x + selTabBounds.x, y - 1, selTabBounds.width - 1, 5);
-
-					// now we draw the top border line again but not below the selected tab
-					g2.setColor(Colors.TAB_CONTENT_BORDER);
-					g2.drawLine(x + r, y, x + selTabBounds.x, y);
-					g2.drawLine(x + selTabBounds.x + selTabBounds.width - 1, y, x + w - r, y);
+					if (selTabBounds.y + selTabBounds.height == y) {
+						// this is the bottom row tab, paint over bottom border so that selected tab is "open" to content below
+						g2.fillRect(x + selTabBounds.x + wrongXOffset, selTabBounds.y + selTabBounds.height - 2, selTabBounds.width - 1, 3);
+					}
 
 					// there are missing border pixels that needs fixing
-					g2.drawLine(x + selTabBounds.x, y - 1, x + selTabBounds.x, y - 1);
-					g2.drawLine(x + selTabBounds.x + selTabBounds.width - 1, y - 1, x + selTabBounds.x + selTabBounds.width
-							- 1, y - 1);
+					g2.setColor(Colors.TAB_CONTENT_BORDER);
+					g2.drawLine(x + selTabBounds.x + + wrongXOffset, y - 2, x + selTabBounds.x + + wrongXOffset, y);
 				}
 		}
 
@@ -490,7 +544,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		drawLeftTab(x + 2, y, w - 2, h, g2, isStartDialogTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
+		drawLeftTab(x + 2, y, w - 2, h, g2, isStartDialogTab || isFullWidthTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
 
 		g2.dispose();
 	}
@@ -499,7 +553,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		drawTopTab(x, y, w, h, g2, isStartDialogTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
+		drawTopTab(x, y, w, h, g2, isStartDialogTab || isFullWidthTab ? Colors.TAB_BACKGROUND_START_SELECTED : Colors.TAB_BACKGROUND_SELECTED);
 
 		g2.dispose();
 	}
@@ -571,7 +625,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 	 *            the background color of the tab
 	 */
 	private void drawTopTab(int x, int y, int w, int h, Graphics2D g2, ColorUIResource color) {
-		double rTop = isStartDialogTab ? RapidLookAndFeel.CORNER_START_TAB_RADIUS : RapidLookAndFeel.CORNER_TAB_RADIUS * 0.67;
+		double rTop = isStartDialogTab || isFullWidthTab ? RapidLookAndFeel.CORNER_START_TAB_RADIUS : RapidLookAndFeel.CORNER_TAB_RADIUS * 0.67;
 
 		g2.setColor(color);
 		g2.fill(createTopTabShape(x + 1, y + 1, w - 1, h, rTop, true));
@@ -672,9 +726,9 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 	}
 
 	private void paintTabBorderFree(Graphics g, int tabPlacement, int tabIndex, int xp, int yp, int mw, int h) {
-		int x = xp + (isStartDialogTab ? 0 : 2);
+		int x = xp + (isStartDialogTab || isFullWidthTab ? 0 : 2);
 		int y = yp;
-		int w = mw - (isStartDialogTab ? 0 : 4);
+		int w = mw - (isStartDialogTab || isFullWidthTab ? 0 : 4);
 
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -804,14 +858,14 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 				// highlight on hover
 				drawLeftTab(x, y, w, h, g2, Colors.TAB_BACKGROUND_HIGHLIGHT);
 			} else {
-				drawLeftTab(x, y, w, h, g2, isStartDialogTab ? Colors.TAB_BACKGROUND_START : Colors.TAB_BACKGROUND);
+				drawLeftTab(x, y, w, h, g2, isStartDialogTab || isFullWidthTab ? Colors.TAB_BACKGROUND_START : Colors.TAB_BACKGROUND);
 			}
 		} else { // top
 			if (tabIndex == rolloveredTabIndex) {
 				// highlight on hover
 				drawTopTab(x, y, w, h, g2, Colors.TAB_BACKGROUND_HIGHLIGHT);
 			} else {
-				drawTopTab(x, y, w, h, g2, isStartDialogTab ? Colors.TAB_BACKGROUND_START : Colors.TAB_BACKGROUND);
+				drawTopTab(x, y, w, h, g2, isStartDialogTab || isFullWidthTab ? Colors.TAB_BACKGROUND_START : Colors.TAB_BACKGROUND);
 			}
 		}
 		g2.dispose();
@@ -819,7 +873,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 
 	@Override
 	protected int getTabLabelShiftX(int tabPlacement, int tabIndex, boolean isSelected) {
-		if (tabPane.getTabLayoutPolicy() != JTabbedPane.SCROLL_TAB_LAYOUT && isSelected && !isStartDialogTab) {
+		if (tabPane.getTabLayoutPolicy() != JTabbedPane.SCROLL_TAB_LAYOUT && isSelected && !isStartDialogTab && !isFullWidthTab) {
 			return -5;
 		}
 		return 0;
@@ -840,7 +894,7 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 
 	@Override
 	public Insets getContentBorderInsets(int tabPlacement) {
-		return isStartDialogTab ? new Insets(1, 0, 0, 0) : new Insets(1, 1, 2, 1);
+		return isStartDialogTab || isFullWidthTab ? new Insets(1, 0, 0, 0) : new Insets(1, 1, 2, 1);
 	}
 
 	@Override
@@ -883,5 +937,14 @@ public class TabbedPaneUI extends BasicTabbedPaneUI {
 	 */
 	private boolean isStartDialogTab() {
 		return Boolean.parseBoolean(String.valueOf(tabPane.getClientProperty(RapidLookAndFeel.START_DIALOG_INDICATOR_PROPERTY)));
+	}
+
+	/**
+	 * @return @code true} iff the {@link #tabPane} has the client property set to indicate that it is a full width
+	 * tabbed pane; {@code false} otherwise
+	 * @since 9.4.0
+	 */
+	private boolean isFullWidthTab() {
+		return Boolean.parseBoolean(String.valueOf(tabPane.getClientProperty(RapidLookTools.PROPERTY_TABBED_PANE_FULL_WIDTH)));
 	}
 }

@@ -18,12 +18,16 @@
 */
 package com.rapidminer.gui.properties.celleditors.value;
 
+import java.util.function.Predicate;
+
 import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.parameter.ParameterTypeProcessLocation;
+import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.gui.RepositoryLocationChooser;
 
 
 /**
@@ -57,5 +61,10 @@ public class ProcessLocationValueCellEditor extends RepositoryLocationWithExtraV
 	@Override
 	protected Class<ProcessEntry> getExpectedEntryClass() {
 		return ProcessEntry.class;
+	}
+
+	@Override
+	protected Predicate<Entry> getRepositoryFilter() {
+		return RepositoryLocationChooser.ONLY_PROCESSES;
 	}
 }

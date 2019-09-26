@@ -21,6 +21,7 @@ package com.rapidminer.connection;
 import com.rapidminer.connection.util.GenericHandlerRegistry;
 import com.rapidminer.connection.util.GenericRegistrationEventListener;
 import com.rapidminer.operator.OperatorVersion;
+import com.rapidminer.tools.mail.connection.MailConnectionHandler;
 
 
 /**
@@ -35,6 +36,12 @@ public final class ConnectionHandlerRegistry extends GenericHandlerRegistry<Conn
 	public static final OperatorVersion BEFORE_NEW_CONNECTION_MANAGEMENT = new OperatorVersion(9, 2, 1);
 
 	private static final ConnectionHandlerRegistry INSTANCE = new ConnectionHandlerRegistry();
+
+	static {
+		for (MailConnectionHandler handler : MailConnectionHandler.values()) {
+			getInstance().registerHandler(handler);
+		}
+	}
 
 	/**
 	 * Singleton class, no instantiation allowed except for internal purpose

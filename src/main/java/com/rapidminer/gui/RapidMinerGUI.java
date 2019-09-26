@@ -22,7 +22,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
+import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import javax.swing.PopupFactory;
 import javax.swing.SwingUtilities;
@@ -87,6 +90,7 @@ import com.rapidminer.license.LicenseManagerRegistry;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeColor;
+import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryLocation;
@@ -241,6 +245,7 @@ public class RapidMinerGUI extends RapidMiner {
 
 		// GUI Parameters MainFrame
 
+		RapidMiner.registerParameter(new ParameterTypeDouble(MainFrame.PROPERTY_RAPIDMINER_GUI_VISUALIZATIONS_MAX_ROWS_MODIFIER, "", 0.1, 10.0, 1.0));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_SIMPLE_CHARTS, "", false));
 		RapidMiner.registerParameter(new ParameterTypeBoolean(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_SHOW_LEGACY_ADVANCED_CHARTS, "", false));
 		RapidMiner.registerParameter(new ParameterTypeInt(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_MATRIXPLOT_SIZE, "", 1,
@@ -521,9 +526,7 @@ public class RapidMinerGUI extends RapidMiner {
 		CallToActionScheduler.INSTANCE.init();
 
 		// After all is done, clean up memory for the best possible starting conditions
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
-			System.gc();
-		}
+		System.gc();
 	}
 
 	private void setupToolTipManager() {
@@ -753,10 +756,9 @@ public class RapidMinerGUI extends RapidMiner {
 				}
 			}
 			try {
-				mainFrame.setLocation(Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_X)),
-						Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_Y)));
-				mainFrame.setSize(new Dimension(Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_WIDTH)),
-						Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_HEIGHT))));
+				int x = Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_X));
+				int y = Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_Y));
+				mainFrame.setLocation(x, y);
 				int extendedState;
 				if (properties.getProperty(PROPERTY_GEOMETRY_EXTENDED_STATE) == null) {
 					extendedState = Frame.NORMAL;
@@ -764,6 +766,25 @@ public class RapidMinerGUI extends RapidMiner {
 					extendedState = Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_EXTENDED_STATE));
 				}
 				mainFrame.setExtendedState(extendedState);
+				if ((extendedState & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
+					int width = Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_WIDTH));
+					int height = Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_HEIGHT));
+					if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX) {
+						// OS X likes to set up size 0px * 0px if height exceeds available height, so make sure it does not
+						GraphicsConfiguration graphicsConfig = mainFrame.getGraphicsConfiguration();
+						if (graphicsConfig != null) {
+							Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(graphicsConfig);
+							int xInsets = insets.left + insets.right;
+							// random further -15px because a precise calculation does still produce above 0px error
+							int yInsets = insets.top + insets.bottom + 15;
+							int availableWidth = graphicsConfig.getDevice().getDisplayMode().getWidth() - xInsets;
+							int availableHeight = graphicsConfig.getDevice().getDisplayMode().getHeight() - yInsets;
+							width = Math.min(width, availableWidth - x);
+							height = Math.min(height, availableHeight - y);
+						}
+					}
+					mainFrame.setSize(new Dimension(width, height));
+				}
 				mainFrame.getPropertyPanel()
 						.setExpertMode(Boolean.valueOf(properties.getProperty(PROPERTY_EXPERT_MODE)).booleanValue());
 

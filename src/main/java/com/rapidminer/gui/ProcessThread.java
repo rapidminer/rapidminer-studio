@@ -169,12 +169,6 @@ public class ProcessThread extends Thread {
 	public void stopProcess() {
 		if (process != null) {
 			this.process.stop();
-			if (!Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
-				// in-pool execution was added with 9.2 initially in beta mode only
-				// we can't interrupt when process execute is in pool, otherwise process is stopped before operator
-				// checks for stop
-				this.interrupt();
-			}
 		}
 	}
 

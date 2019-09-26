@@ -1312,10 +1312,11 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 			ActionStatisticsCollector.getInstance().logExecution(this);
 
 			IOContainer result;
-			if (Boolean.parseBoolean(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES))) {
-				result = executeRootInPool(input, storeOutput);
-			} else {
+			// RA-2105: prevent pooled process execution for web apps
+			if (rootOperator.getUserData("WEBAPP_EXECUTION") != null) {
 				result = executeRoot(input, storeOutput);
+			} else {
+				result = executeRootInPool(input, storeOutput);
 			}
 			long end = System.currentTimeMillis();
 

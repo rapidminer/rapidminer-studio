@@ -116,6 +116,9 @@ public class AreaUnderCurve extends MeasuredPerformance {
 		this.counter = aucObject.counter;
 		this.positiveClass = aucObject.positiveClass;
 		this.method = aucObject.method;
+		if (!aucObject.rocData.isEmpty()) {
+			this.rocData.addAll(aucObject.rocData);
+		}
 	}
 
 	/** Calculates the AUC. */

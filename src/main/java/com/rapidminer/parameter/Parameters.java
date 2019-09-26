@@ -313,7 +313,9 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 
 	/** Notify all set parameters of the operator renaming */
 	public void notifyRenaming(String oldName, String newName) {
-		notifyRenameReplace((t, v) -> t.notifyOperatorRenaming(oldName, newName, v));
+		if (!Objects.equals(oldName, newName)) {
+			notifyRenameReplace((t, v) -> t.notifyOperatorRenaming(oldName, newName, v));
+		}
 	}
 
 	/**
@@ -345,7 +347,6 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 			}
 		}
 		keyToValueMap.values().removeIf(Objects::isNull);
-		fireUpdate();
 	}
 
 	/** Renames a parameter, e.g. during importing old XML process files. */

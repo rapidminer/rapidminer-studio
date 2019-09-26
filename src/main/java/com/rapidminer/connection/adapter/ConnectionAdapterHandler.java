@@ -411,7 +411,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 		parametersByGroup().forEach((group, names) -> names.forEach(name -> {
 			ParameterType parameterType = parameters.getParameterType(name);
 			// ignore irrelevant parameters
-			if (parameterType == null || parameterType.isOptional()) {
+			if (parameterType == null || parameterType.isOptional() || parameterType.isHidden()) {
 				return;
 			}
 			String fullKey = group + '.' + name;
@@ -610,13 +610,11 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 			cis = new ConnectionInformationSelector(operator, handler.getType());
 			provider.setConnectionSelector(cis);
 			cis.makeDefaultPortTransformation();
-			operator.getTransformer().addRule(() -> {
-				Optional.ofNullable(provider.getConnectionSelector())
-						.filter(sel -> sel.getInput() == null || !sel.getInput().isConnected())
-						.flatMap(suppress(sel -> operator.getParameter(PARAMETER_CONNECTION_SOURCE)).andThen(o -> Optional.of(o == null ? PREDEFINED_MODE : o)))
-						.filter(PREDEFINED_MODE::equals).map(s -> new SimpleProcessSetupError(Severity.WARNING, operator.getPortOwner(), "connection.deprecated"))
-						.ifPresent(operator::addError);
-			});
+			operator.getTransformer().addRule(() -> Optional.ofNullable(provider.getConnectionSelector())
+					.filter(sel -> sel.getInput() == null || !sel.getInput().isConnected())
+					.flatMap(suppress(sel -> operator.getParameter(PARAMETER_CONNECTION_SOURCE)).andThen(o -> Optional.of(o == null ? PREDEFINED_MODE : o)))
+					.filter(PREDEFINED_MODE::equals).map(s -> new SimpleProcessSetupError(Severity.WARNING, operator.getPortOwner(), "connection.deprecated"))
+					.ifPresent(operator::addError));
 		}
 		if (cis.getInput() != null) {
 			connectionSource.registerDependencyCondition(
@@ -639,24 +637,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 * 		the operator to add the rule to; must not be {@code null}
 	 */
 	public static <O extends Operator & ConnectionSelectionProvider> MDTransformationRule createProcessSetupRule(O operator) {
-		return () -> {
-			ConnectionInformationSelector selector = operator.getConnectionSelector();
-			if (selector == null) {
-				return;
-			}
-			ProcessSetupError error = selector.checkConnectionTypeMatch(operator);
-			if (error == null) {
-				return;
-			}
-			if (error instanceof MetaDataError) {
-				InputPort input = selector.getInput();
-				if (input != null) {
-					input.addError((MetaDataError) error);
-					return;
-				}
-			}
-			operator.addError(error);
-		};
+		return ConnectionInformationSelector.makeConnectionCheckTransformation(operator);
 	}
 
 	/**
@@ -677,7 +658,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 *     <li>If the {@link ConnectionInformationSelector#getInput() input port} exists and connected will take
 	 *     a {@link ConnectionInformation} from there</li>
 	 *     <li>If the {@value #REPOSITORY_MODE} is selected for {@value #PARAMETER_CONNECTION_SOURCE}, uses the parameter
-	 *     {@value ConnectionInformationSelector#PARAMETER_CONNECTION_ENTRY} to find the {@link ConnectionInformation} </li>
+	 *     {@link ConnectionInformationSelector#getParameterKey()} to find the {@link ConnectionInformation} </li>
 	 *     <li>If the {@value #PREDEFINED_MODE} is selected for {@value #PARAMETER_CONNECTION_SOURCE}, uses the parameter
 	 *     {@code oldParameterKey} to find the {@link ConfigurationManager#lookup(String, String, RepositoryAccessor) adapter}</li>
 	 * </ol>

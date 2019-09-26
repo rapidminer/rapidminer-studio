@@ -292,7 +292,7 @@ public abstract class AbstractConnectionGUI implements ConnectionGUI {
 		String typeKey = getConnectionModel().getType();
 		String groupKey = group.getName();
 		String title = ConnectionI18N.getGroupName(typeKey, groupKey, ConnectionI18N.LABEL_SUFFIX, groupKey);
-		String tip = ConnectionI18N.getGroupName(typeKey, groupKey, ConnectionI18N.LABEL_SUFFIX, null);
+		String tip = ConnectionI18N.getGroupName(typeKey, groupKey, ConnectionI18N.TIP_SUFFIX, null);
 		Icon icon = ConnectionI18N.getGroupIcon(typeKey, groupKey);
 
 		getTabbedPane().addTab(title, icon, panelAndInject, tip);
@@ -462,6 +462,22 @@ public abstract class AbstractConnectionGUI implements ConnectionGUI {
 		informationWrapper.add(parameterInputComponent, BorderLayout.CENTER);
 		SwingTools.addTooltipHelpIconToLabel(toolTipText, informationWrapper, parent);
 		return informationWrapper;
+	}
+
+	/**
+	 * Updates and links visibility of the component to its parameter's enabled state.
+	 *
+	 * @param component
+	 * 		the component to be wrapped; must not be {@code null}
+	 * @param parameter
+	 * 		the parameter, whose enabled state should be listened to; must not be {@code null}
+	 * @return the component with visibility awareness
+	 * @since 9.4.1
+	 */
+	public static JComponent visibilityWrapper(JComponent component, ConnectionParameterModel parameter) {
+		parameter.enabledProperty().addListener((observable, oldValue, newValue) -> SwingTools.invokeLater(() -> component.setVisible(newValue)));
+		component.setVisible(parameter.isEnabled());
+		return component;
 	}
 
 }

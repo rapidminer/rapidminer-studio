@@ -23,6 +23,8 @@ import java.util.Map;
 
 import com.rapidminer.tools.ValidationUtil;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.mail.connection.MailConnectionHandler;
+import com.rapidminer.tools.mail.connection.gui.MailConnectionGUI;
 
 
 /**
@@ -36,6 +38,12 @@ public enum ConnectionGUIRegistry {
 	INSTANCE;
 
 	private final Map<String, ConnectionGUIProvider> providers = new HashMap<>();
+
+	static {
+		for (MailConnectionHandler handler : MailConnectionHandler.values()) {
+			INSTANCE.registerGUIProvider(MailConnectionGUI::new, handler.getType());
+		}
+	}
 
 
 	/**

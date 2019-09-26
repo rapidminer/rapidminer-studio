@@ -36,10 +36,11 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.swing.Action;
@@ -51,8 +52,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -209,9 +209,7 @@ public class RepositoryTree extends JTree {
 
 					final RepositoryLocation location = (RepositoryLocation) ts.getTransferable()
 							.getTransferData(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_FLAVOR);
-					List<RepositoryLocation> singleLocationList = new LinkedList<>();
-					singleLocationList.add(location);
-					return copyOrMoveRepositoryEntries(droppedOnEntry, singleLocationList, ts);
+					return copyOrMoveRepositoryEntries(droppedOnEntry, Collections.singletonList(location), ts);
 
 				} else if (flavors.contains(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR)) {
 					// Multiple repository entries
@@ -327,8 +325,7 @@ public class RepositoryTree extends JTree {
 						isSingleEntryOperation = false;
 					}
 
-					TreePath droppedOnPath = RepositoryTreeModel.getPathTo(droppedOnFolder,
-							RepositoryManager.getInstance(null));
+					TreePath droppedOnPath = getModel().getPathTo(droppedOnFolder);
 
 					// Initialize progress listener
 					getProgressListener().setTotal(locations.size() * PROGRESS_LISTENER_SINGLE_STEP_SIZE);
@@ -348,11 +345,11 @@ public class RepositoryTree extends JTree {
 
 								if (!userDecisions.repeatDecision) {
 
-									final List<String> optionsToSelect = new LinkedList<>();
+									final List<String> optionsToSelect = new ArrayList<>(3);
 									optionsToSelect.add("existing_entry.insert");
 									optionsToSelect.add("existing_entry.overwrite");
 									optionsToSelect.add("existing_entry.skip");
-									final List<String> optionsToCheck = new LinkedList<>();
+									final List<String> optionsToCheck = new ArrayList<>(1);
 									if (!isSingleEntryOperation) {
 										optionsToCheck.add("existing_entry.repeat");
 									}
@@ -417,15 +414,10 @@ public class RepositoryTree extends JTree {
 					// On multi-operations, select the target folder after finishing copy/move
 					// operation
 					if (droppedOnFolder != null && !isSingleEntryOperation) {
-						SwingUtilities.invokeLater(new Runnable() {
-
-							@Override
-							public void run() {
-								TreePath droppedOnPath = RepositoryTreeModel.getPathTo(droppedOnFolder,
-										RepositoryManager.getInstance(null));
-								RepositoryTree.this.setSelectionPath(droppedOnPath);
-								RepositoryTree.this.scrollPathToVisible(droppedOnPath);
-							}
+						SwingUtilities.invokeLater(() -> {
+							TreePath droppedOnPath1 = getModel().getPathTo(droppedOnFolder);
+							RepositoryTree.this.setSelectionPath(droppedOnPath1);
+							RepositoryTree.this.scrollPathToVisible(droppedOnPath1);
 						});
 					}
 
@@ -441,8 +433,7 @@ public class RepositoryTree extends JTree {
 				private boolean executeCopyOrMoveOperation(RepositoryLocation location, Folder target, boolean isRepositoryInLocations,
 						boolean isSingleEntryOperation, boolean overwriteIfExists) {
 					try {
-						ProgressListener progressListener = null;
-						progressListener = new RescalingProgressListener(getProgressListener(), progressListenerCompleted,
+						ProgressListener progressListener = new RescalingProgressListener(getProgressListener(), progressListenerCompleted,
 								progressListenerCompleted + PROGRESS_LISTENER_SINGLE_STEP_SIZE);
 
 						if (isMoveOperation(ts, isRepositoryInLocations)) {
@@ -454,9 +445,7 @@ public class RepositoryTree extends JTree {
 							// For this case, select the element, which is the target of the drop
 							// operation.
 							if (overwriteIfExists && target != null) {
-								SwingUtilities.invokeLater(() -> RepositoryTree.this.setSelectionPath(RepositoryTreeModel.getPathTo(target,
-										RepositoryManager.getInstance(null))));
-
+								SwingUtilities.invokeLater(() -> RepositoryTree.this.setSelectionPath(getModel().getPathTo(target)));
 							}
 
 						} else {
@@ -700,21 +689,14 @@ public class RepositoryTree extends JTree {
 
 		@Override
 		protected Transferable createTransferable(JComponent c) {
-			final TreePath[] treePaths = getSelectionPaths();
-			if (treePaths.length == 0) {
+			final List<Entry> selectedEntries = getSelectedEntries();
+			if (selectedEntries.isEmpty()) {
 				// Nothing selected
 				return null;
 			}
-			RepositoryLocation[] repositoryLocations;
-			if (treePaths.length == 1) {
-				// Exactly one item selected
-				repositoryLocations = new RepositoryLocation[]{((Entry) treePaths[0].getLastPathComponent()).getLocation()};
-			} else {
-				// Multiple entries selected
-				List<RepositoryLocation> locationList = Arrays.stream(treePaths).
-						map(p -> ((Entry) p.getLastPathComponent()).getLocation()).collect(Collectors.toList());
-				repositoryLocations = RepositoryLocation.removeIntersectedLocations(locationList).toArray(new RepositoryLocation[0]);
-			}
+
+			List<RepositoryLocation> locationList = getSelectedEntries().stream().map(Entry::getLocation).collect(Collectors.toList());
+			RepositoryLocation[] repositoryLocations = RepositoryLocation.removeIntersectedLocations(locationList).toArray(new RepositoryLocation[0]);
 			TransferableRepositoryEntry transferable = new TransferableRepositoryEntry(repositoryLocations);
 			transferable.setUsageStatsLogger(
 					() -> ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_REPOSITORY_TREE, "inserted", null));
@@ -779,6 +761,8 @@ public class RepositoryTree extends JTree {
 		}
 	}
 
+	private final Dialog owner;
+
 	public final AbstractRepositoryAction<Entry> RENAME_ACTION = new RenameRepositoryEntryAction(this);
 
 	public final AbstractRepositoryAction<Entry> DELETE_ACTION = new DeleteRepositoryEntryAction(this);
@@ -791,25 +775,23 @@ public class RepositoryTree extends JTree {
 
 	public final ResourceActionAdapter SHOW_PROCESS_IN_REPOSITORY_ACTION = new ShowProcessInRepositoryAction(this);
 
-	private final Dialog owner;
-
-	private List<AbstractRepositoryAction<?>> listToEnable = new LinkedList<>();
+	private List<AbstractRepositoryAction<?>> listToEnable = new ArrayList<>();
 
 	private EventListenerList listenerList = new EventListenerList();
 
+	// must be after the treeModel, since they require it to be initialized
 	final ToggleAction SORT_BY_NAME_ACTION = new SortByNameAction(this);
-
 	final ToggleAction SORT_BY_LAST_MODIFIED_DATE_ACTION = new SortByLastModifiedAction(this);
 
 	private static final long serialVersionUID = -6613576606220873341L;
 
-	private static final List<RepositoryActionEntry> REPOSITORY_ACTIONS = new LinkedList<>();
+	private static final List<RepositoryActionEntry> REPOSITORY_ACTIONS = new ArrayList<>();
 
 	/** List of actions available for multiple entries selected in menu */
-	private static final List<RepositoryActionEntry> REPOSITORY_MULTIPLE_ENTRIES_ACTIONS = new LinkedList<>();
+	private static final List<RepositoryActionEntry> REPOSITORY_MULTIPLE_ENTRIES_ACTIONS = new ArrayList<>();
 
 	/** Configuration: List of actions available for multiple entries selected in menu */
-	private static final List<String> multipleMenuEntriesActionClasses = new LinkedList<>(
+	private static final List<String> multipleMenuEntriesActionClasses = new ArrayList<>(
 			Arrays.asList(CutEntryRepositoryAction.class.getName(), CopyEntryRepositoryAction.class.getName(),
 					DeleteRepositoryEntryAction.class.getName(), RefreshRepositoryEntryAction.class.getName()));
 
@@ -866,20 +848,34 @@ public class RepositoryTree extends JTree {
 		this(owner, onlyFolders, onlyWritableRepositories, installDraghandler, null);
 	}
 
-	/**
-	 * @param installDraghandler
-	 *            when true, the {@link RepositoryTreeTransferhandler} is installed and the user is
-	 *            able to drag/drop data.
-	 * @param backgroundColor
-	 *            if {@code null} the default background color will be used, otherwise the provided
-	 *            background color will be used
-	 */
 	public RepositoryTree(Dialog owner, boolean onlyFolders, boolean onlyWritableRepositories, boolean installDraghandler,
 			final Color backgroundColor) {
-		super(new RepositoryTreeModel(RepositoryManager.getInstance(null), onlyFolders, onlyWritableRepositories));
-		this.owner = owner;
-		((RepositoryTreeModel) getModel()).setParentTree(this);
+		this(owner, onlyFolders, onlyWritableRepositories, installDraghandler, backgroundColor, null);
+	}
 
+	/**
+	 * Create a new RepositoryTree, configure it directly in the constructor
+	 *
+	 * @param owner
+	 * 		the dialog that is the owner of this tree, used when creating subdialogs
+	 * @param onlyFolders
+	 * 		if true only show repositories and folders, no entries
+	 * @param onlyWritableRepositories
+	 * 		if true only show writable repositories and their content
+	 * @param installDraghandler
+	 * 		when true, the {@link RepositoryTreeTransferhandler} is installed and the user is
+	 * 		able to drag/drop data.
+	 * @param backgroundColor
+	 * 		if {@code null} the default background color will be used, otherwise the provided
+	 * 		background color will be used
+	 * @param predicate
+	 * 		if supplied only those repositories, folders and entries will be shown that match the predicate
+	 */
+	public RepositoryTree(Dialog owner, boolean onlyFolders, boolean onlyWritableRepositories, boolean installDraghandler,
+						  final Color backgroundColor, Predicate<Entry> predicate) {
+		super(new RepositoryTreeModel(RepositoryManager.getInstance(null), onlyFolders, onlyWritableRepositories, predicate));
+		this.owner = owner;
+		getModel().setParentTree(this);
 		// these actions are a) needed for the action map or b) needed by other classes for toolbars
 		// etc
 		listToEnable.add(DELETE_ACTION);
@@ -907,26 +903,22 @@ public class RepositoryTree extends JTree {
 				@Override
 				public Color getBackground() {
 					return backgroundColor;
-				};
+				}
 
 				@Override
 				public Color getBackgroundNonSelectionColor() {
 					return backgroundColor;
-				};
+				}
 			});
 		} else {
 			setCellRenderer(new RepositoryTreeCellRenderer());
 		}
 		getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
 
-		addTreeSelectionListener(new TreeSelectionListener() {
-
-			@Override
-			public void valueChanged(TreeSelectionEvent e) {
-				if (e.getSource() instanceof JTree) {
-					JTree jtree = (JTree) e.getSource();
-					jtree.repaint();
-				}
+		addTreeSelectionListener(e -> {
+			if (e.getSource() instanceof JTree) {
+				JTree jtree = (JTree) e.getSource();
+				jtree.repaint();
 			}
 		});
 
@@ -1070,35 +1062,35 @@ public class RepositoryTree extends JTree {
 
 			@Override
 			public String getTip(Object o) {
-				if (o instanceof Entry) {
-					return ToolTipProviderHelper.getTip((Entry) o);
-				} else {
-					return null;
-				}
+				return (o instanceof Entry) ? ToolTipProviderHelper.getTip((Entry) o) : null;
 			}
 
 			@Override
 			public Object getIdUnder(Point point) {
 				TreePath path = getPathForLocation((int) point.getX(), (int) point.getY());
-				if (path != null) {
-					return path.getLastPathComponent();
-				} else {
-					return null;
-				}
+				return path == null ? null : path.getLastPathComponent();
 			}
 
 			@Override
 			public Component getCustomComponent(Object o) {
-				if (o instanceof Entry) {
-					return ToolTipProviderHelper.getCustomComponent((Entry) o);
-				} else {
-					return null;
-				}
+				return (o instanceof Entry) ? ToolTipProviderHelper.getCustomComponent((Entry) o) : null;
 			}
 		}, this, TooltipLocation.RIGHT);
 
 		if (backgroundColor != null) {
 			setBackground(backgroundColor);
+		}
+	}
+
+	@Override
+	public RepositoryTreeModel getModel() {
+		return (RepositoryTreeModel) super.getModel();
+	}
+
+	@Override
+	public void setModel(TreeModel treeModel) {
+		if (treeModel instanceof RepositoryTreeModel) {
+			super.setModel(treeModel);
 		}
 	}
 
@@ -1133,11 +1125,8 @@ public class RepositoryTree extends JTree {
 	}
 
 	private void fireLocationSelected(Entry entry) {
-		RepositorySelectionEvent event = null;
+		RepositorySelectionEvent event = new RepositorySelectionEvent(entry);
 		for (RepositorySelectionListener l : listenerList.getListeners(RepositorySelectionListener.class)) {
-			if (event == null) {
-				event = new RepositorySelectionEvent(entry);
-			}
 			l.repositoryLocationSelected(event);
 		}
 	}
@@ -1156,16 +1145,17 @@ public class RepositoryTree extends JTree {
 
 		// set y and height in a way that the path always appears in the center
 		Rectangle bounds = getPathBounds(path);
-		if (bounds != null) {
-			Rectangle visibleRect = getVisibleRect();
-			// try to stay as far left as possible. If very deep folder structure, let Swing decide where to start
-			if ((bounds.x + 50) < visibleRect.x + visibleRect.width) {
-				bounds.x = 0;
-			}
-			bounds.y = bounds.y - visibleRect.height / 2;
-			bounds.height = visibleRect.height;
-			scrollRectToVisible(bounds);
+		if (bounds == null) {
+			return;
 		}
+		Rectangle visibleRect = getVisibleRect();
+		// try to stay as far left as possible. If very deep folder structure, let Swing decide where to start
+		if ((bounds.x + 50) < visibleRect.x + visibleRect.width) {
+			bounds.x = 0;
+		}
+		bounds.y = bounds.y - visibleRect.height / 2;
+		bounds.height = visibleRect.height;
+		scrollRectToVisible(bounds);
 	}
 
 	/**
@@ -1212,8 +1202,7 @@ public class RepositoryTree extends JTree {
 			if (relativeTo != null) {
 				RepositoryManager.getInstance(null).unhide(relativeTo.getRepositoryName());
 			}
-			RepositoryTreeModel model = (RepositoryTreeModel) getModel();
-			TreePath pathTo = model.getPathTo(entry);
+			TreePath pathTo = getModel().getPathTo(entry);
 			expandPath(pathTo);
 			setSelectionPath(pathTo);
 			if (entry instanceof Folder) {
@@ -1238,21 +1227,14 @@ public class RepositoryTree extends JTree {
 
 	private void showPopup(MouseEvent e) {
 
-		TreePath[] paths = getSelectionPaths();
+		List<Entry> entries = getSelectedEntries();
 		JPopupMenu menu = new JPopupMenu();
 
-		if (paths == null || paths.length < 1) {
+		if (entries.isEmpty()) {
 			return;
-		} else if (paths.length == 1) {
-			// Exactly one item selected
-			Object component = paths[0].getLastPathComponent();
-
+		} else if (entries.size() == 1) {
 			// Add actions
-			List<Entry> entryList = new ArrayList<>(1);
-			if (component instanceof Entry) {
-				entryList.add((Entry) component);
-			}
-			List<Action> actionList = createContextMenuActions(this, entryList);
+			List<Action> actionList = createContextMenuActions(this, entries);
 			// Go through ordered list of actions and add them
 			for (Action action : actionList) {
 				if (action == null) {
@@ -1263,13 +1245,11 @@ public class RepositoryTree extends JTree {
 			}
 
 			// Append custom actions if there are any
-			if (component instanceof Entry) {
-				Collection<Action> customActions = ((Entry) component).getCustomActions();
-				if (customActions != null && !customActions.isEmpty()) {
-					menu.addSeparator();
-					for (Action customAction : customActions) {
-						menu.add(customAction);
-					}
+			Collection<Action> customActions = entries.get(0).getCustomActions();
+			if (customActions != null && !customActions.isEmpty()) {
+				menu.addSeparator();
+				for (Action customAction : customActions) {
+					menu.add(customAction);
 				}
 			}
 
@@ -1277,22 +1257,12 @@ public class RepositoryTree extends JTree {
 			// Multiple items selected
 
 			// Get all selected entries
-			List<Entry> selectedEntries = new LinkedList<>();
-			for (TreePath path : paths) {
-				Object component = path.getLastPathComponent();
-				if (component instanceof Entry) {
-					selectedEntries.add((Entry) component);
-				}
-			}
+			List<Entry> selectedEntries = getSelectedEntries();
 
 			// Get possible actions of selected entries
-			List<RepositoryActionEntry> evaluatedActions = new LinkedList<>(REPOSITORY_MULTIPLE_ENTRIES_ACTIONS);
-			for (int i = 0; i < REPOSITORY_MULTIPLE_ENTRIES_ACTIONS.size(); i++) {
-				RepositoryActionEntry actionEntry = REPOSITORY_MULTIPLE_ENTRIES_ACTIONS.get(i);
-				if (!actionEntry.getRepositoryActionCondition().evaluateCondition(selectedEntries)) {
-					evaluatedActions.remove(actionEntry);
-				}
-			}
+			List<RepositoryActionEntry> evaluatedActions = REPOSITORY_MULTIPLE_ENTRIES_ACTIONS.stream()
+					.filter(actionEntry -> actionEntry.getRepositoryActionCondition().evaluateCondition(selectedEntries))
+			        .collect(Collectors.toList());
 
 			// Add actions
 			boolean lastWasSeparator = true;
@@ -1310,11 +1280,8 @@ public class RepositoryTree extends JTree {
 					menu.add(createdAction);
 					if (actionEntry.hasSeparatorAfter) {
 						menu.addSeparator();
-						lastWasSeparator = true;
-					} else {
-						lastWasSeparator = false;
 					}
-
+					lastWasSeparator = actionEntry.hasSeparatorAfter;
 				} catch (Exception ex) {
 					LogService.getRoot().log(Level.SEVERE,
 							"com.rapidminer.repository.gui.RepositoryTree.creating_repository_action_error",
@@ -1367,7 +1334,7 @@ public class RepositoryTree extends JTree {
 	 * Gets list of selected entries of this tree
 	 */
 	public List<Entry> getSelectedEntries() {
-		List<Entry> selectedEntries = new LinkedList<>();
+		List<Entry> selectedEntries = new ArrayList<>();
 		TreePath[] paths = getSelectionPaths();
 		if (paths != null) {
 			for (TreePath treePath : paths) {
@@ -1381,8 +1348,8 @@ public class RepositoryTree extends JTree {
 	}
 
 	public Collection<AbstractRepositoryAction<?>> getAllActions() {
-		List<AbstractRepositoryAction<?>> listOfAbstractRepositoryActions = new LinkedList<>();
-		for (Action action : createContextMenuActions(this, new LinkedList<>())) {
+		List<AbstractRepositoryAction<?>> listOfAbstractRepositoryActions = new ArrayList<>();
+		for (Action action : createContextMenuActions(this, new ArrayList<>())) {
 			if (action instanceof AbstractRepositoryAction<?>) {
 				listOfAbstractRepositoryActions.add((AbstractRepositoryAction<?>) action);
 			}
@@ -1445,23 +1412,12 @@ public class RepositoryTree extends JTree {
 		if (insertAfterThisAction == null) {
 			REPOSITORY_ACTIONS.add(newEntry);
 		} else {
-			// searching for class to insert after
-			boolean inserted = false;
-			int i = 0;
-			for (RepositoryActionEntry entry : REPOSITORY_ACTIONS) {
-				Class<? extends Action> existingAction = entry.getRepositoryActionClass();
-				if (existingAction.equals(insertAfterThisAction)) {
-					REPOSITORY_ACTIONS.add(i + 1, newEntry);
-					inserted = true;
-					break;
-				}
-				i++;
-			}
-
-			// if reference couldn't be found: just add as last
-			if (!inserted) {
-				REPOSITORY_ACTIONS.add(newEntry);
-			}
+			// searching for pos to insert after
+			int insertPos = 1 + REPOSITORY_ACTIONS.stream()
+					.filter(e -> insertAfterThisAction.equals(e.getRepositoryActionClass()))
+					.findFirst().map(REPOSITORY_ACTIONS::indexOf)
+					.orElse(REPOSITORY_ACTIONS.size() - 1);
+			REPOSITORY_ACTIONS.add(insertPos, newEntry);
 		}
 
 		// add action instances for multiple entires
@@ -1489,7 +1445,7 @@ public class RepositoryTree extends JTree {
 	 * add actions.
 	 */
 	private static List<Action> createContextMenuActions(RepositoryTree repositoryTree, List<Entry> entryList) {
-		List<Action> listOfActions = new LinkedList<>();
+		List<Action> listOfActions = new ArrayList<>();
 		boolean lastWasSeparator = true;
 
 		for (RepositoryActionEntry actionEntry : REPOSITORY_ACTIONS) {
@@ -1506,10 +1462,8 @@ public class RepositoryTree extends JTree {
 					listOfActions.add(createdAction);
 					if (actionEntry.hasSeperatorAfter()) {
 						listOfActions.add(null);
-						lastWasSeparator = true;
-					} else {
-						lastWasSeparator = false;
 					}
+					lastWasSeparator = actionEntry.hasSeperatorAfter();
 				}
 			} catch (Exception e) {
 				LogService.getRoot().log(Level.SEVERE,
@@ -1528,24 +1482,17 @@ public class RepositoryTree extends JTree {
 	 * @since 7.4
 	 */
 	public void setSortingMethod(RepositorySortingMethod method) {
-		if (getModel() instanceof RepositoryTreeModel) {
-			// Remember expansion state before setting new RepositorySortingMethod
-			Enumeration<TreePath> expandedDescendants = getExpandedDescendants(new TreePath(treeModel.getRoot()));
-			List<TreePath> oldExpanded = new ArrayList<>();
-			if (expandedDescendants != null) {
-				while (expandedDescendants.hasMoreElements()) {
-					oldExpanded.add(expandedDescendants.nextElement());
-				}
-			}
+		// Remember expansion state before setting new RepositorySortingMethod
+		Enumeration<TreePath> expandedDescendants = getExpandedDescendants(new TreePath(getModel().getRoot()));
+		expandedDescendants = expandedDescendants == null ? Collections.emptyEnumeration() : expandedDescendants;
 
-			((RepositoryTreeModel) getModel()).setSortingMethod(method);
+		getModel().setSortingMethod(method);
 
-			for (TreePath oldEx : oldExpanded) {
-				setExpandedState(oldEx, true);
-			}
-			for (RepositorySortingMethodListener l : listenerList.getListeners(RepositorySortingMethodListener.class)) {
-				l.changedRepositorySortingMethod(method);
-			}
+		while (expandedDescendants.hasMoreElements()) {
+			setExpandedState(expandedDescendants.nextElement(), true);
+		}
+		for (RepositorySortingMethodListener l : listenerList.getListeners(RepositorySortingMethodListener.class)) {
+			l.changedRepositorySortingMethod(method);
 		}
 	}
 
@@ -1556,10 +1503,7 @@ public class RepositoryTree extends JTree {
 	 * @since 7.4
 	 */
 	public RepositorySortingMethod getSortingMethod() {
-		if (getModel() instanceof RepositoryTreeModel) {
-			return ((RepositoryTreeModel) getModel()).getSortingMethod();
-		}
-		return null;
+		return getModel().getSortingMethod();
 	}
 
 }

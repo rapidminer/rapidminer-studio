@@ -18,6 +18,11 @@
  */
 package com.rapidminer.operator;
 
+import static com.rapidminer.repository.RepositoryLocation.REPOSITORY_PREFIX;
+import static com.rapidminer.repository.RepositoryLocation.SEPARATOR;
+import static com.rapidminer.repository.RepositoryLocation.getRepositoryLocation;
+import static com.rapidminer.repository.RepositoryLocation.isConnectionPath;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -880,21 +885,33 @@ public abstract class Operator extends AbstractObservable<Operator>
 			}
 			if (type instanceof ParameterTypeRepositoryLocation) {
 				String value = getParameters().getParameterOrNull(key);
-				if (value != null && !((ParameterTypeRepositoryLocation) type).isAllowAbsoluteEntries()) {
-					if (value.startsWith(RepositoryLocation.REPOSITORY_PREFIX)) {
-						if (!value.startsWith(
-								RepositoryLocation.REPOSITORY_PREFIX + RepositoryManager.SAMPLE_REPOSITORY_NAME)) {
-							addError(new SimpleProcessSetupError(Severity.WARNING, portOwner,
-									"accessing_repository_by_name",
-									key.replace('_', ' '), value));
-						}
-					} else if (value.startsWith(String.valueOf(RepositoryLocation.SEPARATOR))) {
-						addError(new SimpleProcessSetupError(Severity.ERROR, portOwner,
-								Collections.singletonList(new RelativizeRepositoryLocationQuickfix(this, key, value)),
-								"absolute_repository_location",
-								key.replace('_', ' '), value));
-						errorCount++;
+				if (value == null || value.isEmpty() || ((ParameterTypeRepositoryLocation) type).isAllowAbsoluteEntries()
+						|| value.charAt(0) != SEPARATOR && !value.startsWith(REPOSITORY_PREFIX)
+						|| isConnectionPath(value) && !value.startsWith(REPOSITORY_PREFIX))  {
+					continue;
+				}
+				String errorKey = null;
+				Severity severity = null;
+				List<? extends QuickFix> quickfix = Collections.singletonList(
+						new RelativizeRepositoryLocationQuickfix(this, key, value));
+				if (!value.startsWith(REPOSITORY_PREFIX)) {
+					errorKey = "absolute_repository_location";
+					severity = Severity.ERROR;
+					if (getProcess().getRepositoryLocation() == null) {
+						quickfix = Collections.emptyList();
 					}
+					errorCount++;
+				} else if (!value.startsWith(REPOSITORY_PREFIX + RepositoryManager.SAMPLE_REPOSITORY_NAME)) {
+					errorKey = "accessing_repository_by_name";
+					severity = Severity.WARNING;
+					RepositoryLocation processLocation = getProcess().getRepositoryLocation();
+					if (processLocation == null || !value.startsWith(REPOSITORY_PREFIX + processLocation.getRepositoryName())) {
+						quickfix = Collections.emptyList();
+					}
+				}
+				if (errorKey != null) {
+					addError(new SimpleProcessSetupError(severity, getPortOwner(), quickfix, errorKey,
+							key.replace('_', ' '), value));
 				}
 			} else if (type instanceof ParameterTypeDateFormat) {
 				Locale locale = Locale.getDefault();
@@ -1086,7 +1103,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 		for (Port port : ports.getAllPorts()) {
 			builder.append("\n  ");
 			builder.append(port.getName());
-			IOObject data = port.getAnyDataOrNull();
+			IOObject data = port.getRawData();
 			builder.append(data == null ? "-/-" : data.toString());
 		}
 	}
@@ -1599,7 +1616,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 */
 	public RepositoryLocation getParameterAsRepositoryLocation(String key) throws UserError {
 		String loc = getParameter(key);
-		return RepositoryLocation.getRepositoryLocation(loc, this);
+		return getRepositoryLocation(loc, this);
 	}
 
 	/** Returns a single named parameter and casts it to a double matrix. */

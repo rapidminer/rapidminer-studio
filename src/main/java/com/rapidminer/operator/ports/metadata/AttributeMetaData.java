@@ -21,6 +21,7 @@ package com.rapidminer.operator.ports.metadata;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.AbstractCollection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
@@ -49,6 +50,9 @@ public class AttributeMetaData implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	/** Threshold for the number of nominal values shown by {@link #getRangeString()} */
+	private static final int MAX_DISPLAYED_NOMINAL_VALUES = 1000;
+
 	private ExampleSetMetaData owner = null;
 
 	private String name;
@@ -67,6 +71,8 @@ public class AttributeMetaData implements Serializable {
 
 	private Annotations annotations = new Annotations();
 
+	private boolean shrinkedValueSet = false;
+
 	public AttributeMetaData(String name, int type) {
 		this(name, type, null);
 	}
@@ -79,30 +85,32 @@ public class AttributeMetaData implements Serializable {
 	}
 
 	/**
-	 * This will generate the attribute meta data with the data's values shortened if the number of
-	 * values exceeds the respective property and the boolean flag is set to true. If shortened only
+	 * This will generate the attribute meta data with the data's values shortened. If shortened only
 	 * the first 100 characters of each nominal value is returned.
 	 */
 	public AttributeMetaData(AttributeRole role, ExampleSet exampleSet, boolean shortened) {
 		this(role.getAttribute().getName(), role.getAttribute().getValueType(), role.getSpecialName());
 		Attribute att = role.getAttribute();
 		if (att.isNominal()) {
-			int maxValues = shortened ? getMaximumNumberOfNominalValues() : Integer.MAX_VALUE;
+			// always limit the value set
+			int maxValues = getMaximumNumberOfNominalValues();
 			valueSet.clear();
+			valueSetRelation = SetRelation.EQUAL;
 			for (String value : att.getMapping().getValues()) {
 				if (value == null) {
 					continue;
+				}
+				if (maxValues == 0) {
+					valueSetRelation = SetRelation.SUPERSET;
+					shrinkedValueSet = true;
+					break;
 				}
 				if (shortened && value.length() > 100) {
 					value = value.substring(0, 100);
 				}
 				valueSet.add(value);
 				maxValues--;
-				if (maxValues == 0) {
-					break;
-				}
 			}
-			valueSetRelation = SetRelation.EQUAL;
 		}
 		if (exampleSet != null) {
 			numberOfMissingValues = new MDInteger((int) exampleSet.getStatistics(att, Statistics.UNKNOWN));
@@ -146,8 +154,16 @@ public class AttributeMetaData implements Serializable {
 		this.type = Ontology.NOMINAL;
 		this.role = role;
 		this.valueSetRelation = SetRelation.EQUAL;
+		// always shrink the value set
+		int maxValues = getMaximumNumberOfNominalValues();
 		for (String string : values) {
+			if (maxValues == 0) {
+				this.valueSetRelation = SetRelation.SUPERSET;
+				shrinkedValueSet = true;
+				break;
+			}
 			valueSet.add(string);
+			maxValues--;
 		}
 	}
 
@@ -177,6 +193,7 @@ public class AttributeMetaData implements Serializable {
 		this.valueSet = new TreeSet<String>();
 		this.annotations = new Annotations(attributeMetaData.annotations);
 		valueSet.addAll(attributeMetaData.getValueSet());
+		this.shrinkedValueSet = attributeMetaData.shrinkedValueSet;
 	}
 
 	public AttributeMetaData(Attribute attribute) {
@@ -449,6 +466,7 @@ public class AttributeMetaData implements Serializable {
 	public void setValueSet(Set<String> valueSet, SetRelation relation) {
 		this.valueSetRelation = relation;
 		this.valueSet = valueSet;
+		shrinkValueSet();
 	}
 
 	public Range getValueRange() {
@@ -596,10 +614,44 @@ public class AttributeMetaData implements Serializable {
 		} else if (!isNominal() && valueRange != null) {
 			return valueSetRelation.toString() + (valueSetRelation != SetRelation.UNKNOWN ? valueRange.toString() : "");
 		} else if (isNominal() && valueSet != null) {
-			return valueSetRelation.toString() + (valueSetRelation != SetRelation.UNKNOWN ? valueSet.toString() : "");
+			return valueSetRelation.toString() + (valueSetRelation != SetRelation.UNKNOWN ? setToString(valueSet) : "");
 		} else {
 			return "unknown";
 		}
+	}
+
+
+	/**
+	 * Converts String set into String analogously to {@link AbstractCollection#toString()}, but with a maximum number
+	 * of entries. This is necessary, because otherwise the UI can freeze when this String is calculated repeatedly.
+	 * Note that the maximum number of entries cannot be determined by {@link #getMaximumNumberOfNominalValues()}
+	 * because we do not want our UI to freeze if the user sets this too high.
+	 *
+	 * @param set
+	 * 		the set which should be converted to a String
+	 * @return a String with at most {@link #MAX_DISPLAYED_NOMINAL_VALUES} values of the set
+	 */
+	private String setToString(Set<String> set) {
+		if (set.isEmpty()) {
+			return "[]";
+		}
+
+		StringBuilder sb = new StringBuilder();
+		sb.append('[');
+		int size = set.size();
+		int shownValues = Math.min(size, MAX_DISPLAYED_NOMINAL_VALUES);
+		Iterator<String> it = set.iterator();
+		for (int i = 0; i < shownValues - 1; i++) {
+			String e = it.next();
+			sb.append(e);
+			sb.append(',').append(' ');
+		}
+		if (shownValues < size) {
+			sb.append("...");
+		} else {
+			sb.append(it.next());
+		}
+		return sb.append(']').toString();
 	}
 
 	/**
@@ -631,7 +683,7 @@ public class AttributeMetaData implements Serializable {
 	private void shrinkValueSet(int maxSize) {
 		if (valueSet != null) {
 			if (valueSet.size() > maxSize) {
-				Set<String> newSet = new TreeSet<String>();
+				Set<String> newSet = new TreeSet<>();
 				Iterator<String> i = valueSet.iterator();
 				int count = 0;
 				while (i.hasNext() && count < maxSize) {
@@ -640,6 +692,7 @@ public class AttributeMetaData implements Serializable {
 				}
 				this.valueSet = newSet;
 				valueSetRelation = valueSetRelation.merge(SetRelation.SUPERSET);
+				shrinkedValueSet = true;
 
 				if (owner != null) {
 					owner.setNominalDataWasShrinked(true);
@@ -656,10 +709,12 @@ public class AttributeMetaData implements Serializable {
 	/* pp */AttributeMetaData registerOwner(ExampleSetMetaData owner) {
 		if (this.owner == null) {
 			this.owner = owner;
+			owner.setNominalDataWasShrinked(shrinkedValueSet);
 			return this;
 		} else {
 			AttributeMetaData clone = this.clone();
 			clone.owner = owner;
+			owner.setNominalDataWasShrinked(clone.shrinkedValueSet);
 			return clone;
 		}
 	}

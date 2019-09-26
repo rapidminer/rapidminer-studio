@@ -18,10 +18,17 @@
  */
 package com.rapidminer.gui.properties.celleditors.value;
 
+import java.util.Arrays;
+import java.util.function.Predicate;
+
 import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.parameter.ParameterTypeConnectionLocation;
 import com.rapidminer.repository.ConnectionEntry;
+import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryLocation;
+
 
 /**
  * Repository location cell editor that is specialized for {@link ConnectionEntry ConnectionEntries} and adds a second button
@@ -32,8 +39,12 @@ import com.rapidminer.repository.RepositoryLocation;
  */
 public class ConnectionLocationValueCellEditor extends RepositoryLocationWithExtraValueCellEditor {
 
+	// keep the connection types from the ParameterTypeConnectionLocation to create a Predicate for filtering the Repository
+	private String[] conTypes;
+
 	public ConnectionLocationValueCellEditor(ParameterTypeConnectionLocation type) {
 		super(type);
+		conTypes = type.getConnectionType();
 	}
 
 	@Override
@@ -49,5 +60,13 @@ public class ConnectionLocationValueCellEditor extends RepositoryLocationWithExt
 	@Override
 	protected Class<ConnectionEntry> getExpectedEntryClass() {
 		return ConnectionEntry.class;
+	}
+
+	@Override
+	protected Predicate<Entry> getRepositoryFilter() {
+		return entry -> (((entry instanceof Repository) && ((Repository) entry).supportsConnections())
+				|| (entry instanceof Folder && ((Folder) entry).isSpecialConnectionsFolder())
+				|| (entry instanceof ConnectionEntry && (conTypes == null || conTypes.length == 0
+							|| Arrays.stream(conTypes).anyMatch(ct -> ct != null && ct.equals(((ConnectionEntry) entry).getConnectionType())))));
 	}
 }

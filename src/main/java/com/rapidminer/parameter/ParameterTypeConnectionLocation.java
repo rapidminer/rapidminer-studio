@@ -27,25 +27,25 @@ package com.rapidminer.parameter;
  */
 public class ParameterTypeConnectionLocation extends ParameterTypeRepositoryLocation {
 
-	private String conType;
+	private String[] conType;
 
 	/**
 	 * Minimal constructor, accepting the location of a
 	 * {@link com.rapidminer.connection.ConnectionInformation ConnectionInformation} of any type.
 	 */
 	public ParameterTypeConnectionLocation(String key, String description) {
-		this(key, description, null);
+		this(key, description, (String[]) null);
 	}
 
 	/** Constructor with restricting the allowed type of the connection. */
-	public ParameterTypeConnectionLocation(String key, String description, String conType) {
+	public ParameterTypeConnectionLocation(String key, String description, String...conType) {
 		super(key, description, true, false, true, true);
 		setExpert(false);
 		this.conType = conType;
 	}
 
-	/** Get the allowed type of connections. Returns {@code null} if any connection is allowed. */
-	public String getConnectionType() {
+	/** Get the allowed types of connections. Returns {@code null} if any connection is allowed. */
+	public String[] getConnectionType() {
 		return conType;
 	}
 }

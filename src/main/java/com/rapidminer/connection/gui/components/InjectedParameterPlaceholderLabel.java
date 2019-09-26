@@ -130,9 +130,8 @@ public class InjectedParameterPlaceholderLabel extends JPanel {
 		if (valueProvider == null) {
 			return;
 		}
-
-		ValueProviderGUIProvider guiProvider = ValueProviderGUIRegistry.INSTANCE.getGUIProvider(valueProvider.getType());
-		String hint = guiProvider == null ? null : guiProvider.getCustomLabel(ValueProviderGUIProvider.CustomLabel.INJECTED_PARAMETER, valueProvider, ConnectionModelConverter.getConnection(param), param.getGroupName(), param.getName());
+		ValueProviderGUIProvider guiProvider =  ValueProviderGUIRegistry.INSTANCE.getGUIProvider(valueProvider.getType());
+		String hint = guiProvider.getCustomLabel(ValueProviderGUIProvider.CustomLabel.INJECTED_PARAMETER, valueProvider, ConnectionModelConverter.getConnection(param), param.getGroupName(), param.getName());
 
 		if (hint != null) {
 			editorPane.setText(hint);

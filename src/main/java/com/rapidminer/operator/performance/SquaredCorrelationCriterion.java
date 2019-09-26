@@ -29,6 +29,12 @@ public class SquaredCorrelationCriterion extends CorrelationCriterion {
 
 	private static final long serialVersionUID = 8751373179064203312L;
 
+	public SquaredCorrelationCriterion(){}
+
+	public SquaredCorrelationCriterion(SquaredCorrelationCriterion scc) {
+		super(scc);
+	}
+
 	@Override
 	public String getDescription() {
 		return "Returns the squared correlation coefficient between the label and predicted label.";

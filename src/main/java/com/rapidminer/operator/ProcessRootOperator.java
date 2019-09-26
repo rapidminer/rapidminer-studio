@@ -23,11 +23,15 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 import com.rapidminer.Process;
 import com.rapidminer.ProcessContext;
 import com.rapidminer.ProcessListener;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.connection.util.ConnectionInformationSelector;
+import com.rapidminer.connection.util.ConnectionSelectionProvider;
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.nio.file.FileObject;
 import com.rapidminer.operator.ports.InputPort;
@@ -38,12 +42,14 @@ import com.rapidminer.operator.ports.SinglePortExtender;
 import com.rapidminer.operator.ports.metadata.MDTransformationRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
+import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.parameter.conditions.NonEqualTypeCondition;
 import com.rapidminer.repository.BlobEntry;
@@ -54,11 +60,12 @@ import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ListenerTools;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.MailUtilities;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.io.Encoding;
+import com.rapidminer.tools.mail.connection.MailConnectionHandler;
+import com.rapidminer.tools.mail.connection.MailConnectionUtilities;
 
 
 /**
@@ -68,7 +75,7 @@ import com.rapidminer.tools.io.Encoding;
  *
  * @author Ingo Mierswa
  */
-public final class ProcessRootOperator extends OperatorChain {
+public final class ProcessRootOperator extends OperatorChain implements ConnectionSelectionProvider {
 
 	private static final OperatorVersion OPERATOR_REPLACE_MACROS_CAUSES_ERROR_ON_UNDEFINED = new OperatorVersion(6, 0, 2);
 
@@ -111,6 +118,9 @@ public final class ProcessRootOperator extends OperatorChain {
 
 	/** The process which is connected to this process operator. */
 	private Process process;
+
+	/** @since 9.4.1 */
+	private final ConnectionInformationSelector connectionSelector;
 
 	private final SinglePortExtender<InputPort> resultPortExtender = new SinglePortExtender<>("result", getSubprocess(0)
 			.getInnerSinks());
@@ -177,6 +187,7 @@ public final class ProcessRootOperator extends OperatorChain {
 	/** Creates a new process operator which directly references to the given process. */
 	public ProcessRootOperator(OperatorDescription description, Process process) {
 		super(description, "Main Process");
+		connectionSelector = setupConnectionSelector();
 		resultPortExtender.start();
 		processInputExtender.start();
 		getTransformer().addRule(new SubprocessTransformRule(getSubprocess(0)));
@@ -190,6 +201,48 @@ public final class ProcessRootOperator extends OperatorChain {
 		});
 		setProcess(process);
 		rename("Root");
+	}
+
+	/**
+	 * Creates a {@link ConnectionInformationSelector} with parameter key {@link MailConnectionHandler#getParameterKey()}
+	 * from {@link MailConnectionHandler#SEND}
+	 *
+	 * @since 9.4.1
+	 */
+	private ConnectionInformationSelector setupConnectionSelector() {
+		return new ConnectionInformationSelector(null, null, ProcessRootOperator.this, MailConnectionHandler.SEND.getType()) {
+
+			/** @return {@link MailConnectionHandler#getParameterKey()} from {@link MailConnectionHandler#SEND} */
+			@Override
+			public String getParameterKey() {
+				return MailConnectionHandler.SEND.getParameterKey();
+			}
+		};
+	}
+
+	@Override
+	protected void performAdditionalChecks() {
+		super.performAdditionalChecks();
+		try {
+			if (getParameterAsInt(PARAMETER_SEND_MAIL) == PARAMETER_SEND_MAIL_NEVER) {
+				return;
+			}
+		} catch (UndefinedParameterError undefinedParameterError) {
+			return;
+		}
+		if (connectionSelector == null) {
+			return;
+		}
+		if (connectionSelector.isConnectionSpecified()) {
+			ProcessSetupError error = connectionSelector.checkConnectionTypeMatch(this);
+			if (error != null) {
+				addError(error);
+			}
+			return;
+		}
+		addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(),
+				Collections.singletonList(new ParameterSettingQuickFix(this, connectionSelector.getParameterKey())),
+				"connection.mail.not_specified"));
 	}
 
 	public void deliverInput(List<IOObject> inputs) {
@@ -260,6 +313,18 @@ public final class ProcessRootOperator extends OperatorChain {
 		ListenerTools.informAllAndThrow(x-> super.processFinished(), getListenerListCopy(), l -> l.processEnded(process));
 	}
 
+	/** @since 9.4.1 */
+	@Override
+	public ConnectionInformationSelector getConnectionSelector() {
+		return connectionSelector;
+	}
+
+	/** @since 9.4.1 */
+	@Override
+	public void setConnectionSelector(ConnectionInformationSelector selector) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
 	/**
 	 * This method can be used to send an email after the process has finished. Currently only a
 	 * working sendmail server is supported.
@@ -276,22 +341,41 @@ public final class ProcessRootOperator extends OperatorChain {
 		}
 
 		String email = getParameterAsString(PARAMETER_NOTIFICATION_EMAIL);
+		ProgressThread mailThread = new ProgressThread("process.send_result_mail") {
+
+			@Override
+			public void run() {
+				sendEmailAsync(results, e, email);
+			}
+		};
+		mailThread.setIndeterminate(true);
+		mailThread.start();
+	}
+
+	/**
+	 * Sends the result email, called from a {@link ProgressThread}.
+	 *
+	 * @since 9.4.1
+	 * @see MailConnectionUtilities#sendEmail(Operator, String, String, String, java.util.Map)
+	 */
+	private void sendEmailAsync(IOContainer results, Throwable e, String email) {
 		if (email == null) {
 			return;
 		}
 		getLogger().info("Sending notification email to '" + email + "'");
 
 		String name = email;
-		int at = name.indexOf("@");
+		int at = name.indexOf('@');
 		if (at >= 0) {
 			name = name.substring(0, at);
 		}
 
-		String subject = "Process " + getName() + " finished";
+		String operatorName = ProcessRootOperator.this.getName();
+		String subject = "Process " + operatorName + " finished";
 		StringBuilder content = new StringBuilder("Hello " + name + "," + Tools.getLineSeparator()
 				+ Tools.getLineSeparator());
-		content.append("I'm sending you a notification message on your process '" + getProcess().getProcessLocation() + "'."
-				+ Tools.getLineSeparator());
+		content.append("I'm sending you a notification message on your process '")
+				.append(getProcess().getProcessLocation()).append("'.").append(Tools.getLineSeparator());
 
 		// File logFile = getLog().getLogFile();
 		// if (logFile != null) {
@@ -300,26 +384,32 @@ public final class ProcessRootOperator extends OperatorChain {
 		// }
 
 		if (e != null) {
-			content.append("Process failed: " + e.toString());
-			subject = "Process " + getName() + " failed";
+			content.append("Process failed: ").append(e.toString());
+			subject = "Process " + operatorName + " failed";
 		}
 
 		if (results != null) {
-			content.append(Tools.getLineSeparator() + Tools.getLineSeparator() + "Results:");
+			content.append(Tools.getLineSeparator()).append(Tools.getLineSeparator()).append("Results:");
 			ResultObject result;
 			int i = 0;
 			while (i < results.size()) {
 				try {
 					result = results.get(ResultObject.class, i);
-					content.append(Tools.getLineSeparator() + Tools.getLineSeparator() + Tools.getLineSeparator()
-							+ result.toResultString());
+					content.append(Tools.getLineSeparator()).append(Tools.getLineSeparator())
+							.append(Tools.getLineSeparator()).append(result.toResultString());
 					i++;
 				} catch (MissingIOObjectException exc) {
 					break;
 				}
 			}
 		}
-		MailUtilities.sendEmail(email, subject, content.toString());
+		try {
+			MailConnectionUtilities.sendEmail(ProcessRootOperator.this, email, subject, content.toString(), null);
+		} catch (MailNotSentException exception) {
+			getLogger().log(Level.WARNING, "process.send_mail_failed", new UserError(
+					ProcessRootOperator.this, exception.getCause(), exception.getErrorKey(),
+					exception.getArguments()).getMessage());
+		}
 	}
 
 	@Override
@@ -350,12 +440,19 @@ public final class ProcessRootOperator extends OperatorChain {
 
 		types.add(new ParameterTypeCategory(PARAMETER_SEND_MAIL, "Send email upon completion of the proces.",
 				PARAMETER_SEND_MAIL_OPTIONS, PARAMETER_SEND_MAIL_NEVER));
-
+		NonEqualTypeCondition sendMailCondition = new NonEqualTypeCondition(this, PARAMETER_SEND_MAIL,
+				PARAMETER_SEND_MAIL_OPTIONS, true, PARAMETER_SEND_MAIL_NEVER);
+		if (connectionSelector != null) {
+			AboveOperatorVersionCondition compCondition = new AboveOperatorVersionCondition(this, MailConnectionUtilities.BEFORE_EMAIL_CONNECTION);
+			List<ParameterType> cisTypes = ConnectionInformationSelector.createParameterTypes(connectionSelector);
+			types.addAll(cisTypes);
+			cisTypes.forEach(p -> p.registerDependencyCondition(sendMailCondition));
+			cisTypes.forEach(p -> p.registerDependencyCondition(compCondition));
+		}
 		ParameterType parameterRecepient = new ParameterTypeString(PARAMETER_NOTIFICATION_EMAIL,
 				"Email address for the notification mail.",
 				ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_DEFAULT_RECIPIENT));
-		parameterRecepient.registerDependencyCondition(new NonEqualTypeCondition(this, PARAMETER_SEND_MAIL,
-				PARAMETER_SEND_MAIL_OPTIONS, true, PARAMETER_SEND_MAIL_NEVER));
+		parameterRecepient.registerDependencyCondition(sendMailCondition);
 		types.add(parameterRecepient);
 
 		int defaultTime;
@@ -410,8 +507,9 @@ public final class ProcessRootOperator extends OperatorChain {
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		OperatorVersion[] old = super.getIncompatibleVersionChanges();
-		OperatorVersion[] updatedVersions = Arrays.copyOf(old, old.length + 1);
+		OperatorVersion[] updatedVersions = Arrays.copyOf(old, old.length + 2);
 		updatedVersions[old.length] = OPERATOR_REPLACE_MACROS_CAUSES_ERROR_ON_UNDEFINED;
+		updatedVersions[old.length + 1] = MailConnectionUtilities.BEFORE_EMAIL_CONNECTION;
 		return updatedVersions;
 	}
 

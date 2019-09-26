@@ -34,8 +34,7 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
-import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.UserSetupError;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
@@ -75,21 +74,13 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		IOObjectEntry entry;
 		try {
 			entry = getRepositoryEntry();
-		} catch (RepositoryException | UndefinedParameterError e) {
-			handleSetupError(e);
+		} catch (RepositoryException e) {
+			throw handleSetupError(e);
+		} catch (UndefinedParameterError e) {
 			return super.getGeneratedMetaData();
 		}
 		try {
-			MetaData metaData = entry.retrieveMetaData().clone();
-			// We reduce the number of nominal values to a limit here to keep meta data
-			// transformations fast.
-			if (metaData instanceof ExampleSetMetaData) {
-				for (AttributeMetaData amd : ((ExampleSetMetaData) metaData).getAllAttributes()) {
-					if (amd.isNominal()) {
-						amd.shrinkValueSet();
-					}
-				}
-			}
+			MetaData metaData = entry.retrieveMetaData();
 			metaData.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, entry.getLocation().toString());
 			return metaData;
 		} catch (RepositoryException e) {
@@ -167,27 +158,25 @@ public class RepositorySource extends AbstractReader<IOObject> {
 	}
 
 	/**
-	 * Handles the given exception by adding an appropriate {@link com.rapidminer.operator.ProcessSetupError ProcessSetupError}
-	 * to this operator if applicable.
+	 * Handles the given exception by returning an {@link UserSetupError} containing an appropriate
+	 * {@link com.rapidminer.operator.ProcessSetupError ProcessSetupError} for this operator.
 	 * <p>
-	 * Exceptions that are not {@link RepositoryException RepositoryExceptions} will be ignored.
-	 * A specific error is added for entries that can not be found or are of the wrong type. Otherwise a generic error is added.
+	 * A specific error is created for entries that can not be found or are of the wrong type.
+	 * Otherwise a generic error is created.
 	 *
 	 * @since 9.2.0
 	 */
-	private void handleSetupError(Exception e) throws UserError{
-		if (!(e instanceof RepositoryException)) {
-			return;
-		}
+	private UserSetupError handleSetupError(RepositoryException e) throws UserError {
 		if (e instanceof RepositoryEntryNotFoundException || e instanceof RepositoryEntryWrongTypeException) {
-			addError(new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(), PARAMETER_REPOSITORY_ENTRY,
-					Collections.singletonList(new ParameterSettingQuickFix(getPortOwner().getOperator(), PARAMETER_REPOSITORY_ENTRY)),
+			return new UserSetupError(this, new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(),
+					PARAMETER_REPOSITORY_ENTRY,
+					Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_REPOSITORY_ENTRY)),
 					REPO_ERROR_KEYS.get(e.getClass()), getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
 					e.getMessage()));
-			return;
 		}
-		addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "repository_access_error",
-				getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY), e.getMessage()));
+		return new UserSetupError(this, new SimpleProcessSetupError(Severity.WARNING, getPortOwner(),
+				"repository_access_error", getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
+				e.getMessage()));
 	}
 
 	@Override

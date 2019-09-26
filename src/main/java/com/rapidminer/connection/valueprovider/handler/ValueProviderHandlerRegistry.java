@@ -164,7 +164,7 @@ public final class ValueProviderHandlerRegistry extends GenericHandlerRegistry<V
 	 * The order of value providers and placeholder injection are calculated using {@link ChainingValueProviderHandler#sortValueProviders(Map)}
 	 * and the actual dependencies of the placeholders. If there are circular dependencies, nothing might be injected.
 	 * <p>
-	 * Placeholders may reference other parameter names inside their own group or fully qualified keys ([@code group.name})
+	 * Placeholders may reference other parameter names inside their own group or fully qualified keys ({@code group.name})
 	 * for parameters in other groups.
 	 *
 	 * @param connection

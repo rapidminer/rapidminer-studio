@@ -25,6 +25,7 @@ import java.util.List;
 import com.rapidminer.gui.flow.processrendering.model.ProcessRendererModel;
 import com.rapidminer.gui.flow.processrendering.view.ProcessRendererView;
 import com.rapidminer.gui.metadata.MetaDataRendererFactoryRegistry;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TipProvider;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ProcessRootOperator;
@@ -43,6 +44,9 @@ import com.rapidminer.operator.ports.metadata.MetaDataError;
  *
  */
 public class ProcessRendererTooltipProvider implements TipProvider {
+
+	/** Limit the data length in the tooltip so that the html parsing does not take forever */
+	private static final int MAX_DATA_LENGTH = 1000;
 
 	private ProcessRendererModel model;
 
@@ -102,10 +106,10 @@ public class ProcessRendererTooltipProvider implements TipProvider {
 		} else {
 			tip.append("-<br/>");
 		}
-		IOObject data = port.getAnyDataOrNull();
+		IOObject data = port.getRawData();
 		if (data != null) {
 			tip.append("</br><em>Data:</em> ");
-			tip.append(data.toString());
+			tip.append(SwingTools.getShortenedDisplayName(data.toString(), MAX_DATA_LENGTH));
 			tip.append("<br/>");
 		}
 		tip.append(port.getDescription());

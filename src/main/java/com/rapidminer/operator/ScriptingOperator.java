@@ -28,6 +28,9 @@ import java.util.Map;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.codehaus.groovy.GroovyBugError;
 
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ports.InputPortExtender;
 import com.rapidminer.operator.ports.OutputPortExtender;
@@ -36,6 +39,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeText;
 import com.rapidminer.parameter.TextType;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.studio.internal.Resources;
 import com.rapidminer.tools.plugin.Plugin;
 
 import groovy.lang.Binding;
@@ -222,6 +226,7 @@ public class ScriptingOperator extends Operator {
 		}
 
 		List<IOObject> input = inExtender.getData(IOObject.class, false);
+		convertIOTables(input);
 		Object result;
 		try {
 			// cache access is synchronized on a per-script basis to prevent Execute Script
@@ -283,6 +288,20 @@ public class ScriptingOperator extends Operator {
 				} else {
 					getLogger().warning("Unknown result: " + result.getClass() + ": " + result);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Since the script does unchecked casts to {@link com.rapidminer.example.ExampleSet}s, we need to convert belt
+	 * tables here. Later, when more operators return belt tables, we should introduce a compatibility level for this.
+	 */
+	private void convertIOTables(List<IOObject> input) {
+		ConcurrencyContext concurrencyContext = Resources.getConcurrencyContext(this);
+		for (int i = 0; i < input.size(); i++) {
+			IOObject object = input.get(i);
+			if (object instanceof IOTable) {
+				input.set(i, BeltConverter.convert((IOTable) object, concurrencyContext));
 			}
 		}
 	}

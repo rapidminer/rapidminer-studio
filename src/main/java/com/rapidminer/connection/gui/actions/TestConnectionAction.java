@@ -147,10 +147,14 @@ public class TestConnectionAction extends ResourceAction {
 
 	/**
 	 * Tests the given connection
-	 * @param connection the connection to test
+	 *
+	 * @param connection
+	 * 		the connection to test
+	 * @param thread
+	 * 		the progress thread in which the test is executed
 	 * @return the test result
 	 */
-	private TestResult getTestResult(ConnectionInformation connection, ProgressThread thread) {
+	public static TestResult getTestResult(ConnectionInformation connection, ProgressThread thread) {
 		if (connection == null) {
 			return TestResult.nullable();
 		}

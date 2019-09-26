@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -34,12 +35,16 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.AccessController;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -294,6 +299,82 @@ public final class ConnectionInformationFileUtils {
 	 */
 	public static ConnectionInformation loadFromZipFile(Path zipFile) throws IOException {
 		return ConnectionInformationSerializer.LOCAL.loadConnection(new FileInputStream(zipFile.toFile()));
+	}
+
+	/**
+	 * This method tries to add native libraries from a connection (defined as other files ending in *.so, *.dylib, and
+	 * *.dll) to the native library lookup path. If a native lib has already been added, it will not be added again. If
+	 * the connection does not have any files when calling {@link ConnectionInformation#getOtherFiles()}, nothing
+	 * happens.
+	 *
+	 * @param ci the connection, never {@code null}
+	 * @since 9.4.0
+	 */
+	public static void addNativeLibraries(ConnectionInformation ci) {
+		if (ci == null) {
+			throw new IllegalArgumentException("ci must not be null!");
+		}
+
+		for (Path otherFile : ci.getOtherFiles()) {
+			String fileName = otherFile.getFileName().toString();
+			if (isNativeLibrary(fileName)) {
+				String parentFolderPath = otherFile.getParent().toAbsolutePath().toString();
+
+				// add folders to usr_paths in ClassLoader (static variable), if they are not yet contained in there
+				AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+					try {
+						final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+						usrPathsField.setAccessible(true);
+						String[] paths = (String[]) usrPathsField.get(null);
+						if (paths == null) {
+							// if not yet initialized, trigger loading a fake lib so the arrays in the Classloader class get initialized
+							try {
+								System.loadLibrary(UUID.randomUUID().toString());
+							} catch (Throwable t) {
+								// ignore
+							}
+							paths = (String[]) usrPathsField.get(null);
+						}
+						boolean skipLoading = false;
+						// need to add path?
+						for (String path : paths) {
+							if (path != null && path.equals(parentFolderPath)) {
+								skipLoading = true;
+								break;
+							}
+						}
+
+						if (!skipLoading) {
+							// path not yet contained, add it
+							final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
+							newPaths[newPaths.length - 1] = parentFolderPath;
+							usrPathsField.set(null, newPaths);
+							LogService.getRoot().log(Level.INFO, "com.rapidminer.connection.ConnectionInformationFileUtils.added_to_native_path", fileName);
+						}
+					} catch (Throwable t) {
+						LogService.getRoot().log(Level.SEVERE, "com.rapidminer.connection.ConnectionInformationFileUtils.failed_add_native_path", fileName);
+						LogService.getRoot().log(Level.SEVERE, "", t);
+					}
+
+					return null;
+				});
+			}
+		}
+	}
+
+	/**
+	 * Checks if the given file name indicates a native library (ends in *.dll, *.so, or *.dylib).
+	 *
+	 * @param fileName the file name including file suffix, must not be {@code null}
+	 * @return {@code true} if it is a native library according to the file name; {@code false} otherwise
+	 * @since 9.4.0
+	 */
+	public static boolean isNativeLibrary(String fileName) {
+		if (fileName == null) {
+			throw new IllegalArgumentException("fileName must not be null!");
+		}
+
+		return fileName.endsWith(".so") || fileName.endsWith(".dylib") || fileName.endsWith(".dll");
 	}
 
 	private static Path getCacheLocation() {

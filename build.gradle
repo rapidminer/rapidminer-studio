@@ -20,19 +20,20 @@ repositories {
 dependencies {
 
 	// belt project for new data core
-	compile 'com.rapidminer:belt:1.0.0-BETA'
+	compile 'com.rapidminer:belt:1.0.0-BETA2'
 
 	// belt adapter for conversion between old and new core
-	compile ('com.rapidminer:belt-adapter:0.3'){
+	compile ('com.rapidminer:belt-adapter:0.5') {
 		exclude group: 'com.rapidminer.studio', module: 'rapidminer-studio-core'
+		exclude group: 'com.rapidminer', module: 'belt'
 	}
 
     // OS X adapter to add platform specific UI
     compile 'com.rapidminer.studio:rapidminer-studio-osx-adapter:1.0.2'
 
 	// RapidMiner license framework for license management
-	compile 'com.rapidminer.license:rapidminer-license-api:4.1.2'
-	compile('com.rapidminer.license:rapidminer-license-commons:4.1.2'){
+	compile "com.rapidminer.license:rapidminer-license-api:$licenseVersion"
+	compile("com.rapidminer.license:rapidminer-license-commons:$licenseVersion") {
 		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
 		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
 	}

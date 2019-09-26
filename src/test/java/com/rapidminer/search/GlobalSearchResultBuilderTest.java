@@ -38,7 +38,7 @@ import com.rapidminer.search.util.GlobalSearchableTextFakeImpl;
  */
 public class GlobalSearchResultBuilderTest {
 
-
+	private static final int MAX_TRIES = 300;
 	private static GlobalSearchableTextFakeImpl searchable;
 
 	@BeforeClass
@@ -51,10 +51,15 @@ public class GlobalSearchResultBuilderTest {
 
 	@Before
 	public void waitTillReady() {
+		int i = 0;
 		while (!searchable.isInitialized()) {
 			try {
-				Thread.sleep(100l);
+				Thread.sleep(100L);
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+			if (i++ > MAX_TRIES) {
+				throw new IllegalStateException("waitTillReady did not complete in time.");
 			}
 		}
 	}

@@ -42,7 +42,9 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.metadata.ConnectionInformationMetaData;
+import com.rapidminer.operator.ports.metadata.MDTransformationRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.MetaDataError;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
 import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
@@ -106,6 +108,16 @@ public class ConnectionInformationSelector {
 	}
 
 	/**
+	 * Returns the parameter type's key of this selector. Subclasses might override this.
+	 *
+	 * @return always {@value #PARAMETER_CONNECTION_ENTRY}
+	 * @since 9.4.1
+	 */
+	public String getParameterKey() {
+		return PARAMETER_CONNECTION_ENTRY;
+	}
+
+	/**
 	 * Creates default transformation rules if {@link #input} is not {@code null}. This will add a {@link SimplePrecondition}
 	 * on the input port, and adds a
 	 * {@link com.rapidminer.operator.ports.metadata.MDTransformer#addPassThroughRule passthrough rule}.
@@ -131,7 +143,7 @@ public class ConnectionInformationSelector {
 	 * @return whether or not the input port is mandatory. Will return {@code false} if the parameter is set
 	 */
 	protected boolean portMandatory() {
-		return !handler.getParameters().getParameterType(PARAMETER_CONNECTION_ENTRY).isHidden() && !handler.getParameters().isSet(PARAMETER_CONNECTION_ENTRY);
+		return !handler.getParameters().getParameterType(getParameterKey()).isHidden() && !handler.getParameters().isSet(getParameterKey());
 	}
 
 	/** Get the input port. Might return {@code null}. */
@@ -159,7 +171,7 @@ public class ConnectionInformationSelector {
 	 */
 	public boolean isConnectionSpecified() {
 		if (input == null || !input.isConnected()) {
-			return handler.getParameters().isSet(PARAMETER_CONNECTION_ENTRY);
+			return handler.getParameters().isSet(getParameterKey());
 		}
 		return input.getMetaData() instanceof ConnectionInformationMetaData;
 	}
@@ -178,7 +190,7 @@ public class ConnectionInformationSelector {
 
 	/**
 	 * Get the meta data of the connection if it is properly specified. Otherwise returns {@code null} for
-	 * not or wrongly connected inputs, as well as for an unset or unused {@link #PARAMETER_CONNECTION_ENTRY} parameter.
+	 * not or wrongly connected inputs, as well as for an unset or unused {@link #getParameterKey()} parameter.
 	 * Will throw repository related exceptions in case of misconfigured parameters.
 	 *
 	 * @return the properly specified meta data or {@code null}
@@ -194,10 +206,10 @@ public class ConnectionInformationSelector {
 			// wrong kind of MD or no MD => taken care of by precondition
 			return null;
 		}
-		if (handler.getParameters().getParameterType(PARAMETER_CONNECTION_ENTRY).isHidden()) {
+		if (handler.getParameters().getParameterType(getParameterKey()).isHidden()) {
 			return null;
 		}
-		if (!handler.getParameters().isSet(PARAMETER_CONNECTION_ENTRY)) {
+		if (!handler.getParameters().isSet(getParameterKey())) {
 			// parameter not set => but is mandatory
 			return null;
 		}
@@ -250,7 +262,7 @@ public class ConnectionInformationSelector {
 				}
 			}
 		} else {
-			if (!handler.getParameters().isSet(PARAMETER_CONNECTION_ENTRY)) {
+			if (!handler.getParameters().isSet(getParameterKey())) {
 				throw new UserError(null, "connection.no_connection");
 			}
 			RepositoryLocation location = getRepoLocationFromParameter();
@@ -270,7 +282,7 @@ public class ConnectionInformationSelector {
 							getTypeName(conType), getTypeName(actualType));
 				} else {
 					throw new ParameterError(null, CONNECTION_MISMATCHED_TYPE,
-							PARAMETER_CONNECTION_ENTRY, getTypeName(conType), getTypeName(actualType));
+							getParameterKey(), getTypeName(conType), getTypeName(actualType));
 				}
 			}
 		}
@@ -279,7 +291,7 @@ public class ConnectionInformationSelector {
 
 	/**
 	 * Checks that this {@link ConnectionInformationSelector} has a correctly defined connection at hand,
-	 * if that is indicated by a connected port or the parameter {@link #PARAMETER_CONNECTION_ENTRY}.
+	 * if that is indicated by a connected port or the parameter {@link #getParameterKey()}.
 	 * Will return a {@link ProcessSetupError} if one of the following holds:
 	 * <ul>
 	 * 		<li>A repository error occurred when trying to retrieve the information</li>
@@ -297,7 +309,7 @@ public class ConnectionInformationSelector {
 	 */
 	public ProcessSetupError checkConnectionTypeMatch(Operator operator) {
 		ConnectionInformationMetaData metaData;
-		List<ParameterSettingQuickFix> parameterSetting = Collections.singletonList(new ParameterSettingQuickFix(operator, PARAMETER_CONNECTION_ENTRY));
+		List<ParameterSettingQuickFix> parameterSetting = Collections.singletonList(new ParameterSettingQuickFix(operator, getParameterKey()));
 		try {
 			metaData = getMetaDataOrThrow();
 			if (metaData == null) {
@@ -421,7 +433,7 @@ public class ConnectionInformationSelector {
 
 	/** Resolves the repository location. Will make a distinction between an operater and a simple parameter handler */
 	private RepositoryLocation getRepoLocationFromParameter() throws UserError {
-		return RepositoryLocation.getRepositoryLocation(handler.getParameterAsString(PARAMETER_CONNECTION_ENTRY),
+		return RepositoryLocation.getRepositoryLocation(handler.getParameterAsString(getParameterKey()),
 				handler instanceof Operator ? (Operator) handler : null);
 	}
 
@@ -432,7 +444,7 @@ public class ConnectionInformationSelector {
 	 */
 	public static List<ParameterType> createParameterTypes(ConnectionInformationSelector cis) {
 		ArrayList<ParameterType> types = new ArrayList<>();
-		ParameterType type = new ParameterTypeConnectionLocation(PARAMETER_CONNECTION_ENTRY,
+		ParameterType type = new ParameterTypeConnectionLocation(cis.getParameterKey(),
 				createConnectionEntryDescription(PARAMETER_CONNECTION_ENTRY, cis.conType,
 						"Select a connection from a repository"), cis.conType);
 		if (cis.input != null) {
@@ -440,6 +452,42 @@ public class ConnectionInformationSelector {
 		}
 		types.add(type);
 		return types;
+	}
+
+	/**
+	 * Creates an {@link MDTransformationRule} that checks if a {@link ConnectionInformation} is provided either through
+	 * the input port or as a parameter of the given provider. If any error occurs, adds a {@link ProcessSetupError}
+	 * to either the port or operator.
+	 *
+	 * @param provider
+	 * 		the connection selection provider; should also be an {@link Operator}
+	 * @return the meta data transformation rule
+	 * @see #checkConnectionTypeMatch(Operator)
+	 * @since 9.4.1
+	 */
+	public static MDTransformationRule makeConnectionCheckTransformation(ConnectionSelectionProvider provider) {
+		if (!(provider instanceof Operator)) {
+			return () -> {};
+		}
+		Operator operator = (Operator) provider;
+		return () -> {
+			ConnectionInformationSelector selector = provider.getConnectionSelector();
+			if (selector == null) {
+				return;
+			}
+			ProcessSetupError error = selector.checkConnectionTypeMatch(operator);
+			if (error == null) {
+				return;
+			}
+			if (error instanceof MetaDataError) {
+				InputPort input = selector.getInput();
+				if (input != null) {
+					input.addError((MetaDataError) error);
+					return;
+				}
+			}
+			operator.addError(error);
+		};
 	}
 
 	/**

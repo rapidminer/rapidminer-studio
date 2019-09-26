@@ -23,7 +23,6 @@ import java.awt.event.ActionEvent;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 
 import com.rapidminer.core.license.ProductLinkRegistry;
 import com.rapidminer.gui.tools.MultiSwingWorker;
@@ -79,7 +78,7 @@ public class UpgradeLicenseAction extends ResourceAction {
 	}
 
 	/**
-	 * Creates a new upgrade {@link SwingWorker}.
+	 * Creates a new upgrade {@link MultiSwingWorker}.
 	 * 
 	 * @return
 	 */

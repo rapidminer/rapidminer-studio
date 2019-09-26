@@ -179,11 +179,18 @@ public class ExampleSetMetaData extends MetaData {
 		attributeMetaData.remove(attribute.getName());
 	}
 
+	/**
+	 * Adds the given attribute to the meta data and adds the meta data as the owner of the attribute. Shrinks the
+	 * nominal values to {@link RapidMiner#PROPERTY_RAPIDMINER_GENERAL_MAX_NOMINAL_VALUES}.
+	 *
+	 * @param attribute
+	 * 		the attribute meta data to add
+	 */
 	public void addAttribute(AttributeMetaData attribute) {
 		if (attributeMetaData == null) {
-			attributeMetaData = new LinkedHashMap<String, AttributeMetaData>();
+			attributeMetaData = new LinkedHashMap<>();
 		}
-		// registering this exampleSetmetaData as owner of the attribute.
+		// registering this exampleSetMetaData as owner of the attribute.
 		attribute = attribute.registerOwner(this);
 		attributeMetaData.put(attribute.getName(), attribute);
 	}
@@ -635,7 +642,7 @@ public class ExampleSetMetaData extends MetaData {
 	}
 
 	public void setNominalDataWasShrinked(boolean b) {
-		nominalDataWasShrinked = true;
+		nominalDataWasShrinked = nominalDataWasShrinked || b;
 	}
 
 	/**

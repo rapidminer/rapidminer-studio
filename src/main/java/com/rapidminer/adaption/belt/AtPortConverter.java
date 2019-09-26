@@ -18,15 +18,12 @@
  */
 package com.rapidminer.adaption.belt;
 
-import com.rapidminer.RapidMiner;
 import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.studio.internal.Resources;
-import com.rapidminer.tools.ParameterService;
-import com.rapidminer.tools.parameter.ParameterChangeListener;
 
 
 /**
@@ -42,29 +39,6 @@ public final class AtPortConverter {
 
 	// Suppress default constructor for noninstantiability
 	private AtPortConverter() {throw new AssertionError();}
-
-	private static boolean betaMode = Boolean.parseBoolean(
-			ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES));
-
-	private static final ParameterChangeListener betaFeaturesListener = new ParameterChangeListener() {
-
-		@Override
-		public void informParameterChanged(String key, String value) {
-			if (RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES.equals(key)) {
-				setBetaMode(value);
-			}
-		}
-
-		@Override
-		public void informParameterSaved() {
-			// do nothing
-		}
-
-	};
-
-	static {
-		ParameterService.registerParameterChangeListener(betaFeaturesListener);
-	}
 
 	/**
 	 * Checks if is is possible to convert the dataClass into the desired class. Only conversion from an {@link
@@ -99,31 +73,6 @@ public final class AtPortConverter {
 		} else {
 			throw new UnsupportedOperationException("Conversion not supported");
 		}
-	}
-
-	/**
-	 * Converts an {@link IOObject} if it is a type that should not leave an operator.
-	 *
-	 * @param data
-	 * 		the data to check
-	 * @param port
-	 * 		the port where the conversion takes place
-	 * @return a converted object or the same object if no conversion is necessary.
-	 */
-	public static IOObject convertIfNecessary(IOObject data, Port port) {
-		if (data instanceof IOTable && !betaMode) {
-			ConcurrencyContext context = Resources.getConcurrencyContext(port.getPorts().getOwner().getOperator());
-			return BeltConverter.convert((IOTable) data, context);
-		} else {
-			return data;
-		}
-	}
-
-	/**
-	 * Set the beta mode static field to the parsed value.
-	 */
-	private static void setBetaMode(String value) {
-		betaMode = Boolean.parseBoolean(value);
 	}
 
 }

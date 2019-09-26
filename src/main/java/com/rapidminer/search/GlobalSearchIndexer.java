@@ -38,6 +38,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.search.event.GlobalSearchManagerListener;
 import com.rapidminer.search.event.GlobalSearchRegistryEvent;
 import com.rapidminer.tools.FileSystemService;
@@ -53,7 +54,6 @@ import com.rapidminer.tools.LogService;
 public enum GlobalSearchIndexer {
 
 	INSTANCE;
-
 
 	private Path indexDirectoryPath;
 
@@ -124,8 +124,9 @@ public enum GlobalSearchIndexer {
 	 */
 	GlobalSearchIndexer() {
 		try {
-			indexDirectoryPath = FileSystemService.getUserRapidMinerDir().toPath().resolve(FileSystemService.RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL);
-
+			indexDirectoryPath = FileSystemService.getUserRapidMinerDir().toPath().resolve(FileSystemService.RAPIDMINER_INTERNAL_CACHE_SEARCH_INSTANCE_FULL);
+			RapidMiner.addShutdownHook(this::shutdown);
+			Files.createDirectory(indexDirectoryPath);
 			// set up of Lucene is done in initialize()
 		} catch (Exception e) {
 			setupError = true;
@@ -359,6 +360,19 @@ public enum GlobalSearchIndexer {
 	 */
 	protected IndexReader createIndexReader() throws IOException {
 		return DirectoryReader.open(indexWriter, true, false);
+	}
+
+	/**
+	 * Closes the {@link #indexWriter} and deletes the {@link #indexDirectoryPath}
+	 */
+	private void shutdown() {
+		try (IndexWriter writer = indexWriter) {
+			// null safe auto close
+		} catch (Exception e) {
+			LogService.getRoot().log(Level.SEVERE, "com.rapidminer.global_search.searchindexer.shutdown_failed", e);
+		} finally {
+			FileUtils.deleteQuietly(indexDirectoryPath.toFile());
+		}
 	}
 
 }

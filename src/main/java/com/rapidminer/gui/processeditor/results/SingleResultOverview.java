@@ -37,7 +37,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.SwingWorker;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.text.html.HTMLEditorKit;
@@ -163,7 +162,7 @@ public class SingleResultOverview extends JPanel {
 
 		if (process.getRootOperator().getSubprocess(0).getInnerSinks().getNumberOfPorts() > resultIndex) {
 			InputPort resultPort = process.getRootOperator().getSubprocess(0).getInnerSinks().getPortByIndex(resultIndex);
-			IOObject other = resultPort.getAnyDataOrNull();
+			IOObject other = resultPort.getRawData();
 			if (result == other) { // make sure result does not come from collecting unconnected
 				// outputs, but is really
 				// from inner sink
@@ -349,7 +348,7 @@ public class SingleResultOverview extends JPanel {
 	}
 
 	/**
-	 * Updates the preview renderable image in a {@link SwingWorker}.
+	 * Updates the preview renderable image in a {@link MultiSwingWorker}.
 	 */
 	private void updatePreviewImage() {
 		final IOObject result = ioObject != null ? ioObject.get() : null;

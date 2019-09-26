@@ -180,7 +180,7 @@ public final class ProcessDrawUtils {
 			return Color.LIGHT_GRAY;
 		}
 
-		IOObject data = port.getAnyDataOrNull();
+		IOObject data = port.getRawData();
 		MetaData md = null;
 		try {
 			md = port.getMetaData(MetaData.class);

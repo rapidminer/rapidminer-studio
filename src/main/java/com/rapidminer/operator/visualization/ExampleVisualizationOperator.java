@@ -35,7 +35,9 @@ import com.rapidminer.tools.ObjectVisualizerService;
  * the visualization of single examples in the provided plotter components.
  * 
  * @author Ingo Mierswa
+ * @deprecated since 9.4.0
  */
+@Deprecated
 public class ExampleVisualizationOperator extends AbstractExampleSetProcessing {
 
 	public ExampleVisualizationOperator(OperatorDescription description) {

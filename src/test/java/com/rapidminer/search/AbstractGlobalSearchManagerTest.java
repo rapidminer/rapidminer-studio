@@ -40,6 +40,7 @@ import com.rapidminer.search.event.GlobalSearchManagerListener;
  */
 public class AbstractGlobalSearchManagerTest {
 
+	private static final int MAX_TRIES = 300;
 	private static final String TEST = "test";
 
 	private static AbstractGlobalSearchManagerTestImpl searchManagerTest;
@@ -54,9 +55,17 @@ public class AbstractGlobalSearchManagerTest {
 	}
 
 	@Before
-	public void waitTillReady() throws InterruptedException {
+	public void waitTillReady() {
+		int i = 0;
 		while(!searchManagerTest.isInitialized()) {
-			Thread.sleep(100);
+			try {
+				Thread.sleep(100L);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+			if (i++ > MAX_TRIES) {
+				throw new IllegalStateException("waitTillReady did not complete in time.");
+			}
 		}
 	}
 

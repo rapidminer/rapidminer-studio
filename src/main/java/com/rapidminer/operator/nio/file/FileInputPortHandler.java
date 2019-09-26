@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ports.InputPort;
@@ -84,7 +83,7 @@ public class FileInputPortHandler {
 	 * */
 	public File getSelectedFile() throws OperatorException {
 		if (!(fileInputPort.isConnected() || fileInputPort.getPorts().getOwner().getOperator().getProcess() == null
-				&& fileInputPort.getAnyDataOrNull() != null)) {
+				&& fileInputPort.getRawData() != null)) {
 			String fileParameter = operator.getParameterAsString(fileParameterName);
 			try {
 				URL url = new URL(fileParameter);
@@ -124,7 +123,7 @@ public class FileInputPortHandler {
 	 * */
 	public InputStream openSelectedFile() throws OperatorException, IOException {
 		if (!(fileInputPort.isConnected() || fileInputPort.getPorts().getOwner().getOperator().getProcess() == null
-				&& fileInputPort.getAnyDataOrNull() != null)) {
+				&& fileInputPort.getRawData() != null)) {
 			return new FileInputStream(getSelectedFile());
 		} else {
 			return fileInputPort.getData(FileObject.class).openStream();
@@ -137,7 +136,7 @@ public class FileInputPortHandler {
 	 * */
 	public boolean isFileSpecified() {
 		if (!(fileInputPort.isConnected() || fileInputPort.getPorts().getOwner().getOperator().getProcess() == null
-				&& fileInputPort.getAnyDataOrNull() != null)) {
+				&& fileInputPort.getRawData() != null)) {
 			return operator.isParameterSet(fileParameterName);
 		} else {
 			try {

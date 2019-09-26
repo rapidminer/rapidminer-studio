@@ -2098,7 +2098,7 @@ public class SwingTools {
 	public static String getShortenedDisplayName(String input, int maxLength) {
 		if (input.length() > maxLength + BRACKETS.length()) {
 			StringBuilder builder = new StringBuilder();
-			builder.append(input.substring(0, maxLength / 2));
+			builder.append(input, 0, maxLength / 2);
 			builder.append(BRACKETS);
 			builder.append(input.substring(input.length() - maxLength / 2 - 1));
 			return builder.toString();

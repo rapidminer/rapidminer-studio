@@ -34,7 +34,6 @@ import com.rapidminer.RapidMiner.ExecutionMode;
 import com.rapidminer.RapidMinerVersion;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.tools.BrowserPopup;
 import com.rapidminer.gui.tools.bubble.WindowChoreographer;
 import com.rapidminer.license.License;
 import com.rapidminer.license.LicenseEvent;
@@ -276,15 +275,19 @@ public enum CallToActionScheduler {
 				}
 
 				// Display the CTA
-				final BrowserPopup cta = new BrowserPopup(rule.getRule().getMessage());
+				CTAVisualizationRegistry.CTA cta = CTAVisualizationRegistry.getVisualization(rule.getRule().getMessage());
+				if (cta == null) {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.usagestats.CallToActionScheduler.rule.visualization.unavailable", rule.getRule().getId());
+					return;
+				}
 				rule.setDisplaying(true);
-				SwingUtilities.invokeLater(() -> choreographer.addWindow(cta));
+				SwingUtilities.invokeLater(() -> choreographer.addWindow(cta.getWindow()));
 
 				// wait for results in separate thread (user may not click on CTA for ages)
 				new Thread(() -> {
 					// Store the triggered state
 					try {
-						String result = cta.get();
+						String result = cta.getResult();
 						rule.setDisplaying(false);
 						CtaDao.INSTANCE.triggered(rule.getRule(), result);
 						ActionStatisticsCollector.INSTANCE.logCtaRuleTriggered(rule.getRule().getId(), result);

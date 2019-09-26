@@ -37,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -301,7 +300,7 @@ public class JFreeChartPlotEngine
 
 	/**
 	 * Trigger an update of the {@link JFreeChart} that is stored in the {@link ChartPanel}. The
-	 * update is performed by using a {@link SwingWorker} thread. First the new Chart is created and
+	 * update is performed by using a {@link MultiSwingWorker} thread. First the new Chart is created and
 	 * afterwards the new chart is stored in the {@link ChartPanel}.
 	 *
 	 * @param informPlotConfigWhenDone

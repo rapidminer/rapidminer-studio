@@ -414,35 +414,32 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 			conn.setAllowUserInteraction(false);
 			conn.setRequestProperty("Content-Type", "application/json");
 			int responseCode = conn.getResponseCode();
-			if (responseCode == HttpURLConnection.HTTP_OK) {
-				// query worked, parse JSON to items and add to search index
-				String json = Tools.readTextFile(conn.getInputStream());
-				RepositoryGlobalSearchItem[] repositorySearchItems = WebServiceTools.parseJsonString(json, RepositoryGlobalSearchItem[].class, false);
-				for (RepositoryGlobalSearchItem item : repositorySearchItems) {
-					// If an item has no parent, it's in the root folder.
-					// Because the name is locally defined, it is not known on RM Server. Set it here.
-					if (item.getParent().isEmpty()) {
-						item.setParent(repository.getName());
-					}
-					String itemLocation = item.getLocation();
-					if (repoPrefix != null) {
-						if (!itemLocation.startsWith(repoPrefix)) {
-							// skip items that do not come from the correct prefix
-							continue;
-						}
-						// if there is a repo prefix, cut it from the actual location
-						itemLocation = itemLocation.substring(repoPrefix.length());
-					}
-					// for the same reason as above, always set the REST repository name as repository before the absolute location
-					item.setLocation(RepositoryLocation.REPOSITORY_PREFIX + repository.getName() + itemLocation);
-					list.add(createDocument(item));
-				}
-			} else {
-				LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_rest_folder", new Object[]{repository.getName() + path, responseCode});
-				LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_fallback_rest_folder");
-				indexFolder(list, folder, fullIndex, pg);
+			if (responseCode != HttpURLConnection.HTTP_OK) {
+				throw new IOException(responseCode + " " + conn.getResponseMessage());
 			}
-		} catch (IOException | RepositoryException e) {
+			// query worked, parse JSON to items and add to search index
+			String json = Tools.readTextFile(conn.getInputStream());
+			RepositoryGlobalSearchItem[] repositorySearchItems = WebServiceTools.parseJsonString(json, RepositoryGlobalSearchItem[].class, false);
+			for (RepositoryGlobalSearchItem item : repositorySearchItems) {
+				// If an item has no parent, it's in the root folder.
+				// Because the name is locally defined, it is not known on RM Server. Set it here.
+				if (item.getParent().isEmpty()) {
+					item.setParent(repository.getName());
+				}
+				String itemLocation = item.getLocation();
+				if (repoPrefix != null) {
+					if (!itemLocation.startsWith(repoPrefix)) {
+						// skip items that do not come from the correct prefix
+						continue;
+					}
+					// if there is a repo prefix, cut it from the actual location
+					itemLocation = itemLocation.substring(repoPrefix.length());
+				}
+				// for the same reason as above, always set the REST repository name as repository before the absolute location
+				item.setLocation(RepositoryLocation.REPOSITORY_PREFIX + repository.getName() + itemLocation);
+				list.add(createDocument(item));
+			}
+		} catch (IOException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_rest_folder", new Object[]{repository.getName() + path, e.getMessage()});
 		}
 	}

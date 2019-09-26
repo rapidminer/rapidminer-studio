@@ -25,8 +25,6 @@ import java.util.logging.Level;
 
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ports.metadata.AttributeMetaData;
-import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataFactory;
 import com.rapidminer.operator.tools.IOObjectSerializer;
@@ -92,13 +90,7 @@ public class ResourceIOObjectEntry extends ResourceDataEntry implements IOObject
 		if (metaData == null) {
 			try (InputStream in = getResourceStream(getMetaDataSuffix())) {
 				this.metaData = readMetaDataObject(in);
-				if (this.metaData instanceof ExampleSetMetaData) {
-					for (AttributeMetaData amd : ((ExampleSetMetaData) metaData).getAllAttributes()) {
-						if (amd.isNominal()) {
-							amd.shrinkValueSet();
-						}
-					}
-				}
+				MetaData.shrinkValues(metaData);
 			} catch (RepositoryException e) {
 				// in case meta data cannot be loaded (e.g. missing .md files), we try to create the meta data now
 				LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.resource.ResourceIOObjectEntry.missing_metadata", getName());

@@ -27,7 +27,6 @@ import java.awt.event.KeyEvent;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -55,6 +54,9 @@ import com.rapidminer.tools.I18N;
  *
  */
 public final class CellTypeImplHelper {
+
+	/** Maximal number of allowed radio buttons in dropdown. Without threshold the UI can freeze. */
+	private static final int MAX_RADIO_BUTTONS = 100;
 
 	/**
 	 * Adds content assist to the given field. Does not validate the model, so make sure this call
@@ -167,6 +169,7 @@ public final class CellTypeImplHelper {
 					final ScrollableJPopupMenu popupMenu, final Class<? extends CellType> cellClass) {
 				ButtonGroup group = new ButtonGroup();
 				String existingValue = field.getText();
+				int count = 0;
 				for (String item : possibleValues) {
 					final JRadioButton radioButton = new JRadioButton(item);
 					radioButton.setOpaque(false);
@@ -195,6 +198,10 @@ public final class CellTypeImplHelper {
 
 					group.add(radioButton);
 					popupMenu.add(radioButton);
+					count++;
+					if(count > MAX_RADIO_BUTTONS){
+						break;
+					}
 				}
 			}
 

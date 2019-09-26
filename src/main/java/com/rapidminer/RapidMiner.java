@@ -420,7 +420,7 @@ public class RapidMiner {
 	 * the beta features should be set to disabled again for everyone. The settings.xml and Settings.properties
 	 * have to be adjusted as well.
 	 */
-	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features.v2";
+	public static final String PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES = "rapidminer.update.beta_features.v3";
 
 	/**
 	 * The name of the property indicating whether or not additional permissions should be enabled

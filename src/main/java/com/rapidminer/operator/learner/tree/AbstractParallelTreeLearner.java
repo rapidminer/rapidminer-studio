@@ -19,11 +19,14 @@
 package com.rapidminer.operator.learner.tree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -34,6 +37,7 @@ import com.rapidminer.operator.Model;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.learner.AbstractLearner;
@@ -45,6 +49,7 @@ import com.rapidminer.operator.learner.tree.criterions.GainRatioColumnCriterion;
 import com.rapidminer.operator.learner.tree.criterions.GiniIndexColumnCriterion;
 import com.rapidminer.operator.learner.tree.criterions.InfoGainColumnCriterion;
 import com.rapidminer.operator.learner.tree.criterions.LeastSquareColumnCriterion;
+import com.rapidminer.operator.learner.tree.criterions.LeastSquareDistributionColumnCriterion;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.AbstractPrecondition;
@@ -112,6 +117,14 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 	public static final Class<?>[] CRITERIA_CLASSES = { GainRatioColumnCriterion.class, InfoGainColumnCriterion.class,
 			GiniIndexColumnCriterion.class, AccuracyColumnCriterion.class, LeastSquareColumnCriterion.class };
 
+	public static final Class<?>[] CRITERIA_CLASSES_NEW;
+
+	static {
+		Class<?>[] criteriaClassesCopy = Arrays.copyOf(CRITERIA_CLASSES, CRITERIA_CLASSES.length);
+		criteriaClassesCopy[criteriaClassesCopy.length - 1] = LeastSquareDistributionColumnCriterion.class;
+		CRITERIA_CLASSES_NEW = criteriaClassesCopy;
+	}
+
 	public static final int CRITERION_GAIN_RATIO = 0;
 
 	public static final int CRITERION_INFO_GAIN = 1;
@@ -121,6 +134,9 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 	public static final int CRITERION_ACCURACY = 3;
 
 	public static final int CRITERION_LEAST_SQUARE = 4;
+
+	/** The version before a faster least square criterion was introduced */
+	public static final OperatorVersion FASTER_REGRESSION = new OperatorVersion(9, 4, 0);
 
 	private static class CriterionLabelPrecondition extends AbstractPrecondition {
 
@@ -367,11 +383,23 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 	protected abstract AbstractParallelTreeBuilder getTreeBuilder(ExampleSet exampleSet) throws OperatorException;
 
 	protected ColumnCriterion createCriterion() throws OperatorException {
-		if (getParameterAsBoolean(PARAMETER_PRE_PRUNING)) {
-			return AbstractColumnCriterion.createColumnCriterion(this, getParameterAsDouble(PARAMETER_MINIMAL_GAIN));
-		} else {
-			return AbstractColumnCriterion.createColumnCriterion(this, 0);
+		Class<?>[] criteriaClasses = CRITERIA_CLASSES;
+		if (getCompatibilityLevel().isAbove(FASTER_REGRESSION)) {
+			criteriaClasses = CRITERIA_CLASSES_NEW;
 		}
+		if (getParameterAsBoolean(PARAMETER_PRE_PRUNING)) {
+			return AbstractColumnCriterion.createColumnCriterion(this, getParameterAsDouble(PARAMETER_MINIMAL_GAIN),
+					criteriaClasses, CRITERIA_NAMES);
+		} else {
+			return AbstractColumnCriterion.createColumnCriterion(this, 0, criteriaClasses, CRITERIA_NAMES);
+		}
+	}
+
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.add(super.getIncompatibleVersionChanges(),
+				FASTER_REGRESSION);
 	}
 
 	@Override

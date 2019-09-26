@@ -1290,11 +1290,6 @@ public class ConfigurableDialog extends ButtonDialog {
 				// prevent multiple invocations
 				setEnabled(false);
 				Repository repository = selectedConfig.getSource();
-				if (repository == null) {
-					// no repo =>  local repo; preselect first local repo
-					repository = RepositoryManager.getInstance(null).getRepositories().stream()
-							.filter(r -> r instanceof LocalRepository).findFirst().orElse(null);
-				}
 				ConfigurableDialog parent = ConfigurableDialog.this;
 				ConnectionCreationDialog conversionDialog = new ConnectionCreationDialog(parent, repository);
 				String type = handler.getType();

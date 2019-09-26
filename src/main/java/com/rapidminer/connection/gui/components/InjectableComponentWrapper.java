@@ -56,7 +56,7 @@ public class InjectableComponentWrapper extends JPanel {
 		add(component, gbc);
 		add(placeholder, gbc);
 		parameter.injectorNameProperty().addListener((observable, oldValue, newValue) -> SwingUtilities.invokeLater(() -> {
-			if (component.isVisible()) {
+			if (component.isVisible() && component.getWidth() != 0 && component.getHeight() != 0) {
 				Dimension size = new Dimension(Math.max(placeholder.getWidth(), component.getWidth()),
 						Math.max(placeholder.getHeight(), component.getHeight()));
 				placeholder.setPreferredSize(size);

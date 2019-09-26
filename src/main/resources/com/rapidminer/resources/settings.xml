@@ -76,7 +76,7 @@
 			<property key="rapidminer.update.url" />
 		</group>
 		<group key="rapidminer.preferences.subgroup.update.beta_program">
-			<property key="rapidminer.update.beta_features.v2" />
+			<property key="rapidminer.update.beta_features.v3" />
 		</group>
 	</group>
 	<group key="gui">
@@ -87,6 +87,7 @@
 			<property key="rapidminer.gui.resolve_relative_repository_locations" />
 		</group>
 		<group key="rapidminer.preferences.subgroup.gui.plotter">
+			<property key="rapidminer.gui.visualizations.max_row_modifier" />
 			<property key="rapidminer.gui.plotter.legacy.simple_charts.show" />
 			<property key="rapidminer.gui.plotter.legacy.advanced_charts.show" />
 			<!--

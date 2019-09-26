@@ -147,7 +147,7 @@ public class InjectParametersDialog extends JDialog {
 		public Component getListCellRendererComponent(JList<? extends ValueProvider> list, ValueProvider vp, int index, boolean isSelected, boolean cellHasFocus) {
 			renderer.getListCellRendererComponent(list, vp, index, isSelected, cellHasFocus);
 			ValueProviderGUIProvider guiProvider = ValueProviderGUIRegistry.INSTANCE.getGUIProvider(vp.getType());
-			String hint = guiProvider == null ? null : guiProvider.getCustomLabel(ValueProviderGUIProvider.CustomLabel.INJECTOR_SELECTION, vp, ConnectionModelConverter.getConnection(parameter), parameter.getGroupName(), parameter.getName());
+			String hint = guiProvider.getCustomLabel(ValueProviderGUIProvider.CustomLabel.INJECTOR_SELECTION, vp, ConnectionModelConverter.getConnection(parameter), parameter.getGroupName(), parameter.getName());
 			String text = hint == null ? vp.getName() : hint;
 			renderer.setText(text);
 			if (wellConfiguredVps.contains(vp.getName())) {

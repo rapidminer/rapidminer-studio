@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 
@@ -79,6 +78,9 @@ public class FilterTableModel extends AbstractTableModel implements TablePanelMo
 
 	/** syntax help for time fields */
 	private static final String SYNTAX_TIME = "9:00:00 AM";
+
+	/** the maximal number of nominal values returned as possible values from {@link #getPossibleValuesForCellOrNull} */
+	private static final int MAX_NOMINAL_VALUES = 100;
 
 	/** the metadata for the example set at the input port */
 	private ExampleSetMetaData md;
@@ -446,8 +448,13 @@ public class FilterTableModel extends AbstractTableModel implements TablePanelMo
 			if (attMD != null) {
 				possibleValues = new LinkedList<>();
 				if (attMD.isNominal()) {
+					int count = 0;
 					for (String value : attMD.getValueSet()) {
 						possibleValues.add(value);
+						count++;
+						if (count > MAX_NOMINAL_VALUES) {
+							break;
+						}
 					}
 				} else {
 					// we only have a range so we can only add lower and upper bounds for numerical

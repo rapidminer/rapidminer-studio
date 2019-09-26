@@ -18,6 +18,9 @@
  */
 package com.rapidminer.gui.processeditor;
 
+import com.rapidminer.adaption.belt.AtPortConverter;
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ports.Port;
@@ -40,6 +43,25 @@ public interface OperatorPortActionProducer {
 	 * @return {@code true} if this producer wants to add actions for the {@link IOObject} type.
 	 */
 	public boolean accepts(Class<? extends IOObject> ioobject);
+
+
+	/**
+	 * This is a first check to see if the implementation does accept these kind of {@link IOObject}s or
+	 * {@link IOObject}s that are automatically converted by ports as its input.
+	 *
+	 * @param ioobject
+	 * 		from the {@link Port} that was accessed
+	 * @return {@code true} if this producer wants to add actions for the {@link IOObject} type or those types that are
+	 * 		automatically converted to the {@link IOObject} by ports.
+	 */
+	default boolean acceptsConvertible(Class<? extends IOObject> ioobject) {
+		if (accepts(ioobject)) {
+			return true;
+		} else {
+			return (AtPortConverter.isConvertible(ioobject, ExampleSet.class) && accepts(ExampleSet.class)) ||
+					(AtPortConverter.isConvertible(ioobject, IOTable.class) && accepts(IOTable.class));
+		}
+	}
 
 	/**
 	 * Will only be called if the accepts method returned true. Here is the place to insert the creation of a {@link ResourceAction}

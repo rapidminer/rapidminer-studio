@@ -62,7 +62,7 @@ public class SimpleUnitExecutor implements UnitExecutor {
 				if (operator.getInputPorts() != null) {
 					for (InputPort inputPort : operator.getInputPorts().getAllPorts()) {
 						if (inputPort.isConnected()) {
-							IOObject data = inputPort.getAnyDataOrNull();
+							IOObject data = inputPort.getRawData();
 							if (data != null) {
 								data = FlowCleaner.INSTANCE.checkCleanup(data, inputPort);
 								input.add(new FlowData(data, inputPort));
@@ -86,7 +86,7 @@ public class SimpleUnitExecutor implements UnitExecutor {
 				if (lastOperator.getOutputPorts() != null) {
 					for (OutputPort outputPort : lastOperator.getOutputPorts().getAllPorts()) {
 						if (outputPort.isConnected()) {
-							IOObject data = outputPort.getAnyDataOrNull();
+							IOObject data = outputPort.getRawData();
 							if (data != null) {
 								output.add(new FlowData(data, outputPort));
 							}

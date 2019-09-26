@@ -23,6 +23,7 @@ import static com.rapidminer.tools.ParameterService.RAPIDMINER_CONFIG_FILE_NAME;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.logging.Level;
 
 
@@ -39,22 +40,26 @@ public class FileSystemService {
 	public static final String RAPIDMINER_EXTENSIONS_WORKSPACE_FOLDER = "workspace";
 	/** folder which can be used to share data between extensions */
 	private static final String RAPIDMINER_SHARED_DATA = "shared data";
-	/** folder which can be used for internal caching of the Global Search feature */
+	/** folder which can be used for internal caching */
 	private static final String RAPIDMINER_INTERNAL_CACHE = "internal cache";
-	/** folder which can be used for internal caching of the Global Search feature */
+	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which can be used for internal caching of the Global Search feature */
 	private static final String RAPIDMINER_INTERNAL_CACHE_SEARCH = "search";
-	/** folder which is used for the connection file cache */
+	/** {@link #RAPIDMINER_INTERNAL_CACHE_SEARCH} subfolder which can be used for internal caching of the Global Search feature */
+	private static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_INSTANCE = "instance_" + UUID.randomUUID();
+	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which is used for the connection file cache */
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONNECTION = "connectionFiles";
-	/** folder which is used by BrowserContext for cache data storage. Browser cache depends on platform, if you mix DLLs for Win32 and Win64, you get an endless loop */
+	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which is used by BrowserContext for cache data storage. Browser cache depends on platform, if you mix DLLs for Win32 and Win64, you get an endless loop */
 	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser" + (PlatformUtilities.getReleasePlatform() != null ? "-" + PlatformUtilities.getReleasePlatform().name() : "");
 
-	/** folder which can be used for internal caching of the content mapper store */
+	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which can be used for internal caching of the content mapper store */
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE = "content mapper";
-	/** folder which can be used as an internal fallback temp folder */
+	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which can be used as an internal fallback temp folder */
 	private static final String RAPIDMINER_INTERNAL_CACHE_TEMP = "temp";
 
 	public static final String RAPIDMINER_INTERNAL_CACHE_CONNECTION_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_CONNECTION;
 	public static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_SEARCH;
+	/** This folder only exists after the {@link com.rapidminer.search.GlobalSearchIndexer Global Search} is initialized. */
+	public static final String RAPIDMINER_INTERNAL_CACHE_SEARCH_INSTANCE_FULL = RAPIDMINER_INTERNAL_CACHE_SEARCH_FULL + "/" + RAPIDMINER_INTERNAL_CACHE_SEARCH_INSTANCE;
 	public static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE;
 	public static final String RAPIDMINER_INTERNAL_CACHE_BROWSER_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_BROWSER;
 	public static final String RAPIDMINER_INTERNAL_CACHE_TEMP_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_TEMP;
@@ -181,7 +186,6 @@ public class FileSystemService {
 			return new File(new File(root, "resources"), name);
 		}
 	}
-
 
 	/**
 	 * Tries to create the given folder location if it does not yet exist.

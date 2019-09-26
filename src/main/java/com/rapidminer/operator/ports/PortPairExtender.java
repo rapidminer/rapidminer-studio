@@ -298,7 +298,7 @@ public class PortPairExtender implements PortExtender {
 	/** Passes the actual data from the output ports to their connected input ports. */
 	public void passDataThrough() {
 		for (PortPair pair : managedPairs) {
-			IOObject data = pair.inputPort.getAnyDataOrNull();
+			IOObject data = pair.inputPort.getRawData();
 			pair.outputPort.deliver(data);
 		}
 	}
@@ -306,7 +306,7 @@ public class PortPairExtender implements PortExtender {
 	/** Does the same as {@link #passDataThrough()} but copies the IOObjects. */
 	public void passCloneThrough() {
 		for (PortPair pair : managedPairs) {
-			IOObject data = pair.inputPort.getAnyDataOrNull();
+			IOObject data = pair.inputPort.getRawData();
 			if (data != null) {
 				pair.outputPort.deliver(data.copy());
 			} else {
@@ -329,7 +329,7 @@ public class PortPairExtender implements PortExtender {
 	 */
 	@Deprecated
 	public <T extends IOObject> List<T> getData() throws UserError {
-		List<T> results = new LinkedList<T>();
+		List<T> results = new LinkedList<>();
 		for (PortPair pair : managedPairs) {
 			T data = pair.inputPort.<T> getDataOrNull();
 			if (data != null) {
@@ -412,9 +412,9 @@ public class PortPairExtender implements PortExtender {
 		Iterator<PortPair> portIterator = getManagedPairs().iterator();
 		for (IOObject object : ioObjectList) {
 			PortPair pair = portIterator.next();
-			IOObject data = pair.inputPort.getAnyDataOrNull();
+			IOObject data = pair.inputPort.getRawData();
 			while (data == null) {
-				data = portIterator.next().inputPort.getAnyDataOrNull();
+				data = portIterator.next().inputPort.getRawData();
 			}
 			pair.outputPort.deliver(object);
 		}
@@ -452,7 +452,7 @@ public class PortPairExtender implements PortExtender {
 	public <T extends IOObject> List<T> getData(Class<T> desiredClass, boolean unfold) throws UserError {
 		List<T> results = new ArrayList<>();
 		for (PortPair port : managedPairs) {
-			IOObject data = port.getInputPort().getAnyDataOrNull();
+			IOObject data = port.getInputPort().getRawData();
 			if (data != null) {
 				if (unfold && data instanceof IOObjectCollection) {
 					unfold((IOObjectCollection<?>) data, results, desiredClass, port);

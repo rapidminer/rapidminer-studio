@@ -28,6 +28,7 @@ import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -122,7 +123,6 @@ public class ConnectionCreationDialog extends JDialog {
 	private JButton nextButton;
 	private AtomicBoolean cancelled;
 
-
 	/**
 	 * Creates a new dialog instance.
 	 *
@@ -135,6 +135,10 @@ public class ConnectionCreationDialog extends JDialog {
 		super(parent, I18N.getGUIMessage("gui.dialog." + I18N_KEY + ".title"), Dialog.ModalityType.APPLICATION_MODAL);
 
 		this.cancelled = new AtomicBoolean(false);
+
+		if (repository == null) {
+			repository = guessRepository();
+		}
 
 		JPanel mainPanel = new JPanel(new BorderLayout());
 
@@ -583,6 +587,30 @@ public class ConnectionCreationDialog extends JDialog {
 		}
 
 		return error;
+	}
+
+	/**
+	 * Returns the {@link Repository} of the currently open {@link com.rapidminer.Process Process} if present,
+	 * otherwise from the currently selected {@link com.rapidminer.repository.Entry Entry}
+	 * of the {@link com.rapidminer.repository.gui.RepositoryTree RepositoryTree}
+	 *
+	 * @return the {@link Repository}, or {@code null}
+	 */
+	private static Repository guessRepository() {
+		Callable<Repository> storedProcess = () -> RapidMinerGUI.getMainFrame().getProcess().getRepositoryLocation().getRepository();
+		Callable<Repository> selectedEntry = () -> RapidMinerGUI.getMainFrame().getRepositoryBrowser().getRepositoryTree().getSelectedEntry().getLocation().getRepository();
+
+		for (Callable<Repository> repositorySupplier : Arrays.asList(storedProcess, selectedEntry)) {
+			try {
+				Repository repository = repositorySupplier.call();
+				if (repository.supportsConnections()) {
+					return repository;
+				}
+			} catch (Exception e) {
+				// next try
+			}
+		}
+		return null;
 	}
 
 }

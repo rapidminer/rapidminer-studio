@@ -41,8 +41,10 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.UserSetupError;
 import com.rapidminer.operator.features.weighting.ForestBasedWeighting.RandomForestModelMetaData;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.operator.learner.tree.ConfigurableRandomForestModel;
@@ -78,7 +80,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 	private boolean cacheDirty = true;
 	private AtomicBoolean transformationScheduled = new AtomicBoolean();
 	private MetaData cachedMetaData;
-	private MetaDataError cachedError;
+	private ProcessSetupError cachedError;
 
 
 	public AbstractReader(OperatorDescription description, Class<? extends IOObject> generatedClass) {
@@ -98,10 +100,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 				cachedError = null;
 				mdTransformationThread.start();
 			}
-			outputPort.deliverMD(cachedMetaData);
-			if (cachedError != null) {
-				outputPort.addError(cachedError);
-			}
+			updateOutputPort();
 		});
 		observeParameters(mdTransformationThread);
 	}
@@ -129,16 +128,32 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 			public void run() {
 				setCachedMetadataAndError();
 				cacheDirty = false;
-				outputPort.deliverMD(cachedMetaData);
-				if (cachedError != null) {
-					outputPort.addError(cachedError);
-				}
+				updateOutputPort();
 				transformationScheduled.set(false);
 			}
 		};
 		progressThread.setDependencyPopups(false);
 		progressThread.setIndeterminate(true);
 		return progressThread;
+	}
+
+	/**
+	 * Delivers cached {@link MetaData} and updates {@link #outputPort} with cached {@link MetaDataError} if necessary.
+	 *
+	 * @since 9.3.1
+	 */
+	private void updateOutputPort() {
+		outputPort.deliverMD(cachedMetaData);
+		if (cachedError != null) {
+			MetaDataError portError;
+			if (cachedError instanceof MetaDataError) {
+				portError = (MetaDataError) cachedError;
+			} else {
+				portError = new SimpleMetaDataError(cachedError.getSeverity(), outputPort, cachedError.getQuickFixes(),
+						"cannot_create_exampleset_metadata", cachedError.getMessage());
+			}
+			outputPort.addError(portError);
+		}
 	}
 
 	/**
@@ -164,7 +179,9 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 			}
 
 			// will be added below
-			if (e instanceof UserError && ((UserError) e).getCode() == 317 && getProcess() != null) {
+			if (e instanceof UserSetupError) {
+				cachedError = ((UserSetupError) e).getSetupError();
+			} else if (e instanceof UserError && ((UserError) e).getCode() == 317 && getProcess() != null) {
 				cachedError = new ProcessNotInRepositoryMetaDataError(Severity.WARNING, outputPort,
 						Collections.singletonList(new SaveProcessQuickFix(getProcess())),
 						"save_process", msg);

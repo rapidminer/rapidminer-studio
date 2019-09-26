@@ -20,13 +20,17 @@ package com.rapidminer.gui.popup;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GraphicsConfiguration;
+import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeListener;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JToggleButton;
@@ -38,14 +42,13 @@ import com.rapidminer.gui.tools.ResourceAction;
 
 
 /**
- * This action can be used to show a component as a popup on the screen. If the popup loses the
- * focus to another component in the containing window it will be hidden.
+ * This action can be used to show a component as a popup on the screen. If the popup loses the focus to another
+ * component in the containing window it will be hidden.
  * <p>
- * The action's settings are taken from a .properties file being part of the GUI Resource bundles of
- * RapidMiner. These might be accessed using the I18N class.
+ * The action's settings are taken from a .properties file being part of the GUI Resource bundles of RapidMiner. These
+ * might be accessed using the I18N class.
  * <p>
- * A resource action needs a key specifier, which will be used to build the complete keys of the
- * form:
+ * A resource action needs a key specifier, which will be used to build the complete keys of the form:
  * <ul>
  * <li>gui.action.-key-.label = Which will be the caption</li>
  * <li>gui.action.-key-.icon = The icon of this action. For examples used in menus or buttons</li>
@@ -54,7 +57,12 @@ import com.rapidminer.gui.tools.ResourceAction;
  * <li>gui.action.-key-.mne = Which will give you access to the mnemonics key. Please make it the
  * same case as in the label</li>
  * </ul>
- * 
+ * <p>
+ * Since 9.4.0: If a popup needs to be dynamically resized while it is being displayed, call {@link
+ * Component#firePropertyChange(String, boolean, boolean)} on the component with {@code pack} as the property name. This
+ * will trigger a {@link JDialog#pack()} call on the popup, changing its size to the currently preferred size of the component.
+ * </p>
+ *
  * @author Nils Woehler
  */
 public class PopupAction extends ResourceAction implements PopupComponentListener, ComponentListener {
@@ -98,19 +106,25 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 	}
 
 	private static final long serialVersionUID = 1L;
+	private static final String PACK_EVENT = "pack";
 
 	private final PopupPanel popupComponent;
+
 	private Component actionSource = null;
 
 	private ContainerPopupDialog popup = null;
 
 	private PopupPosition position = PopupPosition.VERTICAL;
 
-	private static final int BORDER_OFFSET = 9;
+	private static final int BORDER_OFFSET = 5;
 
 	private Window containingWindow;
 
 	private long hideTime = 0;
+
+	/** listening for custom resize event */
+	private PropertyChangeListener propertyChangeListener;
+
 
 	public PopupAction(boolean smallIcon, String i18nKey, Component component, Object... i18nArgs) {
 		super(smallIcon, i18nKey, i18nArgs);
@@ -156,6 +170,11 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 	}
 
 	private Point calculatePosition(Component source) {
+		if (!source.isShowing()) {
+			// should not happen, but better safe than sorry
+			return new Point(0, 0);
+		}
+
 		int xSource = source.getLocationOnScreen().x;
 		int ySource = source.getLocationOnScreen().y;
 
@@ -168,34 +187,42 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 		int xPopup = 0;
 		int yPopup = 0;
 
-		// get max x and y window positions
+		// get max x and y screen coordinates
 		Window focusedWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
-		int maxX = focusedWindow.getLocationOnScreen().x + focusedWindow.getWidth();
-		int maxY = focusedWindow.getLocationOnScreen().y + focusedWindow.getHeight();
+		if (focusedWindow == null) {
+			// should not happen, but better safe than sorry
+			return new Point(xSource, ySource);
+		}
+		GraphicsConfiguration graphicsConfig = focusedWindow.getGraphicsConfiguration();
+		if (graphicsConfig == null) {
+			// should not happen, but better safe than sorry
+			return new Point(xSource, ySource);
+		}
+		Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(graphicsConfig);
+		int maxScreenX = graphicsConfig.getDevice().getDisplayMode().getWidth() - screenInsets.right;
+		int maxScreenY = graphicsConfig.getDevice().getDisplayMode().getHeight() - screenInsets.bottom;
 
 		switch (position) {
 			case VERTICAL:
 
 				// place popup at sources' x position
 				xPopup = xSource;
-
-				// check if popup is outside active window
-				if (xPopup + popupSize.width > maxX) {
-
-					// move popup x position to the left
-					// to fit inside the active window
-					xPopup = maxX - popupSize.width - BORDER_OFFSET;
-				}
-
 				// place popup always below source (to avoid overlapping)
 				yPopup = ySource + source.getHeight();
 
-				// if the popup now would be moved outside of RM Studio to the left it would look
+				// check if popup is outside active window
+				if (xPopup + popupSize.width > maxScreenX) {
+
+					// move popup x position to the left
+					// to fit inside the active window
+					xPopup = maxScreenX - popupSize.width - BORDER_OFFSET;
+				}
+
+				// if the popup now would be moved outside of screen to the left it would look
 				// silly, so in that case just show it at its intended position and let it be cut
 				// off on the right side as we cannot do anything about it
-				if (xPopup < focusedWindow.getLocationOnScreen().x
-						|| (xPopup - focusedWindow.getLocationOnScreen().x) + popupSize.width > focusedWindow.getWidth()) {
-					xPopup = xSource;
+				if (xPopup < screenInsets.left) {
+					xPopup = screenInsets.left;
 				}
 
 				break;
@@ -204,22 +231,21 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 				// place popup always to the right side of the source (to avoid overlapping)
 				xPopup = xSource + source.getWidth();
 
+				// place popup at sources' y position
 				yPopup = ySource;
 
 				// check if popup is outside active window
-				if (yPopup + popupSize.height > maxY) {
+				if (yPopup + popupSize.height > maxScreenY) {
 
 					// move popup upwards to fit into active window
-					yPopup = maxY - popupSize.height - BORDER_OFFSET;
+					yPopup = maxScreenY - popupSize.height - BORDER_OFFSET;
 				}
 
-				// if the popup now would be moved outside of RM Studio at the top it would look
-				// silly, so in that case just show it at its intended position and let it be cut
+				// if the popup now would be moved outside of screen at the top it would look
+				// silly, so in that case just show it at top of screen and let it be cut
 				// off on the bottom side as we cannot do anything about it
-				int minY = RapidMinerGUI.getMainFrame().getLocationOnScreen().y;
-				int studioHeight = RapidMinerGUI.getMainFrame().getHeight();
-				if (yPopup < minY || (yPopup - minY) + popupSize.height > studioHeight) {
-					yPopup = ySource;
+				if (yPopup < screenInsets.top) {
+					yPopup = screenInsets.top;
 				}
 
 				break;
@@ -252,6 +278,20 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 		popup.setVisible(true);
 		popup.requestFocus();
 		popupComponent.startTracking(containingWindow);
+
+		if (propertyChangeListener != null) {
+			popupComponent.getComponent().removePropertyChangeListener(PACK_EVENT, propertyChangeListener);
+		}
+		propertyChangeListener =  e -> {
+			if (popup != null) {
+				popup.pack();
+
+				// best position may change due to changed dimensions, recalculate and set
+				Point popupPosition = calculatePosition(source);
+				popup.setLocation(popupPosition);
+			}
+		};
+		popupComponent.getComponent().addPropertyChangeListener(PACK_EVENT, propertyChangeListener);
 	}
 
 	/**
@@ -278,6 +318,7 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 		if (popup != null) {
 			popupComponent.setVisible(false);
 			popupComponent.stopTracking();
+			popupComponent.getComponent().removePropertyChangeListener(PACK_EVENT, propertyChangeListener);
 
 			// hide popup and reset
 			popup.dispose();

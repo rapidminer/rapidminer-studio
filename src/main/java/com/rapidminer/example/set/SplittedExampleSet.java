@@ -21,7 +21,6 @@ package com.rapidminer.example.set;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -360,15 +359,16 @@ public class SplittedExampleSet extends AbstractExampleSet {
 	public static SplittedExampleSet splitByAttribute(ExampleSet exampleSet, Attribute attribute) {
 		int[] elements = new int[exampleSet.size()];
 		int i = 0;
-		Map<Integer, Integer> indexMap = new HashMap<Integer, Integer>();
-		AtomicInteger currentIndex = new AtomicInteger(0);
+		Map<Integer, Integer> indexMap = new HashMap<>();
+		int currentIndex = 0;
 		for (Example example : exampleSet) {
 			int value = (int) example.getValue(attribute);
 			Integer indexObject = indexMap.get(value);
 			if (indexObject == null) {
-				indexMap.put(value, currentIndex.getAndIncrement());
+				indexMap.put(value, currentIndex);
+				currentIndex++;
 			}
-			int intValue = indexMap.get(value).intValue();
+			int intValue = indexMap.get(value);
 			elements[i++] = intValue;
 		}
 

@@ -45,26 +45,15 @@ public class LeastSquareColumnCriterion implements MinimalGainHandler, ColumnCri
 
 	@Override
 	public double getNominalBenefit(ColumnExampleTable columnTable, int[] selection, int attributeNumber) {
+		byte[] attributeValues = columnTable.getNominalAttributeColumn(attributeNumber);
 		NominalMapping mapping = columnTable.getNominalAttribute(attributeNumber).getMapping();
 		// maximal as many values as size of the mapping and one more for potential NaNs
 		int classes = mapping.size() + 1;
 		double[] averages = new double[classes];
 		double[] counts = new double[classes];
-		byte[] attributeValues = columnTable.getNominalAttributeColumn(attributeNumber);
-		double[] weights = columnTable.getWeightColumn();
-		double[] labelValues = columnTable.getNumericalLabelColumn();
-		for (int selected : selection) {
-			double weight = 1.0;
-			if (weights != null) {
-				weight = weights[selected];
-			}
-			averages[attributeValues[selected]] += labelValues[selected] * weight;
-			counts[attributeValues[selected]] += weight;
-		}
-		double totalAverage = 0;
-		for (double sum : averages) {
-			totalAverage += sum;
-		}
+		double[] labelValues = calculateSumsAndCounts(columnTable, selection, attributeValues,
+				columnTable.getWeightColumn(), averages, counts);
+		double totalAverage = getTotalSum(averages);
 		double totalCount = 0;
 		for (int i = 0; i < averages.length; i++) {
 			double count = counts[i];
@@ -90,9 +79,38 @@ public class LeastSquareColumnCriterion implements MinimalGainHandler, ColumnCri
 		return (totalResidual - residual) / (totalResidual * selection.length);
 	}
 
+
+	/**
+	 * Calculates the weighted sums and weighted count for all entries.
+	 */
+	double[] calculateSumsAndCounts(ColumnExampleTable columnTable, int[] selection, byte[] attributeValues,
+									double[] weights, double[] averages, double[] counts) {
+		double[] labelValues = columnTable.getNumericalLabelColumn();
+		for (int selected : selection) {
+			double weight = 1.0;
+			if (weights != null) {
+				weight = weights[selected];
+			}
+			averages[attributeValues[selected]] += labelValues[selected] * weight;
+			counts[attributeValues[selected]] += weight;
+		}
+		return labelValues;
+	}
+
+	/**
+	 * Calculates the sum over all entries.
+	 */
+	double getTotalSum(double[] sums) {
+		double totalSum = 0;
+		for (double sum : sums) {
+			totalSum += sum;
+		}
+		return totalSum;
+	}
+
 	@Override
 	public double getNumericalBenefit(ColumnExampleTable columnTable, int[] selection, int attributeNumber,
-			double splitValue) {
+									  double splitValue) {
 		double firstSum = 0;
 		double secondSum = 0;
 		double missingSum = 0;
@@ -132,8 +150,23 @@ public class LeastSquareColumnCriterion implements MinimalGainHandler, ColumnCri
 		if (missingCount > 0) {
 			missingAverage = missingSum / missingCount;
 		}
-		double totalAverage = (firstSum + secondSum + missingSum) / (firstCount + secondCount + missingCount);
+		double totalSum = firstSum + secondSum + missingSum;
+		double totalAverage = totalSum / (firstCount + secondCount + missingCount);
 
+		double[] sums = {firstSum, secondSum, missingSum, totalSum};
+		double[] averages = {firstAverage, secondAverage, missingAverage, totalAverage};
+
+		return calculateNumericalBenefit(selection, splitValue, numericalAttributeColumn, label, sums, averages);
+	}
+
+	/**
+	 * Calculates the actual numerical benefit from the given parameters. Returns 0 for benefits smaller than
+	 * {@link #minimalGain}.
+	 *
+	 * @return the numerical benefit
+	 * @since 9.4.1
+	 */
+	protected double calculateNumericalBenefit(int[] selection, double splitValue, double[] numericalAttributeColumn, double[] label, double[] sums, double[] averages) {
 		double firstResidual = 0;
 		double secondResidual = 0;
 		double missingResidual = 0;
@@ -142,13 +175,13 @@ public class LeastSquareColumnCriterion implements MinimalGainHandler, ColumnCri
 		for (int selected : selection) {
 			double value = numericalAttributeColumn[selected];
 			if (Double.isNaN(value)) {
-				missingResidual += Math.pow(label[selected] - missingAverage, 2);
+				missingResidual += Math.pow(label[selected] - averages[2], 2);
 			} else if (value <= splitValue) {
-				firstResidual += Math.pow(label[selected] - firstAverage, 2);
+				firstResidual += Math.pow(label[selected] - averages[0], 2);
 			} else {
-				secondResidual += Math.pow(label[selected] - secondAverage, 2);
+				secondResidual += Math.pow(label[selected] - averages[1], 2);
 			}
-			totalResidual += Math.pow(label[selected] - totalAverage, 2);
+			totalResidual += Math.pow(label[selected] - averages[3], 2);
 		}
 
 		double residual = firstResidual + secondResidual + missingResidual;
@@ -166,7 +199,7 @@ public class LeastSquareColumnCriterion implements MinimalGainHandler, ColumnCri
 
 	@Override
 	public WeightDistribution startIncrementalCalculation(ColumnExampleTable columnTable, int[] selection,
-			int attributeNumber) {
+														  int attributeNumber) {
 		return null;
 	}
 

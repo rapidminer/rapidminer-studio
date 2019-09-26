@@ -42,7 +42,7 @@ public class IOMultiplier extends Operator {
 
 	@Override
 	public void doWork() {
-		IOObject input = inputPort.getAnyDataOrNull();
+		IOObject input = inputPort.getRawData();
 		if (input != null) {
 			for (OutputPort outputPort : outputExtender.getManagedPorts()) {
 				outputPort.deliver(input.copy());

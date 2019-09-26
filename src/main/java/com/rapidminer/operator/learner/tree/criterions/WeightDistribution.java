@@ -48,16 +48,16 @@ public class WeightDistribution {
 	private double[] missingsLabelWeights;
 
 	/** the sum of all leftWeights */
-	private double leftWeight;
+	protected double leftWeight;
 
 	/** the sum of all rightWeights */
-	private double rightWeight;
+	protected double rightWeight;
 
 	/** the sum of all totalWeights */
-	private double totalWeight;
+	protected double totalWeight;
 
 	/** the sum of all missingsWeights */
-	private double missingsWeight;
+	protected double missingsWeight;
 
 	/** indicates whether there are missing attribute values in the example selection */
 	private boolean hasMissings = false;
@@ -81,6 +81,10 @@ public class WeightDistribution {
 			System.arraycopy(totalLabelWeights, 0, rightLabelWeights, 0, totalLabelWeights.length);
 		}
 
+	}
+
+	protected WeightDistribution() {
+		// noop for subclasses
 	}
 
 	/**

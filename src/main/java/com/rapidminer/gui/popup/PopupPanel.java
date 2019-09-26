@@ -129,6 +129,14 @@ public class PopupPanel extends JPanel implements PropertyChangeListener {
 		KeyboardFocusManager.getCurrentKeyboardFocusManager().removePropertyChangeListener(PERMANENT_FOCUS_OWNER, this);
 	}
 
+	/**
+	 * @return the component, never {@code null}
+	 * @since 9.4.0
+	 */
+	Component getComponent() {
+		return component;
+	}
+
 	private void fireFocusLost() {
 		for (PopupComponentListener l : listeners) {
 			l.focusLost();

@@ -18,6 +18,7 @@
 */
 package com.rapidminer.gui.actions;
 
+import com.rapidminer.connection.ConnectionInformationContainerIOObject;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -60,7 +61,7 @@ public class StoreInRepositoryAction extends ResourceAction {
 	@Override
 	public void loggedActionPerformed(ActionEvent e) {
 		String loc = RepositoryLocationChooser.selectLocation(lastLocation, "", RapidMinerGUI.getMainFrame().getExtensionsMenu(), true, false,
-				true, true, true);
+				true, true, true, object instanceof ConnectionInformationContainerIOObject ? RepositoryLocationChooser.ONLY_CONNECTIONS : RepositoryLocationChooser.NO_CONNECTIONS);
 		if (loc != null) {
 			RepositoryLocation location;
 			try {

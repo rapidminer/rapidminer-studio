@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.AbstractModel;
 import com.rapidminer.operator.Model;
@@ -35,8 +36,6 @@ import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.Tools;
 
@@ -58,13 +57,27 @@ public class StackingModel extends PredictionModel implements MetaModel {
 
 	private boolean useAllAttributes;
 
+	private boolean keepConfidences;
+
+	/**
+	 * Creates a new stacking model.
+	 *
+	 * @since 9.4.1
+	 */
 	public StackingModel(ExampleSet exampleSet, String modelName, List<Model> baseModels, Model stackingModel,
-			boolean useAllAttributes) {
+			boolean useAllAttributes, boolean keepConfidences) {
 		super(exampleSet, null, null);
 		this.modelName = modelName;
 		this.baseModels = baseModels;
 		this.stackingModel = stackingModel;
 		this.useAllAttributes = useAllAttributes;
+		this.keepConfidences = keepConfidences;
+	}
+
+
+	public StackingModel(ExampleSet exampleSet, String modelName, List<Model> baseModels, Model stackingModel,
+			boolean useAllAttributes) {
+		this(exampleSet, modelName, baseModels, stackingModel, useAllAttributes, false);
 	}
 
 	@Override
@@ -76,6 +89,7 @@ public class StackingModel extends PredictionModel implements MetaModel {
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
 		// init
 		PredictionModel.removePredictedLabel(exampleSet, true, true);
+
 		ExampleSet stackingExampleSet = (ExampleSet) exampleSet.clone();
 		if (!useAllAttributes) {
 			stackingExampleSet.getAttributes().clearRegular();
@@ -88,8 +102,11 @@ public class StackingModel extends PredictionModel implements MetaModel {
 			progress.setTotal(100);
 		}
 
+		// We must not replace the ExampleTable of the input, thus, we need to keep track of temporary attributes and
+		// remove them manually before returning.
+		List<Attribute> tempAttributes = new ArrayList<>();
+
 		// create predictions from base models
-		List<Attribute> tempPredictions = new LinkedList<Attribute>();
 		int i = 0;
 
 		for (Model baseModel : baseModels) {
@@ -109,31 +126,43 @@ public class StackingModel extends PredictionModel implements MetaModel {
 					((AbstractModel) baseModel).setShowProgress(true);
 					OperatorProgress internalProgress = dummy.getProgress();
 					internalProgress.setCheckForStop(false);
-					internalProgress.addObserver(new Observer<OperatorProgress>() {
-
-						@Override
-						public void update(Observable<OperatorProgress> observable, OperatorProgress arg) {
-							try {
-								finalProgress.setCompleted((int) (0.9 * arg.getProgress() / baseModels.size()
-										+ 90.0 * finalModelCounter / baseModels.size()));
-							} catch (ProcessStoppedException e) {
-								throw new ProcessStoppedRuntimeException();
-							}
+					internalProgress.addObserver((observable, arg) -> {
+						try {
+							finalProgress.setCompleted((int) (0.9 * arg.getProgress() / baseModels.size()
+									+ 90.0 * finalModelCounter / baseModels.size()));
+						} catch (ProcessStoppedException e) {
+							throw new ProcessStoppedRuntimeException();
 						}
 					}, false);
 				}
 			}
 
-			// apply the model
-			exampleSet = baseModel.apply(exampleSet);
-			Attribute basePrediction = exampleSet.getAttributes().getPredictedLabel();
-			// renaming attribute
-			basePrediction.setName("base_prediction" + i);
 
-			PredictionModel.removePredictedLabel(exampleSet, false, true);
-			stackingExampleSet.getAttributes().addRegular(basePrediction);
-			tempPredictions.add(basePrediction);
+			// apply the model
+			ExampleSet trainingSet = (ExampleSet) exampleSet.clone();
+			trainingSet = baseModel.apply(trainingSet);
+			Attributes attributes = trainingSet.getAttributes();
+			Attribute label = trainingSet.getAttributes().getPredictedLabel();
+			if (label.isNominal()) {
+				for (String value : label.getMapping().getValues()) {
+					Attribute confidence = attributes.getSpecial(Attributes.CONFIDENCE_NAME + "_" + value);
+					if (confidence == null) {
+						continue;
+					}
+					if (keepConfidences) {
+						confidence.setName("base_confidence_" + value + i);
+						stackingExampleSet.getAttributes().addRegular(confidence);
+					}
+					tempAttributes.add(confidence);
+				}
+			}
+			// renaming attribute
+			label.setName("base_prediction" + i);
+			stackingExampleSet.getAttributes().addRegular(label);
+			tempAttributes.add(label);
+
 			i++;
+
 			if (progress != null) {
 				if (dummy != null && baseModel instanceof AbstractModel) {
 					((AbstractModel) baseModel).setShowProgress(false);
@@ -147,34 +176,38 @@ public class StackingModel extends PredictionModel implements MetaModel {
 		stackingExampleSet = stackingModel.apply(stackingExampleSet);
 		PredictionModel.copyPredictedLabel(stackingExampleSet, exampleSet);
 
-		// remove temporary predictions from table
-		for (Attribute tempPrediction : tempPredictions) {
-			stackingExampleSet.getAttributes().remove(tempPrediction);
-			stackingExampleSet.getExampleTable().removeAttribute(tempPrediction);
+		// Clean up underlying ExampleTable (still contains all attributes added by the base learners).
+		for (Attribute attribute: tempAttributes) {
+			exampleSet.getExampleTable().removeAttribute(attribute);
 		}
 
 		if (progress != null) {
 			progress.complete();
 		}
+
 		return exampleSet;
 	}
 
 	@Override
 	public String toString() {
-		StringBuffer result = new StringBuffer(super.toString() + Tools.getLineSeparators(2));
-		result.append(this.modelName + ":");
-		result.append(Tools.getLineSeparator() + stackingModel.toString() + Tools.getLineSeparators(2));
+		StringBuilder result = new StringBuilder(super.toString() + Tools.getLineSeparators(2));
+		result.append(this.modelName)
+				.append(":")
+				.append(Tools.getLineSeparator())
+				.append(stackingModel.toString())
+				.append(Tools.getLineSeparators(2));
 
 		result.append("Base Models:");
 		for (Model baseModel : baseModels) {
-			result.append(Tools.getLineSeparator() + baseModel.toString());
+			result.append(Tools.getLineSeparator())
+					.append(baseModel.toString());
 		}
 		return result.toString();
 	}
 
 	@Override
 	public List<String> getModelNames() {
-		List<String> names = new LinkedList<String>();
+		List<String> names = new LinkedList<>();
 		for (int i = 0; i < this.baseModels.size(); i++) {
 			names.add("Model " + (i + 1));
 		}
@@ -184,7 +217,7 @@ public class StackingModel extends PredictionModel implements MetaModel {
 
 	@Override
 	public List<? extends Model> getModels() {
-		ArrayList<Model> models = new ArrayList<Model>(baseModels);
+		ArrayList<Model> models = new ArrayList<>(baseModels);
 		models.add(stackingModel);
 		return models;
 	}

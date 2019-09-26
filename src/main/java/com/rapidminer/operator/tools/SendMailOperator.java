@@ -18,11 +18,18 @@
 */
 package com.rapidminer.operator.tools;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.connection.util.ConnectionInformationSelector;
+import com.rapidminer.connection.util.ConnectionSelectionProvider;
+import com.rapidminer.connection.util.TestResult.ResultType;
+import com.rapidminer.connection.util.ValidationResult;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.properties.SettingsDialog;
 import com.rapidminer.operator.MailNotSentException;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -32,6 +39,8 @@ import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.DummyPortPairExtender;
+import com.rapidminer.operator.ports.quickfix.AbstractQuickFix;
+import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeList;
@@ -40,8 +49,8 @@ import com.rapidminer.parameter.ParameterTypeText;
 import com.rapidminer.parameter.TextType;
 import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
-import com.rapidminer.tools.MailUtilities;
-import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.mail.connection.MailConnectionHandler;
+import com.rapidminer.tools.mail.connection.MailConnectionUtilities;
 
 
 /**
@@ -49,11 +58,10 @@ import com.rapidminer.tools.ParameterService;
  * @author Simon Fischer, Nils Woehler
  *
  */
-public class SendMailOperator extends Operator {
+public class SendMailOperator extends Operator implements ConnectionSelectionProvider {
 
 	public static final OperatorVersion VERSION_SWAPPED_INPUT_PORTS = new OperatorVersion(5, 2, 6);
 
-	private DummyPortPairExtender through = new DummyPortPairExtender("through", getInputPorts(), getOutputPorts());
 
 	public static final String PARAMETER_TO = "to";
 	public static final String PARAMETER_SUBJECT = "subject";
@@ -65,6 +73,43 @@ public class SendMailOperator extends Operator {
 
 	public static final String PARAMETER_THROW_ERROR = "ignore_errors";
 
+	/**
+	 * Mapping of setting properties to process setup error keys
+	 * @since 9.4.1
+	 */
+	private static final Map<String, String> MISSING_MAIL_SETTING;
+	static {
+		Map<String, String> missingMailSetting = new HashMap<>();
+		missingMailSetting.put(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD, "invalid_mail_method");
+		missingMailSetting.put(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_SENDER, "invalid_mail_sender");
+		missingMailSetting.put(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND, "no_send_mail_command");
+		missingMailSetting.put(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_USER, "no_smtp_mail_user_set");
+		missingMailSetting.put(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD, "no_smtp_mail_passwd_set");
+		missingMailSetting.put(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST, "no_smtp_mail_host_set");
+		missingMailSetting.put(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT, "no_smtp_mail_port_set");
+		MISSING_MAIL_SETTING = Collections.unmodifiableMap(missingMailSetting);
+	}
+
+	/**
+	 * {@link QuickFix} to set mail settings
+	 *
+	 * @since 9.4.1
+	 */
+	private static final QuickFix OPEN_SETTINGS_QUICKFIX = new AbstractQuickFix(AbstractQuickFix.MAX_RATING, true, "open_mail_settings") {
+		@Override
+		public void apply() {
+			new SettingsDialog(MailConnectionHandler.PROPERTY_TOOLS).setVisible(true);
+			if (RapidMinerGUI.getMainFrame().VALIDATE_AUTOMATICALLY_ACTION.isSelected()) {
+				RapidMinerGUI.getMainFrame().validateProcess(false);
+			}
+		}
+	};
+
+	private DummyPortPairExtender through = new DummyPortPairExtender("through", getInputPorts(), getOutputPorts());
+
+	/** @since 9.4.1 */
+	private ConnectionInformationSelector selector;
+
 	public SendMailOperator(OperatorDescription description) {
 		super(description);
 		through.start();
@@ -74,35 +119,19 @@ public class SendMailOperator extends Operator {
 	@Override
 	protected void performAdditionalChecks() {
 		super.performAdditionalChecks();
-
-		String method = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD);
-		if (method.equals(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_VALUES[0])) { // sendmail
-			String command = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND);
-			if (command == null || command.equals("")) {
-				addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "no_send_mail_command"));
-			}
-		} else if (method.equals(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_MAIL_METHOD_VALUES[1])) { // smtp
-			String user = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_USER);
-			if (user == null || user.equals("")) {
-				addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "no_smtp_mail_user_set"));
-			}
-
-			String passwd = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PASSWD);
-			if (passwd == null || passwd.equals("")) {
-				addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "no_smtp_mail_passwd_set"));
-			}
-
-			String host = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_HOST);
-			if (host == null || host.equals("")) {
-				addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "no_smtp_mail_host_set"));
-			}
-
-			String port = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_TOOLS_SMTP_PORT);
-			if (port == null || port.equals("")) {
-				addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), "no_smtp_mail_port_set"));
-			}
+		if (getCompatibilityLevel().isAbove(MailConnectionUtilities.BEFORE_EMAIL_CONNECTION)) {
+			return;
 		}
-
+		// use new mechanism to check settings
+		ValidationResult valResult = MailConnectionHandler.SEND.validate(MailConnectionHandler.getSettingsConnection(null));
+		if (valResult.getType() == ResultType.SUCCESS) {
+			return;
+		}
+		valResult.getParameterErrorMessages().keySet().stream().findFirst()
+				.map(key -> MailConnectionHandler.PROPERTY_RAPIDMINER_TOOLS_PREFIX + key)
+				.map(MISSING_MAIL_SETTING::get)
+				.map(errorKey -> new SimpleProcessSetupError(Severity.WARNING, getPortOwner(), Collections.singletonList(OPEN_SETTINGS_QUICKFIX), errorKey))
+				.ifPresent(this::addError);
 	}
 
 	@Override
@@ -110,7 +139,7 @@ public class SendMailOperator extends Operator {
 		String to = getParameterAsString(PARAMETER_TO);
 		String subject = getParameterAsString(PARAMETER_SUBJECT);
 
-		Map<String, String> headers = new HashMap<String, String>();
+		Map<String, String> headers = new HashMap<>();
 		for (String[] entry : getParameterList(PARAMETER_HEADERS)) {
 			headers.put(entry[0], entry[1]);
 		}
@@ -121,30 +150,43 @@ public class SendMailOperator extends Operator {
 		} else {
 			body = getParameterAsString(PARAMETER_BODY_PLAIN);
 		}
-		if (getCompatibilityLevel().isAtMost(VERSION_SWAPPED_INPUT_PORTS)) {
-			MailUtilities.sendEmail(to, subject, body, headers);
-		} else {
-			if (!getParameterAsBoolean(PARAMETER_THROW_ERROR)) {
-				try {
-					MailUtilities.sendEmailWithException(to, subject, body, headers);
-				} catch (MailNotSentException e) {
-					Exception cause = (Exception) (e.getArguments().length > 0 && e.getArguments()[0] instanceof Exception
-							? e.getArguments()[0] : null);
-					String message = cause != null ? cause.getMessage() : "";
-					Object[] args = "sending_mail_to_address_error".equals(e.getErrorKey()) ? new Object[] { to, message }
-							: e.getArguments();
-					throw new UserError(this, e.getCause(), e.getErrorKey(), args);
+		boolean throwOnError = getCompatibilityLevel().isAbove(VERSION_SWAPPED_INPUT_PORTS) && !getParameterAsBoolean(PARAMETER_THROW_ERROR);
+		try {
+			MailConnectionUtilities.sendEmail(this, to, subject, body, headers);
+		} catch (MailNotSentException sendException) {
+			if (throwOnError) {
+				if (sendException.getCause() instanceof UserError) {
+					throw (UserError) sendException.getCause();
 				}
-			} else {
-				MailUtilities.sendEmail(to, subject, body, headers);
+				Object[] arguments = sendException.getArguments();
+				Exception cause = (Exception) (arguments.length > 0 && arguments[0] instanceof Exception ? arguments[0] : null);
+				String message = cause != null ? cause.getMessage() : "";
+				Object[] args = "sending_mail_to_address_error".equals(sendException.getErrorKey()) ? new Object[]{to, message} : arguments;
+				throw new UserError(this, sendException.getCause(), sendException.getErrorKey(), args);
 			}
 		}
+		if (selector != null) {
+			selector.passDataThrough();
+		}
 		through.passDataThrough();
+	}
+
+	/** @since 9.4.1 */
+	@Override
+	public ConnectionInformationSelector getConnectionSelector() {
+		return selector;
+	}
+
+	/** @since 9.4.1 */
+	@Override
+	public void setConnectionSelector(ConnectionInformationSelector selector) {
+		this.selector = selector;
 	}
 
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		final List<ParameterType> types = super.getParameterTypes();
+		types.addAll(MailConnectionUtilities.getMailParameters(this, MailConnectionHandler.SEND));
 		types.add(new ParameterTypeString(PARAMETER_TO, "Receiver of the email.", false, false));
 		types.add(new ParameterTypeString(PARAMETER_SUBJECT, "Subject the email.", false, false));
 
@@ -182,7 +224,7 @@ public class SendMailOperator extends Operator {
 
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return new OperatorVersion[] { VERSION_SWAPPED_INPUT_PORTS };
+		return new OperatorVersion[] { VERSION_SWAPPED_INPUT_PORTS, MailConnectionUtilities.BEFORE_EMAIL_CONNECTION };
 	}
 
 }

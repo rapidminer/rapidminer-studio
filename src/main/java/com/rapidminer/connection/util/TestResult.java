@@ -43,7 +43,7 @@ public class TestResult {
 		NONE
 	}
 
-	private static final TestResult NULL_TEST = new TestResult(ResultType.NONE, "test_object_null", null);
+	private static final TestResult NULL_TEST = new TestResult(ResultType.NONE, "test.object_null", null);
 	/** use this i18n constant when the test succeeded */
 	public static final String I18N_KEY_SUCCESS = "test.success";
 	/** use this i18n constant for generic test fails */

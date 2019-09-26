@@ -18,12 +18,6 @@
 */
 package com.rapidminer.gui.tools;
 
-import com.rapidminer.repository.RepositoryLocation;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -33,7 +27,6 @@ import java.awt.event.KeyListener;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -42,6 +35,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observable;
+import com.rapidminer.tools.Observer;
 
 
 /**
@@ -161,8 +160,6 @@ public class RepositoryEntryTextField extends JPanel implements Observable<Boole
 
 	/**
 	 * Checks if the entered repository entry name is valid.
-	 * 
-	 * @param e
 	 */
 	private void checkName() {
 		boolean valid = false;
@@ -307,5 +304,4 @@ public class RepositoryEntryTextField extends JPanel implements Observable<Boole
 	public boolean requestFocusInWindow() {
 		return entryTextField.requestFocusInWindow();
 	}
-
 }

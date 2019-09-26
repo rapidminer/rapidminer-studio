@@ -18,7 +18,6 @@
 */
 package com.rapidminer.operator.learner.meta;
 
-import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Model;
@@ -29,12 +28,15 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.operator.ports.metadata.MDTransformationRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SubprocessTransformRule;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.math.container.Range;
 
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -47,6 +49,8 @@ import java.util.List;
  */
 public class Stacking extends AbstractStacking {
 
+	private static final int MD_MAX_CONFIDENCE_ATTRIBUTES = 100;
+
 	private final OutputPort stackingExamplesInnerSource = getSubprocess(1).getInnerSources()
 			.createPort("stacking examples");
 	private final InputPort stackingModelInnerSink = getSubprocess(1).getInnerSinks().createPort("stacking model",
@@ -54,42 +58,53 @@ public class Stacking extends AbstractStacking {
 
 	public static final String PARAMETER_KEEP_ALL_ATTRIBUTES = "keep_all_attributes";
 
+	public static final String PARAMETER_KEEP_CONFIDENCES = "keep_confidences";
+
 	public Stacking(OperatorDescription description) {
 		super(description, "Base Learner", "Stacking Model Learner");
-		getTransformer().addRule(new MDTransformationRule() {
-
-			@Override
-			public void transformMD() {
-				MetaData metaData = exampleSetInput.getMetaData();
-				if (metaData != null) {
-					MetaData unmodifiedMetaData = metaData.clone();
-					if (unmodifiedMetaData instanceof ExampleSetMetaData) {
-						ExampleSetMetaData emd = (ExampleSetMetaData) unmodifiedMetaData;
-						if (!keepOldAttributes()) {
-							emd.clearRegular();
+		getTransformer().addRule(() -> {
+			MetaData metaData = exampleSetInput.getMetaData();
+			if (metaData != null) {
+				MetaData clonedMetaData = metaData.clone();
+				if (clonedMetaData instanceof ExampleSetMetaData) {
+					ExampleSetMetaData exampleSetMetaData = (ExampleSetMetaData) clonedMetaData;
+					if (!keepOldAttributes()) {
+						exampleSetMetaData.clearRegular();
+					}
+					// constructing new meta attributes
+					List<MetaData> metaDatas = baseModelExtender.getMetaData(true);
+					int numberOfModels = 0;
+					for (MetaData md : metaDatas) {
+						if (PredictionModel.class.isAssignableFrom(md.getObjectClass())) {
+							numberOfModels++;
 						}
-						// constructing new meta attributes
-						List<MetaData> metaDatas = baseModelExtender.getMetaData(true);
-						int numberOfModels = 0;
-						for (MetaData md : metaDatas) {
-							if (PredictionModel.class.isAssignableFrom(md.getObjectClass())) {
-								numberOfModels++;
-							}
-						}
-						// adding stacking attributes
-						AttributeMetaData label = emd.getLabelMetaData();
+					}
+					// adding stacking attributes
+					AttributeMetaData label = exampleSetMetaData.getLabelMetaData();
+					if (label != null) {
 						for (int i = 0; i < numberOfModels; i++) {
 							AttributeMetaData newRegular = label.copy();
+							newRegular.setRegular();
 							newRegular.setName("base_prediction" + i);
-							newRegular.setRole(Attributes.ATTRIBUTE_NAME);
-							emd.addAttribute(newRegular);
+							exampleSetMetaData.addAttribute(newRegular);
+							if (label.isNominal() && keepConfidences()) {
+								AttributeMetaData confidence = new AttributeMetaData("base_confidence" + i, Ontology.REAL);
+								confidence.setValueRange(new Range(0, 1), SetRelation.SUBSET);
+								Iterator<String> values = label.getValueSet().iterator();
+								int valuesAdded  = 0;
+								while (values.hasNext() && valuesAdded < MD_MAX_CONFIDENCE_ATTRIBUTES) {
+									newRegular = confidence.copy();
+									newRegular.setName("base_confidence_" + values.next() + i);
+									exampleSetMetaData.addAttribute(newRegular);
+									valuesAdded++;
+								}
+							}
 						}
-						stackingExamplesInnerSource.deliverMD(emd);
 					}
-					stackingExamplesInnerSource.deliverMD(unmodifiedMetaData);
-				} else {
-					stackingExamplesInnerSource.deliverMD(metaData);
 				}
+				stackingExamplesInnerSource.deliverMD(clonedMetaData);
+			} else {
+				stackingExamplesInnerSource.deliverMD(null);
 			}
 		});
 		getTransformer().addRule(new SubprocessTransformRule(getSubprocess(1)));
@@ -109,7 +124,9 @@ public class Stacking extends AbstractStacking {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeBoolean(PARAMETER_KEEP_ALL_ATTRIBUTES,
-				"Indicates if all attributes (including the original ones) in order to learn the stacked model.", true));
+				"Use all attributes of the input example set for training the stacked model.", true));
+		types.add(new ParameterTypeBoolean(PARAMETER_KEEP_CONFIDENCES,
+				"Use confidences generated by the base learners for training the stacked model.", false));
 		return types;
 	}
 
@@ -124,4 +141,10 @@ public class Stacking extends AbstractStacking {
 		getSubprocess(1).execute();
 		return stackingModelInnerSink.getData(Model.class);
 	}
+
+	@Override
+	protected boolean keepConfidences() {
+		return getParameterAsBoolean(PARAMETER_KEEP_CONFIDENCES);
+	}
+
 }

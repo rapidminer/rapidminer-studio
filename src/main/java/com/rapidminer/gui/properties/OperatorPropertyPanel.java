@@ -31,7 +31,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -375,6 +374,12 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 	}
 
 	@Override
+	protected String getValue(Operator operator, ParameterType type) {
+		operator = operator == null ? this.operator : operator;
+		return operator.getParameters().getParameterOrNull(type.getKey());
+	}
+
+	@Override
 	protected void setValue(Operator operator, ParameterType type, String value) {
 		if (value.length() == 0) {
 			value = null;
@@ -465,12 +470,11 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 								// Store description when parameter element ends
 								if (reader.getLocalName().equals(TAG_PARAMETER)) {
 									final String parameterDescription = parameterTextBuilder.toString();
-									final String key = parameterKey;
 									if (!parameterDescriptionCache.containsKey(parameterKey)) {
 										Source xmlSource = new StreamSource(new StringReader(parameterDescription));
 										try {
 											String desc = OperatorDocToHtmlConverter.applyXSLTTransformation(xmlSource);
-											parameterDescriptionCache.put(key, StringEscapeUtils.unescapeHtml(desc));
+											parameterDescriptionCache.put(parameterKey, StringEscapeUtils.unescapeHtml(desc));
 										} catch (TransformerException e) {
 											// ignore
 										}

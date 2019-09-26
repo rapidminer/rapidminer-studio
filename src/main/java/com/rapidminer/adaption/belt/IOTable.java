@@ -72,14 +72,17 @@ public final class IOTable extends ResultObjectAdapter {
 	public String toString() {
 		StringBuilder str = new StringBuilder(this.getClass().getSimpleName() + ":" + Tools.getLineSeparator());
 		str.append(table.height()).append(" examples,").append(Tools.getLineSeparator());
-		str.append(table.width()).append(" attributes,").append(Tools.getLineSeparator());
 
 		List<String> withRoles = table.select().withMetaData(ColumnRole.class).labels();
+		str.append(table.width() - withRoles.size()).append(" regular attributes,").append(Tools.getLineSeparator());
+
 		boolean first = true;
 		for (String label : withRoles) {
 			if (first) {
 				str.append("special attributes = {").append(Tools.getLineSeparator());
 				first = false;
+			} else {
+				str.append(',');
 			}
 			str.append("    ").append(BeltConverter.convertRole(table, label)).append(" = ").append(label)
 					.append(Tools.getLineSeparator());

@@ -44,12 +44,27 @@ public class ConnectionParameterLabel extends JLabel {
 	 * </p>
 	 *
 	 * @param type
-	 * 		the {@link com.rapidminer.connection.gui.model.ConnectionModel#getType() connection type}
+	 * 		the {@link com.rapidminer.connection.gui.model.ConnectionModel#getType() connection type} (unused)
+	 * @param parameter
+	 * 		the parameter for which this label is displayed
+	 * @deprecated since 9.3.1, use {@link #ConnectionParameterLabel(ConnectionParameterModel)} instead
+	 */
+	@Deprecated
+	public ConnectionParameterLabel(String type, ConnectionParameterModel parameter) {
+		this(parameter);
+	}
+
+	/**
+	 * Creates a new {@link ConnectionParameterLabel}
+	 * <p>
+	 * Displays a warning icon if an {@link ConnectionParameterModel#getValidationError() validation error} exists
+	 * </p>
+	 *
 	 * @param parameter
 	 * 		the parameter for which this label is displayed
 	 */
-	public ConnectionParameterLabel(String type, ConnectionParameterModel parameter) {
-		this(type, parameter.getGroupName(), parameter.getName());
+	public ConnectionParameterLabel(ConnectionParameterModel parameter) {
+		this(parameter.getType(), parameter.getGroupName(), parameter.getName());
 		parameter.validationErrorProperty().addListener((observable, oldValue, newValue) -> {
 			if (oldValue == null && newValue != null) {
 				setFont(getFont().deriveFont(Font.BOLD));

@@ -19,9 +19,10 @@
 package com.rapidminer.repository.gui.actions;
 
 import java.awt.event.ActionEvent;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.rapidminer.gui.operatortree.actions.CutCopyPasteDeleteAction;
 import com.rapidminer.gui.tools.ProgressThread;
@@ -174,22 +175,12 @@ public abstract class AbstractRepositoryAction<T extends Entry> extends Resource
 	protected List<Entry> removeIntersectedEntries(List<Entry> entries) {
 
 		// Get locations of entries
-		List<RepositoryLocation> locations = new LinkedList<>();
-		for (Entry entry : entries) {
-			locations.add(entry.getLocation());
-		}
+		Map<RepositoryLocation, Entry> locations = entries.stream().collect(Collectors.toMap(Entry::getLocation, Function.identity()));
 
 		// Remove intersected locations
-		locations = RepositoryLocation.removeIntersectedLocations(locations);
+		List<RepositoryLocation> filteredLocations = RepositoryLocation.removeIntersectedLocations(locations.keySet());
 
-		// Remove entries of intersected locations
-		Iterator<Entry> entryIt = entries.iterator();
-		while (entryIt.hasNext()) {
-			if (!locations.contains(entryIt.next().getLocation())) {
-				entryIt.remove();
-			}
-		}
-
-		return entries;
+		// return entries
+		return filteredLocations.stream().map(locations::get).collect(Collectors.toList());
 	}
 }

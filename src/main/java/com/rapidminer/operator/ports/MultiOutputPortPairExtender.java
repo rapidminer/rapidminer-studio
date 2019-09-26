@@ -57,7 +57,7 @@ public class MultiOutputPortPairExtender extends MultiPortPairExtender<InputPort
 	@Deprecated
 	public void passDataThrough() {
 		for (MultiPortPair mpp : getManagedPairs()) {
-			IOObject data = mpp.singlePort.getAnyDataOrNull();
+			IOObject data = mpp.singlePort.getRawData();
 			for (OutputPort port : mpp.multiPorts) {
 				port.deliver(data);
 			}
@@ -74,7 +74,7 @@ public class MultiOutputPortPairExtender extends MultiPortPairExtender<InputPort
 	 */
 	public void passDataThrough(int i) {
 		for (MultiPortPair mpp : getManagedPairs()) {
-			IOObject data = mpp.singlePort.getAnyDataOrNull();
+			IOObject data = mpp.singlePort.getRawData();
 			mpp.multiPorts.get(i).deliver(data);
 		}
 	}

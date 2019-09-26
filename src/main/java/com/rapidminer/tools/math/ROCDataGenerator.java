@@ -196,8 +196,7 @@ public class ROCDataGenerator implements Serializable {
 			WeightedConfidenceAndLabel wcl = calArray[i];
 			double currentConfidence = wcl.getConfidence();
 
-			boolean mustStartNewPoint = false;
-			mustStartNewPoint |= (currentConfidence != oldConfidence);
+			boolean mustStartNewPoint = (currentConfidence != oldConfidence);
 			if (method != ROCBias.NEUTRAL) {
 				mustStartNewPoint |= (oldLabel != wcl.getLabel());
 			}

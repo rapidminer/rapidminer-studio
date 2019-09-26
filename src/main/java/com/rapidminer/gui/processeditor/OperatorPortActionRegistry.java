@@ -93,11 +93,11 @@ public enum OperatorPortActionRegistry {
 	 * @return the additional ResourceActions in alphabetic order
 	 */
 	public List<ResourceAction> getPortActions(Port port) {
-		if (port == null || port.getAnyDataOrNull() == null) {
+		if (port == null || port.getRawData() == null) {
 			return Collections.emptyList();
 		}
 
-		final Class<? extends IOObject> ioobjectClass = port.getAnyDataOrNull().getClass();
+		final Class<? extends IOObject> ioobjectClass = port.getRawData().getClass();
 		List<ResourceAction> result = new ArrayList<>();
 		for (Map.Entry<Class<? extends Port>, List<OperatorPortActionProducer>> entry : porttypeActions.entrySet()) {
 			if (!entry.getKey().isAssignableFrom(port.getClass())) {
@@ -107,7 +107,7 @@ public enum OperatorPortActionRegistry {
 			if (operatorPortActionProducers == null) {
 				continue;
 			}
-			operatorPortActionProducers.stream().filter(portAction -> portAction.accepts(ioobjectClass))
+			operatorPortActionProducers.stream().filter(portAction -> portAction.acceptsConvertible(ioobjectClass))
 					.map(portAction -> portAction.createAction(port)).filter(Objects::nonNull).forEach(result::add);
 		}
 		return result;

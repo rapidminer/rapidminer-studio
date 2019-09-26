@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.tools.SystemInfoUtilities;
 
 
 /**
@@ -58,7 +59,7 @@ public class WindowChoreographer {
 	 * ArrayList that does not explode, if you try to set the next value
 	 *
 	 */
-	private class SetOrAddArrayList<E> extends ArrayList<E> {
+	private static class SetOrAddArrayList<E> extends ArrayList<E> {
 
 		private static final long serialVersionUID = 1L;
 
@@ -93,7 +94,7 @@ public class WindowChoreographer {
 				freeSpaces.add(freePosition);
 				cleanUp();
 			}
-		};
+		}
 
 	}
 
@@ -170,55 +171,62 @@ public class WindowChoreographer {
 				}
 
 			});
+
+			// macOS requires a window state changed listener for minimize / maximize
+			if (SystemInfoUtilities.getOperatingSystem() == SystemInfoUtilities.OperatingSystem.OSX) {
+				SwingUtilities.getWindowAncestor(parent).addWindowStateListener(e -> {
+					recalculateWindowPositions();
+					cleanUp();
+				});
+			}
 		}
 	}
 
 	/**
 	 * Adds a Window into the next free position
 	 *
-	 * @param w
+	 * @param window
 	 *            The window
 	 * @return true if the Window could be displayed immediately
 	 */
-	public synchronized boolean addWindow(Window w) {
-		if (w == null) {
-			throw new IllegalArgumentException("w must not be null!");
+	public synchronized boolean addWindow(Window window) {
+		if (window == null) {
+			throw new IllegalArgumentException("window must not be null!");
 		}
 		// Don't trigger in iconified mode
 		if (RapidMinerGUI.getMainFrame().getExtendedState() == Frame.ICONIFIED) {
-			bubbleStack.add(w);
+			bubbleStack.add(window);
 			return false;
 		}
 
-		int pos = getNextPosition(w);
+		int pos = getNextPosition(window);
 		int yOffset = windowYOffset.get(pos - 1);
-		if (!fitsScreen(w, yOffset)) {
+		if (!fitsScreen(window, yOffset)) {
 			// Lets store the bubble for later
-			bubbleStack.add(w);
+			bubbleStack.add(window);
 			return false;
 		}
 		// Allow a window only one time
-		if (windowPosition.containsKey(w)) {
+		if (windowPosition.containsKey(window)) {
 			return false;
 		}
 		// Remember the position of the window
-		windowPosition.put(w, pos);
+		windowPosition.put(window, pos);
 		// Great job Java there are two remove methods
 		freeSpaces.remove(pos);
+
 		// Remember size if it's a new window
 		if (pos >= windowYOffset.size()) {
-			this.windowYOffset.set(pos, yOffset + w.getHeight() + DEFAULT_BOTTOM_MARGIN);
+			this.windowYOffset.set(pos, yOffset + window.getHeight() + DEFAULT_BOTTOM_MARGIN);
 		}
-		w.addWindowListener(closeListener);
-		w.setVisible(true);
-		recalculateWindowPosition(w, pos);
+		window.addWindowListener(closeListener);
+		window.setVisible(true);
+		recalculateWindowPosition(window, pos);
 		return true;
 	}
 
 	/**
 	 * Follow the parent Component position
-	 *
-	 * @param e
 	 */
 	private void recalculateWindowPositions() {
 		windowPosition.forEach(this::recalculateWindowPosition);
@@ -227,8 +235,8 @@ public class WindowChoreographer {
 	/**
 	 * Recalculate the Window position
 	 *
-	 * @param window
-	 * @param position
+	 * @param window the window
+	 * @param position the position of the window
 	 */
 	private void recalculateWindowPosition(Window window, int position) {
 		Rectangle parentBounds = parent.getBounds();
@@ -252,15 +260,15 @@ public class WindowChoreographer {
 	/**
 	 * Returns the next position that fits the window
 	 *
-	 * @param w
-	 * @return
+	 * @param w the window
+	 * @return the next free position
 	 */
 	private int getNextPosition(Window w) {
 		if (!freeSpaces.isEmpty()) {
 			Integer pos = freeSpaces.first();
 			while (pos != null) {
 				int start = windowYOffset.get(pos);
-				int end = pos + 2 < windowYOffset.size() ? windowYOffset.get(pos + 1) : (int) parent.getHeight();
+				int end = pos + 2 < windowYOffset.size() ? windowYOffset.get(pos + 1) : parent.getHeight();
 				if (w.getHeight() <= end - start) {
 					return pos;
 				}
@@ -277,7 +285,7 @@ public class WindowChoreographer {
 	 *            The window to insert
 	 * @param yOffset
 	 *            The start offset of the Window
-	 * @return
+	 * @return true if it fits on the screen
 	 */
 	private boolean fitsScreen(Window w, int yOffset) {
 		return yOffset + w.getHeight() <= parent.getHeight() && parent.getWidth() >= w.getWidth() + DEFAULT_RIGHT_MARGIN;
@@ -294,7 +302,7 @@ public class WindowChoreographer {
 			while (free != null) {
 				if (free + 1 >= windowYOffset.size()) {
 					// End of the list, remove by index NOT value
-					int index = free.intValue();
+					int index = free;
 					windowYOffset.remove(index);
 					freeSpaces.remove(free);
 					free = freeSpaces.lower(free);

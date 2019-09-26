@@ -202,6 +202,9 @@ public abstract class AbstractDataTable implements DataTable, Tableable {
 	@Override
 	public String getCell(int row, int column) {
 		double value = getRow(row).getValue(column);
+		if (Double.isNaN(value)) {
+			return "?";
+		}
 		if (isDate(column)) {
 			return Tools.formatDate(new Date((long) value));
 		} else if (isDateTime(column)) {

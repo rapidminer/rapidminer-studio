@@ -130,6 +130,14 @@ public final class RapidLookTools {
 	 */
 	public static final String PROPERTY_INPUT_TYPE_COMPOSITE = "input_type_composite";
 
+	/**
+	 * If a tabbed pane should lay out its tabs at the top (horizontally) using the full available width - and not more.
+	 * So 2 tabs would take ~50% each, 3 tabs ~33% each, etc.
+	 *
+	 * @since 9.4.0
+	 */
+	public static final String PROPERTY_TABBED_PANE_FULL_WIDTH = "tabbed_pane_full_width";
+
 	static {
 		try {
 			VLToolBar.class.getName();

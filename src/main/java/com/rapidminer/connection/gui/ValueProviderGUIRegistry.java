@@ -75,7 +75,7 @@ public enum ValueProviderGUIRegistry {
 	 * @param provider
 	 * 		the provider for the type
 	 * @param valueProviderType
-	 * 		the value provder type
+	 * 		the value provider type
 	 * @return {@code true} if the handler was successfully unregistered
 	 */
 	public boolean unregisterGUIProvider(ValueProviderGUIProvider provider, String valueProviderType) {
@@ -90,13 +90,10 @@ public enum ValueProviderGUIRegistry {
 	 *
 	 * @param valueProviderType
 	 * 		the value provider type
-	 * @return the registered {@link ValueProviderGUIProvider} for the type or a default renderer, never {@code null}
-	 * @throws UnsupportedOperationException
-	 * 		if the caller is not signed
+	 * @return a proxy for the registered {@link ValueProviderGUIProvider} or the default renderer
 	 */
 	public ValueProviderGUIProvider getGUIProvider(String valueProviderType) {
-		Tools.requireInternalPermission();
-		return providers.getOrDefault(valueProviderType, DEFAULT_VP_GUI_PROVIDER);
+		return new ProxyValueProviderGUIProvider(providers.getOrDefault(valueProviderType, DEFAULT_VP_GUI_PROVIDER));
 	}
 
 }

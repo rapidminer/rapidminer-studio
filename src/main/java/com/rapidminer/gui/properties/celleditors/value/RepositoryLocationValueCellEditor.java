@@ -25,6 +25,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.util.function.Predicate;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -34,6 +35,7 @@ import javax.swing.JTextField;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
+import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
 
@@ -81,21 +83,21 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 			public void loggedActionPerformed(ActionEvent e) {
 				com.rapidminer.Process process = RepositoryLocationValueCellEditor.this.operator != null ? RepositoryLocationValueCellEditor.this.operator
 						.getProcess() : null;
-						RepositoryLocation processLocation = null;
-						if (process != null) {
-							processLocation = process.getRepositoryLocation();
-							if (processLocation != null) {
-								processLocation = processLocation.parent();
-							}
-						}
+				RepositoryLocation processLocation = null;
+				if (process != null) {
+					processLocation = process.getRepositoryLocation();
+					if (processLocation != null) {
+						processLocation = processLocation.parent();
+					}
+				}
 
-						String locationName = RepositoryLocationChooser.selectLocation(processLocation, textField.getText(), panel,
-								type.isAllowEntries(), type.isAllowFolders(), false, type.isEnforceValidRepositoryEntryName(),
-								type.isOnlyWriteableLocations());
-						if (locationName != null) {
-							textField.setText(locationName);
-						}
-						fireEditingStopped();
+				String locationName = RepositoryLocationChooser.selectLocation(processLocation, textField.getText(),
+						panel, type.isAllowEntries(), type.isAllowFolders(), false,
+						type.isEnforceValidRepositoryEntryName(), type.isOnlyWriteableLocations(), getRepositoryFilter());
+				if (locationName != null) {
+					textField.setText(locationName);
+				}
+				fireEditingStopped();
 			}
 		});
 		button.addFocusListener(new FocusAdapter() {
@@ -143,6 +145,18 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 			}
 		});
 
+	}
+
+	/**
+	 * If the items in a RepositoryLocationChooserDialog, containing a {@link com.rapidminer.repository.gui.RepositoryTree},
+	 * should show only a subset of the whole tree, provide a {@link Predicate<Entry>} to accept those. Defaults to null,
+	 * meaning everything is visible.
+	 *
+	 * @return the {@link Predicate<Entry>} that accepts {@link Entry Entries} that should be visualized in the {@link com.rapidminer.repository.gui.RepositoryTree}
+	 * @since 9.4
+	 */
+	protected Predicate<Entry> getRepositoryFilter() {
+		return null;
 	}
 
 	@Override

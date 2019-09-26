@@ -26,6 +26,8 @@ import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.logging.Level;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -257,7 +259,8 @@ public class ConnectionEditDialog extends JDialog {
 			return new UnknownConnectionTypeGUIProvider().edit(this, connection, location, false);
 		}
 
-		ConnectionGUIProvider guiProvider = ConnectionGUIRegistry.INSTANCE.getGUIProvider(connection.getConfiguration().getType());
+		ConnectionGUIProvider guiProvider = AccessController.doPrivileged((PrivilegedAction<ConnectionGUIProvider>)
+				() -> ConnectionGUIRegistry.INSTANCE.getGUIProvider(connection.getConfiguration().getType()));
 
 		if (guiProvider != null) {
 			editGui = guiProvider.edit(this, connection, location, editable);

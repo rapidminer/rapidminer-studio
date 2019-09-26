@@ -65,7 +65,6 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -109,7 +108,7 @@ import com.rapidminer.tools.Tools;
 /**
  * This is the GUI to display meta data statistics for {@link ExampleSet}s. Note that EDT blocking
  * is minimal because the GUI for each {@link Attribute} and the subsequent population with the data
- * are done in {@link SwingWorker}s. The attributes are displayed via a pagination system, i.e. when
+ * are done in {@link MultiSwingWorker}s. The attributes are displayed via a pagination system, i.e. when
  * more than {@link MetaDataStatisticsModel#PAGE_SIZE} attributes exist they are displayed on pages
  * which show up to {@link MetaDataStatisticsModel#PAGE_SIZE}. This prevents performance problems
  * even when the number of attributes exceeds <code>100,000</code>.
@@ -442,7 +441,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 	}
 
 	/**
-	 * Creates all {@link AttributeStatisticsPanel}s in a {@link SwingWorker}.
+	 * Creates all {@link AttributeStatisticsPanel}s in a {@link MultiSwingWorker}.
 	 */
 	private void createAttributeStatisticsPanels() {
 		final MultiSwingWorker<Boolean, AttributeStatisticsPanel> worker = new MultiSwingWorker<Boolean,
@@ -556,7 +555,7 @@ public class MetaDataStatisticsViewer extends JPanel implements Renderable, Prin
 
 	/**
 	 * Setup the GUI. This does NOT include creating the {@link AttributeStatisticsPanel}s, as that
-	 * is done via a {@link SwingWorker} above. Reason is that we do not want to risk GUI freezes.
+	 * is done via a {@link MultiSwingWorker} above. Reason is that we do not want to risk GUI freezes.
 	 *
 	 */
 	private void initGUI() {

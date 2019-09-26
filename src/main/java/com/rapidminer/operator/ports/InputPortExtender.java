@@ -88,7 +88,7 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 	@Deprecated
 	@SuppressWarnings("unchecked")
 	public <T extends IOObject> List<T> getData(boolean unfold) {
-		List<IOObject> results = new LinkedList<IOObject>();
+		List<IOObject> results = new LinkedList<>();
 		for (InputPort port : getManagedPorts()) {
 			IOObject data = port.getAnyDataOrNull();
 			if (data != null) {
@@ -118,7 +118,7 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 	public <T extends IOObject> List<T> getData(Class<T> desiredClass, boolean unfold) throws UserError {
 		List<T> results = new ArrayList<T>();
 		for (InputPort port : getManagedPorts()) {
-			IOObject data = port.getAnyDataOrNull();
+			IOObject data = port.getRawData();
 			if (data != null) {
 				if (unfold && data instanceof IOObjectCollection) {
 					unfold((IOObjectCollection<?>) data, results, desiredClass, port);

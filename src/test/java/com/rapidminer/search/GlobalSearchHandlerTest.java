@@ -39,6 +39,7 @@ import com.rapidminer.search.util.GlobalSearchableTextFakeImpl;
  */
 public class GlobalSearchHandlerTest {
 
+	private static final int MAX_TRIES = 300;
 	private static GlobalSearchableTextFakeImpl searchable;
 
 	@BeforeClass
@@ -51,15 +52,25 @@ public class GlobalSearchHandlerTest {
 
 	@Before
 	public void waitTillReady() throws ParseException {
+		int i = 0;
 		while (!searchable.isInitialized()) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(100L);
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+			if (i++ > MAX_TRIES) {
+				throw new IllegalStateException("waitTillReady did not complete in time.");
 			}
 		}
+
+		i = 0;
 		boolean foundResults = false;
 		while (!foundResults) {
 			foundResults = new GlobalSearchResultBuilder("life").runSearch().getNumberOfResults() > 0;
+			if (i++ > MAX_TRIES) {
+				throw new IllegalStateException("waitTillReady did not complete in time.");
+			}
 		}
 	}
 

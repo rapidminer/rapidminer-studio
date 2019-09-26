@@ -149,7 +149,7 @@ public class Plugin {
 	/** @since 9.0.0 */
 	private static final Set<String> PACKAGED_EXTENSIONS;
 	/** @since 9.0.0 */
-	private static final String SHIPPED_IDS = "model_simulator,process_scheduling,social_media,cloud_connectivity,h2o,dataeditor,cloud_execution,operator_recommender,time_series";
+	private static final String SHIPPED_IDS = "model_simulator,process_scheduling,social_media,cloud_connectivity,h2o,dataeditor,model_deployment_management,operator_recommender,time_series";
 	/** @since 9.0.0 */
 	private static final Set<String> SHIPPED_EXTENSIONS;
 	private static final String PACKAGEID_RAPIDMINER = "rapidminer-studio-6";

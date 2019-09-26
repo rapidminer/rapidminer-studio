@@ -157,6 +157,7 @@ public class ActionsGlobalSearchManager extends AbstractGlobalSearchManager {
 		mainFrameActions.add(createDocument((ResourceAction) RapidMinerGUI.getMainFrame().EXIT_ACTION));
 		mainFrameActions.add(createDocument((ResourceAction) RapidMinerGUI.getMainFrame().SETTINGS_ACTION));
 		mainFrameActions.add(createDocument((ResourceAction) RapidMinerGUI.getMainFrame().RESTORE_PERSPECTIVE_ACTION));
+		mainFrameActions.add(createDocument((ResourceAction) RapidMinerGUI.getMainFrame().CREATE_CONNECTION));
 		mainFrameActions.add(createDocument((ResourceAction) RapidMinerGUI.getMainFrame().TUTORIAL_ACTION));
 		mainFrameActions.add(createDocument((ResourceAction) RapidMinerGUI.getMainFrame().BROWSE_VIDEOS_ACTION));
 		mainFrameActions.add(createDocument((ResourceAction) RapidMinerGUI.getMainFrame().BROWSE_DOCUMENTATION_ACTION));

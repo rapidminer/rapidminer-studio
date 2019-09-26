@@ -18,6 +18,7 @@
 */
 package com.rapidminer.operator.performance;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -100,19 +101,26 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
 	public WeightedMultiClassPerformance(WeightedMultiClassPerformance m) {
 		super(m);
 		this.type = m.type;
-		this.classNames = new String[m.classNames.length];
-		for (int i = 0; i < this.classNames.length; i++) {
-			this.classNames[i] = m.classNames[i];
-			this.classNameMap.put(this.classNames[i], i);
+		if (m.classNames != null) {
+			this.classNames = Arrays.copyOf(m.classNames, m.classNames.length);
+			this.classNameMap.putAll(m.classNameMap);
 		}
-		this.counter = new double[m.counter.length][m.counter.length];
-		for (int i = 0; i < this.counter.length; i++) {
-			for (int j = 0; j < this.counter[i].length; j++) {
-				this.counter[i][j] = m.counter[i][j];
+		if (m.classWeights != null) {
+			this.classWeights = Arrays.copyOf(m.classWeights, m.classWeights.length);
+			this.weightSum = m.weightSum;
+		}
+		if (m.counter != null) {
+			this.counter = new double[m.counter.length][];
+			for (int i = 0; i < m.counter.length; i++) {
+				this.counter[i] = Arrays.copyOf(m.counter[i], m.counter[i].length);
 			}
 		}
-		this.labelAttribute = (Attribute) m.labelAttribute.clone();
-		this.predictedLabelAttribute = (Attribute) m.predictedLabelAttribute.clone();
+		if (m.labelAttribute != null) {
+			this.labelAttribute = (Attribute) m.labelAttribute.clone();
+		}
+		if (m.predictedLabelAttribute != null) {
+			this.predictedLabelAttribute = (Attribute) m.predictedLabelAttribute.clone();
+		}
 		if (m.weightAttribute != null) {
 			this.weightAttribute = (Attribute) m.weightAttribute.clone();
 		}

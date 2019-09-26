@@ -23,6 +23,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -52,6 +53,21 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 
 	@Override
 	public JComponent getComponentForGroup(ConnectionParameterGroupModel groupModel, ConnectionModel connectionModel) {
+		return combinedGroupComponent(connectionModel, groupModel);
+	}
+
+	/**
+	 * Creates a composite {@link JPanel} for all referenced groups. Helper method to display several groups in one tab.
+	 * Can be used in {@link #getComponentForGroup(ConnectionParameterGroupModel, ConnectionModel)}.
+	 *
+	 * @param connectionModel
+	 * 		the connection model
+	 * @param groupModels
+	 * 		all relevant group models
+	 * @return the panel with all groups' label and input components
+	 * @since 9.4.1
+	 */
+	protected final JComponent combinedGroupComponent(ConnectionModel connectionModel, ConnectionParameterGroupModel... groupModels) {
 		JPanel panel = new JPanel(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.weightx = 1.0;
@@ -68,12 +84,12 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 		right.insets = new Insets(0, 0, VERTICAL_COMPONENT_SPACING, 0);
 		left.gridx = 0;
 		right.gridx = 1;
-		for (ConnectionParameterModel parameter : groupModel.getParameters()) {
-			components.add(getParameterLabelComponent(connectionModel.getType(), parameter), left);
-			JComponent parameterInputComponent = getParameterInputComponent(connectionModel.getType(), parameter);
-			JPanel informationWrapper = addInformationIcon(parameterInputComponent, connectionModel.getType(),
-					parameter, getParentDialog());
-			components.add(informationWrapper, right);
+		for (ConnectionParameterGroupModel groupModel : groupModels) {
+			for (ConnectionParameterModel parameter : groupModel.getParameters()) {
+				components.add(getParameterLabelComponent(connectionModel.getType(), parameter), left);
+				JComponent parameterInputComponent = getParameterInputComponent(connectionModel.getType(), parameter);
+				components.add(wrapInformationIcon(connectionModel, parameter, parameterInputComponent), right);
+			}
 		}
 		panel.add(components, gbc);
 
@@ -83,6 +99,24 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 		panel.add(new JLabel(), gbc);
 
 		return panel;
+	}
+
+	/**
+	 * Wraps the given component with an information icon to display its tooltip. Can be overriden by subclasses,
+	 * e.g. to also add a {@link #visibilityWrapper(JComponent, ConnectionParameterModel) visibilityWrapper}.
+	 *
+	 * @param connectionModel
+	 * 		the connection model
+	 * @param parameter
+	 * 		the parameter
+	 * @param component
+	 * 		the component to wrap
+	 * @return the wrapped component
+	 * @see #addInformationIcon(JComponent, String, ConnectionParameterModel, JDialog)
+	 * @since 9.4.1
+	 */
+	protected JComponent wrapInformationIcon(ConnectionModel connectionModel, ConnectionParameterModel parameter, JComponent component) {
+		return addInformationIcon(component, connectionModel.getType(), parameter, getParentDialog());
 	}
 
 	/**
@@ -97,7 +131,7 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 	 * @return a {@link ConnectionParameterLabel} by default
 	 */
 	protected JComponent getParameterLabelComponent(String type, ConnectionParameterModel parameter) {
-		return new ConnectionParameterLabel(type, parameter);
+		return new ConnectionParameterLabel(parameter);
 	}
 
 	/**
@@ -113,7 +147,7 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 	 * @return a {@link ConnectionParameterTextField} by default
 	 */
 	protected JComponent getParameterInputComponent(String type, ConnectionParameterModel parameter) {
-		return new ConnectionParameterTextField(type, parameter);
+		return new ConnectionParameterTextField(parameter);
 	}
 
 }

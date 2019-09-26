@@ -26,6 +26,7 @@ import org.apache.commons.collections15.Factory;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.operator.clustering.HierarchicalClusterModel;
 import com.rapidminer.operator.clustering.HierarchicalClusterNode;
+import com.rapidminer.tools.ObjectVisualizerService;
 import com.rapidminer.tools.Tools;
 
 import edu.uci.ics.jung.graph.DelegateTree;
@@ -70,6 +71,8 @@ public class ClusterModelGraphCreator extends GraphCreatorAdaptor {
 
 	public ClusterModelGraphCreator(ClusterModel clusterModel) {
 		this(new HierarchicalClusterModel(clusterModel));
+		// reuse visualizer
+		ObjectVisualizerService.addObjectVisualizer(this.clusterModel, ObjectVisualizerService.getVisualizerForObject(clusterModel));
 	}
 
 	public ClusterModelGraphCreator(HierarchicalClusterModel clusterModel) {

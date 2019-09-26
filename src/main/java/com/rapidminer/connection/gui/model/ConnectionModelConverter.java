@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.rapidminer.connection.ConnectionHandler;
+import com.rapidminer.connection.ConnectionHandlerRegistry;
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationBuilder;
 import com.rapidminer.connection.configuration.ConfigurationParameter;
@@ -38,6 +40,7 @@ import com.rapidminer.connection.configuration.ConfigurationParameterImpl;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
 import com.rapidminer.connection.configuration.PlaceholderParameter;
 import com.rapidminer.connection.configuration.PlaceholderParameterImpl;
+import com.rapidminer.connection.util.GenericHandlerRegistry;
 import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.LogService;
@@ -74,12 +77,19 @@ public final class ConnectionModelConverter {
 		ConnectionModel conn = new ConnectionModel(connection, location, editable, valueProviderModels);
 		conn.setDescription(connection.getConfiguration().getDescription());
 		conn.setTags(new ArrayList<>(connection.getConfiguration().getTags()));
-		for (ConfigurationParameterGroup group : connection.getConfiguration().getKeys()) {
-			ConnectionParameterGroupModel groupModel = conn.getOrCreateParameterGroup(group.getGroup());
-			for (ConfigurationParameter p : group.getParameters()) {
-				groupModel.addOrSetParameter(p.getName(), p.getValue(), p.isEncrypted(), p.getInjectorName(), p.isEnabled());
-			}
+		// use new (empty) connection to capture all potential new parameters
+		ConnectionInformation newConnection = null;
+		try {
+			ConnectionHandler handler = ConnectionHandlerRegistry.getInstance().getHandler(connection.getConfiguration().getType());
+			newConnection = handler.createNewConnectionInformation("emptyCI");
+		} catch (GenericHandlerRegistry.MissingHandlerException e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.connection.gui.model.ConnectionModelConverter.creating_empty_connection_failed", connection.getConfiguration().getType());
 		}
+		if (newConnection != null) {
+			addParameters(newConnection, conn);
+		}
+		// now overwrite with values of existing connection
+		addParameters(connection, conn);
 		for (PlaceholderParameter p : connection.getConfiguration().getPlaceholders()) {
 			conn.addOrSetPlaceholder(p.getGroup(), p.getName(), p.getValue(), p.isEncrypted(), p.getInjectorName(), p.isEnabled());
 		}
@@ -214,5 +224,22 @@ public final class ConnectionModelConverter {
 			result.add(new PlaceholderParameterImpl(parameter.getName(), parameter.getValue(), parameter.getGroupName(), parameter.isEncrypted(), parameter.getInjectorName(), parameter.isEnabled()));
 		}
 		return result;
+	}
+
+	/**
+	 * Adds all {@link ConfigurationParameter} of the given CI to the given model.
+	 *
+	 * @param connection
+	 * 		the CI
+	 * @param model
+	 * 		the model
+	 */
+	private static void addParameters(ConnectionInformation connection, ConnectionModel model) {
+		for (ConfigurationParameterGroup group : connection.getConfiguration().getKeys()) {
+			ConnectionParameterGroupModel groupModel = model.getOrCreateParameterGroup(group.getGroup());
+			for (ConfigurationParameter p : group.getParameters()) {
+				groupModel.addOrSetParameter(p.getName(), p.getValue(), p.isEncrypted(), p.getInjectorName(), p.isEnabled());
+			}
+		}
 	}
 }
