@@ -1141,6 +1141,36 @@ public class Tools {
 		return resourceURL.openStream();
 	}
 
+	/**
+	 * Tries to load the given text file from the resources. If it fails, returns an empty string and logs it. This is
+	 * necessary for extensions because {@link #getResource(String)} only looks in {@code
+	 * resources/com/rapidminer/resources}.
+	 *
+	 * @param resourcePath the path, e.g. "com/rapidminer/extension/resources/folder/script.js". The path is treated as
+	 *                     an absolute path. If the path contains a version number (which is quite common for HTML
+	 *                     resources), it & anything behind it will be stripped as it is not a valid filename. Example:
+	 *                     "/com/test/myFile.js?v=4.7.0" will become "/com/test/myFile.js".
+	 * @return the stream, never {@code null}. Must be closed by the caller!
+	 * @throws FileNotFoundException if the resource cannot be found
+	 * @throws IOException           if accessing the resource fails
+	 * @since 9.5.0
+	 */
+	public static InputStream openStreamFromResources(String resourcePath) throws IOException {
+		if (resourcePath.startsWith("/")) {
+			resourcePath = resourcePath.substring(1);
+		}
+		// in HTML files, it's quite common to reference a version. That is an invalid file name, so drop that.
+		if (resourcePath.contains("?v=")) {
+			resourcePath = resourcePath.substring(0, resourcePath.indexOf("?v="));
+		}
+		URL scriptResource = Plugin.getMajorClassLoader().getResource(resourcePath);
+		if (scriptResource == null) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.Tools.resource_not_found", resourcePath);
+			throw new FileNotFoundException("Could not find resource '" + resourcePath + "'");
+		}
+		return scriptResource.openStream();
+	}
+
 	public static String readTextFile(InputStream in) throws IOException {
 		return readTextFile(new InputStreamReader(in, "UTF-8"));
 	}

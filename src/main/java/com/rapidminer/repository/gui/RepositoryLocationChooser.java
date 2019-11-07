@@ -312,7 +312,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			}
 		}
 		tree.getSelectionModel().addTreeSelectionListener(e -> {
-			if (e.getPath() != null) {
+			if (e.getPath() != null && e.getPath().getLastPathComponent() instanceof Entry) {
 				currentEntry = (Entry) e.getPath().getLastPathComponent();
 				if (!(currentEntry instanceof Folder) && allowEntries) {
 					locationField.setText(currentEntry.getLocation().getName());
@@ -406,8 +406,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		if (resolveRelativeTo != null) {
 			resolveBox = new JCheckBox(
 					new ResourceActionAdapter("repository_chooser.resolve", resolveRelativeTo.getAbsoluteLocation()));
-			resolveBox.setSelected(ParameterService
-					.getParameterValue(RapidMinerGUI.PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS).equals("true"));
+			resolveBox.setSelected("true".equals(ParameterService
+					.getParameterValue(RapidMinerGUI.PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS)));
 			add(resolveBox, c);
 			resolveBox.addActionListener(e -> updateResult());
 		}
@@ -432,43 +432,26 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 	}
 
 	public String getRepositoryLocation() throws MalformedRepositoryLocationException {
-		if (tree.getSelectionPath() != null) {
-			Entry selectedEntry = (Entry) tree.getSelectionPath().getLastPathComponent();
-			RepositoryLocation selectedLocation = selectedEntry.getLocation();
-			if (selectedEntry instanceof Folder) {
-				if (enforceValidRepositoryEntryName) {
-					selectedLocation = new RepositoryLocation(selectedLocation, locationFieldRepositoryEntry.getText());
-				} else {
-					selectedLocation = new RepositoryLocation(selectedLocation, locationField.getText());
-				}
-			} else if (selectedLocation.parent() != null) {
-				// this is the case when an entry is selected and it has a parent (should always have a parent, but hey)
-				if (enforceValidRepositoryEntryName) {
-					selectedLocation = new RepositoryLocation(selectedLocation.parent(), locationFieldRepositoryEntry.getText());
-				} else {
-					selectedLocation = new RepositoryLocation(selectedLocation.parent(), locationField.getText());
-				}
-			}
-			if (RepositoryLocationChooser.this.resolveRelativeTo != null && resolveBox.isSelected()) {
-				return selectedLocation.makeRelative(RepositoryLocationChooser.this.resolveRelativeTo);
-			} else {
-				return selectedLocation.getAbsoluteLocation();
-			}
+		final TreePath path = tree.getSelectionPath();
+		if (path == null || !(path.getLastPathComponent() instanceof Entry)) {
+			return getLocationNameFieldText();
+		}
+		Entry selectedEntry = (Entry) path.getLastPathComponent();
+		RepositoryLocation selectedLocation = selectedEntry.getLocation();
+		if (selectedEntry instanceof Folder) {
+			selectedLocation = new RepositoryLocation(selectedLocation, getLocationNameFieldText());
+		} else if (selectedLocation.parent() != null) {
+			selectedLocation = new RepositoryLocation(selectedLocation.parent(), getLocationNameFieldText());
+		}
+		if (resolveRelativeTo != null && resolveBox.isSelected()) {
+			return selectedLocation.makeRelative(resolveRelativeTo);
 		} else {
-			if (enforceValidRepositoryEntryName) {
-				return locationFieldRepositoryEntry.getText();
-			} else {
-				return locationField.getText();
-			}
+			return selectedLocation.getAbsoluteLocation();
 		}
 	}
 
 	public boolean isEntryValid() {
-		if (!enforceValidRepositoryEntryName) {
-			return hasSelection();
-		} else {
-			return hasSelection() && currentEntryValid;
-		}
+		return hasSelection() && !enforceValidRepositoryEntryName || currentEntryValid;
 	}
 
 	/** Same as {@link #hasSelection(boolean)} with parameter false. */
@@ -479,12 +462,10 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 	/** Returns true if the user entered a valid, non-empty repository location. */
 	public boolean hasSelection(boolean allowFolders) {
 		if (!allowFolders
-				&& (enforceValidRepositoryEntryName && locationFieldRepositoryEntry.getText().isEmpty()
+				&& (enforceValidRepositoryEntryName &&
+				    !RepositoryLocation.isNameValid(locationFieldRepositoryEntry.getText())
 						|| !enforceValidRepositoryEntryName && locationField.getText().isEmpty()
-						|| enforceValidRepositoryEntryName
-								&& !RepositoryLocation.isNameValid(locationFieldRepositoryEntry.getText())
-						|| enforceValidRepositoryEntryName && tree.getSelectedEntry() == null
-						|| !enforceValidRepositoryEntryName && tree.getSelectedEntry() == null)) {
+						|| tree.getSelectedEntry() == null)) {
 			return false;
 		} else {
 			try {
@@ -506,12 +487,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 	}
 
 	public void setResolveRelative(boolean resolveRelative) {
-		if (resolveBox != null) {
-			if (!resolveRelative && resolveBox.isSelected()) {
-				resolveBox.doClick();
-			} else if (resolveRelative && !resolveBox.isSelected()) {
-				resolveBox.doClick();
-			}
+		if (resolveBox != null && resolveRelative != resolveBox.isSelected()) {
+			resolveBox.doClick();
 		}
 	}
 
@@ -628,25 +605,21 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		if (dialog.wasConfirmed()) {
 			if (resolveRelativeTo != null && !forceDisableRelativeResolve) {
 				ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_RESOLVE_RELATIVE_REPOSITORY_LOCATIONS,
-						dialog.chooser.resolveRelative() ? "true" : "false");
+						Boolean.toString(dialog.chooser.resolveRelative()));
 				ParameterService.saveParameters();
 			}
-			String text;
 			try {
-				text = dialog.chooser.getRepositoryLocation();
+				String text = dialog.chooser.getRepositoryLocation();
+				if (text.length() > 0) {
+					return text;
+				}
 			} catch (MalformedRepositoryLocationException e) {
 				// this should not happen since the dialog would not have disposed without an error
 				// message.
 				throw new RuntimeException(e);
 			}
-			if (text.length() > 0) {
-				return text;
-			} else {
-				return null;
-			}
-		} else {
-			return null;
 		}
+		return null;
 	}
 
 	/**
@@ -654,7 +627,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 	 */
 	private void updateSelection() {
 		TreePath selectionPath = tree.getSelectionPath();
-		if (selectionPath != null) {
+		if (selectionPath != null && selectionPath.getLastPathComponent() instanceof Entry) {
 			Entry selectedEntry = (Entry) selectionPath.getLastPathComponent();
 			if (!(selectedEntry instanceof Folder)) {
 				tree.setSelectionPath(selectionPath.getParentPath());
@@ -664,7 +637,6 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 
 	private void updateResult() {
 		try {
-
 			String repositoryLocation = getRepositoryLocation();
 			resultLabel.setText(repositoryLocation);
 			// check if a repository folder is selected, if not, show warning
@@ -681,15 +653,7 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.repository.gui.RepositoryLocationChooser.malformed_location", e), e);
 		}
-		if (currentEntry instanceof Folder && !enforceValidRepositoryEntryName && locationField.getText().isEmpty()) {
-			this.folderSelected = true;
-		}
-		if (currentEntry instanceof Folder && enforceValidRepositoryEntryName
-				&& locationFieldRepositoryEntry.getText().isEmpty()) {
-			this.folderSelected = true;
-		} else {
-			this.folderSelected = false;
-		}
+		this.folderSelected = currentEntry instanceof Folder && getLocationNameFieldText().isEmpty();
 		for (ChangeListener l : listeners) {
 			l.stateChanged(new ChangeEvent(this));
 		}
@@ -700,19 +664,12 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 	}
 
 	public void setEnforceValidRepositoryEntryName(final boolean enforceValidRepositoryEntryName) {
-		if (SwingUtilities.isEventDispatchThread()) {
+		SwingTools.invokeLater(() -> {
 			this.enforceValidRepositoryEntryName = enforceValidRepositoryEntryName;
 			this.locationLabel.setVisible(!enforceValidRepositoryEntryName);
 			this.locationField.setVisible(!enforceValidRepositoryEntryName);
 			this.locationFieldRepositoryEntry.setVisible(enforceValidRepositoryEntryName);
-		} else {
-			SwingUtilities.invokeLater(() -> {
-				RepositoryLocationChooser.this.enforceValidRepositoryEntryName = enforceValidRepositoryEntryName;
-				RepositoryLocationChooser.this.locationLabel.setVisible(!enforceValidRepositoryEntryName);
-				RepositoryLocationChooser.this.locationField.setVisible(!enforceValidRepositoryEntryName);
-				RepositoryLocationChooser.this.locationFieldRepositoryEntry.setVisible(enforceValidRepositoryEntryName);
-			});
-		}
+		});
 	}
 
 	@Override
@@ -730,5 +687,12 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		} else {
 			return tree.requestFocusInWindow();
 		}
+	}
+
+	/**
+	 * @return the text value of the visible location field
+	 */
+	private String getLocationNameFieldText() {
+		return enforceValidRepositoryEntryName ? locationFieldRepositoryEntry.getText() : locationField.getText();
 	}
 }

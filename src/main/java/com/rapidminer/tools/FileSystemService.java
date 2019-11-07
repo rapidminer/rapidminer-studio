@@ -49,7 +49,7 @@ public class FileSystemService {
 	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which is used for the connection file cache */
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONNECTION = "connectionFiles";
 	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which is used by BrowserContext for cache data storage. Browser cache depends on platform, if you mix DLLs for Win32 and Win64, you get an endless loop */
-	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser" + (PlatformUtilities.getReleasePlatform() != null ? "-" + PlatformUtilities.getReleasePlatform().name() : "");
+	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser7.3" + (PlatformUtilities.getReleasePlatform() != null ? "-" + PlatformUtilities.getReleasePlatform().name() : "");
 
 	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which can be used for internal caching of the content mapper store */
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE = "content mapper";

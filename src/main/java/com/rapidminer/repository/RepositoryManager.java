@@ -248,6 +248,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 			// initialize the content store mapper to enable it to update data for repo locations on rename
 			PersistentContentMapperStore.INSTANCE.init();
 			instance.postInstall();
+			RapidMiner.registerCleanupHook(RepositoryManager::cleanup);
 		}
 	}
 
@@ -1178,6 +1179,26 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	private void fireRepositoryWasRemoved(Repository repository) {
 		for (RepositoryManagerListener l : listeners.getListeners(RepositoryManagerListener.class)) {
 			l.repositoryWasRemoved(repository);
+		}
+	}
+
+	/**
+	 * Runs the cleanup for the repositories, i.e. disconnects remote repositories (including SAML authentication)
+	 * and clears the {@link #CACHED_MANAGERS cached managers}.
+	 *
+	 * @since 9.5
+	 */
+	private static void cleanup() {
+		synchronized (INSTANCE_LOCK) {
+			if (instance == null) {
+				return;
+			}
+			for (Repository repo : instance.getRepositories()) {
+				if (repo instanceof RemoteRepository) {
+					((RemoteRepository) repo).cleanup();
+				}
+			}
+			CACHED_MANAGERS.clear();
 		}
 	}
 }

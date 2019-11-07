@@ -337,6 +337,10 @@ public class Plugin {
 
 		// Block beta version usage of the TurboPrep/AutoModel extension
 		PLUGIN_BLACKLIST.put("rmx_model_simulator", new Pair<>(null, new VersionNumber(9, 0, 0, "BETA4")));
+
+		// Google dependencies of earlier In-Database Processing extension and newer Cloud
+		// Connectivity may collide
+		PLUGIN_BLACKLIST.put("rmx_in_database_processing", new Pair<>(null, new VersionNumber(9, 1, 0)));
 	}
 
 	/**
@@ -1593,26 +1597,28 @@ public class Plugin {
 		sortedLoadingTimes.sort(Comparator.comparing(Entry::getValue));
 		for (Entry<String, Long> entry : sortedLoadingTimes) {
 			Plugin plugin = getPluginByExtensionId(entry.getKey());
-			String value = String.valueOf(entry.getValue()) + "ms";
+			String loadingTime = String.valueOf(entry.getValue()) + "ms";
 			Level logLevel = Level.INFO;
 			if (entry.getValue() > LOADING_THRESHOLD) {
-				value = Tools.formatDuration(entry.getValue());
+				loadingTime = Tools.formatDuration(entry.getValue());
 				logLevel = Level.WARNING;
 			}
 
 			String identifier;
+			String value;
 			if (plugin != null) {
 				LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time",
-						new Object[] { plugin.getName(), value });
-				identifier = plugin.getExtensionId();
+						new Object[] { plugin.getName(), loadingTime });
+				identifier = plugin.getExtensionId() + ActionStatisticsCollector.ARG_SPACER + plugin.getVersion();
+				value = ActionStatisticsCollector.VALUE_EXTENSION_INITIALIZATION;
 			} else {
 				LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time_failure",
-						new Object[] { entry.getKey(), value });
+						new Object[] { entry.getKey(), loadingTime });
 				identifier = entry.getKey();
+				value = ActionStatisticsCollector.VALUE_EXTENSION_INITIALIZATION_FAILED;
 			}
 
-			ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_CONSTANT,
-					ActionStatisticsCollector.VALUE_EXTENSION_INITIALIZATION, identifier);
+			ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_CONSTANT, value, identifier);
 		}
 	}
 

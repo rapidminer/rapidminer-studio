@@ -20,10 +20,13 @@ package com.rapidminer.operator.features.transformation;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
-import Jama.EigenvalueDecomposition;
-import Jama.Matrix;
+import org.apache.commons.lang.ArrayUtils;
+import org.ojalgo.matrix.decomposition.Eigenvalue;
+import org.ojalgo.matrix.store.MatrixStore;
+import org.ojalgo.matrix.store.RawStore;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
@@ -32,6 +35,7 @@ import com.rapidminer.operator.Model;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
@@ -52,6 +56,9 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.matrix.CovarianceMatrix;
+
+import Jama.EigenvalueDecomposition;
+import Jama.Matrix;
 
 
 /**
@@ -85,6 +92,9 @@ public class PCA extends Operator {
 	public static final int REDUCTION_NONE = 0;
 	public static final int REDUCTION_VARIANCE = 1;
 	public static final int REDUCTION_FIXED = 2;
+
+	/** The version before the change from JAMA to ojAlgo for Eigenvalue calculations */
+	public static final OperatorVersion EIGENVALUE_ALGORITHM_CHANGED = new OperatorVersion(9, 4, 1);
 
 	private InputPort exampleSetInput = getInputPorts().createPort("example set input");
 
@@ -158,14 +168,30 @@ public class PCA extends Operator {
 
 		// EigenVector and EigenValues of the covariance matrix
 		log("Performing the eigenvalue decomposition...");
-		EigenvalueDecomposition eigenvalueDecomposition = covarianceMatrix.eig();
 
-		checkForStop();
+		double[][] eigenvectors;
+		double[] eigenvalues;
+		if (getCompatibilityLevel().isAtMost(EIGENVALUE_ALGORITHM_CHANGED)) {
+			//calculate using JAMA
+			EigenvalueDecomposition eigenvalueDecomposition = covarianceMatrix.eig();
 
-		// create and deliver results
-		double[] eigenvalues = eigenvalueDecomposition.getRealEigenvalues();
-		Matrix eigenvectorMatrix = eigenvalueDecomposition.getV();
-		double[][] eigenvectors = eigenvectorMatrix.getArray();
+			checkForStop();
+			// create and deliver results
+			eigenvalues = eigenvalueDecomposition.getRealEigenvalues();
+			Matrix eigenvectorMatrix = eigenvalueDecomposition.getV();
+			eigenvectors = eigenvectorMatrix.getArray();
+		} else {
+			//calculate using ojAlgo
+			MatrixStore<Double> matA = RawStore.wrap(covarianceMatrix.getArray());
+			Eigenvalue<Double> eig = Eigenvalue.PRIMITIVE.make(matA, true);
+			eig.decompose(matA);
+
+			checkForStop();
+			// create and deliver results
+			eigenvectors = eig.getV().toRawCopy2D();
+			eigenvalues = new double[eigenvectors.length];
+			eig.getEigenvalues(eigenvalues, Optional.empty());
+		}
 
 		PCAModel model = new PCAModel(exampleSet, eigenvalues, eigenvectors);
 
@@ -211,6 +237,12 @@ public class PCA extends Operator {
 		type.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_REDUCTION_TYPE, REDUCTION_METHODS, true,
 				REDUCTION_FIXED));
 		list.add(type);
+
 		return list;
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.add(super.getIncompatibleVersionChanges(), EIGENVALUE_ALGORITHM_CHANGED);
 	}
 }

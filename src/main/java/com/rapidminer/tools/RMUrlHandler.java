@@ -81,6 +81,8 @@ public class RMUrlHandler {
 	public static final String ACTION_RUN_PROCESS_RMSERVER_NOW = "run_process_rmserver_now";
 	public static final String ACTION_RUN_PROCESS_RMSERVER_SCHEDULE = "run_process_rmserver_schedule";
 	public static final String ACTION_MARKETPLACE = "marketplace";
+	/** @since 9.5.0 */
+	public static final String ACTION_MARKETPLACE_UPDATES = "marketplace-updates";
 	public static final String ACTION_MANAGE_EXTENSIONS = "manage_extensions";
 	public static final String ACTION_MANAGE_LICENSES = "manage_licenses";
 

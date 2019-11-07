@@ -21,6 +21,7 @@ package com.rapidminer.operator.tools;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +37,12 @@ import org.junit.Test;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.column.ColumnType;
+import com.rapidminer.belt.column.ColumnTypes;
 import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.belt.table.Builders;
+import com.rapidminer.belt.table.Table;
+import com.rapidminer.belt.util.Belt;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
 import com.rapidminer.example.Attribute;
@@ -137,6 +143,19 @@ public class SerializationToStreamTest {
 
 		ExampleSet backAndForth = (ExampleSet) readFromArray(writeToArray(table));
 		RapidAssert.assertEquals("ExampleSets are not equal", set, backAndForth);
+	}
+
+	@Test(expected = InvalidObjectException.class)
+	public void testTableWithCustomColumn() throws IOException {
+		ColumnType<Double> customType = ColumnTypes.objectType("com.rapidminer.custom.double", Double.class, null);
+		ColumnType<Integer> customType2 = ColumnTypes.categoricalType("com.rapidminer.custom.integer", Integer.class,
+				null);
+		Table table = Builders.newTableBuilder(11).addReal("real", i -> 3 * i / 5.0)
+				.addObject("custom", i -> (double) i, customType).addInt("int", i -> 5 * i)
+				.addCategorical("custom2", i -> i, customType2)
+				.build(Belt.defaultContext());
+
+		writeToArray(new IOTable(table));
 	}
 
 	private byte[] writeToArray(Object object) throws IOException {

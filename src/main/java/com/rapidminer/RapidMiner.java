@@ -28,9 +28,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.AccessControlException;
 import java.security.AccessController;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -477,6 +479,16 @@ public class RapidMiner {
 	public static final String RAPIDMINER_FOLLOW_HTTP_TO_HTTPS = "rapidminer.system.network.follow_http_to_https";
 
 	public static final String PROCESS_FILE_EXTENSION = "rmp";
+
+	/**
+	 * Collection of clean up hooks
+	 *
+	 * @see #cleanup()
+	 * #see {@link #registerCleanupHook(Runnable)}
+	 * #see {@link #unregisterCleanupHook(Runnable)}
+	 * @since 9.5
+	 */
+	private static final Set<Runnable> CLEAN_UP_HOOKS = new LinkedHashSet<>();
 
 	/**
 	 * This map of {@link IOObject}s is used to remember {@link IOObject}s during the runtime of
@@ -1100,6 +1112,56 @@ public class RapidMiner {
 
 	public static void setExecutionMode(final ExecutionMode executionMode) {
 		RapidMiner.executionMode = executionMode;
+	}
+
+	/**
+	 * Adds a clean up hook to be run after each process execution to prevent interference.
+	 *
+	 * @param cleanup
+	 * 		the clean up hook to add
+	 * @since 9.5
+	 */
+	public static void registerCleanupHook(Runnable cleanup) {
+		synchronized (CLEAN_UP_HOOKS) {
+			CLEAN_UP_HOOKS.add(cleanup);
+		}
+	}
+	/**
+	 * Removes the given clean up hook.
+	 *
+	 * @param cleanup
+	 * 		the clean up hook to remove
+	 * @since 9.5
+	 */
+
+	public static void unregisterCleanupHook(Runnable cleanup) {
+		synchronized (CLEAN_UP_HOOKS) {
+			CLEAN_UP_HOOKS.remove(cleanup);
+		}
+	}
+
+	/**
+	 * Runs a cleanup between processes so they don't interfere with each other. Clears the {@link #ioObjectCache IOObject cache},
+	 * runs all {@link #CLEAN_UP_HOOKS clean up hooks} and triggers the garbage collection.
+	 *
+	 * @since 9.5
+	 */
+	public static void cleanup() {
+		if (ioObjectCache != null) {
+			ioObjectCache.clearStorage();
+		}
+		ArrayList<Runnable> cleanUpHooks;
+		synchronized (CLEAN_UP_HOOKS) {
+			cleanUpHooks = new ArrayList<>(CLEAN_UP_HOOKS);
+		}
+		for (Runnable cleanUpHook : cleanUpHooks) {
+			try {
+				cleanUpHook.run();
+			} catch (Throwable e) {
+				LogService.getRoot().log(Level.WARNING, "com.rapidMiner.RapidMiner.clean_up.error", e);
+			}
+		}
+		System.gc();
 	}
 
 	private static void initializeProxy() {

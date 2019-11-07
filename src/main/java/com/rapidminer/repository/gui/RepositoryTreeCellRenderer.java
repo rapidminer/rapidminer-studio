@@ -35,6 +35,7 @@ import com.rapidminer.connection.util.ConnectionI18N;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
@@ -44,6 +45,7 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.internal.remote.RemoteDataEntry;
+import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.tools.Tools;
 
 
@@ -90,6 +92,14 @@ public class RepositoryTreeCellRenderer extends DefaultTreeCellRenderer {
 			StringBuilder stateStringBuilder = new StringBuilder();
 			boolean hasState = false;
 			if (entry instanceof Repository) {
+				if (entry instanceof RemoteRepository) {
+					RemoteRepository remoteRepository = (RemoteRepository) entry;
+					final VersionNumber remoteRepositoryVersion = remoteRepository.getKnownServerVersion();
+					if (remoteRepositoryVersion != null) {
+						String versionNumber = remoteRepositoryVersion.getShortVersion();
+						stateStringBuilder.append("v").append(versionNumber).append("&nbsp;");
+					}
+				}
 				String reposState = ((Repository) entry).getState();
 				if (reposState != null) {
 					stateStringBuilder.append(reposState);
@@ -122,7 +132,6 @@ public class RepositoryTreeCellRenderer extends DefaultTreeCellRenderer {
 					appendDash(stateStringBuilder);
 					stateStringBuilder.append("&ge;2 GB");
 				}
-
 			}
 			if (stateStringBuilder.length() > 0) {
 				labelText.append(" <small style=\"color:gray\">(").append(stateStringBuilder).append(")</small>");
@@ -157,7 +166,7 @@ public class RepositoryTreeCellRenderer extends DefaultTreeCellRenderer {
 				}
 			} else if (entry.getType().equals(ProcessEntry.TYPE_NAME)) {
 				label.setIcon(ICON_PROCESS);
-			} else if (entry.getType().equals(BlobEntry.TYPE_NAME)) {
+			} else if (entry instanceof BlobEntry) {
 				String mimeType = ((BlobEntry) entry).getMimeType();
 				if (mimeType != null) {
 					if (mimeType.startsWith("text/") || "application/pdf".equals(mimeType)

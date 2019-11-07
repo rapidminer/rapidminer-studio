@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.IOObject;
@@ -106,7 +107,12 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 		IOObject ioObject = getRawData();
 		//prevent returning IOTables for backward compatibility
 		if (ioObject instanceof IOTable) {
-			return AtPortConverter.convert(ioObject, this);
+			try {
+				return AtPortConverter.convert(ioObject, this);
+			} catch (BeltConverter.ConversionException e) {
+				// nothing else we can do as this method is not allowed to throw exceptions
+				return null;
+			}
 		}
 		return ioObject;
 	}
@@ -166,7 +172,15 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 		} else if (desiredClass.isAssignableFrom(data.getClass())) {
 			return desiredClass.cast(data);
 		} else if (AtPortConverter.isConvertible(data.getClass(), desiredClass)) {
-			return desiredClass.cast(AtPortConverter.convert(data, this));
+			try {
+				return desiredClass.cast(AtPortConverter.convert(data, this));
+			} catch (BeltConverter.ConversionException e) {
+				if (nullForOther) {
+					return null;
+				} else {
+					throw new PortUserError(this, "table_not_convertible.custom_column", e.getColumnName(), e.getType().customTypeID());
+				}
+			}
 		} else if (!nullForOther) {
 			PortUserError error = new PortUserError(this, 156, RendererService.getName(data.getClass()), this.getName(),
 					RendererService.getName(desiredClass));

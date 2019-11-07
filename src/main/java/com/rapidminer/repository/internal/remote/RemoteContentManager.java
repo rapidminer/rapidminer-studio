@@ -22,12 +22,12 @@ import java.util.List;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.ws.BindingProvider;
 
-import com.rapid_i.repository.wsimport.AccessRights;
-import com.rapid_i.repository.wsimport.EntryResponse;
-import com.rapid_i.repository.wsimport.FolderContentsResponse;
-import com.rapid_i.repository.wsimport.ProcessContentsResponse;
-import com.rapid_i.repository.wsimport.Response;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.internal.remote.model.AccessRights;
+import com.rapidminer.repository.internal.remote.model.EntryResponse;
+import com.rapidminer.repository.internal.remote.model.FolderContentsResponse;
+import com.rapidminer.repository.internal.remote.model.ProcessContentsResponse;
+import com.rapidminer.repository.internal.remote.model.Response;
 import com.rapidminer.tools.PasswordInputCanceledException;
 
 

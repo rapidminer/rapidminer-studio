@@ -20,6 +20,8 @@ package com.rapidminer.operator.features.weighting;
 
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.Model;
@@ -27,6 +29,7 @@ import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.features.transformation.PCA;
 import com.rapidminer.parameter.ParameterType;
@@ -56,6 +59,7 @@ public class PCAWeighting extends AbstractWeighting {
 		} catch (OperatorCreationException e) {
 			throw new UserError(this, 904, "inner pca operator", e.getMessage());
 		}
+		pcaOperator.setCompatibilityLevel(this.getCompatibilityLevel());
 		pcaOperator.setParameter(PCA.PARAMETER_REDUCTION_TYPE, PCA.REDUCTION_NONE + "");
 
 		ComponentWeights weightOperator = null;
@@ -94,5 +98,10 @@ public class PCAWeighting extends AbstractWeighting {
 			default:
 				return false;
 		}
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.add(super.getIncompatibleVersionChanges(), PCA.EIGENVALUE_ALGORITHM_CHANGED);
 	}
 }

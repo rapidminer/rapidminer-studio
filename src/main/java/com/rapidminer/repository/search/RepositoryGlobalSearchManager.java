@@ -58,6 +58,8 @@ import com.rapidminer.repository.RepositoryManagerListener;
 import com.rapidminer.repository.internal.db.DBRepository;
 import com.rapidminer.repository.internal.remote.RESTRepository;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
+import com.rapidminer.repository.internal.remote.ResponseContainer;
+import com.rapidminer.repository.internal.remote.exception.NotYetSupportedServiceException;
 import com.rapidminer.repository.resource.ResourceRepository;
 import com.rapidminer.search.AbstractGlobalSearchManager;
 import com.rapidminer.search.GlobalSearchDefaultField;
@@ -350,16 +352,17 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 		}
 
 		try {
-			String apiPath = fullIndex ? API_REST_REMOTE_REPO_DETAILS : API_REST_REMOTE_REPO_SUMMARY;
-			HttpURLConnection conn = repository.getHTTPConnection(apiPath, "?subfolder=" + URLEncoder.encode(path, StandardCharsets.UTF_8.name()), true);
-			conn.setRequestMethod("GET");
-			conn.setUseCaches(false);
-			conn.setAllowUserInteraction(false);
-			conn.setRequestProperty("Content-Type", "application/json");
-			int responseCode = conn.getResponseCode();
+			ResponseContainer globalSearchResult;
+			if (fullIndex) {
+				globalSearchResult = repository.getClient().getGlobalSearchItemDetails(path);
+			} else {
+				globalSearchResult = repository.getClient().getGlobalSearchItemSummary(path);
+			}
+
+			int responseCode = globalSearchResult.getResponseCode();
 			if (responseCode == HttpURLConnection.HTTP_OK) {
 				// query worked, parse JSON to items and add to search index
-				String json = Tools.readTextFile(conn.getInputStream());
+				String json = Tools.readTextFile(globalSearchResult.getInputStream());
 				RepositoryGlobalSearchItem[] repositorySearchItems = WebServiceTools.parseJsonString(json, RepositoryGlobalSearchItem[].class, false);
 				for (RepositoryGlobalSearchItem item : repositorySearchItems) {
 					// If an item has no parent, it's in the root folder.
@@ -374,7 +377,9 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 			} else {
 				LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_remote_folder", new Object[]{repository.getName() + path, responseCode});
 			}
-		} catch (IOException | RepositoryException e) {
+		} catch (NotYetSupportedServiceException e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_remote_folder_old_server", new Object[]{repository.getName() + path});
+		}catch (IOException | RepositoryException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_remote_folder", new Object[]{repository.getName() + path, e.getMessage()});
 		}
 	}

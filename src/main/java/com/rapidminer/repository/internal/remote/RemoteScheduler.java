@@ -20,14 +20,13 @@ package com.rapidminer.repository.internal.remote;
 
 import java.util.Collection;
 import java.util.List;
-
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import com.rapid_i.repository.wsimport.ExecutionResponse;
-import com.rapid_i.repository.wsimport.ProcessContextWrapper;
-import com.rapid_i.repository.wsimport.ProcessResponse;
-import com.rapid_i.repository.wsimport.Response;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.internal.remote.model.ExecutionResponse;
+import com.rapidminer.repository.internal.remote.model.ProcessContextWrapper;
+import com.rapidminer.repository.internal.remote.model.ProcessResponse;
+import com.rapidminer.repository.internal.remote.model.Response;
 import com.rapidminer.tools.PasswordInputCanceledException;
 
 
@@ -52,7 +51,7 @@ public interface RemoteScheduler {
 	 *             if the user canceled the login dialog
 	 */
 	ExecutionResponse executeProcessSimple(String executeProcess, XMLGregorianCalendar xmlGregorianCalendar,
-			ProcessContextWrapper processContextWrapper) throws RepositoryException, PasswordInputCanceledException;
+										   ProcessContextWrapper processContextWrapper) throws RepositoryException, PasswordInputCanceledException;
 
 	/**
 	 * Schedules a process to be executed as soon as possible. If Process Service version is not at
@@ -107,8 +106,8 @@ public interface RemoteScheduler {
 
 	/**
 	 * Note: This method returns info about the job associated with the given id of a
-	 * {@link ScheduledProcess}, not of the {@link ProcessExecutionParameters} object returned from
-	 * {@link ProcessService_1_3#executeProcessSimple(String, Date)} when submitting the job.
+	 * link ScheduledProcess, not of the link ProcessExecutionParameters object returned from
+	 * link ProcessService_1_3#executeProcessSimple(String, Date) when submitting the job.
 	 *
 	 * @throws RepositoryException
 	 *             on fail

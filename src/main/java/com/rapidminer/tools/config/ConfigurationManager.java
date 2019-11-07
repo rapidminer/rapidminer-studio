@@ -18,7 +18,33 @@
 */
 package com.rapidminer.tools.config;
 
-import java.net.HttpURLConnection;
+import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.parameter.ParameterHandler;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.SimpleListBasedParameterHandler;
+import com.rapidminer.repository.ConnectionListener;
+import com.rapidminer.repository.ConnectionRepository;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryAccessor;
+import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryListener;
+import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.RepositoryManagerListener;
+import com.rapidminer.repository.internal.remote.RemoteRepository;
+import com.rapidminer.repository.internal.remote.ResponseContainer;
+import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Observable;
+import com.rapidminer.tools.Observer;
+import com.rapidminer.tools.config.gui.event.ConfigurableEvent;
+import com.rapidminer.tools.config.gui.event.ConfigurableEvent.EventType;
+import com.rapidminer.tools.container.ComparablePair;
+import com.rapidminer.tools.container.Pair;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.io.FileNotFoundException;
 import java.security.Key;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,33 +62,6 @@ import java.util.WeakHashMap;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import com.rapidminer.io.process.XMLTools;
-import com.rapidminer.parameter.ParameterHandler;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.SimpleListBasedParameterHandler;
-import com.rapidminer.repository.ConnectionListener;
-import com.rapidminer.repository.ConnectionRepository;
-import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.Repository;
-import com.rapidminer.repository.RepositoryAccessor;
-import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryListener;
-import com.rapidminer.repository.RepositoryManager;
-import com.rapidminer.repository.RepositoryManagerListener;
-import com.rapidminer.repository.internal.remote.RemoteRepository;
-import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
-import com.rapidminer.tools.WebServiceTools;
-import com.rapidminer.tools.config.gui.event.ConfigurableEvent;
-import com.rapidminer.tools.config.gui.event.ConfigurableEvent.EventType;
-import com.rapidminer.tools.container.ComparablePair;
-import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -540,33 +539,8 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 
 		// load configuration typeIds from this repository
 		try {
-			HttpURLConnection connection = ra.getHTTPConnection(RM_SERVER_CONFIGURATION_URL_PREFIX, true);
-			WebServiceTools.setURLConnectionDefaults(connection);
-			if (connection.getResponseCode() == 404) {
-				LogService.getRoot().log(Level.WARNING,
-				        "com.rapidminer.tools.config.ConfigurationManager.loading_configuration_types_error",
-				        new Object[] { ra.getName() });
-			} else {
-				Document doc = XMLTools.parse(connection.getInputStream());
-
-				Element root = doc.getDocumentElement();
-				if (!CONFIGURATION_TAG.equals(root.getTagName())) {
-					throw new ConfigurationException("XML root tag must be <configuration>");
-				}
-
-				List<String> typeIds = new LinkedList<>();
-				for (Element elem : XMLTools.getChildElements(root)) {
-					if (elem.getTagName().equals("typeIds")) {
-
-						for (Element value : XMLTools.getChildElements(elem)) {
-							typeIds.add(value.getTextContent());
-						}
-						break;
-					}
-				}
-				ra.setTypeIds(typeIds);
-			}
-
+			List<String> typeIds = ra.getClient().loadConfigurationTypes();
+			ra.setTypeIds(typeIds);
 		} catch (Exception e) {
 			LogService.log(LogService.getRoot(), Level.WARNING, e,
 			        "com.rapidminer.tools.config.ConfigurationManager.loading_configuration_types_error", ra.getName(),
@@ -577,28 +551,32 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 		for (String typeId : getAllTypeIds()) {
 			AbstractConfigurator<?> configurator = getAbstractConfigurator(typeId);
 			try {
-				HttpURLConnection connection = ra.getHTTPConnection(RM_SERVER_CONFIGURATION_URL_PREFIX + typeId, true);
-				WebServiceTools.setURLConnectionDefaults(connection);
-				if (connection.getResponseCode() == 404) {
+				ResponseContainer response = ra.getClient().loadConfigurationType(typeId);
+
+				if (response.getResponseCode() == 404) {
 					LogService.getRoot().log(Level.INFO,
-					        "com.rapidminer.tools.config.ConfigurationManager.loading_configuration.unknown",
-					        new Object[] { typeId, ra.getName() });
+							"com.rapidminer.tools.config.ConfigurationManager.loading_configuration.unknown",
+							new Object[]{typeId, ra.getName()});
 					continue;
 				}
-				Document doc = XMLTools.parse(connection.getInputStream());
+				Document doc = XMLTools.parse(response.getInputStream());
 				Map<Pair<Integer, String>, Map<String, String>> configurationParameters = fromXML(doc, configurator);
 				int counter = configurationParameters.size();
 				Map<Pair<Integer, String>, Set<String>> configurationPermittedGroups = permittedGroupsfromXML(doc,
-				        configurator);
+						configurator);
 
 				createAndRegisterConfigurables(configurator, configurationParameters, configurationPermittedGroups, ra);
 				LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ClientConfigurationManager.loaded_from_ra",
-				        new Object[] { ra.getName(), configurator.getName(), counter });
+						new Object[]{ra.getName(), configurator.getName(), counter});
 
+			} catch (FileNotFoundException fnfe) {
+				LogService.getRoot().log(Level.INFO,
+						"com.rapidminer.tools.config.ConfigurationManager.loading_configuration.unknown",
+						new Object[]{typeId, ra.getName()});
 			} catch (Exception e) {
 				LogService.log(LogService.getRoot(), Level.WARNING, e,
-				        "com.rapidminer.tools.config.ClientConfigurationManager.error_loading_from_ra", ra.getName(),
-				        configurator.getName(), e.toString());
+						"com.rapidminer.tools.config.ClientConfigurationManager.error_loading_from_ra", ra.getName(),
+						configurator.getName(), e.toString());
 			}
 		}
 

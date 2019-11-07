@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.WrapperOperatorRuntimeException;
 import com.rapidminer.operator.performance.MeasuredPerformance;
@@ -60,7 +61,7 @@ public class PerformanceCriterionTest {
 		try {
 			pcA.compareTo(pcB);
 		} catch (WrapperOperatorRuntimeException e) {
-			String expectedError = UserError.getErrorMessage(i18nKey,
+			String expectedError = OperatorException.getErrorMessage(i18nKey,
 					new Object[]{nameProvider.apply(pcA), nameProvider.apply(pcB)});
 			Assert.assertEquals(expectedError, e.getMessage());
 		}

@@ -20,10 +20,10 @@ repositories {
 dependencies {
 
 	// belt project for new data core
-	compile 'com.rapidminer:belt:1.0.0-BETA2'
+	compile 'com.rapidminer:belt:1.0.0-BETA4'
 
 	// belt adapter for conversion between old and new core
-	compile ('com.rapidminer:belt-adapter:0.5') {
+	compile ('com.rapidminer:belt-adapter:0.6'){
 		exclude group: 'com.rapidminer.studio', module: 'rapidminer-studio-core'
 		exclude group: 'com.rapidminer', module: 'belt'
 	}
@@ -158,6 +158,9 @@ dependencies {
 	// access to windows registry
 	compile 'net.java.dev.jna:jna-platform:4.5.2'
 
+	// matrix library (https://www.ojalgo.org/)
+	compile 'org.ojalgo:ojalgo:47.3.0'
+
 	// tests require mockito
 	testCompile 'org.mockito:mockito-core:2.13.0'
 
@@ -165,7 +168,6 @@ dependencies {
 
 task wrapper(type: Wrapper) { gradleVersion = '4.0.1' }
 
-apply from: 'gradle/wsimport.gradle'
 apply from: 'gradle/props.gradle'
 apply from: 'gradle/tutorial.gradle'
 apply from: 'gradle/template.gradle'

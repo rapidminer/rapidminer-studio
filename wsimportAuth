@@ -1,5 +1,0 @@
-http://admin:changeit@localhost:8080/RAWS/RepositoryService.wsdl
-http://admin:changeit@localhost:8080/RAWS/ProcessService?wsdl
-http://admin:changeit@localhost:8080/RAWS/ManagementService?wsdl
-http://admin:changeit@localhost:8080/RAWS/ProcessService_1_3?wsdl
-http://admin:changeit@localhost:8080/RAWS/RAInfoService?wsdl

@@ -26,6 +26,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -34,13 +35,13 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JToggleButton;
@@ -63,6 +64,7 @@ import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.InputPort;
@@ -211,6 +213,8 @@ public enum ActionStatisticsCollector {
 
 	/** extension initialization (since 7.3) */
 	public static final String VALUE_EXTENSION_INITIALIZATION = "extension_initialization";
+	/** extension initialization failed (since 9.5) */
+	public static final String VALUE_EXTENSION_INITIALIZATION_FAILED = "extension_initialization_failed";
 
 	/** type cta (since 7.5) */
 	public static final String TYPE_CTA = "cta";
@@ -238,14 +242,14 @@ public enum ActionStatisticsCollector {
 
 	/** introduced in 8.1.2 for the new FeedbackForm */
 	private static final String TYPE_FEEDBACK = "feedback";
-	private static final String ARG_FEEDBACK_SPACER = "|";
+	private static final String ARG_FEEDBACK_SPACER = ARG_SPACER;
 
 	/** introduced in 8.1 for the new Global Search */
 	private static final String TYPE_GLOBAL_SEARCH = "global_search";
 	public static final String VALUE_TIMEOUT = "timeout";
 	public static final String VALUE_FOCUS_LOST = "focus_lost";
 	public static final String VALUE_ACTION = "action";
-	public static final String ARG_GLOBAL_SEARCH_SPACER = "|";
+	public static final String ARG_GLOBAL_SEARCH_SPACER = ARG_SPACER;
 	public static final String ARG_GLOBAL_SEARCH_CATEGORY_ALL = "all";
 
 	/** ab group | number of groups | selected group (since 8.2) */
@@ -253,7 +257,7 @@ public enum ActionStatisticsCollector {
 
 	/** operator / operator_key / double-click|action(open, parameter, rename)|value(primary_parameter_key) (since 8.2) */
 	public static final String ARG_DOUBLE_CLICK = "double-click";
-	public static final String ARG_DOUBLE_CLICK_SEPARATOR = "|";
+	public static final String ARG_DOUBLE_CLICK_SEPARATOR = ARG_SPACER;
 	/** operator chain entered */
 	public static final String OPERATOR_ACTION_OPEN = "open";
 	/** primary parameter editor opened */
@@ -269,7 +273,7 @@ public enum ActionStatisticsCollector {
 	/** new_import | guessed_date_wrong | guessed|choosen (since 9.1) */
 	public static final String VALUE_GUESSED_DATE_FORMAT_RIGHT = "guessed_date_format_right";
 	public static final String VALUE_GUESSED_DATE_FORMAT_WRONG = "guessed_date_format_wrong";
-	public static final String ARG_GUESSED_DATE_SEPARATOR  = "|";
+	public static final String ARG_GUESSED_DATE_SEPARATOR  = ARG_SPACER;
 
 	/** es_view_filter | filter_selected | condition (since 9.1) */
 	public static final String TYPE_EXAMPLESET_VIEW_FILTER = "es_view_filter";
@@ -298,7 +302,7 @@ public enum ActionStatisticsCollector {
 	public static final String VALUE_CONNECTION_ERROR = "connection_error";
 	public static final String VALUE_DISCONNECTED = "disconnected";
 	public static final String VALUE_REMOVED = "removed";
-	public static final String ARG_REMOTE_REPOSITORY_SEPARATOR  = "|";
+	public static final String ARG_REMOTE_REPOSITORY_SEPARATOR  = ARG_SPACER;
 
 	/** conversion constant for bytes to megabytes */
 	private static final int BYTE_TO_MB = 1024 * 1024;
@@ -1074,10 +1078,10 @@ public enum ActionStatisticsCollector {
 				Object source = actionEvent.getSource();
 				if (source != null) {
 					arg.append(source.getClass().getName());
-					arg.append("|");
+					arg.append(ARG_SPACER);
 					arg.append(actionCommand);
 					if (source instanceof AbstractButton) {
-						arg.append("|");
+						arg.append(ARG_SPACER);
 						arg.append(((AbstractButton) source).isSelected());
 					}
 				}
@@ -1186,30 +1190,32 @@ public enum ActionStatisticsCollector {
 	 *             The exception to be logged.
 	 */
 	public void logExecutionException(Process process, Exception e) {
-		String processOriginPrefix = prefixProcessOriginUsage(process.getRootOperator());
-
+		final String type = prefixProcessOriginUsage(process.getRootOperator()) + TYPE_PROCESS;
 		if (e instanceof ProcessStoppedException) {
-			log(processOriginPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_STOPPED);
+			log(type, VALUE_EXECUTION, ARG_STOPPED);
 		} else {
-			log(processOriginPrefix + TYPE_PROCESS, VALUE_EXECUTION, ARG_FAILED);
-			StringBuilder exception = new StringBuilder();
+			log(type, VALUE_EXECUTION, ARG_FAILED);
+			String[] arg = new String[5];
+			Arrays.fill(arg, "");
 			if (process.getCurrentOperator() != null) {
-				exception.append(process.getCurrentOperator().getOperatorDescription().getKey());
+				arg[0] = process.getCurrentOperator().getOperatorDescription().getKey();
 			}
 			if (e instanceof UserError) {
 				UserError ue = (UserError) e;
-				exception.append("|ue|");
-				exception.append(ue.getErrorName());
-				exception.append("|");
-				exception.append(ue.getOperator().getOperatorDescription().getKey());
-				exception.append("|");
+				arg[1] = "ue";
+				arg[2] = ue.getErrorName();
+				arg[3] = ue.getOperator().getOperatorDescription().getKey();
+			} else if (e instanceof OperatorException) {
+				arg[1] = "oe";
+				arg[2] = Objects.toString(((OperatorException) e).getErrorIdentifier(), "");
 			} else {
-				exception.append("|ex|");
-				exception.append(e.getClass());
-				exception.append("||");
+				arg[1] = "ex";
+				arg[2] = e.getClass().toString();
 			}
-			exception.append(getExceptionStackTraceAsString(e));
-			log(processOriginPrefix + TYPE_PROCESS, VALUE_EXCEPTION, exception.toString());
+			// Log a short version without the stacktrace
+			CtaEventAggregator.INSTANCE.logBlacklistedKey(new Key(type, VALUE_EXCEPTION, String.join(ARG_SPACER, arg)), 1);
+			arg[4] = getExceptionStackTraceAsString(e);
+			log(type, VALUE_EXCEPTION, String.join(ARG_SPACER, arg));
 		}
 	}
 
@@ -1380,7 +1386,7 @@ public enum ActionStatisticsCollector {
 	 * For the key given by TYPE, VALUE and ARG logs the amount, its minimum and maximum and how
 	 * often a amount was logged.
 	 */
-	void logCountSumMinMax(String type, String value, String arg, long data) {
+	public void logCountSumMinMax(String type, String value, String arg, long data) {
 		Key key = new Key(type, value, arg);
 		log(key, data);
 		logMin(key, data);
@@ -1391,7 +1397,7 @@ public enum ActionStatisticsCollector {
 	/**
 	 * For the key given by type, value and arg logs the minimum and maximum amount.
 	 */
-	void logMinMax(String type, String value, String arg, long data) {
+	public void logMinMax(String type, String value, String arg, long data) {
 		Key key = new Key(type, value, arg);
 		logMin(key, data);
 		logMax(key, data);

@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.adaption.belt.AtPortConverter;
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
@@ -157,7 +158,12 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 		if (desiredClass.isInstance(data)) {
 			results.add(desiredClass.cast(data));
 		} else if (AtPortConverter.isConvertible(data.getClass(), desiredClass)) {
-			results.add(desiredClass.cast(AtPortConverter.convert(data, port)));
+			try {
+				results.add(desiredClass.cast(AtPortConverter.convert(data, port)));
+			} catch (BeltConverter.ConversionException e) {
+				throw new UserError(getPorts().getOwner().getOperator(), "table_not_convertible.custom_column",
+						e.getColumnName(), e.getType().customTypeID());
+			}
 		} else {
 			throw new UserError(getPorts().getOwner().getOperator(), 156,
 					RendererService.getName(data.getClass()), port.getName(),

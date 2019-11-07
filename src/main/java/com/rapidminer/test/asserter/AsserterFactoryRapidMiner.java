@@ -18,6 +18,8 @@
 */
 package com.rapidminer.test.asserter;
 
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +33,7 @@ import org.junit.ComparisonFailure;
 
 import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.adaption.belt.TableViewingTools;
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.SparseDataRow;
@@ -231,10 +234,17 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 			@Override
 			public void assertEquals(String message, Object expectedObj, Object actualObj) {
 
-				ExampleSet expected = expectedObj instanceof IOTable ?
-						TableViewingTools.getView((IOTable) expectedObj) : (ExampleSet) expectedObj;
-				ExampleSet actual = actualObj instanceof IOTable ? TableViewingTools.getView((IOTable) actualObj) :
-						(ExampleSet) actualObj;
+				ExampleSet expected = null;
+				ExampleSet actual = null;
+				try {
+					expected = expectedObj instanceof IOTable ?
+							TableViewingTools.getView((IOTable) expectedObj) : (ExampleSet) expectedObj;
+					actual = actualObj instanceof IOTable ? TableViewingTools.getView((IOTable) actualObj) :
+							(ExampleSet) actualObj;
+				} catch (BeltConverter.ConversionException e) {
+					fail("Custom column " + e.getColumnName() + " of type " + e.getType().customTypeID() + " not " +
+							"comparable");
+				}
 
 				message = message + " - ExampleSets are not equal";
 

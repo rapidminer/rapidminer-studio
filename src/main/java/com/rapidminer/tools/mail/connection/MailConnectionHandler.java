@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.function.UnaryOperator;
 import javax.mail.AuthenticationFailedException;
+import javax.mail.MessagingException;
 import javax.swing.SwingWorker;
 
 import org.apache.commons.lang.StringUtils;
@@ -304,6 +305,8 @@ public enum MailConnectionHandler implements ConnectionHandler {
 			failureKey = I18N_KEY_TEST_AUTHENTICATION_FAILED;
 		} else if (e instanceof NullPointerException) {
 			failureKey = I18N_KEY_TEST_SESSION_CREATION_ERROR;
+		} else if (e instanceof MessagingException && ((MessagingException) e).getNextException() != null) {
+			e = ((MessagingException) e).getNextException();
 		}
 		return TestResult.failure(failureKey, e.getMessage());
 	}

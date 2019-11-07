@@ -98,6 +98,7 @@ import com.rapidminer.repository.RepositorySortingMethodListener;
 import com.rapidminer.repository.RepositoryStoreOtherInConnectionsFolderException;
 import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.repository.gui.actions.AbstractRepositoryAction;
+import com.rapidminer.repository.gui.actions.CheckProcessCompatibility;
 import com.rapidminer.repository.gui.actions.ConfigureRepositoryAction;
 import com.rapidminer.repository.gui.actions.CopyEntryRepositoryAction;
 import com.rapidminer.repository.gui.actions.CopyLocationAction;
@@ -826,6 +827,8 @@ public class RepositoryTree extends JTree {
 				new RepositoryActionConditionImplStandard(new Class<?>[]{Entry.class}), true, false);
 		addRepositoryAction(OpenInFileBrowserAction.class, new RepositoryActionConditionImplStandard(
 				new Class<?>[]{Entry.class}, new Class<?>[]{LocalRepository.class}), false, false);
+		addRepositoryAction(CheckProcessCompatibility.class,
+				new RepositoryActionConditionImplStandard(new Class<?>[]{ProcessEntry.class}, new Class<?>[]{RemoteRepository.class}), true, true);
 	}
 
 	public RepositoryTree() {

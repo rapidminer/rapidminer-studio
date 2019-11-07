@@ -28,6 +28,9 @@ import java.util.Map;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.adaption.belt.TableViewingTools;
+import com.rapidminer.belt.column.Column;
+import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.belt.table.Table;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -119,6 +122,22 @@ public class ExampleSetMetaData extends MetaData {
 	 */
 	public ExampleSetMetaData(ExampleSet exampleSet, boolean shortened, boolean recalculateStatistics) {
 		super(ExampleSet.class);
+		create(exampleSet, shortened, recalculateStatistics);
+	}
+
+	/**
+	 * Adds {@link AttributeMetaData} according to the given {@link ExampleSet}.
+	 *
+	 * @param exampleSet
+	 * 		the ExampleSet object the meta-data should be constructed for
+	 * @param shortened
+	 * 		whether the meta data should be shortened. In case it should be shortened the meta-data will contain at
+	 * 		most
+	 *        {@link #getMaximumNumberOfAttributes()} attributes
+	 * @param recalculateStatistics
+	 * 		defines whether the ExampleSet statistics should be recalculated
+	 */
+	private void create(ExampleSet exampleSet, boolean shortened, boolean recalculateStatistics) {
 		int maxNumber = Integer.MAX_VALUE;
 		if (shortened) {
 			maxNumber = getMaximumNumberOfAttributes();
@@ -143,7 +162,46 @@ public class ExampleSetMetaData extends MetaData {
 	}
 
 	public ExampleSetMetaData(IOTable tableObject, boolean shortened) {
-		this(TableViewingTools.getView(tableObject), shortened, !shortened);
+		super(ExampleSet.class);
+		try {
+			create(TableViewingTools.getView(tableObject), shortened, !shortened);
+		} catch (BeltConverter.ConversionException e) {
+			//clear meta data in case some were added before the exception
+			attributeMetaData.clear();
+			handleWithCustom(tableObject, shortened);
+		}
+	}
+
+	/**
+	 * In case the tableObject contains custom columns, creates meta data for the table without custom columns and then
+	 * adds the custom columns with {@link Ontology#ATTRIBUTE_VALUE}.
+	 *
+	 * @param tableObject
+	 * 		the table object for which to create meta data
+	 * @param shortened
+	 * 		whether the meta data should be shortened. In case it should be shortened the meta-data will contain at
+	 * 		most {@link #getMaximumNumberOfAttributes()} attributes
+	 */
+	private void handleWithCustom(IOTable tableObject, boolean shortened) {
+		Table table = tableObject.getTable();
+		Table tableWithoutCustoms = table.columns(table.select().notOfTypeId(Column.TypeId.CUSTOM).labels());
+		ExampleSet view = TableViewingTools.getView(new IOTable(tableWithoutCustoms));
+		create(view, shortened, !shortened);
+		int maxNumber = Integer.MAX_VALUE;
+		if (shortened) {
+			maxNumber = getMaximumNumberOfAttributes();
+		}
+		maxNumber -= attributeMetaData.size();
+		if (maxNumber > 0) {
+			for (String custom : table.select().ofTypeId(Column.TypeId.CUSTOM).labels()) {
+				String role = BeltConverter.convertRole(table, custom);
+				addAttribute(new AttributeMetaData(custom, Ontology.ATTRIBUTE_VALUE, role));
+				maxNumber--;
+				if (maxNumber == 0) {
+					break;
+				}
+			}
+		}
 	}
 
 	public AttributeMetaData getAttributeByName(String name) {

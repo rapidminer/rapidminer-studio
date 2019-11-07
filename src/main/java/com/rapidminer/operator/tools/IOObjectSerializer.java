@@ -18,17 +18,19 @@
 */
 package com.rapidminer.operator.tools;
 
-import com.rapidminer.adaption.belt.TableViewingTools;
-import com.rapidminer.example.ExampleSet;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidObjectException;
 import java.io.OutputStream;
 import java.util.Arrays;
+
+import com.rapidminer.adaption.belt.TableViewingTools;
+import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.example.ExampleSet;
 
 
 /**
@@ -48,7 +50,12 @@ public class IOObjectSerializer {
 
 	/** Serializes the object with a default type appropriate for the given object. */
 	public void serialize(OutputStream out, Object object) throws IOException {
-		object = TableViewingTools.replaceTableObject(object);
+		try {
+			object = TableViewingTools.replaceTableObject(object);
+		} catch (BeltConverter.ConversionException e) {
+			throw new InvalidObjectException("Custom column " + e.getColumnName()
+					+ " of type " + e.getType().customTypeID() + " not serializable");
+		}
 		SerializationType type;
 		if (object instanceof ExampleSet) {
 			type = SerializationType.STREAMED_EXAMPLE_SET_DENSE_CURRENT_VERSION;

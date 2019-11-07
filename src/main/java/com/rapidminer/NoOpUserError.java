@@ -18,17 +18,19 @@
 */
 package com.rapidminer;
 
-import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.OperatorException;
 import com.rapidminer.tools.Tools;
 
 
 /**
  * An exception caused outside an operator which is <i>not</i> a bug, but caused by the user.
  * 
- * Unfortunately, this class doubles most of the code of {@link UserError}.
+ * Unfortunately, this class doubles most of the code of {@link com.rapidminer.operator.UserError}.
  * 
  * @author Simon Fischer, Ingo Mierswa
+ * @deprecated since 9.5.0 not used anywhere
  */
+@Deprecated
 public class NoOpUserError extends Exception implements NoBugError {
 
 	private static final long serialVersionUID = -686838060355434724L;
@@ -48,7 +50,7 @@ public class NoOpUserError extends Exception implements NoBugError {
 	 *            Arguments for the short message.
 	 */
 	public NoOpUserError(Throwable cause, int code, Object[] arguments) {
-		super(UserError.getErrorMessage(code, arguments), cause);
+		super(OperatorException.getErrorMessage("" + code, arguments), cause);
 		this.code = code;
 	}
 
@@ -85,12 +87,12 @@ public class NoOpUserError extends Exception implements NoBugError {
 
 	@Override
 	public String getDetails() {
-		return UserError.getResourceString(code, "long", "Description missing.");
+		return OperatorException.getResourceString("" + code, "long", "Description missing.");
 	}
 
 	@Override
 	public String getErrorName() {
-		return UserError.getResourceString(code, "name", "Unnamed error.");
+		return OperatorException.getResourceString("" + code, "name", "Unnamed error.");
 	}
 
 	@Override

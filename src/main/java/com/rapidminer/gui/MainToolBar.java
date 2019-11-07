@@ -281,6 +281,11 @@ public class MainToolBar extends JPanel {
 					// design and result are the first to be added (see PerspectiveModel#makePredefined)
 					knownActionList.add(Math.min(knownActionList.size(), 3), action);
 					break;
+				case PerspectiveModel.DEPLOYMENTS:
+					// ensure model deployment management view is in front of hadoop data view
+					// design and result are the first to be added (see PerspectiveModel#makePredefined)
+					knownActionList.add(Math.min(knownActionList.size(), 4), action);
+					break;
 				default:
 					if (!p.isUserDefined()) {
 						nonUserActionList.add(action);

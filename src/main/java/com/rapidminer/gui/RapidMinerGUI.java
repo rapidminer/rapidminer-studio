@@ -53,7 +53,6 @@ import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 
 import com.rapidminer.FileProcessLocation;
-import com.rapidminer.NoOpUserError;
 import com.rapidminer.Process;
 import com.rapidminer.ProcessLocation;
 import com.rapidminer.RapidMiner;
@@ -118,7 +117,7 @@ import com.rapidminer.tools.SystemInfoUtilities;
 import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.plugin.Plugin;
-import com.rapidminer.tools.usagestats.CallToActionScheduler;
+import com.rapidminer.tools.usagestats.CtaEventAggregator;
 import com.rapidminer.tools.usagestats.UsageStatistics;
 import com.rapidminer.tools.usagestats.UsageStatsScheduler;
 import com.rapidminer.tools.usagestats.UsageStatsTransmissionDialog;
@@ -140,7 +139,7 @@ public class RapidMinerGUI extends RapidMiner {
 	public static final String PROPERTY_GEOMETRY_WIDTH = "rapidminer.gui.geometry.width";
 	public static final String PROPERTY_GEOMETRY_HEIGHT = "rapidminer.gui.geometry.height";
 	public static final String PROPERTY_GEOMETRY_DIVIDER_MAIN = "rapidminer.gui.geometry.divider.main";
-	public static final String PROPERTY_GEOMETRY_DIVIDER_EDITOR = "rapidminer.gui.geometry.divider.editor";;
+	public static final String PROPERTY_GEOMETRY_DIVIDER_EDITOR = "rapidminer.gui.geometry.divider.editor";
 	public static final String PROPERTY_GEOMETRY_DIVIDER_LOGGING = "rapidminer.gui.geometry.divider.logging";
 	public static final String PROPERTY_GEOMETRY_DIVIDER_GROUPSELECTION = "rapidminer.gui.geometry.divider.groupselection";
 	public static final String PROPERTY_EXPERT_MODE = "rapidminer.gui.expertmode";
@@ -333,7 +332,6 @@ public class RapidMinerGUI extends RapidMiner {
 				UsageStatistics.getInstance().save();
 				RepositoryManager.shutdown();
 				UsageStatsScheduler.transmitOnShutdown();
-				CallToActionScheduler.INSTANCE.shutdown();
 			}
 		}
 	}
@@ -521,9 +519,10 @@ public class RapidMinerGUI extends RapidMiner {
 		DataSourceFactoryRegistry.INSTANCE.register(new ExcelDataSourceFactory());
 		DataSourceFactoryRegistry.INSTANCE.register(new CSVDataSourceFactory());
 
-		// init CTA event storage and rule checking system only after all other systems have been
-		// started to avoid overlaying CTA mesages during startup
-		CallToActionScheduler.INSTANCE.init();
+		// If the CTA extension was not loaded for whatever reason, kill the CTA event aggregator to avoid useless event map bloating
+		if (!CtaEventAggregator.INSTANCE.isCtaSystemLive()) {
+			CtaEventAggregator.INSTANCE.killAggregator();
+		}
 
 		// After all is done, clean up memory for the best possible starting conditions
 		System.gc();
@@ -543,7 +542,7 @@ public class RapidMinerGUI extends RapidMiner {
 	 * This default implementation only setup the tool tip durations. Subclasses might override this
 	 * method.
 	 */
-	protected void setupGUI() throws NoOpUserError {
+	protected void setupGUI() throws Exception {
 		System.setProperty(BookmarkIO.PROPERTY_BOOKMARKS_DIR, FileSystemService.getUserRapidMinerDir().getAbsolutePath());
 		System.setProperty(BookmarkIO.PROPERTY_BOOKMARKS_FILE, ".bookmarks");
 

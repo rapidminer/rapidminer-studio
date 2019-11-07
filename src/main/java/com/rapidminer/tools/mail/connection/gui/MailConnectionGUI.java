@@ -100,6 +100,7 @@ public class MailConnectionGUI extends DefaultConnectionGUI {
 		ExtendedJScrollPane scrollPane = new ExtendedJScrollPane(combinedGroupComponent(connectionModel, mailGroupModel, sendmailGroupModel, groupModel));
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		scrollPane.setBorder(null);
 		return scrollPane;
 	}
 

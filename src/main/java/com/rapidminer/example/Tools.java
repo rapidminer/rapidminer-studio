@@ -54,6 +54,12 @@ import com.rapidminer.tools.math.sampling.OrderedSamplingWithoutReplacement;
  */
 public class Tools {
 
+	/**
+	 * Thrown as a {@link UserError#getErrorIdentifier()} by {@link #onlyFiniteValues}
+	 * @since 9.5.0
+	 */
+	public static String INFINITE_VALUES = "infinite_values";
+
 	// ================================================================================
 	// -------------------- Tools --------------------
 	// ================================================================================
@@ -435,6 +441,7 @@ public class Tools {
 	 *            will be shown as the origin of the error
 	 * @param operator
 	 *            the offending operator. Can be <code>null</code>
+	 * @throws UserError with {@link UserError#getErrorIdentifier()} {@link #INFINITE_VALUES} in case of infinite values
 	 * @since 7.6
 	 **/
 	public static void onlyFiniteValues(ExampleSet exampleSet, String task, Operator operator)
@@ -454,6 +461,7 @@ public class Tools {
 	 *            will be shown as the origin of the error
 	 * @param operator
 	 *            the offending operator. Can be <code>null</code>
+	 * @throws UserError with {@link UserError#getErrorIdentifier()} {@link #INFINITE_VALUES} in case of infinite values
 	 * @since 7.6
 	 **/
 	public static void onlyFiniteValues(ExampleSet exampleSet, boolean allowMissing, String task, Operator operator)
@@ -481,6 +489,7 @@ public class Tools {
 	 * @param specialAttributes
 	 *            contains the special attributes which have to be checked. If a listed attribute
 	 *            does not exist or contains non-finite values, a {@link UserError} is thrown
+	 * @throws UserError with {@link UserError#getErrorIdentifier()} {@link #INFINITE_VALUES} in case of infinite values
 	 * @since 7.6
 	 **/
 	public static void onlyFiniteValues(ExampleSet exampleSet, String task, Operator operator, String... specialAttributes)
@@ -505,7 +514,8 @@ public class Tools {
 	 * @param specialAttributes
 	 *            contains the special attributes which have to be checked. If a listed attribute
 	 *            does not exist or contains not-allowed values, a {@link UserError} is thrown
-	 * @since 7.6
+	 * @throws UserError with {@link UserError#getErrorIdentifier()} {@link #INFINITE_VALUES} in case of infinite values
+ 	 * @since 7.6
 	 **/
 	public static void onlyFiniteValues(ExampleSet exampleSet, boolean allowMissing, String task, Operator operator,
 			String... specialAttributes) throws ProcessStoppedException, UserError {
@@ -531,7 +541,7 @@ public class Tools {
 				for (Example example : exampleSet) {
 					double value = example.getValue(attribute);
 					if (Double.isInfinite(value)) {
-						throw new UserError(operator, "infinite_values", task);
+						throw new UserError(operator, INFINITE_VALUES, task);
 					}
 					if (!allowMissing && Double.isNaN(value)) {
 						throw new UserError(operator, 139, task);
@@ -555,8 +565,9 @@ public class Tools {
 	/**
 	 * The attributes all have to be numerical.
 	 *
-	 * @param es
-	 *            the example set
+	 * @param attributes
+	 *            the attributes
+	 * @param task task name used for the error message
 	 * @throws UserError
 	 */
 	public static void onlyNumericalAttributes(Attributes attributes, String task) throws UserError {
@@ -572,6 +583,7 @@ public class Tools {
 	 *
 	 * @param es
 	 *            the example set
+	 * @param task task name used for the error message
 	 * @throws UserError
 	 */
 	public static void onlyNominalAttributes(ExampleSet es, String task) throws UserError {
@@ -581,6 +593,9 @@ public class Tools {
 	/**
 	 * The attributes all have to be nominal or binary.
 	 *
+	 * @param attributes
+	 *            the attributes
+	 * @param task task name used for the error message
 	 * @throws UserError
 	 */
 	public static void onlyNominalAttributes(Attributes attributes, String task) throws UserError {
@@ -596,6 +611,7 @@ public class Tools {
 	 *
 	 * @param exampleSet
 	 *            the example set
+	 * @param task task name used for the error message
 	 * @throws UserError
 	 *
 	 */

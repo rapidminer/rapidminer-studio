@@ -68,6 +68,11 @@ public interface Folder extends Entry {
 	 */
 	String MESSAGE_CONNECTION_FOLDER_CONNECTIONS_UNKNOWN = I18N.getErrorMessage("repository.connection_folder_unknown");
 
+	/**
+	 * Error message when trying to create/copy a connection entry to a folder implementation which does not know about connection entries.
+	 */
+	String MESSAGE_CONNECTION_FOLDER_ERROR = I18N.getErrorMessage("repository.connection_folder_error");
+
 	@Override
 	default String getType() {
 		return TYPE_NAME;

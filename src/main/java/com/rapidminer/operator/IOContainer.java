@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.column.Column;
 import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.tools.Tools;
@@ -189,7 +190,9 @@ public class IOContainer implements Serializable {
 	 * Check if the desired class is ExampleSet and the object an {@link IOTable} so that conversion is possible.
 	 */
 	private <T extends IOObject> boolean isToExampleSetConvertible(Class<T> cls, IOObject object) {
-		return object instanceof IOTable && cls.equals(ExampleSet.class);
+		return object instanceof IOTable && cls.equals(ExampleSet.class)
+				//cannot convert custom columns
+				&& ((IOTable)object).getTable().select().ofTypeId(Column.TypeId.CUSTOM).labels().isEmpty();
 	}
 
 	/**

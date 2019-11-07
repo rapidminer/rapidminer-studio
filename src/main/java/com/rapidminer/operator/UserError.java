@@ -18,11 +18,7 @@
  */
 package com.rapidminer.operator;
 
-import java.text.MessageFormat;
-import java.util.ResourceBundle;
-
 import com.rapidminer.NoBugError;
-import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Tools;
 
 
@@ -56,17 +52,9 @@ public class UserError extends OperatorException implements NoBugError {
 
 	private static final long serialVersionUID = -8441036860570180869L;
 
-	private static ResourceBundle messages = I18N.getUserErrorMessagesBundle();
-
-	private static final MessageFormat formatter = new MessageFormat("");
-
-	private String errorIdentifier = null;
-
 	private final int code;
 
 	private transient Operator operator;
-
-	private final Object[] arguments;
 
 	/**
 	 * Creates a new UserError.
@@ -83,10 +71,9 @@ public class UserError extends OperatorException implements NoBugError {
 	 *            Arguments for the short or long message.
 	 */
 	public UserError(Operator operator, Throwable cause, int code, Object... arguments) {
-		super(getErrorMessage(code, arguments), cause);
+		super(code + "", cause, arguments);
 		this.code = code;
 		this.operator = operator;
-		this.arguments = arguments;
 	}
 
 	/** Convenience constructor for messages with no arguments and cause. */
@@ -104,11 +91,9 @@ public class UserError extends OperatorException implements NoBugError {
 	}
 
 	public UserError(Operator operator, Throwable cause, String errorId, Object... arguments) {
-		super(getErrorMessage(errorId, arguments), cause);
+		super(errorId, cause, arguments);
 		this.code = -1;
-		this.errorIdentifier = errorId;
 		this.operator = operator;
-		this.arguments = arguments;
 	}
 
 	/**
@@ -131,23 +116,18 @@ public class UserError extends OperatorException implements NoBugError {
 
 	@Override
 	public String getDetails() {
-		if (errorIdentifier == null) {
-			String details = getResourceString(code, "long", "Description missing.");
-			return addArguments(arguments, details);
-		} else {
-			// allow arguments for error details of new user errors
-			String message = getResourceString(errorIdentifier, "long", "Description missing.");
-			return addArguments(arguments, message);
-		}
+		return OperatorException.getErrorMessage(getErrorIdentifier(),
+				"long",
+				"Description missing.",
+				getArguments());
 	}
 
 	@Override
 	public String getErrorName() {
-		if (errorIdentifier == null) {
-			return getResourceString(code, "name", "Unnamed error.");
-		} else {
-			return getResourceString(errorIdentifier, "name", "Unnamed error.");
-		}
+		return OperatorException.getErrorMessage(getErrorIdentifier(),
+				"name",
+				"Unnamed error.",
+				getArguments());
 	}
 
 	@Override
@@ -155,49 +135,58 @@ public class UserError extends OperatorException implements NoBugError {
 		return code;
 	}
 
-	/**
-	 * Returns the ErrorIdentifier if the UserError was created with a constructor that specifies
-	 * an error ID. Returns null if the UserError was created with a constructor that specifies an
-	 * error code.
-	 */
+	@Override
 	public String getErrorIdentifier() {
-		return errorIdentifier;
+		return super.getErrorIdentifier();
 	}
 
+	@Override
+	public String getHTMLMessage() {
+		return "<html>Error in: <b>" + getOperator() + "</b><br>" + Tools.escapeXML(getMessage()) + "</html>";
+	}
+
+	/**
+	 * Returns the operator which caused this error
+	 *
+	 * @return the operator associated with this exception
+	 */
 	public Operator getOperator() {
 		return operator;
 	}
 
+	/**
+	 * Sets the operator which caused this error
+	 *
+	 * @param operator the operator
+	 */
 	public void setOperator(Operator operator) {
 		this.operator = operator;
 	}
 
+	/**
+	 * Returns the short message for the given error code
+	 *
+	 * @param code the error code
+	 * @param arguments the arguments for the message
+	 * @return the formatted message or "No message."
+	 * @deprecated since 9.5.0 use {@link OperatorException#getErrorMessage(String, Object[])} instead
+	 */
+	@Deprecated
 	public static String getErrorMessage(int code, Object[] arguments) {
-		String message = getResourceString(code, "short", "No message.");
-		return addArguments(arguments, message);
-
-	}
-
-	public static String getErrorMessage(String identifier, Object[] arguments) {
-		String message = getResourceString(identifier, "short", "No message.");
-		return addArguments(arguments, message);
+		return getErrorMessage("" + code, arguments);
 	}
 
 	/**
-	 * Adds the arguments to the message.
+	 * Returns the short message for the given error code
 	 *
-	 * @param arguments
-	 * @param message
-	 * @return the message including the arguments or the message of the exception if one occurs
+	 * @param identifier the error identifier
+	 * @param arguments the arguments for the message
+	 * @return the formatted message or "No message."
+	 * @deprecated since 9.5.0 use {@link OperatorException#getErrorMessage(String, Object[])} instead
 	 */
-	private static String addArguments(Object[] arguments, String message) {
-		try {
-			formatter.applyPattern(message);
-			String formatted = formatter.format(arguments);
-			return formatted;
-		} catch (Throwable t) {
-			return message;
-		}
+	@Deprecated
+	public static String getErrorMessage(String identifier, Object[] arguments) {
+		return OperatorException.getErrorMessage(identifier, arguments);
 	}
 
 	/**
@@ -205,7 +194,10 @@ public class UserError extends OperatorException implements NoBugError {
 	 *
 	 * @param key
 	 *            one out of &quot;name&quot;, &quot;short&quot;, &quot;long&quot;
+	 * @return the unformatted resource string
+	 * @deprecated since 9.5.0 use {@link OperatorException#getResourceString} instead
 	 */
+	@Deprecated
 	public static String getResourceString(int code, String key, String deflt) {
 		return getResourceString(code + "", key, deflt);
 	}
@@ -224,23 +216,11 @@ public class UserError extends OperatorException implements NoBugError {
 	 *            The part of the error description that should be shown.
 	 * @param deflt
 	 *            The default if no resource bundle is available.
+	 * @deprecated since 9.5.0 use OperatorException#getResourceString instead
 	 */
+	@Deprecated
 	public static String getResourceString(String id, String key, String deflt) {
-		if (messages == null) {
-			return deflt;
-		}
-		try {
-			return messages.getString("error." + id + "." + key);
-		} catch (java.util.MissingResourceException e) {
-			return deflt;
-		}
+		return OperatorException.getResourceString(id, key, deflt);
 	}
 
-	@Override
-	public String getHTMLMessage() {
-		// return "<html>Error in: <b>" + getOperator() + "</b><br>" + Tools.escapeXML(getMessage())
-		// + "<hr>" + Tools.escapeXML(getDetails()) +
-		// "</html>";
-		return "<html>Error in: <b>" + getOperator() + "</b><br>" + Tools.escapeXML(getMessage()) + "</html>";
-	}
 }

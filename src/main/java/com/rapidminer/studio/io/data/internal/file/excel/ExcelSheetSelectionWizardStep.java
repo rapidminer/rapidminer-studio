@@ -37,7 +37,7 @@ import com.rapidminer.studio.io.gui.internal.steps.AbstractWizardStep;
 
 
 /**
- * An {@link ImportWizardStep} which allows to select the Excel sheet and cell range to import.
+ * An {@link com.rapidminer.core.io.gui.WizardStep ImportWizardStep} which allows to select the Excel sheet and cell range to import.
  *
  * @author Nils Woehler
  * @since 7.0.0

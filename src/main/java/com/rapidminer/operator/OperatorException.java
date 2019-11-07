@@ -18,10 +18,9 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.tools.I18N;
+import java.util.MissingResourceException;
 
-import java.text.MessageFormat;
-import java.util.ResourceBundle;
+import com.rapidminer.tools.I18N;
 
 
 /**
@@ -40,41 +39,59 @@ public class OperatorException extends Exception {
 
 	private static final long serialVersionUID = 3626738574540303240L;
 
-	private static ResourceBundle messages = I18N.getUserErrorMessagesBundle(); // ErrorBundle();
-	private static final MessageFormat formatter = new MessageFormat("");
+	private final String errorIdentifier;
+	private final Object[] arguments;
 
 	public OperatorException(String message) {
 		super(message);
+		this.errorIdentifier = null;
+		this.arguments = new Object[0];
 	}
 
 	public OperatorException(String message, Throwable cause) {
 		super(message, cause);
+		this.errorIdentifier = null;
+		this.arguments = new Object[0];
 	}
 
 	public OperatorException(String errorKey, Throwable cause, Object... arguments) {
 		super(getErrorMessage(errorKey, arguments), cause);
+		this.errorIdentifier = errorKey;
+		this.arguments = arguments;
 	}
 
-	public static String getErrorMessage(String identifier, Object[] arguments) {
-		String message = getResourceString(identifier, "short", "No message.");
-		try {
-			formatter.applyPattern(message);
-			String formatted = formatter.format(arguments);
-			return formatted;
-		} catch (Throwable t) {
-			return message;
-		}
+	/**
+	 * The errorKey used to access the error.{errorKey}.short message of the getUserErrorMessage bundle
+	 *
+	 * @return The error key which was used to create this exception, or {@code null}
+	 * @since 9.5.0
+	 */
+	public String getErrorIdentifier() {
+		return errorIdentifier;
+	}
 
+	/**
+	 * @return the i18n arguments
+	 * @since 9.5.0
+	 */
+	protected Object[] getArguments() {
+		return arguments;
+	}
+
+	/**
+	 * Returns the short error message from the {@link I18N#getUserErrorMessage UserErrorBundle}
+	 *
+	 * @param identifier part of the error.{identifier}.short i18n key
+	 * @param arguments optional arguments for message formatter
+	 * @return the formatted string or "No message." if no i18n entry exists
+	 */
+	public static String getErrorMessage(String identifier, Object[] arguments) {
+		return getErrorMessage(identifier, "short", "No message.", arguments);
 	}
 
 	/**
 	 * This returns a resource message of the internationalized error messages identified by an id.
-	 * Compared to the legacy method {@link #getResourceString(int, String, String)} this supports a
-	 * more detailed identifier. This makes it easier to ensure extensions don't reuse already
-	 * defined core errors. It is common sense to add the extensions namespace identifier as second
-	 * part of the key, just after error. For example: error.rmx_web.operator.unusable = This
-	 * operator {0} is unusable.
-	 * 
+	 *
 	 * @param id
 	 *            The identifier of the error. "error." will be automatically prepended-
 	 * @param key
@@ -83,13 +100,29 @@ public class OperatorException extends Exception {
 	 *            The default if no resource bundle is available.
 	 */
 	public static String getResourceString(String id, String key, String deflt) {
-		if (messages == null) {
-			return deflt;
-		}
 		try {
-			return messages.getString("error." + id + "." + key);
-		} catch (java.util.MissingResourceException e) {
+			return I18N.getUserErrorMessagesBundle().getString("error." + id + "." + key);
+		} catch (MissingResourceException | NullPointerException e) {
 			return deflt;
 		}
 	}
+
+	/**
+	 * Returns the formatted message from the {@link I18N#getUserErrorMessagesBundle() UserError} bundle
+	 * key: error.{identifier}.{type}
+	 *
+	 * @param identifier the error identifier
+	 * @param type
+	 * 		the type, either "name", "short" or "long"
+	 * @param defaultMessage
+	 * 		the message if no entry for the given key exists
+	 * @param arguments i18n arguments
+	 * @return the message or the defaultMessage
+	 * @since 9.5.0
+	 */
+	protected static String getErrorMessage(String identifier, String type, String defaultMessage, Object... arguments) {
+		String message = I18N.getUserErrorMessageOrNull("error." + identifier + "." + type, arguments);
+		return message == null ? defaultMessage : message;
+	}
+
 }

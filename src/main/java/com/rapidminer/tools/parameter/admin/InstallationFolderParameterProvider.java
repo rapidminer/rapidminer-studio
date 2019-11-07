@@ -28,6 +28,7 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.SystemInfoUtilities;
+import com.rapidminer.tools.SystemInfoUtilities.OperatingSystem;
 
 
 /**
@@ -41,7 +42,7 @@ class InstallationFolderParameterProvider implements ParameterProvider {
 	/**
 	 * Indicates if current OS is OSX
 	 */
-	private static final boolean IS_OSX = SystemInfoUtilities.getOperatingSystem() == SystemInfoUtilities.OperatingSystem.OSX;
+	private static final boolean IS_OSX = SystemInfoUtilities.getOperatingSystem() == OperatingSystem.OSX;
 
 	/**
 	 * Used to detect if started from an IDE

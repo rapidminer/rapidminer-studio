@@ -18,6 +18,7 @@
  */
 package com.rapidminer.adaption.belt;
 
+import java.io.InvalidObjectException;
 import java.io.ObjectStreamException;
 import java.util.List;
 import java.util.Objects;
@@ -111,7 +112,12 @@ public final class IOTable extends ResultObjectAdapter {
 	 * When serializing, convert to an example set.
 	 */
 	private Object writeReplace() throws ObjectStreamException {
-		return BeltConverter.convertSequentially(this);
+		try {
+			return BeltConverter.convertSequentially(this);
+		} catch (BeltConverter.ConversionException e) {
+			throw new InvalidObjectException("Custom column " + e.getColumnName()
+					+ " of type " + e.getType().customTypeID() + " not serializable");
+		}
 	}
 
 }

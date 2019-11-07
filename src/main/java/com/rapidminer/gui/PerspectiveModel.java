@@ -51,6 +51,7 @@ public class PerspectiveModel extends AbstractObservable<List<Perspective>> {
 
 	public static final String TURBO_PREP = "turbo_prep";
 	public static final String MODEL_WIZARD = "model_wizard";
+	public static final String DEPLOYMENTS = "deployments";
 	public static final String HADOOP_DATA = "hadoop_data";
 
 	private final Map<String, Perspective> perspectives = new LinkedHashMap<>();

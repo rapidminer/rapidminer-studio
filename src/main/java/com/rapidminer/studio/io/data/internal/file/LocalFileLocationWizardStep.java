@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import javax.swing.event.ChangeListener;
@@ -118,11 +119,16 @@ final class LocalFileLocationWizardStep extends AbstractWizardStep {
 
 				@Override
 				public boolean accept(File f) {
-					boolean accept = f.isDirectory();
-					for (String fileEnding : item.getSecond()) {
-						accept |= f.getName().endsWith(fileEnding);
+					if (f.isDirectory()) {
+						return true;
 					}
-					return accept;
+					String lowerCaseName = f.getName().toLowerCase(Locale.ENGLISH);
+					for (String fileEnding : item.getSecond()) {
+						if (lowerCaseName.endsWith(fileEnding)) {
+							return true;
+						}
+					}
+					return false;
 				}
 			});
 		}

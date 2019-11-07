@@ -116,8 +116,6 @@ public class TransformedRegressionModel extends PredictionModel implements Deleg
 				while (originalReader.hasNext()) {
 					double functionValue = reader.next().getPredictedLabel();
 					if (zscale) {
-						// if(zscale) is quicker and has less chance of
-						// numerical errors
 						functionValue = functionValue * stddev + mean;
 					}
 					Example example = originalReader.next();
@@ -128,8 +126,6 @@ public class TransformedRegressionModel extends PredictionModel implements Deleg
 				while (originalReader.hasNext()) {
 					double predictedRank = reader.next().getPredictedLabel();
 					if (zscale) {
-						// if(zscale) is quicker and has less chance of
-						// numerical errors
 						predictedRank = predictedRank * stddev + mean;
 					}
 					Example example = originalReader.next();
@@ -167,12 +163,13 @@ public class TransformedRegressionModel extends PredictionModel implements Deleg
 				}
 				break;
 			case NONE:
-				if (zscale) {
-					while (originalReader.hasNext()) {
-						double functionValue = reader.next().getPredictedLabel() * stddev + mean;
-						Example example = originalReader.next();
-						example.setPredictedLabel(functionValue);
+				while (originalReader.hasNext()) {
+					double functionValue = reader.next().getPredictedLabel();
+					if (zscale) {
+						functionValue = functionValue * stddev + mean;
 					}
+					Example example = originalReader.next();
+					example.setPredictedLabel(functionValue);
 				}
 				break;
 			default:
@@ -185,7 +182,7 @@ public class TransformedRegressionModel extends PredictionModel implements Deleg
 
 	@Override
 	public String toString() {
-		StringBuffer result = new StringBuffer(super.toString() + Tools.getLineSeparator());
+		StringBuilder result = new StringBuilder(super.toString() + Tools.getLineSeparator());
 		result.append("Method: " + METHODS[method] + Tools.getLineSeparator());
 		result.append(model.toString());
 		return result.toString();

@@ -18,20 +18,6 @@
 */
 package com.rapidminer.tools.config.gui;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.security.Key;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.parameter.ParameterHandler;
@@ -40,6 +26,7 @@ import com.rapidminer.parameter.Parameters;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
+import com.rapidminer.repository.internal.remote.ResponseContainer;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PasswordInputCanceledException;
@@ -56,6 +43,18 @@ import com.rapidminer.tools.config.actions.ConfigurableAction;
 import com.rapidminer.tools.config.actions.SimpleActionResult;
 import com.rapidminer.tools.config.gui.model.ConfigurableModel;
 import com.rapidminer.tools.container.Pair;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+import javax.swing.SwingUtilities;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.security.Key;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
 
 
 /**
@@ -321,111 +320,81 @@ public class ConfigurableController {
 					return;
 				}
 
-				if (model.isEditingPossible()) {
+				if (model.isEditingPossible() && model.hasAdminRights()) {
 
-					if (model.hasAdminRights()) {
+					// upload the configurables for each typeId
+					for (String typeId : ConfigurationManager.getInstance().getAllTypeIds()) {
 
-						// upload the configurables for each typeId
-						for (String typeId : ConfigurationManager.getInstance().getAllTypeIds()) {
+						try {
+							Document xml = ConfigurationManager.getInstance().getConfigurablesAsXMLAndChangeEncryption(typeId,
+									model.getConfigurables(), repository.getName(), KeyGeneratorTool.getUserKey(), serverPublicKey);
 
-							HttpURLConnection conn = null;
+							ResponseContainer response = repository.getClient().storeConfigurationType(typeId, xml);
 
-							try {
-								conn = repository.getHTTPConnection(
-								        ConfigurationManager.RM_SERVER_CONFIGURATION_URL_PREFIX + typeId, true);
-								conn.setRequestMethod("POST");
-								conn.setDoOutput(true);
-								conn.setDoInput(true);
-								conn.setUseCaches(false);
-								conn.setAllowUserInteraction(false);
-								conn.setRequestProperty("Content-Type", "application/xml");
-								Document xml = ConfigurationManager.getInstance().getConfigurablesAsXMLAndChangeEncryption(typeId,
-								        model.getConfigurables(), repository.getName(), KeyGeneratorTool.getUserKey(), serverPublicKey);
+							// check response code for result
+							if (response.getResponseCode() != HttpURLConnection.HTTP_OK) {
+								// something went wrong
 
-								// create and write xml content
-								XMLTools.stream(xml, conn.getOutputStream(), null);
-								conn.disconnect();
+								if (response.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+									LogService.getRoot().log(Level.INFO, () -> typeId + ": " + response.getResponseMessage());
 
-								// check response code for result
-								if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-									// something went wrong
-
-									if (conn.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) {
-										LogService.getRoot().log(Level.INFO, typeId + ": " + conn.getResponseMessage());
-
-									} else if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_METHOD) {
-										LogService.log(LogService.getRoot(), Level.WARNING, null,
-										        "com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration_error_server_not_up_to_date",
-										        typeId, repository.getName(), conn.getResponseMessage());
-										view.displaySaveUploadErrorDialogServerNotUpToDate(repository.getName());
-										// revert parameter and name changes
-										revertChanges();
-										break;
-									} else {
-
-										LogService.log(LogService.getRoot(), Level.WARNING,
-										        new Exception(conn.getResponseMessage()),
-										        "com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration_error",
-										        typeId, repository.getName(), conn.getResponseMessage());
-										view.displaySaveUploadErrorDialog(typeId, repository.getName(),
-										        repository.getBaseUrl().toString());
-										// revert parameter and name changes
-										revertChanges();
-										break;
-									}
+								} else if (response.getResponseCode() == HttpURLConnection.HTTP_BAD_METHOD) {
+									LogService.log(LogService.getRoot(), Level.WARNING, null,
+											"com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration_error_server_not_up_to_date",
+											typeId, repository.getName(), response.getResponseMessage());
+									view.displaySaveUploadErrorDialogServerNotUpToDate(repository.getName());
+									// revert parameter and name changes
+									revertChanges();
+									break;
 								} else {
 
-									// all should be fine
-									Document newIdsDoc = XMLTools.parse(conn.getInputStream());
-									List<Pair<Integer, String>> newIds = ConfigurationManager.newIdsFromXML(newIdsDoc);
+									LogService.log(LogService.getRoot(), Level.WARNING,
+											new Exception(response.getResponseMessage()),
+											"com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration_error",
+											typeId, repository.getName(), response.getResponseMessage());
+									view.displaySaveUploadErrorDialog(typeId, repository.getName(),
+											repository.getBaseUrl().toString());
+									// revert parameter and name changes
+									revertChanges();
+									break;
+								}
+							} else {
 
-									// replace ids of new created configurables (with id -1)
-									for (Configurable config : model.getConfigurables()) {
-										if (config.getTypeId().equals(typeId)) {
-											if (config.getId() == -1) {
-												for (Pair<Integer, String> pair : newIds) {
-													if (pair.getSecond().equals(config.getName())) {
-														// set the new id (given by the server)
-														// instead of -1
-														config.setId(pair.getFirst());
-													}
-												}
+								// all should be fine
+								Document newIdsDoc = XMLTools.parse(response.getInputStream());
+								List<Pair<Integer, String>> newIds = ConfigurationManager.newIdsFromXML(newIdsDoc);
+
+								// replace ids of new created configurables (with id -1)
+								for (Configurable config : model.getConfigurables()) {
+									if (config.getTypeId().equals(typeId) && config.getId() == -1) {
+										for (Pair<Integer, String> pair : newIds) {
+											if (pair.getSecond().equals(config.getName())) {
+												// set the new id (given by the server)
+												// instead of -1
+												config.setId(pair.getFirst());
 											}
 										}
 									}
-
-									// store the configurables permanently in the
-									// ConfigurationManager
-									ConfigurationManager.getInstance().replaceConfigurables(model.getConfigurables(),
-									        repository.getName());
-
-									LogService.getRoot().log(Level.INFO,
-									        "com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration",
-									        typeId);
 								}
-							} catch (IOException | RepositoryException | ConfigurationException | SAXException e) {
-								// revert parameter and name changes
-								revertChanges();
-								LogService.log(LogService.getRoot(), Level.WARNING, e,
-								        "com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration_error",
-								        typeId, repository.getName(), e.toString());
-								view.displaySaveUploadErrorDialog(typeId, repository.getName(),
-								        repository.getBaseUrl().toString());
-								break;
-							} catch (XMLException e) {
-								// revert parameter and name changes
-								revertChanges();
-								LogService.log(LogService.getRoot(), Level.WARNING, e,
-								        "com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration_error",
-								        typeId, repository.getName(), e.toString());
-								view.displaySaveUploadErrorDialog(typeId, repository.getName(),
-								        repository.getBaseUrl().toString());
-								break;
-							} finally {
-								if (conn != null) {
-									conn.disconnect();
-								}
+
+								// store the configurables permanently in the
+								// ConfigurationManager
+								ConfigurationManager.getInstance().replaceConfigurables(model.getConfigurables(),
+										repository.getName());
+
+								LogService.getRoot().log(Level.INFO,
+										"com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration",
+										typeId);
 							}
+						} catch (IOException | RepositoryException | ConfigurationException | SAXException | XMLException e) {
+							// revert parameter and name changes
+							revertChanges();
+							LogService.log(LogService.getRoot(), Level.WARNING, e,
+									"com.rapidminer.tools.config.gui.ConfigurableController.uploading_configuration_error",
+									typeId, repository.getName(), e.toString());
+							view.displaySaveUploadErrorDialog(typeId, repository.getName(),
+									repository.getBaseUrl().toString());
+							break;
 						}
 					}
 				}

@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.gui.RapidMinerGUI;
@@ -313,7 +312,8 @@ public class WindowChoreographer {
 		}
 		// display waiting bubbles now that we have free space again
 		boolean enoughSpace = true;
-		while (!bubbleStack.isEmpty() && enoughSpace) {
+		int initialStackSize = bubbleStack.size();
+		for (int count = 0; count < initialStackSize && enoughSpace; count++) {
 			enoughSpace = addWindow(bubbleStack.pop());
 		}
 	}

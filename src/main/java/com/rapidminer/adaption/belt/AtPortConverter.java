@@ -63,6 +63,8 @@ public final class AtPortConverter {
 	 * @param port
 	 * 		the port at which the conversion takes place
 	 * @return the converted object
+	 * @throws BeltConverter.ConversionException
+	 * 		if the table cannot be converted because it contains custom columns
 	 */
 	public static IOObject convert(IOObject data, Port port) {
 		ConcurrencyContext context = Resources.getConcurrencyContext(port.getPorts().getOwner().getOperator());

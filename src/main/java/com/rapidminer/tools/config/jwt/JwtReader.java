@@ -124,14 +124,14 @@ public class JwtReader {
 	/**
 	 * Retrieve the JWT token from remote and set it on the given connection as authorization header.
 	 *
-	 * @param repository
-	 * 		the {@link RemoteRepository} that should be accessed
-	 * @param connection
-	 * 		the connection to add an authorization header to
+	 * @param repository the {@link RemoteRepository} that should be accessed
+	 * @param connection the connection to add an authorization header to
 	 * @throws IOException
 	 * @throws RepositoryException
 	 * @since 9.3
+	 * @deprecated since 9.5.0, this is a protected method in the ServerClient version 9.3.0 and can be used with a proper client implementation
 	 */
+	@Deprecated
 	public void setJwtAuthorization(RemoteRepository repository, HttpURLConnection connection) throws IOException, RepositoryException {
 		final JwtWrapper jwtWrapper = loadJwtWrapper(repository);
 		if (jwtWrapper == null) {

@@ -226,7 +226,11 @@ public class ScriptingOperator extends Operator {
 		}
 
 		List<IOObject> input = inExtender.getData(IOObject.class, false);
-		convertIOTables(input);
+		try {
+			convertIOTables(input);
+		} catch (BeltConverter.ConversionException e) {
+			throw new UserError(this, "scriptingOperator.custom_columns", e.getColumnName(), e.getType().customTypeID());
+		}
 		Object result;
 		try {
 			// cache access is synchronized on a per-script basis to prevent Execute Script
@@ -295,6 +299,9 @@ public class ScriptingOperator extends Operator {
 	/**
 	 * Since the script does unchecked casts to {@link com.rapidminer.example.ExampleSet}s, we need to convert belt
 	 * tables here. Later, when more operators return belt tables, we should introduce a compatibility level for this.
+	 *
+	 * @throws BeltConverter.ConversionException
+	 * 		if a table cannot be converted because it contains custom columns
 	 */
 	private void convertIOTables(List<IOObject> input) {
 		ConcurrencyContext concurrencyContext = Resources.getConcurrencyContext(this);
