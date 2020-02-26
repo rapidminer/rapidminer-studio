@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -310,7 +311,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	/** Reads an process configuration from the given URL. */
 	public Process(final URL url) throws IOException, XMLException {
 		initContext();
-		try (Reader in = new InputStreamReader(WebServiceTools.openStreamFromURL(url), getEncoding(null))) {
+		try (Reader in = new InputStreamReader(WebServiceTools.openStreamFromURL(url), StandardCharsets.UTF_8)) {
 			readProcess(in);
 		}
 
@@ -1454,6 +1455,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	// Process IO
 	// ----------------------
 
+	/**
+	 * @deprecated since 9.6.0. Use the {@link com.rapidminer.tools.io.Encoding Encoding} class instead if you cannot use UTF-8 for some reason (there should be zero reasons!)
+	 */
+	@Deprecated
 	public static Charset getEncoding(String encoding) {
 		if (encoding == null) {
 			encoding = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -46,7 +46,7 @@ import com.rapidminer.gui.RapidMinerGUI;
  * This component is based on a {@link JWindow}. Once {@link #setVisible(boolean)} is called, the
  * popup will display and fade away after the specified amount of time if the GraphicsDevice
  * supports it. To use this component with minimal effort, you can utilize the static
- * {@link #showFadingPopup(JPanel, JComponent, PopupLocation)} methods.
+ * {@link #showFadingPopup(JPanel, Component, PopupLocation)} methods.
  *
  * @author Marco Boeck
  *
@@ -313,8 +313,7 @@ public class NotificationPopup extends JWindow {
 	 */
 	public static NotificationPopup showFadingPopup(final JPanel content, final Component invoker,
 			final PopupLocation location, final int delay, final int paddingX, final int paddingY, final Border border) {
-		return showFadingPopup(content, invoker, location, delay, paddingX, paddingY,
-				BorderFactory.createLineBorder(Color.BLACK, 1, false), null);
+		return showFadingPopup(content, invoker, location, delay, paddingX, paddingY, border, null);
 	}
 
 	/**

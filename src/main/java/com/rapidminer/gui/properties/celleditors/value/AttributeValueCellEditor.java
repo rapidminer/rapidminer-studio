@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -172,8 +172,11 @@ public class AttributeValueCellEditor extends DefaultRMCellEditor implements Pro
 							icon = AttributeGuiTools.NUMERICAL_COLUMN_ICON;
 						} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.NOMINAL)) {
 							icon = AttributeGuiTools.NOMINAL_COLUMN_ICON;
-						} else {
+						} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.DATE_TIME)) {
 							icon = AttributeGuiTools.DATE_COLUMN_ICON;
+						} else {
+							// attribute value type
+							icon = AttributeGuiTools.UNKNOWN_COLUMN_ICON;
 						}
 						label.setIcon(icon);
 					}

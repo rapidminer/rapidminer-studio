@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -114,18 +114,7 @@ public class MailConnectionGUI extends DefaultConnectionGUI {
 		JComponent inputComponent;
 		String[] possibleValues = POSSIBLE_VALUES_MAP.get(parameter.getGroupName() + '.' + parameter.getName());
 		if (parameter.isEditable() && possibleValues != null && possibleValues.length > 0) {
-			JComboBox<String> comboBox = new JComboBox<>(possibleValues);
-			comboBox.setSelectedItem(possibleValues[0]);
-			if (parameter.getValue() != null) {
-				comboBox.setSelectedItem(parameter.getValue());
-			}
-
-			comboBox.addItemListener(event -> {
-				if (event.getStateChange() == ItemEvent.SELECTED) {
-					parameter.setValue(event.getItem().toString());
-				}
-			});
-			inputComponent = new InjectableComponentWrapper(comboBox, parameter);
+			inputComponent = InjectableComponentWrapper.getInjectableCombobox(parameter, possibleValues, possibleValues[0]);
 		} else {
 			inputComponent = super.getParameterInputComponent(type, parameter);
 		}

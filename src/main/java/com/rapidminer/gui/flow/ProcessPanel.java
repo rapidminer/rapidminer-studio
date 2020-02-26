@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,13 +22,21 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLayeredPane;
@@ -39,8 +47,12 @@ import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.apache.commons.io.FilenameUtils;
+
 import com.rapidminer.Process;
+import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.AutoWireAction;
 import com.rapidminer.gui.flow.processrendering.annotations.AnnotationsVisualizer;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
@@ -59,11 +71,14 @@ import com.rapidminer.gui.flow.processrendering.view.components.OperatorWarningH
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.NotificationPopup;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.ResourceDockKey;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.ViewToolBar;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.tools.XMLException;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 
@@ -212,7 +227,9 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 					case PROCESS_ZOOM_CHANGED:
 						zoomIn.setEnabled(model.canZoomIn());
 						zoomOut.setEnabled(model.canZoomOut());
-						resetZoom.setText((int) (model.getZoomFactor() * 100) + "%");
+						int zoom = (int) (model.getZoomFactor() * 100);
+						resetZoom.setText(zoom + "%");
+						resetZoom.setVisible(zoom != 100);
 						break;
 					case PROCESS_SIZE_CHANGED:
 					case MISC_CHANGED:
@@ -387,10 +404,37 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 			}
 		});
 		resetZoom.setHorizontalTextPosition(SwingConstants.LEADING);
+		resetZoom.setVisible((int) (model.getZoomFactor() * 100) != 100);
+
+		JButton copyProcess = new JButton(new ResourceActionAdapter(true, "processpanel.copy_process") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void loggedActionPerformed(ActionEvent e) {
+				fireCopyProcess(mainFrame);
+			}
+
+		});
+
+		JButton pasteProcess = new JButton(new ResourceActionAdapter(true, "processpanel.paste_process") {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void loggedActionPerformed(ActionEvent e) {
+				firePasteProcess(mainFrame);
+			}
+
+		});
 
 		toolBar.add(resetZoom);
 		toolBar.add(zoomIn);
 		toolBar.add(zoomOut);
+		toolBar.addSeparator();
+		toolBar.add(copyProcess);
+		toolBar.add(pasteProcess);
+		toolBar.addSeparator();
 
 		toolBar.add(annotationsHandler.makeAddAnnotationAction(null), ViewToolBar.RIGHT);
 		toolBar.add(new AutoWireAction(), ViewToolBar.RIGHT);
@@ -668,6 +712,95 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 	 */
 	public OperatorWarningHandler getOperatorWarningHandler() {
 		return operatorWarningHandler;
+	}
+
+	/**
+	 * Copies the currently active process xml to the clipboard.
+	 *
+	 * @param mainFrame
+	 * 		MainFrame used to get the currently active process.
+	 */
+	private void fireCopyProcess(MainFrame mainFrame) {
+		String processXML = mainFrame.getProcess().getRootOperator().getXML(false);
+		Clipboard clipBoard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		StringSelection stringSelection = new StringSelection(processXML);
+		clipBoard.setContents(stringSelection, null);
+	}
+
+	/**
+	 * Tries to paste a string or file containing a process xml from the clipboard. Shows an error popup if it fails.
+	 *
+	 * @param mainFrame
+	 * 		MainFrame used to set the currently active process.
+	 */
+	private static void firePasteProcess(MainFrame mainFrame) {
+		Clipboard clipBoard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		DataFlavor[] dataFlavors = clipBoard.getContents(mainFrame.getProcessPanel()).getTransferDataFlavors();
+		Process process = null;
+		if (dataFlavors != null && dataFlavors.length > 0) {
+			try {
+				// we check for the appropriate data flavor and handle the clipboard contents accordingly
+				if (Arrays.asList(dataFlavors).contains(DataFlavor.stringFlavor)) {
+					String xml = ((String) clipBoard.getContents(mainFrame.getProcessPanel()).getTransferData(DataFlavor.stringFlavor));
+					process = new Process(xml);
+				} else if (Arrays.asList(dataFlavors).contains(DataFlavor.javaFileListFlavor)) {
+					String xml = loadProcessFromFileList(clipBoard, mainFrame);
+					if (xml != null) {
+						process = new Process(xml);
+					} // else: no .rmp file in the file list
+				} // else: no string and no .rmp file on the clipboard
+			} catch (XMLException | UnsupportedFlavorException | IOException e) {
+				// Something went wrong. Most likely the xml string / file was not a valid process
+			}
+		} // else: nothing on the clipboard
+
+		if (process != null) {
+			openProcessWithCheck(process);
+		} else {
+			showInvalidPasteNotification(mainFrame);
+		}
+	}
+
+	/**
+	 * Asks the user if he wants to save the currently opened process. Then opens the given process.
+	 *
+	 * @param process
+	 * 		this process will be opened
+	 */
+	private static void openProcessWithCheck(Process process) {
+		if (RapidMinerGUI.getMainFrame().close()) {
+			SwingTools.invokeLater(() -> RapidMinerGUI.getMainFrame().setOpenedProcess(process));
+		}
+	}
+
+	/**
+	 * Looks through the file list for the first file with .rmp file extension and returns its content as a String. If
+	 * there is no such file, {@code null} is returned instead.
+	 *
+	 * @param clipBoard
+	 * 		Clipboard holding a file list.
+	 * @return XML process definition or {@code null}.
+	 */
+	private static String loadProcessFromFileList(Clipboard clipBoard, MainFrame mainFrame) throws IOException, UnsupportedFlavorException {
+		@SuppressWarnings("unchecked") // we did the check in firePasteProcess - the cast is safe
+				List<File> fileList = ((List<File>) clipBoard.getContents(mainFrame.getProcessPanel()).getTransferData(DataFlavor.javaFileListFlavor));
+		for (File file : fileList) {
+			if (RapidMiner.PROCESS_FILE_EXTENSION.equals(FilenameUtils.getExtension(file.getName()))) {
+				return new String(Files.readAllBytes(file.toPath()));
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Shows a notification popup in the lower right corner of the screen, telling the user that the clipboard content
+	 * could not be pasted because it is not a valid RapidMiner process.
+	 */
+	private static void showInvalidPasteNotification(MainFrame mainFrame){
+		NotificationPopup.showFadingPopup(
+				SwingTools.createNotificationPanel("gui.bubble.error.icon",
+						"gui.dialog.error.paste_process_button.invalid_content.message"),
+				mainFrame, NotificationPopup.PopupLocation.LOWER_RIGHT, 3000, 30, 40);
 	}
 
 }

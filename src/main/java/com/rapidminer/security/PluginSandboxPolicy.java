@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -267,6 +267,17 @@ public final class PluginSandboxPolicy extends Policy {
 		final Permissions permissions = new Permissions();
 
 		if (ProductConstraintManager.INSTANCE.isInitialized()) {
+
+			boolean developmentIsEnabled = Boolean.parseBoolean(
+					ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_DEVELOPMENT_PERMISSIONS));
+			boolean isDevelopmentAllowed = ProductConstraintManager.INSTANCE.getActiveLicense()
+					.getPrecedence() >= StudioLicenseConstants.DEVELOPER_LICENSE_PRECEDENCE;
+			if (developmentIsEnabled && isDevelopmentAllowed) {
+				// aid extension development by granting all permissions
+				return createAllPermissions();
+			}
+
+
 			boolean isAllowed = ProductConstraintManager.INSTANCE.getActiveLicense()
 					.getPrecedence() >= StudioLicenseConstants.UNLIMITED_LICENSE_PRECEDENCE
 					|| ProductConstraintManager.INSTANCE.isTrialLicense();

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -366,6 +366,17 @@ public class AntlrParserStatisticalTest extends AntlrParserTest {
 	}
 
 	@Test
+	public void binomRealValues() throws ExpressionException {
+		Expression expression = getExpressionWithFunctionContext("binom(1.9,2.9)");
+		assertEquals(ExpressionType.INTEGER, expression.getExpressionType());
+		assertEquals(0, expression.evaluateNumerical(), 1e-15);
+
+		expression = getExpressionWithFunctionContext("binom(2.0,2.9)");
+		assertEquals(ExpressionType.INTEGER, expression.getExpressionType());
+		assertEquals(1, expression.evaluateNumerical(), 1e-15);
+	}
+
+	@Test
 	public void binomSimpleKSmaller() {
 		try {
 			Expression expression = getExpressionWithFunctionContext("binom(5,2)");
@@ -389,7 +400,7 @@ public class AntlrParserStatisticalTest extends AntlrParserTest {
 	@Test
 	public void binomFirstWrongType() {
 		try {
-			getExpressionWithFunctionContext("binom(1.5, 1)");
+			getExpressionWithFunctionContext("binom(\"aa\", 1)");
 			fail();
 		} catch (ExpressionException e) {
 			assertNotNull(e.getMessage());
@@ -399,7 +410,7 @@ public class AntlrParserStatisticalTest extends AntlrParserTest {
 	@Test
 	public void binomSecondWrongType() {
 		try {
-			getExpressionWithFunctionContext("binom(10, 1.5)");
+			getExpressionWithFunctionContext("binom(10, \"aa\")");
 			fail();
 		} catch (ExpressionException e) {
 			assertNotNull(e.getMessage());

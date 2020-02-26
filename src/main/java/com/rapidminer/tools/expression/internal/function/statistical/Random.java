@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -126,8 +126,8 @@ public class Random extends AbstractFunction {
 
 	@Override
 	protected ExpressionType computeType(ExpressionType... inputTypes) {
-		if (inputTypes.length > 0 && inputTypes[0] != ExpressionType.INTEGER) {
-			throw new FunctionInputException("expression_parser.function_wrong_type", getFunctionName(), "integer");
+		if (inputTypes.length > 0 && inputTypes[0] != ExpressionType.INTEGER && inputTypes[0] != ExpressionType.DOUBLE) {
+			throw new FunctionInputException("expression_parser.function_wrong_type", getFunctionName(), "double or integer");
 		}
 		return ExpressionType.DOUBLE;
 	}

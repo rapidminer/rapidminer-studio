@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -232,8 +232,8 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 			if (!Condition.class.isAssignableFrom(clazz)) {
 				throw new ConditionCreationException("'" + className + "' does not implement Condition!");
 			}
-			Constructor<?> constructor = clazz.getConstructor(new Class[]{ExampleSet.class, String.class});
-			return (Condition) constructor.newInstance(new Object[]{exampleSet, parameterString});
+			Constructor<?> constructor = clazz.getConstructor(ExampleSet.class, String.class);
+			return (Condition) constructor.newInstance(exampleSet, parameterString);
 		} catch (ClassNotFoundException e) {
 			throw new ConditionCreationException("Cannot find class '" + className + "'. Check your classpath.", e);
 		} catch (NoSuchMethodException e) {

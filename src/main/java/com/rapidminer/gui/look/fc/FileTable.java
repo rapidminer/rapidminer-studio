@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -59,6 +59,11 @@ import com.rapidminer.gui.tools.SwingTools;
  */
 public class FileTable extends JTable implements MouseListener, MouseMotionListener {
 
+	static final String FILE_NAME = "File Name";
+	static final String TYPE = "Type";
+	static final String LAST_MODIFIED = "Last Modified";
+	static final String SIZE = "Size";
+
 	private static final long serialVersionUID = -8700859510439797254L;
 
 	private static class LabelRenderer extends FileTableLabel implements TableCellRenderer {
@@ -103,16 +108,16 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 				int viewColumn = columnModel.getColumnIndexAtX(e.getX());
 				int column = columnModel.getColumn(viewColumn).getModelIndex();
 				if (column != -1) {
-					if (columnModel.getColumn(viewColumn).getHeaderValue().equals("File Name")) {
+					if (columnModel.getColumn(viewColumn).getHeaderValue().equals(FILE_NAME)) {
 						FileTable.this.fileList.orderBy(FileList.ORDER_BY_FILE_NAME, false);
 						FileTable.this.fileList.updateTableData();
-					} else if (columnModel.getColumn(viewColumn).getHeaderValue().equals("Type")) {
+					} else if (columnModel.getColumn(viewColumn).getHeaderValue().equals(TYPE)) {
 						FileTable.this.fileList.orderBy(FileList.ORDER_BY_FILE_TYPE, false);
 						FileTable.this.fileList.updateTableData();
-					} else if (columnModel.getColumn(viewColumn).getHeaderValue().equals("Last Modified")) {
+					} else if (columnModel.getColumn(viewColumn).getHeaderValue().equals(LAST_MODIFIED)) {
 						FileTable.this.fileList.orderBy(FileList.ORDER_BY_FILE_MODIFIED, false);
 						FileTable.this.fileList.updateTableData();
-					} else if (columnModel.getColumn(viewColumn).getHeaderValue().equals("Size")) {
+					} else if (columnModel.getColumn(viewColumn).getHeaderValue().equals(SIZE)) {
 						FileTable.this.fileList.orderBy(FileList.ORDER_BY_FILE_SIZE, false);
 						FileTable.this.fileList.updateTableData();
 					}
@@ -294,10 +299,10 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 
 		this.columnNames.removeAllElements();
 
-		this.columnNames.add("File Name");
-		this.columnNames.add("Size");
-		this.columnNames.add("Type");
-		this.columnNames.add("Last Modified");
+		this.columnNames.add(FILE_NAME);
+		this.columnNames.add(SIZE);
+		this.columnNames.add(TYPE);
+		this.columnNames.add(LAST_MODIFIED);
 
 		this.originalColumsWidth.add(Integer.valueOf(0));
 		this.originalColumsWidth.add(Integer.valueOf(0));
@@ -589,7 +594,7 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 	public void updateData(Object[][] vals) {
 		Enumeration<TableColumn> en = this.getColumnModel().getColumns();
 
-		Vector<String> vec = new Vector<String>();
+		Vector<String> vec = new Vector<>();
 		while (en.hasMoreElements()) {
 			vec.add(en.nextElement().getHeaderValue().toString());
 		}
@@ -619,7 +624,7 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 			tempColumn.setWidth(cw);
 			i++;
 		}
-		this.mainColumnIndex = this.getColumnModel().getColumnIndex("File Name");
+		this.mainColumnIndex = this.getColumnModel().getColumnIndex(FILE_NAME);
 		this.getColumnModel().getColumn(this.mainColumnIndex).setCellRenderer(new LabelRenderer());
 		this.setSize(getPreferredSize());
 		clearSelection();

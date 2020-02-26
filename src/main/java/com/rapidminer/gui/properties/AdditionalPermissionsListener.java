@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,7 +22,6 @@ import java.awt.Dialog.ModalityType;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.function.BooleanSupplier;
-
 import javax.swing.JPanel;
 
 import com.rapidminer.RapidMiner;
@@ -45,8 +44,11 @@ import com.rapidminer.tools.ParameterService;
 
 public class AdditionalPermissionsListener extends WindowAdapter {
 
-	/** stores if the beta features are activated when the listener is constructed */
+	/** stores if the additional permissions are activated when the listener is constructed	*/
 	private boolean permissionsActiveBefore;
+
+	/** stores if the development permissions are activated when the listener is constructed */
+	private boolean developmentPermissionActiveBefore;
 
 	/**
 	 * Constructs a Listener for extra permissions activation
@@ -54,37 +56,60 @@ public class AdditionalPermissionsListener extends WindowAdapter {
 	AdditionalPermissionsListener() {
 		permissionsActiveBefore = Boolean.parseBoolean(
 				ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS));
+		developmentPermissionActiveBefore = Boolean.parseBoolean(
+				ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_DEVELOPMENT_PERMISSIONS));
 	}
 
 	@Override
 	public void windowClosed(WindowEvent e) {
-		boolean permissionsActiveNow = Boolean.parseBoolean(
-				ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS));
+		checkPermissions(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS,
+				() -> ProductConstraintManager.INSTANCE.getActiveLicense()
+						.getPrecedence() >= StudioLicenseConstants.UNLIMITED_LICENSE_PRECEDENCE
+						|| ProductConstraintManager.INSTANCE.isTrialLicense(),
+				"additional_permissions", "small_license");
 
-		if (!permissionsActiveBefore && permissionsActiveNow) {
-			BooleanSupplier isAllowed = () -> ProductConstraintManager.INSTANCE.getActiveLicense()
-					.getPrecedence() >= StudioLicenseConstants.UNLIMITED_LICENSE_PRECEDENCE
-					|| ProductConstraintManager.INSTANCE.isTrialLicense();
+		checkPermissions(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_DEVELOPMENT_PERMISSIONS,
+				() -> ProductConstraintManager.INSTANCE.getActiveLicense()
+						.getPrecedence() >= StudioLicenseConstants.DEVELOPER_LICENSE_PRECEDENCE,
+				"development_permissions", "development_license");
+	}
+
+	/**
+	 * Checks if the parameter with the key was newly activated. Checks if it is allowed to be activated and shows a
+	 * warning dialog with the dialogKey. Otherwise it shows a dialog with the failedKey.
+	 *
+	 * @param key
+	 * 		the parameter service key to check
+	 * @param isAllowed
+	 * 		the license check
+	 * @param dialogKey
+	 * 		the key for the warning dialog
+	 * @param failedKey
+	 * 		the key for the failure dialog
+	 */
+	private void checkPermissions(String key, BooleanSupplier isAllowed, String dialogKey, String failedKey) {
+		boolean permissionsActiveNow = Boolean.parseBoolean(ParameterService.getParameterValue(key));
+
+		if (!wasActiveBefore(key) && permissionsActiveNow) {
 			if (ProductConstraintManager.INSTANCE.isInitialized() && isAllowed.getAsBoolean()) {
-				ButtonDialog dialog = new ButtonDialogBuilder("additional_permissions")
+				ButtonDialog dialog = new ButtonDialogBuilder(dialogKey)
 						.setOwner(ApplicationFrame.getApplicationFrame())
 						.setButtons(DefaultButtons.OK_BUTTON, DefaultButtons.CANCEL_BUTTON)
-						.setModalityType(ModalityType.APPLICATION_MODAL).setContent(new JPanel(), ButtonDialog.DEFAULT_SIZE)
+						.setModalityType(ModalityType.APPLICATION_MODAL).setContent(new JPanel(),
+								ButtonDialog.DEFAULT_SIZE)
 						.build();
 				dialog.getRootPane().getDefaultButton().setText("Grant");
 				dialog.getRootPane().getDefaultButton().setMnemonic('G');
 				dialog.setVisible(true);
 				if (!dialog.wasConfirmed()) {
-					ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS,
-							String.valueOf(false));
+					ParameterService.setParameterValue(key, String.valueOf(false));
 					ParameterService.saveParameters();
 				}
 			} else {
-				ParameterService.setParameterValue(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS,
-						String.valueOf(false));
+				ParameterService.setParameterValue(key, String.valueOf(false));
 				ParameterService.saveParameters();
 
-				ButtonDialog smallLicenseDialog = new ButtonDialogBuilder("small_license")
+				ButtonDialog smallLicenseDialog = new ButtonDialogBuilder(failedKey)
 						.setOwner(ApplicationFrame.getApplicationFrame()).setButtons(DefaultButtons.OK_BUTTON)
 						.setModalityType(ModalityType.APPLICATION_MODAL).setContent(new JPanel(), ButtonDialog.MESSAGE)
 						.build();
@@ -92,5 +117,16 @@ public class AdditionalPermissionsListener extends WindowAdapter {
 			}
 		}
 	}
+
+	private boolean wasActiveBefore(String key) {
+		if (RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS.equals(key)) {
+			return permissionsActiveBefore;
+		} else if (RapidMiner.PROPERTY_RAPIDMINER_UPDATE_DEVELOPMENT_PERMISSIONS.equals(key)) {
+			return developmentPermissionActiveBefore;
+		} else {
+			throw new IllegalArgumentException("illegal key");
+		}
+	}
+
 
 }

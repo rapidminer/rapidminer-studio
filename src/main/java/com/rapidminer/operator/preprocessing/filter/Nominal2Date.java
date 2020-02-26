@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -26,12 +26,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.annotation.ResourceConsumptionEstimator;
@@ -176,6 +179,8 @@ import com.rapidminer.tools.math.container.Range;
  */
 public class Nominal2Date extends AbstractDateDataProcessing {
 
+	private static final OperatorVersion BEFORE_TIME_READ_FIX = new OperatorVersion(9, 5, 1);
+
 	private static final String ATTRIBUTE_NAME_POSTFIX = "_old";
 
 	public static final String PARAMETER_ATTRIBUTE_NAME = "attribute_name";
@@ -309,6 +314,12 @@ public class Nominal2Date extends AbstractDateDataProcessing {
 		SimpleDateFormat parser = ParameterTypeDateFormat.createCheckedDateFormat(this, selectedLocale, false);
 		parser.setTimeZone(Tools.getTimeZone(getParameterAsInt(PARAMETER_TIME_ZONE)));
 
+		int monthOffsetForTime = Calendar.FEBRUARY;
+		if (getCompatibilityLevel().isAbove(BEFORE_TIME_READ_FIX)) {
+			monthOffsetForTime = Calendar.JANUARY;
+		}
+
+
 		int row = 1;
 		for (Example e : exampleSet) {
 			if (Double.isNaN(e.getValue(oldAttribute))) {
@@ -325,7 +336,7 @@ public class Nominal2Date extends AbstractDateDataProcessing {
 				if (dateType == TIME) {
 					Calendar calendar = Calendar.getInstance();
 					calendar.setTime(date);
-					calendar.set(1970, 1, 1);
+					calendar.set(1970, monthOffsetForTime, 1);
 					e.setValue(newAttribute, calendar.getTimeInMillis());
 				} else {
 					e.setValue(newAttribute, date.getTime());
@@ -382,5 +393,10 @@ public class Nominal2Date extends AbstractDateDataProcessing {
 	@Override
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPort(), Nominal2Date.class, null);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.add(super.getIncompatibleVersionChanges(), BEFORE_TIME_READ_FIX);
 	}
 }

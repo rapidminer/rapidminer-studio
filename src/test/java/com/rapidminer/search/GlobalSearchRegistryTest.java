@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.search.event.GlobalSearchManagerEventHandler;
 import com.rapidminer.search.event.GlobalSearchRegistryEventListener;
 
@@ -45,6 +46,7 @@ public class GlobalSearchRegistryTest {
 
 	@BeforeClass
 	public static void setup() {
+		RapidMiner.setExecutionMode(RapidMiner.ExecutionMode.UI);
 		GlobalSearchIndexer.INSTANCE.initialize();
 
 		searchRegistryEventListener = Mockito.mock(GlobalSearchRegistryEventListener.class);

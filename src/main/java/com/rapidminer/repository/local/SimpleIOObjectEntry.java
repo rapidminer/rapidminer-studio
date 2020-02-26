@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -29,6 +29,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 
+import com.rapidminer.adaption.belt.TableViewingTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.metadata.MetaData;
@@ -201,7 +202,7 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 			}
 		}
 		this.metaData = new WeakReference<>(md);
-		putProperty(PROPERTY_IOOBJECT_CLASS, data.getClass().getName());
+		putProperty(PROPERTY_IOOBJECT_CLASS, TableViewingTools.replaceTableClassName(data));
 
 		if (existed) {
 			getRepository().fireEntryChanged(this);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -56,7 +56,7 @@ public class ResourceFolderTest {
 	public static final String TEST_CON_NAME = "one";
 	private static final String TEST_CON_TYPE = "cli";
 	private static final String TEST_CON_ID = "1543493610184";
-	private static final String TEST_CON_LIB_FILE = "mariadb-java-client-1.3.6.jar";
+	private static final String TEST_CON_LIB_FILE = "mariadb-java-client-2.5.2.jar";
 	private static final String TEST_CON_OTHER_FILE = "README.txt";
 
 	private Folder resourceFolder = new ResourceFolder(null, "test", null, null);

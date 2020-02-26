@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -34,6 +34,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1918,6 +1919,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	public List<ProcessSetupError> getErrorList() {
 		List<ProcessSetupError> errors = new LinkedList<>();
 		collectErrors(errors);
+		errors.sort(Comparator.comparing(ProcessSetupError::getSeverity).reversed());
 		return errors;
 	}
 

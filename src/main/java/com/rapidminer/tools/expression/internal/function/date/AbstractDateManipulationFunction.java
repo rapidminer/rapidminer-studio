@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -20,6 +20,7 @@ package com.rapidminer.tools.expression.internal.function.date;
 
 import java.util.Date;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.rapidminer.tools.expression.DoubleCallable;
 import com.rapidminer.tools.expression.ExpressionEvaluator;
@@ -46,194 +47,62 @@ public abstract class AbstractDateManipulationFunction extends AbstractFunction 
 
 	@Override
 	public ExpressionEvaluator compute(ExpressionEvaluator... inputEvaluators) {
+		return compute(() -> null, inputEvaluators);
+	}
+
+	@Override
+	public ExpressionEvaluator compute(Callable<Void> stopChecker, ExpressionEvaluator... inputEvaluators) {
 		ExpressionType type = getResultType(inputEvaluators);
 
-		if (inputEvaluators.length == 3) {
-
-			ExpressionEvaluator date = inputEvaluators[0];
-			ExpressionEvaluator value = inputEvaluators[1];
-			ExpressionEvaluator unit = inputEvaluators[2];
-
-			return new SimpleExpressionEvaluator(type, makeDateCallable(date, value, unit, null, null),
-					isResultConstant(inputEvaluators));
-		} else {
-			ExpressionEvaluator date = inputEvaluators[0];
-			ExpressionEvaluator value = inputEvaluators[1];
-			ExpressionEvaluator unit = inputEvaluators[2];
-			ExpressionEvaluator locale = inputEvaluators[3];
-			ExpressionEvaluator timeZone = inputEvaluators[4];
-			return new SimpleExpressionEvaluator(type, makeDateCallable(date, value, unit, locale, timeZone),
-					isResultConstant(inputEvaluators));
+		ExpressionEvaluator locale = new SimpleExpressionEvaluator((String) null, ExpressionType.STRING);
+		ExpressionEvaluator timeZone = new SimpleExpressionEvaluator((String) null, ExpressionType.STRING);
+		ExpressionEvaluator date = inputEvaluators[0];
+		ExpressionEvaluator value = inputEvaluators[1];
+		ExpressionEvaluator unit = inputEvaluators[2];
+		if (inputEvaluators.length != 3) {
+			locale = inputEvaluators[3];
+			timeZone = inputEvaluators[4];
 		}
+		return new SimpleExpressionEvaluator(type, makeDateCallable(stopChecker, date, value, unit, locale, timeZone),
+				isResultConstant(inputEvaluators));
 
 	}
 
-	private Callable<Date> makeDateCallable(ExpressionEvaluator date, ExpressionEvaluator value, ExpressionEvaluator unit,
-			ExpressionEvaluator locale, ExpressionEvaluator timeZone) {
-		final Callable<Date> funcDate = date.getDateFunction();
-		final DoubleCallable funcValue = value.getDoubleFunction();
-		final Callable<String> funcUnit = unit.getStringFunction();
+	private Callable<Date> makeDateCallable(Callable<Void> stopChecker, ExpressionEvaluator date, ExpressionEvaluator value, ExpressionEvaluator unit,
+											ExpressionEvaluator locale, ExpressionEvaluator timeZone) {
+		final Callable<Date> funcDate;
+		final DoubleCallable funcValue;
+		final Callable<String> funcUnit;
 		final Callable<String> funcLocale;
 		final Callable<String> funcTimeZone;
-
-		if (locale != null) {
-			funcLocale = locale.getStringFunction();
-		} else {
-			// create an dummy ExpressionEvaluator for the missing locale argument
-			locale = new SimpleExpressionEvaluator("", ExpressionType.STRING);
-			funcLocale = new Callable<String>() {
-
-				@Override
-				public String call() throws Exception {
-					return null;
-				}
-			};
-		}
-		if (timeZone != null) {
-			funcTimeZone = timeZone.getStringFunction();
-		} else {
-			// create an dummy ExpressionEvaluator for the missing time zone argument
-			timeZone = new SimpleExpressionEvaluator("", ExpressionType.STRING);
-			funcTimeZone = new Callable<String>() {
-
-				@Override
-				public String call() throws Exception {
-					return null;
-				}
-			};
-		}
+		AtomicBoolean allConstant = new AtomicBoolean(true);
 		try {
-			final Date valueDate = date.isConstant() ? funcDate.call() : null;
-			final double valueValue = value.isConstant() ? funcValue.call() : Double.NaN;
-			final String valueUnit = unit.isConstant() ? funcUnit.call() : null;
-			final String valueLocale = locale.isConstant() ? funcLocale.call() : null;
-			final String valueTimezone = timeZone.isConstant() ? funcTimeZone.call() : null;
-
-			// only likely cases checked:
-
-			// all constant values
-			if (date.isConstant() && value.isConstant() && unit.isConstant() && locale.isConstant() && timeZone.isConstant()) {
-				final Date result = compute(valueDate, valueValue, valueUnit, valueLocale, valueTimezone);
-
-				return new Callable<Date>() {
-
-					@Override
-					public Date call() throws Exception {
-						return result;
-					}
-
-				};
-				// constant date, value and unit are not constant
-			} else if (date.isConstant() && !value.isConstant() && !unit.isConstant()) {
-				// branch with constant locale and time zone data, probably both are constant or
-				// both are not
-				if (locale.isConstant() && timeZone.isConstant()) {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(valueDate, funcValue.call(), funcUnit.call(), valueLocale, valueTimezone);
-						}
-					};
-				} else {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(valueDate, funcValue.call(), funcUnit.call(), funcLocale.call(),
-									funcTimeZone.call());
-						}
-					};
-				}
-				// constant value, date and unit are not
-			} else if (!date.isConstant() && value.isConstant() && !unit.isConstant()) {
-				// branch with constant locale and time zone data, probably both are constant or
-				// both are not
-				if (locale.isConstant() && timeZone.isConstant()) {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), valueValue, funcUnit.call(), valueLocale, valueTimezone);
-						}
-					};
-				} else {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), valueValue, funcUnit.call(), funcLocale.call(),
-									funcTimeZone.call());
-						}
-					};
-				}
-				// constant unit, date and value are not
-			} else if (!date.isConstant() && !value.isConstant() && unit.isConstant()) {
-				// branch with constant locale and time zone data, probably both are constant or
-				// both are not
-				if (locale.isConstant() && timeZone.isConstant()) {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), funcValue.call(), valueUnit, valueLocale, valueTimezone);
-						}
-					};
-				} else {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), funcValue.call(), valueUnit, funcLocale.call(),
-									funcTimeZone.call());
-						}
-					};
-				}
-				// value and unit are constant, date is not
-			} else if (!date.isConstant() && value.isConstant() && unit.isConstant()) {
-				// branch with constant locale and time zone data, probably both are constant or
-				// both are not
-				if (locale.isConstant() && timeZone.isConstant()) {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), valueValue, valueUnit, valueLocale, valueTimezone);
-						}
-					};
-				} else {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), valueValue, valueUnit, funcLocale.call(), funcTimeZone.call());
-						}
-					};
-				}
-				// date, value and unit are variable
+			if (date.isConstant()) {
+				Date dateValue = date.getDateFunction().call();
+				funcDate = () -> dateValue;
 			} else {
-				// branch with constant locale and time zone data, probably both are constant or
-				// both are not
-				if (locale.isConstant() && timeZone.isConstant()) {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), funcValue.call(), funcUnit.call(), valueLocale, valueTimezone);
-						}
-					};
-				} else {
-					return new Callable<Date>() {
-
-						@Override
-						public Date call() throws Exception {
-							return compute(funcDate.call(), funcValue.call(), funcUnit.call(), funcLocale.call(),
-									funcTimeZone.call());
-						}
-					};
-				}
+				funcDate = date.getDateFunction();
+				allConstant.set(false);
 			}
+			if (value.isConstant()) {
+				double valueValue = value.getDoubleFunction().call();
+				funcValue = () -> valueValue;
+			} else {
+				funcValue = value.getDoubleFunction();
+				allConstant.set(false);
+			}
+			funcUnit = getStringCallable(unit, allConstant);
+			funcLocale = getStringCallable(locale, allConstant);
+			funcTimeZone = getStringCallable(timeZone, allConstant);
 
+			Callable<Date> callable = () -> compute(stopChecker, funcDate.call(), funcValue.call(), funcUnit.call(),
+					funcLocale.call(), funcTimeZone.call());
+			// all constant values
+			if (allConstant.get()) {
+				Date resultDate = callable.call();
+				return () -> resultDate;
+			}
+			return callable;
 		} catch (ExpressionParsingException e) {
 			throw e;
 		} catch (Exception e) {
@@ -246,16 +115,41 @@ public abstract class AbstractDateManipulationFunction extends AbstractFunction 
 	 * additional locale and time zone arguments.
 	 *
 	 * @param date
-	 *            date to manipulate
+	 * 		date to manipulate
 	 * @param value
-	 *            the amount of which the date should change
+	 * 		the amount of which the date should change
 	 * @param unit
-	 *            the unit constant which should be changed
+	 * 		the unit constant which should be changed
+	 * @param valueLocale
+	 * 		the locale string
 	 * @param valueTimezone
-	 *            time zone string
+	 * 		time zone string
 	 * @return the result of the computation.
 	 */
 	protected abstract Date compute(Date date, double value, String unit, String valueLocale, String valueTimezone);
+
+	/**
+	 * Computes the result for manipulating a date for a certain value on a given unit with
+	 * additional locale and time zone arguments.
+	 *
+	 * @param stopChecker
+	 * 		optional callable to check for stop
+	 * @param date
+	 * 		date to manipulate
+	 * @param value
+	 * 		the amount of which the date should change
+	 * @param unit
+	 * 		the unit constant which should be changed
+	 * @param valueLocale
+	 * 		the locale string
+	 * @param valueTimezone
+	 * 		time zone string
+	 * @return the result of the computation.
+	 * @since 9.6.0
+	 */
+	protected Date compute(Callable<Void> stopChecker, Date date, double value, String unit, String valueLocale, String valueTimezone) {
+		return compute(date, value, unit, valueLocale, valueTimezone);
+	}
 
 	@Override
 	protected ExpressionType computeType(ExpressionType... inputTypes) {
@@ -271,8 +165,8 @@ public abstract class AbstractDateManipulationFunction extends AbstractFunction 
 		if (firstType != ExpressionType.DATE) {
 			throw new FunctionInputException("expression_parser.function_wrong_type_at", getFunctionName(), "date", "first");
 		}
-		if (secondType != ExpressionType.INTEGER) {
-			throw new FunctionInputException("expression_parser.function_wrong_type_at", getFunctionName(), "integer",
+		if (secondType != ExpressionType.DOUBLE && secondType != ExpressionType.INTEGER) {
+			throw new FunctionInputException("expression_parser.function_wrong_type_at", getFunctionName(), "double or integer",
 					"second");
 
 		}
@@ -295,5 +189,15 @@ public abstract class AbstractDateManipulationFunction extends AbstractFunction 
 		}
 		return ExpressionType.DATE;
 
+	}
+
+	/** @since 9.6.0 */
+	private static Callable<String> getStringCallable(ExpressionEvaluator stringEvaluator, AtomicBoolean allConstant) throws Exception {
+		if (stringEvaluator.isConstant()) {
+			String unitValue = stringEvaluator.getStringFunction().call();
+			return () -> unitValue;
+		}
+		allConstant.set(false);
+		return stringEvaluator.getStringFunction();
 	}
 }

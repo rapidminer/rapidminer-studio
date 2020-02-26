@@ -15,7 +15,7 @@
 			<task><activity>Search</activity> for the <op>Join</op> operator in the search box at the top of the <ui>Operator</ui> panel. <activity>Drag <op>Join</op></activity> into the <ui>Process</ui> panel.</task>
 			<task><activity>Connect</activity> the output port of <op>Retrieve Products</op> to an input port of <op>Join</op> (it doesn't matter which one).</task>
 			<task><activity>Connect</activity> <op>Retrieve Transactions</op> to the other <op>Join</op> input port.</task>
-			<task><activity>Click on <op>Join</op></activity> to select it. In the <ui>Parameters</ui> panel, <activity>de-select <param>use id attribute as key</param></activity>. The <param>key attributes</param> field appears.</task>
+			<task><activity>Click on <op>Join</op></activity> to select it. In the <ui>Parameters</ui> panel find the <param>key attributes</param> field.</task>
 			<task><activity>Click <param>Edit List</param>.</activity> Select <value>Product ID</value> for the left and right key attributes. Then, <activity>click <param>Apply</param></activity>.</task>
 		</tasks>
 		<info>Remember to <emph>ALWAYS</emph> connect the operators before you start changing their parameters.  You can only select the <value>Product ID</value> from the list after the connection was made since otherwise the operator would not know what data is available.</info>
@@ -25,10 +25,10 @@
 		<tasks>
 			<task><activity>Drag the <op>Aggregate</op></activity> operator into the process. <activity>Connect</activity> it to the output of <op>Join</op>.</task> 
 			<task><activity>Click <op>Aggregate</op></activity> to select. Make the following changes in the <ui>Parameters</ui> panel:</task>
-			<task><activity>Click on <param>group by attributes</param>.</activity> Then, <activity>select the <value>Product ID</value></activity> by moving it to the right. <activity>Click <param>Apply</param></activity>.</task>
 			<task><activity>Click on <param>aggregation attributes</param>.</activity></task>
 			<task><activity>Select <value>Customer ID</value></activity> in the left box and set <param>function</param> to <value>count</value> in the right box.</task>
 			<task>Stay in this dialog and <activity>add another entry <value>Product Name</value> with <param>function</param> set to <value>mode</value></activity>. <activity>Click <param>Apply</param></activity>.</task>
+			<task><activity>Click on <param>group by attributes</param>.</activity> Then, <activity>select the <value>Product ID</value></activity> by moving it to the right. <activity>Click <param>Apply</param></activity>.</task>
 		</tasks>
 		<info><op>Aggregate</op> performs a "group-by-function" that you may know from databases. Next to joins and filters, the aggregate function is one of the most important operators for data blending. In this case, it groups the data by product, counts the number of purchases for each product, and uses the product name for describing this product. The result is a table of all products with the following attributes: product ID, product name, and the number of customers that have purchased the product.</info>
 	</step>  

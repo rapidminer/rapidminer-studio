@@ -76,12 +76,12 @@
 			</task>
 			<task>
 				<activity>Connect</activity> the output of <op>Apply Model</op> with <op>Performance</op> and the 
-				output of <op>Performance</op> with the first average port "ave" on the right.
+				output of <op>Performance</op> with the first performance port "per" on the right.
 			</task>
 		</tasks>
 
 		<info>
-			Every performance delivered at the "ave" port on the right will be averaged together and delivered to the "ave" output port 
+			Every performance delivered at the "per" port on the right will be averaged together and delivered to the "per" output port
 			of the <op>Cross Validation</op> operator.  Also, note that you can fully control what happens inside of 
 			the cross-validation.  This allows you to take into account the effects of preprocessing 
 			like normalization or feature selection, which can have a significant impact on the performance of the model.

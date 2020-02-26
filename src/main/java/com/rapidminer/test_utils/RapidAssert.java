@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -563,7 +563,11 @@ public class RapidAssert extends Assert {
 		expectedRoleIt = expected.specialAttributes();
 		while (expectedRoleIt.hasNext()) {
 			AttributeRole expectedRole = expectedRoleIt.next();
-			AttributeRole actualRole = actual.getRole(actual.getSpecial(expectedRole.getSpecialName()));
+			Attribute special = actual.getSpecial(expectedRole.getSpecialName());
+			if (special == null) {
+				assertEquals(message + " (attribute role)", expectedRole.getSpecialName(), null);
+			}
+			AttributeRole actualRole = actual.getRole(special);
 			RapidAssert.assertEquals(message, expectedRole, actualRole, compareDefaultValues);
 		}
 	}

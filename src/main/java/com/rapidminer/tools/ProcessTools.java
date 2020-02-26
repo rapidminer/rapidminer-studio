@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -33,6 +33,7 @@ import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.UndefinedParameterSetupError;
+import com.rapidminer.operator.UserData;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.metadata.InputMissingMetaDataError;
 import com.rapidminer.operator.preprocessing.filter.attributes.SubsetAttributeFilter;
@@ -54,6 +55,33 @@ import com.rapidminer.tools.container.Pair;
  *
  */
 public final class ProcessTools {
+
+	/**
+	 * @since 9.6
+	 */
+	private static final String KEY_PARENT_PROCESS = "parent_process";
+
+	/**
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	private static class ParentUserData implements UserData<Object> {
+
+		private Process parent;
+
+		public ParentUserData(Process parent) {
+			this.parent = parent;
+		}
+
+		@Override
+		public UserData<Object> copyUserData(Object newParent) {
+			return this;
+		}
+
+		public Process getParent() {
+			return parent;
+		}
+	}
 
 	/**
 	 * Private constructor which throws if called.
@@ -280,6 +308,45 @@ public final class ProcessTools {
 			origin = RepositoryManager.getInstance(null).getSpecialRepositoryOrigin(repository);
 		}
 		ProcessOriginProcessXMLFilter.setProcessOriginState(process, origin);
+	}
+
+	/**
+	 * Marks the given process with its parent to allow for better connection caching
+	 *
+	 * @param process
+	 * 		the process to be tagged
+	 * @param parentProcess
+	 * 		the process' parent process
+	 * @see com.rapidminer.connection.adapter.ConnectionAdapterHandler ConnectionAdapterHandler
+	 * @since 9.6
+	 */
+	public static void setParentProcess(Process process, Process parentProcess) {
+		if (parentProcess == null) {
+			return;
+		}
+		UserData<Object> parentData = parentProcess.getRootOperator().getUserData(KEY_PARENT_PROCESS);
+		if (parentData != null) {
+			process.getRootOperator().setUserData(KEY_PARENT_PROCESS, parentData);
+			return;
+		}
+		process.getRootOperator().setUserData(KEY_PARENT_PROCESS, new ParentUserData(parentProcess));
+	}
+
+	/**
+	 * Gets the parent process of the specified process. Will return the argument if there is no user data indicating
+	 * another parent process.
+	 *
+	 * @param process
+	 * 		the process whose parent should be retrieved
+	 * @return the process' parent or the process itself if there is no parent
+	 * @since 9.6
+	 */
+	public static Process getParentProcess(Process process) {
+		UserData<Object> parentData = process.getRootOperator().getUserData(KEY_PARENT_PROCESS);
+		if (parentData instanceof ParentUserData) {
+			return ((ParentUserData) parentData).getParent();
+		}
+		return process;
 	}
 
 	/**

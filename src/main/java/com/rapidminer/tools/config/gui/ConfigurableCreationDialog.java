@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -34,7 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-
+import java.util.stream.Collectors;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -56,13 +56,16 @@ import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import com.rapidminer.connection.adapter.ConnectionAdapterHandler;
 import com.rapidminer.gui.ApplicationFrame;
+import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.gui.tools.components.TransparentGlassPanePanel;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryManager;
@@ -75,6 +78,7 @@ import com.rapidminer.tools.config.gui.event.ConfigurableEvent;
 import com.rapidminer.tools.config.gui.event.ConfigurableModelEventListener;
 import com.rapidminer.tools.config.gui.renderer.ConfigurationRenderer;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
 /**
@@ -98,6 +102,7 @@ public class ConfigurableCreationDialog extends JDialog {
 
 	/** icon displayed in case of fetching configuration types */
 	private static final ImageIcon WAITING_ICON = SwingTools.createIcon("48/rm_logo_loading.gif");
+	private static final ImageIcon WARNING_ICON = SwingTools.createIcon("24/sign_warning.png");
 
 	/** the controller behind the creation dialog */
 	private ConfigurableController controller;
@@ -201,6 +206,11 @@ public class ConfigurableCreationDialog extends JDialog {
 
 	/** label for error reporting */
 	private JLabel errorLabel;
+
+	/** label for telling user that at least one configurable was filtered due to availability in new connection management (9.3+) */
+	private JLabel deprecationLabel;
+	/** text area for telling user that at least one configurable was filtered due to availability in new connection management (9.3+) */
+	private JTextArea deprecationArea;
 
 	/** repository manager used to get {@link RemoteRepository}s */
 	private RepositoryManager repoManager = RepositoryManager.getInstance(null);
@@ -538,6 +548,40 @@ public class ConfigurableCreationDialog extends JDialog {
 		gbc.insets = new Insets(5, 10, 5, 10);
 		outerPanel.add(errorLabel, gbc);
 
+		// Deprecation warning
+		deprecationLabel = new JLabel();
+		deprecationLabel.setIcon(WARNING_ICON);
+		deprecationLabel.setVerticalAlignment(SwingConstants.TOP);
+		deprecationLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+		gbc.gridx = 0;
+		gbc.gridy += 1;
+		gbc.weightx = 1.0;
+		gbc.weighty = 1.0;
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.gridwidth = 1;
+		gbc.insets = new Insets(10, 10, 5, 5);
+		outerPanel.add(deprecationLabel, gbc);
+
+		deprecationArea = new JTextArea(I18N.getGUILabel("configurable_creation_dialog.configurators.deprecated_hidden.label"));
+		deprecationArea.setLineWrap(true);
+		deprecationArea.setBackground(Colors.PANEL_BACKGROUND);
+		deprecationArea.setEditable(false);
+		deprecationArea.setWrapStyleWord(true);
+		deprecationArea.setBorder(null);
+		scrollPane = new ExtendedJScrollPane(deprecationArea);
+		scrollPane.setMinimumSize(AREA_SIZE);
+		scrollPane.setPreferredSize(AREA_SIZE);
+		scrollPane.setMaximumSize(AREA_SIZE);
+		scrollPane.setBorder(null);
+		gbc.gridx += 1;
+		gbc.weightx = 1;
+		gbc.weighty = 0;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridwidth = 3;
+		gbc.insets = new Insets(5, 10, 5, 10);
+		outerPanel.add(scrollPane, gbc);
+
 		// Ok and Cancel button
 		gbc.gridy += 1;
 		gbc.gridx = 1;
@@ -685,27 +729,25 @@ public class ConfigurableCreationDialog extends JDialog {
 		AbstractConfigurator<?> currentConfigurator = (AbstractConfigurator<?>) configuratorCombo.getSelectedItem();
 		String name = configurationName.getText();
 		boolean configuratorExists = currentConfigurator != null;
-		if (errorLabel != null) {
-			addButton.setEnabled(false);
-			if (configuratorExists) {
-				boolean isUnique = controller.isNameUniqueForType(currentConfigurator.getTypeId(), name);
-				if ("".equals(name.trim())) {
-					errorLabel.setText(I18N.getMessage(I18N.getGUIBundle(),
-							"gui.dialog.error.configurable_creation_dialog.invalid_name.message"));
-					return false;
-				}
-				if (!isUnique) {
-					errorLabel.setText(I18N.getMessage(I18N.getGUIBundle(),
-							"gui.dialog.error.configurable_creation_dialog.invalid_duplicate_name.message"));
-					return false;
-				}
-			} else {
+		addButton.setEnabled(false);
+		if (configuratorExists) {
+			boolean isUnique = controller.isNameUniqueForType(currentConfigurator.getTypeId(), name);
+			if ("".equals(name.trim())) {
 				errorLabel.setText(I18N.getMessage(I18N.getGUIBundle(),
-						"gui.dialog.error.configurable_creation_dialog.invalid_configuration_type.message"));
+						"gui.dialog.error.configurable_creation_dialog.invalid_name.message"));
 				return false;
 			}
-			errorLabel.setText("");
+			if (!isUnique) {
+				errorLabel.setText(I18N.getMessage(I18N.getGUIBundle(),
+						"gui.dialog.error.configurable_creation_dialog.invalid_duplicate_name.message"));
+				return false;
+			}
+		} else {
+			errorLabel.setText(I18N.getMessage(I18N.getGUIBundle(),
+					"gui.dialog.error.configurable_creation_dialog.invalid_configuration_type.message"));
+			return false;
 		}
+		errorLabel.setText("");
 		if (!addButton.isEnabled()) {
 			addButton.setEnabled(true);
 		}
@@ -718,16 +760,47 @@ public class ConfigurableCreationDialog extends JDialog {
 	private void updateConfiguratorComboBox() {
 
 		List<AbstractConfigurator<?>> configurators = new LinkedList<>();
+		boolean deprecatedHidden = false;
 		for (String typeId : ConfigurationManager.getInstance().getAllTypeIds()) {
-			// for local connections or if the server did not return a list of type ids, use all
-			// connection types
-			// otherwise use the typeIds given by the server
-			if (source == null || source.getTypeIds() != null && source.getTypeIds().contains(typeId)) {
-				AbstractConfigurator<?> c = ConfigurationManager.getInstance().getAbstractConfigurator(typeId);
+			// for local connections and unknown server versions, use all connection types
+			// MINUS the ones that were converted to the new connection management in the repository in RapidMiner 9.3
+			AbstractConfigurator<?> c = ConfigurationManager.getInstance().getAbstractConfigurator(typeId);
+			if (source == null) {
+				if (ConnectionAdapterHandler.class.isAssignableFrom(c.getClass())) {
+					// show label that informs that something was filtered due to new connection management
+					deprecatedHidden = true;
+				} else {
+					// not yet converted to new connection management, add it
+					configurators.add(c);
+				}
+			} else if (source.getKnownServerVersion() == null) {
+				// should not happen as we're connected anyway
+				configurators.add(c);
+			} else if (source.getKnownServerVersion().isAtLeast(new VersionNumber(9, 6, 0, "SNAPSHOT"))) {
+				// Server at least on 9.6, we can prevent creation of legacy connections
+				if (ConnectionAdapterHandler.class.isAssignableFrom(c.getClass())) {
+					// show label that informs that something was filtered due to new connection management
+					deprecatedHidden = true;
+				} else if (source.getTypeIds().contains(typeId)) {
+					// not yet converted to new connection management and available, add it
+					configurators.add(c);
+				}
+			} else if (source.getTypeIds().contains(typeId)) {
+				// Server below 9.6, add if the type id is available on Server
 				configurators.add(c);
 			}
+
 		}
-		configuratorCombo.setModel(new DefaultComboBoxModel<>(configurators.toArray(new AbstractConfigurator<?>[0])));
+		AbstractConfigurator<?>[] availableConfigurators = configurators.toArray(new AbstractConfigurator<?>[0]);
+		configuratorCombo.setModel(new DefaultComboBoxModel<>(availableConfigurators));
+
+		// add available options to usage stats so that we can track not-yet migrated types
+		String value = source == null ? ActionStatisticsCollector.VALUE_AVAILABLE_CONFIGURABLES_CREATION_LOCAL : ActionStatisticsCollector.VALUE_AVAILABLE_CONFIGURABLES_CREATION_SERVER;
+		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_OLD_CONNECTION, value,
+				configurators.stream().map(AbstractConfigurator::getTypeId).collect(Collectors.joining(",")));
+
+		deprecationLabel.setVisible(deprecatedHidden);
+		deprecationArea.setVisible(deprecatedHidden);
 
 		AbstractConfigurator<?> currentConfigurator = (AbstractConfigurator<?>) configuratorCombo.getSelectedItem();
 		if (currentConfigurator != null) {

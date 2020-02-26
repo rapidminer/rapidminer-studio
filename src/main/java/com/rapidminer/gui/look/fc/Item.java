@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -607,9 +607,6 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 			} else {
 				try {
 					this.thumbIcon = new ImageIcon(Tools.getScaledInstance(this.file));
-					if (this.thumbIcon == null) {
-						this.thumbIcon = getBigSystemIcon();
-					}
 				} catch (Exception ex) {
 					this.thumbIcon = getBigSystemIcon();
 				}
@@ -649,8 +646,7 @@ public class Item extends JComponent implements Comparable<Item>, MouseListener 
 		String file_original_name = this.file.getName().toLowerCase();
 		if (file_original_name.endsWith("jpeg") || file_original_name.endsWith("jpg") || file_original_name.endsWith("png")
 				|| file_original_name.endsWith("gif") || file_original_name.endsWith("bmp")
-				|| file_original_name.endsWith("tif") || file_original_name.endsWith("tiff")
-				|| file_original_name.endsWith("png")) {
+				|| file_original_name.endsWith("tif") || file_original_name.endsWith("tiff")) {
 			return true;
 		} else {
 			return false;

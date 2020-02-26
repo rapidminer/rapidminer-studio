@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -19,6 +19,8 @@
 package com.rapidminer.adaption.belt;
 
 import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.belt.table.DatetimeTableWrapper;
+import com.rapidminer.belt.table.DoubleTableWrapper;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.table.TableViewCreator;
 import com.rapidminer.example.ExampleSet;
@@ -66,7 +68,10 @@ public final class TableViewingTools {
 			try {
 				return getView(ioTable);
 			} catch (BeltConverter.ConversionException e) {
-				return TableViewCreator.INSTANCE.createView(TableViewCreator.INSTANCE.replacedCustomsWithError(ioTable.getTable()));
+				ExampleSet view =
+						TableViewCreator.INSTANCE.createView(TableViewCreator.INSTANCE.replacedCustomsWithError(ioTable.getTable()));
+				copySourceAndAnnotations(ioTable, view);
+				return view;
 			}
 		}
 		return result;
@@ -90,6 +95,19 @@ public final class TableViewingTools {
 	}
 
 	/**
+	 * Replaces the class name the same way as the other methods from this class replace the objects themselves.
+	 * Necessary since {@link IOTable}s are temporarily viewed/written as {@link ExampleSet}s.
+	 *
+	 * @param data
+	 * 		the ioobject to get the class name for
+	 * @return the class name of what the data is stored as
+	 * @since 9.6.0
+	 */
+	public static String replaceTableClassName(IOObject data) {
+		return data instanceof IOTable ? ExampleSet.class.getName() : data.getClass().getName();
+	}
+
+	/**
 	 * Wraps the {@link Table} of the given {@link IOTable} into an {@link ExampleSet} in order to visualize it.
 	 *
 	 * @param object
@@ -100,7 +118,29 @@ public final class TableViewingTools {
 	 */
 	public static ExampleSet getView(IOTable object) {
 		Table table = object.getTable();
-		return TableViewCreator.INSTANCE.createView(table);
+		ExampleSet view = TableViewCreator.INSTANCE.createView(table);
+		copySourceAndAnnotations(object, view);
+		return view;
 	}
 
+	/**
+	 * Checks if the {@link ExampleSet} is a wrapper for a belt {@link Table} that can only be used for viewing purposes.
+	 *
+	 * @param exampleSet
+	 * 		the example set to check
+	 * @return {@code true} iff the example set cannot be in processes
+	 * @since 9.6.0
+	 */
+	public static boolean isViewWrapper(ExampleSet exampleSet) {
+		return exampleSet instanceof DoubleTableWrapper || exampleSet instanceof DatetimeTableWrapper;
+	}
+
+	/**
+	 * Copies annotations and the source from the {@link IOTable} to the {@link ExampleSet}. When converting the {@link
+	 * Table} to an {@link ExampleSet} this information cannot be handled.
+	 */
+	private static void copySourceAndAnnotations(IOTable from, ExampleSet to) {
+		to.setSource(from.getSource());
+		to.getAnnotations().putAll(from.getAnnotations());
+	}
 }

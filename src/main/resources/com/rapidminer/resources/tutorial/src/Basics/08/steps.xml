@@ -31,7 +31,6 @@
 	</step>
 	<step name="Congratulations!">
 		<text>You've finished the First Tutorial Chapter! You learned how to use the most common data preprocessing operators and even built your first predictive model in RapidMiner. This is an exciting moment - celebrate!</text>
-		<text>Before you celebrate too much, try some of the following challenges:</text>
 		<questions>
 			<question>Can you find out how to restrict the depth of the decision tree, i.e. reduce its complexity?  Why could this be a good idea?</question>
 			<question>Limit the depth of the decision tree to <value>4</value>.  Use the parameter setting you found above.</question>

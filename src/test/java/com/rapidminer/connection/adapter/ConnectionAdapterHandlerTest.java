@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,31 +18,42 @@
  */
 package com.rapidminer.connection.adapter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.rapidminer.connection.ConnectionHandlerRegistry;
+import com.rapidminer.connection.ConnectionInformation;
+import com.rapidminer.connection.ConnectionInformationBuilder;
+import com.rapidminer.connection.configuration.ConfigurationParameter;
 import com.rapidminer.connection.util.ConnectionInformationSelector;
 import com.rapidminer.connection.util.ConnectionSelectionProvider;
-import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.ports.PortOwner;
-import com.rapidminer.operator.ports.impl.InputPortsImpl;
-import com.rapidminer.operator.ports.impl.OutputPortsImpl;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.tools.OperatorService;
+import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.ProcessToolsTest;
+import com.rapidminer.tools.config.ConfigurationException;
 import com.rapidminer.tools.config.ConfigurationManager;
 import com.rapidminer.tools.config.ParameterTypeConfigurable;
 import com.rapidminer.tools.documentation.OperatorDocumentation;
@@ -56,32 +67,189 @@ import com.rapidminer.tools.documentation.OperatorDocumentation;
  */
 public class ConnectionAdapterHandlerTest {
 
+	/**
+	 * Simple {@link Operator} that implements {@link ConnectionSelectionProvider} and holds a
+	 * {@link ConnectionInformationSelector}.
+	 *
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	private static class ConnectionOperator extends Operator implements ConnectionSelectionProvider {
+
+		private ConnectionInformationSelector selectorReference;
+
+		private ConnectionOperator(OperatorDescription description) {
+			super(description);
+		}
+
+		@Override
+		public ConnectionInformationSelector getConnectionSelector() {
+			return selectorReference;
+		}
+
+		@Override
+		public void setConnectionSelector(ConnectionInformationSelector selector) {
+			selectorReference = selector;
+		}
+
+	}
+
+	/**
+	 * Minimalistic {@link ConnectionAdapter} that has a {@link #cleanUp()} method whose effect can be checked.
+	 * Must be public so it can be created automatically.
+	 *
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	public static class TestConnectionAdapter extends ConnectionAdapter {
+
+		private boolean initialized = true;
+
+		@Override
+		public String getTypeId() {
+			return TEST_TYPE;
+		}
+
+		@Override
+		public void cleanUp() {
+			initialized = false;
+		}
+
+		private boolean isInitialized() {
+			return initialized;
+		}
+	}
+
+	/**
+	 * Wrapper {@link ConnectionInformationSelector} to create a test connection and provide a fake repository location
+	 *
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	private static class TestCIS extends ConnectionInformationSelector {
+
+		private final ConnectionInformationSelector original;
+
+		private TestCIS(ConnectionInformationSelector original) {
+			super(original.getInput(), original.getOutput(), original.getHandler(), original.getConnectionType());
+			this.original = original;
+		}
+
+		@Override
+		public InputPort getInput() {
+			return original.getInput();
+		}
+
+		@Override
+		public String getConnectionType() {
+			return original.getConnectionType();
+		}
+
+		@Override
+		public ConnectionInformation getConnection() throws UserError {
+			ConnectionAdapterHandler<ConnectionAdapter> handler = ConnectionAdapterHandler.getHandler(getConnectionType());
+			return handler.createNewConnectionInformation(TEST_NAME);
+		}
+
+		@Override
+		public RepositoryLocation getConnectionLocation() {
+			return original.getConnectionLocation();
+		}
+
+		@Override
+		public void passDataThrough() {
+			original.passDataThrough();
+		}
+	}
+
 	private static final String TEST_TYPE = "test";
 	private static final String TEST_NAME = "Test Connection";
+	private static final String TEST_LOCATION = "//test/test";
+	private static final String PARAMETER_TEST_INTEGER = "int_key";
+	private static OperatorDescription desc;
+	private static ParameterTypeConfigurable configurableParam;
+	private static ConnectionAdapterHandler<TestConnectionAdapter> handler;
 
 	@BeforeClass
 	@SuppressWarnings("unchecked")
-	public static void setup() {
-		ConnectionAdapterHandler<ConnectionAdapter> handler = mock(ConnectionAdapterHandler.class);
-		when(handler.getTypeId()).thenReturn(TEST_TYPE);
-		when(handler.getType()).thenReturn(TEST_TYPE);
-		when(handler.getName()).thenReturn(TEST_NAME);
+	public static void setup() throws ConfigurationException, OperatorCreationException, ConnectionAdapterException {
+		OperatorDocumentation docu = new OperatorDocumentation("Test");
+		desc = mock(OperatorDescription.class);
+		doReturn(docu).when(desc).getOperatorDocumentation();
+		when(desc.createOperatorInstance()).then(invocation -> new ConnectionOperator(desc));
+
+		Repository repo = mock(Repository.class);
+		when(repo.getName()).thenReturn(TEST_TYPE);
+
+		handler = new ConnectionAdapterHandler<TestConnectionAdapter>(null) {
+
+			@Override
+			public Class<TestConnectionAdapter> getConfigurableClass() {
+				return TestConnectionAdapter.class;
+			}
+
+			@Override
+			public String getTypeId() {
+				return TEST_TYPE;
+			}
+
+			@Override
+			public String getType() {
+				return getTypeId();
+			}
+
+			@Override
+			public TestConnectionAdapter getAdapter(ConnectionInformation connection, Operator operator) throws ConnectionAdapterException, ConfigurationException {
+				try {
+					connection = new ConnectionInformationBuilder(connection).inRepository(repo).build();
+					ConfigurationParameter parameter = connection.getConfiguration().getParameter(ConnectionAdapterHandler.BASE_GROUP + "." + PARAMETER_TEST_INTEGER);
+					if (parameter != null) {
+						String value = operator.getParameters().getParameterOrNull(PARAMETER_TEST_INTEGER);
+						if (value == null) {
+							value = "0";
+						}
+						parameter.setValue(value);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return super.getAdapter(connection, operator);
+			}
+
+			@Override
+			public String getI18NBaseKey() {
+				return null;
+			}
+
+			@Override
+			public List<ParameterType> getParameterTypes(ParameterHandler parameterHandler) {
+				return Collections.singletonList(new ParameterTypeInt(PARAMETER_TEST_INTEGER, "", 0, 20));
+			}
+		};
+
 		ConnectionAdapterHandler.registerHandler(handler);
+
+		configurableParam = new ParameterTypeConfigurable("parameter", "", TEST_TYPE);
+
+		// register a fake process root operator
+		ProcessToolsTest.setup();
 	}
 
 	@AfterClass
 	@SuppressWarnings("unchecked")
 	public static void tearDown() throws NoSuchFieldException, IllegalAccessException {
-		Field handlerMap = ConnectionAdapterHandler.class.getDeclaredField("handlerMap");
-		handlerMap.setAccessible(true);
-		((Map<String, Object>) handlerMap.get(null)).remove(TEST_TYPE);
-		ConnectionHandlerRegistry.getInstance().unregisterHandler(ConnectionHandlerRegistry.getInstance().getHandler(TEST_TYPE));
+		ConnectionHandlerRegistry.getInstance().unregisterHandler(handler);
+		assertNull(ConnectionAdapterHandler.getHandler(handler.getType()));
 		Field configurators = ConfigurationManager.class.getDeclaredField("configurators");
 		Field configurables = ConfigurationManager.class.getDeclaredField("configurables");
 		configurators.setAccessible(true);
 		configurables.setAccessible(true);
-		((Map<String, Object>) configurators.get(ConfigurationManager.getInstance())).remove(TEST_TYPE);
-		((Map<String, Object>) configurables.get(ConfigurationManager.getInstance())).remove(TEST_TYPE);
+		((Map<String, Object>) configurators.get(ConfigurationManager.getInstance())).remove(handler.getType());
+		((Map<String, Object>) configurables.get(ConfigurationManager.getInstance())).remove(handler.getType());
+		desc = null;
+		configurableParam = null;
+		handler = null;
+		ProcessToolsTest.tearDown();
 	}
 
 	@Test
@@ -95,30 +263,9 @@ public class ConnectionAdapterHandlerTest {
 
 	@Test
 	public void testGettingParameters() {
-		OperatorDocumentation docu = mock(OperatorDocumentation.class);
-		OperatorDescription desc = mock(OperatorDescription.class);
-		doReturn(docu).when(desc).getOperatorDocumentation();
 		Operator normalOperator = new Operator(desc){};
-		ParameterTypeConfigurable configurableParam = new ParameterTypeConfigurable("parameter", "", TEST_TYPE);
 		List<ParameterType> parameters = ConnectionAdapterHandler.getConnectionParameters(normalOperator, TEST_TYPE, configurableParam);
 		assertEquals("Mismatched parameters for non-connection operator", Collections.singletonList(configurableParam), parameters);
-
-		AtomicReference<ConnectionInformationSelector> selectorReference = new AtomicReference<>();
-		class ConnectionOperator extends Operator implements ConnectionSelectionProvider {
-			private ConnectionOperator(OperatorDescription description) {
-				super(description);
-			}
-
-			@Override
-			public ConnectionInformationSelector getConnectionSelector() {
-				return selectorReference.get();
-			}
-
-			@Override
-			public void setConnectionSelector(ConnectionInformationSelector selector) {
-				selectorReference.set(selector);
-			}
-		}
 
 		ConnectionOperator connectionOperator = new ConnectionOperator(desc);
 
@@ -126,8 +273,8 @@ public class ConnectionAdapterHandlerTest {
 		assertTrue(parameters.contains(configurableParam));
 		assertTrue(configurableParam.isOptionalWithoutConditions());
 		assertEquals(3, parameters.size());
-		assertNotNull("Connection selector was not set", selectorReference.get());
-		assertNotNull("Input port was not set", selectorReference.get().getInput());
-		assertNotNull("Output port was not set", selectorReference.get().getOutput());
+		assertNotNull("Connection selector was not set", connectionOperator.getConnectionSelector());
+		assertNotNull("Input port was not set", connectionOperator.getConnectionSelector().getInput());
+		assertNotNull("Output port was not set", connectionOperator.getConnectionSelector().getOutput());
 	}
 }

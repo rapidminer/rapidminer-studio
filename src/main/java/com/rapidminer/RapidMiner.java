@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -429,6 +429,11 @@ public class RapidMiner {
 	 */
 	public static final String PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS = "rapidminer.init.additional_permissions";
 
+	/**
+	 * The name of the property indicating whether or not development permissions should be enabled
+	 */
+	public static final String PROPERTY_RAPIDMINER_UPDATE_DEVELOPMENT_PERMISSIONS = "rapidminer.init.development_permissions";
+
 	// --- INIT PROPERTIES ---
 
 	/**
@@ -477,6 +482,11 @@ public class RapidMiner {
 	 * Set this parameter to {@code true} to allow http to https redirects
 	 */
 	public static final String RAPIDMINER_FOLLOW_HTTP_TO_HTTPS = "rapidminer.system.network.follow_http_to_https";
+
+	/**
+	 * Defines a default user-agent
+	 */
+	public static final String RAPIDMINER_DEFAULT_USER_AGENT = "rapidminer.system.network.default_user_agent";
 
 	public static final String PROCESS_FILE_EXTENSION = "rmp";
 
@@ -584,8 +594,11 @@ public class RapidMiner {
 		registerParameter(new ParameterTypeBoolean(RAPIDMINER_FOLLOW_HTTP_TO_HTTPS, "", true), "system");
 		registerParameter(new ParameterTypeBoolean(RAPIDMINER_FOLLOW_HTTPS_TO_HTTP, "", true), "system");
 
+		registerParameter(new ParameterTypeString(RAPIDMINER_DEFAULT_USER_AGENT, "", true), "system");
+
 		registerParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_BETA_FEATURES, "", false));
 		registerProtectedParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_ADDITIONAL_PERMISSIONS, "", false));
+		registerProtectedParameter(new ParameterTypeBoolean(RapidMiner.PROPERTY_RAPIDMINER_UPDATE_DEVELOPMENT_PERMISSIONS, "", false));
 
 		// initialize the state of IOObjects
 		ioObjectCache = new IOObjectMap();

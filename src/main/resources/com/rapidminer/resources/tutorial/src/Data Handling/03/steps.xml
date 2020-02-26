@@ -142,7 +142,7 @@
 	<step name="Congratulations!">
 		<text>You rotated an aggregated data set in wide table format - good job! <op>Pivot</op> can be difficult to
 			configure sometimes.
-			Just keep in mind that the <param>group by attributes</param> parameter parameter will define the groups in
+			Just keep in mind that the <param>group by attributes</param> parameter will define the groups in
 			the rows with one row per group while the values of the column grouping attribute parameter will define the
 			new columns.
 		</text>

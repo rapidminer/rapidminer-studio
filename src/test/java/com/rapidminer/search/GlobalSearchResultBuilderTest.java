@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.rapidminer.RapidMiner;
 import com.rapidminer.search.util.GlobalSearchableTextFakeImpl;
 
 
@@ -43,6 +44,7 @@ public class GlobalSearchResultBuilderTest {
 
 	@BeforeClass
 	public static void setup() {
+		RapidMiner.setExecutionMode(RapidMiner.ExecutionMode.UI);
 		GlobalSearchIndexer.INSTANCE.initialize();
 
 		searchable = new GlobalSearchableTextFakeImpl();

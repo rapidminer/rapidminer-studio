@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -67,7 +67,7 @@ public abstract class AbstractConfigurator<T extends Configurable> {
 
 	/**
 	 * Creates a new {@link Configurable} based on parameters. The parameters passed to this method
-	 * match the ones specified by {@link #getParameterTypes()}.
+	 * match the ones specified by {@link #getParameterTypes(ParameterHandler)}.
 	 *
 	 * @throws ConfigurationException
 	 * @name a unique (user defined) name identifying this {@link Configurable}.

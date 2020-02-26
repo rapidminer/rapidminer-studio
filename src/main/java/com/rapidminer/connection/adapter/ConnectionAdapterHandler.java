@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,38 +27,42 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.map.LRUMap;
+
 import com.rapidminer.Process;
+import com.rapidminer.ProcessStoppedListener;
+import com.rapidminer.RapidMiner;
 import com.rapidminer.connection.ConnectionHandler;
 import com.rapidminer.connection.ConnectionHandlerRegistry;
+import com.rapidminer.connection.ConnectionHandlerRegistryListener;
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationBuilder;
 import com.rapidminer.connection.configuration.ConfigurationParameter;
-import com.rapidminer.connection.configuration.ConfigurationParameterImpl;
 import com.rapidminer.connection.configuration.ConnectionConfiguration;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
 import com.rapidminer.connection.legacy.ConversionException;
 import com.rapidminer.connection.util.ConnectionInformationSelector;
 import com.rapidminer.connection.util.ConnectionSelectionProvider;
 import com.rapidminer.connection.util.GenericHandler;
+import com.rapidminer.connection.util.ParameterUtility;
 import com.rapidminer.connection.util.TestExecutionContext;
 import com.rapidminer.connection.util.TestResult;
 import com.rapidminer.connection.util.TestResult.ResultType;
 import com.rapidminer.connection.util.ValidationResult;
 import com.rapidminer.connection.valueprovider.handler.ValueProviderHandlerRegistry;
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
-import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.MDTransformationRule;
-import com.rapidminer.operator.ports.metadata.MetaDataError;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypePassword;
@@ -68,9 +72,15 @@ import com.rapidminer.parameter.SimpleListBasedParameterHandler;
 import com.rapidminer.parameter.conditions.EqualStringCondition;
 import com.rapidminer.parameter.conditions.NonEqualStringCondition;
 import com.rapidminer.parameter.conditions.PortConnectedCondition;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryAccessor;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.tools.ConsumerWithThrowable;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ProcessTools;
 import com.rapidminer.tools.ValidationUtil;
 import com.rapidminer.tools.config.AbstractConfigurator;
 import com.rapidminer.tools.config.Configurable;
@@ -122,6 +132,128 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 		extends AbstractConfigurator<T> implements ConfigurableConnectionHandler<T> {
 
+	static final String PROGRESS_CLEANUP_KEY = "connection.clean_configurable_cache";
+
+	/**
+	 * Subclass of {@link LRUMap} that cleans up values when they are removed in an asynchronous way. This works on both
+	 * normal {@link #remove(Object)} calls as well as when an entry is removed during the LRU algorithm.
+	 *
+	 * @param <K>
+	 * 		the key type
+	 * @param <V>
+	 * 		the value type
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	private abstract static class CleaningLRUMap<K, V> extends LRUMap<K, V> {
+
+		CleaningLRUMap(int maxSize) {
+			super(maxSize);
+		}
+
+		@Override
+		protected void removeEntry(HashEntry<K, V> entry, int hashIndex, HashEntry<K, V> previous) {
+			asyncCleanUp(entry.getValue());
+			super.removeEntry(entry, hashIndex, previous);
+		}
+
+		@Override
+		public void clear() {
+			forEach((key, value) -> asyncCleanUp(value));
+			super.clear();
+		}
+
+		void syncClear() {
+			forEach((key, value) -> cleanUp(value));
+			super.clear();
+		}
+
+		/**
+		 * Starts a {@link ProgressThread} to {@link #cleanUp(Object) clean up} the removed value.
+		 */
+		private void asyncCleanUp(V removed) {
+			if (removed == null) {
+				return;
+			}
+			new ProgressThread(PROGRESS_CLEANUP_KEY, false) {
+
+				@Override
+				public void run() {
+					cleanUp(removed);
+				}
+			}.start();
+		}
+
+		/**
+		 * Cleans up the given value. To be implemented by subclasses
+		 */
+		abstract void cleanUp(V value);
+	}
+
+	/**
+	 * Specific subclass of {@link CleaningLRUMap} that holds a cache for each process. The cache is represented by a
+	 * {@link ConnectionCacheByClass}.
+	 *
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	private static final class ProcessConnectionCache extends CleaningLRUMap<Process, ConnectionCacheByClass> {
+
+		private ProcessConnectionCache(int maxSize) {
+			super(maxSize);
+		}
+
+		/**
+		 * Cleans up all connections held in the given cache. This includes connections of all types.
+		 */
+		@Override
+		void cleanUp(ConnectionCacheByClass cacheByClass) {
+			cacheByClass.forEach((aClass, objectMap) -> objectMap.values()
+					.forEach(ConsumerWithThrowable.suppress(ConnectionAdapter::cleanUp,
+							t -> LogService.getRoot().log(Level.WARNING,
+									"com.rapidminer.connection.adapter.clean_up_failed",
+									new Object[]{t.getMessage()}))));
+		}
+	}
+
+	/**
+	 * Helper class representing a connection cache that is sorted by the connections' classes.
+	 *
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	private static class ConnectionCacheByClass extends HashMap<Class<? extends ConnectionAdapter>, Map<ConnectionCacheHash, ConnectionAdapter>> {}
+
+	/**
+	 * A cache pojo that holds a connection's repository location as a string as well as a hash of it's parameters.
+	 * Used as a key for {@link ConnectionAdapter ConnectionAdapters}.
+	 *
+	 * @author Jan Czogalla
+	 * @since 9.6
+	 */
+	private static class ConnectionCacheHash {
+		private String location;
+		private long paramHash;
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ConnectionCacheHash that = (ConnectionCacheHash) o;
+			return paramHash == that.paramHash &&
+					Objects.equals(location, that.location);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(location, paramHash);
+		}
+	}
+
 	/** The group key for the default parameter group */
 	public static final String BASE_GROUP = "basic";
 
@@ -138,7 +270,45 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	//endregion
 
 	/** Map of all registered {@link ConnectionHandler ConnectionHandlers} that are based on {@link ConnectionAdapterHandler} */
-	private static final Map<String, ConnectionAdapterHandler> handlerMap = new HashMap<>();
+	private static final Map<String, ConnectionAdapterHandler> HANDLER_MAP = new HashMap<>();
+	// check on registration events to catch unregistration of handlers
+	// or registration of handlers that don't go through this class' registration
+	static {
+		ConnectionHandlerRegistry.getInstance().addEventListener((ConnectionHandlerRegistryListener) (event, changedObject) -> {
+			if (!(changedObject instanceof ConnectionAdapterHandler)) {
+				return;
+			}
+			switch (event.getType()) {
+				case REGISTERED:
+					// redundancy/fallback if a connection adapter handler was registered directly
+					// through the connection handler registry
+					ConnectionAdapterHandler<?> conHandler = (ConnectionAdapterHandler) changedObject;
+					ConnectionAdapterHandler<ConnectionAdapter> handler = getHandler(changedObject.getType(), false);
+					if (handler == null) {
+						registerHandler(conHandler);
+					}
+					return;
+				case UNREGISTERED:
+					// clear handler from internal map
+					HANDLER_MAP.remove(changedObject.getType(), changedObject);
+					return;
+				default:
+			}
+		});
+	}
+
+
+	private static final int LRU_SIZE = 10;
+	private static final ProcessConnectionCache CONNECTION_CACHE = new ProcessConnectionCache(LRU_SIZE);
+	private static final ProcessStoppedListener CACHE_CLEAN_ON_STOP = ConnectionAdapterHandler::cleanupAdapters;
+
+	static {
+		RapidMiner.registerCleanupHook(() -> {
+			synchronized (ConnectionAdapterHandler.class) {
+				CONNECTION_CACHE.syncClear();
+			}
+		});
+	}
 
 	/** The namespace of this handler, might be {@code null} */
 	private final String namespace;
@@ -227,7 +397,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 				if (isEncrypted) {
 					value = encryptedKeys.get(p).transformNewValue(value);
 				}
-				cps.add(new ConfigurationParameterImpl(p, value, isEncrypted));
+				cps.add(ParameterUtility.getCPBuilder(p, isEncrypted).withValue(value).build());
 			}
 			builder.withKeys(entry.getKey(), cps);
 		}
@@ -249,6 +419,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	//endregion
 
 	//region adapter methods
+
 	/**
 	 * Gets the {@link ConnectionAdapter} that corresponds to the given {@link ConnectionInformation} and {@link Operator}.
 	 * Uses the {@link ValueProviderHandlerRegistry#injectValues(ConnectionInformation, Operator, boolean) injection mechanism}
@@ -269,6 +440,18 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 * @see #create(String, Map)
 	 */
 	public T getAdapter(ConnectionInformation connection, Operator operator) throws ConnectionAdapterException, ConfigurationException {
+		ConnectionCacheHash hash = new ConnectionCacheHash();
+		try {
+			Repository repo = connection.getRepository();
+			if (repo != null) {
+				hash.location = new RepositoryLocation(repo.getName(),
+						new String[]{Folder.CONNECTION_FOLDER_NAME, connection.getConfiguration().getName()}).getAbsoluteLocation();
+			} else {
+				hash.location = connection.getConfiguration().getName();
+			}
+		} catch (MalformedRepositoryLocationException e) {
+			// ignore
+		}
 		ConnectionConfiguration configuration = ValidationUtil.requireNonNull(connection, "connection").getConfiguration();
 		Map<String, ConfigurationParameter> keyMap = configuration.getKeyMap();
 
@@ -280,8 +463,18 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 		// remove all null values and get rid of group prefix
 		Map<String, String> adapterMap = valueMap.entrySet().stream().filter(e ->  e.getValue() != null)
 				.collect(Collectors.toMap(e -> e.getKey().substring(e.getKey().indexOf('.') + 1), Entry::getValue));
-
-		return create(configuration.getName(), adapterMap);
+		if (operator != null && operator.getProcess() != null) {
+			hash.paramHash = adapterMap.hashCode();
+			T cachedAdapter = findAdapter(operator.getProcess(), getConfigurableClass(), hash);
+			if (cachedAdapter != null) {
+				return cachedAdapter;
+			}
+		}
+		T adapter = create(configuration.getName(), adapterMap);
+		if (operator != null && operator.getProcess() != null) {
+			registerAdapter(operator.getProcess(), hash, adapter);
+		}
+		return adapter;
 	}
 
 	/**
@@ -345,9 +538,11 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 
 		TestConfigurableAction testAction = adapter.getTestAction();
 		if (testAction == null) {
+			adapter.cleanUp();
 			return new TestResult(ResultType.NOT_SUPPORTED, TestResult.I18N_KEY_NOT_IMPLEMENTED, null);
 		}
 		ActionResult testResult = testAction.doWork();
+		adapter.cleanUp();
 		switch (testResult.getResult()) {
 			case SUCCESS:
 				return TestResult.success(TestResult.I18N_KEY_SUCCESS);
@@ -506,19 +701,19 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 */
 	public static synchronized <T extends ConnectionAdapter> void registerHandler(ConnectionAdapterHandler<T> handler) {
 		String typeId = ValidationUtil.requireNonNull(handler, "handler").getTypeId();
-		ConnectionAdapterHandler<T> registeredhandler = getHandler(typeId, false);
-		if (registeredhandler != null) {
+		ConnectionAdapterHandler<T> registeredHandler = getHandler(typeId, false);
+		if (registeredHandler != null) {
 			Level severity = Level.INFO;
 			String messageKey = "com.rapidminer.connection.adapter.handler_already_registered";
-			if (registeredhandler.getClass() != handler.getClass()) {
+			if (registeredHandler.getClass() != handler.getClass()) {
 				severity = Level.WARNING;
 				messageKey += ".mismatch";
 			}
-			LogService.getRoot().log(severity, messageKey, new Object[]{typeId, registeredhandler.getClass(), handler.getClass()});
+			LogService.getRoot().log(severity, messageKey, new Object[]{typeId, registeredHandler.getClass(), handler.getClass()});
 			// check classes?
 			return;
 		}
-		handlerMap.put(typeId, handler);
+		HANDLER_MAP.put(typeId, handler);
 		handler.initialize();
 		// this is now centralized here, so when we decide to completely remove this, we can just do it here
 		ConfigurationManager.getInstance().register(handler);
@@ -569,7 +764,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 * @param typeId
 	 * 		the type ID for the adapter; must be neither {@code null} nor empty
 	 * @param oldParameter
-	 * 		the parameter for the {@link Configurable}; must not be{@code null}
+	 * 		the parameter for the {@link Configurable}; must not be {@code null}
 	 * @return the list of parameters, never {@code null}
 	 * @see ConnectionInformationSelector
 	 * @see ConnectionSelectionProvider
@@ -705,18 +900,37 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 			ActionStatisticsCollector.INSTANCE.logOldConnection(operator, oldTypeID);
 			operator.logWarning(I18N.getErrorMessage("process.error.connection.deprecated"));
 			return oldConnection;
-		} else {
-			// make sure data is propagated as otherwise each operator would need to do it himself
-			cis.passDataThrough();
-			ConnectionInformation connection = cis.getConnection();
-			ConnectionAdapterHandler<ConnectionAdapter> handler = ConnectionAdapterHandler.getHandler(cis.getConnectionType());
-			if (handler == null) {
-				throw new UserError(operator, "connection.adapter.no_handler_registered", oldTypeID);
-			}
-			T newConnection = (T) handler.getAdapter(connection, operator);
-			ActionStatisticsCollector.INSTANCE.logNewConnection(operator, connection);
-			return newConnection;
 		}
+
+		// make sure data is propagated as otherwise each operator would need to do it himself
+		cis.passDataThrough();
+		ConnectionAdapterHandler<ConnectionAdapter> handler = ConnectionAdapterHandler.getHandler(cis.getConnectionType());
+		if (handler == null) {
+			throw new UserError(operator, "connection.adapter.no_handler_registered", oldTypeID);
+		}
+		Process process = operator.getProcess();
+		ConnectionCacheHash hash = new ConnectionCacheHash();
+		RepositoryLocation connectionLocation = cis.getConnectionLocation();
+		if (connectionLocation != null) {
+			hash.location = connectionLocation.getAbsoluteLocation();
+		}
+		// get cached adapter based only on the connection location if possible and if the process is not running
+		// this reduces repository access because the parameters can only be determined if the connection
+		// is actually retrieved; for meta data manipulation this should be good enough
+		boolean isStaticContext = process != null && process.getProcessState() != Process.PROCESS_STATE_RUNNING;
+		if (isStaticContext) {
+			ConnectionAdapter cachedAdapter = findAdapter(process, handler.getConfigurableClass(), hash);
+			if (cachedAdapter != null) {
+				return (T) cachedAdapter;
+			}
+		}
+		ConnectionInformation connection = cis.getConnection();
+		ConnectionAdapter newConnection = handler.getAdapter(connection, operator);
+		if (isStaticContext) {
+			registerAdapter(process, hash, newConnection);
+		}
+		ActionStatisticsCollector.INSTANCE.logNewConnection(operator, connection);
+		return (T) newConnection;
 	}
 
 	/**
@@ -739,11 +953,67 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 		if (separator >= 0) {
 			typeId = typeId.substring(separator + 1);
 		}
-		ConnectionAdapterHandler handler = handlerMap.get(typeId);
+		ConnectionAdapterHandler handler = HANDLER_MAP.get(typeId);
 		if (handler == null && logNullHandler) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.connection.adapter.no_handler_registered", typeId);
 		}
 		return (ConnectionAdapterHandler<T>) handler;
+	}
+	//endregion
+
+	//region static methods for caching converted connection information
+
+	/**
+	 * Cleans up all {@link ConnectionAdapter ConnectionAdapters} that are associated with the given process.
+	 *
+	 * @param process
+	 * 		the process whose connections should be removed
+	 * @since 9.6
+	 */
+	public static synchronized void cleanupAdapters(Process process) {
+		CONNECTION_CACHE.remove(process);
+		if (process != null) {
+			process.removeProcessStateListener(CACHE_CLEAN_ON_STOP);
+		}
+	}
+
+	/**
+	 * Registers a newly created {@link ConnectionAdapter} for the given process and hash if not already present.
+	 *
+	 * @param process
+	 * 		the process to associate the connection with
+	 * @param hash
+	 * 		the hash of the connection
+	 * @param adapter
+	 * 		the connection to register
+	 * @since 9.6
+	 */
+	private static synchronized void registerAdapter(Process process, ConnectionCacheHash hash, ConnectionAdapter adapter) {
+		ConnectionCacheByClass typeMap = CONNECTION_CACHE.computeIfAbsent(ProcessTools.getParentProcess(process), p -> {
+			p.addProcessStateListener(CACHE_CLEAN_ON_STOP);
+			return new ConnectionCacheByClass();
+		});
+		Map<ConnectionCacheHash, ConnectionAdapter> cachedConnections =
+				typeMap.computeIfAbsent(adapter.getClass(), c -> new HashMap<>());
+		cachedConnections.putIfAbsent(hash, adapter);
+	}
+
+	/**
+	 * Finds a previously {@link #registerAdapter(Process, ConnectionCacheHash, ConnectionAdapter) registered adapter}
+	 * if possible. Otherwise returns {@code null}.
+	 *
+	 * @param process
+	 * 		the process that is the context for the searched adapter
+	 * @param adapterClass
+	 * 		the class of the searched adapter
+	 * @param hash
+	 * 		the hash of the searched adapter
+	 * @return the cached adapter or {@code null} if it is not found
+	 * @since 9.6
+	 */
+	private static synchronized <T extends ConnectionAdapter> T findAdapter(Process process, Class<T> adapterClass, ConnectionCacheHash hash) {
+		return Optional.ofNullable(CONNECTION_CACHE.get(ProcessTools.getParentProcess(process))).map(classMap -> classMap.get(adapterClass))
+				.map(conMap -> conMap.get(hash)).map(suppress(adapterClass::cast)).orElse(null);
 	}
 	//endregion
 

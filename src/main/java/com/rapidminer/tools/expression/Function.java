@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,6 +18,8 @@
 */
 package com.rapidminer.tools.expression;
 
+import java.util.concurrent.Callable;
+
 /**
  * Class for a function that can be used inside expressions. Functions are contained in a
  * {@link ExpressionParserModule} which can be used in a {@link ExpressionParserBuilder} via
@@ -34,24 +36,42 @@ public interface Function {
 	/**
 	 * @return the {@link FunctionDescription} of the function
 	 */
-	public FunctionDescription getFunctionDescription();
+	FunctionDescription getFunctionDescription();
 
 	/**
 	 * @return the function name of the function
 	 */
-	public String getFunctionName();
+	String getFunctionName();
 
 	/**
 	 * Creates an {@link ExpressionEvaluator} for this function with the given inputEvaluators as
 	 * arguments.
 	 *
 	 * @param inputEvaluators
-	 *            the {@link ExpressionEvaluators} containing the input arguments
+	 *            the {@link ExpressionEvaluator ExpressionEvaluators} containing the input arguments
 	 * @return an expression evaluator for this function applied to the inputEvaluators
 	 * @throws ExpressionParsingException
 	 *             if the creation of the ExpressionEvaluator fails, FunctionInputException if the
 	 *             cause for the failure is a wrong argument
 	 */
-	public ExpressionEvaluator compute(ExpressionEvaluator... inputEvaluators) throws ExpressionParsingException;
+	ExpressionEvaluator compute(ExpressionEvaluator... inputEvaluators) throws ExpressionParsingException;
+
+	/**
+	 * Creates an {@link ExpressionEvaluator} for this function with the given inputEvaluators as
+	 * arguments.
+	 *
+	 * @param stopChecker
+	 * 		checks for stop and may throw an exception to indicate to stop the compuatation
+	 * @param inputEvaluators
+	 * 		the {@link ExpressionEvaluator ExpressionEvaluators} containing the input arguments
+	 * @return an expression evaluator for this function applied to the inputEvaluators
+	 * @throws ExpressionParsingException
+	 * 		if the creation of the ExpressionEvaluator fails, FunctionInputException if the
+	 * 		cause for the failure is a wrong argument
+	 * @since 9.6.0
+	 */
+	default ExpressionEvaluator compute(Callable<Void> stopChecker, ExpressionEvaluator... inputEvaluators) throws ExpressionParsingException {
+		return compute(inputEvaluators);
+	}
 
 }

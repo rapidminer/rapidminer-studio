@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -47,10 +47,10 @@ public class Binominal extends Abstract2DoubleInputFunction {
 		ExpressionType left = inputTypes[0];
 		ExpressionType right = inputTypes[1];
 
-		if (left == ExpressionType.INTEGER && right == ExpressionType.INTEGER) {
+		if ((left == ExpressionType.INTEGER || left == ExpressionType.DOUBLE) && (right == ExpressionType.INTEGER || right == ExpressionType.DOUBLE)) {
 			return ExpressionType.INTEGER;
 		} else {
-			throw new FunctionInputException("expression_parser.function_wrong_type", getFunctionName(), "integer");
+			throw new FunctionInputException("expression_parser.function_wrong_type", getFunctionName(), "double or integer");
 		}
 	}
 
@@ -58,18 +58,21 @@ public class Binominal extends Abstract2DoubleInputFunction {
 	protected double compute(double value1, double value2) {
 
 		// special case for handling missing values
-		if (Double.isNaN(value1) || Double.isNaN(value2)) {
+		if (Double.isNaN(value1) || Double.isNaN(value2) || Double.isInfinite(value1) || Double.isInfinite(value2)) {
 			return Double.NaN;
 		}
 
-		if (value1 < 0 || value2 < 0) {
+		int v1 = (int) value1;
+		int v2 = (int) value2;
+
+		if (v1 < 0 || v2 < 0) {
 			throw new FunctionInputException("expression_parser.function_non_negative", getFunctionName());
 		}
 		// This is the common definition for the case for k > n.
-		if (value2 > value1) {
+		if (v2 > v1) {
 			return 0;
 		} else {
-			return CombinatoricsUtils.binomialCoefficientDouble((int) value1, (int) value2);
+			return CombinatoricsUtils.binomialCoefficientDouble(v1, v2);
 		}
 	}
 

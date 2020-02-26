@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -92,7 +92,7 @@ public interface ConnectionConfiguration {
 	/** Gets a copy of the map of fully qualified placeholder parameters to parameters */
 	Map<String, ConfigurationParameter> getPlaceholderKeyMap();
 
-	/** Checks wether the specified fully qualified key represents a placeholder parameter. */
+	/** Checks whether the specified fully qualified key represents a placeholder parameter. */
 	boolean isPlaceholder(String key);
 
 	/** Gets a list of all qualified keys, both normal keys and placeholders; changes on this list have no effect on this configuration */

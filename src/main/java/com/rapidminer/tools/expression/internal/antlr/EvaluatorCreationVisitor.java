@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,10 +18,13 @@
 */
 package com.rapidminer.tools.expression.internal.antlr;
 
+import java.util.concurrent.Callable;
+
 import com.rapidminer.tools.expression.ExpressionContext;
 import com.rapidminer.tools.expression.ExpressionEvaluator;
 import com.rapidminer.tools.expression.ExpressionType;
 import com.rapidminer.tools.expression.Function;
+import com.rapidminer.tools.expression.internal.SimpleExpressionContext;
 import com.rapidminer.tools.expression.internal.SimpleExpressionEvaluator;
 import com.rapidminer.tools.expression.internal.antlr.FunctionExpressionParser.AttributeContext;
 import com.rapidminer.tools.expression.internal.antlr.FunctionExpressionParser.FunctionContext;
@@ -37,7 +40,7 @@ import com.rapidminer.tools.expression.internal.antlr.FunctionExpressionParser.V
 
 /**
  * Visitor that recursively builds an {@link ExpressionEvaluator}. Specifies what should happen at
- * every node of the {@link ParseTree}.
+ * every node of the {@link org.antlr.v4.runtime.tree.ParseTree ParseTree}.
  *
  * @author Gisa Schaefer
  *
@@ -62,28 +65,16 @@ class EvaluatorCreationVisitor extends FunctionExpressionParserBaseVisitor<Expre
 		if (ctx.op == null) {
 			return visit(ctx.atomExp());
 		} else {
-
-			if (ctx.operationExp().size() == 1) {
-				ExpressionEvaluator right = visit(ctx.operationExp(0));
-
-				String operatorName = ctx.op.getText();
-				Function function = lookUp.getFunction(ctx.op.getText());
-				if (function == null) {
-					throw new UnknownFunctionException(ctx, "expression_parser.unknown_operator", operatorName);
-				}
-				return function.compute(right);
-
-			} else {
-				ExpressionEvaluator left = visit(ctx.operationExp(0));
-				ExpressionEvaluator right = visit(ctx.operationExp(1));
-
-				String operatorName = ctx.op.getText();
-				Function function = lookUp.getFunction(ctx.op.getText());
-				if (function == null) {
-					throw new UnknownFunctionException(ctx, "expression_parser.unknown_operator", operatorName);
-				}
-				return function.compute(left, right);
+			ExpressionEvaluator[] evals = new ExpressionEvaluator[ctx.operationExp().size() == 1 ? 1 : 2];
+			for (int i = 0; i < evals.length; i++) {
+				evals[i] = visit(ctx.operationExp(i));
 			}
+			String operatorName = ctx.op.getText();
+			Function function = lookUp.getFunction(ctx.op.getText());
+			if (function == null) {
+				throw new UnknownFunctionException(ctx, "expression_parser.unknown_operator", operatorName);
+			}
+			return function.compute(getStopChecker(), evals);
 		}
 	}
 
@@ -107,7 +98,7 @@ class EvaluatorCreationVisitor extends FunctionExpressionParserBaseVisitor<Expre
 			throw new UnknownFunctionException(ctx, "expression_parser.unknown_function", functionName);
 		}
 
-		return function.compute(innerEvaluators);
+		return function.compute(getStopChecker(), innerEvaluators);
 	}
 
 	@Override
@@ -223,4 +214,14 @@ class EvaluatorCreationVisitor extends FunctionExpressionParserBaseVisitor<Expre
 		return new SimpleExpressionEvaluator(doubleValue, ExpressionType.INTEGER);
 	}
 
+	/** @since 9.6.0 */
+	private Callable<Void> getStopChecker() {
+		if (lookUp instanceof SimpleExpressionContext) {
+			Callable<Void> stopChecker = ((SimpleExpressionContext) lookUp).getStopChecker();
+			if (stopChecker != null) {
+				return  stopChecker;
+			}
+		}
+		return () -> null;
+	}
 }

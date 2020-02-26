@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -21,11 +21,14 @@ package com.rapidminer.connection.gui.components;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ItemEvent;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.connection.gui.model.ConnectionParameterModel;
+import com.rapidminer.gui.tools.ExtendedJComboBox;
 
 
 /**
@@ -37,14 +40,30 @@ import com.rapidminer.connection.gui.model.ConnectionParameterModel;
 public class InjectableComponentWrapper extends JPanel {
 
 	/**
-	 * Creates a {@link InjectableComponentWrapper}
+	 * Creates a {@link InjectableComponentWrapper} with a default {@link InjectedParameterPlaceholderLabel placeholder}.
+	 * Same as {@link #InjectableComponentWrapper(JComponent, JComponent, ConnectionParameterModel)
+	 * InjectableComponentWrapper(component, new InjectedParameterPlaceholderLabel(parameter), parameter)}
 	 *
-	 * @param component the component to wrap
-	 * @param parameter the parameter which is displayed by the {@code component}
+	 * @param component
+	 * 		the component to wrap
+	 * @param parameter
+	 * 		the parameter which is displayed by the {@code component}
 	 */
 	public InjectableComponentWrapper(JComponent component, ConnectionParameterModel parameter) {
+		this(component, new InjectedParameterPlaceholderLabel(parameter), parameter);
+	}
+
+	/**
+	 * Creates a {@link InjectableComponentWrapper} with a custom placeholder
+	 *
+	 * @param component
+	 * 		the component to wrap
+	 * @param parameter
+	 * 		the parameter which is displayed by the {@code component}
+	 * @since 9.6
+	 */
+	public InjectableComponentWrapper(JComponent component, JComponent placeholder, ConnectionParameterModel parameter) {
 		super(new GridBagLayout());
-		JComponent placeholder = new InjectedParameterPlaceholderLabel(parameter);
 		component.setVisible(!parameter.isInjected());
 		placeholder.setVisible(parameter.isInjected());
 
@@ -69,6 +88,36 @@ public class InjectableComponentWrapper extends JPanel {
 		}));
 		parameter.enabledProperty().addListener((observable, oldValue, newValue) -> placeholder.setEnabled(newValue));
 		placeholder.setEnabled(parameter.isEnabled());
+	}
+
+	/**
+	 * Creates a combobox that can be injected and updates with regards to the given parameter.
+	 *
+	 * @param parameter
+	 * 		the parameter the combobox should represent
+	 * @param categories
+	 * 		the categories for the combobox; must not be {@code null}
+	 * @param initialValue
+	 * 		the initial value of the combobox; can be {@code null}
+	 * @return the wrapped combobox
+	 * @since 9.6
+	 */
+	public static JComponent getInjectableCombobox(ConnectionParameterModel parameter, String[] categories, String initialValue) {
+		JComboBox<String> comboBox = new ExtendedJComboBox<>(categories);
+		if (initialValue != null ) {
+			comboBox.setSelectedItem(initialValue);
+		}
+		if (parameter.getValue() != null) {
+			comboBox.setSelectedItem(parameter.getValue());
+		}
+
+		comboBox.addItemListener(event -> {
+			if (event.getStateChange() == ItemEvent.SELECTED) {
+				parameter.setValue(event.getItem().toString());
+			}
+		});
+
+		return new InjectableComponentWrapper(comboBox, parameter);
 	}
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -69,6 +69,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import org.xml.sax.ext.DefaultHandler2;
 
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.XMLException;
@@ -171,7 +172,11 @@ public class XMLTools {
 	public static DocumentBuilder createDocumentBuilder() throws XMLParserException {
 		try {
 			synchronized (BUILDER_FACTORY) {
-				return BUILDER_FACTORY.newDocumentBuilder();
+				DocumentBuilder builder = BUILDER_FACTORY.newDocumentBuilder();
+				// In contrast to the native default error handler,
+				// DefaultHandler2 does not print stuff to System.err
+				builder.setErrorHandler(new DefaultHandler2());
+				return builder;
 			}
 		} catch (ParserConfigurationException e) {
 			LogService.getRoot().log(Level.WARNING, "Unable to create document builder", e);

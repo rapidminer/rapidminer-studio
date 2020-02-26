@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -18,20 +18,7 @@
 */
 package com.rapidminer.tools;
 
-import java.awt.Desktop;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.Action;
-import javax.swing.event.HyperlinkListener;
-
+import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.gui.MainFrame;
@@ -43,6 +30,7 @@ import com.rapidminer.gui.dialog.BrowserUnavailableDialogFactory;
 import com.rapidminer.gui.security.PasswordManager;
 import com.rapidminer.gui.tools.DockingTools;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Entry;
@@ -53,6 +41,22 @@ import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryBrowser;
 import com.rapidminer.tools.update.internal.UpdateManagerRegistry;
+
+import javax.swing.Action;
+import javax.swing.SwingUtilities;
+import javax.swing.event.HyperlinkListener;
+import java.awt.Desktop;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -117,6 +121,7 @@ public class RMUrlHandler {
 	private static final String RAPIDMINER_SCHEMA_EXTENSION = "extension";
 	private static final String RAPIDMINER_SCHEMA_REPOSITORY = "repository";
 	private static final String RAPIDMINER_SCHEMA_OPERATOR_TUTORIAL_PROCESS = "operator_tutorial_process";
+	private static final String RAPIDMINER_SCHEMA_PROCESS_URL = "process_url";
 	private static final String INTERNAL_SCHEMA_OPDOC = "opdoc/";
 	private static final String INTERNAL_SCHEMA_OPERATOR = "operator/";
 	private static final String SCHEMA_HTTP = "http://";
@@ -444,6 +449,31 @@ public class RMUrlHandler {
 				} catch (Exception e) {
 					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.unknown_rapidminer_url",
 							new Object[]{urlStr});
+				}
+				break;
+			case RAPIDMINER_SCHEMA_PROCESS_URL:
+				// example: rapidminer://process_url/s3.amazonaws.com:rapidminer.community:XML:61083.xml
+				// urls must use colon instead of slashes since we split along the slashes above, for that reason we
+				// also cannot accept a url with the schema but https:// will be added in front automatically
+				locString = components[1].replaceAll(":", "/");
+				URL processURL = null;
+				try {
+					processURL = new URL(SCHEMA_HTTPS + locString);
+				} catch (MalformedURLException e) {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.malformed_rapidminer_url",
+							new Object[] { urlStr, e.getMessage() });
+				}
+				if (processURL != null) {
+					try {
+						Process p = new Process(processURL);
+						// ensure this is tracked in UsageStats by setting the process origin
+						ProcessOriginProcessXMLFilter.setProcessOriginState(p, ProcessOriginProcessXMLFilter.ProcessOriginState.WEB_URL);
+						if (RapidMinerGUI.getMainFrame().close()) {
+							SwingUtilities.invokeLater(() -> RapidMinerGUI.getMainFrame().setOpenedProcess(p));
+						}
+					} catch (IOException | XMLException | RuntimeException e) {
+						LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.url_process_failed", new Object[] { urlStr });
+					}
 				}
 				break;
 			default:

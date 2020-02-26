@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
@@ -120,7 +121,7 @@ public class OperatorService {
 	/**
 	 * Maps operator keys as defined in the OperatorsCore.xml to operator descriptions.
 	 */
-	private static final Map<String, OperatorDescription> KEYS_TO_DESCRIPTIONS = new HashMap<>();
+	private static final Map<String, OperatorDescription> KEYS_TO_DESCRIPTIONS = new ConcurrentHashMap<>();
 
 	/** Set of all Operator classes registered. */
 	private static final Set<Class<? extends Operator>> REGISTERED_OPERATOR_CLASSES = new HashSet<>();
@@ -167,7 +168,9 @@ public class OperatorService {
 		// this serves 2 purposes:
 		// 1: Add Global Search capabilities for operators by registering OperatorServiceListener
 		// 2: Keep reference so that weak listener reference is not killed via GC
-		operatorSearchable = new OperatorGlobalSearch();
+		if (!RapidMiner.getExecutionMode().isHeadless()) {
+			operatorSearchable = new OperatorGlobalSearch();
+		}
 
 		URL mainOperators = getMainOperators();
 		if (mainOperators == null) {

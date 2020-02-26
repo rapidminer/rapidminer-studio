@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -33,8 +33,17 @@ import com.rapidminer.gui.StaticButtonModel;
  */
 public class ConnectionParameterCheckBox extends JCheckBox {
 
+	/**
+	 * @deprecated since 9.6; use {@link #ConnectionParameterCheckBox(ConnectionParameterModel)} instead
+	 */
+	@Deprecated
 	public ConnectionParameterCheckBox(String type, ConnectionParameterModel parameter) {
-		this(type, parameter.getGroupName(), parameter.getName());
+		this(parameter);
+	}
+
+	/** @since 9.6 */
+	public ConnectionParameterCheckBox(ConnectionParameterModel parameter) {
+		this(parameter.getType(), parameter.getGroupName(), parameter.getName());
 		boolean editable = parameter.isEditable();
 		setEnabled((parameter.isEnabled() && editable));
 		setSelected(Boolean.parseBoolean(parameter.getValue()));

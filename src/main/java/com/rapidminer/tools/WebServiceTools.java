@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -26,13 +26,17 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.xml.ws.BindingProvider;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rapidminer.RapidMiner;
 import com.rapidminer.tools.net.UrlFollower;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
 
@@ -41,12 +45,11 @@ import com.rapidminer.tools.parameter.ParameterChangeListener;
  * Some utility methods for web services and url connections.
  *
  * @author Simon Fischer, Marco Boeck
- *
  */
 public class WebServiceTools {
 
 	// three minutes
-	private static final int READ_TIMEOUT = 180000;
+	private static final int READ_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(3);
 
 	private static final int CHUNKED_SIZE = 4096 * 16;
 
@@ -54,6 +57,12 @@ public class WebServiceTools {
 
 	/** the timeout in ms used for url connections */
 	public static int TIMEOUT_URL_CONNECTION;
+
+	/** The HTTP user agent request header */
+	private static final String USER_AGENT_HEADER = "User-Agent";
+
+	/** the custom userAgent */
+	private static String userAgent = StringUtils.stripToNull(ParameterService.getParameterValue(RapidMiner.RAPIDMINER_DEFAULT_USER_AGENT));
 
 	static {
 		String timeoutStr = ParameterService.getParameterValue(WEB_SERVICE_TIMEOUT);
@@ -74,6 +83,8 @@ public class WebServiceTools {
 					if (value != null) {
 						TIMEOUT_URL_CONNECTION = Integer.parseInt(value);
 					}
+				} else if (RapidMiner.RAPIDMINER_DEFAULT_USER_AGENT.equals(key)) {
+					userAgent = StringUtils.stripToNull(value);
 				}
 			}
 		});
@@ -130,8 +141,14 @@ public class WebServiceTools {
 
 		connection.setConnectTimeout(TIMEOUT_URL_CONNECTION);
 		connection.setReadTimeout(READ_TIMEOUT);
-		if (connection instanceof HttpURLConnection && isChunked) {
-			((HttpURLConnection) connection).setChunkedStreamingMode(CHUNKED_SIZE);
+		if (connection instanceof HttpURLConnection) {
+			if (isChunked) {
+				((HttpURLConnection) connection).setChunkedStreamingMode(CHUNKED_SIZE);
+			}
+			String userAgentCopy = userAgent;
+			if (userAgentCopy != null && connection.getRequestProperties().keySet().stream().noneMatch(USER_AGENT_HEADER::equalsIgnoreCase)) {
+				connection.setRequestProperty(USER_AGENT_HEADER, userAgentCopy);
+			}
 		}
 	}
 

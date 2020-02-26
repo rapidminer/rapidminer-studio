@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -339,8 +339,8 @@ public class Plugin {
 		PLUGIN_BLACKLIST.put("rmx_model_simulator", new Pair<>(null, new VersionNumber(9, 0, 0, "BETA4")));
 
 		// Google dependencies of earlier In-Database Processing extension and newer Cloud
-		// Connectivity may collide
-		PLUGIN_BLACKLIST.put("rmx_in_database_processing", new Pair<>(null, new VersionNumber(9, 1, 0)));
+		// Connectivity may collide. Force 9.5.0+ usage
+		PLUGIN_BLACKLIST.put("rmx_in_database_processing", new Pair<>(null, new VersionNumber(9, 4, 999)));
 	}
 
 	/**
@@ -739,21 +739,22 @@ public class Plugin {
 
 		// Do only register renderers and process renderer colors if not in headless mode
 		if (!RapidMiner.getExecutionMode().isHeadless()) {
+			// registering colors
+			if (pluginGroupDescriptions != null) {
+				ProcessDrawUtils.registerAdditionalObjectColors(pluginGroupDescriptions, name, classLoader, this);
+				ProcessDrawUtils.registerAdditionalGroupColors(pluginGroupDescriptions, name, classLoader, this);
+			}
+
 			// registering renderers
 			if (pluginResourceObjects != null) {
 				URL resource = this.classLoader.getResource(pluginResourceObjects);
 				if (resource != null) {
+					this.classLoader.setIgnoreDependencyClassloaders(false);
 					RendererService.init(name, resource, this.classLoader);
 				} else {
 					throw new PluginException("Cannot find io object descriptor '" + pluginResourceObjects + "' for plugin "
 							+ getName() + ".");
 				}
-			}
-
-			// registering colors
-			if (pluginGroupDescriptions != null) {
-				ProcessDrawUtils.registerAdditionalObjectColors(pluginGroupDescriptions, name, classLoader, this);
-				ProcessDrawUtils.registerAdditionalGroupColors(pluginGroupDescriptions, name, classLoader, this);
 			}
 		}
 
@@ -1232,9 +1233,8 @@ public class Plugin {
 						found = true;
 						dependenciesMet = false;
 						break; // break this loop: Nothing to check
-					} else {
-						dependenciesMet &= initialized.contains(dependencyPlugin);
 					}
+					dependenciesMet &= initialized.contains(dependencyPlugin);
 				}
 
 				// if we have all dependencies met: Load final class loader

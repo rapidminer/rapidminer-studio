@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -52,23 +52,45 @@ public class SimpleExpressionContext implements ExpressionContext {
 	private List<Resolver> scopeResolvers;
 	private List<Resolver> constantResolvers;
 
+	private final Callable<Void> stopChecker;
+
 	/**
 	 * Creates a {@link ExpressionContext} that uses the given functions and resolvers.
 	 *
 	 * @param functions
-	 *            the functions to use in expressions
+	 * 		the functions to use in expressions
 	 * @param scopeResolvers
-	 *            the scope resolvers to use
+	 * 		the scope resolvers to use
 	 * @param dynamicResolvers
-	 *            the resolvers for dynamic variables to use
+	 * 		the resolvers for dynamic variables to use
 	 * @param constantResolvers
-	 *            the resolvers for constants
 	 */
 	public SimpleExpressionContext(List<Function> functions, List<Resolver> scopeResolvers, List<Resolver> dynamicResolvers,
-			List<Resolver> constantResolvers) {
+								   List<Resolver> constantResolvers) {
+		this(functions, scopeResolvers, dynamicResolvers, constantResolvers, null);
+	}
+
+	/**
+	 * Creates a {@link ExpressionContext} that uses the given functions and resolvers.
+	 *
+	 * @param functions
+	 * 		the functions to use in expressions
+	 * @param scopeResolvers
+	 * 		the scope resolvers to use
+	 * @param dynamicResolvers
+	 * 		the resolvers for dynamic variables to use
+	 * @param constantResolvers
+	 * 		the resolvers for constants
+	 * @param stopChecker
+	 * 		a callable that might throw an exception to stop a running evaluation
+	 * @since 9.6.0
+	 */
+	public SimpleExpressionContext(List<Function> functions, List<Resolver> scopeResolvers, List<Resolver> dynamicResolvers,
+								   List<Resolver> constantResolvers, Callable<Void> stopChecker) {
 		this.scopeResolvers = scopeResolvers;
 		this.dynamicResolvers = dynamicResolvers;
 		this.constantResolvers = constantResolvers;
+		this.stopChecker = stopChecker == null ? () -> null : stopChecker;
 
 		this.functionMap = new LinkedHashMap<>();
 		for (Function function : functions) {
@@ -259,5 +281,14 @@ public class SimpleExpressionContext implements ExpressionContext {
 		} else {
 			return null;
 		}
+	}
+
+	/**
+	 * Returns the stop checker.
+	 *
+	 * @since 9.6.0
+	 */
+	public Callable<Void> getStopChecker() {
+		return stopChecker;
 	}
 }

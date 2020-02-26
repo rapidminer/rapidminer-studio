@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -21,10 +21,10 @@ package com.rapidminer.connection.gui.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.rapidminer.connection.util.ParameterUtility;
 import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.connection.valueprovider.ValueProviderImpl;
 import com.rapidminer.connection.valueprovider.ValueProviderParameter;
-import com.rapidminer.connection.valueprovider.ValueProviderParameterImpl;
 
 
 /**
@@ -63,7 +63,8 @@ public final class ValueProviderModelConverter {
 	static ValueProviderImpl toValueProvider(ValueProvider model) {
 		List<ValueProviderParameter> parameters = new ArrayList<>();
 		for (ValueProviderParameter param : model.getParameters()) {
-			parameters.add(new ValueProviderParameterImpl(param.getName(), param.getValue(), param.isEncrypted(), param.isEnabled()));
+			parameters.add(ParameterUtility.getVPPBuilder(param.getName(), param.isEncrypted())
+					.withValue(param.getValue()).enable(param.isEnabled()).build());
 		}
 		return new ValueProviderImpl(model.getName(), model.getType(), parameters);
 	}

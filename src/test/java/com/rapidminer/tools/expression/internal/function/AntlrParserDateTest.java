@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -481,6 +482,61 @@ public class AntlrParserDateTest extends AntlrParserTest {
 		}
 	}
 
+	@Test
+	public void dateAddWithReals() throws ExpressionException {
+		// only integer portion should be taken into account according to docs
+		ExampleSet exampleSet = makeDateExampleSet();
+		ExampleResolver resolver = new ExampleResolver(exampleSet);
+		resolver.bind(exampleSet.getExample(0));
+		Expression expression = getExpressionWithFunctionsAndExamples("date_add(date_now(), 5.9, DATE_UNIT_HOUR)",
+				resolver);
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.HOUR, 5);
+		double diff = cal.getTime().getTime() - expression.evaluateDate().getTime();
+		assertTrue("Dates aren't close enough to each other!", Math.abs(diff) < 10);
+
+		expression = getExpressionWithFunctionsAndExamples("date_add(date_now(), 6.0, DATE_UNIT_HOUR)",
+				resolver);
+		cal = Calendar.getInstance();
+		cal.add(Calendar.HOUR, 6);
+		diff = cal.getTime().getTime() - expression.evaluateDate().getTime();
+		assertTrue("Dates aren't close enough to each other!", Math.abs(diff) < 10);
+	}
+
+	@Test
+	public void dateAddWithLongs() {
+		try {
+			ExampleSet exampleSet = makeDateExampleSet();
+			ExampleResolver resolver = new ExampleResolver(exampleSet);
+			resolver.bind(exampleSet.getExample(0));
+			long overFlow = 20L;
+			long addValue = overFlow + 2L * Integer.MAX_VALUE;
+			Expression expression = getExpressionWithFunctionsAndExamples(
+					"date_add(date_now(), " + addValue + ", DATE_UNIT_HOUR)", resolver);
+			Date evaluateDate = expression.evaluateDate();
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.HOUR_OF_DAY, Integer.MAX_VALUE);
+			cal.add(Calendar.HOUR_OF_DAY, Integer.MAX_VALUE);
+			cal.add(Calendar.HOUR_OF_DAY, (int) overFlow);
+			double diff = cal.getTime().getTime() - evaluateDate.getTime();
+			assertTrue("Dates aren't close enough to each other!" + "(Diff was " + diff + ")", Math.abs(diff) < 15);
+
+			addValue = - overFlow + 2L * Integer.MIN_VALUE;
+			expression = getExpressionWithFunctionsAndExamples(
+					"date_add(date_now(), " + addValue + ", DATE_UNIT_HOUR)", resolver);
+			evaluateDate = expression.evaluateDate();
+			cal = Calendar.getInstance();
+			cal.add(Calendar.HOUR_OF_DAY, Integer.MIN_VALUE + 1000);
+			cal.add(Calendar.HOUR_OF_DAY, Integer.MIN_VALUE + 1000);
+			cal.add(Calendar.HOUR_OF_DAY, (int) -overFlow - 2000);
+			diff = cal.getTime().getTime() - evaluateDate.getTime();
+			assertTrue("Dates aren't close enough to each other!" + "(Diff was " + diff + ")", Math.abs(diff) < 15);
+		} catch (ExpressionException e) {
+			fail(e.getMessage());
+		}
+	}
+
+	@Test
 	public void dateAddBasicWithLocaleTZ() {
 		try {
 			ExampleSet exampleSet = makeDateExampleSet();
@@ -497,13 +553,14 @@ public class AntlrParserDateTest extends AntlrParserTest {
 		}
 	}
 
+	@Test
 	public void dateAddBasicWithLocaleTZMissing() {
 		try {
 			ExampleSet exampleSet = makeDateExampleSet();
 			ExampleResolver resolver = new ExampleResolver(exampleSet);
 			resolver.bind(exampleSet.getExample(0));
 			Expression expression = getExpressionWithFunctionsAndExamples(
-					"date_add(date_now(), 5, DATE_UNIT_HOUR, MISSNING_NOMINAL, MISSNING_NOMINAL)", resolver);
+					"date_add(date_now(), 5, DATE_UNIT_HOUR, MISSING_NOMINAL, MISSING_NOMINAL)", resolver);
 			Calendar cal = Calendar.getInstance();
 			cal.add(Calendar.HOUR, 5);
 			double diff = cal.getTime().getTime() - expression.evaluateDate().getTime();
@@ -633,6 +690,44 @@ public class AntlrParserDateTest extends AntlrParserTest {
 			Expression expression = getExpressionWithFunctionsAndExamples("date_set(date_time, 11, DATE_UNIT_MONTH)",
 					resolver);
 			assertEquals(11, expression.evaluateDate().getMonth());
+		} catch (ExpressionException e) {
+			fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void dateSetWithReals() throws ExpressionException {
+		// only integer portion should be taken into account according to docs
+		ExampleSet exampleSet = makeDateExampleSet();
+		ExampleResolver resolver = new ExampleResolver(exampleSet);
+		resolver.bind(exampleSet.getExample(0));
+		Expression expression = getExpressionWithFunctionsAndExamples("date_set(date_time, 10.9, DATE_UNIT_MONTH)",
+				resolver);
+		assertEquals(10, expression.evaluateDate().getMonth());
+
+		expression = getExpressionWithFunctionsAndExamples("date_set(date_time, 11.0, DATE_UNIT_MONTH)",
+				resolver);
+		assertEquals(11, expression.evaluateDate().getMonth());
+	}
+
+	@Test
+	public void dateSetWithLongs() {
+		try {
+			ExampleSet exampleSet = makeDateExampleSet();
+			ExampleResolver resolver = new ExampleResolver(exampleSet);
+			resolver.bind(exampleSet.getExample(0));
+			long setValue = 20L + 2L * Integer.MAX_VALUE;
+			Expression expression = getExpressionWithFunctionsAndExamples(
+					"date_set(date_time, " + setValue + ", DATE_UNIT_MINUTE)", resolver);
+			assertEquals(setValue % 60, expression.evaluateDate().getMinutes());
+			setValue *= -1;
+			expression = getExpressionWithFunctionsAndExamples(
+					"date_set(date_time, " + setValue + ", DATE_UNIT_MINUTE)", resolver);
+			long expected = setValue % 60;
+			if (expected < 0) {
+				expected += 60;
+			}
+			assertEquals(expected, expression.evaluateDate().getMinutes());
 		} catch (ExpressionException e) {
 			fail(e.getMessage());
 		}
@@ -935,5 +1030,4 @@ public class AntlrParserDateTest extends AntlrParserTest {
 			fail(e.getMessage());
 		}
 	}
-
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -199,6 +199,12 @@ public class DeclareMissingValueOperator extends AbstractExampleSetProcessing {
 						Boolean resultBoolean;
 						try {
 							resultBoolean = result.evaluateBoolean();
+							// some expressions can return null (e.g. matches(att, val) when the attribute value is missing)
+							// in that case we treat the evaluation as a failure, thus we will NOT set the value to missing
+							// without this, an NPE would occur later when trying to evaluate if (resultBoolean)
+							if (resultBoolean == null) {
+								resultBoolean = Boolean.FALSE;
+							}
 						} catch (ExpressionException e) {
 							throw ExpressionParserUtils.convertToUserError(this, expression, e);
 						}

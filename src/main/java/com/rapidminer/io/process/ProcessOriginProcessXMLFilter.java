@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -123,7 +123,14 @@ public class ProcessOriginProcessXMLFilter implements ProcessXMLFilter {
 		 *
 		 * @since 9.0.2
 		 */
-		EXPORTED_AUTOMODEL_CLOUD("amc_exp_");
+		EXPORTED_AUTOMODEL_CLOUD("amc_exp_"),
+
+		/**
+		 * Loaded from a web URL which typically would be done by clicking on a rapidminer://process_url/... link.
+		 *
+		 * @since 9.6.0
+		 */
+		WEB_URL("web_url_");
 
 
 		private String prefix;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -656,22 +656,26 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 	 */
 	public void loadConfiguration() {
 		for (AbstractConfigurator<? extends Configurable> configurator : configurators.values()) {
-			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ConfigurationManager.loading_configuration",
-			        configurator.getName());
-			Map<Pair<Integer, String>, Map<String, String>> parameters;
 			try {
-				parameters = loadAllParameters(configurator);
-			} catch (ConfigurationException e1) {
-				LogService.getRoot().log(Level.WARNING,
-				        I18N.getMessage(LogService.getRoot().getResourceBundle(),
-				                "com.rapidminer.tools.config.ConfigurationManager.loading_configuration_error",
-				                configurator.getName(), e1),
-				        e1);
-				continue;
+				LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ConfigurationManager.loading_configuration",
+						configurator.getName());
+				Map<Pair<Integer, String>, Map<String, String>> parameters;
+				try {
+					parameters = loadAllParameters(configurator);
+				} catch (ConfigurationException e1) {
+					LogService.getRoot().log(Level.WARNING,
+							I18N.getMessage(LogService.getRoot().getResourceBundle(),
+									"com.rapidminer.tools.config.ConfigurationManager.loading_configuration_error",
+									configurator.getName(), e1),
+							e1);
+					continue;
+				}
+				createAndRegisterConfigurables(configurator, parameters, null, null);
+				LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ConfigurationManager.loaded_configurations",
+						new Object[]{configurables.get(configurator.getTypeId()).size(), configurator.getName()});
+			} catch (Throwable t) {
+				LogService.getRoot().log(Level.SEVERE, "Failed to load configurable " + configurator.getTypeId(), t);
 			}
-			createAndRegisterConfigurables(configurator, parameters, null, null);
-			LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ConfigurationManager.loaded_configurations",
-			        new Object[] { configurables.get(configurator.getTypeId()).size(), configurator.getName() });
 		}
 	}
 

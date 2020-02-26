@@ -41,6 +41,7 @@
 			<property key="account_server_url" />
 			<property key="rapidminer.system.network.follow_https_to_http" />
 			<property key="rapidminer.system.network.follow_http_to_https" />
+			<property key="rapidminer.system.network.default_user_agent" />
 		</group>
 		<group key="rapidminer.preferences.subgroup.system.file_cache">
 			<property key="rapidminer.system.file_cache.connection.keep" />

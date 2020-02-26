@@ -129,7 +129,7 @@
          then.</help>
       <key>numerical_to_polynominal</key>
       <tags>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Categorical</tag>
          <tag>Nominal</tag>
          <tag>Polynominal</tag>
@@ -1257,6 +1257,7 @@
          <tag>Positives</tag>
          <tag>Negatives</tag>
          <tag>Metrics</tag>
+         <tag>Confusion Matrix</tag>
     </tags>
     <shortName>Performance</shortName>
   </operator>
@@ -1346,7 +1347,7 @@
             new value will be missing.</help>
     <key>numerical_to_real</key>
     <tags>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Numbers</tag>
          <tag>Integers</tag>
          <tag>Reals</tag>
@@ -1368,7 +1369,7 @@
     <key>guess_types</key>
     <tags>
          <tag>Automatic</tag>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Categorical</tag>
          <tag>Nominal</tag>
          <tag>Ordinary</tag>
@@ -2454,7 +2455,7 @@
        <operator>
         <name>Performance (Ranking)</name>
         <synopsis>This operator delivers as a performance value representing costs
-           for the cofidence rank of the true label.</synopsis>
+           for the confidence rank of the true label.</synopsis>
         <help>&lt;p&gt;This performance evaluator operator should be used for
             tasks, where it is not only important that the real class is assigned the 
             highest but receives a comparably high confidence.&lt;/p&gt;
@@ -2560,7 +2561,7 @@
             special attributes including the label.</help>
     <key>discretize_by_bins</key>
     <tags>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Categorical</tag>
          <tag>Nominal</tag>
          <tag>Polynominal</tag>
@@ -2926,7 +2927,7 @@
          <tag>Binarizer</tag>
          <tag>Dual</tag>
          <tag>Categorical</tag>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Types</tag>
     </tags>
   </operator>
@@ -3196,6 +3197,7 @@
          <tag>Crosstable</tag>
          <tag>Distinct</tag>
          <tag>Percentile</tag>
+         <tag>Standard Deviation</tag>
     </tags>
   </operator>
     <operator>
@@ -4214,7 +4216,7 @@
          <tag>Dates</tag>
          <tag>Times</tag>
          <tag>Datetimes</tag>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Numbers</tag>
          <tag>Weeks</tag>
          <tag>Days</tag>
@@ -4297,6 +4299,7 @@
          <tag>Validations</tag>
          <tag>Evaluations</tag>
          <tag>Metrics</tag>
+         <tag>Confusion Matrix</tag>
     </tags>
     <shortName>Performance</shortName>
   </operator>
@@ -5026,7 +5029,7 @@
          <tag>Nominal to numerical</tag>
          <tag>Parsing</tag>
          <tag>Formats</tag>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Numbers</tag>
          <tag>Quantitative</tag>
          <tag>Integers</tag>
@@ -5079,7 +5082,7 @@
             mapped to unknown values in the resulting attribute.</help>
     <key>discretize_by_user_specification</key>
     <tags>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Categorical</tag>
          <tag>Nominal</tag>
          <tag>Polynominal</tag>
@@ -5633,6 +5636,7 @@
          <tag>Avg</tag>
          <tag>Mean</tag>
          <tag>Concatenation</tag>
+         <tag>Standard Deviation</tag>
     </tags>
   </operator>
     <operator>
@@ -6232,6 +6236,7 @@
          <tag>Validations</tag>
          <tag>Evaluations</tag>
          <tag>Metrics</tag>
+         <tag>Confusion Matrix</tag>
     </tags>
     <shortName>Performance</shortName>
   </operator>
@@ -6697,7 +6702,7 @@
             random subset of attributes is available. The resulting model is a
             voting model of all trees.</synopsis>
         <help>This operators learns a random forest. The resulting forest
-            model contains serveral single random tree models.</help>
+            model contains several single random tree models.</help>
     <key>random_forest</key>
   </operator>
     <operator>
@@ -7044,7 +7049,7 @@
             Skips all special attributes including the label.</help>
     <key>discretize_by_size</key>
     <tags>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Categorical</tag>
          <tag>Nominal</tag>
          <tag>Polynominal</tag>
@@ -7080,7 +7085,7 @@
         <name>Apply Model</name>
         <synopsis>Applies a model to an example set. This might be a
             prediction or another data transformation model.</synopsis>
-        <help>&lt;p&gt;      This operator applies a &lt;i&gt;Model&lt;/i&gt; to an &lt;i&gt;ExampleSet&lt;/i&gt;. &lt;i&gt;Models &lt;/i&gt;usually       contain information about the data they have been trained on. This       information can be used for predicting the value of a possibly unknown       label, reproduce some transformations as during training or performing       other changes. All needed parameters are stored within the model object.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      Please pay attention to the fact, that the application of &lt;i&gt;Models &lt;/i&gt;will       need the same attributes during application on an &lt;i&gt;ExampleSet &lt;/i&gt;that       where part of the &lt;i&gt;ExampleSet&lt;/i&gt; it was trained on. Some minor       changes like adding attributes might be possible, but might cause severe       calculation errors. Please make sure, that &lt;b&gt;the attributes' number,       order, type and role &lt;/b&gt;are consistent during training and application.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      If the model supports views, it is possible to create a view instead of       changing the underlying data. In order to advise the Apply Model       operator to do so, simply switch on the create view parameter. The       transformation that would be normaly performed directly on the data will       then be computed every time a value is requested and the result is       returned without changing the data. Please keep in mind, that not all       models support views.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      If you have to apply serveral models in a row, like for example when you       have to apply a few preprocessing models before applying a prediction       model, then you would like to group models. This is possible using the &lt;a href="rm://opdoc/group_models"&gt;Group       Models &lt;/a&gt;operator in a convenient way.    &lt;/p&gt;</help>
+        <help>&lt;p&gt;      This operator applies a &lt;i&gt;Model&lt;/i&gt; to an &lt;i&gt;ExampleSet&lt;/i&gt;. &lt;i&gt;Models &lt;/i&gt;usually       contain information about the data they have been trained on. This       information can be used for predicting the value of a possibly unknown       label, reproduce some transformations as during training or performing       other changes. All needed parameters are stored within the model object.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      Please pay attention to the fact, that the application of &lt;i&gt;Models &lt;/i&gt;will       need the same attributes during application on an &lt;i&gt;ExampleSet &lt;/i&gt;that       where part of the &lt;i&gt;ExampleSet&lt;/i&gt; it was trained on. Some minor       changes like adding attributes might be possible, but might cause severe       calculation errors. Please make sure, that &lt;b&gt;the attributes' number,       order, type and role &lt;/b&gt;are consistent during training and application.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      If the model supports views, it is possible to create a view instead of       changing the underlying data. In order to advise the Apply Model       operator to do so, simply switch on the create view parameter. The       transformation that would be normaly performed directly on the data will       then be computed every time a value is requested and the result is       returned without changing the data. Please keep in mind, that not all       models support views.    &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;          &lt;/p&gt;    &lt;p&gt;      If you have to apply several models in a row, like for example when you       have to apply a few preprocessing models before applying a prediction       model, then you would like to group models. This is possible using the &lt;a href="rm://opdoc/group_models"&gt;Group       Models &lt;/a&gt;operator in a convenient way.    &lt;/p&gt;</help>
     <key>apply_model</key>
     <tags>
          <tag>Predict</tag>
@@ -7393,7 +7398,7 @@
          <tag>One hot</tag>
          <tag>Encoding</tag>
          <tag>Index</tag>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Types</tag>
     </tags>
   </operator>
@@ -8011,9 +8016,9 @@
     <operator>
         <name>Real to Integer</name>
         <synopsis>Replaces all real-valued attributes by corresponding integer
-            attributes (rounded or cutted).</synopsis>
+            attributes (rounded or cut).</synopsis>
         <help>Converts all real valued attributes to integer valued
-            attributes. Each real value is simply cutted (default) or rounded. If
+            attributes. Each real value is simply cut (default) or rounded. If
             the value is missing, the new value will be missing.</help>
     <key>real_to_integer</key>
   </operator>
@@ -8062,7 +8067,7 @@
             between examples with same value.</help>
     <key>discretize_by_frequency</key>
     <tags>
-         <tag>Continous</tag>
+         <tag>Continuous</tag>
          <tag>Categorical</tag>
          <tag>Nominal</tag>
          <tag>Polynominal</tag>
@@ -8671,7 +8676,7 @@ Thomas Breuel, Faisal Shafait. The Learning Workshop, Cliff Lodge, Snowbird, Uta
       <synopsis>Opens a file for processing by parsing operators.</synopsis>
       <help>Opens a file for processing by parsing operators. Even if this file points to a data file, like Excel or CSV, this
       operator returns an uninterpreted blob. You still need an operator for parsing the file like Read CSV or Read Excel.
-      In most cases, you don't need an OpenFile operator to open such a file, you can simply use the corresponging read operator.
+      In most cases, you don't need an OpenFile operator to open such a file, you can simply use the corresponding read operator.
       The main use is in combination with some loop or with in a RapidMiner Server service reacting to a POST request.</help>
       <key>open_file</key>
    </operator>

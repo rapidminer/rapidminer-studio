@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -72,8 +72,7 @@ public final class ParameterUtility {
 		 * @see ValueProviderParameter#setEnabled(boolean) ValueProviderParameter.setEnabled(true)
 		 */
 		public ParameterBuilder<P> enable() {
-			parameter.setEnabled(true);
-			return this;
+			return enable(true);
 		}
 
 		/**
@@ -83,7 +82,16 @@ public final class ParameterUtility {
 		 */
 
 		public ParameterBuilder<P> disable() {
-			parameter.setEnabled(false);
+			return enable(false);
+		}
+
+		/**
+		 * Set the enabled state of the parameter
+		 *
+		 * @since 9.6
+		 */
+		public ParameterBuilder<P> enable(boolean enable) {
+			parameter.setEnabled(enable);
 			return this;
 		}
 

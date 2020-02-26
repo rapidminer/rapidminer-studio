@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -20,6 +20,7 @@ package com.rapidminer.tools.expression;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.rapidminer.Process;
 import com.rapidminer.operator.OperatorVersion;
@@ -87,7 +88,7 @@ public class ExpressionParserBuilder {
 		constantResolvers.add(new ConstantResolver(TypeConstants.INSTANCE.getKey(), TypeConstants.INSTANCE.getConstants()));
 
 		ExpressionContext context = new SimpleExpressionContext(functions, scopeResolvers, dynamicsResolvers,
-				constantResolvers);
+				constantResolvers, getStopChecker());
 		AntlrParser parser = new AntlrParser(context);
 
 		if (!compatibleWithOldParser) {
@@ -191,6 +192,14 @@ public class ExpressionParserBuilder {
 			compatibleWithOldParser = true;
 		}
 		return this;
+	}
+
+	/** @since 9.6.0 */
+	private Callable<Void> getStopChecker() {
+		if (process != null) {
+			return  () -> {process.getRootOperator().checkForStop(); return null;};
+		}
+		return () -> null;
 	}
 
 }

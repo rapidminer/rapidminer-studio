@@ -29,7 +29,7 @@ dependencies {
 	}
 
     // OS X adapter to add platform specific UI
-    compile 'com.rapidminer.studio:rapidminer-studio-osx-adapter:1.0.2'
+    compile 'com.rapidminer.studio:rapidminer-studio-osx-adapter:1.0.3'
 
 	// RapidMiner license framework for license management
 	compile "com.rapidminer.license:rapidminer-license-api:$licenseVersion"
@@ -161,9 +161,11 @@ dependencies {
 	// matrix library (https://www.ojalgo.org/)
 	compile 'org.ojalgo:ojalgo:47.3.0'
 
+	// OpenJDK 8 does not come with JavaFX, so we need the core libs from it separately
+	compile 'com.dukescript.api:javafx.base:8.60.11'
+
 	// tests require mockito
 	testCompile 'org.mockito:mockito-core:2.13.0'
-
 }
 
 task wrapper(type: Wrapper) { gradleVersion = '4.0.1' }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -244,7 +244,9 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		synchronized (INSTANCE_LOCK) {
 			instance = new RepositoryManager();
 			// initialize Repository Global Search
-			new RepositoryGlobalSearch();
+			if (!RapidMiner.getExecutionMode().isHeadless()) {
+				new RepositoryGlobalSearch();
+			}
 			// initialize the content store mapper to enable it to update data for repo locations on rename
 			PersistentContentMapperStore.INSTANCE.init();
 			instance.postInstall();
@@ -471,6 +473,10 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		repository.preRemove();
 		repository.removeRepositoryListener(repositoryListener);
 		repositories.remove(repository);
+
+		if (instance != null) {
+			save();
+		}
 
 		// observer is kept for legacy reasons
 		fireUpdate(null);

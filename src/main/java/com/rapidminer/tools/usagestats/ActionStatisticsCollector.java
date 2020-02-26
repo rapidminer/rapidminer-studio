@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -53,6 +53,8 @@ import org.w3c.dom.NodeList;
 import com.rapidminer.Process;
 import com.rapidminer.ProcessListener;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.table.Table;
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.configuration.ConnectionConfiguration;
 import com.rapidminer.connection.valueprovider.ValueProvider;
@@ -302,6 +304,8 @@ public enum ActionStatisticsCollector {
 	public static final String VALUE_CONNECTION_ERROR = "connection_error";
 	public static final String VALUE_DISCONNECTED = "disconnected";
 	public static final String VALUE_REMOVED = "removed";
+	public static final String VALUE_AVAILABLE_CONFIGURABLES_CREATION_LOCAL = "available_configurables_creation_local";
+	public static final String VALUE_AVAILABLE_CONFIGURABLES_CREATION_SERVER = "available_configurables_creation_server";
 	public static final String ARG_REMOTE_REPOSITORY_SEPARATOR  = ARG_SPACER;
 
 	/** conversion constant for bytes to megabytes */
@@ -988,6 +992,9 @@ public enum ActionStatisticsCollector {
 					if (ioObject instanceof ExampleSet) {
 						ExampleSet exampleSet = (ExampleSet) ioObject;
 						logInputVolume(op, inputPort, exampleSet.size(), exampleSet.getAttributes().allSize());
+					} else if (ioObject instanceof IOTable) {
+						Table table = ((IOTable) ioObject).getTable();
+						logInputVolume(op, inputPort, table.height(), table.width());
 					}
 				} catch (UserError e) {
 					// cannot log volume
@@ -1004,6 +1011,9 @@ public enum ActionStatisticsCollector {
 					if (ioObject instanceof ExampleSet) {
 						ExampleSet exampleSet = (ExampleSet) ioObject;
 						logOutputVolume(op, outputPort, exampleSet.size(), exampleSet.getAttributes().allSize());
+					} else if (ioObject instanceof IOTable) {
+						Table table = ((IOTable) ioObject).getTable();
+						logOutputVolume(op, outputPort, table.height(), table.width());
 					}
 				} catch (UserError e) {
 					// cannot log volume

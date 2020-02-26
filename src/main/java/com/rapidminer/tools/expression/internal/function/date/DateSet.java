@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,84 +19,49 @@
 package com.rapidminer.tools.expression.internal.function.date;
 
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.concurrent.Callable;
 
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.expression.FunctionDescription;
-import com.rapidminer.tools.expression.FunctionInputException;
-import com.rapidminer.tools.expression.internal.ExpressionParserConstants;
 
 
 /**
- * A {@link Function} for setting a value of a given date.
+ * A {@link com.rapidminer.tools.expression.Function Function} for setting a value of a given date.
  *
- * @author David Arnu
+ * @author David Arnu, Jan Czogalla
  *
  */
-public class DateSet extends AbstractDateManipulationFunction {
+public class DateSet extends AbstractDateLongManipulationFunction {
 
 	public DateSet() {
 		super("date.date_set", FunctionDescription.UNFIXED_NUMBER_OF_ARGUMENTS, Ontology.DATE_TIME);
 	}
 
+	/** Sets the given {@code value} with the specified unit in the calendar; For {@link Calendar#YEAR}, caps the value. */
 	@Override
-	protected Date compute(Date date, double value, String unit, String valueLocale, String valueTimezone) {
-		Locale locale;
-		TimeZone zone;
-		if (valueLocale == null) {
-			locale = Locale.getDefault();
-		} else {
-			locale = new Locale(valueLocale);
+	void integerManipulation(Callable<Void> stopChecker, Calendar cal, int unit, int value) {
+		if (unit == Calendar.YEAR) {
+			if (value < -cal.getLeastMaximum(unit)) {
+				value = -cal.getLeastMaximum(unit);
+			} else if (value >= cal.getMaximum(unit)) {
+				value = cal.getMaximum(unit) - 1;
+			}
 		}
-		if (valueTimezone == null) {
-			zone = TimeZone.getDefault();
-		} else {
-			zone = TimeZone.getTimeZone(valueTimezone);
+		cal.set(unit, value);
+	}
+
+	/**
+	 * For {@link Calendar#YEAR} as {@code dateUnit}, calls {@link #integerManipulation(Callable, Calendar, int, int)} with
+	 * {@link Integer#MAX_VALUE} or {@link Integer#MIN_VALUE}, depending on{@code sign}. For all other fields,
+	 * uses modulo calculations to find the appropriate value to set.
+	 */
+	@Override
+	void longManipulation(Callable<Void> stopChecker, Calendar cal, long dateValue, int sign, int dateUnit) {
+		if (dateUnit == Calendar.YEAR) {
+			integerManipulation(stopChecker, cal, dateUnit, sign == 1 ? Integer.MAX_VALUE : Integer.MIN_VALUE);
+			return;
 		}
-
-		// for missing values as arguments, a missing value is returned
-		if (date == null || unit == null || Double.isNaN(value)) {
-			return null;
-		}
-
-		Calendar cal = Calendar.getInstance(zone, locale);
-		cal.setTime(date);
-
-		switch (unit) {
-			case ExpressionParserConstants.DATE_UNIT_YEAR:
-				cal.set(Calendar.YEAR, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_MONTH:
-				cal.set(Calendar.MONTH, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_WEEK:
-				cal.set(Calendar.WEEK_OF_YEAR, (int) value);
-				break;
-
-			case ExpressionParserConstants.DATE_UNIT_DAY:
-				cal.set(Calendar.DAY_OF_MONTH, (int) value);
-				break;
-
-			case ExpressionParserConstants.DATE_UNIT_HOUR:
-				cal.set(Calendar.HOUR_OF_DAY, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_MINUTE:
-				cal.set(Calendar.MINUTE, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_SECOND:
-				cal.set(Calendar.SECOND, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_MILLISECOND:
-				cal.set(Calendar.MILLISECOND, (int) value);
-				break;
-			default:
-				throw new FunctionInputException("expression_parser.function_wrong_type_at", getFunctionName(),
-						"unit constant", "third");
-
-		}
-
-		return cal.getTime();
+		integerManipulation(stopChecker, cal, dateUnit, 0);
+		new DateAdd().longManipulation(stopChecker, cal, dateValue, sign, dateUnit);
 	}
 }

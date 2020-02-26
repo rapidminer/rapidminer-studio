@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <steps>
 	<step name="Working with Attributes.">
-		<text>You are almost ready to build your first predictive model in RapidMiner! But first, we need to deal with two very important operations for transforming your data sets into a format more suitable for learning. The beginning of this process is the same as the previous one; this is a great opportunity for you to implement what you have learned so far. We will then create a new data column and remove some unused/unnecessary columns from the data.</text>
+		<text>You are almost ready to build your first predictive model in RapidMiner! But first, we need to deal with two very important operations for transforming your data sets into a format more suitable for training your model. The beginning of this process is the same as the previous one; this is a great opportunity for you to implement what you have learned so far. We will then create a new data column i.e. generate an attribute and remove some unused/unnecessary columns from the data.</text>
 	</step>
 	<step name="Add product details to transactions.">
 		<tasks>
 			<task><activity>Drag the <file>Transactions</file> and <file>Products</file></activity> datasets into the <ui>Process</ui>.</task>
 			<task><activity>Add a <op>Join</op></activity> operator.</task>
 			<task><activity>Connect</activity> all operators.</task>
-			<task><activity>Specify the columns to use in the <ui>Parameters</ui></activity> for <op>Join</op>. That is, de-select <param>use id attributes as key</param>, click <param>Edit List</param>, and use <value>Product ID</value> for the left and right key attributes.</task>
+			<task><activity>Specify the columns to use in the <ui>Parameters</ui></activity> for <op>Join</op>. That is, click <param>Edit List</param>, and use <value>Product ID</value> for the left and right key attributes.</task>
 		</tasks>
 		<info>The resulting example set contains all transactions with product details for each transaction.</info>
 	</step>	

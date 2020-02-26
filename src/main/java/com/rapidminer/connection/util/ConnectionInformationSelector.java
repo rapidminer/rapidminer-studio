@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -287,6 +287,27 @@ public class ConnectionInformationSelector {
 			}
 		}
 		return ci;
+	}
+
+	/**
+	 * Looks up the repository location of the selected connection if possible, both through the input port as well
+	 * as the new connection parameter. This might not be correct if the old configurable parameter is used.
+	 *
+	 * @return the process location of the connection if possible, {@code null} otherwise.
+	 * @since 9.6
+	 */
+	public RepositoryLocation getConnectionLocation() {
+		boolean connectionFromPort = input != null && input.isConnected();
+		if (connectionFromPort) {
+			// infer repo location from meta data
+			return getRepoLocationFromInputMD(input);
+		} else {
+			try {
+				return getRepoLocationFromParameter();
+			} catch (UserError userError) {
+				return null;
+			}
+		}
 	}
 
 	/**

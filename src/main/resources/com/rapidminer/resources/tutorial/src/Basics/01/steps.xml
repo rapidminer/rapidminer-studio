@@ -27,7 +27,7 @@
 			<task><activity>Click <icon>16/media_play.png</icon> <ui>Run</ui> (top left)</activity> to execute the process.</task>
 		</tasks>
 		<info>Nice! You have run your first process in RapidMiner Studio. When you click "Run", the operators in your process will perform their actions. 
-		RapidMiner executes the process and shows the data connected to the result port. In the center of the <ui>Results</ui> view, you can see our raw data about the Titanic passengers such as their family size or their age. On the <ui>Statistics</ui> tab we get a statistics summary, which provides useful information; for example, 349 passengers survived the Titanic accident.</info>
+		RapidMiner executes the process and shows the data connected to the result port. In the center of the <ui>Results</ui> view, you can see our raw data about the Titanic passengers such as their family size or their age. On the <ui>Statistics</ui> tab we get a statistics summary, which provides useful information; for example, 349 passengers survived the Titanic accident. If you get different results, please make sure you dragged in the correct dataset: <file>Titanic Training</file>.</info>
 	</step>	
 	<step name="Congratulations - Halfway there!">
 		<text>Well done - you just mastered your first tutorial! To quickly review:

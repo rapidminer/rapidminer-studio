@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -249,7 +249,7 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 	// ================================================================================
 
 	/**
-	 * Indicates wether or not percentage format should be used in the {@link #toString} method. The
+	 * Indicates whether or not percentage format should be used in the {@link #toString} method. The
 	 * default implementation returns false.
 	 */
 	public boolean formatPercent() {

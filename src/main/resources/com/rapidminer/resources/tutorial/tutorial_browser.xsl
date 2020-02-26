@@ -84,5 +84,9 @@
 		</span>
 	</xsl:template>
 
+	<xsl:template match="ul">
+		<ul><xsl:apply-templates/></ul>
+	</xsl:template>
+
 
 </xsl:stylesheet>

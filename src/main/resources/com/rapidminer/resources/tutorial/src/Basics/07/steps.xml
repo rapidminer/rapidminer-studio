@@ -15,11 +15,13 @@
 	<step name="Define attribute types and roles.">
 		<tasks>
 			<task><activity>Add a <op>Discretize by Binning</op></activity> operator and <activity>connect it</activity>. In its <ui>Parameters</ui>:</task>
-			<task><activity>Set the <param>attribute filter type</param> to <value>single</value></activity> (i.e. you only work on one of the attributes).</task>
-			<task><activity>Set <param>attribute</param> to <value>Age</value></activity>.</task>
-			<task><activity>Set <param>number of bins</param> to <value>3</value>.</activity></task>
+			<ul>
+				<task><activity>Set the <param>attribute filter type</param> to <value>single</value></activity> (i.e. you only work on one of the attributes).</task>
+				<task><activity>Set <param>attribute</param> to <value>Age</value></activity>.</task>
+				<task><activity>Set <param>number of bins</param> to <value>3</value>.</activity></task>
+			</ul>
 		</tasks>
-		<info>"Binning" is a common technique to transform the type from <value>numerical</value> to <value>polynominal</value> (a nominal with more than 2 values). Here, we create three "bins" covering the complete range of values.  The operator then replaces the original numerical value with the name of the bin the value belongs to.</info>
+		<info>"Binning" is a common technique to transform the type from <value>numerical</value> to <value>polynominal</value> (a nominal with more than 2 values). Here, we create three "bins" covering the complete range of values.  The operator then replaces the original numerical value with the name of the bin the value belongs to. This technique is often useful to categorise data into simpler to assess groups. Like 'everything bigger x = interesting and everything smaller x = not interesting'. Such groups can then be used in calculation, charts or even serve as a label for model training.</info>
 	</step>
 	<step name="Define which column to predict.">
 		<info>In RapidMiner, we call the column which should be predicted <emph>label</emph>.  It is sometimes also known as <emph>target</emph> or <emph>class</emph>.</info>

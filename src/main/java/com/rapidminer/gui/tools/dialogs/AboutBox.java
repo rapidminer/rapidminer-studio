@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -44,7 +44,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
-
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -84,6 +83,10 @@ public class AboutBox extends JDialog {
 
 	private static final String DEFAULT_VENDOR = "RapidMiner";
 	private static final String DEFAULT_VENDOR_OLD = "Rapid-I";
+	private static final String JAVA_VERSION = "java.version";
+	private static final String COPYRIGHT = "copyright";
+	private static final String LICENSOR = "licensor";
+	private static final String LICENSE = "license";
 
 	public static Image backgroundImage = null;
 
@@ -110,11 +113,9 @@ public class AboutBox extends JDialog {
 		}
 	}
 
-	private final ContentPanel contentPanel;
-
 	private static class ContentPanel extends JPanel {
 
-		private static final String[] DISPLAYED_KEYS = new String[] { "copyright", "licensor", "license" };
+		private static final String[] DISPLAYED_KEYS = new String[] {JAVA_VERSION, COPYRIGHT, LICENSOR, LICENSE};
 
 		private static final Font FONT_SANS_SERIF_11 = FontTools.getFont(Font.SANS_SERIF, Font.PLAIN, 11);
 		private static final Font FONT_SANS_SERIF_BOLD_11 = FontTools.getFont(Font.SANS_SERIF, Font.BOLD, 11);
@@ -159,10 +160,10 @@ public class AboutBox extends JDialog {
 			for (String key : DISPLAYED_KEYS) {
 				if (properties.containsKey(key)) {
 					foundKeys++;
-					if (foundKeys > 2) {
-						height += ADDITIONAL_LINE_HEIGHT;
-					}
 				}
+			}
+			if (foundKeys >= 2) {
+				height += (foundKeys - 1) * ADDITIONAL_LINE_HEIGHT;
 			}
 			setPreferredSize(new Dimension(width, height));
 			setMinimumSize(new Dimension(width, height));
@@ -183,8 +184,8 @@ public class AboutBox extends JDialog {
 			g.fillRect(0, 0, getWidth(), getHeight());
 
 			// draw the background image without RapidMiner branding if the vendor is not RM
-			if (properties.get("licensor") != null && !String.valueOf(properties.get("licensor")).contains(DEFAULT_VENDOR)
-					&& !String.valueOf(properties.get("licensor")).contains(DEFAULT_VENDOR_OLD)
+			if (properties.get(LICENSOR) != null && !String.valueOf(properties.get(LICENSOR)).contains(DEFAULT_VENDOR)
+					&& !String.valueOf(properties.get(LICENSOR)).contains(DEFAULT_VENDOR_OLD)
 					&& backgroundImageWithoutLogo != null) {
 				g.drawImage(backgroundImageWithoutLogo, 0, 0, this);
 			} else if (backgroundImage != null) {
@@ -244,7 +245,7 @@ public class AboutBox extends JDialog {
 			String revision = properties.getProperty("revision");
 			if (revision != null) {
 				builder.append(" (rev: ");
-				builder.append(revision.substring(0, 6));
+				builder.append(revision, 0, 6);
 				String platform = properties.getProperty("platform");
 				if (platform != null) {
 					builder.append(", platform: ");
@@ -316,9 +317,7 @@ public class AboutBox extends JDialog {
 			if (text == null) {
 				return;
 			}
-			float xPos = x;
-			float yPos = y;
-			g.drawString(text, xPos, yPos);
+			g.drawString(text, (float) x, (float) y);
 		}
 	}
 
@@ -345,7 +344,7 @@ public class AboutBox extends JDialog {
 		if (name != null) {
 			setTitle("About " + name);
 		}
-		contentPanel = new ContentPanel(properties, productLogo);
+		ContentPanel contentPanel = new ContentPanel(properties, productLogo);
 		add(contentPanel, BorderLayout.CENTER);
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -429,6 +428,9 @@ public class AboutBox extends JDialog {
 			properties.setProperty("registered_to", license.getLicenseUser().getName());
 		}
 		Plugin.initAboutTexts(properties);
+
+		properties.setProperty(JAVA_VERSION, I18N.getGUILabel("about.java_version.label", System.getProperty("java.vendor") + " " + System.getProperty("java.version")));
+
 		return properties;
 	}
 
@@ -437,8 +439,8 @@ public class AboutBox extends JDialog {
 		Properties properties = new Properties();
 		properties.setProperty("name", productName);
 		properties.setProperty("version", productVersion);
-		properties.setProperty("licensor", licensor);
-		properties.setProperty("license", "Website: " + url);
+		properties.setProperty(LICENSOR, licensor);
+		properties.setProperty(LICENSE, "Website: " + url);
 		properties.setProperty("more", text);
 		properties.setProperty("textNextToLogo", "" + renderTextNextToLogo);
 		properties.setProperty("url", url);

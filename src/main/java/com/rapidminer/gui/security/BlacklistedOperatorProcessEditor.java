@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -195,6 +195,6 @@ public final class BlacklistedOperatorProcessEditor implements ExtendedProcessEd
 
 		NotificationPopup.showFadingPopup(notificationPanel, RapidMinerGUI.getMainFrame().getProcessPanel()
 						.getProcessRenderer(), NotificationPopup.PopupLocation.LOWER_RIGHT, (int) TimeUnit.MINUTES.toMillis(5), 45, 30,
-				BorderFactory.createLineBorder(Color.GRAY, 1, false));
+				BorderFactory.createLineBorder(Color.BLACK, 1, false));
 	}
 }

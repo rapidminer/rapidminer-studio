@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -23,6 +23,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Locale;
@@ -351,6 +353,14 @@ public final class PlatformUtilities {
 		if (url == null) {
 			logSevere("Failed to locate 'rapidminer.home'. Could not locate base directory of classes!");
 		} else {
+			try {
+				url = URLDecoder.decode(url, StandardCharsets.UTF_8.name());
+			} catch (UnsupportedEncodingException e) {
+				// should not happen
+				e.printStackTrace();
+				logSevere("Failed to decode url! Path could be wrong: " + url);
+			}
+			
 			// Use parent file, not the JAR itself
 			File buildDir = new File(url).getParentFile();
 			logInfo("Trying base directory of classes (build) '" + buildDir + "' ...");

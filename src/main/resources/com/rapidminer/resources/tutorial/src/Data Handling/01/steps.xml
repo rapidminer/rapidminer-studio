@@ -229,8 +229,7 @@
 				Right-click on
 				<op>Select Attributes</op>
 				and
-				<emph>disable</emph>
-				the operator. Do the same with
+				<emph>uncheck</emph> <icon>16/lightbulb_off.png</icon><ui>Enable Operator</ui> option. Do the same with
 				<op>Replace Missing Values</op>. What do you expect if you re-run the process now? Try it!
 			</question>
 			<question>

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -139,6 +139,11 @@ public enum GlobalSearchIndexer {
 	 */
 	public void initialize() {
 		if (!initialized.get()) {
+			if (RapidMiner.getExecutionMode().isHeadless()) {
+				// don't initialize in headless mode
+				return;
+			}
+
 			if (setupError) {
 				// should not happen at this point, but better be safe
 				return;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -57,6 +57,7 @@ import com.rapidminer.Process;
 import com.rapidminer.ProcessLocation;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.RepositoryProcessLocation;
+import com.rapidminer.connection.adapter.ConnectionAdapterHandler;
 import com.rapidminer.core.io.data.source.DataSourceFactoryRegistry;
 import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.gui.actions.search.ActionsGlobalSearch;
@@ -72,6 +73,7 @@ import com.rapidminer.gui.look.fc.BookmarkIO;
 import com.rapidminer.gui.look.ui.RapidDockingUISettings;
 import com.rapidminer.gui.osx.OSXAdapter;
 import com.rapidminer.gui.plotter.PlotterPanel;
+import com.rapidminer.gui.processeditor.ChangingProcessEditor;
 import com.rapidminer.gui.processeditor.search.OperatorGlobalSearch;
 import com.rapidminer.gui.processeditor.search.OperatorGlobalSearchGUIProvider;
 import com.rapidminer.gui.safemode.SafeMode;
@@ -444,6 +446,15 @@ public class RapidMinerGUI extends RapidMiner {
 			}
 		}
 		mainFrame.addExtendedProcessEditor(new BlacklistedOperatorProcessEditor());
+		// add clean up listener for configurable cache
+		mainFrame.addExtendedProcessEditor(new ChangingProcessEditor() {
+			@Override
+			protected void doWork(Process currentProcess, Process newProcess) {
+				if (currentProcess != null) {
+					ConnectionAdapterHandler.cleanupAdapters(currentProcess);
+				}
+			}
+		});
 
 		SwingUtilities.invokeAndWait(mainFrame::finishInitialization);
 

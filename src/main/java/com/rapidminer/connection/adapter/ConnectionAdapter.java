@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,6 +18,7 @@
  */
 package com.rapidminer.connection.adapter;
 
+import com.rapidminer.Process;
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.legacy.ConversionException;
 import com.rapidminer.tools.config.AbstractConfigurable;
@@ -51,4 +52,13 @@ public abstract class ConnectionAdapter extends AbstractConfigurable {
 		}
 		return handler.convert(this);
 	}
+
+	/**
+	 * Cleans up this adapter instance. Might be useful if an adapter holds some active connection for better
+	 * response times. This is called when a cconnection is tested or when it is cleared from the connection cache.
+	 *
+	 * @see ConnectionAdapterHandler#cleanupAdapters(Process)
+	 * @since 9.6
+	 */
+	public void cleanUp() {}
 }

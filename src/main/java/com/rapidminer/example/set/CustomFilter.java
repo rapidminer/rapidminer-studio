@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -52,7 +52,7 @@ public class CustomFilter implements Condition {
 	/**
 	 * Enum for custom filters.
 	 */
-	public static enum CustomFilters {
+	public enum CustomFilters {
 
 		EQUALS_NUMERICAL("gui.comparator.numerical.equals", "eq", Ontology.NUMERICAL) {
 
@@ -389,53 +389,28 @@ public class CustomFilter implements Condition {
 		// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 		// EXTREMELY expensive
 		/** the format for date_time */
-		private static final ThreadLocal<DateFormat> FORMAT_DATE_TIME = new ThreadLocal<DateFormat>() {
-
-			@Override
-			protected DateFormat initialValue() {
-				return new SimpleDateFormat(DATE_TIME_FORMAT_STRING, Locale.ENGLISH);
-			}
-		};
+		private static final ThreadLocal<DateFormat> FORMAT_DATE_TIME =
+				ThreadLocal.withInitial(() -> new SimpleDateFormat(DATE_TIME_FORMAT_STRING, Locale.ENGLISH));
 
 		/** the old format for date_time */
-		private static final ThreadLocal<DateFormat> FORMAT_DATE_TIME_OLD = new ThreadLocal<DateFormat>() {
-
-			@Override
-			protected DateFormat initialValue() {
-				return new SimpleDateFormat(DATE_TIME_FORMAT_STRING_OLD, Locale.ENGLISH);
-			}
-		};
+		private static final ThreadLocal<DateFormat> FORMAT_DATE_TIME_OLD =
+				ThreadLocal.withInitial(() -> new SimpleDateFormat(DATE_TIME_FORMAT_STRING_OLD, Locale.ENGLISH));
 
 		// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 		// EXTREMELY expensive
 		/** the format for date */
-		private static final ThreadLocal<DateFormat> FORMAT_DATE = new ThreadLocal<DateFormat>() {
-
-			@Override
-			protected DateFormat initialValue() {
-				return new SimpleDateFormat(DATE_FORMAT_STRING, Locale.ENGLISH);
-			}
-		};
+		private static final ThreadLocal<DateFormat> FORMAT_DATE =
+				ThreadLocal.withInitial(() -> new SimpleDateFormat(DATE_FORMAT_STRING, Locale.ENGLISH));
 
 		/** the old format for date */
-		private static final ThreadLocal<DateFormat> FORMAT_DATE_OLD = new ThreadLocal<DateFormat>() {
-
-			@Override
-			protected DateFormat initialValue() {
-				return new SimpleDateFormat(DATE_FORMAT_STRING_OLD, Locale.ENGLISH);
-			}
-		};
+		private static final ThreadLocal<DateFormat> FORMAT_DATE_OLD =
+				ThreadLocal.withInitial(() -> new SimpleDateFormat(DATE_FORMAT_STRING_OLD, Locale.ENGLISH));
 
 		// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 		// EXTREMELY expensive
 		/** the format for time */
-		private static final ThreadLocal<DateFormat> FORMAT_TIME = new ThreadLocal<DateFormat>() {
-
-			@Override
-			protected DateFormat initialValue() {
-				return new SimpleDateFormat(TIME_FORMAT_STRING, Locale.ENGLISH);
-			}
-		};
+		private static final ThreadLocal<DateFormat> FORMAT_TIME =
+				ThreadLocal.withInitial(() -> new SimpleDateFormat(TIME_FORMAT_STRING, Locale.ENGLISH));
 
 		/** the label for this filter */
 		private String label;
@@ -500,13 +475,7 @@ public class CustomFilter implements Condition {
 		 * @return
 		 */
 		public boolean isNumericalFilter() {
-			if (isSpecialFilter()) {
-				return false;
-			}
-			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NUMERICAL)) {
-				return true;
-			}
-			return false;
+			return !isSpecialFilter() && Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NUMERICAL);
 		}
 
 		/**
@@ -516,13 +485,7 @@ public class CustomFilter implements Condition {
 		 * @return
 		 */
 		public boolean isNominalFilter() {
-			if (isSpecialFilter()) {
-				return false;
-			}
-			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NOMINAL)) {
-				return true;
-			}
-			return false;
+			return !isSpecialFilter() && Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NOMINAL);
 		}
 
 		/**
@@ -533,10 +496,7 @@ public class CustomFilter implements Condition {
 		 * @return
 		 */
 		public boolean isSpecialFilter() {
-			if (valueType == -1) {
-				return true;
-			}
-			return false;
+			return valueType == -1;
 		}
 
 		/**
@@ -814,6 +774,7 @@ public class CustomFilter implements Condition {
 	private MacroHandler macroHandler;
 
 	private boolean fulfillAllConditions;
+	private boolean resolveAttName;
 
 	/**
 	 * Creates a new {@link CustomFilter} instance with the {@link CustomFilters} encoded in the
@@ -824,18 +785,39 @@ public class CustomFilter implements Condition {
 	 * @param conditions
 	 * @param fulfillAllConditions
 	 * @param macroHandler
-	 *            the macro handler which will be used to resolve macros for the filter value, can
-	 *            be <code>null</code>
-	 * @param version
-	 *            can be used to force old behaviour. If not needed and current implementation is
-	 *            desired, can be set to <code>null</code>
-	 *
+	 * 		the macro handler which will be used to resolve macros for the filter value, can
+	 * 		be <code>null</code>
 	 */
 	public CustomFilter(final ExampleSet exampleSet, final List<String[]> conditions, final boolean fulfillAllConditions,
-			final MacroHandler macroHandler) {
+						final MacroHandler macroHandler) {
+		this(exampleSet, conditions, fulfillAllConditions, macroHandler, false);
+	}
+
+	/**
+	 * Creates a new {@link CustomFilter} instance with the {@link CustomFilters} encoded in the
+	 * {@link List} of {@link String} arrays. The {@link Boolean} parameter defines if either all
+	 * conditions must be fulfilled or only one of them.
+	 *
+	 * @param version
+	 * 		can be used to force old behaviour. If not needed and current implementation is
+	 * 		desired, can be set to <code>null</code>
+	 * @param exampleSet
+	 * @param conditions
+	 * @param fulfillAllConditions
+	 * @param macroHandler
+	 * 		the macro handler which will be used to resolve macros for the filter value, can
+	 * 		be <code>null</code>
+	 * @param resolveAttName
+	 * 		whether to resolve attribute names with macros
+	 *
+	 * @since 9.6
+	 */
+	public CustomFilter(final ExampleSet exampleSet, final List<String[]> conditions, final boolean fulfillAllConditions,
+						final MacroHandler macroHandler, boolean resolveAttName) {
 		if (conditions == null) {
 			throw new IllegalArgumentException("typeList must not be null!");
 		}
+		this.resolveAttName = resolveAttName;
 
 		conditionsOldDateFilter = new boolean[conditions.size()];
 		// check if given conditions list is well formed and valid!
@@ -853,14 +835,17 @@ public class CustomFilter implements Condition {
 			}
 
 			String attName = conditionTupel[CONDITION_TUPEL_ATT_INDEX];
-			Attribute att = exampleSet.getAttributes().get(attName);
 			String filterSymbol = conditionTupel[CONDITION_TUPEL_FILTER_INDEX];
 			CustomFilters filter = CustomFilters.getBySymbol(filterSymbol);
 			String filterValue = conditionTupel[CONDITION_TUPEL_VALUE_INDEX];
 			if (macroHandler != null) {
 				this.macroHandler = macroHandler;
 				filterValue = substituteMacros(filterValue, macroHandler);
+				if (this.resolveAttName) {
+					attName = substituteMacros(attName, macroHandler);
+				}
 			}
+			Attribute att = exampleSet.getAttributes().get(attName);
 			if (filter == null) {
 				throw new IllegalArgumentException(I18N.getMessageOrNull(I18N.getErrorBundle(),
 						"custom_filters.filter_not_found", filterSymbol));
@@ -877,18 +862,17 @@ public class CustomFilter implements Condition {
 					throw new AttributeTypeException(I18N.getMessageOrNull(I18N.getErrorBundle(),
 							"custom_filters.numerical_comparator_type_invalid", filter.getLabel(), att.getName()));
 				}
+				// check if filter value works for numerical attribute
 				if (att.isDateTime()) {
 					// check if filter value works for date attribute
 					if (filterValue == null || "".equals(filterValue) || !isStringValidDoubleValue(filter, filterValue, att)) {
 						throw new IllegalArgumentException(I18N.getMessageOrNull(I18N.getErrorBundle(),
 								"custom_filters.illegal_date_value", filterValue, att.getName()));
 					}
-				} else if (att.isNumerical()) {
-					// check if filter value works for numerical attribute
-					if (filterValue == null || "".equals(filterValue) || !isStringValidDoubleValue(filter, filterValue, att)) {
-						throw new IllegalArgumentException(I18N.getMessageOrNull(I18N.getErrorBundle(),
-								"custom_filters.illegal_numerical_value", filterValue, att.getName()));
-					}
+				} else if (att.isNumerical() &&
+						(filterValue == null || "".equals(filterValue) || !isStringValidDoubleValue(filter, filterValue, att))) {
+					throw new IllegalArgumentException(I18N.getMessageOrNull(I18N.getErrorBundle(),
+							"custom_filters.illegal_numerical_value", filterValue, att.getName()));
 				}
 
 				// keep compatibility with processes from versions prior to 6.0.004
@@ -903,11 +887,9 @@ public class CustomFilter implements Condition {
 				// if true, the old (bugged) parsing will be used; otherwise the new yyyy parsing
 				// will be used
 				conditionsOldDateFilter[counter] = yearString != null && yearString.length() == 2;
-			} else if (filter.isNominalFilter()) {
-				if (!att.isNominal()) {
-					throw new AttributeTypeException(I18N.getMessageOrNull(I18N.getErrorBundle(),
-							"custom_filters.nominal_comparator_type_invalid", filter.getLabel(), att.getName()));
-				}
+			} else if (filter.isNominalFilter() && !att.isNominal()) {
+				throw new AttributeTypeException(I18N.getMessageOrNull(I18N.getErrorBundle(),
+						"custom_filters.nominal_comparator_type_invalid", filter.getLabel(), att.getName()));
 			}
 
 			counter++;
@@ -925,6 +907,7 @@ public class CustomFilter implements Condition {
 	 *
 	 * @throws IllegalArgumentException
 	 *             <b>ALWAYS THROWN!</b>
+	 * @deprecated
 	 */
 	@Deprecated
 	public CustomFilter(final ExampleSet exampleSet, final String parameterString) throws IllegalArgumentException {
@@ -956,20 +939,23 @@ public class CustomFilter implements Condition {
 
 	@Override
 	public boolean conditionOk(final Example e) {
-		boolean conditionsFulfilled = fulfillAllConditions ? true : false;
+		boolean conditionsFulfilled = fulfillAllConditions;
 		int counter = 0;
 		for (String[] conditionArray : conditions) {
 			// we checked for malformed conditions in the constructor so no need to do it again
 			String condition = conditionArray[CONDITION_ARRAY_CONDITION_INDEX];
 			String[] conditionTupel = ParameterTypeTupel.transformString2Tupel(condition);
 			String attName = conditionTupel[CONDITION_TUPEL_ATT_INDEX];
-			Attribute att = e.getAttributes().get(attName);
 			String filterSymbol = conditionTupel[CONDITION_TUPEL_FILTER_INDEX];
 			CustomFilters filter = CustomFilters.getBySymbol(filterSymbol);
 			String filterValue = conditionTupel[CONDITION_TUPEL_VALUE_INDEX];
 			if (macroHandler != null) {
 				filterValue = substituteMacros(filterValue, macroHandler);
+				if (resolveAttName) {
+					attName = substituteMacros(attName, macroHandler);
+				}
 			}
+			Attribute att = e.getAttributes().get(attName);
 
 			// check if condition is fulfilled
 			boolean fulfilled;
@@ -1090,16 +1076,11 @@ public class CustomFilter implements Condition {
 					return false;
 				}
 			} else {
-				if ("?".equals(value)) {
-					// special handling for ? as missing value
-					return true;
-				} else {
-					// all parsing tries failed
-					return false;
-				}
+				// special handling for ? as missing value
+				// or all parsing tries failed
+				return "?".equals(value);
 			}
 		}
-
 		return true;
 	}
 
@@ -1116,16 +1097,16 @@ public class CustomFilter implements Condition {
 			return value;
 		}
 		try {
-			StringBuffer result = new StringBuffer();
+			StringBuilder result = new StringBuilder();
 			while (startIndex >= 0) {
 				result.append(value.substring(0, startIndex));
-				int endIndex = value.indexOf("}", startIndex + 2);
+				int endIndex = value.indexOf('}', startIndex + 2);
 				String macroString = value.substring(startIndex + 2, endIndex);
 				String macroValue = macroHandler.getMacro(macroString);
 				if (macroValue != null) {
 					result.append(macroValue);
 				} else {
-					result.append("%{" + macroString + "}");
+					result.append("%{").append(macroString).append('}');
 				}
 				value = value.substring(endIndex + 1);
 				startIndex = value.indexOf("%{");

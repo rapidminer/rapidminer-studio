@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -22,12 +22,16 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.util.LinkedList;
 import java.util.List;
-
+import javax.swing.Icon;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 
 import com.rapidminer.gui.look.Colors;
+import com.rapidminer.gui.tools.AttributeGuiTools;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -128,6 +132,39 @@ public class ExampleSetMetaDataTableModel implements TableModel {
 
 	public static Component makeTableForToolTip(ExampleSetMetaData emd) {
 		ExtendedJTable table = new ExtendedJTable(new ExampleSetMetaDataTableModel(emd), true, true, true, false, false);
+		table.getColumnModel().getColumn(TYPE_COLUMN).setCellRenderer(new DefaultTableCellRenderer() {
+			public Component getTableCellRendererComponent(JTable table, Object value,
+														   boolean isSelected, boolean hasFocus,
+														   int row, int column) {
+				Component tableCellRendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+				if (tableCellRendererComponent instanceof JLabel) {
+					JLabel renderer = (JLabel) tableCellRendererComponent;
+					Integer type = null;
+					try {
+						type = Ontology.ATTRIBUTE_VALUE_TYPE.mapName(String.valueOf(value));
+					} catch (NumberFormatException e) {
+						// do nothing
+					}
+					if (type != null) {
+						Icon icon;
+						if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.NUMERICAL)) {
+							icon = AttributeGuiTools.NUMERICAL_COLUMN_ICON;
+						} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.NOMINAL)) {
+							icon = AttributeGuiTools.NOMINAL_COLUMN_ICON;
+						} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.DATE_TIME)) {
+							icon = AttributeGuiTools.DATE_COLUMN_ICON;
+						} else {
+							// attribute value type
+							icon = AttributeGuiTools.UNKNOWN_COLUMN_ICON;
+						}
+						renderer.setIcon(icon);
+					}
+				}
+
+				return tableCellRendererComponent;
+			}
+
+		});
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setBorder(null);
 		scrollPane.setPreferredSize(new Dimension(300, 200));

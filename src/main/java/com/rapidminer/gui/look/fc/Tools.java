@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -26,6 +26,8 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.io.File;
 
+import javax.imageio.ImageIO;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 
@@ -55,8 +57,6 @@ public class Tools {
 	private static Kernel sharpenKernel = new Kernel(3, 3, sharpenMatrix);
 
 	private static ConvolveOp sharpenOperator = new ConvolveOp(sharpenKernel, ConvolveOp.EDGE_NO_OP, null);
-
-	private static BufferedImage srcBImage;
 
 	public static ImageIcon getSmallSystemIcon(Image img) throws Exception {
 		if (img.getWidth(null) > 20 || img.getHeight(null) > 20) {
@@ -113,7 +113,7 @@ public class Tools {
 	}
 
 	public static Image getScaledInstance(File file) throws Exception {
-		srcBImage = javax.imageio.ImageIO.read(file);
+		BufferedImage srcBImage = ImageIO.read(file);
 
 		if (srcBImage.getWidth() > srcBImage.getHeight()) {
 			width = 100;
@@ -132,9 +132,28 @@ public class Tools {
 		g.drawImage(srcBImage, 0, 0, width, height, null);
 
 		g.dispose();
-		srcBImage = null;
 		blurOperator.filter(dest, dest2);
 
 		return dest2;
+	}
+	/**
+	 * Converts the given Icon into an Image
+	 *
+	 * @param icon
+	 * 		the icon to convert
+	 * @return an image of the icon, or {@code null} if the icon is {@code null}
+	 */
+	public static Image asImage(Icon icon) {
+		if (icon == null) {
+			return null;
+		}
+		final Image image;
+		if (icon instanceof ImageIcon) {
+			image = ((ImageIcon) icon).getImage();
+		} else {
+			image = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+			icon.paintIcon(null, image.getGraphics(), 0, 0);
+		}
+		return image;
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,84 +19,46 @@
 package com.rapidminer.tools.expression.internal.function.date;
 
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.concurrent.Callable;
 
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.expression.FunctionDescription;
-import com.rapidminer.tools.expression.FunctionInputException;
-import com.rapidminer.tools.expression.internal.ExpressionParserConstants;
 
 
 /**
- * A {@link Function} for setting a value of a given date.
+ * A {@link com.rapidminer.tools.expression.Function Function} for setting a value of a given date.
  *
- * @author David Arnu
+ * @author David Arnu, Jan Czogalla
  *
  */
-public class DateAdd extends AbstractDateManipulationFunction {
+public class DateAdd extends AbstractDateLongManipulationFunction {
 
 	public DateAdd() {
 		super("date.date_add", FunctionDescription.UNFIXED_NUMBER_OF_ARGUMENTS, Ontology.DATE_TIME);
 	}
 
+	/** Adds the given {@code value} with the specified unit to the calendar */
 	@Override
-	protected Date compute(Date date, double value, String unit, String valueLocale, String valueTimezone) {
+	void integerManipulation(Callable<Void> stopChecker, Calendar cal, int unit, int value) {
+		cal.add(unit, value);
+	}
 
-		Locale locale;
-		TimeZone zone;
-		if (valueLocale == null) {
-			locale = Locale.getDefault();
-		} else {
-			locale = new Locale(valueLocale);
+	/**
+	 * Call {@link AbstractDateLongManipulationFunction#integerManipulation(Callable, Calendar, int, int)} with
+	 * {@link #MAX_DATE_VALUE} until there is only an integer rest and finally add that.
+	 */
+	@Override
+	void longManipulation(Callable<Void> stopChecker, Calendar cal, long dateValue, int sign, int dateUnit) {
+		try {
+			while (dateValue >= MAX_DATE_VALUE) {
+				integerManipulation(stopChecker, cal, dateUnit, MAX_DATE_VALUE * sign);
+				dateValue -= MAX_DATE_VALUE;
+				stopChecker.call();
+			}
+		} catch (Exception e) {
+			// stop checker forced calculation to stop
+			return;
 		}
-		if (valueTimezone == null) {
-			zone = TimeZone.getDefault();
-		} else {
-			zone = TimeZone.getTimeZone(valueTimezone);
-		}
-
-		// for missing values as arguments, a missing value is returned
-		if (date == null || unit == null || Double.isNaN(value)) {
-			return null;
-		}
-
-		Calendar cal = Calendar.getInstance(zone, locale);
-		cal.setTime(date);
-
-		switch (unit) {
-			case ExpressionParserConstants.DATE_UNIT_YEAR:
-				cal.add(Calendar.YEAR, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_MONTH:
-				cal.add(Calendar.MONTH, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_WEEK:
-				cal.add(Calendar.WEEK_OF_YEAR, (int) value);
-				break;
-
-			case ExpressionParserConstants.DATE_UNIT_DAY:
-				cal.add(Calendar.DAY_OF_MONTH, (int) value);
-				break;
-
-			case ExpressionParserConstants.DATE_UNIT_HOUR:
-				cal.add(Calendar.HOUR_OF_DAY, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_MINUTE:
-				cal.add(Calendar.MINUTE, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_SECOND:
-				cal.add(Calendar.SECOND, (int) value);
-				break;
-			case ExpressionParserConstants.DATE_UNIT_MILLISECOND:
-				cal.add(Calendar.MILLISECOND, (int) value);
-				break;
-			default:
-				throw new FunctionInputException("expression_parser.function_wrong_type_at", getFunctionName(),
-						"unit constant", "third");
-
-		}
-		return cal.getTime();
+		integerManipulation(stopChecker, cal, dateUnit, (int) (sign * dateValue));
 	}
 }

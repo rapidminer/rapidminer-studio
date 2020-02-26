@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -983,7 +983,7 @@ final class ExcelSheetSelectionPanel extends JPanel {
 	}
 
 	/**
-	 * @return wether the UI of the sheet selection panel is currently updated
+	 * @return whether the UI of the sheet selection panel is currently updated
 	 */
 	boolean isUpdatingUI() {
 		return updatingUI;

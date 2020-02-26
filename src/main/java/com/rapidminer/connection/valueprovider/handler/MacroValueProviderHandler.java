@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,9 +27,9 @@ import java.util.logging.Level;
 import org.apache.commons.lang.StringUtils;
 
 import com.rapidminer.connection.ConnectionInformation;
+import com.rapidminer.connection.util.ParameterUtility;
 import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.connection.valueprovider.ValueProviderParameter;
-import com.rapidminer.connection.valueprovider.ValueProviderParameterImpl;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.LogService;
 
@@ -77,7 +77,7 @@ public final class MacroValueProviderHandler extends BaseValueProviderHandler {
 	 * Creates a new MacroValueProviderHandler
 	 */
 	private MacroValueProviderHandler() {
-		super(TYPE, Collections.singletonList(new ValueProviderParameterImpl(PARAMETER_PREFIX)));
+		super(TYPE, Collections.singletonList(ParameterUtility.getVPPBuilder(PARAMETER_PREFIX).build()));
 	}
 
 	@Override

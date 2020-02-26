@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -127,19 +127,20 @@ public class AntlrParserProcessFunctionTest extends AntlrParserTest {
 	}
 
 	@Test
-	public void randWithArgumentWrongType() {
+	public void randWithArgumentDouble() {
 		try {
-			getExpressionWithFunctionContext("rand(\"bla\")");
-			fail();
+			Expression expression = getExpressionWithFunctionContext("rand(2015.9)");
+			assertEquals(ExpressionType.DOUBLE, expression.getExpressionType());
+			assertEquals(0.6224847827770777, expression.evaluateNumerical(), 1e-15);
 		} catch (ExpressionException e) {
-			assertNotNull(e.getMessage());
+			fail(e.getMessage());
 		}
 	}
 
 	@Test
-	public void randWithWrongArgumentDouble() {
+	public void randWithArgumentWrongType() {
 		try {
-			getExpressionWithFunctionContext("rand(0.234)");
+			getExpressionWithFunctionContext("rand(\"bla\")");
 			fail();
 		} catch (ExpressionException e) {
 			assertNotNull(e.getMessage());

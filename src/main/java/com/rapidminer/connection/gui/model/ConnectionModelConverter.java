@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -36,11 +36,10 @@ import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationBuilder;
 import com.rapidminer.connection.configuration.ConfigurationParameter;
 import com.rapidminer.connection.configuration.ConfigurationParameterGroup;
-import com.rapidminer.connection.configuration.ConfigurationParameterImpl;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
 import com.rapidminer.connection.configuration.PlaceholderParameter;
-import com.rapidminer.connection.configuration.PlaceholderParameterImpl;
 import com.rapidminer.connection.util.GenericHandlerRegistry;
+import com.rapidminer.connection.util.ParameterUtility;
 import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.LogService;
@@ -200,7 +199,9 @@ public final class ConnectionModelConverter {
 			List<ConfigurationParameter> parameters = new ArrayList<>();
 			for (ConnectionParameterModel parameter : group.getParameters()) {
 				if (StringUtils.trimToNull(parameter.getName()) != null) {
-					parameters.add(new ConfigurationParameterImpl(parameter.getName(), parameter.getValue(), parameter.isEncrypted(), parameter.getInjectorName(), parameter.isEnabled()));
+					parameters.add(ParameterUtility.getCPBuilder(parameter.getName(), parameter.isEncrypted())
+							.withValue(parameter.getValue()).enable(parameter.isEnabled())
+							.withInjector(parameter.getInjectorName()).build());
 				}
 			}
 			//We can't add empty groups
@@ -221,7 +222,9 @@ public final class ConnectionModelConverter {
 	static List<PlaceholderParameter> toList(List<PlaceholderParameterModel> groupModels) {
 		List<PlaceholderParameter> result = new ArrayList<>();
 		for (PlaceholderParameterModel parameter : groupModels) {
-			result.add(new PlaceholderParameterImpl(parameter.getName(), parameter.getValue(), parameter.getGroupName(), parameter.isEncrypted(), parameter.getInjectorName(), parameter.isEnabled()));
+			result.add(ParameterUtility.getPPBuilder(parameter.getName(), parameter.getGroupName(), parameter.isEncrypted())
+					.withValue(parameter.getValue()).enable(parameter.isEnabled())
+					.withInjector(parameter.getInjectorName()).build());
 		}
 		return result;
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -24,6 +24,7 @@ import java.awt.GraphicsConfiguration;
 import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
@@ -198,9 +199,10 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 			// should not happen, but better safe than sorry
 			return new Point(xSource, ySource);
 		}
+		Rectangle bounds = graphicsConfig.getBounds();
 		Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(graphicsConfig);
-		int maxScreenX = graphicsConfig.getDevice().getDisplayMode().getWidth() - screenInsets.right;
-		int maxScreenY = graphicsConfig.getDevice().getDisplayMode().getHeight() - screenInsets.bottom;
+		int maxScreenX = (int) (bounds.getX() + bounds.getWidth() - screenInsets.right);
+		int maxScreenY = (int) (bounds.getY() + bounds.getHeight() - screenInsets.bottom);
 
 		switch (position) {
 			case VERTICAL:
@@ -221,8 +223,8 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 				// if the popup now would be moved outside of screen to the left it would look
 				// silly, so in that case just show it at its intended position and let it be cut
 				// off on the right side as we cannot do anything about it
-				if (xPopup < screenInsets.left) {
-					xPopup = screenInsets.left;
+				if (xPopup < bounds.getX() + screenInsets.left) {
+					xPopup = (int) (bounds.getX() + screenInsets.left);
 				}
 
 				break;
@@ -244,8 +246,8 @@ public class PopupAction extends ResourceAction implements PopupComponentListene
 				// if the popup now would be moved outside of screen at the top it would look
 				// silly, so in that case just show it at top of screen and let it be cut
 				// off on the bottom side as we cannot do anything about it
-				if (yPopup < screenInsets.top) {
-					yPopup = screenInsets.top;
+				if (yPopup < bounds.getY() + screenInsets.top) {
+					yPopup = (int) (bounds.getY() + screenInsets.top);
 				}
 
 				break;

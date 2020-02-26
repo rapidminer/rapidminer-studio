@@ -108,8 +108,8 @@
 			The first result you see is the test set with the label and the predictions.  
 			The second result is the performance of the model on the test set.  
 			You can select the different performance measurements ("criterion") on the left side of the screen.  The <emph>accuracy</emph> 
-			is 77.82% and tells you how accurate the model is overall. The <emph>confusion matrix</emph>  
-			shows you the different kind of errors.  For example, 30 cases have been predicted "no" 
+			is 80.36% and tells you how accurate the model is overall. The <emph>confusion matrix</emph>
+			shows you the different kind of errors.  For example, 29 cases have been predicted "no"
 			when they were actually "yes."  The accuracy is the sum of all the numbers on the diagonal divided by the sum of all 
 			numbers! The larger the numbers on the diagonal, the better the performance of our model.
 		</info>

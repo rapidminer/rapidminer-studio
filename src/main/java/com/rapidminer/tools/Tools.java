@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -231,12 +231,14 @@ public class Tools {
 
 	public static final int SYSTEM_TIME_ZONE = 0;
 
+	public static final String SYSTEM_TIME_ZONE_NAME = "SYSTEM";
+
 	static {
 		String[] allTimeZoneNames = TimeZone.getAvailableIDs();
 		Arrays.sort(allTimeZoneNames);
 
 		availableTimeZoneNames = new String[allTimeZoneNames.length + 1];
-		availableTimeZoneNames[SYSTEM_TIME_ZONE] = "SYSTEM";
+		availableTimeZoneNames[SYSTEM_TIME_ZONE] = SYSTEM_TIME_ZONE_NAME;
 		System.arraycopy(allTimeZoneNames, 0, availableTimeZoneNames, 1, allTimeZoneNames.length);
 	}
 

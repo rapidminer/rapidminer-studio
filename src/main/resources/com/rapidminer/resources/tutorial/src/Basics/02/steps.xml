@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <steps>
 	<step name="Let's do some data science.">
-		<text>In the last tutorial, we imported a dataset and ran a process. We found out that 349 passengers survived the Titanic accident.  Let's build a Process to see if those survivors have something in common or not.</text>
+		<text>In the last tutorial, we loaded a dataset and ran a process. We found out that 349 passengers survived the Titanic accident.  Let's build a Process to see if those survivors have something in common or not.</text>
 	</step>
 	<step name="Retrieve the Titanic Training data.">
 		<text>Load the Titanic Training data.</text>
@@ -26,7 +26,7 @@
 			<task><activity>Connect</activity> the first output ("mod") of the <op>Decision Tree</op> with the result port ("res") on the right side of the <ui>Process panel</ui>.</task>
 			<task><activity>Press the <icon>16/media_play.png</icon> Run</activity> button in the toolbar to execute the process.</task>
 		</tasks>
-		<info>Great job!  Your process should now be complete and deliver a decision tree model, which explains to you what most of the survivors and most of the victims had in common.</info>
+		<info>Great job!  Your process should now be complete and deliver a decision tree model, which explains to you what most of the survivors and most of the victims had in common. Read more explanation on <link url="https://redirects.rapidminer.com/app/studio/9.6/docs/port-info">operator ports</link> and <link url="https://redirects.rapidminer.com/app/studio/9.6/academy/decision-trees">decision trees</link>.</info>
 	</step>  	
 	<step name="Congratulations!">
 		<text>Great - you just have built your first machine learning model.  This was not hard, was it?  You now know how to load data, add a machine learning model to the process, and execute both steps.</text>

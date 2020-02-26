@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -96,7 +96,7 @@ public class DummyOperator extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = new ParameterTypeLinkButton(PARAMETER_INSTALL_EXTENSION,
-				I18N.getGUILabel("dummy.parameter.install_extension"), SwingTools.createMarketplaceDownloadActionForNamespace("install_extension_dummy", getExtensionId()));
+				I18N.getGUILabel("dummy.parameter.install_extension"), SwingTools.createMarketplaceDownloadActionForNamespace("install_extension_dummy", getRequiredPluginPrefix()));
 		type.setExpert(false);
 		types.add(type);
 		return types;

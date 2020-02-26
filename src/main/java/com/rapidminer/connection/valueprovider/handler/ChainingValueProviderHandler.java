@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -32,13 +32,13 @@ import java.util.stream.Collectors;
 
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.configuration.ConnectionConfiguration;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.connection.util.ParameterUtility;
 import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.connection.valueprovider.ValueProviderParameter;
-import com.rapidminer.connection.valueprovider.ValueProviderParameterImpl;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ValidationUtil;
 
 /**
  * Helps with injecting values into other value providers. Works on a single parameter that is a list separated by
@@ -63,7 +63,7 @@ public class ChainingValueProviderHandler extends BaseValueProviderHandler {
 	private static final ChainingValueProviderHandler INSTANCE = new ChainingValueProviderHandler();
 
 	private ChainingValueProviderHandler() {
-		super(TYPE, Collections.singletonList(new ValueProviderParameterImpl(PARAMETER_CHAINED_VPS)));
+		super(TYPE, Collections.singletonList(ParameterUtility.getVPPBuilder(PARAMETER_CHAINED_VPS).build()));
 	}
 
 	public static ChainingValueProviderHandler getInstance() {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.preprocessing.filter;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.rapidminer.example.AttributeTypeException;
@@ -133,6 +134,8 @@ public class ExampleFilter extends AbstractDataProcessing {
 	/** The hidden parameter for &quot;Check meta data for comparators.&quot; */
 	public static final String PARAMETER_FILTERS_CHECK_METADATA = "filters_check_metadata";
 
+	public static final OperatorVersion BEFORE_ATT_NAME_RESOLUTION = new OperatorVersion(9, 5, 1);
+
 	private final OutputPort unmatchedOutput = getOutputPorts().createPort("unmatched example set");
 
 	public ExampleFilter(final OperatorDescription description) {
@@ -201,8 +204,10 @@ public class ExampleFilter extends AbstractDataProcessing {
 					throw new UndefinedParameterError(PARAMETER_FILTER, this);
 				}
 				List<String[]> operatorFilterList = ParameterTypeList.transformString2List(rawParameterString);
-				condition = new CustomFilter(inputSet, operatorFilterList,
-						getParameterAsBoolean(PARAMETER_FILTERS_LOGIC_AND), getProcess().getMacroHandler());
+				CustomFilter customFilter = new CustomFilter(inputSet, operatorFilterList,
+						getParameterAsBoolean(PARAMETER_FILTERS_LOGIC_AND), getProcess().getMacroHandler(),
+						getCompatibilityLevel().isAbove(BEFORE_ATT_NAME_RESOLUTION));
+				condition = customFilter;
 			} else if (className.equals(ConditionedExampleSet.KNOWN_CONDITION_NAMES[ConditionedExampleSet.CONDITION_EXPRESSION])) {
 				// special handling for expression, has different
 				String expression = getParameterAsString(PARAMETER_PARAMETER_EXPRESSION);
@@ -319,7 +324,11 @@ public class ExampleFilter extends AbstractDataProcessing {
 
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return ExpressionParserUtils.addIncompatibleExpressionParserChange(super.getIncompatibleVersionChanges());
+		OperatorVersion[] incompatibleVersions = ExpressionParserUtils.addIncompatibleExpressionParserChange(super.getIncompatibleVersionChanges());
+		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
+				incompatibleVersions.length + 1);
+		extendedIncompatibleVersions[incompatibleVersions.length] = BEFORE_ATT_NAME_RESOLUTION;
+		return extendedIncompatibleVersions;
 	}
 
 }

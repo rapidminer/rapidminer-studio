@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 RapidMiner GmbH
+ * Copyright (C) 2001-2020 RapidMiner GmbH
  */
 package com.rapidminer.doc;
 

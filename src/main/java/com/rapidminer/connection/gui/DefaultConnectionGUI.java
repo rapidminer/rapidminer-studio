@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2019 by RapidMiner and the contributors
+ * Copyright (C) 2001-2020 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,6 +22,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.util.List;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -82,15 +84,29 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 		left.insets = new Insets(0, 0, VERTICAL_COMPONENT_SPACING, HORIZONTAL_COMPONENT_SPACING);
 		right.fill = left.fill = GridBagConstraints.HORIZONTAL;
 		right.insets = new Insets(0, 0, VERTICAL_COMPONENT_SPACING, 0);
-		left.gridx = 0;
-		right.gridx = 1;
+		left.gridwidth = 1;
+		right.gridwidth = GridBagConstraints.REMAINDER;
+		JComponent header = getCombinedGroupHeader(connectionModel, groupModels);
+		if (header != null) {
+			components.add(header, right);
+		}
+
 		for (ConnectionParameterGroupModel groupModel : groupModels) {
-			for (ConnectionParameterModel parameter : groupModel.getParameters()) {
-				components.add(getParameterLabelComponent(connectionModel.getType(), parameter), left);
+			for (ConnectionParameterModel parameter : orderedParameters(groupModel)) {
 				JComponent parameterInputComponent = getParameterInputComponent(connectionModel.getType(), parameter);
+				if (!(parameterInputComponent instanceof JCheckBox)) {
+					// checkboxes should appear on the left, as their label is to the right of the box everywhere
+					// therefore, we only add the usual label here if it's not a checkbox
+					components.add(getParameterLabelComponent(connectionModel.getType(), parameter), left);
+				}
 				components.add(wrapInformationIcon(connectionModel, parameter, parameterInputComponent), right);
 			}
 		}
+		JComponent footer = getCombinedGroupFooter(connectionModel, groupModels);
+		if (footer != null) {
+			components.add(footer, right);
+		}
+
 		panel.add(components, gbc);
 
 		gbc.weighty = 1.0;
@@ -99,6 +115,47 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 		panel.add(new JLabel(), gbc);
 
 		return panel;
+	}
+
+	/**
+	 * Returns the ordered list of parameters of the given group.
+	 *
+	 * @return by default, returns the result of {@link ConnectionParameterGroupModel#getParameters()}
+	 *
+	 * @since 9.6
+	 */
+	protected List<ConnectionParameterModel> orderedParameters(ConnectionParameterGroupModel groupModel) {
+		return groupModel.getParameters();
+	}
+
+	/**
+	 * Creates a header component if necessary and puts it at the top of the group component. If {@code null} is returned,
+	 * this will be ignored.
+	 *
+	 * @param connectionModel
+	 * 		the connection model
+	 * @param groupModels
+	 * 		the group models
+	 * @return {@code null} by default
+	 * @since 9.6
+	 */
+	protected JComponent getCombinedGroupHeader(ConnectionModel connectionModel, ConnectionParameterGroupModel... groupModels) {
+		return null;
+	}
+
+	/**
+	 * Creates a footer component if necessary and puts it below the last parameter of the group component.
+	 * If {@code null} is returned, this will be ignored.
+	 *
+	 * @param connectionModel
+	 * 		the connection model
+	 * @param groupModels
+	 * 		the group models
+	 * @return {@code null} by default
+	 * @since 9.6
+	 */
+	protected JComponent getCombinedGroupFooter(ConnectionModel connectionModel, ConnectionParameterGroupModel... groupModels) {
+		return null;
 	}
 
 	/**
@@ -137,8 +194,8 @@ public class DefaultConnectionGUI extends AbstractConnectionGUI {
 	/**
 	 * Creates the input component for the given {@link ConnectionParameterModel parameter} and type.
 	 * Subclasses can override this to customize a simple UI. If the parameter is injectable, the returned component
-	 * should be wrapped inside a {@link com.rapidminer.connection.gui.components.InjectableComponentWrapper}.
-	 * More complex UIs should be implemented by extending {@link AbstractConnectionGUI} directly.
+	 * should be wrapped inside a {@link com.rapidminer.connection.gui.components.InjectableComponentWrapper
+	 * InjectableComponentWrapper}. More complex UIs should be implemented by extending {@link AbstractConnectionGUI} directly.
 	 *
 	 * @param type
 	 * 		the type of the connection (see {@link ConnectionModel#getType()})
